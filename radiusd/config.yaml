@@ -1,0 +1,19 @@
+mysql:
+    maxusage: 10
+    host: 'localhost'
+    user: 'root'
+    passwd: 'root'
+    db: 'slcrms'
+    charset: "utf8"
+radiusd:
+    version: 1.0
+    debug: true
+    hosts:
+        test:
+            addr: 127.0.0.1
+            secret: 123456
+            type: std
+        test2:
+            addr: 192.168.1.105
+            secret: 123456
+            type: std            

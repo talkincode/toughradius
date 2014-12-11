@@ -1,0 +1,6 @@
+Beaker==1.6.4
+Mako==0.9.1
+MarkupSafe==0.21
+PyYAML==3.11
+wsgiref==0.1.2
+pyrad==2.0
