@@ -36,14 +36,12 @@ def decrypt(x):
     return AES.new(_key, AES.MODE_CBC).decrypt(x).strip()    
 
 
-def is_valid_date(dstr1,dstr2):
-    if not dstr1 or not dstr2:
-        log.msg('error date format : %s,%s'%(dstr1,dstr2))
+def is_expire(dstr):
+    if not dstr:
         return False
-    d1 = datetime.datetime.strptime("%s 00:00:00"%dstr1,"%Y-%m-%d %H:%M:%S")
-    d2 = datetime.datetime.strptime("%s 23:59:59"%dstr2,"%Y-%m-%d %H:%M:%S")
+    expire_date = datetime.datetime.strptime("%s 23:59:59"%dstr,"%Y-%m-%d %H:%M:%S")
     now = datetime.datetime.now()
-    return now >= d1 and now <= d2    
+    return expire_date < now
 
 
 
@@ -72,7 +70,7 @@ class AuthPacket2(AuthPacket):
         if self.code == 1:
             _str += ",username=%s,mac_addr=%s" % (self.get_user_name(),self.get_mac_addr())
         if 'Reply-Message' in self:
-            _str += ',reply-msg="%s"' % self['Reply-Message'][0]
+            _str += ',Reply-Message="%s"' % self['Reply-Message'][0]
         return _str   
 
     def CreateReply(self, msg=None,**attributes):

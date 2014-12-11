@@ -7,13 +7,15 @@ mysql:
     charset: "utf8"
 radiusd:
     version: 1.0
-    debug: true
+    debug: false
     hosts:
         test:
+            identifier: test
             addr: 127.0.0.1
             secret: 123456
             type: std
         test2:
-            addr: 192.168.1.105
+            identifier: test2
+            addr: 192.168.0.184
             secret: 123456
             type: std            

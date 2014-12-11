@@ -107,17 +107,16 @@ class GroupCheck(AuthMiddleWare):
 class AcctPoicyCheck(AuthMiddleWare):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""
     def on_auth(self):
-
-        # acct_poicy = self.user['product_poicy'] or FEE_BUYOUT
-        # if acct_poicy == FEE_BUYOUT:
-        #     if not utils.is_valid_date(self.user.get('auth_begin_date'),self.user.get('auth_end_date')):
-        #         return self.error('user is not effective or expired')
-        # elif acct_poicy == FEE_TIMES:
-        #     if int(self.user.get("time_length") or 0) <= 0:
-        #         return self.error('user times poor')
-        # elif acct_poicy == FEE_FLOW:
-        #     if int(self.user.get("flow_length") or 0) <= 0:
-        #         return self.error('user credit poor')       
+        acct_policy = self.user['product_policy'] or FEE_BUYOUT
+        if acct_policy == FEE_BUYOUT:
+            if utils.is_expire(self.user.get('expire_date')):
+                return self.error('user is  expired')
+        elif acct_policy == FEE_TIMES:
+            if int(self.user.get("time_length",0)) <= 0:
+                return self.error('user times poor')
+        elif acct_policy == FEE_FLOW:
+            if int(self.user.get("flow_length",0)) <= 0:
+                return self.error('user credit poor')       
 
         return self.resp
 

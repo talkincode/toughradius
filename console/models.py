@@ -54,10 +54,11 @@ class SlcRadBas(DeclarativeBase):
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
     isp_id = Column(u'isp_id', INTEGER(), nullable=False)
-    ip_addr = Column(u'ip_addr', VARCHAR(length=15), nullable=False,unique=True)
+    identifier = Column(u'identifier', VARCHAR(length=32), nullable=False,unique=True)
+    vendor_id = Column(u'vendor_id', VARCHAR(length=32), nullable=False)
+    ip_addr = Column(u'ip_addr', VARCHAR(length=15), nullable=False)
     bas_name = Column(u'bas_name', VARCHAR(length=64), nullable=False)
     bas_secret = Column(u'secret', VARCHAR(length=32), nullable=False)
-    bas_type = Column(u'bas_type',VARCHAR(length=32), nullable=False)
     status = Column(u'status', SMALLINT(), nullable=False)
     time_type = Column(u'time_type', SMALLINT(), nullable=False)
 
@@ -275,10 +276,11 @@ def init_db():
     bas = SlcRadBas()
     bas.id = 1
     bas.isp_id = 10001
+    bas.identifier = 'test'
+    bas.vendor_id = '14896'
     bas.ip_addr = '127.0.0.1'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
-    bas.bas_type = 'std'
     bas.status = 1
     bas.time_type = 0
     db.add(bas)

@@ -45,7 +45,8 @@ class Store():
 
     def get_user(self,username):
         with Cursor(self.dbpool) as cur:
-            cur.execute("select * from slc_rad_account where account_number = %s ",(username,))
+            cur.execute("select a.*,p.product_policy from slc_rad_account a,slc_rad_product p "
+                "where a.product_id = p.product_id and a.account_number = %s ",(username,))
             user =  cur.fetchone()
             return user
 
