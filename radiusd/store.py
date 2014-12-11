@@ -43,6 +43,11 @@ class Store():
     def __init__(self,dbpool=None):
         self.dbpool = dbpool 
 
+    def list_bas(self):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select * from  slc_rad_bas")
+            return [bas for bas in cur] 
+
     def get_user(self,username):
         with Cursor(self.dbpool) as cur:
             cur.execute("select a.*,p.product_policy from slc_rad_account a,slc_rad_product p "

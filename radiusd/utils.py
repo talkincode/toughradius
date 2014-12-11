@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 from pyrad import tools
+from twisted.internet.defer import Deferred
 from pyrad.packet import AuthPacket
 from pyrad.packet import AcctPacket
 from pyrad.packet import AccessRequest
@@ -49,7 +50,8 @@ class AuthPacket2(AuthPacket):
 
     def __init__(self, code=AccessRequest, id=None, secret=six.b(''),
             authenticator=None, **attributes):
-        AuthPacket.__init__(self, code, id, secret, authenticator, **attributes)   
+        AuthPacket.__init__(self, code, id, secret, authenticator, **attributes)
+        self.deferred = Deferred()
 
     def format_str(self):
         attr_keys = self.keys()
@@ -102,8 +104,21 @@ class AuthPacket2(AuthPacket):
         except:return None
 
     def get_user_name(self):
-        try:return tools.DecodeString(self.get(1)[0])
-        except:return None
+        try:
+            user_name = tools.DecodeString(self.get(1)[0])
+            if "@" in user_name:
+                user_name = user_name[:user_name.index("@")]
+            return user_name
+        except:
+            return None
+
+    def get_domain(self):
+        try:
+            user_name = tools.DecodeString(self.get(1)[0])
+            if "@" in user_name:
+                return user_name[user_name.index("@")+1:]
+        except:
+            return None            
         
     def get_vlanids(self):
         try:
@@ -148,6 +163,7 @@ class AcctPacket2(AcctPacket):
     def __init__(self, code=AccountingRequest, id=None, secret=six.b(''),
             authenticator=None, **attributes):
         AcctPacket.__init__(self, code, id, secret, authenticator, **attributes)
+        self.deferred = Deferred()
 
     def format_str(self):
         attr_keys = self.keys()
@@ -173,8 +189,13 @@ class AcctPacket2(AcctPacket):
         return reply        
 
     def get_user_name(self):
-        try:return tools.DecodeString(self.get(1)[0])
-        except:return None        
+        try:
+            user_name = tools.DecodeString(self.get(1)[0])
+            if "@" in user_name:
+                return user_name[:user_name.index("@")]
+        except:
+            return None
+ 
 
     def get_mac_addr(self):
         try:return tools.DecodeString(self.get(31)[0]).replace("-",":")

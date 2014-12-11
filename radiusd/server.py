@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
-
+from twisted.internet.defer import Deferred
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
@@ -15,20 +15,15 @@ import sys
 import pprint
 import utils
 
-class PacketError(Exception):
-    """Exception class for bogus packets
-
-    PacketError exceptions are only used inside the Server class to
-    abort processing of a packet.
-    """
+class PacketError(Exception):pass
 
 class RADIUS(host.Host, protocol.DatagramProtocol):
-    def __init__(self, config="config.yaml", dict=dictionary.Dictionary("res/dictionary")):
+    def __init__(self, config="config.yaml",dict=dictionary.Dictionary("res/dictionary"),debug=False):
         host.Host.__init__(self,dict=dict)
-        with open(config) as cf:
+        self.debug = debug
+        self.bas_ip_pool = {bas['ip_addr']:bas for bas in store.list_bas()}
+        with open(config,'rb') as cf:
             self.config = yaml.load(cf)
-        self.debug = self.config['radiusd']['debug']
-        self.hosts = self.config['radiusd']['hosts']
 
     def processPacket(self, pkt):
         pass
@@ -36,38 +31,30 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
     def createPacket(self, **kwargs):
         raise NotImplementedError('Attempted to use a pure base class')
 
-
     def datagramReceived(self, datagram, (host, port)):
-        bas_host = [ vh for vh in self.hosts.values() if vh['addr']==host ]
-        bas_host = bas_host and bas_host[0]
-        if not bas_host:
-            log.msg('Dropping packet from unknown host ' + host)
-            return
-
+        bas = self.bas_ip_pool.get(host)
+        if self.config['bas_host_check']  and not bas:
+            return log.msg('Dropping packet from unknown host ' + host)
+        secret = bas['secret'] or self.config['bas_default_secret']
         try:
-            pkt = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(bas_host['secret'])))
-            pkt.source = (host, port)
-            log.msg("::Received an radius request from %s:%s : %s"%(host,port,str(pkt)))
+            _packet = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(secret)))
+            _packet.deferred.addCallbacks(self.reply,self.on_exception)
+            _packet.source = (host, port)
+            log.msg("::Received an radius request from %s : %s"%((host, port),str(_packet)))
             if self.debug:
-                log.msg(pkt.format_str())    
-
+                log.msg(_packet.format_str())    
+            self.processPacket(_packet)
         except packet.PacketError as err:
-            log.msg('::Dropping invalid packet: ' + str(err))
-            return
+            log.msg('::Dropping invalid packet from %s: %s'%((host, port),str(err)))
 
-        try:
-            
-            reply = self.processPacket(pkt)
-            log.msg("::Send an radius response to %s:%s : %s"%(host,port,reply))
-            if self.debug:
-                log.msg(reply.format_str())
-            self.transport.write(reply.ReplyPacket(), reply.source)  
-    
-
-        except PacketError as err:
-            log.msg('::Dropping packet from %s: %s' % (host, str(err)))
-
-      
+    def reply(self,reply):
+        log.msg("send radius response to %s : %s"%(reply.source,reply))
+        if self.debug:
+            log.msg(reply.format_str())
+        self.transport.write(reply.ReplyPacket(), reply.source)  
+ 
+    def on_exception(self,err):
+        log.msg('Packet process error：%s' % str(err))   
 
 
 class RADIUSAccess(RADIUS):
@@ -77,32 +64,11 @@ class RADIUSAccess(RADIUS):
 
     def processPacket(self, req):
         if req.code != packet.AccessRequest:
-            raise PacketError(
-                    'non-AccessRequest packet on authentication socket')
+            raise PacketError('non-AccessRequest packet on authentication socket')
 
         reply = req.CreateReply()
         reply.source = req.source
-
-        # domain check
-        domain_user = req.get_user_name()
-        domain = None
-        username = domain_user
-        if "@" in domain_user:
-            username = domain_user[:domain_user.index("@")]
-            self.req["User-Name"] = username
-            domain = domain_user[domain_user.index("@")+1:]
-
-        user = store.get_user(username)
-        if not user:
-            reply.code = packet.AccessReject
-            reply['Reply-Message'] = 'user %s not exists'%username
-            return reply
-
-        if domain and domain not in user.get('domain'):
-            reply.code = packet.AccessReject
-            reply['Reply-Message'] = 'user domain %s not match'%domain         
-            return reply
-            
+        user = store.get_user(req.get_user_name())
         # middleware execute
         for mcls in middlewares.auth_objs:
             middle_ware = mcls(req,reply,user)
@@ -111,12 +77,12 @@ class RADIUSAccess(RADIUS):
                     log.msg(mcls.__doc__)
                 reply = middle_ware.on_auth()
                 if reply.code == packet.AccessReject:
-                    return reply
+                    return req.deferred.callback(reply)
                     
         # send accept
         reply['Reply-Message'] = 'success!'
         reply.code=packet.AccessAccept
-        return reply
+        req.deferred.callback(reply)
            
 
 class RADIUSAccounting(RADIUS):
@@ -129,23 +95,22 @@ class RADIUSAccounting(RADIUS):
             raise PacketError(
                     'non-AccountingRequest packet on authentication socket')
 
-        user = store.get_user(req.get_user_name())
-
-        def do_acct(req,user):
+        def do_acct(req):
+            user = store.get_user(req.get_user_name())
             for mcls in middlewares.acct_objs:
                 middle_ware = mcls(req,user)
                 if hasattr(middle_ware,'on_acct'):
                     middle_ware.on_acct() 
 
-        reactor.callInThread(do_acct,req,user)           
-
         reply = req.CreateReply()
         reply.source = req.source
-        return reply
+        reply.deferred.addCallbacks(do_acct,self.on_exception)    
+        req.deferred.callback(reply)
+        reply.deferred.callback(req)
 
 
 if __name__ == '__main__':
     log.startLogging(sys.stdout, 0)
-    reactor.listenUDP(1812, RADIUSAccess())
+    reactor.listenUDP(1812, RADIUSAccess(debug=True))
     reactor.listenUDP(1813, RADIUSAccounting())
     reactor.run()

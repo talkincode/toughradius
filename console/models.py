@@ -9,29 +9,7 @@ engine = create_engine('mysql://root:root@127.0.0.1:3306/slcrms?charset=utf8')
 DeclarativeBase = declarative_base()
 metadata = DeclarativeBase.metadata
 metadata.bind = engine
-
-class SlcIsp(DeclarativeBase):
-    """运营商,状态 0-未激活，1-激活
-    """
-    __tablename__ = 'slc_isp'
-
-    __table_args__ = {}
-
-    #column definitions
-    isp_id = Column('isp_id', INTEGER(), 
-        Sequence('isp_id_seq', start=10001, increment=1),
-        primary_key=True,nullable=False)
-    isp_name = Column(u'isp_name', VARCHAR(length=64), nullable=False)
-    isp_desc = Column(u'isp_desc', VARCHAR(length=255))
-    isp_operator = Column('isp_operator',VARCHAR(length=32),nullable=False)
-    isp_password = Column('isp_password',VARCHAR(length=64),nullable=False)
-    isp_email = Column('isp_email',VARCHAR(length=255))
-    isp_phone = Column('isp_phone',VARCHAR(length=64))
-    isp_token = Column('isp_token',VARCHAR(length=128))
-    status = Column('status', SMALLINT(), nullable=False)    
-
-    #relation definitions
-
+ 
 class SlcNode(DeclarativeBase):
     __tablename__ = 'slc_node'
 
@@ -39,7 +17,6 @@ class SlcNode(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
-    isp_id = Column(u'isp_id', INTEGER(), nullable=False)
     node_name = Column(u'node_name', VARCHAR(length=32), nullable=False)
     node_desc = Column(u'node_desc', VARCHAR(length=64), nullable=False)
 
@@ -53,8 +30,6 @@ class SlcRadBas(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
-    isp_id = Column(u'isp_id', INTEGER(), nullable=False)
-    identifier = Column(u'identifier', VARCHAR(length=32), nullable=False,unique=True)
     vendor_id = Column(u'vendor_id', VARCHAR(length=32), nullable=False)
     ip_addr = Column(u'ip_addr', VARCHAR(length=15), nullable=False)
     bas_name = Column(u'bas_name', VARCHAR(length=64), nullable=False)
@@ -72,7 +47,6 @@ class SlcRadGroup(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
-    isp_id = Column(u'isp_id', INTEGER(), nullable=False)
     group_name = Column(u'group_name', VARCHAR(length=64), nullable=False)
     group_desc = Column(u'group_desc', VARCHAR(length=255))
     bind_mac = Column(u'bind_mac', SMALLINT(), nullable=False)
@@ -91,7 +65,6 @@ class SlcRadRoster(DeclarativeBase):
     __table_args__ = {}
 
     #column definitions
-    isp_id = Column('isp_id', INTEGER(), nullable=False)
     account_number = Column('account_number', VARCHAR(length=32))
     begin_time = Column('begin_time', VARCHAR(length=19), nullable=False)
     end_time = Column('end_time', VARCHAR(length=19), nullable=False)
@@ -130,7 +103,6 @@ class SlcMember(DeclarativeBase):
     member_id = Column('member_id', INTEGER(), 
         Sequence('member_id_seq', start=100001, increment=1),
         primary_key=True,nullable=False)
-    isp_id = Column('isp_id', INTEGER(), nullable=False)
     node_id = Column('node_id', INTEGER(), nullable=False)
     member_name = Column('member_name', VARCHAR(length=32), nullable=False)
     realname = Column('realname', VARCHAR(length=64), nullable=False)
@@ -223,7 +195,6 @@ class SlcRadProduct(DeclarativeBase):
     __table_args__ = {}
 
     product_id = Column('product_id', INTEGER(),primary_key=True,autoincrement=1,nullable=False)
-    isp_id = Column('isp_id', INTEGER(), nullable=False)
     product_name = Column('product_name', VARCHAR(length=64), nullable=False)
     product_policy = Column('product_policy', INTEGER(), nullable=False)
     product_status = Column('product_status', SMALLINT(), nullable=False)    
@@ -254,20 +225,7 @@ def init_db():
     from sqlalchemy.orm import scoped_session, sessionmaker
     db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
 
-    isp = SlcIsp()
-    isp.isp_id = 10001
-    isp.isp_name = 'lingyatech'
-    isp.isp_desc = '凌亚速联'
-    isp.isp_token = '1234567890'
-    isp.isp_operator = 'lyadmin'
-    isp.isp_password = '123456'
-    isp.isp_email = 'support@lingyatech.com'
-    isp.isp_phone = '101000201'
-    isp.status = 1
-    db.add(isp)    
-
     node = SlcNode()
-    node.isp_id = 10001
     node.id = 1
     node.node_name = 'default'
     node.node_desc = 'default'
@@ -275,8 +233,6 @@ def init_db():
 
     bas = SlcRadBas()
     bas.id = 1
-    bas.isp_id = 10001
-    bas.identifier = 'test'
     bas.vendor_id = '14896'
     bas.ip_addr = '127.0.0.1'
     bas.bas_name = 'test_bas'
@@ -287,7 +243,6 @@ def init_db():
 
     product = SlcRadProduct()
     product.product_id = 1
-    product.isp_id = 10001
     product.product_name = 'test_product'
     product.product_policy = 0
     product.product_status = 1
@@ -309,7 +264,6 @@ def init_db():
 
     member = SlcMember()
     member.member_id = 100001
-    member.isp_id = 10001
     member.node_id = 1
     member.member_name = 'wjt'
     member.realname = 'wjt'

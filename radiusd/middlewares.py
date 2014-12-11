@@ -30,9 +30,12 @@ class AuthMiddleWare(object):
         self.resp['Reply-Message'] = errmsg
         return self.resp
       
-class BasicCheck(AuthMiddleWare):
+class BasicFilter(AuthMiddleWare):
     """执行基本校验：密码校验，状态检测，并发数限制"""
     def on_auth(self):
+        if not self.user:
+            return self.error('user %s not exists'%self.req.get_user_name())
+
         if not self.req.is_valid_pwd(self.user['password']):
             return self.error('user password not match')
 
@@ -41,7 +44,17 @@ class BasicCheck(AuthMiddleWare):
 
         return self.resp
 
-class BindCheck(AuthMiddleWare):
+class DomainFilter(AuthMiddleWare):
+    """执行基本校验：密码校验，状态检测，并发数限制"""
+    def on_auth(self):
+        domain = self.req.get_domain()
+        user_domain  = self.user.get("domain_name")
+        if domain and user_domain:
+            if domain not in user_domain:
+                return self.error('user domain %s not match'%domain  )
+        return self.resp        
+
+class BindFilter(AuthMiddleWare):
     """执行绑定校验，检查MAC地址与VLANID"""
     def on_auth(self):
 
@@ -69,7 +82,7 @@ class BindCheck(AuthMiddleWare):
 
         return self.resp
 
-class GroupCheck(AuthMiddleWare):
+class GroupFilter(AuthMiddleWare):
     """执行用户组策略校验，检查MAC与VLANID绑定，并发数限制 """
     def on_auth(self):
         group = store.get_group(self.user['group_id'])
@@ -104,7 +117,7 @@ class GroupCheck(AuthMiddleWare):
         return self.resp
 
 
-class AcctPoicyCheck(AuthMiddleWare):
+class AcctPoicyFilter(AuthMiddleWare):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""
     def on_auth(self):
         acct_policy = self.user['product_policy'] or FEE_BUYOUT
@@ -121,7 +134,7 @@ class AcctPoicyCheck(AuthMiddleWare):
         return self.resp
 
 
-auth_objs = [ BasicCheck,GroupCheck,BindCheck,AcctPoicyCheck ]   
+auth_objs = [ BasicFilter,DomainFilter,GroupFilter,BindFilter,AcctPoicyFilter ]   
 
 
 ########################################################################################

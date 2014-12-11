@@ -7,7 +7,7 @@ from pyrad.dictionary import Dictionary
 
 def SendPacket(srv, req):
     try:
-        srv.SendPacket(req)
+        return srv.SendPacket(req)
     except pyrad.client.Timeout:
         print "RADIUS server does not reply"
     except socket.error, error:

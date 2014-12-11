@@ -7,7 +7,7 @@ from pyrad.dictionary import Dictionary
 
 def test_auth():
     srv=Client(server="127.0.0.1",secret="123456",dict=Dictionary("dictionary"))
-    req=srv.CreateAuthPacket(code=pyrad.packet.AccessRequest,User_Name="wjt001")
+    req=srv.CreateAuthPacket(code=pyrad.packet.AccessRequest,User_Name="wjt001@cmcc")
     req["NAS-IP-Address"]     = "192.168.1.10"
     req["NAS-Port"]           = 0
     req["Service-Type"]       = "Login-User"

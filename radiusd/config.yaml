@@ -1,3 +1,7 @@
+system: radiusd
+verson: 1.0
+bas_host_check: false
+bas_default_secret: '123456'
 mysql:
     maxusage: 10
     host: 'localhost'
@@ -5,17 +9,4 @@ mysql:
     passwd: 'root'
     db: 'slcrms'
     charset: "utf8"
-radiusd:
-    version: 1.0
-    debug: false
-    hosts:
-        test:
-            identifier: test
-            addr: 127.0.0.1
-            secret: 123456
-            type: std
-        test2:
-            identifier: test2
-            addr: 192.168.0.184
-            secret: 123456
-            type: std            
+       
