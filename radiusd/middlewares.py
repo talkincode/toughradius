@@ -293,8 +293,8 @@ class AcctPoicyFilter(AuthMiddleWare):
             if utils.is_expire(self.user.get('expire_date')):
                 return self.error('user is  expired')
         elif acct_policy == FEE_TIMES:
-            if int(self.user.get("time_length",0)) <= 0:
-                return self.error('user times poor')    
+            if int(self.user.get("balance",0)) <= 0:
+                return self.error('user balance poor')    
         return self.resp
 
 
@@ -307,7 +307,7 @@ auth_objs = [ BasicFilter,DomainFilter,GroupFilter,BindFilter,AcctPoicyFilter ]
 #
 ########################################################################################
 
-class AcctMiddleWare(object):
+class AccountingMiddleWare(object):
     """ super class """
     def __init__(self, req,user={}):
         self.req = req
@@ -317,7 +317,7 @@ class AcctMiddleWare(object):
         pass
         
 
-class AcctStart(AcctMiddleWare):
+class AccountingStart(AccountingMiddleWare):
     """记账开始包处理"""
     def on_acct(self):
         if not self.req.get_acct_status_type() == STATUS_TYPE_START:
@@ -339,10 +339,10 @@ class AcctStart(AcctMiddleWare):
 
         store.add_online(online)
 
-        log.msg('%s Accounting start request , add new online'%self.user['account_number'],level=logging.INFO)
+        log.msg('%s Accounting start request, add new online'%self.req.get_user_name(),level=logging.INFO)
         
         
-class AcctStop(AcctMiddleWare):
+class AccountingStop(AccountingMiddleWare):
     """记账结束包处理"""
     def on_acct(self):
         if not self.req.get_acct_status_type() == STATUS_TYPE_STOP:
@@ -369,6 +369,8 @@ class AcctStop(AcctMiddleWare):
             ticket.start_source= STATUS_TYPE_STOP
             ticket.stop_source = STATUS_TYPE_STOP
 
+        log.msg('%s Accounting stop request, remove online'%self.req.get_user_name(),level=logging.INFO)
+
         user = store.get_user(ticket.account_number)
 
         def _err_ticket(_ticket):
@@ -381,13 +383,17 @@ class AcctStop(AcctMiddleWare):
             return _err_ticket(ticket)
 
         product = store.get_product(user['product_id'])
-        if product and product['product_policy'] == 0:
+        if not product or product['product_policy'] not in (FEE_BUYOUT,FEE_TIMES):
+            _err_ticket(ticket)
+
+        if product['product_policy'] == FEE_BUYOUT:
             # buyout fee policy
             ticket.fee_receivables = 0
             ticket.acct_fee = 0
             ticket.is_deduct = 0
             store.add_ticket(ticket)
-        elif product and product['product_policy'] == 1:
+
+        elif product['product_policy'] == FEE_TIMES:
             # PrePay fee times policy
             sessiontime = round(req.get_acctsessiontime()/60,0)
             usedfee = round(sessiontime/60*product['fee_price'],0)
@@ -404,12 +410,8 @@ class AcctStop(AcctMiddleWare):
             ticket.acct_fee = usedfee
             ticket.is_deduct = 1
             store.add_ticket(ticket)
-        else:
-            _err_ticket(ticket)
-
-
-
-class AcctUpdate(AcctMiddleWare):
+            
+class AccountingUpdate(AccountingMiddleWare):
     """记账更新包处理"""
     def on_acct(self):
         if not self.req.get_acct_status_type() == STATUS_TYPE_UPDATE:
@@ -420,7 +422,7 @@ class AcctUpdate(AcctMiddleWare):
         if not online:
             user = store.get_user(self.req.get_user_name())
             if not user:
-                return log.err("[Acct] Received an accounting request but user[%s] not exists"%self.req.get_user_name())
+                return log.err("[Acct] Received an accounting update request but user[%s] not exists"%self.req.get_user_name())
                             
             sessiontime = self.req.get_acct_sessiontime()
             updatetime = datetime.datetime.now()
@@ -439,14 +441,19 @@ class AcctUpdate(AcctMiddleWare):
             store.add_online(online)       
 
 
-class AcctClose(AcctMiddleWare):
+class AccountingClose(AccountingMiddleWare):
     """记账启动关闭处理"""
     def on_acct(self):
         if  self.req.get_acct_status_type() in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
             onlines = store.del_nas_onlines(self.req.get_nas_addr()) 
+
+        if self.req.get_acct_status_type() == STATUS_TYPE_ACCT_ON:
+            log.msg('bas accounting on success',level=logging.INFO)
+        else:
+            log.msg('bas accounting off success',level=logging.INFO)
               
 
-acct_objs = [AcctStart,AcctStop,AcctUpdate,AcctClose]
+acct_objs = [AccountingStart,AccountingStop,AccountingUpdate,AccountingClose]
 
 
 
