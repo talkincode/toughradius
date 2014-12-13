@@ -1,0 +1,178 @@
+<%inherit file="../base.html"/>
+
+<%def name="head()">
+<title>在线用户管理</title>
+<script>
+function updateAreaCode() {
+    var node_id = $("#node_id").val();
+    if(node_id.length==0){
+        $("#area_code").empty();
+        $("#area_code").append("<option></option>");
+    }else{
+        $.get("/area/" + node_id + "/data.json", {}, function (data) {
+            $("#area_code").empty();
+            $("#area_code").append("<option></option>");
+            $.each(data, function (index, area) {
+                var is_sel = '${area_code or ""}' == area.area_code ? "selected" : "";
+                $("#area_code").append("<option value='" + area.area_code + "'"+is_sel+">" + area.area_name + "</option>");
+            });
+            updateCourtyardCode();
+        }, "json");
+    }
+}
+
+function updateCourtyardCode() {
+    var node_id = $("#node_id").val();
+    var area_code = $("#area_code").val();
+    if(area_code.length==0){
+        $("#courtyard_code").empty();
+        $("#courtyard_code").append("<option></option>");
+    }else{
+        $.get("/courtyard/" + node_id +"/"+area_code+"/data.json", {}, function (data) {
+            $("#courtyard_code").empty();
+            $("#courtyard_code").append("<option></option>");
+            $.each(data, function (index, courtyard) {
+                var is_sel = '${courtyard_code or ""}' == courtyard.courtyard_code ? "selected" : "";
+                $("#courtyard_code").append("<option value='" + courtyard.courtyard_code + "'"+is_sel+">" + courtyard.courtyard_name + "</option>");
+            });
+        }, "json");
+    }
+}
+
+function whenNodeChange(){
+    updateAreaCode();
+    updateCourtyardCode();
+}
+function whenAreaChange(){
+    updateCourtyardCode();
+}
+$(document).ready(function (){
+     updateAreaCode();
+     updateCourtyardCode();
+
+    $("#realseAll").click(function(){
+        var bas_addr = $("#bas_ipaddr").val();
+        if(bas_addr.length == 0)
+        {
+            alert("请选择bas");
+            return;
+        }
+        if(confirm("是否解锁该bas下所有用户?"))
+        {
+             window.location.href = "/online/releaseAll?bas_ipaddr=" + bas_addr;
+        }
+
+    });
+
+});
+
+</script>
+
+</%def>
+
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span>在线用户管理</div>
+    <div class="panel-body">
+        <form class="form-horizontal" role="form" action="/online" method="post">
+            ${handler.xsrf_form_html()}
+            <div class="form-group">
+                <label for="node_id" class="col-md-1 control-label">组织节点</label>
+                <div class="col-md-3">
+                    <select id="node_id" name="node_id" class="form-control" onchange="whenNodeChange()">
+                        <option></option>
+                        % for node in node_list:
+                          <option value="${node.node_id}" ${node.node_id==node_id and "selected" or ""}>${node.node_name}</option>
+                        % endfor
+                    </select>
+                </div>
+
+                <label for="area_code" class="col-md-1 control-label">区域</label>
+                <div class="col-md-3">
+                    <select id="area_code" name="area_code" class="form-control" onchange="whenAreaChange()">
+
+                    </select>
+                </div>
+
+                <label for="courtyard_code" class="col-md-1 control-label">小区</label>
+                <div class="col-md-3">
+                    <select id="courtyard_code" name="courtyard_code" class="form-control">
+
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="user_name" class="col-md-1 control-label">用户账号</label>
+                <div class="col-md-3">
+                    <input type="text" id="user_name" name="user_name" class="form-control" placeholder="模糊查询" value=${user_name or ""} >
+                </div>
+
+                 <label for="framed_ipaddr" class="col-md-1 control-label">IP地址</label>
+                <div class="col-md-3">
+                    <input id="framed_ipaddr"  name="framed_ipaddr" class="form-control" type="text" value=${ip_addr or ""}>
+                </div>
+
+
+                <label for="mac_addr" class="col-md-1 control-label">MAC地址</label>
+                <div class="col-md-3">
+                    <input type="text" id="mac_addr" name="mac_addr" class="form-control" value=${mac_addr or ""}>
+                </div>
+            </div>
+
+            <div class="form-group">
+
+                <label for="bas_ipaddr" class="col-md-1 control-label">选择bas</label>
+                <div class="col-md-3">
+                     <select id="bas_ipaddr" name="bas_ipaddr" class="form-control">
+                        <option></option>
+                        % for bas in bas_list:
+                          <option value="${bas.ip_addr}" ${bas.ip_addr== bas_ipaddr and "selected" or ""}>${bas.bas_name}</option>
+                        % endfor
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-7">
+                    <button type="submit" class="btn btn-default">查询</button>&nbsp;&nbsp;<button type="button" class="btn btn-default" id="realseAll">BAS用户下线</button>
+                </div>
+            </div>
+        </form>
+        <hr>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>上网账号</th>
+                <th>BAS名称</th>
+                <th>会话标识</th>
+                <th>上线时间</th>
+                <th>用户IP地址</th>
+                <th>用户MAC地址</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+                % for online in page_data.result:
+            <tr>
+                <td>${online.get('userName')}</td>
+                <td>${online.get('basIpAddress')}</td>
+                <td>${online.get('acctSessionId')}</td>
+                <td>${online.get('acctStartTime')}</td>
+                <td>${online.get('framedIpAddress')}</td>
+                <td>${online.get('macAddress')}</td>
+                <td><a class="opt-btn btn-default" href="/online/release?acct_session_id=${online.get('acctSessionId')}&bas_ipaddr=${online.get('basIpAddress')}">解锁</a></td>
+            </tr>
+                % endfor
+            </tbody>
+
+        </table>
+        ${page_data.render()}
+
+    </div>
+</div>
+
+</%def>

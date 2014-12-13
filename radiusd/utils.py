@@ -43,8 +43,34 @@ def is_expire(dstr):
     expire_date = datetime.datetime.strptime("%s 23:59:59"%dstr,"%Y-%m-%d %H:%M:%S")
     now = datetime.datetime.now()
     return expire_date < now
+    
 
+TYPE_MAP = {
+    1 : 'AccessRequest',
+    2 : 'AccessAccept',
+    3 : 'AccessReject',
+    4 : 'AccountingRequest',
+    5 : 'AccountingResponse'
+}
 
+class Storage(dict):
+    def __getattr__(self, key): 
+        try:
+            return self[key]
+        except KeyError, k:
+            raise AttributeError, k
+    
+    def __setattr__(self, key, value): 
+        self[key] = value
+    
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError, k:
+            raise AttributeError, k
+    
+    def __repr__(self):     
+        return '<Storage ' + dict.__repr__(self) + '>'
 
 class AuthPacket2(AuthPacket):
 
@@ -52,6 +78,12 @@ class AuthPacket2(AuthPacket):
             authenticator=None, **attributes):
         AuthPacket.__init__(self, code, id, secret, authenticator, **attributes)
         self.deferred = Deferred()
+        self.source_user = None
+        self.vendor_id = 0
+        self.vlanid = 0
+        self.vlanid2 = 0
+        self.client_macaddr = None
+        self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def format_str(self):
         attr_keys = self.keys()
@@ -81,6 +113,7 @@ class AuthPacket2(AuthPacket):
             **attributes)
         if msg:
             reply.set_reply_msg(tools.EncodeString(msg))
+        reply.source_user = self.get_user_name()
         return reply
 
 
@@ -100,6 +133,7 @@ class AuthPacket2(AuthPacket):
         except:return None
         
     def get_mac_addr(self):
+        if self.client_macaddr:return self.client_macaddr
         try:return tools.DecodeString(self.get(31)[0]).replace("-",":")
         except:return None
 
@@ -121,14 +155,14 @@ class AuthPacket2(AuthPacket):
             return None            
         
     def get_vlanids(self):
-        try:
-            #attr87 = tools.DecodeString(self.get(87)[0])
-            return 0,0
-        except:return 0,0
+        return self.vlanid,self.vlanid2
 
     def get_passwd(self):
         try:return self.PwDecrypt(self.get(2)[0])
-        except:return None        
+        except:
+            import traceback
+            traceback.print_exc()
+            return None        
 
     def get_chappwd(self):
         try:return tools.DecodeOctets(self.get(3)[0])
@@ -164,6 +198,11 @@ class AcctPacket2(AcctPacket):
             authenticator=None, **attributes):
         AcctPacket.__init__(self, code, id, secret, authenticator, **attributes)
         self.deferred = Deferred()
+        self.source_user = None
+        self.vendor_id = 0
+        self.client_macaddr = None
+        self.ticket = {}
+        self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def format_str(self):
         attr_keys = self.keys()
@@ -186,6 +225,7 @@ class AcctPacket2(AcctPacket):
         reply = AcctPacket2(AccountingResponse, self.id,
             self.secret, self.authenticator, dict=self.dict,
             **attributes)
+        reply.source_user = self.get_user_name()
         return reply        
 
     def get_user_name(self):
@@ -193,11 +233,14 @@ class AcctPacket2(AcctPacket):
             user_name = tools.DecodeString(self.get(1)[0])
             if "@" in user_name:
                 return user_name[:user_name.index("@")]
+            else:
+                return user_name
         except:
             return None
  
 
     def get_mac_addr(self):
+        if self.client_macaddr:return self.client_macaddr
         try:return tools.DecodeString(self.get(31)[0]).replace("-",":")
         except:return None
 
@@ -206,12 +249,12 @@ class AcctPacket2(AcctPacket):
         except:return None
 
     def get_nas_port(self):
-        try:return tools.DecodeInteger(self.get(5)[0])
-        except:return None
+        try:return tools.DecodeInteger(self.get(5)[0]) or 0
+        except:return 0
 
     def get_service_type(self):
-        try:return tools.DecodeInteger(self.get(0)[0])
-        except:return None
+        try:return tools.DecodeInteger(self.get(0)[0]) or 0
+        except:return 0
         
     def get_framed_ipaddr(self):
         try:return tools.DecodeAddress(self.get(8)[0])
@@ -226,8 +269,8 @@ class AcctPacket2(AcctPacket):
         except:return None   
 
     def get_session_timeout(self):
-        try:return tools.DecodeInteger(self.get(27)[0])
-        except:return None
+        try:return tools.DecodeInteger(self.get(27)[0]) or 0
+        except:return 0
 
     def get_calling_stationid(self):
         try:return tools.DecodeString(self.get(31)[0])
@@ -238,83 +281,86 @@ class AcctPacket2(AcctPacket):
         except:return None
 
     def get_acct_input_octets(self):
-        try:return tools.DecodeInteger(self.get(42)[0])
-        except:return None
+        try:return tools.DecodeInteger(self.get(42)[0]) or 0
+        except:return 0
 
     def get_acct_output_octets(self):
-        try:return tools.DecodeInteger(self.get(43)[0])
-        except:return None
+        try:return tools.DecodeInteger(self.get(43)[0]) or 0
+        except:return 0
 
     def get_acct_sessionid(self):
         try:return tools.DecodeString(self.get(44)[0])
         except:return None                                                         
 
     def get_acct_sessiontime(self):
-        try:return tools.DecodeInteger(self.get(46)[0])
-        except:return None                                                             
+        try:return tools.DecodeInteger(self.get(46)[0]) or 0
+        except:return 0                                                             
 
     def get_acct_input_packets(self):
-        try:return tools.DecodeInteger(self.get(47)[0])
-        except:return None                                                       
+        try:return tools.DecodeInteger(self.get(47)[0]) or 0
+        except:return 0                                                       
 
     def get_acct_output_packets(self):
-        try:return tools.DecodeInteger(self.get(48)[0])
-        except:return None           
+        try:return tools.DecodeInteger(self.get(48)[0]) or 0
+        except:return 0           
 
     def get_acct_terminate_cause(self):
-        try:return tools.DecodeInteger(self.get(49)[0])
-        except:return None           
+        try:return tools.DecodeInteger(self.get(49)[0]) or 0
+        except:return 0           
 
     def get_acct_input_gigawords(self):
-        try:return tools.DecodeInteger(self.get(52)[0])
-        except:return None       
+        try:return tools.DecodeInteger(self.get(52)[0]) or 0
+        except:return 0       
 
     def get_acct_output_gigawords(self):
-        try:return tools.DecodeInteger(self.get(53)[0])
-        except:return None                                                         
+        try:return tools.DecodeInteger(self.get(53)[0]) or 0
+        except:return 0                                                         
 
     def get_event_timestamp(self,timetype=0):
         try:
             _time = tools.DecodeDate(self.get(55)[0])
             if timetype == 0:
-                return datetime.datetime.fromtimestamp(_time).strptime("%Y-%m-%d %H:%M:%S")
+                return datetime.datetime.fromtimestamp(_time).strftime("%Y-%m-%d %H:%M:%S")
             else:
-                return datetime.datetime.fromtimestamp(_time-(8*3600)).strptime("%Y-%m-%d %H:%M:%S")
+                return datetime.datetime.fromtimestamp(_time-(8*3600)).strftime("%Y-%m-%d %H:%M:%S")
         except:
             return None
 
     def get_nas_port_type(self):
-        try:return tools.DecodeInteger(self.get(61)[0])
-        except:return None   
+        try:return tools.DecodeInteger(self.get(61)[0]) or 0
+        except:return 0   
 
     def get_nas_portid(self):
         try:return tools.DecodeString(self.get(87)[0])
         except:return None        
 
     def get_ticket(self):
-        return dict(
-        user_name = self.get_user_name(),
-        mac_addr = self.get_mac_addr(),
-        nas_addr = self.get_nas_addr(),
-        nas_port = self.get_nas_port(),
-        service_type = self.get_service_type(),
-        framed_ipaddr = self.get_framed_ipaddr(),
-        framed_netmask = self.get_framed_netmask(),
-        nas_class = self.get_nas_class(),
-        session_timeout = self.get_session_timeout(),
-        calling_stationid = self.get_calling_stationid(),
-        acct_status_type = self.get_acct_status_type(),
-        acct_input_octets = self.get_acct_input_octets(),
-        acct_output_octets = self.get_acct_output_octets(),
-        acct_sessionid = self.get_acct_sessionid(),
-        acct_sessiontime = self.get_acct_sessiontime(),
-        acct_input_packets = self.get_acct_input_packets(),
-        acct_output_packets = self.get_acct_output_packets(),
-        acct_terminate_cause = self.get_acct_terminate_cause(),
-        acct_input_gigawords = self.get_acct_input_gigawords(),
-        acct_output_gigawords = self.get_acct_output_gigawords(),
-        event_timestamp = self.get_event_timestamp(),
-        nas_port_type=self.get_nas_port_type(),
-        nas_portid=self.get_nas_portid())
+        if self.ticket:return self.ticket
+        self.ticket = Storage(
+            account_number = self.get_user_name(),
+            mac_addr = self.get_mac_addr(),
+            nas_addr = self.get_nas_addr(),
+            nas_port = self.get_nas_port(),
+            service_type = self.get_service_type(),
+            framed_ipaddr = self.get_framed_ipaddr(),
+            framed_netmask = self.get_framed_netmask(),
+            nas_class = self.get_nas_class(),
+            session_timeout = self.get_session_timeout(),
+            calling_stationid = self.get_calling_stationid(),
+            acct_status_type = self.get_acct_status_type(),
+            acct_input_octets = self.get_acct_input_octets(),
+            acct_output_octets = self.get_acct_output_octets(),
+            acct_session_id = self.get_acct_sessionid(),
+            acct_session_time = self.get_acct_sessiontime(),
+            acct_input_packets = self.get_acct_input_packets(),
+            acct_output_packets = self.get_acct_output_packets(),
+            acct_terminate_cause = self.get_acct_terminate_cause(),
+            acct_input_gigawords = self.get_acct_input_gigawords(),
+            acct_output_gigawords = self.get_acct_output_gigawords(),
+            event_timestamp = self.get_event_timestamp(),
+            nas_port_type=self.get_nas_port_type(),
+            nas_port_id=self.get_nas_portid()
+        )
+        return self.ticket
 
 

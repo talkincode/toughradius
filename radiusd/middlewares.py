@@ -8,6 +8,172 @@ import logging
 import datetime
 import utils
 
+########################################################################################
+#
+#  parse middlewares
+#
+########################################################################################
+class ParseMiddleWare(object):
+    """ super class """
+    def __init__(self,req):
+        self.req = req
+
+    def on_parse(self):
+        pass
+
+#  mac parse 
+class MacParseFilter(ParseMiddleWare):
+    """解析MAC地址"""
+    def __init__(self,req):
+        ParseMiddleWare.__init__(self,req)
+        self.parses = {
+            '9' : self.parse_cisco,
+            '2352' : self.parse_radback,
+            '3902' : self.parse_zte,
+            '25506' : self.parse_h3c
+        }
+        
+    def parse_cisco(self):
+        for attr in self.req:
+            if attr not in 'Cisco-AVPair':
+                continue
+            attr_val = self.req[attr]
+            if attr_val.startswith('client-mac-address'):
+                mac_addr = attr_val[len("client-mac-address="):]
+                mac_addr = mac_addr.replace('.','')
+                _mac = (mac_addr[0:2],mac_addr[2:4],mac_addr[4:6],mac_addr[6:8],mac_addr[8:10],mac_addr[10:])
+                self.req.client_macaddr =  ':'.join(_mac)
+    
+    def parse_radback(self):
+        mac_addr = self.req.get('Mac-Addr')
+        if mac_addr:self.req.client_macaddr = mac_addr.replace('-',':')
+        
+    def parse_zte(self):
+        mac_addr = self.req.get('Calling-Station-Id')
+        if mac_addr:
+            mac_addr = mac_addr[12:] 
+            _mac = (mac_addr[0:2],mac_addr[2:4],mac_addr[4:6],mac_addr[6:8],mac_addr[8:10],mac_addr[10:])
+            self.req.client_macaddr =  ':'.join(_mac)
+            
+    def parse_h3c(self):
+        mac_addr = self.req.get('H3C-Ip-Host-Addr')
+        if mac_addr and len(mac_addr) > 17:
+            self.req.client_macaddr = mac_addr[:-17]
+        else:
+            self.req.client_macaddr = mac_addr
+        
+    def on_parse(self):
+        try:
+            if self.req.vendor_id in self.parses:
+                self.parses[self.req.vendor_id]()
+        except Exception as err:
+            log.err("parse vlan error %s"%str(err))
+     
+#  vlan parse          
+class VlanParseFilter(ParseMiddleWare):
+    """解析VLAN"""
+    def __init__(self,req):
+        ParseMiddleWare.__init__(self,req)
+        self.parses = {
+            '0' : self.parse_std,
+            '9' : self.parse_cisco,
+            '3041' : self.parse_cisco,
+            '2352' : self.parse_radback,
+            '2011' : self.parse_std,
+            '25506' : self.parse_std,
+            '3902' : self.parse_zte,
+            '14988' : self.parse_ros
+        }
+        
+    def parse_cisco(self):
+        '''phy_slot/phy_subslot/phy_port:XPI.XCI'''
+        nasportid = self.req.get('NAS-Port-Id')
+        if not nasportid:return
+        nasportid = nasportid.lower()
+        def parse_vlanid():
+            ind = nasportid.find(':')
+            if ind == -1:return
+            ind2 = nasportid.find('.',ind)
+            if ind2 == -1:
+                self.req.vlanid = int(nasportid[ind+1])
+            else:
+                self.req.vlanid = int(nasportid[ind+1:ind2])
+        def parse_vlanid2():
+            ind = nasportid.find('.')
+            if ind == -1:return
+            ind2 = nasportid.find(' ',ind)
+            if ind2 == -1:
+                self.req.vlanid2 = int(nasportid[ind+1])
+            else:
+                self.req.vlanid2 = int(nasportid[ind+1:ind2])
+                
+        parse_vlanid()
+        parse_vlanid2()
+        
+    def parse_radback(self):
+        self.parse_ros()
+        
+    def parse_zte(self):
+        self.parse_ros()
+        
+    def parse_std(self):
+        ''''''
+        nasportid = self.req.get('NAS-Port-Id')
+        if not nasportid:return
+        nasportid = nasportid.lower()
+        def parse_vlanid():
+            ind = nasportid.find('vlanid=')
+            if ind == -1:return
+            ind2 = nasportid.find(';',ind)
+            if ind2 == -1:
+                self.req.vlanid = int(nasportid[ind+7])
+            else:
+                self.req.vlanid = int(nasportid[ind+7:ind2])
+                
+        def parse_vlanid2():
+            ind = nasportid.find('vlanid2=')
+            if ind == -1:return
+            ind2 = nasportid.find(';',ind)
+            if ind2 == -1:
+                self.req.vlanid2 = int(nasportid[ind+8])
+            else:
+                self.req.vlanid2 = int(nasportid[ind+8:ind2])
+                
+        parse_vlanid()
+        parse_vlanid2() 
+        
+    def parse_ros(self):
+        ''''''
+        nasportid = self.req.get('NAS-Port-Id')
+        if not nasportid:return
+        nasportid = nasportid.lower()
+        def parse_vlanid():
+            ind = nasportid.find(':')
+            if ind == -1:return        
+            ind2 = nasportid.find(' ',ind)
+            if ind2 == -1:return
+            self.req.vlanid = int(nasportid[ind+1:ind2])
+            
+        def parse_vlanid2():
+            ind = nasportid.find(':')
+            if ind == -1:return
+            ind2 = nasportid.find('.',ind)
+            if ind2 == -1:return
+            self.req.vlanid2 = int(nasportid[ind+1:ind2])
+            
+        parse_vlanid()
+        parse_vlanid2()               
+        
+    def on_parse(self):
+        try:
+            if self.req.vendor_id in self.parses:
+                self.parses[self.req.vendor_id]()
+        except Exception as err:
+            log.err("parse vlan error %s"%str(err))
+        
+
+auth_parse_objs = [MacParseFilter,VlanParseFilter]
+acct_parse_objs = [MacParseFilter]
 
 ########################################################################################
 #
@@ -29,7 +195,8 @@ class AuthMiddleWare(object):
         self.resp.code = packet.AccessReject
         self.resp['Reply-Message'] = errmsg
         return self.resp
-      
+        
+
 class BasicFilter(AuthMiddleWare):
     """执行基本校验：密码校验，状态检测，并发数限制"""
     def on_auth(self):
@@ -52,7 +219,8 @@ class DomainFilter(AuthMiddleWare):
         if domain and user_domain:
             if domain not in user_domain:
                 return self.error('user domain %s not match'%domain  )
-        return self.resp        
+        return self.resp       
+              
 
 class BindFilter(AuthMiddleWare):
     """执行绑定校验，检查MAC地址与VLANID"""
@@ -126,11 +294,7 @@ class AcctPoicyFilter(AuthMiddleWare):
                 return self.error('user is  expired')
         elif acct_policy == FEE_TIMES:
             if int(self.user.get("time_length",0)) <= 0:
-                return self.error('user times poor')
-        elif acct_policy == FEE_FLOW:
-            if int(self.user.get("flow_length",0)) <= 0:
-                return self.error('user credit poor')       
-
+                return self.error('user times poor')    
         return self.resp
 
 
@@ -154,58 +318,135 @@ class AcctMiddleWare(object):
         
 
 class AcctStart(AcctMiddleWare):
-    """acct start"""
+    """记账开始包处理"""
     def on_acct(self):
         if not self.req.get_acct_status_type() == STATUS_TYPE_START:
             return
-
+            
         if not self.user:
-            log.err('user %s not exists'%self.req.get_user_name())
-            return
-
-        online = dict(
-            user_name = self.user['account_number'],
+            return log.err('user %s not exists'%self.req.get_user_name())
+            
+        online = utils.Storage(
+            account_number = self.user['account_number'],
             nas_addr = self.req.get_nas_addr(),
             sessionid = self.req.get_acct_sessionid(),
             acct_start_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
             framed_ipaddr = self.req.get_framed_ipaddr(),
             macaddr = self.req.get_mac_addr(),
             nasportid = self.req.get_nas_portid(),
-            startsource = STATUS_TYPE_START)
+            start_source = STATUS_TYPE_START
+        )
 
-        # rdb.hmset('online:%s:%s'%(online['nas_addr'],online['sessionid']),online)
+        store.add_online(online)
 
         log.msg('%s Accounting start request , add new online'%self.user['account_number'],level=logging.INFO)
         
         
 class AcctStop(AcctMiddleWare):
-    """acct stop"""
+    """记账结束包处理"""
     def on_acct(self):
         if not self.req.get_acct_status_type() == STATUS_TYPE_STOP:
-            return        
+            return  
+        
+        ticket = self.req.get_ticket()
+        if not ticket.nas_addr:
+            ticket.nas_addr = req.source[0]
+            
+        _datetime = datetime.datetime.now() 
+        online = store.get_online(ticket.nas_addr,ticket.acct_session_id)    
+        if online:
+            store.del_online(ticket.nas_addr,ticket.acct_session_id)
+            ticket.acct_start_time = online['acct_start_time']
+            ticket.acct_stop_time= _datetime.strftime( "%Y-%m-%d %H:%M:%S")
+            ticket.start_source = online['start_source']
+            ticket.stop_source = STATUS_TYPE_STOP
+        else:
+            session_time = ticket.acct_session_time 
+            stop_time = _datetime.strftime( "%Y-%m-%d %H:%M:%S")
+            start_time = (_datetime - datetime.timedelta(seconds=int(session_time))).strftime( "%Y-%m-%d %H:%M:%S")
+            ticket.acct_start_time = start_time
+            ticket.acct_stop_time = stop_time
+            ticket.start_source= STATUS_TYPE_STOP
+            ticket.stop_source = STATUS_TYPE_STOP
+
+        user = store.get_user(ticket.account_number)
+
+        def _err_ticket(_ticket):
+            _ticket.fee_receivables= 0
+            _ticket.acct_fee = 0
+            _ticket.is_deduct = 0
+            store.add_ticket(_ticket)
+
+        if not user:
+            return _err_ticket(ticket)
+
+        product = store.get_product(user['product_id'])
+        if product and product['product_policy'] == 0:
+            # buyout fee policy
+            ticket.fee_receivables = 0
+            ticket.acct_fee = 0
+            ticket.is_deduct = 0
+            store.add_ticket(ticket)
+        elif product and product['product_policy'] == 1:
+            # PrePay fee times policy
+            sessiontime = round(req.get_acctsessiontime()/60,0)
+            usedfee = round(sessiontime/60*product['fee_price'],0)
+            remaind = round(sessiontime%60,0)
+            if remaind > 0 :
+                usedfee = usedfee + round(remaind*product.fee_price/60,0);
+            balance = user['balance'] - usedfee
+            if balance < 0:
+                user['balance'] = 0
+            else:
+                user['balance'] = balance
+            store.update_user_balance(user['account_number'],balance)
+            ticket.fee_receivables = usedfee
+            ticket.acct_fee = usedfee
+            ticket.is_deduct = 1
+            store.add_ticket(ticket)
+        else:
+            _err_ticket(ticket)
+
 
 
 class AcctUpdate(AcctMiddleWare):
-    """acct update"""
+    """记账更新包处理"""
     def on_acct(self):
         if not self.req.get_acct_status_type() == STATUS_TYPE_UPDATE:
-            return        
+            return   
 
-class AcctSOn(AcctMiddleWare):
-    """acct on"""
+        online = store.get_online(self.req.get_nas_addr(),self.req.get_acct_sessionid())  
+
+        if not online:
+            user = store.get_user(self.req.get_user_name())
+            if not user:
+                return log.err("[Acct] Received an accounting request but user[%s] not exists"%self.req.get_user_name())
+                            
+            sessiontime = self.req.get_acct_sessiontime()
+            updatetime = datetime.datetime.now()
+            _starttime = updatetime - datetime.timedelta(seconds=sessiontime)       
+
+            online = utils.Storage(
+                account_number = self.user['account_number'],
+                nas_addr = self.req.get_nas_addr(),
+                sessionid = self.req.get_acct_sessionid(),
+                acct_start_time = _starttime.strftime( "%Y-%m-%d %H:%M:%S"),
+                framed_ipaddr = self.req.get_framed_ipaddr(),
+                macaddr = self.req.get_mac_addr(),
+                nasportid = self.req.get_nas_portid(),
+                start_source = STATUS_TYPE_UPDATE
+            )
+            store.add_online(online)       
+
+
+class AcctClose(AcctMiddleWare):
+    """记账启动关闭处理"""
     def on_acct(self):
-        if not self.req.get_acct_status_type() == STATUS_TYPE_ACCT_ON:
-            return                     
+        if  self.req.get_acct_status_type() in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
+            onlines = store.del_nas_onlines(self.req.get_nas_addr()) 
+              
 
-
-class AcctSOff(AcctMiddleWare):
-    """acct off"""
-    def on_acct(self):
-        if not self.req.get_acct_status_type() == STATUS_TYPE_ACCT_OFF:
-            return           
-
-
-acct_objs = [AcctStart,AcctStop,AcctUpdate,AcctSOn,AcctSOff]
+acct_objs = [AcctStart,AcctStop,AcctUpdate,AcctClose]
 
 
 

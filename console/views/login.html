@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>微信公众平台管理登录</title>
+        <!-- Bootstrap core CSS -->
+        <link href="/static/css/bootstrap.css" rel="stylesheet">
+        <!-- Custom styles for this template -->
+        <link href="/static/css/login.css" rel="stylesheet">
+        <!-- Just for debugging purposes. Don't actually copy this line! -->
+        <!--[if lt IE 9]>
+        <script src="/static/js/ie8-responsive-file-warning.js"></script><![endif]-->
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="/static/js/html5shiv.min.js"></script>
+        <script src="/static/js/respond.min.js"></script>
+        <![endif]-->
+        <script type="application/javascript" src="/static/js/jquery-1.11.0.min.js"></script>
+        <script>
+            function doLogin()
+            {
+                var username = $("#username").val();
+                var password = $("#password").val();
+                params = {username:username,password:password,_xsrf: ''};
+                $.post("/login", params, function (data) {
+                    if (data.code > 0) {
+                        alert(data.msg)
+                        return false;
+                    }
+                    else {
+                        window.location.href = "/";
+                    }
+                },"json");
+            }
+        </script>
+    </head>
+        <body>
+            <div class="container">
+                <form class="form-signin" role="form" action="/login" method="post">
+                <input type="hidden" name="_xsrf" value="${}">
+                <h2 class="form-signin-heading">管理登录</h2>
+                <input id="username" type="text" class="form-control" placeholder="输入登录名" required autofocus>
+                <input id="password" type="password" class="form-control" placeholder="输入密码" required>
+                <button class="btn btn-lg btn-primary btn-block" type="button" onclick="doLogin();" >登录</button>
+            </form>
+        </div>
+    </body>
+</html>

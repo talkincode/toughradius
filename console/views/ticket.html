@@ -1,0 +1,107 @@
+<%inherit file="../base.html"/>
+
+<%def name="head()">
+<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
+<link rel="stylesheet" href="/static/js/bootstrap-datetimepicker.min.css">
+   <script>
+    $(document).ready(function(){
+        $("#query_begin_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+        $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+    });
+
+   </script>
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span>上网记录查询</div>
+    <div class="panel-body">
+        <form class="form-horizontal" role="form" action="/ticket">
+            ${handler.xsrf_form_html()}
+             % if msg:
+                <div class="alert alert-warning">${msg}</div>
+            % endif
+            <div class="form-group">
+                <label for="user_name" class="col-md-1 control-label">用户账号</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="user_name" name="user_name" class="form-control">
+                </div>
+                <label for="frame_ip_address" class="col-md-1 control-label">IP地址</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="frame_ip_address" name="frame_ip_address" class="form-control" placeholder="精确查询">
+                </div>
+
+
+                <label for="node_id" class="col-md-1 control-label">组织节点</label>
+
+                <div class="col-md-3">
+                    <select id="node_id" name="node_id" class="form-control">
+                        <option></option>
+                        % for node in node_list:
+                          <option value="${node.node_id}" ${node.node_id==node_id and "selected" or ""}>${node.node_name}</option>
+                        % endfor
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="mac_address" class="col-md-1 control-label">MAC地址</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="mac_address" name="mac_address" class="form-control" placeholder="精确查询">
+                </div>
+
+                <label for="query_begin_time" class="col-md-1 control-label">上网时间</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="query_begin_time" name="query_begin_time" value="${query_begin_time}" class="form-control form_datetime"  >
+                </div>
+                 <label for="query_end_time" class="col-md-1 control-label">————</label>
+                <div class="col-md-3">
+                    <input type="text" id="query_end_time" name="query_end_time" value="${query_end_time}"  class="form-control form_datetime">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-7">
+                    <button type="submit" class="btn btn-default">查询</button>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>上网账号</th>
+                <th>客户端IP</th>
+                <th>BAS名称</th>
+                <th>会话标识</th>
+                <th>计费开始时间</th>
+                <th>计费结束时间</th>
+                <th>MAC地址</th>
+                <th>端口信息</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for ticket in page_data.result:
+            <tr>
+                <td>${ticket.get('userName')}</a></td>
+                <td>${ticket.get('framedIpAddress')}</td>
+                <td>${ticket.get('nasIpAddress')}</td>
+                <td>${ticket.get('acctSessionId')}</td>
+                <td>${ticket.get('acctStartTime')}</td>
+                <td>${ticket.get('acctStopTime')}</td>
+                <td>${ticket.get('callingStationId')}</td>
+                <td>${ticket.get('nasPortId')}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+        % if page_data:
+            ${page_data.render()}
+        % endif
+    </div>
+</div>
+
+
+</%def>
