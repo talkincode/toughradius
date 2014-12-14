@@ -1,7 +1,5 @@
 system: radiusd
 verson: 1.0
-bas_host_check: false
-bas_default_secret: '123456'
 mysql:
     maxusage: 10
     host: 'localhost'

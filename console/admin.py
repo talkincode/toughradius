@@ -20,6 +20,7 @@ import functools
 import urllib
 import models
 import forms
+import decimal
 
 ###############################################################################
 # init                ########################################################
@@ -35,9 +36,23 @@ app.config.update(dict(
     page_size = 20,
 ))
 
+decimal.getcontext().prec = 11
+decimal.getcontext().rounding = decimal.ROUND_UP
+
+def fen2yuan(fen):
+    f = decimal.Decimal(fen)
+    y = f / decimal.Decimal(100)
+    return str(y.quantize(decimal.Decimal('1.00')))
+
+def yuan2fen(yuan):
+    y = decimal.Decimal(yuan)
+    f = y * decimal.Decimal(100)
+    return int(f.to_integral_value())
+
 MakoTemplate.defaults.update(dict(
     system_name = 'Radius Console',
     get_cookie = lambda name: request.get_cookie(name,secret=app.config['secret']),
+    fen2yuan = fen2yuan,
     request = request
 ))
 
@@ -73,6 +88,8 @@ def get_page_data(query):
     page_data = Paginator(_page_url, page, query.count(), page_size)
     page_data.result = query.limit(page_size).offset(offset)
     return page_data
+
+
 
 ###############################################################################
 # Basic handle         ########################################################
@@ -170,50 +187,132 @@ def roster(db):
     return render("roster_list", page_data = get_page_data(db.query(models.SlcRadRoster)))
 
 ################ user manage ################################
-	               
+                   
 @app.route('/user',apply=auth_opr,method=['GET','POST'])
 def user_query(db):   
-	node_id = request.params.get('node_id')
-	product_id = request.params.get('product_id')
-	user_name = request.params.get('user_name')
-	status = request.params.get('status')
-	user_query = db.query(
-			models.SlcMember.realname,
-			models.SlcRadAccount.member_id,
-			models.SlcRadAccount.account_number,
-			models.SlcRadAccount.expire_date,
-			models.SlcRadAccount.balance,
-			models.SlcRadAccount.time_length,
-			models.SlcRadAccount.status,
-			models.SlcRadAccount.create_time,
-			models.SlcRadProduct.product_name
-		).filter(
-			models.SlcRadProduct.id == models.SlcRadAccount.product_id,
-			models.SlcMember.member_id == models.SlcRadAccount.member_id
-		)
-	if node_id:
-		user_query = user_query.filter(models.SlcMember.node_id == node_id)
-	if product_id:
-		user_query = user_query.filter(models.SlcRadAccount.product_id)
-	if user_name:
-		user_query = user_query.filter(models.SlcRadAccount.account_number.like('%'+user_name+'%'))
-	if status:
-		user_query = user_query.filter(models.SlcRadAccount.status == status)
-		
-	return render("user_list", page_data = get_page_data(user_query),
-	               node_list=db.query(models.SlcNode), 
-	               product_list=db.query(models.SlcRadProduct),**request.params)
+    node_id = request.params.get('node_id')
+    product_id = request.params.get('product_id')
+    user_name = request.params.get('user_name')
+    status = request.params.get('status')
+    _query = db.query(
+            models.SlcMember.realname,
+            models.SlcRadAccount.member_id,
+            models.SlcRadAccount.account_number,
+            models.SlcRadAccount.expire_date,
+            models.SlcRadAccount.balance,
+            models.SlcRadAccount.time_length,
+            models.SlcRadAccount.status,
+            models.SlcRadAccount.create_time,
+            models.SlcRadProduct.product_name
+        ).filter(
+            models.SlcRadProduct.id == models.SlcRadAccount.product_id,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id
+        )
+    if node_id:
+        _query = _query.filter(models.SlcMember.node_id == node_id)
+    if product_id:
+        _query = _query.filter(models.SlcRadAccount.product_id)
+    if user_name:
+        _query = _query.filter(models.SlcRadAccount.account_number.like('%'+user_name+'%'))
+    if status:
+        _query = _query.filter(models.SlcRadAccount.status == status)
+        
+    return render("user_list", page_data = get_page_data(_query),
+                   node_list=db.query(models.SlcNode), 
+                   product_list=db.query(models.SlcRadProduct),**request.params)
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
     return render("user_trace", bas_list=db.query(models.SlcRadBas))
     
+################ online manage ################################
     
+@app.route('/online',apply=auth_opr,method=['GET','POST'])
+def online_query(db): 
+    node_id = request.params.get('node_id')
+    account_number = request.params.get('account_number')  
+    framed_ipaddr = request.params.get('framed_ipaddr')  
+    mac_addr = request.params.get('mac_addr')  
+    nas_addr = request.params.get('nas_addr')  
+    _query = db.query(
+        models.SlcRadOnline.id,
+        models.SlcRadOnline.account_number,
+        models.SlcRadOnline.nas_addr,
+        models.SlcRadOnline.acct_session_id,
+        models.SlcRadOnline.acct_start_time,
+        models.SlcRadOnline.framed_ipaddr,
+        models.SlcRadOnline.mac_addr,
+        models.SlcRadOnline.nas_port_id,
+        models.SlcRadOnline.start_source,
+        models.SlcMember.node_id,
+        models.SlcMember.realname
+    ).filter(
+            models.SlcRadOnline.account_number == models.SlcRadAccount.account_number,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id
+    )
+    if node_id:
+        _query = _query.filter(models.SlcMember.node_id == node_id)
+    if account_number:
+        _query = _query.filter(models.SlcRadOnline.account_number.like('%'+account_number+'%'))
+    if framed_ipaddr:
+        _query = _query.filter(models.SlcRadOnline.framed_ipaddr == framed_ipaddr)
+    if mac_addr:
+        _query = _query.filter(models.SlcRadOnline.mac_addr == mac_addr)
+    if nas_addr:
+        _query = _query.filter(models.SlcRadOnline.nas_addr == nas_addr)
+
+    return render("online_list", page_data = get_page_data(_query),
+                   node_list=db.query(models.SlcNode), 
+                   bas_list=db.query(models.SlcRadBas),**request.params)
+
+################ ticket manage ################################
+@app.route('/ticket',apply=auth_opr,method=['GET','POST'])
+def ticket_query(db): 
+    node_id = request.params.get('node_id')
+    account_number = request.params.get('account_number')  
+    framed_ipaddr = request.params.get('framed_ipaddr')  
+    mac_addr = request.params.get('mac_addr')  
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(
+        models.SlcRadTicket.id,
+        models.SlcRadTicket.account_number,
+        models.SlcRadTicket.nas_addr,
+        models.SlcRadTicket.acct_session_id,
+        models.SlcRadTicket.acct_start_time,
+        models.SlcRadTicket.acct_stop_time,
+        models.SlcRadTicket.framed_ipaddr,
+        models.SlcRadTicket.mac_addr,
+        models.SlcRadTicket.nas_port_id,
+        models.SlcRadTicket.acct_fee,
+        models.SlcRadTicket.is_deduct,
+        models.SlcMember.node_id,
+        models.SlcMember.realname
+    ).filter(
+            models.SlcRadTicket.account_number == models.SlcRadAccount.account_number,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id
+    )
+    if node_id:
+        _query = _query.filter(models.SlcMember.node_id == node_id)
+    if account_number:
+        _query = _query.filter(models.SlcRadTicket.account_number.like('%'+account_number+'%'))
+    if framed_ipaddr:
+        _query = _query.filter(models.SlcRadTicket.framed_ipaddr == framed_ipaddr)
+    if mac_addr:
+        _query = _query.filter(models.SlcRadTicket.mac_addr == mac_addr)
+    if query_begin_time:
+        _query = _query.filter(models.SlcRadTicket.acct_start_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcRadTicket.acct_stop_time <= query_end_time)
+
+    return render("ticket_list", page_data = get_page_data(_query),
+               node_list=db.query(models.SlcNode),**request.params)
+
     
 ###############################################################################
 # run server                                                                  #
 ###############################################################################
 
 if __name__ == "__main__":
-    runserver(app, host='0.0.0.0', port=8080 ,server="twisted",debug=True,reloader=True)
+    runserver(app, host='0.0.0.0', port=8080 ,debug=True,reloader=True)
 

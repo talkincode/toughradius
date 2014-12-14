@@ -329,11 +329,11 @@ class AccountingStart(AccountingMiddleWare):
         online = utils.Storage(
             account_number = self.user['account_number'],
             nas_addr = self.req.get_nas_addr(),
-            sessionid = self.req.get_acct_sessionid(),
+            acct_session_id = self.req.get_acct_sessionid(),
             acct_start_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
             framed_ipaddr = self.req.get_framed_ipaddr(),
-            macaddr = self.req.get_mac_addr(),
-            nasportid = self.req.get_nas_portid(),
+            mac_addr = self.req.get_mac_addr(),
+            nas_port_id = self.req.get_nas_portid(),
             start_source = STATUS_TYPE_START
         )
 
@@ -431,11 +431,11 @@ class AccountingUpdate(AccountingMiddleWare):
             online = utils.Storage(
                 account_number = self.user['account_number'],
                 nas_addr = self.req.get_nas_addr(),
-                sessionid = self.req.get_acct_sessionid(),
+                acct_session_id = self.req.get_acct_sessionid(),
                 acct_start_time = _starttime.strftime( "%Y-%m-%d %H:%M:%S"),
                 framed_ipaddr = self.req.get_framed_ipaddr(),
-                macaddr = self.req.get_mac_addr(),
-                nasportid = self.req.get_nas_portid(),
+                mac_addr = self.req.get_mac_addr(),
+                nas_port_id = self.req.get_nas_portid(),
                 start_source = STATUS_TYPE_UPDATE
             )
             store.add_online(online)       
@@ -444,8 +444,10 @@ class AccountingUpdate(AccountingMiddleWare):
 class AccountingClose(AccountingMiddleWare):
     """记账启动关闭处理"""
     def on_acct(self):
-        if  self.req.get_acct_status_type() in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
-            onlines = store.del_nas_onlines(self.req.get_nas_addr()) 
+        if  self.req.get_acct_status_type() not in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
+            return
+            
+        onlines = store.del_nas_onlines(self.req.get_nas_addr()) 
 
         if self.req.get_acct_status_type() == STATUS_TYPE_ACCT_ON:
             log.msg('bas accounting on success',level=logging.INFO)

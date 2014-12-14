@@ -21,9 +21,7 @@
         showMessage: function (message) {
             $("#inbox").prepend('<div class="well well-sm">'
              + message.time 
-             + " ("
-             + message.host
-             + ") :: " + message.data + '</div>');
+             + " :: " + message.data + '</div>');
         },
 
         onOpen: function(event){
@@ -40,7 +38,7 @@
         }
         data = JSON.stringify(message);
         updater.socket.send(data);
-        updater.timer = setTimeout("doGetLastTrace()", 1000);
+        updater.timer = setTimeout("doGetLastTrace()", 100);
     }
     
     function doGetUserTrace() {

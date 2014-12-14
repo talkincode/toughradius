@@ -257,17 +257,19 @@ class SlcRadTicket(DeclarativeBase):
 class SlcRadOnline(DeclarativeBase):
     __tablename__ = 'slc_rad_online'
 
-    __table_args__ = {}  
+    __table_args__ = {
+        'mysql_engine' : 'MEMORY'
+    }  
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
     account_number = Column(u'account_number', VARCHAR(length=32), nullable=False)
     nas_addr = Column(u'nas_addr', VARCHAR(length=32), nullable=False)
-    sessionid = Column(u'sessionid', VARCHAR(length=64), nullable=False)
+    acct_session_id = Column(u'acct_session_id', VARCHAR(length=64), nullable=False)
     acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False)
     framed_ipaddr = Column(u'framed_ipaddr', VARCHAR(length=32), nullable=False)
-    macaddr = Column(u'macaddr', VARCHAR(length=32), nullable=False)
-    nasportid = Column(u'nasportid', VARCHAR(length=64), nullable=False)
+    mac_addr = Column(u'mac_addr', VARCHAR(length=32), nullable=False)
+    nas_port_id = Column(u'nas_port_id', VARCHAR(length=64), nullable=False)
     start_source = Column(u'start_source', SMALLINT(), nullable=False)
 
 def build_db():
@@ -307,7 +309,7 @@ def init_db():
     bas = SlcRadBas()
     bas.id = 1
     bas.vendor_id = '14896'
-    bas.ip_addr = '127.0.0.1'
+    bas.ip_addr = '192.168.1.102'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
     bas.status = 1
@@ -350,30 +352,31 @@ def init_db():
     member.update_time = '2014-12-10 23:23:21'
     db.add(member)
 
-    account = SlcRadAccount()
-    account.account_number = 'wjt001'
-    account.member_id = 100001
-    account.product_id = 1
-    account.domain_name = 'cmcc'
-    account.group_id = 1
-    account.install_address = 'hunan'
-    account.ip_address = ''
-    account.mac_addr = ''
-    account.password = '888888'
-    account.status = 1
-    account.balance = 0
-    account.basic_fee = 0
-    account.time_length = 0
-    account.flow_length = 0
-    account.expire_date = '2015-12-30'
-    account.user_concur_number = 0
-    account.bind_mac = 0
-    account.bind_vlan = 0
-    account.vlan_id = 0
-    account.vlan_id2 = 0
-    account.create_time = '2014-12-10 23:23:21'
-    account.update_time = '2014-12-10 23:23:21'
-    db.add(account)
+    for i in range(1000):
+        account = SlcRadAccount()
+        account.account_number = 'test00%s'%i
+        account.member_id = 100001
+        account.product_id = 1
+        account.domain_name = 'cmcc'
+        account.group_id = 1
+        account.install_address = 'hunan'
+        account.ip_address = ''
+        account.mac_addr = ''
+        account.password = '888888'
+        account.status = 1
+        account.balance = 0
+        account.basic_fee = 0
+        account.time_length = 0
+        account.flow_length = 0
+        account.expire_date = '2015-12-30'
+        account.user_concur_number = 0
+        account.bind_mac = 0
+        account.bind_vlan = 0
+        account.vlan_id = 0
+        account.vlan_id2 = 0
+        account.create_time = '2014-12-10 23:23:21'
+        account.update_time = '2014-12-10 23:23:21'
+        db.add(account)
 
     db.commit()
 
@@ -387,6 +390,10 @@ if __name__ == '__main__':
     action = raw_input("init_db ?[n]")
     if action == 'y':
         init_db()
+
+    with open('./testusers.txt','wb') as tf:
+        for i in range(1000):
+            tf.write('test00%s,888888\n'%i)
 
 
 

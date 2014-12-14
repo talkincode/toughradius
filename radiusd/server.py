@@ -40,22 +40,21 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
 
     def datagramReceived(self, datagram, (host, port)):
         bas = self.bas_ip_pool.get(host)
-        if self.config['bas_host_check']  and not bas:
+        if not bas:
             return log.msg('Dropping packet from unknown host ' + host)
-        secret = (bas and bas['secret']) or self.config['bas_default_secret']
-        vendor_id = (bas and bas['vendor_id']) or 0
+        secret,vendor_id = bas['secret'],bas['vendor_id']
         try:
             _packet = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(secret)),vendor_id=vendor_id)
             _packet.deferred.addCallbacks(self.reply,self.on_exception)
             _packet.source = (host, port)
-            log.msg("::Received an radius request from %s : %s"%((host, port),str(_packet)))
+            log.msg("::Received radius request: %s"%(str(_packet)))
             if self.debug:log.msg(_packet.format_str())    
             self.processPacket(_packet)
         except packet.PacketError as err:
             log.msg('::Dropping invalid packet from %s: %s'%((host, port),str(err)))
 
     def reply(self,reply):
-        log.msg("send radius response to %s : %s"%(reply.source,reply))
+        log.msg("send radius response: %s"%(reply))
         if self.debug:log.msg(reply)
         self.transport.write(reply.ReplyPacket(), reply.source)  
  

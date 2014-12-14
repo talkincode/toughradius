@@ -103,10 +103,10 @@ class Store():
             cur.execute("select * from slc_rad_product where id = %s ",(product_id,))
             return cur.fetchone()     
             
-    def get_online(self,nas_addr,sessionid):
+    def get_online(self,nas_addr,acct_session_id):
         with Cursor(self.dbpool) as cur: 
-            sql = 'select * from slc_rad_online where  nas_addr = %s and sessionid = %s'
-            cur.execute(sql,(nas_addr,sessionid)) 
+            sql = 'select * from slc_rad_online where  nas_addr = %s and acct_session_id = %s'
+            cur.execute(sql,(nas_addr,acct_session_id)) 
             return cur.fetchone()     
 
     def get_nas_onlines(self,nas_addr):
@@ -124,11 +124,11 @@ class Store():
             cur.execute(sql)
             conn.commit()
     
-    def del_online(self,nas_addr,sessionid):
+    def del_online(self,nas_addr,acct_session_id):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor()
-            sql = 'delete from slc_rad_online where nas_addr = %s and sessionid = %s'
-            cur.execute(sql,(nas_addr,sessionid))
+            sql = 'delete from slc_rad_online where nas_addr = %s and acct_session_id = %s'
+            cur.execute(sql,(nas_addr,acct_session_id))
             conn.commit()
 
     def del_nas_onlines(self,nas_addr):

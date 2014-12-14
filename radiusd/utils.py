@@ -87,7 +87,8 @@ class AuthPacket2(AuthPacket):
 
     def format_str(self):
         attr_keys = self.keys()
-        _str = "\nRadiusAccess Packet::"
+        _str = "\nRadius Packet::%s"%TYPE_MAP[self.code]
+        _str += "\nhost:%s:%s" % self.source
         _str += "\nid:%s" % self.id
         _str += "\ncode:%s" % self.code
         _str += "\nAttributes: "     
@@ -99,8 +100,9 @@ class AuthPacket2(AuthPacket):
         return _str  
 
     def __str__(self):
-        _str = {1:'[AuthRequest]',2:'[AuthAccept]',3:'[AuthReject]'}[self.code]
-        _str += " id=%s"%self.id
+        _str = TYPE_MAP[self.code]
+        _str += " host=%s:%s" % self.source
+        _str += ",id=%s"%self.id
         if self.code == 1:
             _str += ",username=%s,mac_addr=%s" % (self.get_user_name(),self.get_mac_addr())
         if 'Reply-Message' in self:
@@ -206,7 +208,8 @@ class AcctPacket2(AcctPacket):
 
     def format_str(self):
         attr_keys = self.keys()
-        _str = "\nRadiusAccounting Packet::"
+        _str = "\nRadius Packet::%s"%TYPE_MAP[self.code]
+        _str += "\nhost:%s:%s" % self.source
         _str += "\nid:%s" % self.id
         _str += "\ncode:%s" % self.code
         _str += "\nAttributes: "     
@@ -215,8 +218,9 @@ class AcctPacket2(AcctPacket):
         return _str  
 
     def __str__(self):
-        _str = {4:'[AcctRequest]',5:'[AcctResponse]'}[self.code]
-        _str += " id=%s"%self.id
+        _str = TYPE_MAP[self.code]
+        _str += " host=%s:%s" % self.source
+        _str += ",id=%s"%self.id
         if self.code == 4:
             _str += ",username=%s,mac_addr=%s" % (self.get_user_name(),self.get_mac_addr())
         return _str   

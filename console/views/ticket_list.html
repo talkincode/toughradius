@@ -1,0 +1,105 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
+<link rel="stylesheet" href="/static/js/bootstrap-datetimepicker.min.css">
+   <script>
+    $(document).ready(function(){
+        $("#query_begin_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+        $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+    });
+
+   </script>
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span>上网记录查询</div>
+    <div class="panel-body">
+        <form id="query_form" class="form-horizontal" role="form" action="/ticket">
+            <div class="form-group">
+
+                <label for="node_id" class="col-md-2 control-label">组织节点</label>
+
+                <div class="col-md-3">
+                    <select id="node_id" name="node_id" class="form-control">
+                        <option></option>
+                        % for node in node_list:
+                          <option value="${node.id}" ${node.id==node_id and "selected" or ""}>${node.node_name}</option>
+                        % endfor
+                    </select>
+                </div>
+                <label for="account_number" class="col-md-2 control-label">用户账号</label>
+                <div class="col-md-3">
+                    <input type="text" id="account_number" name="account_number" class="form-control">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="framed_ipaddr" class="col-md-2 control-label">IP地址</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="framed_ipaddr" name="framed_ipaddr" class="form-control" placeholder="精确查询">
+                </div>            
+                <label for="mac_address" class="col-md-2 control-label">MAC地址</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="mac_addr" name="mac_addr" class="form-control" placeholder="精确查询">
+                </div>
+            </div>    
+            <div class="form-group">
+                <label for="query_begin_time" class="col-md-2 control-label">上网开始时间</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="query_begin_time" name="query_begin_time" value="${query_begin_time or ''}" class="form-control form_datetime"  >
+                </div>
+                 <label for="query_end_time" class="col-md-2 control-label">上网结束时间</label>
+                <div class="col-md-3">
+                    <input type="text" id="query_end_time" name="query_end_time" value="${query_end_time or ''}"  class="form-control form_datetime">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-7">
+                    <button type="submit" class="btn btn-default">查询</button>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>用户姓名</th>
+                <th>上网账号</th>
+                <th>客户端IP</th>
+                <th>BAS地址</th>
+                <th>开始时间</th>
+                <th>结束时间</th>
+                <th>MAC地址</th>
+                <th>端口信息</th>
+                <th>计费金额</th>
+                <th>已扣费</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for ticket in page_data.result:
+            <tr>
+                <td>${ticket.realname}</td>
+                <td>${ticket.account_number}</td>
+                <td>${ticket.framed_ipaddr}</td>
+                <td>${ticket.nas_addr}</td>
+                <td>${ticket.acct_start_time}</td>
+                <td>${ticket.acct_stop_time}</td>
+                <td>${ticket.mac_addr}</td>
+                <td>${ticket.nas_port_id}</td>
+                <td>${fen2yuan(ticket.acct_fee)}</td>
+                <td>${{0:u'未扣费',1:u'已扣费'}[ticket.is_deduct]}</td>
+
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+        ${page_data.render(form_id="query_form")}
+    </div>
+</div>
+
+
+</%def>
