@@ -9,14 +9,14 @@ import datetime
 import utils
 
 """记账结束包处理"""
-def process(req=None,user=None):
+def process(req=None,user=None,runstat=None):
     if not req.get_acct_status_type() == STATUS_TYPE_STOP:
         return  
-    
+    runstat.acct_stop += 1   
     ticket = req.get_ticket()
     if not ticket.nas_addr:
         ticket.nas_addr = req.source[0]
-        
+
     _datetime = datetime.datetime.now() 
     online = store.get_online(ticket.nas_addr,ticket.acct_session_id)    
     if online:

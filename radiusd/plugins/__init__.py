@@ -15,7 +15,9 @@ __all__ = [
     'acct_update_process',
     'acct_onoff_process',
     'auth_std_accept',
-    'auth_cisco_accept'
+    'auth_cisco_accept',
+    'admin_trace_global',
+    'admin_trace_user'
 ]
 
 def error_auth(resp,errmsg):

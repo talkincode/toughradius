@@ -307,7 +307,7 @@ def init_db():
     bas = SlcRadBas()
     bas.id = 1
     bas.vendor_id = '0'
-    bas.ip_addr = '192.168.0.184'
+    bas.ip_addr = '192.168.1.105'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
     bas.status = 1

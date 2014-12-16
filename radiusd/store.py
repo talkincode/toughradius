@@ -5,6 +5,7 @@ import MySQLdb
 from MySQLdb import cursors
 from DBUtils.PooledDB import PooledDB
 import settings
+import cache
 
 ticket_fds = [
     'account_number','acct_fee','acct_input_gigawords','acct_input_octets',
@@ -52,17 +53,25 @@ class Store():
     def __init__(self,dbpool=None):
         self.dbpool = dbpool 
 
+    @cache.cache('all')
     def get_param(self,param_name):
         with Cursor(self.dbpool) as cur:
             cur.execute("select param_value from  slc_param where param_name = %s",(param_name,))
             param = cur.fetchone()
             return param and param['param_value'] or None
 
+    def update_param_cache(self):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select param_name from  slc_param where param_name = %s",(param_name,))
+            for param in cur:
+                cache.delete('all',self.get_param, param['param_name'])
+
     def list_bas(self):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from  slc_rad_bas")
             return [bas for bas in cur] 
 
+    @cache.cache('all')
     def get_user(self,username):
         with Cursor(self.dbpool) as cur:
             cur.execute("select a.*,p.product_policy from slc_rad_account a,slc_rad_product p "
@@ -70,12 +79,16 @@ class Store():
             user =  cur.fetchone()
             return user
 
+    def update_user_cache(self,username):
+        cache.delete('all',self.get_user, username)
+
     def update_user_balance(self,username,balance):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor()
             sql = "update slc_rad_account set balance = %s where account_number = %s"
             cur.execute(sql,(balance,username))
             conn.commit()
+            self.update_user_cache(username)
 
     def update_user_mac(self,username,mac_addr):
         with Connect(self.dbpool) as conn:
@@ -83,6 +96,7 @@ class Store():
             sql = "update slc_rad_account set mac_addr = %s where account_number = %s"
             cur.execute(sql,(mac_addr,username))
             conn.commit()
+            self.update_user_cache(username)
 
     def update_user_vlan_id(self,username,vlan_id):
         with Connect(self.dbpool) as conn:
@@ -90,25 +104,40 @@ class Store():
             sql = "update slc_rad_account set vlan_id = %s where account_number = %s"
             cur.execute(sql,(vlan_id,username))
             conn.commit()
+            self.update_user_cache(username)
 
     def update_user_vlan_id2(self,username,vlan_id2):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor()
             sql = "update slc_rad_account set vlan_id2 = %s where account_number = %s"
             cur.execute(sql,(vlan_id2,username))    
-            conn.commit()        
+            conn.commit() 
+            self.update_user_cache(username)     
 
-
+    @cache.cache('all')
     def get_group(self,group_id):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_group where id = %s ",(group_id,))
             return cur.fetchone()
 
+    def clear_group_cache(self,group_id):
+        cache.delete('all',self.get_group, group_id)
+
+    @cache.cache('all')
     def get_product(self,product_id):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_product where id = %s ",(product_id,))
-            return cur.fetchone()     
-            
+            return cur.fetchone()  
+
+    def clear_product_cache(self,product_id):
+        cache.delete('all',self.get_product, product_id)
+          
+    def is_online(self,nas_addr,acct_session_id):
+        with Cursor(self.dbpool) as cur: 
+            sql = 'select count(id) as online from slc_rad_online where  nas_addr = %s and acct_session_id = %s'
+            cur.execute(sql,(nas_addr,acct_session_id)) 
+            return cur.fetchone()['online'] > 0
+
     def get_online(self,nas_addr,acct_session_id):
         with Cursor(self.dbpool) as cur: 
             sql = 'select * from slc_rad_online where  nas_addr = %s and acct_session_id = %s'

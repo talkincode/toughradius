@@ -37,7 +37,8 @@ class Middleware():
             return self._plugin_modules[name].process(**kwargs)
         except Exception as err:
             log.err(err,'Plugin %s failed to process.' % name)
-            raise 
+            return False
+             
 
 #第一次导入此模块时进行初始化加载
 Middleware.load_plugins()

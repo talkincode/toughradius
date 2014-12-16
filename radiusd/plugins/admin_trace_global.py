@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+#coding=utf-8
+from twisted.python import log
+import logging
+import json
+
+def process(req=None,trace=None,send=None):
+    pkt = trace.get_global_msg()
+    if pkt is None: 
+        return
+    mtype = int(req.get('type'))
+    username = req.get("username")
+    basaddr = req.get("bas")
+    if mtype:
+        if mtype in (1,) and pkt.code not in (1,2,3):return
+        if mtype in (4,) and pkt.code not in (4,5):return    
+    if username:
+        if pkt.code in (1,4) and username not in pkt.get_user_name():return
+        if pkt.code in (2,3,5) and username not in pkt.source_user:return
+    if basaddr:
+        if basaddr not in pkt.source[0]:return
+    reply = {'data' : pkt.format_str(),'time':pkt.created,'host':pkt.source}
+    msg = json.dumps(reply)
+    msg = msg.replace("\\n","<br>")
+    msg = msg.replace("\\t","    ")
+    send(msg,False) 
+
+

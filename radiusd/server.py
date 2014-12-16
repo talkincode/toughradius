@@ -14,6 +14,8 @@ from store import store
 from admin import UserTrace,AdminServerProtocol
 from settings import auth_plugins,acct_plugins,acct_before_plugins
 import middleware
+import settings
+import statistics
 import logging
 import six
 import sys
@@ -32,11 +34,13 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
                 dict=dictionary.Dictionary("res/dictionary"),
                 trace=None,
                 midware=None,
+                runstat=None,
                 debug=False):
         host.Host.__init__(self,dict=dict)
         self.debug = debug
         self.user_trace = trace
         self.midware = midware
+        self.runstat = runstat
         self.bas_ip_pool = {bas['ip_addr']:bas for bas in store.list_bas()}
 
     def processPacket(self, pkt):
@@ -66,6 +70,10 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         if self.debug:
             log.msg(reply.format_str(),level=logging.DEBUG)
         self.transport.write(reply.ReplyPacket(), reply.source)  
+        if reply.code == packet.AccessReject:
+            self.runstat.auth_reject += 1
+        elif reply.code == packet.AccessAccept:
+            self.runstat.auth_accept += 1
  
     def on_exception(self,err):
         log.msg('Packet process error：%s' % str(err))   
@@ -84,7 +92,9 @@ class RADIUSAccess(RADIUS):
         return pkt
 
     def processPacket(self, req):
+        self.runstat.auth_all += 1
         if req.code != packet.AccessRequest:
+            self.runstat.auth_drop += 1
             raise PacketError('non-AccessRequest packet on authentication socket')
         
         reply = req.CreateReply()
@@ -119,9 +129,10 @@ class RADIUSAccounting(RADIUS):
         return pkt
 
     def processPacket(self, req):
+        self.runstat.acct_all += 1
         if req.code != packet.AccountingRequest:
-            raise PacketError(
-                    'non-AccountingRequest packet on authentication socket')
+            self.runstat.acct_drop += 1
+            raise PacketError('non-AccountingRequest packet on authentication socket')
 
         for plugin in acct_before_plugins:
             self.midware.process(plugin,req=req)
@@ -135,7 +146,7 @@ class RADIUSAccounting(RADIUS):
         req.deferred.callback(reply)
         # middleware execute
         for plugin in acct_plugins:
-            self.midware.process(plugin,req=req,user=user)
+            self.midware.process(plugin,req=req,user=user,runstat=self.runstat)
                 
 
 ###############################################################################
@@ -146,14 +157,17 @@ if __name__ == '__main__':
     from autobahn.twisted.websocket import WebSocketServerFactory
     log.startLogging(sys.stdout, 0)
     _trace = UserTrace()
+    _runstat = statistics.RunStat()
     _middleware = middleware.Middleware()
+    _debug = settings.debug
     # radius server
-    reactor.listenUDP(1812, RADIUSAccess(trace=_trace,midware=_middleware,debug=True))
-    reactor.listenUDP(1813, RADIUSAccounting(trace=_trace,midware=_middleware,debug=True))
+    reactor.listenUDP(1812, RADIUSAccess(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug))
+    reactor.listenUDP(1813, RADIUSAccounting(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug))
     # admin server
     factory = WebSocketServerFactory("ws://localhost:1815", debug = False)
     factory.protocol = AdminServerProtocol
     factory.protocol.user_trace = _trace
     factory.protocol.midware = _middleware
+    factory.protocol.runstat = _runstat
     reactor.listenTCP(1815, factory)
     reactor.run()

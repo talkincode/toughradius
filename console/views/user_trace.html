@@ -31,7 +31,7 @@
 
     function doGetLastTrace() {
         var message = {
-            scope:"global",
+            process:"admin_trace_global",
             type:$("#msgType").val(),
             bas:$("#basAddr").val(),
             username: $("#userName").val()
@@ -47,7 +47,7 @@
         $("#stopTraceAction").attr("disabled", "disabled");    
         $("#inbox").empty();
         var message = {
-            scope:"user",
+            process:"admin_trace_user",
             username: $("#userName").val()
         }
         data = JSON.stringify(message);

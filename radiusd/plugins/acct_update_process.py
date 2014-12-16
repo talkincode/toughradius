@@ -9,10 +9,10 @@ import datetime
 import utils
 
 """记账更新包处理"""
-def process(req=None,user=None):
+def process(req=None,user=None,runstat=None):
     if not req.get_acct_status_type() == STATUS_TYPE_UPDATE:
         return   
-
+    runstat.acct_update += 1  
     online = store.get_online(req.get_nas_addr(),req.get_acct_sessionid())  
 
     if not online:
