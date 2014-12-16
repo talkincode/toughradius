@@ -4,7 +4,7 @@
 <script>
     function deleteNode(node_id) {
         if (confirm("确认删除吗？")) {
-            window.location.href = "/node/delete?id=" + node_id;
+            window.location.href = "/node/delete?node_id=" + node_id;
         }
     }
 </script>
@@ -31,7 +31,7 @@
             <tr>
                 <td>${node.node_name}</td>
                 <td>${node.node_desc}</td>
-                <td><a class="opt-btn btn-default" href="/node/modify?id=${node.id}">修改</a>
+                <td><a class="opt-btn btn-default" href="/node/update?node_id=${node.id}">修改</a>
                     <a class="opt-btn btn-default" href="javascript:deleteNode('${node.id}')">删除</a></td>
             </tr>
             % endfor

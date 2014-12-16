@@ -4,6 +4,7 @@ import yaml
 import MySQLdb
 from MySQLdb import cursors
 from DBUtils.PooledDB import PooledDB
+import settings
 
 ticket_fds = [
     'account_number','acct_fee','acct_input_gigawords','acct_input_octets',
@@ -40,9 +41,8 @@ class Cursor:
         self.conn.close()
 
 class DbPool():
-    def __init__(self,config="config.yaml"):
-        with open(config,'rb') as cf:
-            self.dbpool = PooledDB(creator=MySQLdb,**yaml.load(cf)['mysql'])
+    def __init__(self):
+        self.dbpool = PooledDB(creator=MySQLdb,**settings.db_config['mysql'])
 
     def connect(self):
         return self.dbpool.connection()

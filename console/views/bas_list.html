@@ -6,7 +6,7 @@
     {
         if(confirm("确认删除吗？"))
         {
-            window.location.href = "/bas/delete?id="+bas_id;
+            window.location.href = "/bas/delete?bas_id="+bas_id;
         }
     }
 </script>
@@ -26,33 +26,27 @@
                         <tr>
                             <th>BAS名称</th>
                             <th>BAS地址</th>
-                            <th>VENDOR</th>
+                            <th>BAS类型</th>
                             <th>共享密钥</th>
                             <th>时区</th>
-                            <th>状态</th>
                             <th>操作</th>
                         </tr>
                     </thead>
                     <tbody>
-                        % for bas in page_data.result:
+                        % for bas in bas_list:
                             <tr>
                                 <td>${bas.bas_name}</td>
                                 <td>${bas.ip_addr}</td>
-                                <td>${bas.vendor_id}</td>
+                                <td>${bastype[str(bas.vendor_id)]}</td>
                                 <td>${bas.bas_secret}</td>
                                 <td>${{0:u"标准时区，北京时间",1:u"时间与时区相同"}[bas.time_type]}
                                 </td>
-                                <td>
-                                    ${ bas.status and u"正常" or u"停用"}
-                                </td>
-                                <td><a class="opt-btn btn-default" href="/bas/modify?id=${bas.id}">修改</a>
+                                <td><a class="opt-btn btn-default" href="/bas/update?bas_id=${bas.id}">修改</a>
                                     <a class="opt-btn btn-default" href="javascript:deleteBas('${bas.id}')">删除</a></td>
                             </tr>
                         % endfor
                     </tbody>
                 </table>
-
-                ${page_data.render()}
             </div>
         </div>
     </div>

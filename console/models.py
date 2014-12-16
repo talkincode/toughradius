@@ -58,8 +58,7 @@ class SlcRadBas(DeclarativeBase):
     vendor_id = Column(u'vendor_id', VARCHAR(length=32), nullable=False)
     ip_addr = Column(u'ip_addr', VARCHAR(length=15), nullable=False)
     bas_name = Column(u'bas_name', VARCHAR(length=64), nullable=False)
-    bas_secret = Column(u'secret', VARCHAR(length=32), nullable=False)
-    status = Column(u'status', SMALLINT(), nullable=False)
+    bas_secret = Column(u'bas_secret', VARCHAR(length=64), nullable=False)
     time_type = Column(u'time_type', SMALLINT(), nullable=False)
 
     #relation definitions
@@ -206,7 +205,6 @@ class SlcRadProduct(DeclarativeBase):
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False)
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False)
     concur_number = Column('concur_number', INTEGER(), nullable=False)
-    fee_num = Column('fee_num', INTEGER(), nullable=False) 
     fee_period = Column('fee_period', VARCHAR(length=11))
     fee_price = Column('fee_price', INTEGER(), nullable=False)
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False)
@@ -308,8 +306,8 @@ def init_db():
 
     bas = SlcRadBas()
     bas.id = 1
-    bas.vendor_id = '14896'
-    bas.ip_addr = '192.168.1.102'
+    bas.vendor_id = '0'
+    bas.ip_addr = '192.168.0.184'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
     bas.status = 1

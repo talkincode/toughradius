@@ -9,7 +9,7 @@
 <script>
     function deleteProduct(product_id) {
         if (confirm("确认删除吗？")) {
-            window.location.href = "/product/delete?id=" + product_id;
+            window.location.href = "/product/delete?product_id=" + product_id;
         }
     }
 </script>
@@ -28,7 +28,7 @@
             <tr>
                 <th>套餐名称</th>
                 <th>产品策略</th>
-                <th>产品价格</th>
+                <th>产品价格(元)</th>
                 <th>并发数</th>
                 <th>是否绑定MAC</th>
                 <th>是否绑定VLAN</th>
@@ -41,15 +41,15 @@
             <tr>
                 <td>${product.product_name}</td>
                 <td>
-                    ${{0:u'买断包月',1:u'预付费时长'}[product.product_policy]}
+                    ${{0:u'包月',1:u'小时计费'}[product.product_policy]}
                 </td>
-                <td>${product.fee_price}</td>
+                <td>${fen2yuan(product.fee_price)}</td>
                 <td>${product.concur_number}</td>
                 <td>${product.bind_mac and u'是' or u'否'}</td>
                 <td>${product.bind_vlan and u'是' or u'否'}</td>
                 <td>${product.input_max_limit}</td>
                 <td>${product.output_max_limit}</td>
-                <td><a class="opt-btn btn-default" href="/product/modify?id=${product.id}">修改</a> <a
+                <td><a class="opt-btn btn-default" href="/product/update?product_id=${product.id}">修改</a> <a
                         class="opt-btn btn-default"  href="javascript:deleteProduct('${product.id}')">删除</a></td>
             </tr>
             % endfor

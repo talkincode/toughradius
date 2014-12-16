@@ -45,7 +45,7 @@ def is_expire(dstr):
     return expire_date < now
     
 
-TYPE_MAP = {
+AcctStatusTypeMap = {
     1 : 'AccessRequest',
     2 : 'AccessAccept',
     3 : 'AccessReject',
@@ -87,7 +87,7 @@ class AuthPacket2(AuthPacket):
 
     def format_str(self):
         attr_keys = self.keys()
-        _str = "\nRadius Packet::%s"%TYPE_MAP[self.code]
+        _str = "\nRadius Packet::%s"%AcctStatusTypeMap[self.code]
         _str += "\nhost:%s:%s" % self.source
         _str += "\nid:%s" % self.id
         _str += "\ncode:%s" % self.code
@@ -100,7 +100,7 @@ class AuthPacket2(AuthPacket):
         return _str  
 
     def __str__(self):
-        _str = TYPE_MAP[self.code]
+        _str = AcctStatusTypeMap[self.code]
         _str += " host=%s:%s" % self.source
         _str += ",id=%s"%self.id
         if self.code == 1:
@@ -208,7 +208,7 @@ class AcctPacket2(AcctPacket):
 
     def format_str(self):
         attr_keys = self.keys()
-        _str = "\nRadius Packet::%s"%TYPE_MAP[self.code]
+        _str = "\nRadius Packet::%s"%AcctStatusTypeMap[self.code]
         _str += "\nhost:%s:%s" % self.source
         _str += "\nid:%s" % self.id
         _str += "\ncode:%s" % self.code
@@ -218,7 +218,7 @@ class AcctPacket2(AcctPacket):
         return _str  
 
     def __str__(self):
-        _str = TYPE_MAP[self.code]
+        _str = AcctStatusTypeMap[self.code]
         _str += " host=%s:%s" % self.source
         _str += ",id=%s"%self.id
         if self.code == 4:

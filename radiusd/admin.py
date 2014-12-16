@@ -39,9 +39,10 @@ class UserTrace():
         return self.user_cache.get(username) or []
         
 
-class TraceServerProtocol(WebSocketServerProtocol):
+class AdminServerProtocol(WebSocketServerProtocol):
 
     user_trace = None
+    midware = None
 
     def onConnect(self, request):
         log.msg("Client connecting: {0}".format(request.peer))
