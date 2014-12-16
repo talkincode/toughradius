@@ -13,10 +13,13 @@ __all__ = [
     'acct_start_process',
     'acct_stop_process',
     'acct_update_process',
-    'acct_onoff_process'
+    'acct_onoff_process',
+    'auth_std_accept',
+    'auth_cisco_accept'
 ]
 
 def error_auth(resp,errmsg):
     resp.code = packet.AccessReject
     resp['Reply-Message'] = errmsg
     return resp    
+

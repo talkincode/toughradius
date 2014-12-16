@@ -52,6 +52,12 @@ class Store():
     def __init__(self,dbpool=None):
         self.dbpool = dbpool 
 
+    def get_param(self,param_name):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select param_value from  slc_param where param_name = %s",(param_name,))
+            param = cur.fetchone()
+            return param and param['param_value'] or None
+
     def list_bas(self):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from  slc_rad_bas")

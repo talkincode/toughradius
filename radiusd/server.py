@@ -14,6 +14,7 @@ from store import store
 from admin import UserTrace,AdminServerProtocol
 from settings import auth_plugins,acct_plugins,acct_before_plugins
 import middleware
+import logging
 import six
 import sys
 import pprint
@@ -47,21 +48,23 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
     def datagramReceived(self, datagram, (host, port)):
         bas = self.bas_ip_pool.get(host)
         if not bas:
-            return log.msg('Dropping packet from unknown host ' + host)
+            return log.msg('Dropping packet from unknown host ' + host,level=logging.DEBUG)
         secret,vendor_id = bas['bas_secret'],bas['vendor_id']
         try:
             _packet = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(secret)),vendor_id=vendor_id)
             _packet.deferred.addCallbacks(self.reply,self.on_exception)
             _packet.source = (host, port)
-            log.msg("::Received radius request: %s"%(str(_packet)))
-            if self.debug:log.msg(_packet.format_str())    
+            log.msg("::Received radius request: %s"%(str(_packet)),level=logging.INFO)
+            if self.debug:
+                log.msg(_packet.format_str(),level=logging.DEBUG)    
             self.processPacket(_packet)
         except packet.PacketError as err:
-            log.msg('::Dropping invalid packet from %s: %s'%((host, port),str(err)))
+            log.err(err,'::Dropping invalid packet from %s: %s'%((host, port),str(err)))
 
     def reply(self,reply):
-        log.msg("send radius response: %s"%(reply))
-        if self.debug:log.msg(reply)
+        log.msg("send radius response: %s"%(reply),level=logging.INFO)
+        if self.debug:
+            log.msg(reply.format_str(),level=logging.DEBUG)
         self.transport.write(reply.ReplyPacket(), reply.source)  
  
     def on_exception(self,err):
@@ -132,7 +135,7 @@ class RADIUSAccounting(RADIUS):
         req.deferred.callback(reply)
         # middleware execute
         for plugin in acct_plugins:
-            self.midware.process(plugin,req=req)
+            self.midware.process(plugin,req=req,user=user)
                 
 
 ###############################################################################

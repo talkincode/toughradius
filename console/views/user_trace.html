@@ -7,7 +7,7 @@
         timer: null,
 
         start: function () {
-            var url = "ws://127.0.0.1:9000";
+            var url = "ws://127.0.0.1:1815";
             updater.socket = new WebSocket(url);
             updater.socket.onmessage = function (event) {
                 updater.showMessage(JSON.parse(event.data));
@@ -38,7 +38,7 @@
         }
         data = JSON.stringify(message);
         updater.socket.send(data);
-        updater.timer = setTimeout("doGetLastTrace()", 100);
+        updater.timer = setTimeout("doGetLastTrace()", 300);
     }
     
     function doGetUserTrace() {

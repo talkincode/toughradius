@@ -42,7 +42,9 @@ auth_plugins = [
     'auth_domain_filter',
     'auth_bind_filter',
     'auth_group_filter',
-    'auth_policy_filter'
+    'auth_policy_filter',
+    'auth_std_accept',
+    'auth_cisco_accept'
 ]
 
 acct_before_plugins = [
