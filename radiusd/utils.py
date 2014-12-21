@@ -72,6 +72,45 @@ class Storage(dict):
     def __repr__(self):     
         return '<Storage ' + dict.__repr__(self) + '>'
 
+class AuthDelay():
+    
+    def __init__(self,reject_delay=0):
+        self.reject_delay = reject_delay
+        self.rosters = {}
+        self.delay_cache = []
+
+    def delay_len(self):
+        return len(self.delay_cache)
+
+    def add_roster(self,mac_addr):
+        if not mac_addr:
+            return
+        if mac_addr not in  self.rosters:
+            self.rosters.setdefault(mac_addr,1)
+        else:
+            self.rosters[mac_addr] += 1
+
+    def del_roster(self,mac_addr):
+        if mac_addr in self.rosters:
+            del self.rosters[mac_addr]
+
+    def over_reject(self,mac_addr):
+        return self.reject_delay>0 and self.rosters.get(mac_addr,0)>6
+
+    def add_delay_reject(self,reject):
+        self.delay_cache.append(reject)
+
+    def get_delay_reject(self,idx):
+        return self.delay_cache[idx]
+
+    def pop_delay_reject(self):
+        try:
+            return self.delay_cache.pop(0)
+        except:
+            return None
+
+
+
 class AuthPacket2(AuthPacket):
 
     def __init__(self, code=AccessRequest, id=None, secret=six.b(''),
@@ -83,7 +122,7 @@ class AuthPacket2(AuthPacket):
         self.vlanid = 0
         self.vlanid2 = 0
         self.client_macaddr = None
-        self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created = datetime.datetime.now()
 
     def format_str(self):
         attr_keys = self.keys()
@@ -204,7 +243,7 @@ class AcctPacket2(AcctPacket):
         self.vendor_id = 0
         self.client_macaddr = None
         self.ticket = {}
-        self.created = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.created = datetime.datetime.now()
 
     def format_str(self):
         attr_keys = self.keys()

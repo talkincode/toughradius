@@ -19,7 +19,7 @@ def process(req=None,trace=None,send=None):
         if pkt.code in (2,3,5) and username not in pkt.source_user:return
     if basaddr:
         if basaddr not in pkt.source[0]:return
-    reply = {'data' : pkt.format_str(),'time':pkt.created,'host':pkt.source}
+    reply = {'data' : pkt.format_str(),'time':pkt.created.strftime("%Y-%m-%d %H:%M:%S"),'host':pkt.source}
     msg = json.dumps(reply)
     msg = msg.replace("\\n","<br>")
     msg = msg.replace("\\t","    ")

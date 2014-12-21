@@ -2,7 +2,7 @@
 #coding=utf-8
 # from twisted.internet import kqreactor
 # kqreactor.install()
-
+from twisted.internet import task
 from twisted.internet.defer import Deferred
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -13,6 +13,7 @@ from pyrad import packet
 from store import store
 from admin import UserTrace,AdminServerProtocol
 from settings import auth_plugins,acct_plugins,acct_before_plugins
+import datetime
 import middleware
 import settings
 import statistics
@@ -41,6 +42,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         self.user_trace = trace
         self.midware = midware
         self.runstat = runstat
+        self.auth_delay = utils.AuthDelay(settings.reject_delay)
         self.bas_ip_pool = {bas['ip_addr']:bas for bas in store.list_bas()}
 
     def processPacket(self, pkt):
@@ -78,6 +80,17 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
     def on_exception(self,err):
         log.msg('Packet process error：%s' % str(err))   
 
+    def process_delay(self):
+        while self.auth_delay.delay_len() > 0:
+            try:
+                reject = self.auth_delay.get_delay_reject(0)
+                if (datetime.datetime.now() - reject.created).seconds < self.auth_delay.reject_delay:
+                    return
+                else:
+                    self.reply(self.auth_delay.pop_delay_reject())
+            except:
+                log.err("process_delay error")
+
 ###############################################################################
 # Auth Server                                                              ####
 ###############################################################################
@@ -105,13 +118,18 @@ class RADIUSAccess(RADIUS):
         for plugin in auth_plugins:
             self.midware.process(plugin,req=req,resp=reply,user=user)
             if reply.code == packet.AccessReject:
+                self.auth_delay.add_roster(req.get_mac_addr())
                 if user:self.user_trace.push(user['account_number'],reply)
-                return req.deferred.callback(reply)
+                if self.auth_delay.over_reject(req.get_mac_addr()):
+                    return self.auth_delay.add_delay_reject(reply)
+                else:
+                    return req.deferred.callback(reply)
                     
         # send accept
         reply['Reply-Message'] = 'success!'
         reply.code=packet.AccessAccept
         if user:self.user_trace.push(user['account_number'],reply)
+        self.auth_delay.del_roster(req.get_mac_addr())
         req.deferred.callback(reply)
         
         
@@ -161,8 +179,12 @@ if __name__ == '__main__':
     _middleware = middleware.Middleware()
     _debug = settings.debug
     # radius server
-    reactor.listenUDP(1812, RADIUSAccess(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug))
-    reactor.listenUDP(1813, RADIUSAccounting(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug))
+    auth_protocol = RADIUSAccess(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug)
+    acct_protocol = RADIUSAccounting(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug)
+    reactor.listenUDP(1812, auth_protocol)
+    reactor.listenUDP(1813, acct_protocol)
+    _task = task.LoopingCall(auth_protocol.process_delay)
+    _task.start(2.7)
     # admin server
     factory = WebSocketServerFactory("ws://localhost:1815", debug = False)
     factory.protocol = AdminServerProtocol

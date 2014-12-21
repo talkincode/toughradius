@@ -55,7 +55,7 @@ class AdminServerProtocol(WebSocketServerProtocol):
     def onMessage(self, payload, isBinary):
         req_msg = json.loads(payload)
         log.msg("websocket trace query: %s"%str(req_msg))
-        log.msg("trace size info %s,%s"%self.user_trace.size_info(),level=logging.DEBUG)
+        # log.msg("trace size info %s,%s"%self.user_trace.size_info(),level=logging.DEBUG)
         plugin = req_msg.get("process")
         self.midware.process(plugin,req=req_msg,trace=self.user_trace,send=self.sendMessage)
 

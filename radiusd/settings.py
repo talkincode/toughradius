@@ -3,8 +3,8 @@
 __verson__ = '0.1'
 
 debug = True
-
 cache_timeout = 3600 #second
+reject_delay = 9
 
 FEE_BUYOUT = 0
 FEE_TIMES = 1
