@@ -1,0 +1,63 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script>
+</script>
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户列表</div>
+    <div class="panel-body">
+        <form id="query_form" class="form-horizontal" role="form" action="/bus/member" method="post">
+            <div class="form-group">
+                <label for="node_id" class="col-md-2 control-label">区域</label>
+                <div class="col-md-3">
+                    <select id="node_id" name="node_id" class="form-control" >
+                    <option value=""></option>
+                        % for node in node_list:
+                          <option value="${node.id}" ${node.id==node_id and "selected" or ""}>${node.node_name}</option>
+                        % endfor
+                    </select>
+                </div>            
+                <label for="realname" class="col-md-2 control-label">用户姓名</label>
+                <div class="col-md-3">
+                    <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value=${realname or ""}>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-7">
+                    <button type="submit" class="btn btn-primary">查询</button>
+                    <a href="/bus/member/export" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出用户信息</a>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>用户姓名</th>
+                <th>区域</th>
+                <th>联系电话</th>
+                <th>地址</th>
+                <th>创建时间</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for member in page_data.result:
+            <tr>
+                <td><a href="/bus/member/detail?member_id=${member.member_id}">${member.realname}</a></td>
+                <td>${member.node_name}</td>
+                <td>${member.mobile}</td>
+                <td>${member.address}</td>
+                <td>${member.create_time}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+        ${page_data.render(form_id="query_form")}
+    </div>
+</div>
+
+
+</%def>

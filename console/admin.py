@@ -8,58 +8,26 @@ from bottle import redirect
 from bottle import run as runserver
 from bottle import static_file
 from bottle import abort
-from bottle import MakoTemplate
 from bottle import mako_template as render
-from beaker.middleware import SessionMiddleware
 from libs import sqla_plugin 
 from libs.paginator import Paginator
+from libs import utils
 from hashlib import md5
 from tablib import Dataset
-import logging
 import bottle
-import functools
-import urllib
 import models
 import forms
-import decimal
 import datetime
 
 ###############################################################################
 # init                
 ###############################################################################
 
-""" define logging """
-logger = logging.getLogger("admin")
+from base import *
+from ops import app as ops_app
+from business import app as bus_app
 
-app = bottle.app()
-app.config.update(dict(
-    port = 8080,
-    secret='123321qweasd',
-    page_size = 20,
-))
-
-decimal.getcontext().prec = 11
-decimal.getcontext().rounding = decimal.ROUND_UP
-
-def fen2yuan(fen):
-    f = decimal.Decimal(fen)
-    y = f / decimal.Decimal(100)
-    return str(y.quantize(decimal.Decimal('1.00')))
-
-def yuan2fen(yuan):
-    y = decimal.Decimal(yuan)
-    f = y * decimal.Decimal(100)
-    return int(f.to_integral_value())
-
-get_cookie = lambda name: request.get_cookie(name,secret=app.config['secret'])
-set_cookie = lambda name,value:response.set_cookie(name,value,secret=app.config['secret'])
-
-MakoTemplate.defaults.update(dict(
-    system_name = 'ToughRADIUS Console',
-    get_cookie = get_cookie,
-    fen2yuan = fen2yuan,
-    request = request
-))
+app = Bottle()
 
 ''' install plugins'''
 sqla_pg = sqla_plugin.Plugin(
@@ -71,28 +39,12 @@ sqla_pg = sqla_plugin.Plugin(
     use_kwargs=False 
 )
 app.install(sqla_pg)
+ops_app.install(sqla_pg)
+bus_app.install(sqla_pg)
 
-def auth_opr(func):
-    @functools.wraps(func)
-    def warp(*args,**kargs):
-        if not get_cookie("username"):
-            logger.info("admin login timeout")
-            return redirect('/login')
-        else:
-            return func(*args,**kargs)
-    return warp
+app.mount("/ops",ops_app)
+app.mount("/bus",bus_app)
 
-def get_page_data(query):
-    def _page_url(page, form_id=None):
-        if form_id:return "javascript:goto_page('%s',%s);" %(form_id.strip(),page)
-        request.query['page'] = page
-        return request.path + '?' + urllib.urlencode(request.query)        
-    page_size = app.config.get("page_size",20)
-    page = int(request.params.get("page",1))
-    offset = (page - 1) * page_size
-    page_data = Paginator(_page_url, page, query.count(), page_size)
-    page_data.result = query.limit(page_size).offset(offset)
-    return page_data
 
 ###############################################################################
 # Basic handle         
@@ -135,6 +87,8 @@ def admin_login_post(db):
     ).first()
     if not opr:return dict(code=1,msg=u"用户名密码不符")
     set_cookie('username',uname)
+    set_cookie('login_time', utils.get_currtime())
+    set_cookie('login_ip', request.remote_addr)    
     return dict(code=0,msg="ok")
 
 @app.get("/logout")
@@ -320,7 +274,7 @@ def product_add_post(db):
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
     product.fee_period = form.d.fee_period
-    product.fee_price = yuan2fen(form.d.fee_price)
+    product.fee_price = utils.yuan2fen(form.d.fee_price)
     product.input_max_limit = form.d.input_max_limit
     product.output_max_limit = form.d.output_max_limit
     product.input_rate_code = form.d.input_rate_code
@@ -339,7 +293,7 @@ def product_update(db):
     product = db.query(models.SlcRadProduct).get(product_id)
     form.fill(product)
     form.product_policy_name.set_value(forms.product_policy[product.product_policy])
-    form.fee_price.set_value(fen2yuan(product.fee_price))
+    form.fee_price.set_value(utils.fen2yuan(product.fee_price))
     return render("base_form",form=form)
 
 @app.post('/product/update',apply=auth_opr)
@@ -356,12 +310,12 @@ def product_add_update(db):
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
     product.fee_period = form.d.fee_period
-    product.fee_price = yuan2fen(form.d.fee_price)
+    product.fee_price = utils.yuan2fen(form.d.fee_price)
     product.input_max_limit = form.d.input_max_limit
     product.output_max_limit = form.d.output_max_limit
     product.input_rate_code = form.d.input_rate_code
     product.output_rate_code = form.d.output_rate_code
-    product.update_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+    product.update_time = utils.get_currtime()
     db.commit()
     redirect("/product")    
 
@@ -398,7 +352,7 @@ def group_add_post(db):
     group.bind_mac = form.d.bind_mac
     group.bind_vlan = form.d.bind_vlan
     group.concur_number = form.d.concur_number
-    group.update_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+    group.update_time = utils.get_currtime()
     db.add(group)
     db.commit()
     redirect("/group")
@@ -421,7 +375,7 @@ def group_add_update(db):
     group.bind_mac = form.d.bind_mac
     group.bind_vlan = form.d.bind_vlan
     group.concur_number = form.d.concur_number
-    group.update_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+    group.update_time = utils.get_currtime()
     db.commit()
     redirect("/group")    
 
@@ -440,8 +394,6 @@ def group_delete(db):
 def roster(db):   
     return render("roster_list", page_data = get_page_data(db.query(models.SlcRadRoster)))
 
-
-   
 @app.get('/roster/add',apply=auth_opr)
 def roster_add(db):  
     return render("roster_form",form=forms.roster_add_form())
@@ -491,146 +443,6 @@ def roster_delete(db):
     db.commit() 
     redirect("/roster")        
 
-###############################################################################
-# user manage        
-###############################################################################
-                   
-@app.route('/user',apply=auth_opr,method=['GET','POST'])
-@app.get('/user/export',apply=auth_opr)
-def user_query(db):   
-    node_id = request.params.get('node_id')
-    product_id = request.params.get('product_id')
-    user_name = request.params.get('user_name')
-    status = request.params.get('status')
-    _query = db.query(
-            models.SlcMember.realname,
-            models.SlcRadAccount.member_id,
-            models.SlcRadAccount.account_number,
-            models.SlcRadAccount.expire_date,
-            models.SlcRadAccount.balance,
-            models.SlcRadAccount.time_length,
-            models.SlcRadAccount.status,
-            models.SlcRadAccount.create_time,
-            models.SlcRadProduct.product_name
-        ).filter(
-            models.SlcRadProduct.id == models.SlcRadAccount.product_id,
-            models.SlcMember.member_id == models.SlcRadAccount.member_id
-        )
-    if node_id:
-        _query = _query.filter(models.SlcMember.node_id == node_id)
-    if product_id:
-        _query = _query.filter(models.SlcRadAccount.product_id)
-    if user_name:
-        _query = _query.filter(models.SlcRadAccount.account_number.like('%'+user_name+'%'))
-    if status:
-        _query = _query.filter(models.SlcRadAccount.status == status)
-
-    if request.path == '/user':
-        return render("user_list", page_data = get_page_data(_query),
-                       node_list=db.query(models.SlcNode), 
-                       product_list=db.query(models.SlcRadProduct),**request.params)
-    elif request.path == "/user/export":
-        result = _query.all()
-        data = Dataset()
-        data.append((u'上网账号',u'姓名', u'套餐', u'过期时间', u'余额',u'时长',u'状态',u'创建时间'))
-        for i in result:
-            data.append((i.account_number, i.realname, i.product_name, i.expire_date,i.balance,i.time_length,i.status,i.create_time))
-        name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
-
-@app.get('/user/trace',apply=auth_opr)
-def user_trace(db):   
-    return render("user_trace", bas_list=db.query(models.SlcRadBas))
-    
-###############################################################################
-# online manage      
-###############################################################################
-    
-@app.route('/online',apply=auth_opr,method=['GET','POST'])
-def online_query(db): 
-    node_id = request.params.get('node_id')
-    account_number = request.params.get('account_number')  
-    framed_ipaddr = request.params.get('framed_ipaddr')  
-    mac_addr = request.params.get('mac_addr')  
-    nas_addr = request.params.get('nas_addr')  
-    _query = db.query(
-        models.SlcRadOnline.id,
-        models.SlcRadOnline.account_number,
-        models.SlcRadOnline.nas_addr,
-        models.SlcRadOnline.acct_session_id,
-        models.SlcRadOnline.acct_start_time,
-        models.SlcRadOnline.framed_ipaddr,
-        models.SlcRadOnline.mac_addr,
-        models.SlcRadOnline.nas_port_id,
-        models.SlcRadOnline.start_source,
-        models.SlcMember.node_id,
-        models.SlcMember.realname
-    ).filter(
-            models.SlcRadOnline.account_number == models.SlcRadAccount.account_number,
-            models.SlcMember.member_id == models.SlcRadAccount.member_id
-    )
-    if node_id:
-        _query = _query.filter(models.SlcMember.node_id == node_id)
-    if account_number:
-        _query = _query.filter(models.SlcRadOnline.account_number.like('%'+account_number+'%'))
-    if framed_ipaddr:
-        _query = _query.filter(models.SlcRadOnline.framed_ipaddr == framed_ipaddr)
-    if mac_addr:
-        _query = _query.filter(models.SlcRadOnline.mac_addr == mac_addr)
-    if nas_addr:
-        _query = _query.filter(models.SlcRadOnline.nas_addr == nas_addr)
-
-    return render("online_list", page_data = get_page_data(_query),
-                   node_list=db.query(models.SlcNode), 
-                   bas_list=db.query(models.SlcRadBas),**request.params)
-
-###############################################################################
-# ticket manage        
-###############################################################################
-
-@app.route('/ticket',apply=auth_opr,method=['GET','POST'])
-def ticket_query(db): 
-    node_id = request.params.get('node_id')
-    account_number = request.params.get('account_number')  
-    framed_ipaddr = request.params.get('framed_ipaddr')  
-    mac_addr = request.params.get('mac_addr')  
-    query_begin_time = request.params.get('query_begin_time')  
-    query_end_time = request.params.get('query_end_time')  
-    _query = db.query(
-        models.SlcRadTicket.id,
-        models.SlcRadTicket.account_number,
-        models.SlcRadTicket.nas_addr,
-        models.SlcRadTicket.acct_session_id,
-        models.SlcRadTicket.acct_start_time,
-        models.SlcRadTicket.acct_stop_time,
-        models.SlcRadTicket.framed_ipaddr,
-        models.SlcRadTicket.mac_addr,
-        models.SlcRadTicket.nas_port_id,
-        models.SlcRadTicket.acct_fee,
-        models.SlcRadTicket.is_deduct,
-        models.SlcMember.node_id,
-        models.SlcMember.realname
-    ).filter(
-            models.SlcRadTicket.account_number == models.SlcRadAccount.account_number,
-            models.SlcMember.member_id == models.SlcRadAccount.member_id
-    )
-    if node_id:
-        _query = _query.filter(models.SlcMember.node_id == node_id)
-    if account_number:
-        _query = _query.filter(models.SlcRadTicket.account_number.like('%'+account_number+'%'))
-    if framed_ipaddr:
-        _query = _query.filter(models.SlcRadTicket.framed_ipaddr == framed_ipaddr)
-    if mac_addr:
-        _query = _query.filter(models.SlcRadTicket.mac_addr == mac_addr)
-    if query_begin_time:
-        _query = _query.filter(models.SlcRadTicket.acct_start_time >= query_begin_time)
-    if query_end_time:
-        _query = _query.filter(models.SlcRadTicket.acct_stop_time <= query_end_time)
-
-    return render("ticket_list", page_data = get_page_data(_query),
-               node_list=db.query(models.SlcNode),**request.params)
 
     
 ###############################################################################

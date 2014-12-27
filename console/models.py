@@ -291,7 +291,7 @@ def init_db():
 
     param1 = SlcParam()
     param1.param_name = 'max_session_timeout'
-    param1.param_desc = u'最大会话时长'
+    param1.param_desc = u'最大会话时长(秒)'
     param1.param_value = '86400'
     db.add(param1)
     param2 = SlcParam()
