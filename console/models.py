@@ -294,6 +294,11 @@ def init_db():
     param1.param_desc = u'最大会话时长'
     param1.param_value = '86400'
     db.add(param1)
+    param2 = SlcParam()
+    param2.param_name = 'pre_auth_days'
+    param2.param_desc = u'预授权天数'
+    param2.param_value = '1'
+    db.add(param2)    
 
     opr = SlcOperator()
     opr.id = 1
