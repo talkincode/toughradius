@@ -14,6 +14,7 @@ from beaker.middleware import SessionMiddleware
 from libs import sqla_plugin 
 from libs.paginator import Paginator
 from hashlib import md5
+from tablib import Dataset
 import logging
 import bottle
 import functools
@@ -439,11 +440,63 @@ def group_delete(db):
 def roster(db):   
     return render("roster_list", page_data = get_page_data(db.query(models.SlcRadRoster)))
 
+
+   
+@app.get('/roster/add',apply=auth_opr)
+def roster_add(db):  
+    return render("roster_form",form=forms.roster_add_form())
+
+@app.post('/roster/add',apply=auth_opr)
+def roster_add_post(db): 
+    form=forms.roster_add_form()
+    if not form.validates(source=request.forms):
+        return render("roster_form", form=form)  
+    if db.query(models.SlcRadRoster.id).filter_by(mac_addr=form.d.mac_addr).count()>0:
+        return render("roster_form", form=form,msg=u"MAC地址已经存在")     
+    roster = models.SlcRadRoster()
+    roster.mac_addr = form.d.mac_addr
+    roster.account_number = form.d.account_number
+    roster.begin_time = form.d.begin_time
+    roster.end_time = form.d.end_time
+    roster.roster_type = form.d.roster_type
+    db.add(roster)
+    db.commit()
+    redirect("/roster")
+
+@app.get('/roster/update',apply=auth_opr)
+def roster_update(db):  
+    roster_id = request.params.get("roster_id")
+    form=forms.roster_update_form()
+    form.fill(db.query(models.SlcRadRoster).get(roster_id))
+    return render("roster_form",form=form)
+
+@app.post('/roster/update',apply=auth_opr)
+def roster_add_update(db): 
+    form=forms.roster_update_form()
+    if not form.validates(source=request.forms):
+        return render("roster_form", form=form)       
+    roster = db.query(models.SlcRadRoster).get(form.d.id)
+    roster.mac_addr = form.d.mac_addr
+    roster.account_number = form.d.account_number
+    roster.begin_time = form.d.begin_time
+    roster.end_time = form.d.end_time
+    roster.roster_type = form.d.roster_type
+    db.commit()
+    redirect("/roster")    
+
+@app.get('/roster/delete',apply=auth_opr)
+def roster_delete(db):     
+    roster_id = request.params.get("roster_id")
+    db.query(models.SlcRadRoster).filter_by(id=roster_id).delete()
+    db.commit() 
+    redirect("/roster")        
+
 ###############################################################################
 # user manage        
 ###############################################################################
                    
 @app.route('/user',apply=auth_opr,method=['GET','POST'])
+@app.get('/user/export',apply=auth_opr)
 def user_query(db):   
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
@@ -471,10 +524,21 @@ def user_query(db):
         _query = _query.filter(models.SlcRadAccount.account_number.like('%'+user_name+'%'))
     if status:
         _query = _query.filter(models.SlcRadAccount.status == status)
-        
-    return render("user_list", page_data = get_page_data(_query),
-                   node_list=db.query(models.SlcNode), 
-                   product_list=db.query(models.SlcRadProduct),**request.params)
+
+    if request.path == '/user':
+        return render("user_list", page_data = get_page_data(_query),
+                       node_list=db.query(models.SlcNode), 
+                       product_list=db.query(models.SlcRadProduct),**request.params)
+    elif request.path == "/user/export":
+        result = _query.all()
+        data = Dataset()
+        data.append((u'上网账号',u'姓名', u'套餐', u'过期时间', u'余额',u'时长',u'状态',u'创建时间'))
+        for i in result:
+            data.append((i.account_number, i.realname, i.product_name, i.expire_date,i.balance,i.time_length,i.status,i.create_time))
+        name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
+        with open(u'./static/xls/%s' % name, 'wb') as f:
+            f.write(data.xls)
+        return static_file(name, root='./static/xls',download=True)
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   

@@ -89,8 +89,9 @@ class SlcRadRoster(DeclarativeBase):
     __table_args__ = {}
 
     #column definitions
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    mac_addr = Column('mac_addr', VARCHAR(length=17), nullable=False)
     account_number = Column('account_number', VARCHAR(length=32))
-    mac_addr = Column('mac_addr', VARCHAR(length=17), primary_key=True, nullable=False)
     begin_time = Column('begin_time', VARCHAR(length=19), nullable=False)
     end_time = Column('end_time', VARCHAR(length=19), nullable=False)
     roster_type = Column('roster_type', SMALLINT(), nullable=False)
