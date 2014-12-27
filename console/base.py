@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+#coding:utf-8
+
+from bottle import request
+from bottle import response
+from bottle import redirect
+from libs.paginator import Paginator
+from bottle import MakoTemplate
+from libs import utils
+import functools
+import urllib
+import logging
+
+
+""" define logging """
+logger = logging.getLogger("admin")
+
+secret='123321qweasd',
+
+page_size = 20
+
+get_cookie = lambda name: request.get_cookie(name,secret=secret)
+set_cookie = lambda name,value:response.set_cookie(name,value,secret=secret)
+
+MakoTemplate.defaults.update(dict(
+    system_name = 'ToughRADIUS Console',
+    get_cookie = get_cookie,
+    fen2yuan = utils.fen2yuan,
+    request = request
+))
+
+def auth_opr(func):
+    @functools.wraps(func)
+    def warp(*args,**kargs):
+        if not get_cookie("username"):
+            logger.info("admin login timeout")
+            return redirect('/login')
+        else:
+            return func(*args,**kargs)
+    return warp
+
+def get_page_data(query):
+    def _page_url(page, form_id=None):
+        if form_id:return "javascript:goto_page('%s',%s);" %(form_id.strip(),page)
+        request.query['page'] = page
+        return request.path + '?' + urllib.urlencode(request.query)        
+    page = int(request.params.get("page",1))
+    offset = (page - 1) * page_size
+    page_data = Paginator(_page_url, page, query.count(), page_size)
+    page_data.result = query.limit(page_size).offset(offset)
+    return page_data
+
+

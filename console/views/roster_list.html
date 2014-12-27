@@ -2,11 +2,11 @@
 
 <%def name="head()">
 <script>
-    function deleteRoster(mac_addr)
+    function deleteRoster(roster_id)
     {
         if(confirm("确认删除吗？"))
         {
-            window.location.href = "/roster/delete?mac_addr="+mac_addr;
+            window.location.href = "/roster/delete?roster_id="+roster_id;
         }
     }
 
@@ -35,14 +35,13 @@
                 <tbody>
                     % for roster in page_data.result:
                         <tr>
-                            <td>${roster.node_id}</td>
                             <td>${roster.mac_addr}</td>
-                            <td>${{0:'白名单',1:'黑名单'}.get(roster.roster_type)}</td>
-                            <td>${roster.user_name}</td>
+                            <td>${{0:u'白名单',1:u'黑名单'}.get(roster.roster_type)}</td>
+                            <td>${roster.account_number}</td>
                             <td>${roster.begin_time}</td>
                             <td>${roster.end_time}</td>
-                            <td><a class="opt-btn btn-default" href="/roster/modify?mac_addr='${roster.mac_addr}'">修改</a>
-                                <a class="opt-btn btn-default" href="javascript:deleteRoster('${roster.mac_addr}')">删除</a></td>
+                            <td><a class="opt-btn btn-default" href="/roster/update?roster_id=${roster.id}">修改</a>
+                                <a class="opt-btn btn-default" href="javascript:deleteRoster('${roster.id}')">删除</a></td>
                         </tr>
                     % endfor
                 </tbody>

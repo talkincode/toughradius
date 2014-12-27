@@ -14,7 +14,7 @@ $(document).ready(function (){
         }
         if(confirm("是否解锁该bas下所有用户?"))
         {
-             window.location.href = "/online/releaseAll?nas_addr=" + nas_addr;
+             window.location.href = "/ops/online/releaseAll?nas_addr=" + nas_addr;
         }
 
     });
@@ -29,9 +29,9 @@ $(document).ready(function (){
     <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span>在线用户管理</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal" role="form" action="/online" method="post">
+        <form id="query_form" class="form-horizontal" role="form" action="/ops/online" method="post">
             <div class="form-group">
-                <label for="node_id" class="col-md-2 control-label">节点</label>
+                <label for="node_id" class="col-md-2 control-label">区域</label>
                 <div class="col-md-3">
                     <select id="node_id" name="node_id" class="form-control" onchange="whenNodeChange()">
                         <option></option>
@@ -75,7 +75,7 @@ $(document).ready(function (){
 
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" class="btn btn-default">查询</button>&nbsp;&nbsp;<button type="button" class="btn btn-default" id="realseAll">BAS用户下线</button>
+                    <button type="submit" class="btn btn-primary">查询</button>&nbsp;&nbsp;<button type="button" class="btn btn-default" id="realseAll">BAS用户下线</button>
                 </div>
             </div>
         </form>
@@ -105,7 +105,7 @@ $(document).ready(function (){
                 <td>${online.acct_start_time}</td>
                 <td>${online.framed_ipaddr}</td>
                 <td>${online.mac_addr}</td>
-                <td><a class="opt-btn btn-default" href="/online/release?session_id=${online.acct_session_id}&nas_addr=${online.nas_addr}">解锁</a></td>
+                <td><a class="opt-btn btn-default" href="/ops/online/release?session_id=${online.acct_session_id}&nas_addr=${online.nas_addr}">解锁</a></td>
             </tr>
                 % endfor
             </tbody>

@@ -14,17 +14,18 @@
                 <tbody>
                     <tr>
                         <td>登录管理员</td>
-                        <td></td>
+                        <td>${get_cookie("username")}</td>
                         <td>登录时间</td>
-                        <td></td>
+                        <td>${get_cookie("login_time")}</td>
                     </tr>
                     <tr>
                         <td>登录IP地址</td>
-                        <td></td>
+                        <td>${get_cookie("login_ip")}</td>
                         <td></td>
                         <td></td>
                     </tr>
             </tbody>
+
         </table>
     </div>
 </div>

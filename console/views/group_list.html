@@ -9,7 +9,7 @@
 <script>
     function deletegroup(group_id) {
         if (confirm("确认删除吗？")) {
-            window.location.href = "/group/delete?id=" +group_id;
+            window.location.href = "/group/delete?group_id=" +group_id;
         }
     }
 </script>
@@ -42,9 +42,9 @@
                 <td>${group.concur_number}</td>
                 <td>${group.bind_mac and u'绑定' or u'不绑定'}</td>
                 <td>${group.bind_vlan and u'绑定' or u'不绑定'}</td>
-                <td>${group.create_time}</td>
+                <td>${group.update_time}</td>
                 <td>${group.group_desc}</td>
-                <td><a class="opt-btn btn-default" href="/group/modify?id=${group.id}">修改</a>
+                <td><a class="opt-btn btn-default" href="/group/update?group_id=${group.id}">修改</a>
                     <a class="opt-btn btn-default" href="javascript:deletegroup('${group.id}')">删除</a></td>
             </tr>
             % endfor
