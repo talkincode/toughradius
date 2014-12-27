@@ -119,6 +119,29 @@ product_update_form = pyforms.Form(
 )
 
 
+group_add_form = pyforms.Form(
+    pyforms.Textbox("group_name", rules.len_of(2,32), description=u"用户组名",required="required",**input_style),
+    pyforms.Textbox("group_desc", rules.len_of(2,64), description=u"用户组描述",required="required",**input_style),
+    pyforms.Dropdown("bind_mac",  args=boolean.items(),description=u"绑定MAC", required="required",**input_style),
+    pyforms.Dropdown("bind_vlan", args=boolean.items(), description=u"绑定VLAN", required="required",**input_style),
+    pyforms.Textbox("concur_number", rules.is_number,description=u"并发数",value=0, required="required",**input_style),
+    pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+    title=u"增加用户组",
+    action="/group/add"
+)
+
+group_update_form = pyforms.Form(
+    pyforms.Hidden("id",  description=u"编号"),
+    pyforms.Textbox("group_name", rules.len_of(2,32), description=u"用户组名",required="required",**input_style),
+    pyforms.Textbox("group_desc", rules.len_of(2,64), description=u"用户组描述",required="required",**input_style),
+    pyforms.Dropdown("bind_mac",  args=boolean.items(),description=u"绑定MAC", required="required",**input_style),
+    pyforms.Dropdown("bind_vlan", args=boolean.items(), description=u"绑定VLAN", required="required",**input_style),
+    pyforms.Textbox("concur_number", rules.is_number,description=u"并发数", required="required",**input_style),
+    pyforms.Button("submit",  type="submit", html=u"<b>更新</b>", **button_style),
+    title=u"修改用户组",
+    action="/group/update"
+)
+
 
 
 

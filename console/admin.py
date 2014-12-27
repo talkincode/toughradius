@@ -54,7 +54,7 @@ get_cookie = lambda name: request.get_cookie(name,secret=app.config['secret'])
 set_cookie = lambda name,value:response.set_cookie(name,value,secret=app.config['secret'])
 
 MakoTemplate.defaults.update(dict(
-    system_name = 'Radius Console',
+    system_name = 'ToughRADIUS Console',
     get_cookie = get_cookie,
     fen2yuan = fen2yuan,
     request = request
@@ -285,7 +285,7 @@ def bas_add_update(db):
     redirect("/bas")    
 
 @app.get('/bas/delete',apply=auth_opr)
-def node_delete(db):     
+def bas_delete(db):     
     bas_id = request.params.get("bas_id")
     db.query(models.SlcRadBas).filter_by(id=bas_id).delete()
     db.commit() 
@@ -380,6 +380,56 @@ def product_delete(db):
 @app.get('/group',apply=auth_opr)
 def group(db):   
     return render("group_list", page_data = get_page_data(db.query(models.SlcRadGroup)))
+
+   
+@app.get('/group/add',apply=auth_opr)
+def group_add(db):  
+    return render("base_form",form=forms.group_add_form())
+
+@app.post('/group/add',apply=auth_opr)
+def group_add_post(db): 
+    form=forms.group_add_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)    
+    group = models.SlcRadGroup()
+    group.group_name = form.d.group_name
+    group.group_desc = form.d.group_desc
+    group.bind_mac = form.d.bind_mac
+    group.bind_vlan = form.d.bind_vlan
+    group.concur_number = form.d.concur_number
+    group.update_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+    db.add(group)
+    db.commit()
+    redirect("/group")
+
+@app.get('/group/update',apply=auth_opr)
+def group_update(db):  
+    group_id = request.params.get("group_id")
+    form=forms.group_update_form()
+    form.fill(db.query(models.SlcRadGroup).get(group_id))
+    return render("base_form",form=form)
+
+@app.post('/group/update',apply=auth_opr)
+def group_add_update(db): 
+    form=forms.group_update_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+    group = db.query(models.SlcRadGroup).get(form.d.id)
+    group.group_name = form.d.group_name
+    group.group_desc = form.d.group_desc
+    group.bind_mac = form.d.bind_mac
+    group.bind_vlan = form.d.bind_vlan
+    group.concur_number = form.d.concur_number
+    group.update_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+    db.commit()
+    redirect("/group")    
+
+@app.get('/group/delete',apply=auth_opr)
+def group_delete(db):     
+    group_id = request.params.get("group_id")
+    db.query(models.SlcRadGroup).filter_by(id=group_id).delete()
+    db.commit() 
+    redirect("/group")    
 
 ###############################################################################
 # roster manage    
