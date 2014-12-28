@@ -105,7 +105,7 @@ $(document).ready(function (){
                 <td>${online.acct_start_time}</td>
                 <td>${online.framed_ipaddr}</td>
                 <td>${online.mac_addr}</td>
-                <td><a class="opt-btn btn-default" href="/ops/online/release?session_id=${online.acct_session_id}&nas_addr=${online.nas_addr}">解锁</a></td>
+                <td><a class="opt-btn btn-default" href="/ops/online/unlock?session_id=${online.acct_session_id}&nas_addr=${online.nas_addr}">解锁</a></td>
             </tr>
                 % endfor
             </tbody>

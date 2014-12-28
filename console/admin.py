@@ -259,6 +259,16 @@ def product(db):
 def product_add(db):  
     return render("base_form",form=forms.product_add_form())
 
+@app.get('/product/detail',apply=auth_opr)
+def product_detail(db):
+    product_id = request.params.get("product_id")   
+    product = db.query(models.SlcRadProduct).get(product_id)
+    if not product:
+        return render("error",msg=u"资费不存在")
+    product_attrs = db.query(models.SlcRadProductAttr).filter_by(product_id=product_id)
+    return render("product_detail",product=product,product_attrs=product_attrs) 
+
+
 @app.post('/product/add',apply=auth_opr)
 def product_add_post(db): 
     form=forms.product_add_form()
@@ -268,8 +278,6 @@ def product_add_post(db):
     product.product_name = form.d.product_name
     product.product_policy = form.d.product_policy
     product.product_status = form.d.product_status
-    product.domain_name = form.d.domain_name
-    product.bandwidth_code = form.d.bandwidth_code
     product.bind_mac = form.d.bind_mac
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
@@ -277,8 +285,6 @@ def product_add_post(db):
     product.fee_price = utils.yuan2fen(form.d.fee_price)
     product.input_max_limit = form.d.input_max_limit
     product.output_max_limit = form.d.output_max_limit
-    product.input_rate_code = form.d.input_rate_code
-    product.output_rate_code = form.d.output_rate_code
     _datetime = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
     product.create_time = _datetime
     product.update_time = _datetime
@@ -304,8 +310,6 @@ def product_add_update(db):
     product = db.query(models.SlcRadProduct).get(form.d.id)
     product.product_name = form.d.product_name
     product.product_status = form.d.product_status
-    product.domain_name = form.d.domain_name
-    product.bandwidth_code = form.d.bandwidth_code
     product.bind_mac = form.d.bind_mac
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
@@ -313,8 +317,6 @@ def product_add_update(db):
     product.fee_price = utils.yuan2fen(form.d.fee_price)
     product.input_max_limit = form.d.input_max_limit
     product.output_max_limit = form.d.output_max_limit
-    product.input_rate_code = form.d.input_rate_code
-    product.output_rate_code = form.d.output_rate_code
     product.update_time = utils.get_currtime()
     db.commit()
     redirect("/product")    

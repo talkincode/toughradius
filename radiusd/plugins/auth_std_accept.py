@@ -37,9 +37,7 @@ def process(req=None,resp=None,user=None):
         except:pass
 
     for attr in store.get_user_attrs(user['account_number']):
-        try:
-            if attr.attr_name in resp: del resp[attr.attr_name]
-            resp[attr.attr_name] = attr.attr_value
+        try:resp[attr.attr_name] = attr.attr_value
         except:pass
 
     return resp

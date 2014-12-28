@@ -192,8 +192,10 @@ class SlcRadAccount(DeclarativeBase):
 class SlcRadAccountAttr(DeclarativeBase):
     __tablename__ = 'slc_rad_account_attr'
     __table_args__ = {}
-    account_number = Column('account_number', VARCHAR(length=32),primary_key=True,nullable=False)
-    attr_name = Column(u'attr_name', VARCHAR(length=255), primary_key=True, nullable=False)
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    account_number = Column('account_number', VARCHAR(length=32),nullable=False)
+    attr_name = Column(u'attr_name', VARCHAR(length=255), nullable=False)
     attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False)
     attr_desc = Column(u'attr_desc', VARCHAR(length=255))    
 
@@ -208,7 +210,6 @@ class SlcRadProduct(DeclarativeBase):
     product_name = Column('product_name', VARCHAR(length=64), nullable=False)
     product_policy = Column('product_policy', INTEGER(), nullable=False)
     product_status = Column('product_status', SMALLINT(), nullable=False)    
-    domain_name = Column('domain_name', VARCHAR(length=32))
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False)
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False)
     concur_number = Column('concur_number', INTEGER(), nullable=False)
@@ -226,8 +227,9 @@ class SlcRadProductAttr(DeclarativeBase):
 
     __table_args__ = {}    
 
-    product_id = Column('product_id', INTEGER(),autoincrement=False,primary_key=True,nullable=False)
-    attr_name = Column(u'attr_name', VARCHAR(length=255), primary_key=True, nullable=False)
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    product_id = Column('product_id', INTEGER(),nullable=False)
+    attr_name = Column(u'attr_name', VARCHAR(length=255), nullable=False)
     attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False)
     attr_desc = Column(u'attr_desc', VARCHAR(length=255))
     
@@ -239,17 +241,17 @@ class SlcRadTicket(DeclarativeBase):
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
     account_number = Column(u'account_number', VARCHAR(length=253), nullable=False)
-    acct_input_gigawords = Column(u'acct_input_gigawords', INTEGER(), nullable=False)
-    acct_input_octets = Column(u'acct_input_octets', INTEGER(), nullable=False)
-    acct_input_packets = Column(u'acct_input_packets', INTEGER(), nullable=False)
-    acct_output_gigawords = Column(u'acct_output_gigawords', INTEGER(), nullable=False)
-    acct_output_octets = Column(u'acct_output_octets', INTEGER(), nullable=False)
-    acct_output_packets = Column(u'acct_output_packets', INTEGER(), nullable=False)
+    acct_input_gigawords = Column(u'acct_input_gigawords', INTEGER())
+    acct_input_octets = Column(u'acct_input_octets', INTEGER())
+    acct_input_packets = Column(u'acct_input_packets', INTEGER())
+    acct_output_gigawords = Column(u'acct_output_gigawords', INTEGER())
+    acct_output_octets = Column(u'acct_output_octets', INTEGER())
+    acct_output_packets = Column(u'acct_output_packets', INTEGER())
     acct_session_id = Column(u'acct_session_id', VARCHAR(length=253), nullable=False)
     acct_session_time = Column(u'acct_session_time', INTEGER(), nullable=False)
     acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False)
     acct_stop_time = Column(u'acct_stop_time', VARCHAR(length=19), nullable=False)
-    acct_terminate_cause = Column(u'acct_terminate_cause', INTEGER())
+    acct_terminate_cause = Column(u'acct_terminate_cause',INTEGER())
     mac_addr = Column(u'mac_addr', VARCHAR(length=128))
     calling_station_id =  Column(u'calling_station_id', VARCHAR(length=128))
     framed_netmask = Column(u'frame_id_netmask', VARCHAR(length=15))

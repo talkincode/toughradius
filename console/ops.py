@@ -69,7 +69,51 @@ def user_query(db):
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
     return render("ops_user_trace", bas_list=db.query(models.SlcRadBas))
-    
+
+
+                   
+@app.get('/user/detail',apply=auth_opr)
+def user_detail(db):   
+    account_number = request.params.get('account_number')  
+    user  = db.query(
+        models.SlcMember.realname,
+        models.SlcRadAccount.member_id,
+        models.SlcRadAccount.account_number,
+        models.SlcRadAccount.expire_date,
+        models.SlcRadAccount.balance,
+        models.SlcRadAccount.time_length,
+        models.SlcRadAccount.user_concur_number,
+        models.SlcRadAccount.status,
+        models.SlcRadAccount.mac_addr,
+        models.SlcRadAccount.vlan_id,
+        models.SlcRadAccount.vlan_id2,
+        models.SlcRadAccount.ip_address,
+        models.SlcRadAccount.bind_mac,
+        models.SlcRadAccount.bind_vlan,
+        models.SlcRadAccount.ip_address,
+        models.SlcRadAccount.install_address,
+        models.SlcRadAccount.create_time,
+        models.SlcRadProduct.product_name
+    ).filter(
+            models.SlcRadProduct.id == models.SlcRadAccount.product_id,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id,
+            models.SlcRadAccount.account_number == account_number
+    ).first()
+    if not user:
+        return render("error",msg=u"用户不存在")
+    user_attrs = db.query(models.SlcRadAccountAttr).filter_by(account_number=account_number)
+    return render("ops_user_detail",user=user,user_attrs=user_attrs)
+
+@app.get('/user/release',apply=auth_opr)
+def user_release(db):   
+    account_number = request.params.get('account_number')  
+    user = db.query(models.SlcRadAccount).filter_by(account_number=account_number)
+    user.mac_addr = ''
+    user.vlan_id = 0
+    user.vlan_id2 = 0
+    db.commit()
+    return dict(code=0,msg=u"解绑成功")
+
 ###############################################################################
 # online manage      
 ###############################################################################
@@ -111,6 +155,7 @@ def online_query(db):
     return render("ops_online_list", page_data = get_page_data(_query),
                    node_list=db.query(models.SlcNode), 
                    bas_list=db.query(models.SlcRadBas),**request.params)
+
 
 ###############################################################################
 # ticket manage        

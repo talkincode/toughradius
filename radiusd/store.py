@@ -6,6 +6,7 @@ from MySQLdb import cursors
 from DBUtils.PooledDB import PooledDB
 import settings
 import cache
+import datetime
 
 ticket_fds = [
     'account_number','acct_fee','acct_input_gigawords','acct_input_octets',
@@ -180,13 +181,13 @@ class Store():
             cur.execute(sql,(nas_addr,acct_session_id))
             conn.commit()
 
-    def del_nas_onlines(self,nas_addr):
-        with Connect(self.dbpool) as conn:
-            cur = conn.cursor()
-            sql = 'delete from slc_rad_online where nas_addr = %s'
-            cur.execute(sql,(nas_addr,))
-            conn.commit()
-            
+    # def del_nas_onlines(self,nas_addr):
+    #     with Connect(self.dbpool) as conn:
+    #         cur = conn.cursor()
+    #         sql = 'delete from slc_rad_online where nas_addr = %s'
+    #         cur.execute(sql,(nas_addr,))
+    #         conn.commit()
+
     def add_ticket(self,ticket):
         _ticket = ticket.copy()
         for _key in _ticket:
@@ -199,7 +200,63 @@ class Store():
             sql = 'insert into slc_rad_ticket (%s) values(%s)'%(keys,vals)
             cur.execute(sql)
             conn.commit()
-            
+
+    def unlock_online(self,nas_addr,acct_session_id,stop_source):
+        bsql = ''' insert into slc_rad_ticket (
+        account_number,acct_session_id,acct_start_time,nas_addr,framed_ipaddr,start_source,
+        acct_session_time,acct_stop_time,stop_source,fee_receivables,acct_fee,is_deduct) values(
+         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        ''' 
+        def _ticket(online):
+            ticket = []
+            ticket.append(online['account_number'])
+            ticket.append(online['acct_session_id'])
+            ticket.append(online['acct_start_time'])
+            ticket.append(online['nas_addr'])
+            ticket.append(online['framed_ipaddr'])
+            ticket.append(online['start_source'])
+            _datetime = datetime.datetime.now()
+            _starttime = datetime.datetime.strptime(online['acct_start_time'],"%Y-%m-%d %H:%M:%S")
+            session_time = (_datetime - _starttime).seconds
+            stop_time = _datetime.strftime( "%Y-%m-%d %H:%M:%S")
+            ticket.append(session_time)
+            ticket.append(stop_time)
+            ticket.append(stop_source)
+            ticket.append(0)
+            ticket.append(0)
+            ticket.append(0)
+            return ticket
+
+        def _unlock_one():
+            ticket = None
+            with Connect(self.dbpool) as conn:
+                cur = conn.cursor(cursors.DictCursor)
+                sql = 'select * from slc_rad_online where  nas_addr = %s and acct_session_id = %s'
+                cur.execute(sql,(nas_addr,acct_session_id)) 
+                online = cur.fetchone()
+                if online:
+                    ticket = _ticket(online) 
+                    dsql = 'delete from slc_rad_online where nas_addr = %s and acct_session_id = %s'
+                    cur.execute(dsql,(nas_addr,acct_session_id))
+                    cur.execute(bsql,ticket)
+                    conn.commit()  
+
+        def _unlock_many():
+            tickets = []
+            with Connect(self.dbpool) as conn:
+                cur = conn.cursor(cursors.DictCursor)
+                cur.execute('select * from slc_rad_online where nas_addr = %s',(nas_addr,)) 
+                for online in cur:
+                    tickets.append(_ticket(online))
+                if tickets:     
+                    cur.executemany(bsql,tickets)
+                    cur.execute('delete from slc_rad_online where nas_addr = %s',(nas_addr,))
+                    conn.commit()                  
+
+        if acct_session_id:_unlock_one()
+        else:_unlock_many()
+
+
 store = Store(DbPool())
 
 

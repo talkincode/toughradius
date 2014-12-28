@@ -39,7 +39,7 @@
             <tbody>
             % for product in page_data.result:
             <tr>
-                <td>${product.product_name}</td>
+                <td><a href="/product/detail?product_id=${product.id}">${product.product_name}</a></td>
                 <td>
                     ${{0:u'包月',1:u'小时计费'}[product.product_policy]}
                 </td>

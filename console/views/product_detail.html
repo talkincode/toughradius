@@ -1,0 +1,76 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 资费信息 </div>
+        <div class="panel-body">
+        <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="6">基本信息</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>资费名称</td>
+                        <td>${product.product_name}</td>
+                        <td>资费策略</td>
+                        <td>${{0:u'包月',1:u"小时计费"}[product.product_policy]}</td>
+                        <td>资费状态</td>
+                        <td>${{0:u"正常", 1:u"停用"}[product.product_status]}</td>                 
+                    </tr> 
+                    <tr>
+                        <td>资费价格</td>
+                        <td>${fen2yuan(product.fee_price)}</td>
+                        <td>计费时段</td>
+                        <td>${product.fee_period}</td>
+                        <td>创建时间</td>
+                        <td>${product.create_time}</td>                        
+                    </tr>  
+                    <tr>
+                        <td>绑定MAC</td>
+                        <td>${{0:u"否", 1:u"是"}[product.bind_mac]}</td>                        
+                        <td>绑定VLAN</td>
+                        <td>${{0:u"否", 1:u"是"}[product.bind_vlan]}</td>
+                        <td>并发数</td>
+                        <td>${product.concur_number}</td>
+                    </tr>   
+ 
+                    <tr>
+                        <td>最大上行速率</td>
+                        <td>${product.input_max_limit}</td>
+                        <td>最大下行速率</td>
+                        <td>${product.output_max_limit}</td>
+                        <td>更新时间</td>
+                        <td>${product.update_time}</td>                        
+                    </tr>                                                                      
+            </tbody>
+        </table>
+
+        <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="3">扩展策略属性列表</th>
+                    </tr>
+                </thead>
+            <tr>
+                <th>策略名称</th>
+                <th>策略值</th>
+                <th>策略描述</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for attr in product_attrs:
+            <tr>
+                <td>${attr.attr_name}</td>
+                <td>${attr.attr_value}</td>
+                <td>${attr.attr_desc}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>        
+    </div>
+</div>
+</div>
+</%def>
