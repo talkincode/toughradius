@@ -16,15 +16,15 @@ class Middleware():
             try:
                 __import__('plugins.%s' % name)
                 cls.add_plugin(name,getattr(plugins, name))
-                log.msg('Plugin %s loaded success.' % name)
+                log.msg('Plugin %s loaded success.' % name,level=logging.INFO)
             except Exception as err:
-                log.err(err,'Fail to load plugin %s' % (name))
+                log.err(err,'Fail to load plugin %s' % (name),level=logging.INFO)
         cls._plugin_loaded = True
 
     @classmethod
     def add_plugin(cls,name,plugin):
         if not hasattr(plugin, 'process'):
-            log.err('Plugin %s has no method named process, ignore it')
+            log.err('Plugin %s has no method named process, ignore it',level=logging.INFO)
             return False
         cls._plugin_modules[name] = plugin
         return True
@@ -36,7 +36,7 @@ class Middleware():
             log.msg('Plugin %s match.'%name,level=logging.DEBUG)
             return self._plugin_modules[name].process(**kwargs)
         except Exception as err:
-            log.err(err,'Plugin %s failed to process.' % name)
+            log.err(err,'Plugin %s failed to process.' % name,level=logging.INFO)
             return False
              
 

@@ -5,8 +5,13 @@ from pyrad import packet
 from store import store
 from settings import *
 import logging
+import decimal
 import datetime
 import utils
+
+decimal.getcontext().prec = 11
+decimal.getcontext().rounding = decimal.ROUND_UP
+
 
 """记账结束包处理"""
 def process(req=None,user=None,runstat=None):
@@ -60,11 +65,10 @@ def process(req=None,user=None,runstat=None):
 
     elif product['product_policy'] == FEE_TIMES:
         # PrePay fee times policy
-        sessiontime = round(req.get_acctsessiontime()/60,0)
-        usedfee = round(sessiontime/60*product['fee_price'],0)
-        remaind = round(sessiontime%60,0)
-        if remaind > 0 :
-            usedfee = usedfee + round(remaind*product.fee_price/60,0);
+        sessiontime = decimal.Decimal(req.get_acctsessiontime())
+        fee_price = decimal.Decimal(product['fee_price'])
+        usedfee = sessiontime/decimal.Decimal(3600) * fee_price
+        usedfee = int(usedfee.to_integral_value())
         balance = user['balance'] - usedfee
         if balance < 0:
             user['balance'] = 0

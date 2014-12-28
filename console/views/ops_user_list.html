@@ -1,8 +1,15 @@
 <%inherit file="base.html"/>
 
 <%def name="head()">
-<script>
-</script>
+        <script>
+            function release(account_number)
+            {
+                params = {account_number:account_number};
+                $.post("/ops/user/release", params, function (data) {
+                    alert(data.msg)
+                },"json");
+            }
+        </script>
 </%def>
 
 <%def name="body()">
@@ -74,7 +81,7 @@
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
                 <td>${user.create_time}</td>
-                 <td><a class="opt-btn btn-default" href="/ops/user/release?account_number=${user.account_number}}">释放绑定</a></td>
+                 <td><a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">释放绑定</a></td>
             </tr>
             % endfor
             </tbody>

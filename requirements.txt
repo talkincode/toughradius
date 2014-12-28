@@ -4,4 +4,9 @@ MarkupSafe==0.21
 PyYAML==3.11
 wsgiref==0.1.2
 pyrad==2.0
-bottle=0.1.2
+bottle==0.12.7
+six==1.4.1
+CherryPy==3.6.0
+MySQL-python==1.2.5
+SQLAlchemy==0.8.2
+Twisted==13.2.0

@@ -133,6 +133,8 @@ class Form(object):
             out.append(i.post) 
             out.append('\n')
             out.append('</div>')
+            if i.hr:
+                out.append("<hr/>")
         return ''.join(out) 
         
     def rendernote(self, note):
@@ -197,6 +199,7 @@ class Input(object):
         self.value = attrs.pop('value', None)
         self.pre = attrs.pop('pre', "")
         self.post = attrs.pop('post', "")
+        self.hr = attrs.pop('hr',False)
         self.note = None
         
         self.id = attrs.setdefault('id', self.get_default_id())

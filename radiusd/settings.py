@@ -62,7 +62,7 @@ acct_plugins = [
 ]
 
 admin_plugins = [
-
+    'admin_unlock_online',
 ]
 
 

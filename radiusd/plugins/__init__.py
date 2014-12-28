@@ -15,7 +15,8 @@ __all__ = [
     'acct_onoff_process',
     'auth_std_accept',
     'admin_trace_global',
-    'admin_trace_user'
+    'admin_trace_user',
+    'admin_unlock_online'
 ]
 
 def error_auth(resp,errmsg):

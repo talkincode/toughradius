@@ -53,3 +53,37 @@ def member_query(db):
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
         return static_file(name, root='./static/xls',download=True)    
+
+
+@app.get('/member/detail',apply=auth_opr)
+def member_detail(db): 
+    member_id =   request.params.get('member_id')
+    member = db.query(models.SlcMember).get(member_id)
+    accounts = db.query(
+        models.SlcMember.realname,
+        models.SlcRadAccount.member_id,
+        models.SlcRadAccount.account_number,
+        models.SlcRadAccount.expire_date,
+        models.SlcRadAccount.balance,
+        models.SlcRadAccount.time_length,
+        models.SlcRadAccount.status,
+        models.SlcRadAccount.create_time,
+        models.SlcRadProduct.product_name
+    ).filter(
+        models.SlcRadProduct.id == models.SlcRadAccount.product_id,
+        models.SlcMember.member_id == models.SlcRadAccount.member_id,
+        models.SlcRadAccount.member_id == member_id
+    )
+    return  render("bus_member_detail",member=member,accounts=accounts)
+
+@app.get('/member/open',apply=auth_opr)
+def member_open(db): 
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    form = forms.user_add_form(nodes,products)
+    return render("open_form",form=form)
+
+
+
+
+

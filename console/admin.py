@@ -330,6 +330,58 @@ def product_delete(db):
     db.commit() 
     redirect("/product")   
 
+@app.get('/product/attr/add',apply=auth_opr)
+def product_attr_add(db): 
+    product_id = request.params.get("product_id")
+    if db.query(models.SlcRadProduct).filter_by(id=product_id).count()<=0:
+        return render("error",msg=u"资费不存在") 
+    form = forms.product_attr_add_form()
+    form.product_id.set_value(product_id)
+    return render("base_form",form=form)
+
+@app.post('/product/attr/add',apply=auth_opr)
+def product_attr_add(db): 
+    form = forms.product_attr_add_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)   
+    attr = models.SlcRadProductAttr()
+    attr.product_id = form.d.product_id
+    attr.attr_name = form.d.attr_name
+    attr.attr_value = form.d.attr_value
+    attr.attr_desc = form.d.attr_desc
+    db.add(attr)
+    db.commit()
+    redirect("/product/detail?product_id="+form.d.product_id) 
+
+@app.get('/product/attr/update',apply=auth_opr)
+def product_attr_update(db): 
+    attr_id = request.params.get("attr_id")
+    attr = db.query(models.SlcRadProductAttr).get(attr_id)
+    form = forms.product_attr_update_form()
+    form.fill(attr)
+    return render("base_form",form=form)
+
+@app.post('/product/attr/update',apply=auth_opr)
+def product_attr_update(db): 
+    form = forms.product_attr_update_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)   
+    attr = db.query(models.SlcRadProductAttr).get(form.d.id)
+    attr.attr_name = form.d.attr_name
+    attr.attr_value = form.d.attr_value
+    attr.attr_desc = form.d.attr_desc
+    db.commit()
+    redirect("/product/detail?product_id="+form.d.product_id) 
+
+@app.get('/product/attr/delete',apply=auth_opr)
+def product_attr_update(db): 
+    attr_id = request.params.get("attr_id")
+    attr = db.query(models.SlcRadProductAttr).get(attr_id)
+    product_id = attr.product_id
+    db.query(models.SlcRadProductAttr).filter_by(id=attr_id).delete()
+    db.commit()
+    redirect("/product/detail?product_id=%s"%product_id)     
+
 ###############################################################################
 # group manage      
 ###############################################################################

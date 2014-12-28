@@ -104,7 +104,7 @@ def user_detail(db):
     user_attrs = db.query(models.SlcRadAccountAttr).filter_by(account_number=account_number)
     return render("ops_user_detail",user=user,user_attrs=user_attrs)
 
-@app.get('/user/release',apply=auth_opr)
+@app.post('/user/release',apply=auth_opr)
 def user_release(db):   
     account_number = request.params.get('account_number')  
     user = db.query(models.SlcRadAccount).filter_by(account_number=account_number)

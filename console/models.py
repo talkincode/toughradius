@@ -135,8 +135,9 @@ class SlcMemberOrder(DeclarativeBase):
     product_id = Column('product_id', INTEGER(),nullable=False)
     account_number = Column('account_number', VARCHAR(length=32),nullable=False)
     order_fee = Column('order_fee', INTEGER(), nullable=False)
+    actual_fee = Column('actual_fee', INTEGER(), nullable=False)
     pay_status = Column('pay_status', INTEGER(), nullable=False)
-    order_detail = Column('order_detail', VARCHAR(length=1024), nullable=False)
+    order_source = Column('order_source', VARCHAR(length=64), nullable=False)
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
 
 
@@ -312,11 +313,7 @@ def init_db():
     param1.param_desc = u'最大会话时长(秒)'
     param1.param_value = '86400'
     db.add(param1)
-    param2 = SlcParam()
-    param2.param_name = 'pre_auth_days'
-    param2.param_desc = u'预授权天数'
-    param2.param_value = '1'
-    db.add(param2)    
+  
 
     opr = SlcOperator()
     opr.id = 1
@@ -340,7 +337,7 @@ def init_db():
 
     product = SlcRadProduct()
     product.id = 1
-    product.product_name = 'test_product'
+    product.product_name = u'10元包月套餐'
     product.product_policy = 0
     product.product_status = 1
     product.bind_mac = 0
@@ -355,25 +352,25 @@ def init_db():
     product.update_time = '2014-12-10 23:23:21'
     db.add(product)
 
-    member = SlcMember()
-    member.member_id = 100001
-    member.node_id = 1
-    member.member_name = 'wjt'
-    member.realname = 'wjt'
-    member.idcard = '0'
-    member.sex = '1'
-    member.age = '33'
-    member.email = 'wjt@lingyatech.com'
-    member.mobile = '1366666666'
-    member.address = 'hunan changsha'
-    member.create_time = '2014-12-10 23:23:21'
-    member.update_time = '2014-12-10 23:23:21'
-    db.add(member)
+
 
     for i in range(1000):
+        member = SlcMember()
+        member.member_id = 100000 + i
+        member.node_id = 1
+        member.realname = 'test00%s'%i
+        member.idcard = '0'
+        member.sex = '1'
+        member.age = '33'
+        member.email = 'wjt@lingyatech.com'
+        member.mobile = '1366666666'
+        member.address = 'hunan changsha'
+        member.create_time = '2014-12-10 23:23:21'
+        member.update_time = '2014-12-10 23:23:21'
+        db.add(member)        
         account = SlcRadAccount()
         account.account_number = 'test00%s'%i
-        account.member_id = 100001
+        account.member_id = member.member_id
         account.product_id = 1
         account.domain_name = 'cmcc'
         account.group_id = 1

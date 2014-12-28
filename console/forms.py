@@ -110,6 +110,28 @@ product_update_form = pyforms.Form(
     action="/product/update"
 )
 
+product_attr_add_form = pyforms.Form(
+    pyforms.Hidden("product_id",  description=u"资费编号"),
+    pyforms.Textbox("attr_name", rules.is_alphanum3(1, 255), description=u"策略名称",  required="required",**input_style),
+    pyforms.Textbox("attr_value", rules.is_alphanum3(1, 255),description=u"策略值", required="required",**input_style),
+    pyforms.Textbox("attr_desc", rules.len_of(1, 255),description=u"策略描述", required="required",**input_style),
+    pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
+    title=u"增加策略属性",
+    action="/product/attr/add"
+)
+
+product_attr_update_form = pyforms.Form(
+    pyforms.Hidden("id",  description=u"编号"),
+    pyforms.Hidden("product_id",  description=u"资费编号"),
+    pyforms.Textbox("attr_name", rules.is_alphanum3(1, 255), description=u"策略名称",  readonly="required",**input_style),
+    pyforms.Textbox("attr_value", rules.is_alphanum3(1, 255),description=u"策略值", required="required",**input_style),
+    pyforms.Textbox("attr_desc", rules.len_of(1, 255),description=u"策略描述", required="required",**input_style),
+    pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
+    title=u"修改策略属性",
+    action="/product/attr/update"
+)
+
+
 
 group_add_form = pyforms.Form(
     pyforms.Textbox("group_name", rules.len_of(2,32), description=u"用户组名",required="required",**input_style),
@@ -160,7 +182,28 @@ roster_update_form = pyforms.Form(
 )
 
 
+userreg_state = {1:u"正常", 6:u"未激活"}
+user_state = {1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期", 6:u"未激活"}
+bind_state = {0: u"不绑定", 1: u"绑定"}
 
+def user_add_form(nodes=[],products=[]):
+    return pyforms.Form(
+        pyforms.Dropdown("node_id", description=u"区域", args=nodes, **input_style),
+        pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
+        pyforms.Textbox("idcard", rules.is_idcard, description=u"证件号码", required="required", **input_style),
+        pyforms.Textbox("mobile", rules.is_number,description=u"用户手机号码", required="required", **input_style),
+        pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
+        pyforms.Textbox("account_number", description=u"用户账号",  required="required", **input_style),
+        pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
+        pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
+        pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
+        pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
+        pyforms.Dropdown("status", args=userreg_state.items(), description=u"用户域",  **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"用户开户",
+        action="/bus/member/open"
+    )
 
 
 

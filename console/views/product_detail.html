@@ -1,10 +1,20 @@
 <%inherit file="base.html"/>
 <%def name="head()">
+<script>
+    function deleteAttr(attr_id) {
+        if (confirm("确认删除吗？")) {
+            window.location.href = "/product/attr/delete?attr_id=" +attr_id;
+        }
+    }
+</script>
 </%def>
 <%def name="body()">
     <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 资费信息 </div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 资费信息 <a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
         <div class="panel-body">
+        <div class="pull-right bottom10">
+            <a href="/product/attr/add?product_id=${product.id}" class="btn btn-sm btn-info">增加策略属性</a>
+        </div>   
         <table class="table table-hover">
                 <thead>
                     <tr>
@@ -48,16 +58,17 @@
             </tbody>
         </table>
 
-        <table class="table table-hover">
+        <table class="table table-hover ">
                 <thead>
                     <tr>
-                        <th colspan="3">扩展策略属性列表</th>
+                        <th colspan="4">扩展策略属性列表</th>
                     </tr>
                 </thead>
-            <tr>
+            <tr class="active">
                 <th>策略名称</th>
                 <th>策略值</th>
                 <th>策略描述</th>
+                <th></th>
             </tr>
             </thead>
             <tbody>
@@ -66,6 +77,10 @@
                 <td>${attr.attr_name}</td>
                 <td>${attr.attr_value}</td>
                 <td>${attr.attr_desc}</td>
+                <td>
+                <a class="opt-btn btn-default" href="/product/attr/update?attr_id=${attr.id}">修改</a>
+                <a class="opt-btn btn-default" href="javascript:deleteAttr('${attr.id}');">删除</a>
+                </td>
             </tr>
             % endfor
             </tbody>
