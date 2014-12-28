@@ -186,7 +186,7 @@ userreg_state = {1:u"正常", 6:u"未激活"}
 user_state = {1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期", 6:u"未激活"}
 bind_state = {0: u"不绑定", 1: u"绑定"}
 
-def user_add_form(nodes=[],products=[]):
+def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes, **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
@@ -199,11 +199,21 @@ def user_add_form(nodes=[],products=[]):
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
-        pyforms.Dropdown("status", args=userreg_state.items(), description=u"用户域",  **input_style),
+        pyforms.Dropdown("status", args=userreg_state.items(), description=u"用户状态",  **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户开户",
         action="/bus/member/open"
     )
+
+def user_import_form(nodes=[],products=[]):
+    return pyforms.Form(
+        pyforms.Dropdown("node_id", description=u"用户区域", args=nodes, **input_style),
+        pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
+        pyforms.File("import_file", description=u"数据文件",  required="required", **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"用户导入",
+        action="/bus/member/import"
+)
 
 
 

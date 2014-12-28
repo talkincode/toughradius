@@ -80,10 +80,15 @@ def member_detail(db):
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.user_add_form(nodes,products)
+    form = forms.user_open_form(nodes,products)
     return render("open_form",form=form)
 
-
+@app.get('/member/import',apply=auth_opr)
+def member_open(db): 
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    form = forms.user_import_form(nodes,products)
+    return render("import_form",form=form)
 
 
 
