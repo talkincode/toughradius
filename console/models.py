@@ -186,9 +186,16 @@ class SlcRadAccount(DeclarativeBase):
     vlan_id = Column('vlan_id', INTEGER())
     vlan_id2 = Column('vlan_id2', INTEGER())
     ip_address = Column('ip_address', VARCHAR(length=15))
-    domain_name = Column('domain_name', VARCHAR(length=32))
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
     update_time = Column('update_time', VARCHAR(length=19), nullable=False)
+
+class SlcRadAccountAttr(DeclarativeBase):
+    __tablename__ = 'slc_rad_account_attr'
+    __table_args__ = {}
+    account_number = Column('account_number', VARCHAR(length=32),primary_key=True,nullable=False)
+    attr_name = Column(u'attr_name', VARCHAR(length=255), primary_key=True, nullable=False)
+    attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False)
+    attr_desc = Column(u'attr_desc', VARCHAR(length=255))    
 
 class SlcRadProduct(DeclarativeBase):
     '''宽带产品信息
@@ -202,7 +209,6 @@ class SlcRadProduct(DeclarativeBase):
     product_policy = Column('product_policy', INTEGER(), nullable=False)
     product_status = Column('product_status', SMALLINT(), nullable=False)    
     domain_name = Column('domain_name', VARCHAR(length=32))
-    bandwidth_code = Column('bandwidth_code', VARCHAR(length=32), nullable=False)
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False)
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False)
     concur_number = Column('concur_number', INTEGER(), nullable=False)
@@ -210,10 +216,20 @@ class SlcRadProduct(DeclarativeBase):
     fee_price = Column('fee_price', INTEGER(), nullable=False)
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False)
     output_max_limit = Column('output_max_limit', INTEGER(), nullable=False)
-    input_rate_code = Column('input_rate_code', VARCHAR(length=32), nullable=False)
-    output_rate_code = Column('output_rate_code', VARCHAR(length=32), nullable=False)
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
     update_time = Column('update_time', VARCHAR(length=19), nullable=False)
+
+class SlcRadProductAttr(DeclarativeBase):
+    '''宽带产品信息
+    '''
+    __tablename__ = 'slc_rad_product_attr'
+
+    __table_args__ = {}    
+
+    product_id = Column('product_id', INTEGER(),autoincrement=False,primary_key=True,nullable=False)
+    attr_name = Column(u'attr_name', VARCHAR(length=255), primary_key=True, nullable=False)
+    attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False)
+    attr_desc = Column(u'attr_desc', VARCHAR(length=255))
     
 class SlcRadTicket(DeclarativeBase):
     __tablename__ = 'slc_rad_ticket'
@@ -313,7 +329,7 @@ def init_db():
     bas = SlcRadBas()
     bas.id = 1
     bas.vendor_id = '0'
-    bas.ip_addr = '192.168.1.101'
+    bas.ip_addr = '192.168.1.102'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
     bas.status = 1
@@ -325,8 +341,6 @@ def init_db():
     product.product_name = 'test_product'
     product.product_policy = 0
     product.product_status = 1
-    product.domain_name = 'cmcc'
-    product.bandwidth_code = 'none'
     product.bind_mac = 0
     product.bind_vlan = 0
     product.concur_number = 0
@@ -335,8 +349,6 @@ def init_db():
     product.fee_price = 0
     product.input_max_limit = 102400
     product.output_max_limit = 102400
-    product.input_rate_code = 'none'
-    product.output_rate_code = 'none'
     product.create_time = '2014-12-10 23:23:21'
     product.update_time = '2014-12-10 23:23:21'
     db.add(product)

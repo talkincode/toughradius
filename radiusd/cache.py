@@ -32,6 +32,8 @@ def delete(category,func,*args,**kwargs):
     if key in _cache:
         del _cache[key]
 
+def clear():
+    _cache.clear()
 
 if __name__ == '__main__':
     
@@ -41,7 +43,9 @@ if __name__ == '__main__':
 
     print getcache(1,2,3)
     print _cache
-    delete('all',getcache,1,2,3)
+    # delete('all',getcache,1,2,3)
+    # print _cache
+    clear()
     print _cache
 
 

@@ -23,11 +23,15 @@ get_cookie = lambda name: request.get_cookie(name,secret=secret)
 set_cookie = lambda name,value:response.set_cookie(name,value,secret=secret)
 
 MakoTemplate.defaults.update(dict(
-    system_name = 'ToughRADIUS Console',
-    get_cookie = get_cookie,
-    fen2yuan = utils.fen2yuan,
-    request = request
+        system_name = 'ToughRADIUS Console',
+        get_cookie = get_cookie,
+        fen2yuan = utils.fen2yuan,
+        request = request
 ))
+
+def init_context(**kwargs):
+    MakoTemplate.defaults.update(**kwargs)
+    
 
 def auth_opr(func):
     @functools.wraps(func)

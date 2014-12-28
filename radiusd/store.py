@@ -79,8 +79,15 @@ class Store():
             user =  cur.fetchone()
             return user
 
+    @cache.cache('all')
+    def get_user_attrs(self,username):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select * from slc_rad_account_attr where account_number = %s ",(username,))
+            return cur.fetchall()  
+
     def update_user_cache(self,username):
         cache.delete('all',self.get_user, username)
+        cache.delete('all',self.get_user_attrs, username)
 
     def update_user_balance(self,username,balance):
         with Connect(self.dbpool) as conn:
@@ -129,8 +136,15 @@ class Store():
             cur.execute("select * from slc_rad_product where id = %s ",(product_id,))
             return cur.fetchone()  
 
+    @cache.cache('all')
+    def get_product_attrs(self,product_id):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select * from slc_rad_product_attr where product_id = %s ",(product_id,))
+            return cur.fetchall()  
+
     def clear_product_cache(self,product_id):
         cache.delete('all',self.get_product, product_id)
+        cache.delete('all',self.get_product_attrs, product_id)
           
     def is_online(self,nas_addr,acct_session_id):
         with Cursor(self.dbpool) as cur: 

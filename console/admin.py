@@ -450,5 +450,14 @@ def roster_delete(db):
 ###############################################################################
 
 if __name__ == "__main__":
-    runserver(app, host='0.0.0.0', port=8080 ,debug=True,reloader=True)
+    import sys,argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-http','--httpport', type=int,default=1816,dest='httpport',help='http port')
+    parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
+    parser.add_argument('-debug','--debug', type=bool,default=True,dest='debug',help='debug')
+    _args = sys.argv
+    _args = _args[_args.index(__file__)+1:]
+    args =  parser.parse_args(sys.argv[1:])
+    init_context(adminport=args.adminport)
+    runserver(app, host='0.0.0.0', port=args.httpport ,debug=args.debug,reloader=args.debug,server="cherrypy")
 

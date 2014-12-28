@@ -23,6 +23,7 @@ import sys
 import pprint
 import utils
 import json
+import cache
 
 ###############################################################################
 # Basic Defined                                                            ####
@@ -173,23 +174,35 @@ class RADIUSAccounting(RADIUS):
                  
 if __name__ == '__main__':
     from autobahn.twisted.websocket import WebSocketServerFactory
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-auth','--authport', type=int,default=1812,dest='authport',help='auth port')
+    parser.add_argument('-acct','--acctport', type=int,default=1813,dest='acctport',help='acct port')
+    parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
+    parser.add_argument('-debug','--debug', type=bool,default=True,dest='debug',help='debug')
+    _args = sys.argv
+    _args = _args[_args.index(__file__)+1:]
+    args =  parser.parse_args(sys.argv[1:])
+
     log.startLogging(sys.stdout, 0)
     _trace = UserTrace()
     _runstat = statistics.RunStat()
     _middleware = middleware.Middleware()
-    _debug = settings.debug
+    _debug = args.debug or settings.debug
     # radius server
     auth_protocol = RADIUSAccess(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug)
     acct_protocol = RADIUSAccounting(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug)
-    reactor.listenUDP(1812, auth_protocol)
-    reactor.listenUDP(1813, acct_protocol)
+    reactor.listenUDP(args.authport, auth_protocol)
+    reactor.listenUDP(args.acctport, acct_protocol)
     _task = task.LoopingCall(auth_protocol.process_delay)
     _task.start(2.7)
+    _cache_task = task.LoopingCall(cache.clear)
+    _cache_task.start(3600)
     # admin server
-    factory = WebSocketServerFactory("ws://localhost:1815", debug = False)
+    factory = WebSocketServerFactory("ws://localhost:%s"%args.adminport, debug = _debug)
     factory.protocol = AdminServerProtocol
     factory.protocol.user_trace = _trace
     factory.protocol.midware = _middleware
     factory.protocol.runstat = _runstat
-    reactor.listenTCP(1815, factory)
+    reactor.listenTCP(args.adminport, factory)
     reactor.run()

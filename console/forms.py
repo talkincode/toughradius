@@ -81,19 +81,15 @@ product_add_form = pyforms.Form(
     pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"套餐名称",  required="required",**input_style),
     pyforms.Dropdown("product_policy", args=product_policy.items(), description=u"计费策略", required="required",**input_style),
     pyforms.Dropdown("product_status", args=product_status_dict.items(),description=u"套餐状态", required="required", **input_style),
-    pyforms.Textbox("domain_name",rules.len_of(0,16),description=u"套餐域",**input_style),
     pyforms.Textbox("fee_price", rules.is_rmb, description=u"套餐价格(包月价/每小时价)(元)", required="required", **input_style),
     pyforms.Textbox("fee_period",rules.is_period,description=u"计费时段(小时计费有效)",**input_style),
     pyforms.Textbox("concur_number", rules.is_numberOboveZore,description=u"并发数控制(0表示不限制)",value="0", **input_style),
     pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC ",**input_style),
     pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN ",**input_style),
-    pyforms.Textbox("bandwidth_code",  rules.is_alphanum2(0,16),description=u"套餐限速编码 ",**input_style),
     pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率 ", **input_style),
     pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率 ",**input_style),
-    pyforms.Textbox("input_rate_code",  rules.is_alphanum2(0,16),description=u"上行限速编码 ", **input_style),
-    pyforms.Textbox("output_rate_code",  rules.is_alphanum2(0,16),description=u"下行限速编码 ",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
-    title=u"增加套餐",
+    title=u"增加资费",
     action="/product/add"
 )
 
@@ -102,19 +98,15 @@ product_update_form = pyforms.Form(
     pyforms.Textbox("product_name", rules.len_of(4, 32), description=u"产品套餐名称", required="required",**input_style),
     pyforms.Textbox("product_policy_name", description=u"套餐策略",readonly="readonly", required="required",**input_style),
     pyforms.Dropdown("product_status",args=product_status_dict.items(), description=u"套餐状态", required="required", **input_style),
-    pyforms.Textbox("domain_name",rules.len_of(0,16),description=u"套餐域",**input_style),
     pyforms.Textbox("fee_price", rules.is_rmb,description=u"套餐价格(包月价/每小时价)(元)", required="required", **input_style),
     pyforms.Textbox("fee_period", rules.is_period,description=u"计费时段(小时计费有效)",**input_style),
     pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)", **input_style),
     pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),
     pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN",**input_style),
-    pyforms.Textbox("bandwidth_code",  rules.is_alphanum2(0,16),description=u"套餐限速编码",**input_style),
     pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率", **input_style),
     pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率",**input_style),
-    pyforms.Textbox("input_rate_code",  rules.is_alphanum2(0,16),description=u"上行限速编码", **input_style),
-    pyforms.Textbox("output_rate_code",  rules.is_alphanum2(0,16),description=u"下行限速编码",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
-    title=u"修改套餐",
+    title=u"修改资费",
     action="/product/update"
 )
 

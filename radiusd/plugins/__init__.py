@@ -4,7 +4,6 @@ from pyrad import packet
 
 __all__ = [
     'auth_bind_filter',
-    'auth_domain_filter',
     'auth_group_filter',
     'auth_policy_filter',
     'auth_user_filter',
@@ -15,7 +14,6 @@ __all__ = [
     'acct_update_process',
     'acct_onoff_process',
     'auth_std_accept',
-    'auth_cisco_accept',
     'admin_trace_global',
     'admin_trace_user'
 ]
