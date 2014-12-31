@@ -1,0 +1,11 @@
+{
+    "mysql": 
+    {
+        "maxusage": 10, 
+        "passwd": "root",
+        "charset": "utf8", 
+        "db": "slcrms",
+        "host": "10.211.55.2",
+        "user": "root"
+    }
+}

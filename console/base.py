@@ -10,6 +10,9 @@ from libs import utils
 import functools
 import urllib
 import logging
+import bottle
+import models
+import os
 
 
 """ define logging """
@@ -22,6 +25,8 @@ page_size = 20
 get_cookie = lambda name: request.get_cookie(name,secret=secret)
 set_cookie = lambda name,value:response.set_cookie(name,value,secret=secret)
 
+bottle.TEMPLATE_PATH.append(os.path.split(__file__)[0]+"/views/")
+
 MakoTemplate.defaults.update(dict(
         system_name = 'ToughRADIUS Console',
         get_cookie = get_cookie,
@@ -31,7 +36,7 @@ MakoTemplate.defaults.update(dict(
 
 def init_context(**kwargs):
     MakoTemplate.defaults.update(**kwargs)
-    
+
 
 def auth_opr(func):
     @functools.wraps(func)

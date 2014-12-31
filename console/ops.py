@@ -7,7 +7,6 @@ from bottle import response
 from bottle import redirect
 from bottle import static_file
 from bottle import mako_template as render
-from tablib import Dataset
 import bottle
 import models
 import forms
@@ -56,15 +55,16 @@ def user_query(db):
                        node_list=db.query(models.SlcNode), 
                        product_list=db.query(models.SlcRadProduct),**request.params)
     elif request.path == "/user/export":
-        result = _query.all()
-        data = Dataset()
-        data.append((u'上网账号',u'姓名', u'套餐', u'过期时间', u'余额',u'时长',u'状态',u'创建时间'))
-        for i in result:
-            data.append((i.account_number, i.realname, i.product_name, i.expire_date,i.balance,i.time_length,i.status,i.create_time))
-        name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        pass
+        # result = _query.all()
+        # data = Dataset()
+        # data.append((u'上网账号',u'姓名', u'套餐', u'过期时间', u'余额',u'时长',u'状态',u'创建时间'))
+        # for i in result:
+        #     data.append((i.account_number, i.realname, i.product_name, i.expire_date,i.balance,i.time_length,i.status,i.create_time))
+        # name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
+        # with open(u'./static/xls/%s' % name, 'wb') as f:
+        #     f.write(data.xls)
+        # return static_file(name, root='./static/xls',download=True)
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   

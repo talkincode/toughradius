@@ -32,7 +32,7 @@ STATUS_TYPE_ACCT_OFF = 8
 db_config = {
     'mysql':{
         'maxusage': 10,
-        'host': 'localhost',
+        'host': '127.0.0.1',
         'user': 'root',
         'passwd': 'root',
         'db': 'slcrms',
@@ -64,9 +64,6 @@ acct_plugins = [
 admin_plugins = [
     'admin_unlock_online',
 ]
-
-
-
 
 
 

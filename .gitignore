@@ -20,6 +20,7 @@ release
 target
 _build
 _build/*
+Thumbs.db
 *.pyc
 *.pyo
 tmp

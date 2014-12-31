@@ -2,6 +2,8 @@
 #coding=utf-8
 # from twisted.internet import kqreactor
 # kqreactor.install()
+import sys,os
+sys.path.insert(0,os.path.split(__file__)[0])
 from twisted.internet import task
 from twisted.internet.defer import Deferred
 from twisted.internet import protocol
@@ -13,32 +15,35 @@ from pyrad import packet
 from store import store
 from admin import UserTrace,AdminServerProtocol
 from settings import auth_plugins,acct_plugins,acct_before_plugins
+from plugins import *
 import datetime
 import middleware
 import settings
 import statistics
 import logging
 import six
-import sys
 import pprint
 import utils
 import json
 import cache
+import os
 
 ###############################################################################
 # Basic Defined                                                            ####
 ###############################################################################
+
         
 class PacketError(Exception):pass
 
 class RADIUS(host.Host, protocol.DatagramProtocol):
     def __init__(self, 
-                dict=dictionary.Dictionary("res/dictionary"),
+                dict=None,
                 trace=None,
                 midware=None,
                 runstat=None,
                 debug=False):
-        host.Host.__init__(self,dict=dict)
+        _dict = dictionary.Dictionary(dict)
+        host.Host.__init__(self,dict=_dict)
         self.debug = debug
         self.user_trace = trace
         self.midware = midware
@@ -172,37 +177,70 @@ class RADIUSAccounting(RADIUS):
 # Run  Server                                                              ####
 ###############################################################################     
                  
-if __name__ == '__main__':
-    from autobahn.twisted.websocket import WebSocketServerFactory
-    import argparse
+def main():
+    import argparse,json
+    from twisted.python.logfile import DailyLogFile
     parser = argparse.ArgumentParser()
+    parser.add_argument('-dict','--dictfile', type=str,default='dict/dictionary',dest='dictfile',help='dict file')
     parser.add_argument('-auth','--authport', type=int,default=1812,dest='authport',help='auth port')
     parser.add_argument('-acct','--acctport', type=int,default=1813,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
-    parser.add_argument('-debug','--debug', type=bool,default=True,dest='debug',help='debug')
-    _args = sys.argv
-    _args = _args[_args.index(__file__)+1:]
+    parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
+    parser.add_argument('-d','--debug', type=int,default=False,dest='debug',help='debug')
+    print sys.argv
     args =  parser.parse_args(sys.argv[1:])
 
-    log.startLogging(sys.stdout, 0)
+    if args.conf:
+        with open(args.conf) as cf:
+            settings.db_config.update(**json.loads(cf.read()))
+
+    if not args.debug:
+        log.startLogging(DailyLogFile.fromFullPath("./logs/radiusd.log"))
+    else:
+        log.startLogging(sys.stdout)
+
     _trace = UserTrace()
     _runstat = statistics.RunStat()
     _middleware = middleware.Middleware()
     _debug = args.debug or settings.debug
+
     # radius server
-    auth_protocol = RADIUSAccess(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug)
-    acct_protocol = RADIUSAccounting(trace=_trace,midware=_middleware,runstat=_runstat,debug=_debug)
-    reactor.listenUDP(args.authport, auth_protocol)
-    reactor.listenUDP(args.acctport, acct_protocol)
-    _task = task.LoopingCall(auth_protocol.process_delay)
-    _task.start(2.7)
-    _cache_task = task.LoopingCall(cache.clear)
-    _cache_task.start(3600)
+    def start_radiusd():
+        auth_protocol = RADIUSAccess(
+            dict=args.dictfile,
+            trace=_trace,
+            midware=_middleware,
+            runstat=_runstat,
+            debug=_debug
+        )
+        acct_protocol = RADIUSAccounting(
+            dict=args.dictfile,
+            trace=_trace,
+            midware=_middleware,
+            runstat=_runstat,
+            debug=_debug
+        )
+        reactor.listenUDP(args.authport, auth_protocol)
+        reactor.listenUDP(args.acctport, acct_protocol)
+        _task = task.LoopingCall(auth_protocol.process_delay)
+        _task.start(2.7)
+        _cache_task = task.LoopingCall(cache.clear)
+        _cache_task.start(3600)
+
     # admin server
-    factory = WebSocketServerFactory("ws://localhost:%s"%args.adminport, debug = _debug)
-    factory.protocol = AdminServerProtocol
-    factory.protocol.user_trace = _trace
-    factory.protocol.midware = _middleware
-    factory.protocol.runstat = _runstat
-    reactor.listenTCP(args.adminport, factory)
+    def start_admin():
+        from autobahn.twisted.websocket import WebSocketServerFactory
+        factory = WebSocketServerFactory("ws://localhost:%s"%args.adminport, debug = _debug)
+        factory.protocol = AdminServerProtocol
+        factory.protocol.user_trace = _trace
+        factory.protocol.midware = _middleware
+        factory.protocol.runstat = _runstat
+        reactor.listenTCP(args.adminport, factory)
+
+    start_radiusd()
+    start_admin()
     reactor.run()
+
+
+if __name__ == '__main__':
+    main()

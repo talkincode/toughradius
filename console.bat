@@ -1,0 +1,1 @@
+cd console && ..\python27.exe admin.py -c ../config.json || pause

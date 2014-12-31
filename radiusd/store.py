@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 #coding=utf-8
-import yaml
 import MySQLdb
 from MySQLdb import cursors
 from DBUtils.PooledDB import PooledDB
@@ -43,10 +42,10 @@ class Cursor:
         self.conn.close()
 
 class DbPool():
-    def __init__(self):
-        self.dbpool = PooledDB(creator=MySQLdb,**settings.db_config['mysql'])
-
+    dbpool = None
     def connect(self):
+        if not self.dbpool:
+            self.dbpool = PooledDB(creator=MySQLdb,**settings.db_config['mysql'])
         return self.dbpool.connection()
 
 class Store():

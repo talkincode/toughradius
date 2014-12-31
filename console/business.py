@@ -10,7 +10,6 @@ from bottle import static_file
 from bottle import abort
 from bottle import mako_template as render
 from hashlib import md5
-from tablib import Dataset
 import bottle
 import models
 import forms
@@ -44,15 +43,16 @@ def member_query(db):
         return render("bus_member_list", page_data = get_page_data(_query),
                        node_list=db.query(models.SlcNode),**request.params)
     elif request.path == "/member/export":
-        result = _query.all()
-        data = Dataset()
-        data.append((u'区域',u'姓名', u'联系电话', u'地址', u'创建时间'))
-        for i in result:
-            data.append((i.node_name, i.realname, i.mobile, i.address,i.create_time))
-        name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)    
+        pass
+        # result = _query.all()
+        # data = Dataset()
+        # data.append((u'区域',u'姓名', u'联系电话', u'地址', u'创建时间'))
+        # for i in result:
+        #     data.append((i.node_name, i.realname, i.mobile, i.address,i.create_time))
+        # name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
+        # with open(u'./static/xls/%s' % name, 'wb') as f:
+        #     f.write(data.xls)
+        # return static_file(name, root='./static/xls',download=True)    
 
 
 @app.get('/member/detail',apply=auth_opr)

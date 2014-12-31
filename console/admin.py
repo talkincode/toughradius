@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
-
+import sys,os
+sys.path.insert(0,os.path.split(__file__)[0])
 from bottle import Bottle
 from bottle import request
 from bottle import response
@@ -13,11 +14,11 @@ from libs import sqla_plugin
 from libs.paginator import Paginator
 from libs import utils
 from hashlib import md5
-from tablib import Dataset
 import bottle
 import models
 import forms
 import datetime
+
 
 ###############################################################################
 # init                
@@ -27,24 +28,25 @@ from base import *
 from ops import app as ops_app
 from business import app as bus_app
 
+APP_DIR = os.path.split(__file__)[0]
+print APP_DIR
 app = Bottle()
 
-''' install plugins'''
-sqla_pg = sqla_plugin.Plugin(
-    models.engine, 
-    models.metadata, 
-    keyword='db', 
-    create=False, 
-    commit=False, 
-    use_kwargs=False 
-)
-app.install(sqla_pg)
-ops_app.install(sqla_pg)
-bus_app.install(sqla_pg)
-
-app.mount("/ops",ops_app)
-app.mount("/bus",bus_app)
-
+def init_app():
+    ''' install plugins'''
+    sqla_pg = sqla_plugin.Plugin(
+        models.engine, 
+        models.metadata, 
+        keyword='db', 
+        create=False, 
+        commit=False, 
+        use_kwargs=False 
+    )
+    app.install(sqla_pg)
+    ops_app.install(sqla_pg)
+    bus_app.install(sqla_pg)
+    app.mount("/ops",ops_app)
+    app.mount("/bus",bus_app)
 
 ###############################################################################
 # Basic handle         
@@ -498,20 +500,32 @@ def roster_delete(db):
     redirect("/roster")        
 
 
+
     
 ###############################################################################
 # run server                                                                 
 ###############################################################################
 
-if __name__ == "__main__":
-    import sys,argparse
+def main():
+    import argparse,json
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=1816,dest='httpport',help='http port')
     parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
-    parser.add_argument('-debug','--debug', type=bool,default=True,dest='debug',help='debug')
-    _args = sys.argv
-    _args = _args[_args.index(__file__)+1:]
+    parser.add_argument('-d','--debug', type=int,default=1815,dest='debug',help='debug')
+    parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
     init_context(adminport=args.adminport)
-    runserver(app, host='0.0.0.0', port=args.httpport ,debug=args.debug,reloader=args.debug,server="cherrypy")
+    if args.conf:
+        from sqlalchemy import create_engine
+        with open(args.conf) as cf:
+            _mysql = json.loads(cf.read())['mysql']
+            models.engine = create_engine(
+                'mysql://%s:%s@%s:3306/%s?charset=utf8'%(
+                    _mysql['user'],_mysql['passwd'],_mysql['host'],_mysql['db']
+        )
+    )
+    init_app()
+    runserver(app, host='0.0.0.0', port=args.httpport ,debug=bool(args.debug),reloader=bool(args.debug),server="cherrypy")
 
+if __name__ == "__main__":
+    main()

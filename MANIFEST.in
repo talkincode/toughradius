@@ -1,0 +1,7 @@
+recursive-include radiusd/dict *
+recursive-include console/views *
+recursive-include console/static *.ico
+recursive-include console/static/css *
+recursive-include console/static/js *
+recursive-include console/static/img *
+recursive-include console/static/fonts *
