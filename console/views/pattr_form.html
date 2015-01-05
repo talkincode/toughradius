@@ -1,0 +1,50 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script>
+    $(document).ready(function () {
+        $("#attr_name_help").click(function(i){
+            $('#helpDig').modal({})
+        });
+    });    
+</script>
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> ${form.title}<a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
+        <div class="panel-body">
+            % if msg:
+            <div class="alert alert-warning">${msg}</div>
+            % endif
+            <form class="form-horizontal" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="helpDig" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title" id="myModalLabel">策略参考</h4>
+      </div>
+      <div class="modal-body">
+        <div class="list-group">
+         % for vendor,attrs in pattrs.items():
+              <h4>${vendor}</h4>  
+              % for pattr in attrs: 
+              <div class="list-group-item">
+                <p>${pattr['attr_name']} : ${pattr['attr_desc']}</p>
+              </div>
+              % endfor
+         % endfor
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+</%def>

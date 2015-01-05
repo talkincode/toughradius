@@ -13,6 +13,7 @@ from bottle import mako_template as render
 from libs import sqla_plugin 
 from libs.paginator import Paginator
 from libs import utils
+from libs.radius_attrs import radius_attrs
 from hashlib import md5
 import bottle
 import models
@@ -339,13 +340,13 @@ def product_attr_add(db):
         return render("error",msg=u"资费不存在") 
     form = forms.product_attr_add_form()
     form.product_id.set_value(product_id)
-    return render("base_form",form=form)
+    return render("pattr_form",form=form,pattrs=radius_attrs)
 
 @app.post('/product/attr/add',apply=auth_opr)
 def product_attr_add(db): 
     form = forms.product_attr_add_form()
     if not form.validates(source=request.forms):
-        return render("base_form", form=form)   
+        return render("pattr_form", form=form,pattrs=radius_attrs)   
     attr = models.SlcRadProductAttr()
     attr.product_id = form.d.product_id
     attr.attr_name = form.d.attr_name
@@ -361,13 +362,13 @@ def product_attr_update(db):
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
     form = forms.product_attr_update_form()
     form.fill(attr)
-    return render("base_form",form=form)
+    return render("pattr_form",form=form,pattrs=radius_attrs)
 
 @app.post('/product/attr/update',apply=auth_opr)
 def product_attr_update(db): 
     form = forms.product_attr_update_form()
     if not form.validates(source=request.forms):
-        return render("base_form", form=form)   
+        return render("pattr_form", form=form,pattrs=radius_attrs)   
     attr = db.query(models.SlcRadProductAttr).get(form.d.id)
     attr.attr_name = form.d.attr_name
     attr.attr_value = form.d.attr_value

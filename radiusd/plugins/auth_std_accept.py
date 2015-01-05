@@ -36,9 +36,9 @@ def process(req=None,resp=None,user=None):
         try:resp[attr.attr_name] = attr.attr_value
         except:pass
 
-    for attr in store.get_user_attrs(user['account_number']):
-        try:resp[attr.attr_name] = attr.attr_value
-        except:pass
+    # for attr in store.get_user_attrs(user['account_number']):
+    #     try:resp[attr.attr_name] = attr.attr_value
+    #     except:pass
 
     return resp
 

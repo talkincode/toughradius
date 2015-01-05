@@ -10,6 +10,10 @@ body {
 margin-top: 10px;
 }
 
+.center{
+    text-align: center;
+}
+
 .container img{
     max-width: 480px;
 }

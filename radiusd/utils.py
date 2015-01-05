@@ -17,7 +17,7 @@ import six
 
 md5_constructor = hashlib.md5
 
-_key = '___a_b_c_d_e_f__'
+_key = 't_o_u_g_h_radius'
 
 
 def ndebug():

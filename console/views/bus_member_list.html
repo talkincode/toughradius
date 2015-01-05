@@ -22,7 +22,7 @@
                 </div>            
                 <label for="realname" class="col-md-2 control-label">用户姓名</label>
                 <div class="col-md-3">
-                    <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value=${realname or ""}>
+                    <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value=${realname and unicode(realname,'utf-8') or ""}>
                 </div>
             </div>
             <div class="form-group">

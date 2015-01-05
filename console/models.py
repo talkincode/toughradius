@@ -313,6 +313,12 @@ def init_db():
     param1.param_desc = u'最大会话时长(秒)'
     param1.param_value = '86400'
     db.add(param1)
+
+    param2 = SlcParam()
+    param2.param_name = 'reject_delay'
+    param2.param_desc = u'拒绝延迟时间(秒),0-9'
+    param2.param_value = '86400'
+    db.add(param2)
   
 
     opr = SlcOperator()

@@ -48,7 +48,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         self.user_trace = trace
         self.midware = midware
         self.runstat = runstat
-        self.auth_delay = utils.AuthDelay(settings.reject_delay)
+        self.auth_delay = utils.AuthDelay(int(store.get_param("reject_delay") or 0))
         self.bas_ip_pool = {bas['ip_addr']:bas for bas in store.list_bas()}
 
     def processPacket(self, pkt):
@@ -204,8 +204,7 @@ def main():
     _middleware = middleware.Middleware()
     _debug = args.debug or settings.debug
 
-    # radius server
-    def start_radiusd():
+    def start_servers():
         auth_protocol = RADIUSAccess(
             dict=args.dictfile,
             trace=_trace,
@@ -227,8 +226,6 @@ def main():
         _cache_task = task.LoopingCall(cache.clear)
         _cache_task.start(3600)
 
-    # admin server
-    def start_admin():
         from autobahn.twisted.websocket import WebSocketServerFactory
         factory = WebSocketServerFactory("ws://localhost:%s"%args.adminport, debug = _debug)
         factory.protocol = AdminServerProtocol
@@ -237,8 +234,7 @@ def main():
         factory.protocol.runstat = _runstat
         reactor.listenTCP(args.adminport, factory)
 
-    start_radiusd()
-    start_admin()
+    start_servers()
     reactor.run()
 
 
