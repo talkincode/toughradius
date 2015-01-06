@@ -1,0 +1,1 @@
+toughrad.exe createdb.py  || pause

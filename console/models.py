@@ -4,8 +4,11 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
+from sqlalchemy.orm import scoped_session, sessionmaker
+from hashlib import md5
+from libs import utils
 
-engine = create_engine('mysql://root:root@127.0.0.1:3306/slcrms?charset=utf8')
+engine = create_engine('mysql://root:root@127.0.0.1:3306/test?charset=utf8')
 DeclarativeBase = declarative_base()
 metadata = DeclarativeBase.metadata
 metadata.bind = engine
@@ -174,7 +177,7 @@ class SlcRadAccount(DeclarativeBase):
     member_id = Column('member_id', INTEGER(),nullable=False)
     product_id = Column('product_id', INTEGER(),nullable=False)
     group_id = Column('group_id', VARCHAR(length=32))
-    password = Column('password', VARCHAR(length=64), nullable=False)
+    password = Column('password', VARCHAR(length=128), nullable=False)
     status = Column('status', INTEGER(), nullable=False)
     install_address = Column('install_address', VARCHAR(length=128), nullable=False)
     balance = Column('balance', INTEGER(), nullable=False)
@@ -290,18 +293,23 @@ class SlcRadOnline(DeclarativeBase):
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=64), nullable=False)
     start_source = Column(u'start_source', SMALLINT(), nullable=False)
 
-def build_db():
-    metadata.create_all(engine,checkfirst=True)
-
-def rebuild_db():
-    metadata.drop_all(engine)
+def build_db(config=None):
+    global engine
+    engine = create_engine('mysql://%s:%s@%s:3306/test?charset=utf8'%(
+                    config['user'],config['passwd'],config['host']))
+    conn = engine.connect()
+    try:
+        conn.execute("drop database toughradius")
+    except:
+        pass
+    conn.execute("create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci")
+    conn.execute("commit")
+    conn.close()
+    engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
+                    config['user'],config['passwd'],config['host'],config['db']))
     metadata.create_all(engine,checkfirst=True)    
 
-def init_db():
-    from sqlalchemy.orm import scoped_session, sessionmaker
-    from hashlib import md5
-    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
-
+def init_db(db):
     node = SlcNode()
     node.id = 1
     node.node_name = 'default'
@@ -317,7 +325,7 @@ def init_db():
     param2 = SlcParam()
     param2.param_name = 'reject_delay'
     param2.param_desc = u'拒绝延迟时间(秒),0-9'
-    param2.param_value = '86400'
+    param2.param_value = '7'
     db.add(param2)
   
 
@@ -357,9 +365,9 @@ def init_db():
     product.create_time = '2014-12-10 23:23:21'
     product.update_time = '2014-12-10 23:23:21'
     db.add(product)
+    db.commit()
 
-
-
+def init_test(db):
     for i in range(1000):
         member = SlcMember()
         member.member_id = 100000 + i
@@ -383,7 +391,7 @@ def init_db():
         account.install_address = 'hunan'
         account.ip_address = ''
         account.mac_addr = ''
-        account.password = '888888'
+        account.password = utils.encrypt('888888')
         account.status = 1
         account.balance = 0
         account.basic_fee = 0
@@ -398,23 +406,30 @@ def init_db():
         account.create_time = '2014-12-10 23:23:21'
         account.update_time = '2014-12-10 23:23:21'
         db.add(account)
+    db.commit()    
 
-    db.commit()
+
+
+def install(config=None):
+
+    print 'starting create and init database...'
+    action = raw_input("drop and create database ?[n]")
+    if action == 'y':
+        build_db(config=config)
+
+        db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+        action = raw_input("init database ?[n]")
+        if action == 'y':
+            init_db(db)
+
+        action = raw_input("init testdata ?[n]")
+        if action == 'y':
+            init_test(db)
+            with open('./testusers.txt','wb') as tf:
+                for i in range(1000):
+                    tf.write('test00%s,%s\n'%(i,utils.encrypt('888888')))
+
 
 if __name__ == '__main__':
-    action = raw_input("is rebuild?[n]")
-    if action == 'y':
-        rebuild_db()
-    else:
-        build_db()
-
-    action = raw_input("init_db ?[n]")
-    if action == 'y':
-        init_db()
-
-    with open('./testusers.txt','wb') as tf:
-        for i in range(1000):
-            tf.write('test00%s,888888\n'%i)
-
-
+    install()
 

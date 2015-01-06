@@ -3,7 +3,10 @@
 import decimal
 import datetime
 from Crypto.Cipher import AES
+from Crypto import Random
 import binascii
+import hashlib
+import base64
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
@@ -12,17 +15,34 @@ _base_id = 0
 
 _key = 't_o_u_g_h_radius'
 
+class AESCipher:
 
-def encrypt(x):
-    if not x:return ''
-    x = str(x)
-    result =  AES.new(_key, AES.MODE_CBC).encrypt(x.ljust(len(x)+(16-len(x)%16)))
-    return binascii.hexlify(result)
+    def __init__(self, key): 
+        self.bs = 32
+        self.key = hashlib.sha256(key.encode()).digest()
 
-def decrypt(x):
-    if not x or len(x)%16 > 0 :return ''
-    x = binascii.unhexlify(str(x))
-    return AES.new(_key, AES.MODE_CBC).decrypt(x).strip()    
+    def encrypt(self, raw):
+        raw = self._pad(raw)
+        iv = Random.new().read(AES.block_size)
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return base64.b64encode(iv + cipher.encrypt(raw))
+
+    def decrypt(self, enc):
+        enc = base64.b64decode(enc)
+        iv = enc[:AES.block_size]
+        cipher = AES.new(self.key, AES.MODE_CBC, iv)
+        return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
+
+    def _pad(self, s):
+        return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
+
+    @staticmethod
+    def _unpad(s):
+        return s[:-ord(s[len(s)-1:])]
+
+_aes = AESCipher(_key)
+encrypt = _aes.encrypt
+decrypt = _aes.decrypt 
 
 def fen2yuan(fen):
     f = decimal.Decimal(fen)

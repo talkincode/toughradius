@@ -195,6 +195,7 @@ def main():
             settings.db_config.update(**json.loads(cf.read()))
 
     if not args.debug:
+        print 'logging to file logs/radiusd.log'
         log.startLogging(DailyLogFile.fromFullPath("./logs/radiusd.log"))
     else:
         log.startLogging(sys.stdout)

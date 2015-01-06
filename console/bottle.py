@@ -3099,7 +3099,8 @@ def run(app=None, server='wsgiref', host='127.0.0.1', port=8080,
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
-            _stderr("Bottle v%s server starting up (using %s)...\n" % (__version__, repr(server)))
+            #_stderr("Bottle v%s server starting up (using %s)...\n" % (__version__, repr(server)))
+            _stderr("ToughRADIUS Console Server Starting up...\n")
             _stderr("Listening on http://%s:%d/\n" % (server.host, server.port))
             _stderr("Hit Ctrl-C to quit.\n\n")
 

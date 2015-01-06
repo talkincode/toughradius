@@ -1,1 +1,1 @@
-cd console && ..\python27.exe admin.py -c ../config.json || pause
+cd console && ..\toughrad.exe admin.py -c ../config.json || pause
