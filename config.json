@@ -2,10 +2,10 @@
     "mysql": 
     {
         "maxusage": 10, 
-        "passwd": "root",
+        "passwd": "",
         "charset": "utf8", 
         "db": "toughradius",
-        "host": "10.211.55.2",
+        "host": "localhost",
         "user": "root"
     }
 }
