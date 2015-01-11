@@ -78,11 +78,11 @@ product_policy = {0:u'包月',1:u"小时计费"}
 product_status_dict = {0:u'正常',1:u"停用"}
 
 product_add_form = pyforms.Form(
-    pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"套餐名称",  required="required",**input_style),
+    pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"资费名称",  required="required",**input_style),
     pyforms.Dropdown("product_policy", args=product_policy.items(), description=u"计费策略", required="required",**input_style),
-    pyforms.Dropdown("product_status", args=product_status_dict.items(),description=u"套餐状态", required="required", **input_style),
-    pyforms.Textbox("fee_price", rules.is_rmb, description=u"套餐价格(包月价/每小时价)(元)", required="required", **input_style),
-    pyforms.Textbox("fee_period",rules.is_period,description=u"计费时段(小时计费有效)",**input_style),
+    pyforms.Dropdown("product_status", args=product_status_dict.items(),description=u"资费状态", required="required", **input_style),
+    pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(包月价/每小时价)(元)", required="required", **input_style),
+    pyforms.Textbox("fee_period",rules.is_period,description=u"开放认证时段",**input_style),
     pyforms.Textbox("concur_number", rules.is_numberOboveZore,description=u"并发数控制(0表示不限制)",value="0", **input_style),
     pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC ",**input_style),
     pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN ",**input_style),
@@ -95,11 +95,11 @@ product_add_form = pyforms.Form(
 
 product_update_form = pyforms.Form(
     pyforms.Hidden("id",  description=u"编号"),
-    pyforms.Textbox("product_name", rules.len_of(4, 32), description=u"产品套餐名称", required="required",**input_style),
-    pyforms.Textbox("product_policy_name", description=u"套餐策略",readonly="readonly", required="required",**input_style),
-    pyforms.Dropdown("product_status",args=product_status_dict.items(), description=u"套餐状态", required="required", **input_style),
-    pyforms.Textbox("fee_price", rules.is_rmb,description=u"套餐价格(包月价/每小时价)(元)", required="required", **input_style),
-    pyforms.Textbox("fee_period", rules.is_period,description=u"计费时段(小时计费有效)",**input_style),
+    pyforms.Textbox("product_name", rules.len_of(4, 32), description=u"资费名称", required="required",**input_style),
+    pyforms.Textbox("product_policy_name", description=u"资费策略",readonly="readonly", required="required",**input_style),
+    pyforms.Dropdown("product_status",args=product_status_dict.items(), description=u"资费状态", required="required", **input_style),
+    pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(包月价/每小时价)(元)", required="required", **input_style),
+    pyforms.Textbox("fee_period", rules.is_period,description=u"开放认证时段",**input_style),
     pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)", **input_style),
     pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),
     pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN",**input_style),
