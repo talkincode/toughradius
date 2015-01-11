@@ -14,8 +14,10 @@
     <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户信息 <a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
         <div class="panel-body">
-   
-        <table class="table table-hover">
+        <div class="pull-right bottom10 ">
+            <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开上网账号</a>
+        </div>    
+        <table class="table ">
                 <thead>
                     <tr>
                         <th colspan="6"> 基本信息</th>
@@ -48,12 +50,8 @@
                     </tr>                                                                       
             </tbody>
         </table>
-        <hr/>
-        <div class="center bottom10 ">
-            <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开上网账号</a>
-        </div>   
-         <hr/>
-        <table class="table table-hover">
+
+        <table class="table ">
             <thead>
                 <tr>
                     <th colspan="8"> 上网账号列表</th>
@@ -81,7 +79,37 @@
             </tr>
             % endfor
             </tbody>
-        </table>        
+        </table>  
+        
+        <table class="table ">
+            <thead>
+                <tr>
+                    <th colspan="8"> 用户订购记录</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr class="active">
+                <th>订单号</th>
+                <th>资费</th>
+                <th>上网账号</th>
+                <th>订单费用</th>
+                <th>实缴费用</th>
+                <th>订单状态</th>
+                <th>订单时间</th>
+            </tr>            
+            % for order in orders:
+            <tr>
+                <td>${order.order_id}</td>
+                <td>${order.product_name}</td>
+                <td>${order.account_number}</td>
+                <td>${fen2yuan(order.order_fee)}</td>
+                <td>${fen2yuan(order.actual_fee)}</td>
+                <td>${{0:u"未支付",1:u"已支付",2:u"已取消"}[order.pay_status]}</td>
+                <td>${order.create_time}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>                   
     </div>
 </div>
 </div>

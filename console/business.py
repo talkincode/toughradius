@@ -79,7 +79,21 @@ def member_detail(db):
         models.SlcMember.member_id == models.SlcRadAccount.member_id,
         models.SlcRadAccount.member_id == member_id
     )
-    return  render("bus_member_detail",member=member,accounts=accounts)
+    orders = db.query(
+        models.SlcMemberOrder.order_id,
+        models.SlcMemberOrder.order_id,
+        models.SlcMemberOrder.product_id,
+        models.SlcMemberOrder.account_number,
+        models.SlcMemberOrder.order_fee,
+        models.SlcMemberOrder.actual_fee,
+        models.SlcMemberOrder.pay_status,
+        models.SlcMemberOrder.create_time,
+        models.SlcRadProduct.product_name
+    ).filter(
+        models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
+        models.SlcMemberOrder.member_id==member_id
+    )
+    return  render("bus_member_detail",member=member,accounts=accounts,orders=orders)
 
 @app.get('/member/open',apply=auth_opr)
 def member_open(db): 
