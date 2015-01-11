@@ -3,7 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-ToughRADIUS认证计费系统
+
+ToughRADIUS手册
 =======================================
 
 ToughRADIUS是一个开源，免费，易用的Radius服务软件。
@@ -31,15 +32,29 @@ RADIUS协议
 RADIUS（Remote Authentication Dial In User Service）协议是在IETF的RFC2865和2866中定义的。RADIUS 是基于 UDP 的一种客户机/服务器协议。RADIUS客户机是网络访问服务器，它通常是一个路由器、交换机或无线访问点。RADIUS是AAA的一种实现协议。
 
 
-.. _main-docs:
 
-ToughRADIUS手册
-=======================================
+.. _install-docs:
+
+安装手册
+--------
 
 .. toctree::
     :maxdepth: 3
 
     windows_install
+
+
+.. _management-docs:
+
+管理手册
+--------
+
+.. toctree::
+    :maxdepth: 3
+
+    management/param
+    management/node
+    management/bas
 
 
 
