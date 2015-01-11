@@ -19,7 +19,7 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
 + 关于AAA的概念
 
-AAA是Authentication（认证）、Authorization（授权）和Accounting（计费）的简称。它提供对用户进行认证、授权和计费三种安全功能。具体如下：
+    AAA是Authentication（认证）、Authorization（授权）和Accounting（计费）的简称。它提供对用户进行认证、授权和计费三种安全功能。具体如下：
 
     - 1. 认证（Authentication）：认证用户是否可以获得访问权，确定哪些用户可以访问网络。
     - 2. 授权（Authorization）：授权用户可以使用哪些服务。
@@ -27,7 +27,7 @@ AAA是Authentication（认证）、Authorization（授权）和Accounting（计�
 
 + RADIUS协议
 
-RADIUS（Remote Authentication Dial In User Service）协议是在IETF的RFC2865和2866中定义的。RADIUS 是基于 UDP 的一种客户机/服务器协议。RADIUS客户机是网络访问服务器，它通常是一个路由器、交换机或无线访问点。RADIUS是AAA的一种实现协议。
+    RADIUS（Remote Authentication Dial In User Service）协议是在IETF的RFC2865和2866中定义的。RADIUS 是基于 UDP 的一种客户机/服务器协议。RADIUS客户机是网络访问服务器，它通常是一个路由器、交换机或无线访问点。RADIUS是AAA的一种实现协议。
 
 
 
