@@ -186,7 +186,7 @@ def main():
     parser.add_argument('-acct','--acctport', type=int,default=1813,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
     parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
-    parser.add_argument('-d','--debug', type=int,default=False,dest='debug',help='debug')
+    parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     print sys.argv
     args =  parser.parse_args(sys.argv[1:])
 
