@@ -1,5 +1,6 @@
 #coding:utf-8
 from libs import pyforms
+from libs.pyforms import dataform
 from libs.pyforms import rules
 from libs.pyforms.rules import button_style,input_style
 
@@ -231,6 +232,16 @@ def user_import_form(nodes=[],products=[]):
         title=u"用户导入",
         action="/bus/member/import"
 )
+
+user_import_vform = dataform.Form(
+        dataform.Item("realname", rules.not_null,description=u"用户姓名" ),
+        dataform.Item("account_number",rules.not_null, description=u"用户账号"),
+        dataform.Item("password",rules.not_null,description=u"用户密码"),
+        dataform.Item("expire_date", rules.is_date,description=u"过期日期"),
+        dataform.Item("balance",rules.is_number,description=u"用户余额"),
+        title="import"
+)
+
 
 
 

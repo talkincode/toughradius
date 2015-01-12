@@ -148,7 +148,7 @@ def member_open(db):
     order.order_fee = order_fee
     order.actual_fee = utils.yuan2fen(form.d.fee_value)
     order.pay_status = 1
-    order.order_source = 'admin'
+    order.order_source = 'console'
     order.create_time = member.create_time
     db.add(order)
 
@@ -226,7 +226,7 @@ def account_open(db):
     order.order_fee = order_fee
     order.actual_fee = utils.yuan2fen(form.d.fee_value)
     order.pay_status = 1
-    order.order_source = 'admin'
+    order.order_source = 'console'
     order.create_time = _datetime
     db.add(order)
 
@@ -260,6 +260,119 @@ def member_import(db):
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.user_import_form(nodes,products)
     return render("import_form",form=form)
+
+@app.post('/member/import',apply=auth_opr)
+def member_import(db): 
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    iform = forms.user_import_form(nodes,products)
+    node_id =   request.params.get('node_id')
+    product_id =   request.params.get('product_id')
+    upload = request.files.get('import_file')
+    impctx = upload.file.read()
+    lines = impctx.split("\n")
+    _num = 0
+    impusers = []
+    for line in lines:
+        _num += 1
+        line = line.strip()
+        if not line or u"用户姓名" in line:continue
+        attr_array = line.split(",")
+        if len(attr_array) < 5:
+            return render("import_form",form=iform,msg=u"line %s error: length must 5 "%_num)
+
+        vform = forms.user_import_vform()
+        if not vform.validates(dict(
+                realname = attr_array[0],
+                account_number = attr_array[1], 
+                password = attr_array[2],
+                expire_date = attr_array[3],
+                balance = attr_array[4])):
+            return render("import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
+
+        impusers.append(vform)
+
+    for form in impusers:
+        try:
+            member = models.SlcMember()
+            member.node_id = node_id
+            member.realname = form.d.realname
+            member.idcard = '123456'
+            member.sex = '1'
+            member.age = '0'
+            member.email = ''
+            member.mobile = '123456'
+            member.address = 'address'
+            member.create_time = utils.get_currtime()
+            member.update_time = utils.get_currtime()
+            db.add(member) 
+            db.flush()
+            db.refresh(member)
+
+            order_fee = 0
+            actual_fee = 0 
+            balance = 0
+            expire_date = form.d.expire_date
+            product = db.query(models.SlcRadProduct).get(product_id)
+            if product.product_policy == 1:
+                balance = int(form.d.balance)
+                expire_date = '3000-11-11'
+
+            order = models.SlcMemberOrder()
+            order.order_id = utils.gen_order_id()
+            order.member_id = member.member_id
+            order.product_id = product.id
+            order.account_number = form.d.account_number
+            order.order_fee = order_fee
+            order.actual_fee = actual_fee
+            order.pay_status = 1
+            order.order_source = 'console'
+            order.create_time = member.create_time
+            db.add(order)
+
+            account = models.SlcRadAccount()
+            account.account_number = form.d.account_number
+            account.member_id = member.member_id
+            account.product_id = order.product_id
+            account.install_address = member.address
+            account.ip_address = ''
+            account.mac_addr = ''
+            account.password = utils.encrypt(form.d.password)
+            account.status = 1
+            account.balance = balance
+            account.time_length = 0
+            account.expire_date = expire_date
+            account.user_concur_number = product.concur_number
+            account.bind_mac = product.bind_mac
+            account.bind_vlan = product.bind_vlan
+            account.vlan_id = 0
+            account.vlan_id2 = 0
+            account.create_time = member.create_time
+            account.update_time = member.create_time
+            db.add(account)
+
+            accept_log = models.SlcRadAcceptLog()
+            accept_log.accept_type = 'open'
+            accept_log.accept_source = 'console'
+            accept_log.accept_desc = 'import user'
+            accept_log.account_number = account.account_number
+            accept_log.accept_time = member.create_time
+            accept_log.operator_name = get_cookie("username")
+            db.add(accept_log)
+        except Exception as e:
+            return render("import_form",form=iform,msg=u"error : %s"%str(e))
+
+    db.commit()
+    redirect("/bus/member")
+
+
+
+
+
+
+
+
+
 
 
 

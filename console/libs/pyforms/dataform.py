@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #coding=utf-8
 import copy
-from lib.pyforms import  attrget
-from lib.pyforms import storage
-from lib.pyforms import AttributeList
+from libs.pyforms import  attrget
+from libs.pyforms import storage
+from libs.pyforms import AttributeList
 
 class Form(object):
 
