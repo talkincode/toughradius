@@ -2,6 +2,7 @@
 #coding:utf-8
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
+sys.path.insert(0,os.path.abspath(os.path.pardir))
 from bottle import Bottle
 from bottle import request
 from bottle import response
@@ -512,7 +513,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=1816,dest='httpport',help='http port')
     parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
-    parser.add_argument('-d','--debug', type=int,default=1815,dest='debug',help='debug')
+    parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
     init_context(adminport=args.adminport)
