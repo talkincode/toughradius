@@ -50,7 +50,6 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         self.midware = midware
         self.runstat = runstat
         self.auth_delay = utils.AuthDelay(int(store.get_param("reject_delay") or 0))
-        self.bas_ip_pool = {bas['ip_addr']:bas for bas in store.list_bas()}
 
     def processPacket(self, pkt):
         pass
@@ -59,7 +58,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         raise NotImplementedError('Attempted to use a pure base class')
 
     def datagramReceived(self, datagram, (host, port)):
-        bas = self.bas_ip_pool.get(host)
+        bas = store.get_bas(host)
         if not bas:
             return log.msg('Dropping packet from unknown host ' + host,level=logging.DEBUG)
         secret,vendor_id = bas['bas_secret'],bas['vendor_id']

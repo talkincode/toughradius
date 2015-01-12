@@ -72,6 +72,16 @@ class Store():
             return [bas for bas in cur] 
 
     @cache.cache('all')
+    def get_bas(self,ipaddr):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select * from slc_rad_bas where ip_addr = %s",(ipaddr,))
+            bas = cur.fetchone()
+            return bas
+
+    def update_bas_cache(self,ipaddr):
+        cache.delete('all',self.get_bas, ipaddr)
+
+    @cache.cache('all')
     def get_user(self,username):
         with Cursor(self.dbpool) as cur:
             cur.execute("select a.*,p.product_policy from slc_rad_account a,slc_rad_product p "
