@@ -4,6 +4,7 @@
 资费是对计费规则的定义，它与每个上网账号是一对一的绑定关系，决定了对每个上网账号如何收费，如何扣费的规则。
 
 资费属性说明：
+-----------------------
 
 + 资费名称：资费规则文字说明
 
@@ -21,4 +22,70 @@
 + 上行最大速率：标准上行限速（单位:bps,2M=2097152）
 
 + 下行最大速率：标准下行限速（单位:bps,4M=4194304） 
+
+资费策略扩展：
+-----------------------
+
+在处理策略下发的过程中，经常会涉及到不同BAS接入设备的私有属性扩展，最常见的如限速策略，标准的上行速率和下行速率并不总是能满足要求，不同厂家在限速策略上各有不同的协议特征。不过通过资费绑定扩展策略属性可以很好地解决这一问题。
+
+比如华为RADIUS1.1规范里有四个典型的扩展属性：
+
+> Huawei-Input-Average-Rate : (integer)上行平均速率 单位kbps
+
+> Huawei-Input-Peak-Rate : (integer)上行最大速率 单位kbps
+
+> Huawei-Output-Average-Rate : (integer)下行平均速率 单位kbps
+
+> Huawei-Output-Peak-Rate : (integer)下行最大速率 单位kbps
+
+在ToughRADIUS管理系统中，只需要将这几个属性与资费进行绑定，当订购该资费的用户认证成功后，就会下发这几个属性。
+
+策略配置使用技巧
+-----------------------
+
+各个不同BAS设备厂家都提供了协议字典参考文件，ToughRADIUS系统的radiusd/dict目录下默认放置了常见厂家的Radius协议字典，如果其中没有你使用的设备的radius协议字典，请从相关网站下载字典文件加入此目录，比如增加ros的字典文件dictionary.mikrotik，同时在dictionary中加入 $INCLUDE dictionary.mikrotik。
+
+ToughRADIUS系统的console/lib目录下有个radius_attrs.py文件，你可以编辑该文件，加入你常用的字典属性。
+
+格式如下::
+
+    #coding:utf-8
+    radius_attrs = {
+      'huawei 1.1':[
+         {
+            'attr_name':'Huawei-Input-Average-Rate',
+            'attr_desc':u'(integer)上行平均速率 单位kbps'
+         },
+         {
+            'attr_name':'Huawei-Input-Peak-Rate',
+            'attr_desc':u'(integer)上行最大速率 单位kbps'
+         },
+        {
+            'attr_name':'Huawei-Output-Average-Rate',
+            'attr_desc':u'(integer)下行平均速率 单位kbps'
+         },
+         {
+            'attr_name':'Huawei-Output-Peak-Rate',
+            'attr_desc':u'(integer)下行最大速率 单位kbps'
+         }
+      ]
+    }
+
+完成后，在资费扩展属性配置表单界面，你可以获得一个快捷的参考提示，如图：
+
+.. image:: ../_static/images/radius_attrs.png
+
+
+一个典型的资费配置，如图：
+
+.. image:: ../_static/images/product_attrs.png
+
+
+.. topic:: 注意
+
+    当资费与特定设备的策略属性绑定后，它总是适用于该设备，如果改变了其他类型的设备后，下发这些策略属性将会失效。
+
+
+
+
 

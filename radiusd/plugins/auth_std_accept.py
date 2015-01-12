@@ -33,8 +33,11 @@ def process(req=None,resp=None,user=None):
         resp['Framed-IP-Address'] = user['ip_address']
 
     for attr in store.get_product_attrs(user['product_id']):
-        try:resp[attr.attr_name] = attr.attr_value
-        except:pass
+        try:
+            resp[attr['attr_name']] = attr['attr_value']
+        except Exception as e:
+            print e
+
 
     # for attr in store.get_user_attrs(user['account_number']):
     #     try:resp[attr.attr_name] = attr.attr_value
