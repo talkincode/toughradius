@@ -11,7 +11,7 @@
  Target Server Version : 50613
  File Encoding         : utf-8
 
- Date: 01/12/2015 23:09:42 PM
+ Date: 01/13/2015 00:46:49 AM
 */
 
 SET NAMES utf8;
@@ -34,13 +34,13 @@ CREATE TABLE `slc_member` (
   `create_time` varchar(19) NOT NULL,
   `update_time` varchar(19) NOT NULL,
   PRIMARY KEY (`member_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Records of `slc_member`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_member` VALUES ('2', '1', '测试用户', '4123123', '1', '0', '', '12211221', '23424234', '2015-01-12 23:03:51', '2015-01-12 23:03:51'), ('3', '1', 'testuser1', '123456', '1', '0', '', '123456', 'address', '2015-01-12 23:08:24', '2015-01-12 23:08:24'), ('4', '1', 'testuser2', '123456', '1', '0', '', '123456', 'address', '2015-01-12 23:08:24', '2015-01-12 23:08:24');
+INSERT INTO `slc_member` VALUES ('1', '1', 'testuser1', '123456', '1', '0', '', '123456', 'address', '2015-01-13 00:15:20', '2015-01-13 00:15:20'), ('2', '1', 'testuser2', '123456', '1', '0', '', '123456', 'address', '2015-01-13 00:15:20', '2015-01-13 00:15:20');
 COMMIT;
 
 -- ----------------------------
@@ -65,7 +65,7 @@ CREATE TABLE `slc_member_order` (
 --  Records of `slc_member_order`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_member_order` VALUES ('201501122303510001', '2', '1', 'test01', '0', '3300', '1', '2', 'console', '2015-01-12 23:03:51'), ('201501122308110001', '2', '1', 'test008', '0', '21100', '1', '3', 'console', '2015-01-12 23:08:11'), ('201501122308240002', '3', '1', '1201021222', '0', '0', '1', '4', 'console', '2015-01-12 23:08:24'), ('201501122308240003', '4', '1', '120102e1222', '0', '0', '1', '5', 'console', '2015-01-12 23:08:24');
+INSERT INTO `slc_member_order` VALUES ('201501130015200002', '1', '1', '1201021222', '0', '0', '1', '2', 'console', '2015-01-13 00:15:20'), ('201501130015200003', '2', '1', '120102e1222', '0', '0', '1', '3', 'console', '2015-01-13 00:15:20'), ('201501130015370004', '1', '1', '1201021222', '0', '3300', '1', '4', 'console', '2015-01-13 00:15:37'), ('201501130018510001', '1', '1', '1201021222', '0', '21100', '1', '5', 'console', '2015-01-13 00:18:51'), ('201501130019030002', '1', '1', '1201021222', '0', '22200', '1', '6', 'console', '2015-01-13 00:19:03'), ('201501130022530001', '2', '2', 'test008', '0', '22200', '1', '11', 'console', '2015-01-13 00:22:53'), ('201501130023530001', '2', '2', 'test008', '0', '33300', '1', '12', 'console', '2015-01-13 00:23:53'), ('201501130024150002', '2', '2', 'test008', '0', '22200', '1', '13', 'console', '2015-01-13 00:24:15'), ('201501130032520003', '1', '1', 'test0080', '0', '22200', '1', '14', 'console', '2015-01-13 00:32:52');
 COMMIT;
 
 -- ----------------------------
@@ -80,10 +80,17 @@ CREATE TABLE `slc_member_refund` (
   `refund_fee` int(11) NOT NULL,
   `status` int(11) NOT NULL,
   `accept_id` int(11) NOT NULL,
-  `order_detail` varchar(1024) NOT NULL,
+  `refund_desc` varchar(1024) DEFAULT NULL,
   `create_time` varchar(19) NOT NULL,
   PRIMARY KEY (`refund_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+--  Records of `slc_member_refund`
+-- ----------------------------
+BEGIN;
+INSERT INTO `slc_member_refund` VALUES ('201501130019140003', '1', '1', '1201021222', '34500', '1', '7', null, '2015-01-13 00:19:14');
+COMMIT;
 
 -- ----------------------------
 --  Table structure for `slc_node`
@@ -134,13 +141,13 @@ CREATE TABLE `slc_rad_accept_log` (
   `accept_source` varchar(128) DEFAULT NULL,
   `accept_time` varchar(19) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Records of `slc_rad_accept_log`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_accept_log` VALUES ('2', 'open', null, 'test01', 'admin', 'console', '2015-01-12 23:03:51'), ('3', 'open', null, 'test008', 'admin', 'console', '2015-01-12 23:08:11'), ('4', 'open', 'import user', '1201021222', 'admin', 'console', '2015-01-12 23:08:24'), ('5', 'open', 'import user', '120102e1222', 'admin', 'console', '2015-01-12 23:08:24');
+INSERT INTO `slc_rad_accept_log` VALUES ('2', 'open', 'import user', '1201021222', 'admin', 'console', '2015-01-13 00:15:20'), ('3', 'open', 'import user', '120102e1222', 'admin', 'console', '2015-01-13 00:15:20'), ('4', 'next', null, '1201021222', 'admin', 'console', '2015-01-13 00:15:37'), ('5', 'next', null, '1201021222', 'admin', 'console', '2015-01-13 00:18:51'), ('6', 'next', null, '1201021222', 'admin', 'console', '2015-01-13 00:19:03'), ('7', 'cancel', null, '1201021222', 'admin', 'console', '2015-01-13 00:19:14'), ('8', 'pause', 'pause user', '120102e1222', 'admin', 'console', '2015-01-13 00:19:50'), ('9', 'resume', 'resume user', '120102e1222', 'admin', 'console', '2015-01-13 00:19:54'), ('11', 'open', null, 'test008', 'admin', 'console', '2015-01-13 00:22:53'), ('12', 'charge', null, 'test008', 'admin', 'console', '2015-01-13 00:23:53'), ('13', 'charge', null, 'test008', 'admin', 'console', '2015-01-13 00:24:15'), ('14', 'open', null, 'test0080', 'admin', 'console', '2015-01-13 00:32:52');
 COMMIT;
 
 -- ----------------------------
@@ -175,7 +182,7 @@ CREATE TABLE `slc_rad_account` (
 --  Records of `slc_rad_account`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_account` VALUES ('1201021222', '3', '1', null, 'ABYHngyj3aWVY274T24Jp4VQc+cBi4wkkfEEJoz1VhWV6V5H7lwg6+JEyn0iIcpB', '1', 'address', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:08:24', '2015-01-12 23:08:24'), ('120102e1222', '4', '1', null, '734jqAVem5gU6PiRkciG3CuR+W/TFPJM8KeyYv/pwacVdNlZFOlD/JC9tHGqmcE0', '1', 'address', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:08:24', '2015-01-12 23:08:24'), ('test008', '2', '1', null, '8MEcogu7BaSz06F3eklgsmuQQ4AT7mI6y9CUMG6WghTfO+8KjLF5BQWnjafCCieU', '1', '23424234', '0', '0', '2015-01-23', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:08:11', '2015-01-12 23:08:11'), ('test01', '2', '1', null, 'j7fcl8X3pY/edWxsFcnqsGhOGV/aqsbz06SOj8RMvnKR+BmnU4BxLtVXRjrfGSMa', '1', '23424234', '0', '0', '2015-01-31', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:03:51', '2015-01-12 23:03:51');
+INSERT INTO `slc_rad_account` VALUES ('1201021222', '1', '1', null, 'TJ8EFaSsL8CN3FXLVRUGDH1FEJK42kY7ivBjg0L0/r8SWmJ1iKLfO2tuOeUToq/j', '3', 'address', '0', '0', '2015-03-07', '0', '0', '0', '', '0', '0', '', null, '2015-01-13 00:15:20', '2015-01-13 00:15:20'), ('120102e1222', '2', '1', null, 'WeDmko22VKdf3pX1oTMf1Z9jFxHy0CgGl09Ph2mdtucjvHDnSflMiqn58Gdi7nMU', '1', 'address', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', '2015-01-13 00:19:50', '2015-01-13 00:15:20', '2015-01-13 00:15:20'), ('test008', '2', '2', null, '+3NilQwCqXK8DmD4RkRZQYkXT046lPoAV0/9joBihM8kE2EqIWTGR7s6e7jfdHJc', '1', '23424234', '77700', '0', '3000-11-11', '0', '0', '0', '', '0', '0', '', null, '2015-01-13 00:22:53', '2015-01-13 00:22:53'), ('test0080', '1', '1', null, 'HAqmMo1vPeu0SvChtogGybLx0/ma+hbd5lfor9MF8bUaHcuiUSbpjeqIGyg0G1ME', '1', '23424234', '0', '0', '2015-01-29', '0', '0', '0', '', '0', '0', '', null, '2015-01-13 00:32:52', '2015-01-13 00:32:52');
 COMMIT;
 
 -- ----------------------------
@@ -285,13 +292,13 @@ CREATE TABLE `slc_rad_product` (
   `create_time` varchar(19) NOT NULL,
   `update_time` varchar(19) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 --  Records of `slc_rad_product`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_product` VALUES ('1', '10元包月套餐', '0', '1', '0', '0', '0', '0', '0', '102400', '102400', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
+INSERT INTO `slc_rad_product` VALUES ('1', '10元包月套餐', '0', '1', '0', '0', '0', '0', '0', '102400', '102400', '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('2', '每小时10元', '1', '0', '0', '0', '0', '', '1000', '102400', '102400', '2015-01-13 00:20:28', '2015-01-13 00:26:09');
 COMMIT;
 
 -- ----------------------------
