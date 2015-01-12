@@ -453,6 +453,10 @@ def update(config=None):
                     config['user'],config['passwd'],config['host'],config['db']))
     metadata.create_all(engine,checkfirst=True)    
     print 'starting update database done'
+    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+    action = raw_input("init database ?[n]")
+    if action == 'y':
+        init_db(db)    
 
 
 
