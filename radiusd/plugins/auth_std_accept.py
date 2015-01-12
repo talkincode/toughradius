@@ -5,6 +5,10 @@ from store import store
 from settings import *
 import datetime
 
+def get_type_val(typ,src):
+    if typ == 'integer' or typ == 'date':
+        return int(src)
+
 def process(req=None,resp=None,user=None):
     product = store.get_product(user['product_id'])
     session_timeout = int(store.get_param("max_session_timeout"))
@@ -34,11 +38,13 @@ def process(req=None,resp=None,user=None):
 
     for attr in store.get_product_attrs(user['product_id']):
         try:
-            resp[attr['attr_name']] = attr['attr_value']
-        except Exception as e:
-            print e
+            _type = resp.dict[attr['attr_name']].type
+            resp[str(attr['attr_name'])] = get_type_val(_type,attr['attr_value'])
+        except:
+            import traceback
+            traceback.print_exc()
 
-
+    
     # for attr in store.get_user_attrs(user['account_number']):
     #     try:resp[attr.attr_name] = attr.attr_value
     #     except:pass
