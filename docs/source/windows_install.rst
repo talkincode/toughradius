@@ -21,7 +21,7 @@ ToughRADIUS为windows提供了一个快速部署的模式，帮助使用者快�
 
 ToughRADIUS主要采用MySQL(5.0以上版本)存储数据，在部署ToughRADIUS之前请自行安装MySQL（安装步骤请参考MySQL相关文档）,安装MySQL后确保MySQL为运行状态。
 
-+ 修改配置文件 config.json,请修改数据库地址用户名密码等选项与实际相符。
++ 修改配置文件 config.json中的mysql选项,请修改数据库地址用户名密码等选项与实际相符。
 
 .. code-block:: javascript
 
@@ -47,7 +47,7 @@ ToughRADIUS主要采用MySQL(5.0以上版本)存储数据，在部署ToughRADIUS
 
     #按提示进行操作
 
-    Z:\github\ToughRADIUS>toughrad.exe createdb.py    || pause
+    Z:\github\ToughRADIUS>toughrad.exe createdb.py  -c config.json  || pause
 
     starting create and init database...
 
@@ -62,6 +62,47 @@ ToughRADIUS主要采用MySQL(5.0以上版本)存储数据，在部署ToughRADIUS
     运行脚本会尝试删除原有数据库并重建，如果非首次安装，建议备份数据，init testdata是创建测试数据选项，一般不需要。
 
 
+应用配置
+-------------------------------
+
+在config.json文件中，可以指定几乎所有的配置参数，同时允许自定义命令行参数，命令行参数会覆盖配置文件的定义。
+
+.. code-block:: javascript
+
+    {
+        "mysql": 
+        {
+            "maxusage": 10, 
+            "passwd": "root",
+            "charset": "utf8", 
+            "db": "toughradius",
+            "host": "10.211.55.2",
+            "user": "root"
+        },
+        "radiusd":
+        {
+            "authport": 1812,
+            "acctport": 1813,
+            "adminport": 1815,
+            "dictfile": "./radiusd/dict/dictionary",
+            "debug":1
+        },
+        "console":
+        {
+            "httpport":1816,
+            "radaddr":"127.0.0.1",
+            "adminport":1815,
+            "debug":1
+        }
+    }
+
+.. topic:: 注意
+
+    在实际环境中radaddr必须填写真实地radiusd服务IP地址或主机名，不要使用本地地址。
+
+    admin端口是radiusd的管理监听端口，在console中会通过该端口调用一些管理服务，比如实时查询跟踪用户消息等。
+
+
 运行radiusd服务
 --------------------------------
 
@@ -71,19 +112,8 @@ radiusd.bat内容
 
 .. code-block:: bash
 
-    toughrad.exe radiusd/server.py -c config.json  -dict radiusd/dict/dictionary || pause   
+    toughrad.exe radiusd/server.py -c config.json || pause   
 
-你可以新建一个debug的脚本，加上 -d 或者 --debug 参数即可。
-
-.. code-block:: bash
-
-    toughrad.exe radiusd/server.py -c config.json  -dict radiusd/dict/dictionary -d || pause
-
-你可以通过参数指定端口
-
-.. code-block:: bash
-
-    toughrad.exe radiusd/server.py -auth 1812 -acct 1813 -admin 1815 -c config.json  -dict radiusd/dict/dictionary -d || pause
 
 示例：
 
@@ -112,12 +142,6 @@ console.bat脚本内容
 
     cd console && ..\toughrad.exe admin.py -c ../config.json || pause
 
-你可以新建一个debug的脚本，加上 -d 或者 --debug 参数即可。也可以指定端口运行(默认的http端口是1816)。
-
-.. code-block:: bash
-
-    cd console && ..\toughrad.exe admin.py -http 8080 -admin 1815 -c ../config.json || pause
-
 示例：
 
 .. code-block:: bash
@@ -134,9 +158,7 @@ console.bat脚本内容
 当启动web控制台服务后，就可以通过浏览器访问管理界面了，在浏览器地址栏输入：http://127.0.0.1:1816,默认的管理员密码为admin/root
 
 
-.. topic:: 注意
 
-    admin端口是radiusd的管理监听端口，在console中会通过该端口调用一些管理服务，比如实时查询跟踪用户消息等。
 
 
 
