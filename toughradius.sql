@@ -11,7 +11,7 @@
  Target Server Version : 50613
  File Encoding         : utf-8
 
- Date: 01/12/2015 00:42:08 AM
+ Date: 01/12/2015 23:09:42 PM
 */
 
 SET NAMES utf8;
@@ -34,7 +34,14 @@ CREATE TABLE `slc_member` (
   `create_time` varchar(19) NOT NULL,
   `update_time` varchar(19) NOT NULL,
   PRIMARY KEY (`member_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+--  Records of `slc_member`
+-- ----------------------------
+BEGIN;
+INSERT INTO `slc_member` VALUES ('2', '1', '测试用户', '4123123', '1', '0', '', '12211221', '23424234', '2015-01-12 23:03:51', '2015-01-12 23:03:51'), ('3', '1', 'testuser1', '123456', '1', '0', '', '123456', 'address', '2015-01-12 23:08:24', '2015-01-12 23:08:24'), ('4', '1', 'testuser2', '123456', '1', '0', '', '123456', 'address', '2015-01-12 23:08:24', '2015-01-12 23:08:24');
+COMMIT;
 
 -- ----------------------------
 --  Table structure for `slc_member_order`
@@ -48,10 +55,18 @@ CREATE TABLE `slc_member_order` (
   `order_fee` int(11) NOT NULL,
   `actual_fee` int(11) NOT NULL,
   `pay_status` int(11) NOT NULL,
+  `accept_id` int(11) NOT NULL,
   `order_source` varchar(64) NOT NULL,
   `create_time` varchar(19) NOT NULL,
   PRIMARY KEY (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+--  Records of `slc_member_order`
+-- ----------------------------
+BEGIN;
+INSERT INTO `slc_member_order` VALUES ('201501122303510001', '2', '1', 'test01', '0', '3300', '1', '2', 'console', '2015-01-12 23:03:51'), ('201501122308110001', '2', '1', 'test008', '0', '21100', '1', '3', 'console', '2015-01-12 23:08:11'), ('201501122308240002', '3', '1', '1201021222', '0', '0', '1', '4', 'console', '2015-01-12 23:08:24'), ('201501122308240003', '4', '1', '120102e1222', '0', '0', '1', '5', 'console', '2015-01-12 23:08:24');
+COMMIT;
 
 -- ----------------------------
 --  Table structure for `slc_member_refund`
@@ -64,6 +79,7 @@ CREATE TABLE `slc_member_refund` (
   `account_number` varchar(32) NOT NULL,
   `refund_fee` int(11) NOT NULL,
   `status` int(11) NOT NULL,
+  `accept_id` int(11) NOT NULL,
   `order_detail` varchar(1024) NOT NULL,
   `create_time` varchar(19) NOT NULL,
   PRIMARY KEY (`refund_id`)
@@ -106,6 +122,28 @@ INSERT INTO `slc_param` VALUES ('max_session_timeout', '86400', '最大会话时
 COMMIT;
 
 -- ----------------------------
+--  Table structure for `slc_rad_accept_log`
+-- ----------------------------
+DROP TABLE IF EXISTS `slc_rad_accept_log`;
+CREATE TABLE `slc_rad_accept_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `accept_type` varchar(16) NOT NULL,
+  `accept_desc` varchar(512) DEFAULT NULL,
+  `account_number` varchar(32) NOT NULL,
+  `operator_name` varchar(32) DEFAULT NULL,
+  `accept_source` varchar(128) DEFAULT NULL,
+  `accept_time` varchar(19) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+--  Records of `slc_rad_accept_log`
+-- ----------------------------
+BEGIN;
+INSERT INTO `slc_rad_accept_log` VALUES ('2', 'open', null, 'test01', 'admin', 'console', '2015-01-12 23:03:51'), ('3', 'open', null, 'test008', 'admin', 'console', '2015-01-12 23:08:11'), ('4', 'open', 'import user', '1201021222', 'admin', 'console', '2015-01-12 23:08:24'), ('5', 'open', 'import user', '120102e1222', 'admin', 'console', '2015-01-12 23:08:24');
+COMMIT;
+
+-- ----------------------------
 --  Table structure for `slc_rad_account`
 -- ----------------------------
 DROP TABLE IF EXISTS `slc_rad_account`;
@@ -127,10 +165,18 @@ CREATE TABLE `slc_rad_account` (
   `vlan_id` int(11) DEFAULT NULL,
   `vlan_id2` int(11) DEFAULT NULL,
   `ip_address` varchar(15) DEFAULT NULL,
+  `last_pause` varchar(19) DEFAULT NULL,
   `create_time` varchar(19) NOT NULL,
   `update_time` varchar(19) NOT NULL,
   PRIMARY KEY (`account_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+--  Records of `slc_rad_account`
+-- ----------------------------
+BEGIN;
+INSERT INTO `slc_rad_account` VALUES ('1201021222', '3', '1', null, 'ABYHngyj3aWVY274T24Jp4VQc+cBi4wkkfEEJoz1VhWV6V5H7lwg6+JEyn0iIcpB', '1', 'address', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:08:24', '2015-01-12 23:08:24'), ('120102e1222', '4', '1', null, '734jqAVem5gU6PiRkciG3CuR+W/TFPJM8KeyYv/pwacVdNlZFOlD/JC9tHGqmcE0', '1', 'address', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:08:24', '2015-01-12 23:08:24'), ('test008', '2', '1', null, '8MEcogu7BaSz06F3eklgsmuQQ4AT7mI6y9CUMG6WghTfO+8KjLF5BQWnjafCCieU', '1', '23424234', '0', '0', '2015-01-23', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:08:11', '2015-01-12 23:08:11'), ('test01', '2', '1', null, 'j7fcl8X3pY/edWxsFcnqsGhOGV/aqsbz06SOj8RMvnKR+BmnU4BxLtVXRjrfGSMa', '1', '23424234', '0', '0', '2015-01-31', '0', '0', '0', '', '0', '0', '', null, '2015-01-12 23:03:51', '2015-01-12 23:03:51');
+COMMIT;
 
 -- ----------------------------
 --  Table structure for `slc_rad_account_attr`

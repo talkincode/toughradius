@@ -140,6 +140,7 @@ class SlcMemberOrder(DeclarativeBase):
     order_fee = Column('order_fee', INTEGER(), nullable=False)
     actual_fee = Column('actual_fee', INTEGER(), nullable=False)
     pay_status = Column('pay_status', INTEGER(), nullable=False)
+    accept_id = Column('accept_id', INTEGER(),nullable=False)
     order_source = Column('order_source', VARCHAR(length=64), nullable=False)
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
 
@@ -159,6 +160,7 @@ class SlcMemberRefund(DeclarativeBase):
     account_number = Column('account_number', VARCHAR(length=32),nullable=False)
     refund_fee = Column('refund_fee', INTEGER(), nullable=False)
     status = Column('status', INTEGER(), nullable=False)
+    accept_id = Column('accept_id', INTEGER(),nullable=False)
     order_detail = Column('order_detail', VARCHAR(length=1024), nullable=False)
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
 

@@ -1,1 +1,1 @@
-toughrad.exe createdb.py -config.json || pause
+toughrad.exe createdb.py -c config.json || pause

@@ -72,6 +72,7 @@ def member_detail(db):
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
         models.SlcRadAccount.status,
+        models.SlcRadAccount.last_pause,
         models.SlcRadAccount.create_time,
         models.SlcRadProduct.product_name
     ).filter(
@@ -129,6 +130,16 @@ def member_open(db):
     db.flush()
     db.refresh(member)
 
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'open'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = member.create_time
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)    
+
     order_fee = 0
     balance = 0
     expire_date = form.d.expire_date
@@ -148,6 +159,7 @@ def member_open(db):
     order.order_fee = order_fee
     order.actual_fee = utils.yuan2fen(form.d.fee_value)
     order.pay_status = 1
+    order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = member.create_time
     db.add(order)
@@ -173,13 +185,6 @@ def member_open(db):
     account.update_time = member.create_time
     db.add(account)
 
-    accept_log = models.SlcRadAcceptLog()
-    accept_log.accept_type = 'open'
-    accept_log.accept_source = 'console'
-    accept_log.account_number = account.account_number
-    accept_log.accept_time = member.create_time
-    accept_log.operator_name = get_cookie("username")
-    db.add(accept_log)
 
     db.commit()
     redirect("/bus/member")
@@ -206,6 +211,16 @@ def account_open(db):
         account_number=form.d.account_number).count()>0:
         return render("open_form", form=form,msg=u"上网账号已经存在")
 
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'open'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)
+
     _datetime = utils.get_currtime()
     order_fee = 0
     balance = 0
@@ -226,6 +241,7 @@ def account_open(db):
     order.order_fee = order_fee
     order.actual_fee = utils.yuan2fen(form.d.fee_value)
     order.pay_status = 1
+    order.accept_id = accept_log.id   
     order.order_source = 'console'
     order.create_time = _datetime
     db.add(order)
@@ -309,6 +325,17 @@ def member_import(db):
             db.flush()
             db.refresh(member)
 
+            accept_log = models.SlcRadAcceptLog()
+            accept_log.accept_type = 'open'
+            accept_log.accept_source = 'console'
+            accept_log.accept_desc = 'import user'
+            accept_log.account_number = form.d.account_number
+            accept_log.accept_time = member.create_time
+            accept_log.operator_name = get_cookie("username")
+            db.add(accept_log)
+            db.flush()
+            db.refresh(accept_log)            
+
             order_fee = 0
             actual_fee = 0 
             balance = 0
@@ -326,6 +353,7 @@ def member_import(db):
             order.order_fee = order_fee
             order.actual_fee = actual_fee
             order.pay_status = 1
+            order.accept_id = accept_log.id 
             order.order_source = 'console'
             order.create_time = member.create_time
             db.add(order)
@@ -351,25 +379,68 @@ def member_import(db):
             account.update_time = member.create_time
             db.add(account)
 
-            accept_log = models.SlcRadAcceptLog()
-            accept_log.accept_type = 'open'
-            accept_log.accept_source = 'console'
-            accept_log.accept_desc = 'import user'
-            accept_log.account_number = account.account_number
-            accept_log.accept_time = member.create_time
-            accept_log.operator_name = get_cookie("username")
-            db.add(accept_log)
         except Exception as e:
             return render("import_form",form=iform,msg=u"error : %s"%str(e))
 
     db.commit()
     redirect("/bus/member")
 
+@app.post('/account/pause',apply=auth_opr)
+def account_pause(db): 
+    account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
+
+    if account.status != 1:
+        return dict(msg=u"用户当前状态不允许停机")
+
+    _datetime = utils.get_currtime()
+    account.last_pause = _datetime
+    account.status = 2
+
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'pause'
+    accept_log.accept_source = 'console'
+    accept_log.accept_desc = 'pause user'
+    accept_log.account_number = account.account_number
+    accept_log.accept_time = _datetime
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+
+    db.commit()
+    return dict(msg=u"操作成功")
+
+@app.post('/account/resume',apply=auth_opr)
+def account_resume(db): 
+    account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
+    if account.status != 2:
+        return dict(msg=u"用户当前状态不允许复机") 
+
+    account.status = 1
+    _datetime = datetime.datetime.now()
+    _pause_time = datetime.datetime.strptime(account.last_pause,"%Y-%m-%d %H:%M:%S")
+    _expire_date = datetime.datetime.strptime(account.expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
+    days = (_expire_date - _pause_time).days
+    new_expire = (_datetime + datetime.timedelta(days=int(days))).strftime("%Y-%m-%d")
+    account.expire_date = new_expire
+
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'resume'
+    accept_log.accept_source = 'console'
+    accept_log.accept_desc = 'resume user'
+    accept_log.account_number = account.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+
+    db.commit()
+    return dict(msg=u"操作成功")
 
 
-
-
-
+@app.get('/account/cancel',apply=auth_opr)
+def account_cancel(db): 
+    account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
 
 
 

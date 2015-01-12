@@ -1,13 +1,39 @@
 <%inherit file="base.html"/>
 <%def name="head()">
 <script>
-    function release(account_number)
-    {
-        params = {account_number:account_number};
-        $.post("/ops/user/release", params, function (data) {
-            alert(data.msg)
-        },"json");
+
+function do_pause(account_number)
+{
+    if (!confirm("确认操作吗？")) {
+        return;
     }
+    params = {account_number:account_number};
+    $.post("/bus/account/pause", params, function (data) {
+        alert(data.msg)
+        window.location.reload();
+    },"json");
+}
+
+function do_resume(account_number)
+{
+    if (!confirm("确认操作吗？")) {
+        return;
+    }
+    params = {account_number:account_number};
+    $.post("/bus/account/resume", params, function (data) {
+        alert(data.msg)
+        window.location.reload();
+    },"json");
+}    
+
+function release(account_number)
+{
+    params = {account_number:account_number};
+    $.post("/ops/user/release", params, function (data) {
+        alert(data.msg)
+        location.href.reload();
+    },"json");
+}
 </script>
 </%def>
 <%def name="body()">
@@ -64,6 +90,7 @@
                 <th>用户状态</th>
                 <th>到期时间</th>
                 <th>创建时间</th>
+                <th>最近停机</th>
                 <th></th>
             </tr>            
             % for user in accounts:
@@ -73,12 +100,19 @@
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
                 <td>${user.create_time}</td>
+                <td>${user.last_pause or ''}</td>
                  <td>
-            <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
-            <a class="opt-btn btn-default" href="javascript:do_next('${user.account_number}');">续费</a>
-            <a class="opt-btn btn-default" href="javascript:do_charge('${user.account_number}');">充值</a>
-            <a class="opt-btn btn-default" href="javascript:do_cancel('${user.account_number}');">销户</a>
-            <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">解绑</a>
+                    % if user.status == 2:
+                        <a class="opt-btn btn-default" href="javascript:do_resume('${user.account_number}');">复机</a>
+                    % elif user.status == 1:
+                    <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
+                    <a class="opt-btn btn-default" href="javascript:do_next('${user.account_number}');">续费</a>
+                    <a class="opt-btn btn-default" href="javascript:do_charge('${user.account_number}');">充值</a>
+                    <a class="opt-btn btn-default" href="javascript:do_cancel('${user.account_number}');">销户</a>
+                    <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">解绑</a>
+                    % elif user.status == 4:
+                    <a class="opt-btn btn-default" href="javascript:do_next('${user.account_number}');">续费</a>
+                    % endif
                  </td>
             </tr>
             % endfor
