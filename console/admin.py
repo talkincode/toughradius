@@ -50,6 +50,12 @@ def init_app():
     app.mount("/ops",ops_app)
     app.mount("/bus",bus_app)
 
+    #create dir
+    try:
+        os.makedirs(os.path.join(APP_DIR,'static/xls'))
+    except:pass
+
+
 ###############################################################################
 # Basic handle         
 ###############################################################################
