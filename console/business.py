@@ -173,6 +173,14 @@ def member_open(db):
     account.update_time = member.create_time
     db.add(account)
 
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'open'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = account.account_number
+    accept_log.accept_time = member.create_time
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+
     db.commit()
     redirect("/bus/member")
 

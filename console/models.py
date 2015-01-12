@@ -167,6 +167,7 @@ class SlcRadAccount(DeclarativeBase):
     """
     会员上网账号，每个会员可以同时拥有多个上网账号
     account_number 为每个套餐对应的上网账号，每个上网账号全局唯一
+    用户状态 1:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期", 5:"未激活"
     """
 
     __tablename__ = 'slc_rad_account'
@@ -190,6 +191,7 @@ class SlcRadAccount(DeclarativeBase):
     vlan_id = Column('vlan_id', INTEGER())
     vlan_id2 = Column('vlan_id2', INTEGER())
     ip_address = Column('ip_address', VARCHAR(length=15))
+    last_pause = Column('last_pause', VARCHAR(length=19))
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
     update_time = Column('update_time', VARCHAR(length=19), nullable=False)
 
@@ -293,16 +295,31 @@ class SlcRadOnline(DeclarativeBase):
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=64), nullable=False)
     start_source = Column(u'start_source', SMALLINT(), nullable=False)
 
+class SlcRadAcceptLog(DeclarativeBase):
+    '''业务受理日志
+    open:开户 pause:停机 resume:复机 cancel:销户 next:续费 charge:充值
+    '''
+    __tablename__ = 'slc_rad_accept_log'
+    __table_args__ = {}
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    accept_type = Column(u'accept_type', VARCHAR(length=16), nullable=False)
+    accept_desc = Column(u'accept_desc', VARCHAR(length=512))
+    account_number = Column(u'account_number', VARCHAR(length=32), nullable=False)
+    operator_name = Column(u'operator_name', VARCHAR(32))
+    accept_source = Column(u'accept_source', VARCHAR(length=128))
+    accept_time = Column(u'accept_time', VARCHAR(length=19), nullable=False)
+
 def build_db(config=None):
     global engine
     engine = create_engine('mysql://%s:%s@%s:3306/test?charset=utf8'%(
                     config['user'],config['passwd'],config['host']))
     conn = engine.connect()
     try:
-        conn.execute("drop database toughradius")
+        conn.execute("drop database %s"%config['db'])
     except:
         pass
-    conn.execute("create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci")
+    conn.execute("create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db'])
     conn.execute("commit")
     conn.close()
     engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
@@ -428,6 +445,15 @@ def install(config=None):
             with open('./testusers.txt','wb') as tf:
                 for i in range(1000):
                     tf.write('test00%s,%s\n'%(i,utils.encrypt('888888')))
+
+def update(config=None):
+    print 'starting update database...'
+    global engine
+    engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
+                    config['user'],config['passwd'],config['host'],config['db']))
+    metadata.create_all(engine,checkfirst=True)    
+    print 'starting update database done'
+
 
 
 if __name__ == '__main__':

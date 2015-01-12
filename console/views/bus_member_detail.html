@@ -60,7 +60,6 @@
             <tbody>
             <tr class="active">
                 <th>上网账号</th>
-                <th>用户姓名</th>
                 <th>用户资费</th>
                 <th>用户状态</th>
                 <th>到期时间</th>
@@ -70,12 +69,17 @@
             % for user in accounts:
             <tr>
                 <td><a href="/ops/user/detail?account_number=${user.account_number}">${user.account_number}</a></td>
-                <td>${user.realname}</td>
                 <td>${user.product_name}</td>
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
                 <td>${user.create_time}</td>
-                 <td><a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">释放绑定</a></td>
+                 <td>
+            <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
+            <a class="opt-btn btn-default" href="javascript:do_next('${user.account_number}');">续费</a>
+            <a class="opt-btn btn-default" href="javascript:do_charge('${user.account_number}');">充值</a>
+            <a class="opt-btn btn-default" href="javascript:do_cancel('${user.account_number}');">销户</a>
+            <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">解绑</a>
+                 </td>
             </tr>
             % endfor
             </tbody>
