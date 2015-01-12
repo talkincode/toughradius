@@ -490,8 +490,11 @@ def account_next(db):
 @app.post('/account/next',apply=auth_opr)
 def account_next(db): 
     account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_next_form()
+    if account.status not in (1,4):
+        return render("account_form", user=user,form=form,msg=u"无效用户状态")    
     if not form.validates(source=request.forms):
         return render("account_form", user=user,form=form)
 
@@ -523,7 +526,7 @@ def account_next(db):
     order.create_time = utils.get_currtime()
     db.add(order)  
 
-    account = db.query(models.SlcRadAccount).get(account_number)
+    account.status = 1
     account.expire_date = form.d.expire_date  
 
     db.commit()
@@ -538,10 +541,14 @@ def account_charge(db):
     return render("account_form",user=user,form=form)
 
 @app.post('/account/charge',apply=auth_opr)
-def account_next(db): 
+def account_charge(db): 
     account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_charge_form()
+    if account.status !=1 :
+        return render("account_form", user=user,form=form,msg=u"无效用户状态")  
+
     if not form.validates(source=request.forms):
         return render("account_form", user=user,form=form)
 
@@ -568,7 +575,6 @@ def account_next(db):
     order.create_time = utils.get_currtime()
     db.add(order)  
 
-    account = db.query(models.SlcRadAccount).get(account_number)
     account.balance += order.actual_fee
 
     db.commit()
@@ -586,8 +592,11 @@ def account_cancel(db):
 @app.post('/account/cancel',apply=auth_opr)
 def account_next(db): 
     account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_cancel_form()
+    if account.status !=1 :
+        return render("account_form", user=user,form=form,msg=u"无效用户状态")      
     if not form.validates(source=request.forms):
         return render("account_form", user=user,form=form)
 
@@ -612,7 +621,6 @@ def account_next(db):
     refund.create_time = utils.get_currtime()
     db.add(refund)  
 
-    account = db.query(models.SlcRadAccount).get(account_number)
     account.status = 3
 
     db.commit()
