@@ -7,5 +7,20 @@
         "db": "toughradius",
         "host": "10.211.55.2",
         "user": "root"
+    },
+    "radiusd":
+    {
+        "authport": 1812,
+        "acctport": 1813,
+        "adminport": 1815,
+        "dictfile": "radiusd/dict/dictionary",
+        "debug":1
+    },
+    "console":
+    {
+        "httpport":1816,
+        "radaddr":"127.0.0.1",
+        "adminport":1815,
+        "debug":1
     }
 }

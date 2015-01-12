@@ -508,8 +508,6 @@ def roster_delete(db):
     redirect("/roster")        
 
 
-
-    
 ###############################################################################
 # run server                                                                 
 ###############################################################################
@@ -523,15 +521,38 @@ def main():
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
-    init_context(radaddr=args.radaddr,adminport=args.adminport)
+
+    if not args.conf or not os.path.exists(args.conf):
+        print 'no config file user -c or --conf cfgfile'
+        return
+
+    _config = json.loads(open(args.conf).read())
+    _mysql = _config['mysql']
+    _console = _config['console']
+
+    if args.httpport:
+        _console['httpport'] = args.httpport
+    if args.radaddr:
+        _console['radaddr'] = args.radaddr
+    if args.adminport:
+        _console['adminport'] = args.adminport
+    if args.debug:
+        _console['debug'] = bool(args.debug)
+
+    init_context(radaddr=_console['radaddr'],adminport=_console['adminport'])
+
     from sqlalchemy import create_engine
-    with open(args.conf) as cf:
-        _mysql = json.loads(cf.read())['mysql']
-        models.engine = create_engine(
-            'mysql://%s:%s@%s:3306/%s?charset=utf8'%(
-                _mysql['user'],_mysql['passwd'],_mysql['host'],_mysql['db']))
+    models.engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
+            _mysql['user'],_mysql['passwd'],_mysql['host'],_mysql['db']))
+
     init_app()
-    runserver(app, host='0.0.0.0', port=args.httpport ,debug=bool(args.debug),reloader=bool(args.debug),server="cherrypy")
+    runserver(
+        app, host='0.0.0.0', 
+        port=_console['httpport'] ,
+        debug=bool(_console['debug']),
+        reloader=bool(_console['debug']),
+        server="cherrypy"
+    )
 
 if __name__ == "__main__":
     main()
