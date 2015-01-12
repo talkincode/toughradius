@@ -4,21 +4,20 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>微信公众平台管理登录</title>
-        <!-- Bootstrap core CSS -->
-        <link href="/static/css/bootstrap.css" rel="stylesheet">
-        <!-- Custom styles for this template -->
-        <link href="/static/css/login.css" rel="stylesheet">
-        <!-- Just for debugging purposes. Don't actually copy this line! -->
-        <!--[if lt IE 9]>
-        <script src="/static/js/ie8-responsive-file-warning.js"></script><![endif]-->
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="/static/js/html5shiv.min.js"></script>
-        <script src="/static/js/respond.min.js"></script>
-        <![endif]-->
+        <title>ToughRADIUS Login</title>
+        <link href="/static/css/login2.css" rel="stylesheet">
         <script type="application/javascript" src="/static/js/jquery-1.11.0.min.js"></script>
         <script>
+            function dokey(e){
+                var keynum;
+                var keychar;
+                keynum = window.event ? e.keyCode : e.which;
+                keychar = String.fromCharCode(keynum);
+                if(keynum == 13)
+                {
+                    doLogin();
+                }
+            }
             function doLogin()
             {
                 var username = $("#username").val();
@@ -36,15 +35,27 @@
             }
         </script>
     </head>
-        <body>
-            <div class="container">
-                <form class="form-signin" role="form" action="/login" method="post">
-                <input type="hidden" name="_xsrf" value="${}">
-                <h2 class="form-signin-heading">管理登录</h2>
-                <input id="username" type="text" class="form-control" placeholder="输入登录名" required autofocus>
-                <input id="password" type="password" class="form-control" placeholder="输入密码" required>
-                <button class="btn btn-lg btn-primary btn-block" type="button" onclick="doLogin();" >登录</button>
-            </form>
-        </div>
+    <body>
+    <div class="loginarea" onkeypress="return dokey(event)">
+        <div class="login_title"></div>
+        <div class="logobox"></div>
+        <ul class="inputbox">
+
+            <li class="user">
+                <input name="username" type="text" id="username"  />
+            </li>
+            <li class="pw">
+                <p>
+                <input name="password" type="password" id="password" />
+                <span class="loginbtn">
+                <a id="login" href="javascript:doLogin();" title="提交"></a>
+                </span>
+                </p>
+            </li>
+
+        </ul>
+
+        <div class="copyrightbox">toughradius.org Copyright 2014</div>
+    </div>
     </body>
 </html>
