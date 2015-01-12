@@ -512,11 +512,12 @@ def main():
     import argparse,json
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=1816,dest='httpport',help='http port')
+    parser.add_argument('-raddr','--radaddr', type=str,default='localhost',dest='radaddr',help='raduis address')
     parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
-    init_context(adminport=args.adminport)
+    init_context(radaddr=args.radaddr,adminport=args.adminport)
     from sqlalchemy import create_engine
     with open(args.conf) as cf:
         _mysql = json.loads(cf.read())['mysql']

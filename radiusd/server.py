@@ -229,7 +229,7 @@ def main():
         _cache_task.start(3600)
 
         from autobahn.twisted.websocket import WebSocketServerFactory
-        factory = WebSocketServerFactory("ws://localhost:%s"%args.adminport, debug = _debug)
+        factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = _debug)
         factory.protocol = AdminServerProtocol
         factory.protocol.user_trace = _trace
         factory.protocol.midware = _middleware
