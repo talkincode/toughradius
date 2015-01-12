@@ -13,7 +13,7 @@
         "authport": 1812,
         "acctport": 1813,
         "adminport": 1815,
-        "dictfile": "radiusd/dict/dictionary",
+        "dictfile": "./radiusd/dict/dictionary",
         "debug":1
     },
     "console":

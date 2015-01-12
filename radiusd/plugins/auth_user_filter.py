@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 from plugins import error_auth
-from radiusd import utils
+import utils
 
 def process(req=None,resp=None,user=None):
 

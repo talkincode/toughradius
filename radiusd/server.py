@@ -181,20 +181,37 @@ def main():
     import argparse,json
     from twisted.python.logfile import DailyLogFile
     parser = argparse.ArgumentParser()
-    parser.add_argument('-dict','--dictfile', type=str,default='dict/dictionary',dest='dictfile',help='dict file')
+    parser.add_argument('-dict','--dictfile', type=str,default=None,dest='dictfile',help='dict file')
     parser.add_argument('-auth','--authport', type=int,default=1812,dest='authport',help='auth port')
     parser.add_argument('-acct','--acctport', type=int,default=1813,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
     parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
-    print sys.argv
     args =  parser.parse_args(sys.argv[1:])
 
-    if args.conf:
-        with open(args.conf) as cf:
-            settings.db_config.update(**json.loads(cf.read()))
+    if not args.conf or not os.path.exists(args.conf):
+        print 'no config file user -c or --conf cfgfile'
+        return
 
-    if not args.debug:
+    _config = json.loads(open(args.conf).read())
+    _mysql = _config['mysql']
+    _radiusd = _config['radiusd']    
+
+    if args.authport:
+        _radiusd['authport'] = args.authport
+    if args.acctport:
+        _radiusd['acctport'] = args.acctport
+    if args.adminport:
+        _radiusd['adminport'] = args.adminport
+    if args.dictfile:
+        _radiusd['dictfile'] = args.dictfile
+    if args.debug:
+        _radiusd['debug'] = bool(args.debug)    
+
+    settings.db_config.update(**_config)
+
+
+    if not _radiusd['debug']:
         print 'logging to file logs/radiusd.log'
         log.startLogging(DailyLogFile.fromFullPath("./logs/radiusd.log"))
     else:
@@ -203,25 +220,25 @@ def main():
     _trace = UserTrace()
     _runstat = statistics.RunStat()
     _middleware = middleware.Middleware()
-    _debug = args.debug or settings.debug
+    _debug = _radiusd['debug'] or settings.debug
 
     def start_servers():
         auth_protocol = RADIUSAccess(
-            dict=args.dictfile,
+            dict=_radiusd['dictfile'],
             trace=_trace,
             midware=_middleware,
             runstat=_runstat,
             debug=_debug
         )
         acct_protocol = RADIUSAccounting(
-            dict=args.dictfile,
+            dict=_radiusd['dictfile'],
             trace=_trace,
             midware=_middleware,
             runstat=_runstat,
             debug=_debug
         )
-        reactor.listenUDP(args.authport, auth_protocol)
-        reactor.listenUDP(args.acctport, acct_protocol)
+        reactor.listenUDP(_radiusd['authport'], auth_protocol)
+        reactor.listenUDP(_radiusd['acctport'], acct_protocol)
         _task = task.LoopingCall(auth_protocol.process_delay)
         _task.start(2.7)
         _cache_task = task.LoopingCall(cache.clear)
@@ -233,7 +250,7 @@ def main():
         factory.protocol.user_trace = _trace
         factory.protocol.midware = _middleware
         factory.protocol.runstat = _runstat
-        reactor.listenTCP(args.adminport, factory)
+        reactor.listenTCP(_radiusd['adminport'], factory)
 
     start_servers()
     reactor.run()
