@@ -200,7 +200,7 @@ def user_open_form(nodes=[],products=[]):
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
-        pyforms.Dropdown("status", args=userreg_state.items(), description=u"用户状态",  **input_style),
+        pyforms.Hidden("status", args=userreg_state.items(),value=1, description=u"用户状态",  **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户开户",
         action="/bus/member/open"
@@ -217,7 +217,7 @@ def account_open_form(products=[]):
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
-        pyforms.Dropdown("status", args=userreg_state.items(), description=u"用户状态",  **input_style),
+        pyforms.Hidden("status", args=userreg_state.items(),value=1, description=u"用户状态",  **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户新开账号",
         action="/bus/account/open"
@@ -242,6 +242,32 @@ user_import_vform = dataform.Form(
         title="import"
 )
 
+account_next_form = pyforms.Form(
+        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
+        pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"用户续费",
+        action="/bus/account/next"
+)
+
+account_charge_form = pyforms.Form(
+        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"用户充值",
+        action="/bus/account/charge"
+)
+
+
+account_cancel_form = pyforms.Form(
+        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"退费金额",  required="required", **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"用户销户",
+        action="/bus/account/cancel"
+)
 
 
 

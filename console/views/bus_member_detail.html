@@ -34,6 +34,8 @@ function release(account_number)
         location.href.reload();
     },"json");
 }
+
+
 </script>
 </%def>
 <%def name="body()">
@@ -106,12 +108,15 @@ function release(account_number)
                         <a class="opt-btn btn-default" href="javascript:do_resume('${user.account_number}');">复机</a>
                     % elif user.status == 1:
                     <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
-                    <a class="opt-btn btn-default" href="javascript:do_next('${user.account_number}');">续费</a>
-                    <a class="opt-btn btn-default" href="javascript:do_charge('${user.account_number}');">充值</a>
-                    <a class="opt-btn btn-default" href="javascript:do_cancel('${user.account_number}');">销户</a>
+                        % if user.product_policy == 0:
+                        <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
+                        % elif user.product_policy == 1: 
+                        <a class="opt-btn btn-default" href="/bus/account/charge?account_number=${user.account_number}">充值</a>
+                        % endif
+                    <a class="opt-btn btn-default" href="/bus/account/cancel?account_number=${user.account_number}">销户</a>
                     <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">解绑</a>
                     % elif user.status == 4:
-                    <a class="opt-btn btn-default" href="javascript:do_next('${user.account_number}');">续费</a>
+                    <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
                     % endif
                  </td>
             </tr>
@@ -147,7 +152,36 @@ function release(account_number)
             </tr>
             % endfor
             </tbody>
-        </table>                   
+        </table>    
+
+        <table class="table ">
+            <thead>
+                <tr>
+                    <th colspan="8"> 用户退费记录</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr class="active">
+                <th>退订号</th>
+                <th>资费</th>
+                <th>上网账号</th>
+                <th>退还费用</th>
+                <th>退费状态</th>
+                <th>退费时间</th>
+            </tr>            
+            % for refund in refunds:
+            <tr>
+                <td>${refund.refund_id}</td>
+                <td>${refund.product_name}</td>
+                <td>${refund.account_number}</td>
+                <td>${fen2yuan(refund.refund_fee)}</td>
+                <td>${{0:u"未支付",1:u"已支付",2:u"已取消"}[refund.status]}</td>
+                <td>${refund.create_time}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>   
+
     </div>
 </div>
 </div>

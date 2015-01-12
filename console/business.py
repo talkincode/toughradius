@@ -74,7 +74,8 @@ def member_detail(db):
         models.SlcRadAccount.status,
         models.SlcRadAccount.last_pause,
         models.SlcRadAccount.create_time,
-        models.SlcRadProduct.product_name
+        models.SlcRadProduct.product_name,
+        models.SlcRadProduct.product_policy
     ).filter(
         models.SlcRadProduct.id == models.SlcRadAccount.product_id,
         models.SlcMember.member_id == models.SlcRadAccount.member_id,
@@ -94,7 +95,20 @@ def member_detail(db):
         models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
         models.SlcMemberOrder.member_id==member_id
     )
-    return  render("bus_member_detail",member=member,accounts=accounts,orders=orders)
+    refunds = db.query(
+        models.SlcMemberRefund.refund_id,
+        models.SlcMemberRefund.refund_id,
+        models.SlcMemberRefund.product_id,
+        models.SlcMemberRefund.account_number,
+        models.SlcMemberRefund.refund_fee,
+        models.SlcMemberRefund.status,
+        models.SlcMemberRefund.create_time,
+        models.SlcRadProduct.product_name
+    ).filter(
+        models.SlcRadProduct.id == models.SlcMemberRefund.product_id,
+        models.SlcMemberRefund.member_id==member_id
+    )
+    return  render("bus_member_detail",member=member,accounts=accounts,orders=orders,refunds=refunds)
 
 @app.get('/member/open',apply=auth_opr)
 def member_open(db): 
@@ -230,7 +244,7 @@ def account_open(db):
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
         order_fee = int(order_fee.to_integral_value())
     elif product.product_policy == 1:
-        balance = utils.yuan2fen(fom.d.fee_value)
+        balance = utils.yuan2fen(form.d.fee_value)
         expire_date = '3000-11-11'
 
     order = models.SlcMemberOrder()
@@ -437,13 +451,172 @@ def account_resume(db):
     return dict(msg=u"操作成功")
 
 
+def query_account(db,account_number):
+    return db.query(
+        models.SlcMember.realname,
+        models.SlcRadAccount.member_id,
+        models.SlcRadAccount.product_id,
+        models.SlcRadAccount.account_number,
+        models.SlcRadAccount.expire_date,
+        models.SlcRadAccount.balance,
+        models.SlcRadAccount.time_length,
+        models.SlcRadAccount.user_concur_number,
+        models.SlcRadAccount.status,
+        models.SlcRadAccount.mac_addr,
+        models.SlcRadAccount.vlan_id,
+        models.SlcRadAccount.vlan_id2,
+        models.SlcRadAccount.ip_address,
+        models.SlcRadAccount.bind_mac,
+        models.SlcRadAccount.bind_vlan,
+        models.SlcRadAccount.ip_address,
+        models.SlcRadAccount.install_address,
+        models.SlcRadAccount.create_time,
+        models.SlcRadProduct.product_name
+    ).filter(
+            models.SlcRadProduct.id == models.SlcRadAccount.product_id,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id,
+            models.SlcRadAccount.account_number == account_number
+    ).first()
+
+
+@app.get('/account/next',apply=auth_opr)
+def account_next(db): 
+    account_number = request.params.get("account_number")
+    user = query_account(db,account_number)
+    form = forms.account_next_form()
+    form.account_number.set_value(account_number)
+    return render("account_form",user=user,form=form)
+
+@app.post('/account/next',apply=auth_opr)
+def account_next(db): 
+    account_number = request.params.get("account_number")
+    user = query_account(db,account_number)
+    form = forms.account_next_form()
+    if not form.validates(source=request.forms):
+        return render("account_form", user=user,form=form)
+
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'next'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)
+
+    order_fee = 0
+    product = db.query(models.SlcRadProduct).get(user.product_id)
+    order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
+    order_fee = int(order_fee.to_integral_value())
+
+    order = models.SlcMemberOrder()
+    order.order_id = utils.gen_order_id()
+    order.member_id = user.member_id
+    order.product_id = user.product_id
+    order.account_number = form.d.account_number
+    order.order_fee = order_fee
+    order.actual_fee = utils.yuan2fen(form.d.fee_value)
+    order.pay_status = 1
+    order.accept_id = accept_log.id
+    order.order_source = 'console'
+    order.create_time = utils.get_currtime()
+    db.add(order)  
+
+    account = db.query(models.SlcRadAccount).get(account_number)
+    account.expire_date = form.d.expire_date  
+
+    db.commit()
+    redirect("/bus/member/detail?member_id={}".format(user.member_id))
+
+@app.get('/account/charge',apply=auth_opr)
+def account_charge(db): 
+    account_number = request.params.get("account_number")
+    user = query_account(db,account_number)
+    form = forms.account_charge_form()
+    form.account_number.set_value(account_number)
+    return render("account_form",user=user,form=form)
+
+@app.post('/account/charge',apply=auth_opr)
+def account_next(db): 
+    account_number = request.params.get("account_number")
+    user = query_account(db,account_number)
+    form = forms.account_charge_form()
+    if not form.validates(source=request.forms):
+        return render("account_form", user=user,form=form)
+
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'charge'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)
+
+    order = models.SlcMemberOrder()
+    order.order_id = utils.gen_order_id()
+    order.member_id = user.member_id
+    order.product_id = user.product_id
+    order.account_number = form.d.account_number
+    order.order_fee = 0
+    order.actual_fee = utils.yuan2fen(form.d.fee_value)
+    order.pay_status = 1
+    order.accept_id = accept_log.id
+    order.order_source = 'console'
+    order.create_time = utils.get_currtime()
+    db.add(order)  
+
+    account = db.query(models.SlcRadAccount).get(account_number)
+    account.balance += order.actual_fee
+
+    db.commit()
+    redirect("/bus/member/detail?member_id={}".format(user.member_id))
+
 @app.get('/account/cancel',apply=auth_opr)
 def account_cancel(db): 
     account_number = request.params.get("account_number")
+    user = query_account(db,account_number)
+    form = forms.account_cancel_form()
+    form.account_number.set_value(account_number)
+    return render("account_form",user=user,form=form)
+
+
+@app.post('/account/cancel',apply=auth_opr)
+def account_next(db): 
+    account_number = request.params.get("account_number")
+    user = query_account(db,account_number)
+    form = forms.account_cancel_form()
+    if not form.validates(source=request.forms):
+        return render("account_form", user=user,form=form)
+
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'cancel'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = get_cookie("username")
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)
+
+    refund = models.SlcMemberRefund()
+    refund.refund_id = utils.gen_order_id()
+    refund.member_id = user.member_id
+    refund.product_id = user.product_id
+    refund.account_number = form.d.account_number
+    refund.refund_fee = utils.yuan2fen(form.d.fee_value)
+    refund.status = 1
+    refund.accept_id = accept_log.id
+    refund.create_time = utils.get_currtime()
+    db.add(refund)  
+
     account = db.query(models.SlcRadAccount).get(account_number)
+    account.status = 3
 
-
-
+    db.commit()
+    redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 
 

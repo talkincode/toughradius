@@ -161,7 +161,7 @@ class SlcMemberRefund(DeclarativeBase):
     refund_fee = Column('refund_fee', INTEGER(), nullable=False)
     status = Column('status', INTEGER(), nullable=False)
     accept_id = Column('accept_id', INTEGER(),nullable=False)
-    order_detail = Column('order_detail', VARCHAR(length=1024), nullable=False)
+    refund_desc = Column('refund_desc', VARCHAR(length=1024))
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
 
 

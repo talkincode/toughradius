@@ -1,24 +1,25 @@
 <%inherit file="base.html"/>
 <%def name="head()">
+<script src="/static/js/bootstrap-datepicker.js"></script>
+<link rel="stylesheet" href="/static/js/datepicker.css"> 
 <script>
-    function release(account_number)
-    {
-        params = {account_number:account_number};
-        $.post("/ops/user/release", params, function (data) {
-            alert(data.msg)
-        },"json");
-    }
+$(function () {
+    $("#expire_date").datepicker();
+});
 </script>
+
 </%def>
 <%def name="body()">
     <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户上网账号信息 <a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> ${form.title}<a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
         <div class="panel-body">
-     
+            % if msg:
+            <div class="alert alert-warning">${msg}</div>
+            % endif
         <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th colspan="6"> 基本信息</th>
+                        <th colspan="6"> 上网账号信息</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +66,10 @@
             </tbody>
 
         </table>
+          <hr/>            
+            <form class="form-horizontal" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
     </div>
-</div>
 </div>
 </%def>
