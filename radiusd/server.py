@@ -4,6 +4,7 @@
 # kqreactor.install()
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
+sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.internet import task
 from twisted.internet.defer import Deferred
 from twisted.internet import protocol
