@@ -273,7 +273,20 @@ account_cancel_form = pyforms.Form(
         action="/bus/account/cancel"
 )
 
-
+def member_update_form(nodes=[]):
+    return pyforms.Form(
+        pyforms.Hidden("member_id", description=u"mid",  required="required", **input_style),
+        pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
+        pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
+        pyforms.Textbox("member_name", description=u"用户登陆名", readonly="readonly",**input_style),
+        pyforms.Password("new_password", rules.len_of(6,128),value="", description=u"用户登陆密码(留空不修改)", **input_style),
+        pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
+        pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
+        pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"用户基本信息修改",
+        action="/bus/member/update"
+    )
 
 
 

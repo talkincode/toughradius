@@ -44,7 +44,7 @@ function release(account_number)
         <div class="panel-body">
         <div class="pull-right bottom10 ">
             <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开上网账号</a>
-            <a href="/bus/account/update?member_id=${member.member_id}" class="btn btn-sm btn-info">修改基本资料</a>
+            <a href="/bus/member/update?member_id=${member.member_id}" class="btn btn-sm btn-info">修改基本资料</a>
         </div>    
         <table class="table ">
                 <thead>
@@ -140,6 +140,7 @@ function release(account_number)
                 <th>实缴费用</th>
                 <th>订单状态</th>
                 <th>订单时间</th>
+                <th>订单描述</th>
             </tr>            
             % for order in orders:
             <tr>
@@ -150,38 +151,11 @@ function release(account_number)
                 <td>${fen2yuan(order.actual_fee)}</td>
                 <td>${{0:u"未支付",1:u"已支付",2:u"已取消"}[order.pay_status]}</td>
                 <td>${order.create_time}</td>
+                <td>${order.order_desc or ''}</td>
             </tr>
             % endfor
             </tbody>
         </table>    
-
-        <table class="table ">
-            <thead>
-                <tr>
-                    <th colspan="8"> 用户退费记录</th>
-                </tr>
-            </thead>
-            <tbody>
-            <tr class="active">
-                <th>退订号</th>
-                <th>资费</th>
-                <th>上网账号</th>
-                <th>退还费用</th>
-                <th>退费状态</th>
-                <th>退费时间</th>
-            </tr>            
-            % for refund in refunds:
-            <tr>
-                <td>${refund.refund_id}</td>
-                <td>${refund.product_name}</td>
-                <td>${refund.account_number}</td>
-                <td>${fen2yuan(refund.refund_fee)}</td>
-                <td>${{0:u"未支付",1:u"已支付",2:u"已取消"}[refund.status]}</td>
-                <td>${refund.create_time}</td>
-            </tr>
-            % endfor
-            </tbody>
-        </table>   
 
     </div>
 </div>

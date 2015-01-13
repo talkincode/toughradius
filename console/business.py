@@ -90,25 +90,13 @@ def member_detail(db):
         models.SlcMemberOrder.actual_fee,
         models.SlcMemberOrder.pay_status,
         models.SlcMemberOrder.create_time,
+        models.SlcMemberOrder.order_desc,
         models.SlcRadProduct.product_name
     ).filter(
         models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
         models.SlcMemberOrder.member_id==member_id
     )
-    refunds = db.query(
-        models.SlcMemberRefund.refund_id,
-        models.SlcMemberRefund.refund_id,
-        models.SlcMemberRefund.product_id,
-        models.SlcMemberRefund.account_number,
-        models.SlcMemberRefund.refund_fee,
-        models.SlcMemberRefund.status,
-        models.SlcMemberRefund.create_time,
-        models.SlcRadProduct.product_name
-    ).filter(
-        models.SlcRadProduct.id == models.SlcMemberRefund.product_id,
-        models.SlcMemberRefund.member_id==member_id
-    )
-    return  render("bus_member_detail",member=member,accounts=accounts,orders=orders,refunds=refunds)
+    return  render("bus_member_detail",member=member,accounts=accounts,orders=orders)
 
 @app.get('/member/open',apply=auth_opr)
 def member_open(db): 
@@ -116,6 +104,15 @@ def member_open(db):
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.user_open_form(nodes,products)
     return render("open_form",form=form)
+
+@app.get('/member/update',apply=auth_opr)
+def member_update(db): 
+    member_id = request.params.get("member_id")
+    member = db.query(models.SlcMember).get(member_id)
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    form = forms.member_update_form(nodes)
+    form.fill(member)
+    return render("base_form",form=form)
 
 @app.post('/member/open',apply=auth_opr)
 def member_open(db): 
@@ -185,6 +182,7 @@ def member_open(db):
     order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = member.create_time
+    order.order_desc = u"用户新开账号"
     db.add(order)
 
     account = models.SlcRadAccount()
@@ -271,6 +269,7 @@ def account_open(db):
     order.accept_id = accept_log.id   
     order.order_source = 'console'
     order.create_time = _datetime
+    order.order_desc = u"用户增开账号"
     db.add(order)
 
     account = models.SlcRadAccount()
@@ -385,6 +384,7 @@ def member_import(db):
             order.accept_id = accept_log.id 
             order.order_source = 'console'
             order.create_time = member.create_time
+            order.order_desc = u"用户导入开户"
             db.add(order)
 
             account = models.SlcRadAccount()
@@ -540,6 +540,7 @@ def account_next(db):
     order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
+    order.order_desc = u"用户续费"
     db.add(order)  
 
     account.status = 1
@@ -591,6 +592,7 @@ def account_charge(db):
     order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
+    order.order_desc = u"用户充值"
     db.add(order)  
 
     account.balance += order.actual_fee
@@ -629,16 +631,19 @@ def account_next(db):
     db.flush()
     db.refresh(accept_log)
 
-    refund = models.SlcMemberRefund()
-    refund.refund_id = utils.gen_order_id()
-    refund.member_id = user.member_id
-    refund.product_id = user.product_id
-    refund.account_number = form.d.account_number
-    refund.refund_fee = utils.yuan2fen(form.d.fee_value)
-    refund.status = 1
-    refund.accept_id = accept_log.id
-    refund.create_time = utils.get_currtime()
-    db.add(refund)  
+    order = models.SlcMemberOrder()
+    order.order_id = utils.gen_order_id()
+    order.member_id = user.member_id
+    order.product_id = user.product_id
+    order.account_number = form.d.account_number
+    order.order_fee = 0
+    order.actual_fee = -utils.yuan2fen(form.d.fee_value)
+    order.pay_status = 1
+    order.order_source = 'console'
+    order.accept_id = accept_log.id
+    order.create_time = utils.get_currtime()
+    order.order_desc = u'用户销户'
+    db.add(order)  
 
     account.status = 3
 

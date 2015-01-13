@@ -144,26 +144,7 @@ class SlcMemberOrder(DeclarativeBase):
     pay_status = Column('pay_status', INTEGER(), nullable=False)
     accept_id = Column('accept_id', INTEGER(),nullable=False)
     order_source = Column('order_source', VARCHAR(length=64), nullable=False)
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False)
-
-
-class SlcMemberRefund(DeclarativeBase):
-    """
-    会员退款记录
-    status退款状态：0-未完成，1-已完成，2-已取消
-    """
-    __tablename__ = 'slc_member_refund'
-
-    __table_args__ = {}
-
-    refund_id = Column('refund_id', VARCHAR(length=32),primary_key=True,nullable=False)
-    member_id = Column('member_id', INTEGER(),nullable=False)
-    product_id = Column('product_id', INTEGER(),nullable=False)
-    account_number = Column('account_number', VARCHAR(length=32),nullable=False)
-    refund_fee = Column('refund_fee', INTEGER(), nullable=False)
-    status = Column('status', INTEGER(), nullable=False)
-    accept_id = Column('accept_id', INTEGER(),nullable=False)
-    refund_desc = Column('refund_desc', VARCHAR(length=1024))
+    order_desc = Column('order_desc', VARCHAR(length=255))
     create_time = Column('create_time', VARCHAR(length=19), nullable=False)
 
 
