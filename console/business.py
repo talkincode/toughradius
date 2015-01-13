@@ -184,7 +184,6 @@ def member_open(db):
     account.member_id = member.member_id
     account.product_id = order.product_id
     account.install_address = member.address
-    account.ip_address = ''
     account.mac_addr = ''
     account.password = utils.encrypt(form.d.password)
     account.status = form.d.status
@@ -267,7 +266,6 @@ def account_open(db):
     account.member_id = int(form.d.member_id)
     account.product_id = order.product_id
     account.install_address = form.d.address
-    account.ip_address = ''
     account.mac_addr = ''
     account.password = utils.encrypt(form.d.password)
     account.status = form.d.status

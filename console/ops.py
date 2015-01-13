@@ -12,6 +12,7 @@ import bottle
 import models
 import forms
 import datetime
+from libs import utils
 from base import *
 
 app = Bottle()
@@ -58,9 +59,9 @@ def user_query(db):
     elif request.path == "/user/export":
         result = _query.all()
         data = Dataset()
-        data.append((u'上网账号',u'姓名', u'套餐', u'过期时间', u'余额',u'时长',u'状态',u'创建时间'))
+        data.append((u'上网账号',u'姓名', u'资费', u'过期时间', u'余额(元)',u'时长(秒)',u'状态',u'创建时间'))
         for i in result:
-            data.append((i.account_number, i.realname, i.product_name, i.expire_date,i.balance,i.time_length,i.status,i.create_time))
+            data.append((i.account_number, i.realname, i.product_name, i.expire_date,utils.fen2yuan(i.balance),i.time_length,i.status,i.create_time))
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
