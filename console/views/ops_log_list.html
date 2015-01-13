@@ -1,0 +1,69 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
+<link rel="stylesheet" href="/static/js/bootstrap-datetimepicker.min.css">
+   <script>
+    $(document).ready(function(){
+        $("#query_begin_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+        $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+    });
+
+   </script>
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span>上网记录查询</div>
+    <div class="panel-body">
+        <form id="query_form" class="form-horizontal" role="form" action="/ops/ticket">
+            <div class="form-group">
+                <label for="operator_name" class="col-md-2 control-label">操作员名</label>
+                <div class="col-md-3">
+                    <input type="text" id="operator_name" name="operator_name" class="form-control">
+                </div>
+            </div>   
+            <div class="form-group">
+                <label for="query_begin_time" class="col-md-2 control-label">开始时间</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="query_begin_time" name="query_begin_time" value="${query_begin_time or ''}" class="form-control form_datetime"  >
+                </div>
+                 <label for="query_end_time" class="col-md-2 control-label">结束时间</label>
+                <div class="col-md-3">
+                    <input type="text" id="query_end_time" name="query_end_time" value="${query_end_time or ''}"  class="form-control form_datetime">
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-7">
+                    <button type="submit" class="btn btn-primary">查询</button>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>操作员名称</th>
+                <th>操作员ip</th>
+                <th>操作时间</th>
+                <th>操作描述</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for opslog in page_data.result:
+            <tr>
+                <td>${opslog.operator_name}</td>
+                <td>${opslog.operator_ip}</td>
+                <td>${opslog.operator_time}</td>
+                <td>${opslog.operator_desc[:32]}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+        ${page_data.render(form_id="query_form")}
+    </div>
+</div>
+
+
+</%def>
