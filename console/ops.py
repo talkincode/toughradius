@@ -229,4 +229,4 @@ def opslog_query(db):
         _query = _query.filter(models.SlcRadOperateLog.operate_time >= query_begin_time)
     if query_end_time:
         _query = _query.filter(models.SlcRadOperateLog.operate_time <= query_end_time)
-    return render("ops_log_list", page_data = get_page_data(_query),,**request.params)
+    return render("ops_log_list", page_data = get_page_data(_query),**request.params)
