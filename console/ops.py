@@ -112,6 +112,14 @@ def user_release(db):
     user.mac_addr = ''
     user.vlan_id = 0
     user.vlan_id2 = 0
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'释放用户账号（%s）绑定信息'%(account_number,)
+    db.add(ops_log)
+
     db.commit()
     return dict(code=0,msg=u"解绑成功")
 

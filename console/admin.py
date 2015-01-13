@@ -20,6 +20,7 @@ import bottle
 import models
 import forms
 import datetime
+import json
 
 
 ###############################################################################
@@ -99,10 +100,26 @@ def admin_login_post(db):
     set_cookie('username',uname)
     set_cookie('login_time', utils.get_currtime())
     set_cookie('login_ip', request.remote_addr)    
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)登陆'%(get_cookie("username"),)
+    db.add(ops_log)
+    db.commit()
+
     return dict(code=0,msg="ok")
 
 @app.get("/logout")
-def admin_logout():
+def admin_logout(db):
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)登出'%(get_cookie("username"),)
+    db.add(ops_log)    
+    db.commit()
     request.cookies.clear()
     redirect('/login')
 
@@ -122,6 +139,17 @@ def param_update(db):
             _value = request.forms.get(param.param_name)
             if _value and param.param_value not in _value:
                 param.param_value = _value
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改参数:%s'%(
+        get_cookie("username"),
+        json.dumps([ {c.name: getattr(p, c.name) for c in p.__table__.columns} for p in params ],ensure_ascii=False)
+    )
+    db.add(ops_log)
+
     db.commit()
     redirect("/param")
 
@@ -144,6 +172,14 @@ def passwd_update(db):
         return render("base_form", form=form,msg=u"确认密码不一致")
     opr = db.query(models.SlcOperator).first()
     opr.operator_pass = md5(form.d.operator_pass).hexdigest()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改密码'%(get_cookie("username"),)
+    db.add(ops_log)
+
     db.commit()
     redirect("/passwd")
 
@@ -168,6 +204,14 @@ def node_add_post(db):
     node.node_name = form.d.node_name
     node.node_desc = form.d.node_desc
     db.add(node)
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增区域信息:%s'%(get_cookie("username"),serial_json(node))
+    db.add(ops_log)
+
     db.commit()
     redirect("/node")
 
@@ -186,6 +230,14 @@ def node_add_update(db):
     node = db.query(models.SlcNode).get(form.d.id)
     node.node_name = form.d.node_name
     node.node_desc = form.d.node_desc
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改区域信息:%s'%(get_cookie("username"),serial_json(node))
+    db.add(ops_log)
+
     db.commit()
     redirect("/node")    
 
@@ -195,6 +247,14 @@ def node_delete(db):
     if db.query(models.SlcMember.member_id).filter_by(node_id=node_id).count()>0:
         return render("error",msg=u"该节点下有用户，不允许删除")
     db.query(models.SlcNode).filter_by(id=node_id).delete()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除区域信息:%s'%(get_cookie("username"),node_id)
+    db.add(ops_log)
+
     db.commit() 
     redirect("/node")  
 
@@ -226,6 +286,14 @@ def bas_add_post(db):
     bas.vendor_id = form.d.vendor_id
     bas.bas_secret = form.d.bas_secret
     db.add(bas)
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增BAS信息:%s'%(get_cookie("username"),serial_json(bas))
+    db.add(ops_log)
+
     db.commit()
     redirect("/bas")
 
@@ -246,6 +314,14 @@ def bas_add_update(db):
     bas.time_type = form.d.time_type
     bas.vendor_id = form.d.vendor_id
     bas.bas_secret = form.d.bas_secret
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改BAS信息:%s'%(get_cookie("username"),serial_json(bas))
+    db.add(ops_log)
+
     db.commit()
     redirect("/bas")    
 
@@ -253,6 +329,14 @@ def bas_add_update(db):
 def bas_delete(db):     
     bas_id = request.params.get("bas_id")
     db.query(models.SlcRadBas).filter_by(id=bas_id).delete()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除BAS信息:%s'%(get_cookie("username"),bas_id)
+    db.add(ops_log)
+
     db.commit() 
     redirect("/bas")    
 
@@ -299,6 +383,14 @@ def product_add_post(db):
     product.create_time = _datetime
     product.update_time = _datetime
     db.add(product)
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增资费信息:%s'%(get_cookie("username"),serial_json(product))
+    db.add(ops_log)
+
     db.commit()
     redirect("/product")
 
@@ -328,6 +420,14 @@ def product_add_update(db):
     product.input_max_limit = form.d.input_max_limit
     product.output_max_limit = form.d.output_max_limit
     product.update_time = utils.get_currtime()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改资费信息:%s'%(get_cookie("username"),serial_json(product))
+    db.add(ops_log)
+
     db.commit()
     redirect("/product")    
 
@@ -337,6 +437,14 @@ def product_delete(db):
     if db.query(models.SlcRadAccount).filter_by(product_id=product_id).count()>0:
         return render("error",msg=u"该套餐有用户使用，不允许删除") 
     db.query(models.SlcRadProduct).filter_by(id=product_id).delete()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除资费信息:%s'%(get_cookie("username"),product_id)
+    db.add(ops_log)
+
     db.commit() 
     redirect("/product")   
 
@@ -360,6 +468,14 @@ def product_attr_add(db):
     attr.attr_value = form.d.attr_value
     attr.attr_desc = form.d.attr_desc
     db.add(attr)
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    db.add(ops_log)
+
     db.commit()
     redirect("/product/detail?product_id="+form.d.product_id) 
 
@@ -380,6 +496,14 @@ def product_attr_update(db):
     attr.attr_name = form.d.attr_name
     attr.attr_value = form.d.attr_value
     attr.attr_desc = form.d.attr_desc
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    db.add(ops_log)
+
     db.commit()
     redirect("/product/detail?product_id="+form.d.product_id) 
 
@@ -389,6 +513,14 @@ def product_attr_update(db):
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
     product_id = attr.product_id
     db.query(models.SlcRadProductAttr).filter_by(id=attr_id).delete()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    db.add(ops_log)
+
     db.commit()
     redirect("/product/detail?product_id=%s"%product_id)     
 
@@ -418,6 +550,14 @@ def group_add_post(db):
     group.concur_number = form.d.concur_number
     group.update_time = utils.get_currtime()
     db.add(group)
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增用户组信息:%s'%(get_cookie("username"),serial_json(group))
+    db.add(ops_log)
+
     db.commit()
     redirect("/group")
 
@@ -440,6 +580,14 @@ def group_add_update(db):
     group.bind_vlan = form.d.bind_vlan
     group.concur_number = form.d.concur_number
     group.update_time = utils.get_currtime()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改用户组信息:%s'%(get_cookie("username"),serial_json(group))
+    db.add(ops_log)
+
     db.commit()
     redirect("/group")    
 
@@ -447,6 +595,14 @@ def group_add_update(db):
 def group_delete(db):     
     group_id = request.params.get("group_id")
     db.query(models.SlcRadGroup).filter_by(id=group_id).delete()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除用户组信息:%s'%(get_cookie("username"),group_id)
+    db.add(ops_log)
+
     db.commit() 
     redirect("/group")    
 
@@ -476,6 +632,14 @@ def roster_add_post(db):
     roster.end_time = form.d.end_time
     roster.roster_type = form.d.roster_type
     db.add(roster)
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增黑白名单信息:%s'%(get_cookie("username"),serial_json(roster))
+    db.add(ops_log)
+
     db.commit()
     redirect("/roster")
 
@@ -497,6 +661,14 @@ def roster_add_update(db):
     roster.begin_time = form.d.begin_time
     roster.end_time = form.d.end_time
     roster.roster_type = form.d.roster_type
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改黑白名单信息:%s'%(get_cookie("username"),serial_json(roster))
+    db.add(ops_log)
+
     db.commit()
     redirect("/roster")    
 
@@ -504,6 +676,14 @@ def roster_add_update(db):
 def roster_delete(db):     
     roster_id = request.params.get("roster_id")
     db.query(models.SlcRadRoster).filter_by(id=roster_id).delete()
+
+    ops_log = models.SlcOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除黑白名单信息:%s'%(get_cookie("username"),roster_id)
+    db.add(ops_log)
+
     db.commit() 
     redirect("/roster")        
 

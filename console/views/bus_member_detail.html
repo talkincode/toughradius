@@ -44,6 +44,7 @@ function release(account_number)
         <div class="panel-body">
         <div class="pull-right bottom10 ">
             <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开上网账号</a>
+            <a href="/bus/account/update?member_id=${member.member_id}" class="btn btn-sm btn-info">修改基本资料</a>
         </div>    
         <table class="table ">
                 <thead>
@@ -57,8 +58,8 @@ function release(account_number)
                         <td>${member.realname}</td>
                         <td>证件号码</td>
                         <td>${member.idcard}</td>
-                        <td>性别</td>
-                        <td>${{1:u"男",0:u"女"}[member.sex]}</td>                 
+                        <td>用户登陆名</td>
+                        <td>${member.member_name}</td>                 
                     </tr>
                     <tr>
                         <td>年龄</td>

@@ -132,6 +132,8 @@ def member_open(db):
     member = models.SlcMember()
     member.node_id = form.d.node_id
     member.realname = form.d.realname
+    member.member_name = form.d.member_name
+    member.password = md5(form.d.password.encode()).hexdigest()
     member.idcard = form.d.idcard
     member.sex = '1'
     member.age = '0'

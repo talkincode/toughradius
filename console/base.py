@@ -13,6 +13,7 @@ import logging
 import bottle
 import models
 import os
+import json
 
 
 """ define logging """
@@ -59,4 +60,8 @@ def get_page_data(query):
     page_data.result = query.limit(page_size).offset(offset)
     return page_data
 
+def serial_json(mdl):
+    if not mdl:return
+    if not hasattr(mdl,'__table__'):return
+    return json.dumps({c.name: getattr(mdl, c.name) for c in mdl.__table__.columns},ensure_ascii=False)
 

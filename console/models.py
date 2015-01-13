@@ -113,6 +113,8 @@ class SlcMember(DeclarativeBase):
         Sequence('member_id_seq', start=100001, increment=1),
         primary_key=True,nullable=False)
     node_id = Column('node_id', INTEGER(), nullable=False)
+    member_name = Column('member_name', VARCHAR(length=64), nullable=False)
+    password = Column('password', VARCHAR(length=128), nullable=False)
     realname = Column('realname', VARCHAR(length=64), nullable=False)
     idcard = Column('idcard', VARCHAR(length=32))
     sex = Column('sex', SMALLINT(), nullable=True)
@@ -311,6 +313,19 @@ class SlcRadAcceptLog(DeclarativeBase):
     operator_name = Column(u'operator_name', VARCHAR(32))
     accept_source = Column(u'accept_source', VARCHAR(length=128))
     accept_time = Column(u'accept_time', VARCHAR(length=19), nullable=False)
+
+class SlcOperateLog(DeclarativeBase):
+    __tablename__ = 'slc_rad_operate_log'
+
+    __table_args__ = {}
+
+    #column definitions
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    operator_name = Column(u'operator_name', VARCHAR(32), nullable=False)
+    operate_ip = Column(u'operate_ip', VARCHAR(length=128))
+    operate_time = Column(u'operate_time', VARCHAR(length=19), nullable=False)
+    operate_desc = Column(u'operate_desc', VARCHAR(length=512))
+
 
 def build_db(config=None):
     global engine
