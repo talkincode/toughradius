@@ -184,9 +184,9 @@ def main():
     from twisted.python.logfile import DailyLogFile
     parser = argparse.ArgumentParser()
     parser.add_argument('-dict','--dictfile', type=str,default=None,dest='dictfile',help='dict file')
-    parser.add_argument('-auth','--authport', type=int,default=1812,dest='authport',help='auth port')
-    parser.add_argument('-acct','--acctport', type=int,default=1813,dest='acctport',help='acct port')
-    parser.add_argument('-admin','--adminport', type=int,default=1815,dest='adminport',help='admin port')
+    parser.add_argument('-auth','--authport', type=int,default=0,dest='authport',help='auth port')
+    parser.add_argument('-acct','--acctport', type=int,default=0,dest='acctport',help='acct port')
+    parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
     parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     args =  parser.parse_args(sys.argv[1:])
