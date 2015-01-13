@@ -180,6 +180,7 @@ def member_open(db):
 
     account = models.SlcRadAccount()
     account.account_number = form.d.account_number
+    account.ip_address = form.d.ip_address
     account.member_id = member.member_id
     account.product_id = order.product_id
     account.install_address = member.address
@@ -262,6 +263,7 @@ def account_open(db):
 
     account = models.SlcRadAccount()
     account.account_number = form.d.account_number
+    account.ip_address = form.d.ip_address
     account.member_id = int(form.d.member_id)
     account.product_id = order.product_id
     account.install_address = form.d.address
