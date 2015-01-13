@@ -125,9 +125,15 @@ def member_open(db):
     if not form.validates(source=request.forms):
         return render("open_form", form=form)
 
-    if db.query(models.SlcRadAccount).filter_by(
-        account_number=form.d.account_number).count()>0:
-        return render("open_form", form=form,msg=u"上网账号已经存在")
+    if db.query(models.SlcRadAccount).filter_by(account_number=form.d.account_number).count()>0:
+        return render("open_form", form=form,msg=u"上网账号%s已经存在"%form.d.account_number)
+
+    if db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
+        return render("open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
+
+    if db.query(models.SlcMember).filter_by(
+        member_name=form.d.member_name).count()>0:
+        return render("open_form", form=form,msg=u"用户名%s已经存在"%form.d.member_name)
 
     member = models.SlcMember()
     member.node_id = form.d.node_id
@@ -152,6 +158,7 @@ def member_open(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = member.create_time
     accept_log.operator_name = get_cookie("username")
+    accept_log.accept_desc = u"用户新开户：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)    
@@ -227,12 +234,16 @@ def account_open(db):
         account_number=form.d.account_number).count()>0:
         return render("open_form", form=form,msg=u"上网账号已经存在")
 
+    if db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
+        return render("open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
+
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'open'
     accept_log.accept_source = 'console'
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
+    accept_log.accept_desc = u"用户新增账号：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -330,6 +341,8 @@ def member_import(db):
             member.node_id = node_id
             member.realname = form.d.realname
             member.idcard = '123456'
+            member.member_name = form.d.account_number
+            member.password = form.d.account_number
             member.sex = '1'
             member.age = '0'
             member.email = ''
@@ -344,7 +357,7 @@ def member_import(db):
             accept_log = models.SlcRadAcceptLog()
             accept_log.accept_type = 'open'
             accept_log.accept_source = 'console'
-            accept_log.accept_desc = 'import user'
+            accept_log.accept_desc = u"用户导入账号：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
             accept_log.account_number = form.d.account_number
             accept_log.accept_time = member.create_time
             accept_log.operator_name = get_cookie("username")
@@ -416,7 +429,7 @@ def account_pause(db):
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'pause'
     accept_log.accept_source = 'console'
-    accept_log.accept_desc = 'pause user'
+    accept_log.accept_desc = u"用户停机：上网账号:%s"%(account_number)
     accept_log.account_number = account.account_number
     accept_log.accept_time = _datetime
     accept_log.operator_name = get_cookie("username")
@@ -443,7 +456,7 @@ def account_resume(db):
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'resume'
     accept_log.accept_source = 'console'
-    accept_log.accept_desc = 'resume user'
+    accept_log.accept_desc = u"用户复机：上网账号:%s"%(account_number)
     accept_log.account_number = account.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
@@ -503,6 +516,7 @@ def account_next(db):
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'next'
     accept_log.accept_source = 'console'
+    accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元"%(account_number,form.d.fee_value)
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
@@ -560,6 +574,8 @@ def account_charge(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
+    _new_fee = account.balance + utils.yuan2fen(form.d.fee_value)
+    accept_log.accept_desc = u"用户充值：上网账号:%s，充值前%s(分),充值后%s(分)"%(account_number,account.balance,_new_fee)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -608,6 +624,7 @@ def account_next(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
+    accept_log.accept_desc = u"用户销户：上网账号:%s，退费%s(元)"%(account_number,form.d.fee_value)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -629,4 +646,51 @@ def account_next(db):
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 
+###############################################################################
+# accept log manage        
+###############################################################################
+
+@app.route('/acceptlog',apply=auth_opr,method=['GET','POST'])
+def opslog_query(db): 
+    node_id = request.params.get('node_id')
+    accept_type = request.params.get('accept_type')
+    account_number = request.params.get('account_number')  
+    operator_name = request.params.get('operator_name')
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(
+        models.SlcRadAcceptLog.id,
+        models.SlcRadAcceptLog.accept_type,
+        models.SlcRadAcceptLog.accept_time,
+        models.SlcRadAcceptLog.accept_desc,
+        models.SlcRadAcceptLog.operator_name,
+        models.SlcRadAcceptLog.accept_source,
+        models.SlcRadAcceptLog.account_number,
+        models.SlcMember.node_id,
+    ).filter(
+            models.SlcRadAcceptLog.account_number == models.SlcRadAccount.account_number,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id
+    )
+    if operator_name:
+        _query = _query.filter(models.SlcRadAcceptLog.operator_name == operator_name)
+    if node_id:
+        _query = _query.filter(models.SlcMember.node_id == node_id)
+    if account_number:
+        _query = _query.filter(models.SlcRadAcceptLog.account_number == account_number)
+    if accept_type:
+        _query = _query.filter(models.SlcRadAcceptLog.accept_type == accept_type)
+    if query_begin_time:
+        _query = _query.filter(models.SlcRadAcceptLog.accept_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time)
+
+    type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}   
+    return render(
+        "bus_acceptlog_list", 
+        page_data = get_page_data(_query),
+        node_list=db.query(models.SlcNode),
+        type_map = type_map,
+        get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar(),
+        **request.params
+    )
 
