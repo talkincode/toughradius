@@ -150,10 +150,13 @@ class AuthPacket2(AuthPacket):
         _str += "\ncode:%s" % self.code
         _str += "\nAttributes: "     
         for attr in attr_keys:
-            if attr == 'User-Password' or attr == 'CHAP-Password':
-                _str += "\n\t%s: ******" % (attr)  
-            else:
-                _str += "\n\t%s: %s" % (attr, self[attr][0])   
+            try:
+                if attr == 'User-Password' or attr == 'CHAP-Password':
+                    _str += "\n\t%s: ******" % (attr)  
+                else:
+                    _str += "\n\t%s: %s" % (attr, self[attr][0])   
+            except:
+                _str += "\n\t%s: no display" % (attr)  
         return _str  
 
     def __str__(self):
@@ -271,7 +274,10 @@ class AcctPacket2(AcctPacket):
         _str += "\ncode:%s" % self.code
         _str += "\nAttributes: "     
         for attr in attr_keys:
-            _str += "\n\t%s: %s" % (attr, self[attr][0])   
+            try:
+                _str += "\n\t%s: %s" % (attr, self[attr][0])   
+            except:
+                _str += "\n\t%s: no display" % (attr)  
         return _str  
 
     def __str__(self):
