@@ -108,6 +108,8 @@ class RADIUSAccess(RADIUS):
             vendor_id = kwargs.pop('vendor_id')
         pkt = utils.AuthPacket2(**kwargs)
         pkt.vendor_id = vendor_id
+        if 'CHAP-Challenge' in pkt:
+            pkt.authenticator = pkt['CHAP-Challenge']
         return pkt
 
     def processPacket(self, req):

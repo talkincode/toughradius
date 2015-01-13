@@ -267,7 +267,7 @@ class SlcRadTicket(DeclarativeBase):
     nas_class = Column(u'nas_class', VARCHAR(length=253))
     nas_addr = Column(u'nas_addr', VARCHAR(length=15), nullable=False)
     nas_port = Column(u'nas_port', INTEGER())
-    nas_port_id = Column(u'nas_port_id', VARCHAR(length=253))
+    nas_port_id = Column(u'nas_port_id', VARCHAR(length=255))
     nas_port_type = Column(u'nas_port_type', INTEGER())
     service_type = Column(u'service_type', INTEGER())
     session_timeout = Column(u'session_timeout', INTEGER())
@@ -294,7 +294,7 @@ class SlcRadOnline(DeclarativeBase):
     acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False)
     framed_ipaddr = Column(u'framed_ipaddr', VARCHAR(length=32), nullable=False)
     mac_addr = Column(u'mac_addr', VARCHAR(length=32), nullable=False)
-    nas_port_id = Column(u'nas_port_id', VARCHAR(length=64), nullable=False)
+    nas_port_id = Column(u'nas_port_id', VARCHAR(length=255), nullable=False)
     start_source = Column(u'start_source', SMALLINT(), nullable=False)
 
 class SlcRadAcceptLog(DeclarativeBase):
