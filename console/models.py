@@ -468,6 +468,10 @@ def update(config=None):
     global engine
     engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
                     config['user'],config['passwd'],config['host'],config['db']))
+
+    action = raw_input("rebuild database ?[n]")
+    if action == 'y':
+        metadata.drop_all(engine)      
     metadata.create_all(engine,checkfirst=True)    
     print 'starting update database done'
     db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
