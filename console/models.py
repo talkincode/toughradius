@@ -314,7 +314,7 @@ class SlcRadAcceptLog(DeclarativeBase):
     accept_source = Column(u'accept_source', VARCHAR(length=128))
     accept_time = Column(u'accept_time', VARCHAR(length=19), nullable=False)
 
-class SlcOperateLog(DeclarativeBase):
+class SlcRadOperateLog(DeclarativeBase):
     __tablename__ = 'slc_rad_operate_log'
 
     __table_args__ = {}

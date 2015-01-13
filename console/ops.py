@@ -113,7 +113,7 @@ def user_release(db):
     user.vlan_id = 0
     user.vlan_id2 = 0
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -212,3 +212,21 @@ def ticket_query(db):
     return render("ops_ticket_list", page_data = get_page_data(_query),
                node_list=db.query(models.SlcNode),**request.params)
 
+
+###############################################################################
+# ops log manage        
+###############################################################################
+
+@app.route('/opslog',apply=auth_opr,method=['GET','POST'])
+def opslog_query(db): 
+    operator_name = request.params.get('operator_name')
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(models.SlcRadOperateLog)
+    if operator_name:
+        _query = _query.filter(models.SlcRadOperateLog.operator_name == operator_name)
+    if query_begin_time:
+        _query = _query.filter(models.SlcRadOperateLog.operate_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcRadOperateLog.operate_time <= query_end_time)
+    return render("ops_log_list", page_data = get_page_data(_query),,**request.params)

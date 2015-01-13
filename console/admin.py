@@ -101,7 +101,7 @@ def admin_login_post(db):
     set_cookie('login_time', utils.get_currtime())
     set_cookie('login_ip', request.remote_addr)    
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -113,7 +113,7 @@ def admin_login_post(db):
 
 @app.get("/logout")
 def admin_logout(db):
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -140,7 +140,7 @@ def param_update(db):
             if _value and param.param_value not in _value:
                 param.param_value = _value
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -173,7 +173,7 @@ def passwd_update(db):
     opr = db.query(models.SlcOperator).first()
     opr.operator_pass = md5(form.d.operator_pass).hexdigest()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -205,7 +205,7 @@ def node_add_post(db):
     node.node_desc = form.d.node_desc
     db.add(node)
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -231,7 +231,7 @@ def node_add_update(db):
     node.node_name = form.d.node_name
     node.node_desc = form.d.node_desc
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -248,7 +248,7 @@ def node_delete(db):
         return render("error",msg=u"该节点下有用户，不允许删除")
     db.query(models.SlcNode).filter_by(id=node_id).delete()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -287,7 +287,7 @@ def bas_add_post(db):
     bas.bas_secret = form.d.bas_secret
     db.add(bas)
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -315,7 +315,7 @@ def bas_add_update(db):
     bas.vendor_id = form.d.vendor_id
     bas.bas_secret = form.d.bas_secret
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -330,7 +330,7 @@ def bas_delete(db):
     bas_id = request.params.get("bas_id")
     db.query(models.SlcRadBas).filter_by(id=bas_id).delete()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -384,7 +384,7 @@ def product_add_post(db):
     product.update_time = _datetime
     db.add(product)
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -421,7 +421,7 @@ def product_add_update(db):
     product.output_max_limit = form.d.output_max_limit
     product.update_time = utils.get_currtime()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -438,7 +438,7 @@ def product_delete(db):
         return render("error",msg=u"该套餐有用户使用，不允许删除") 
     db.query(models.SlcRadProduct).filter_by(id=product_id).delete()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -469,7 +469,7 @@ def product_attr_add(db):
     attr.attr_desc = form.d.attr_desc
     db.add(attr)
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -497,7 +497,7 @@ def product_attr_update(db):
     attr.attr_value = form.d.attr_value
     attr.attr_desc = form.d.attr_desc
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -514,7 +514,7 @@ def product_attr_update(db):
     product_id = attr.product_id
     db.query(models.SlcRadProductAttr).filter_by(id=attr_id).delete()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -551,7 +551,7 @@ def group_add_post(db):
     group.update_time = utils.get_currtime()
     db.add(group)
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -581,7 +581,7 @@ def group_add_update(db):
     group.concur_number = form.d.concur_number
     group.update_time = utils.get_currtime()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -596,7 +596,7 @@ def group_delete(db):
     group_id = request.params.get("group_id")
     db.query(models.SlcRadGroup).filter_by(id=group_id).delete()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -633,7 +633,7 @@ def roster_add_post(db):
     roster.roster_type = form.d.roster_type
     db.add(roster)
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -662,7 +662,7 @@ def roster_add_update(db):
     roster.end_time = form.d.end_time
     roster.roster_type = form.d.roster_type
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
@@ -677,7 +677,7 @@ def roster_delete(db):
     roster_id = request.params.get("roster_id")
     db.query(models.SlcRadRoster).filter_by(id=roster_id).delete()
 
-    ops_log = models.SlcOperateLog()
+    ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
