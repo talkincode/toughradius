@@ -45,7 +45,10 @@ _parses = {
         }
 
 def process(req=None,resp=None,user=None):
-    _parses[req.vendor_id](req)
+    if req.vendor_id not in _parses:
+        parse_std(req)
+    else:
+        _parses[req.vendor_id](req)
 
 
 

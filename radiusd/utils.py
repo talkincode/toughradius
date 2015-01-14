@@ -241,7 +241,12 @@ class AuthPacket2(AuthPacket):
 
         if not self.authenticator:
             self.authenticator = self.CreateAuthenticator()
-        _pwd =  md5_constructor("%s%s%s"%(chapid,userpwd,self.authenticator)).digest()
+
+        challenge = self.authenticator
+        if 'CHAP-Challenge' in self:
+            challenge = self['CHAP-Challenge'][0] 
+
+        _pwd =  md5_constructor("%s%s%s"%(chapid,userpwd,challenge)).digest()
         for i in range(16):
             if password[i] != _pwd[i]:
                 return False

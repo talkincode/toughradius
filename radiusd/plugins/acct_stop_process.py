@@ -24,13 +24,7 @@ def process(req=None,user=None,runstat=None):
 
     _datetime = datetime.datetime.now() 
     online = store.get_online(ticket.nas_addr,ticket.acct_session_id)    
-    if online:
-        store.del_online(ticket.nas_addr,ticket.acct_session_id)
-        ticket.acct_start_time = online['acct_start_time']
-        ticket.acct_stop_time= _datetime.strftime( "%Y-%m-%d %H:%M:%S")
-        ticket.start_source = online['start_source']
-        ticket.stop_source = STATUS_TYPE_STOP
-    else:
+    if not online:
         session_time = ticket.acct_session_time 
         stop_time = _datetime.strftime( "%Y-%m-%d %H:%M:%S")
         start_time = (_datetime - datetime.timedelta(seconds=int(session_time))).strftime( "%Y-%m-%d %H:%M:%S")
@@ -38,47 +32,51 @@ def process(req=None,user=None,runstat=None):
         ticket.acct_stop_time = stop_time
         ticket.start_source= STATUS_TYPE_STOP
         ticket.stop_source = STATUS_TYPE_STOP
+        store.add_ticket(ticket)
+    else:
+        store.del_online(ticket.nas_addr,ticket.acct_session_id)
+        ticket.acct_start_time = online['acct_start_time']
+        ticket.acct_stop_time= _datetime.strftime( "%Y-%m-%d %H:%M:%S")
+        ticket.start_source = online['start_source']
+        ticket.stop_source = STATUS_TYPE_STOP
+        print ticket
+        store.add_ticket(ticket)
+
+        if not user:return 
+
+        product = store.get_product(user['product_id'])
+        if product and product['product_policy'] == FEE_TIMES:
+            # PrePay fee times policy
+            user_balance = store.get_user_balance(user['account_number'])
+            sessiontime = decimal.Decimal(req.get_acct_sessiontime())
+            billing_times = decimal.Decimal(online['billing_times'])
+            acct_length = sessiontime-billing_times
+            fee_price = decimal.Decimal(product['fee_price'])
+            usedfee = acct_length/decimal.Decimal(3600) * fee_price
+            usedfee = int(usedfee.to_integral_value())
+            actual_fee = usedfee > user_balance and usedfee or user_balance
+            balance = user_balance - usedfee
+            balance = balance < 0 and 0 or balance
+            store.update_billing(utils.Storage(
+                account_number = online['account_number'],
+                nas_addr = online['nas_addr'],
+                acct_session_id = online['acct_session_id'],
+                acct_start_time = online['acct_start_time'],
+                acct_session_time = req.get_acct_sessiontime(),
+                acct_length = int(acct_length.to_integral_value()),
+                acct_fee = usedfee,
+                actual_fee = actual_fee,
+                balance = balance,
+                is_deduct = 1,
+                create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+            ),False)
+
 
     log.msg('%s Accounting stop request, remove online'%req.get_user_name(),level=logging.INFO)
 
-    user = store.get_user(ticket.account_number)
 
-    def _err_ticket(_ticket):
-        _ticket.fee_receivables= 0
-        _ticket.acct_fee = 0
-        _ticket.is_deduct = 0
-        store.add_ticket(_ticket)
 
-    if not user:
-        return _err_ticket(ticket)
-
-    product = store.get_product(user['product_id'])
-    if not product or product['product_policy'] not in (FEE_BUYOUT,FEE_TIMES):
-        _err_ticket(ticket)
-
-    if product['product_policy'] == FEE_BUYOUT:
-        # buyout fee policy
-        ticket.fee_receivables = 0
-        ticket.acct_fee = 0
-        ticket.is_deduct = 0
-        store.add_ticket(ticket)
-
-    elif product['product_policy'] == FEE_TIMES:
-        # PrePay fee times policy
-        sessiontime = decimal.Decimal(req.get_acctsessiontime())
-        fee_price = decimal.Decimal(product['fee_price'])
-        usedfee = sessiontime/decimal.Decimal(3600) * fee_price
-        usedfee = int(usedfee.to_integral_value())
-        balance = user['balance'] - usedfee
-        if balance < 0:
-            user['balance'] = 0
-        else:
-            user['balance'] = balance
-        store.update_user_balance(user['account_number'],balance)
-        ticket.fee_receivables = usedfee
-        ticket.acct_fee = usedfee
-        ticket.is_deduct = 1
-        store.add_ticket(ticket)
+        
 
 
 

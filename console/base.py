@@ -32,6 +32,7 @@ MakoTemplate.defaults.update(dict(
         system_name = 'ToughRADIUS Console',
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
+        fmt_second = utils.fmt_second,
         request = request
 ))
 

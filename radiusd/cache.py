@@ -43,9 +43,10 @@ if __name__ == '__main__':
 
     print getcache(1,2,3)
     print _cache
-    # delete('all',getcache,1,2,3)
-    # print _cache
-    clear()
+    delete('all',getcache,1,2,3)
+    print _cache
+    print getcache(1,2,3)
+    # clear()
     print _cache
 
 

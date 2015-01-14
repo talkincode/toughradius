@@ -30,6 +30,7 @@ def process(req=None,user=None,runstat=None):
         framed_ipaddr = req.get_framed_ipaddr(),
         mac_addr = req.get_mac_addr(),
         nas_port_id = req.get_nas_portid(),
+        billing_times = 0,
         start_source = STATUS_TYPE_START
     )
 

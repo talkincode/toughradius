@@ -43,7 +43,6 @@ def DecodeString(str):
     try:
         return str.decode('utf-8')
     except:
-        print 'DecodeString',str
         return str
 
 

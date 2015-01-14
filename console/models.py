@@ -170,8 +170,8 @@ class SlcRadAccount(DeclarativeBase):
     time_length = Column('time_length', INTEGER(), nullable=False)
     expire_date = Column('expire_date', VARCHAR(length=10), nullable=False)
     user_concur_number = Column('user_concur_number', INTEGER(), nullable=False)
-    bind_mac = Column('user_mac', SMALLINT(), nullable=False)
-    bind_vlan = Column('user_vlan', SMALLINT(), nullable=False)
+    bind_mac = Column('bind_mac', SMALLINT(), nullable=False)
+    bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False)
     mac_addr = Column('mac_addr', VARCHAR(length=17))
     vlan_id = Column('vlan_id', INTEGER())
     vlan_id2 = Column('vlan_id2', INTEGER())
@@ -223,6 +223,27 @@ class SlcRadProductAttr(DeclarativeBase):
     attr_name = Column(u'attr_name', VARCHAR(length=255), nullable=False)
     attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False)
     attr_desc = Column(u'attr_desc', VARCHAR(length=255))
+
+class SlcRadBilling(DeclarativeBase):
+    __tablename__ = 'slc_rad_billing'
+
+    __table_args__ = { }  
+
+    #column definitions
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    account_number = Column(u'account_number', VARCHAR(length=253), nullable=False)
+    nas_addr = Column(u'nas_addr', VARCHAR(length=15), nullable=False)
+    acct_session_id = Column(u'acct_session_id', VARCHAR(length=253), nullable=False)
+    acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False)
+    acct_session_time = Column(u'acct_session_time', INTEGER(), nullable=False)
+    acct_length = Column(u'acct_length', INTEGER(), nullable=False)
+    acct_fee = Column(u'acct_fee', INTEGER(), nullable=False)
+    actual_fee = Column('actual_fee', INTEGER(), nullable=False)
+    balance = Column('balance', INTEGER(), nullable=False)
+    is_deduct = Column(u'is_deduct', INTEGER(), nullable=False)
+    create_time = Column('create_time', VARCHAR(length=19), nullable=False)
+
+
     
 class SlcRadTicket(DeclarativeBase):
     __tablename__ = 'slc_rad_ticket'
@@ -249,16 +270,13 @@ class SlcRadTicket(DeclarativeBase):
     framed_ipaddr = Column(u'framed_ipaddr', VARCHAR(length=15))
     nas_class = Column(u'nas_class', VARCHAR(length=253))
     nas_addr = Column(u'nas_addr', VARCHAR(length=15), nullable=False)
-    nas_port = Column(u'nas_port', INTEGER())
+    nas_port = Column(u'nas_port', VARCHAR(length=32))
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=255))
     nas_port_type = Column(u'nas_port_type', INTEGER())
     service_type = Column(u'service_type', INTEGER())
     session_timeout = Column(u'session_timeout', INTEGER())
     start_source = Column(u'start_source', INTEGER(), nullable=False)
     stop_source = Column(u'stop_source', INTEGER(), nullable=False)
-    acct_fee = Column(u'acct_fee', INTEGER(), nullable=False)
-    fee_receivables = Column(u'fee_receivables', INTEGER(), nullable=False)
-    is_deduct = Column(u'is_deduct', INTEGER(), nullable=False)
 
     #relation definitions 
 
@@ -278,6 +296,7 @@ class SlcRadOnline(DeclarativeBase):
     framed_ipaddr = Column(u'framed_ipaddr', VARCHAR(length=32), nullable=False)
     mac_addr = Column(u'mac_addr', VARCHAR(length=32), nullable=False)
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=255), nullable=False)
+    billing_times = Column(u'billing_times', INTEGER(), nullable=False)
     start_source = Column(u'start_source', SMALLINT(), nullable=False)
 
 class SlcRadAcceptLog(DeclarativeBase):

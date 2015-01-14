@@ -144,6 +144,7 @@ def online_query(db):
         models.SlcRadOnline.mac_addr,
         models.SlcRadOnline.nas_port_id,
         models.SlcRadOnline.start_source,
+        models.SlcRadOnline.billing_times,
         models.SlcMember.node_id,
         models.SlcMember.realname
     ).filter(
@@ -188,8 +189,6 @@ def ticket_query(db):
         models.SlcRadTicket.framed_ipaddr,
         models.SlcRadTicket.mac_addr,
         models.SlcRadTicket.nas_port_id,
-        models.SlcRadTicket.acct_fee,
-        models.SlcRadTicket.is_deduct,
         models.SlcMember.node_id,
         models.SlcMember.realname
     ).filter(

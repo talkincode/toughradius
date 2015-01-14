@@ -7,6 +7,10 @@ import settings
 import cache
 import datetime
 
+###############################################################################
+# Basic Define                                                            ####
+###############################################################################
+
 ticket_fds = [
     'account_number','acct_fee','acct_input_gigawords','acct_input_octets',
     'acct_input_packets','acct_output_gigawords','acct_output_octets',
@@ -47,6 +51,10 @@ class DbPool():
         if not self.dbpool:
             self.dbpool = PooledDB(creator=MySQLdb,**settings.db_config['mysql'])
         return self.dbpool.connection()
+
+###############################################################################
+# Database Store                                                          ####
+###############################################################################        
 
 class Store():
 
@@ -94,6 +102,12 @@ class Store():
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_account_attr where account_number = %s ",(username,))
             return cur.fetchall()  
+
+    def get_user_balance(self,username):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select balance from slc_rad_account where account_number = %s ",(username,))
+            b = cur.fetchone()  
+            return b and b['balance'] or 0    
 
     def update_user_cache(self,username):
         cache.delete('all',self.get_user, username)
@@ -182,6 +196,23 @@ class Store():
             sql = 'insert into slc_rad_online (%s) values(%s)'%(keys,vals)
             cur.execute(sql)
             conn.commit()
+
+    def update_billing(self,billing,update_online):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor()
+            balan_sql = "update slc_rad_account set balance = %s where account_number = %s"
+            cur.execute(balan_sql,(billing.balance,billing.account_number))
+
+            if update_online:
+                online_sql = "update slc_rad_online set billing_times=%s where nas_addr = %s and acct_session_id = %s"
+                cur.execute(online_sql,(billing.acct_session_time,billing.nas_addr,billing.acct_session_id))
+
+            keys = ','.join(billing.keys())
+            vals = ",".join(["'%s'"% c for c in billing.values()])
+            billing_sql = 'insert into slc_rad_billing (%s) values(%s)'%(keys,vals)
+            cur.execute(billing_sql)
+            conn.commit()
+        self.update_user_cache(billing.account_number) 
     
     def del_online(self,nas_addr,acct_session_id):
         with Connect(self.dbpool) as conn:
@@ -189,13 +220,6 @@ class Store():
             sql = 'delete from slc_rad_online where nas_addr = %s and acct_session_id = %s'
             cur.execute(sql,(nas_addr,acct_session_id))
             conn.commit()
-
-    # def del_nas_onlines(self,nas_addr):
-    #     with Connect(self.dbpool) as conn:
-    #         cur = conn.cursor()
-    #         sql = 'delete from slc_rad_online where nas_addr = %s'
-    #         cur.execute(sql,(nas_addr,))
-    #         conn.commit()
 
     def add_ticket(self,ticket):
         _ticket = ticket.copy()
@@ -213,7 +237,7 @@ class Store():
     def unlock_online(self,nas_addr,acct_session_id,stop_source):
         bsql = ''' insert into slc_rad_ticket (
         account_number,acct_session_id,acct_start_time,nas_addr,framed_ipaddr,start_source,
-        acct_session_time,acct_stop_time,stop_source,fee_receivables,acct_fee,is_deduct) values(
+        acct_session_time,acct_stop_time,stop_source,fee_receivables) values(
          %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''' 
         def _ticket(online):
@@ -231,9 +255,6 @@ class Store():
             ticket.append(session_time)
             ticket.append(stop_time)
             ticket.append(stop_source)
-            ticket.append(0)
-            ticket.append(0)
-            ticket.append(0)
             return ticket
 
         def _unlock_one():

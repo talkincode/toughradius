@@ -75,8 +75,6 @@
                 <th>结束时间</th>
                 <th>MAC地址</th>
                 <th>端口信息</th>
-                <th>计费金额</th>
-                <th>已扣费</th>
             </tr>
             </thead>
             <tbody>
@@ -90,8 +88,6 @@
                 <td>${ticket.acct_stop_time}</td>
                 <td>${ticket.mac_addr}</td>
                 <td>${ticket.nas_port_id}</td>
-                <td>${fen2yuan(ticket.acct_fee)}</td>
-                <td>${{0:u'未扣费',1:u'已扣费'}[ticket.is_deduct]}</td>
 
             </tr>
             % endfor

@@ -36,6 +36,8 @@ class Middleware():
             return self._plugin_modules[name].process(**kwargs)
         except Exception as err:
             log.err(err,'Plugin %s failed to process.' % name,level=logging.INFO)
+            import traceback
+            traceback.print_exc()
             return False
              
 

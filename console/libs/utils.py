@@ -67,6 +67,20 @@ def gen_order_id():
     _num = str(_base_id).zfill(4)
     return datetime.datetime.now().strftime("%Y%m%d%H%M%S") + _num
 
+def fmt_second(time_total):
+    """
+    >>> fmt_second(100)
+    '00:01:40'
+    """
+
+    def _ck(t):
+        return t < 10 and "0%s" % t or t
+
+    times = int(time_total)
+    h = times / 3600
+    m = times % 3600 / 60
+    s = times % 3600 % 60
+    return "%s:%s:%s" % (_ck(h), _ck(m), _ck(s))
 
 if __name__ == '__main__':
     print gen_order_id()

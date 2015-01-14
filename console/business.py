@@ -168,7 +168,7 @@ def member_open(db):
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
         order_fee = int(order_fee.to_integral_value())
     elif product.product_policy == 1:
-        balance = utils.yuan2fen(fom.d.fee_value)
+        balance = utils.yuan2fen(form.d.fee_value)
         expire_date = '3000-11-11'
 
     order = models.SlcMemberOrder()
