@@ -347,7 +347,7 @@ def init_db(db):
     node = SlcNode()
     node.id = 1
     node.node_name = 'default'
-    node.node_desc = 'default'
+    node.node_desc = u'测试区域'
     db.add(node)
 
     param1 = SlcParam()
@@ -376,7 +376,7 @@ def init_db(db):
     bas = SlcRadBas()
     bas.id = 1
     bas.vendor_id = '0'
-    bas.ip_addr = '192.168.1.102'
+    bas.ip_addr = '192.168.88.1'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
     bas.status = 1
@@ -394,11 +394,95 @@ def init_db(db):
     product.fee_num = 0
     product.fee_period = 0
     product.fee_price = 0
-    product.input_max_limit = 102400
-    product.output_max_limit = 102400
+    product.input_max_limit = 2097152
+    product.output_max_limit = 2097152
     product.create_time = '2014-12-10 23:23:21'
     product.update_time = '2014-12-10 23:23:21'
     db.add(product)
+
+    product2 = SlcRadProduct()
+    product2.id = 2
+    product2.product_name = u'2元每小时'
+    product2.product_policy = 1
+    product2.product_status = 1
+    product2.bind_mac = 0
+    product2.bind_vlan = 0
+    product2.concur_number = 0
+    product2.fee_num = 0
+    product2.fee_period = 0
+    product2.fee_price = 0
+    product2.input_max_limit = 2097152
+    product2.output_max_limit = 2097152
+    product2.create_time = '2014-12-10 23:23:21'
+    product2.update_time = '2014-12-10 23:23:21'
+    db.add(product2)
+
+
+    member = SlcMember()
+    member.member_id = 1000001
+    member.member_name = 'tester'
+    member.password = utils.encrypt('888888')
+    member.node_id = 1
+    member.realname = 'tester'
+    member.idcard = '0'
+    member.sex = '1'
+    member.age = '33'
+    member.email = '6583805@qq.com'
+    member.mobile = '1366666666'
+    member.address = 'hunan changsha'
+    member.create_time = '2014-12-10 23:23:21'
+    member.update_time = '2014-12-10 23:23:21'
+    db.add(member)        
+    account = SlcRadAccount()
+    account.account_number = 'test01'
+    account.member_id = member.member_id
+    account.product_id = 1
+    account.domain_name = 'cmcc'
+    account.group_id = 1
+    account.install_address = 'hunan'
+    account.ip_address = ''
+    account.mac_addr = ''
+    account.password = utils.encrypt('888888')
+    account.status = 1
+    account.balance = 0
+    account.basic_fee = 0
+    account.time_length = 0
+    account.flow_length = 0
+    account.expire_date = '2015-12-30'
+    account.user_concur_number = 0
+    account.bind_mac = 0
+    account.bind_vlan = 0
+    account.vlan_id = 0
+    account.vlan_id2 = 0
+    account.create_time = '2014-12-10 23:23:21'
+    account.update_time = '2014-12-10 23:23:21'
+    db.add(account)
+
+    account2 = SlcRadAccount()
+    account2.account_number = 'test02'
+    account2.member_id = member.member_id
+    account2.product_id = 2
+    account2.domain_name = 'cmcc'
+    account2.group_id = 1
+    account2.install_address = 'hunan'
+    account2.ip_address = ''
+    account2.mac_addr = ''
+    account2.password = utils.encrypt('888888')
+    account2.status = 1
+    account2.balance = 1000
+    account2.basic_fee = 0
+    account2.time_length = 0
+    account2.flow_length = 0
+    account2.expire_date = '2015-12-30'
+    account2.user_concur_number = 0
+    account2.bind_mac = 0
+    account2.bind_vlan = 0
+    account2.vlan_id = 0
+    account2.vlan_id2 = 0
+    account2.create_time = '2014-12-10 23:23:21'
+    account2.update_time = '2014-12-10 23:23:21'
+    db.add(account2)    
+
     db.commit()
 
 def init_test(db):
