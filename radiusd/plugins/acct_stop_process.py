@@ -53,10 +53,11 @@ def process(req=None,user=None,runstat=None):
             acct_length = sessiontime-billing_times
             fee_price = decimal.Decimal(product['fee_price'])
             usedfee = acct_length/decimal.Decimal(3600) * fee_price
-            usedfee = int(usedfee.to_integral_value())
-            actual_fee = usedfee > user_balance and usedfee or user_balance
+            usedfee = actual_fee = int(usedfee.to_integral_value())
             balance = user_balance - usedfee
-            balance = balance < 0 and 0 or balance
+            if balance < 0 :  
+                balance = 0
+                actual_fee = user_balance
             store.update_billing(utils.Storage(
                 account_number = online['account_number'],
                 nas_addr = online['nas_addr'],

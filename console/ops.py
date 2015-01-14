@@ -162,6 +162,7 @@ def online_query(db):
     if nas_addr:
         _query = _query.filter(models.SlcRadOnline.nas_addr == nas_addr)
 
+    _query = _query.order_by(models.SlcRadOnline.acct_start_time.desc())
     return render("ops_online_list", page_data = get_page_data(_query),
                    node_list=db.query(models.SlcNode), 
                    bas_list=db.query(models.SlcRadBas),**request.params)
@@ -208,6 +209,7 @@ def ticket_query(db):
     if query_end_time:
         _query = _query.filter(models.SlcRadTicket.acct_stop_time <= query_end_time)
 
+    _query = _query.order_by(models.SlcRadTicket.acct_start_time.desc())
     return render("ops_ticket_list", page_data = get_page_data(_query),
                node_list=db.query(models.SlcNode),**request.params)
 
@@ -228,4 +230,5 @@ def opslog_query(db):
         _query = _query.filter(models.SlcRadOperateLog.operate_time >= query_begin_time)
     if query_end_time:
         _query = _query.filter(models.SlcRadOperateLog.operate_time <= query_end_time)
+    _query = _query.order_by(models.SlcRadOperateLog.operate_time.desc())
     return render("ops_log_list", page_data = get_page_data(_query),**request.params)

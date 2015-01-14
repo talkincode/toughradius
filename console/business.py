@@ -681,14 +681,14 @@ def opslog_query(db):
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
     if account_number:
-        _query = _query.filter(models.SlcRadAcceptLog.account_number == account_number)
+        _query = _query.filter(models.SlcRadAcceptLog.account_number.like('%'+account_number+'%'))
     if accept_type:
         _query = _query.filter(models.SlcRadAcceptLog.accept_type == accept_type)
     if query_begin_time:
         _query = _query.filter(models.SlcRadAcceptLog.accept_time >= query_begin_time)
     if query_end_time:
         _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time)
-
+    _query = _query.order_by(models.SlcRadAcceptLog.accept_time.desc())
     type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}   
     return render(
         "bus_acceptlog_list", 
@@ -698,4 +698,25 @@ def opslog_query(db):
         get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar(),
         **request.params
     )
+
+
+
+###############################################################################
+# billing log query        
+###############################################################################
+
+@app.route('/billing',apply=auth_opr,method=['GET','POST'])
+def opslog_query(db): 
+    account_number = request.params.get('account_number')  
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(models.SlcRadBilling)
+    if account_number:
+        _query = _query.filter(models.SlcRadBilling.SlcRadAccount.account_number.like('%'+account_number+'%'))
+    if query_begin_time:
+        _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
+    _query = _query.order_by(models.SlcRadBilling.create_time.desc())
+    return render("bus_billing_list", page_data = get_page_data(_query),**request.params)
 
