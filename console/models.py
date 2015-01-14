@@ -393,7 +393,7 @@ def init_db(db):
     product.concur_number = 0
     product.fee_num = 0
     product.fee_period = 0
-    product.fee_price = 0
+    product.fee_price = 1000
     product.input_max_limit = 2097152
     product.output_max_limit = 2097152
     product.create_time = '2014-12-10 23:23:21'
@@ -410,7 +410,7 @@ def init_db(db):
     product2.concur_number = 0
     product2.fee_num = 0
     product2.fee_period = 0
-    product2.fee_price = 0
+    product2.fee_price = 200
     product2.input_max_limit = 2097152
     product2.output_max_limit = 2097152
     product2.create_time = '2014-12-10 23:23:21'
@@ -489,6 +489,8 @@ def init_test(db):
     for i in range(1000):
         member = SlcMember()
         member.member_id = 100000 + i
+        member.member_name = 'tester%s'%i
+        member.password = utils.encrypt('888888')
         member.node_id = 1
         member.realname = 'test00%s'%i
         member.idcard = '0'
