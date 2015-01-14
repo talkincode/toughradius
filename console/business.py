@@ -125,7 +125,7 @@ def member_open(db):
     if db.query(models.SlcRadAccount).filter_by(account_number=form.d.account_number).count()>0:
         return render("open_form", form=form,msg=u"上网账号%s已经存在"%form.d.account_number)
 
-    if db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
+    if form.d.ip_address and db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
         return render("open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
 
     if db.query(models.SlcMember).filter_by(
@@ -232,7 +232,7 @@ def account_open(db):
         account_number=form.d.account_number).count()>0:
         return render("open_form", form=form,msg=u"上网账号已经存在")
 
-    if db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
+    if form.d.ip_address and db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
         return render("open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
 
     accept_log = models.SlcRadAcceptLog()
@@ -241,7 +241,7 @@ def account_open(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
-    accept_log.accept_desc = u"用户新增账号：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
+    accept_log.accept_desc = u"用户新增账号：上网账号:%s"%(form.d.account_number)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)

@@ -17,6 +17,7 @@ import datetime
 import hashlib
 import six
 
+
 md5_constructor = hashlib.md5
 
 _key = 't_o_u_g_h_radius'
@@ -151,10 +152,7 @@ class AuthPacket2(AuthPacket):
         _str += "\nAttributes: "     
         for attr in attr_keys:
             try:
-                if attr == 'User-Password' or attr == 'CHAP-Password':
-                    _str += "\n\t%s: ******" % (attr)  
-                else:
-                    _str += "\n\t%s: %s" % (attr, self[attr][0])   
+                _str += "\n\t%s: %s" % (attr, self[attr][0])   
             except:
                 _str += "\n\t%s: no display" % (attr)  
         return _str  
