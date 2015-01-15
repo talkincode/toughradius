@@ -26,7 +26,6 @@ import six
 import pprint
 import utils
 import json
-import cache
 import os
 
 ###############################################################################
@@ -206,10 +205,11 @@ def main():
     if args.dictfile:
         _radiusd['dictfile'] = args.dictfile
     if args.debug:
-        _radiusd['debug'] = bool(args.debug)    
+        _radiusd['debug'] = bool(args.debug)   
+
 
     settings.db_config.update(**_config)
-
+    store.__cache_timeout__ = _radiusd['cache_timeout']
 
     if not _radiusd['debug']:
         print 'logging to file logs/radiusd.log'
@@ -241,8 +241,6 @@ def main():
         reactor.listenUDP(_radiusd['acctport'], acct_protocol)
         _task = task.LoopingCall(auth_protocol.process_delay)
         _task.start(2.7)
-        _cache_task = task.LoopingCall(cache.clear)
-        _cache_task.start(3600)
 
         from autobahn.twisted.websocket import WebSocketServerFactory
         factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = _debug)

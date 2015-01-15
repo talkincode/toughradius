@@ -8,6 +8,7 @@ from bottle import redirect
 from bottle import static_file
 from bottle import mako_template as render
 from tablib import Dataset
+from ucache import ucache
 import bottle
 import models
 import forms
@@ -121,6 +122,7 @@ def user_release(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("account",account_number=account_number)
     return dict(code=0,msg=u"解绑成功")
 
 ###############################################################################

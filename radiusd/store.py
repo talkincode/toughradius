@@ -4,8 +4,14 @@ import MySQLdb
 from MySQLdb import cursors
 from DBUtils.PooledDB import PooledDB
 import settings
-import cache
 import datetime
+from beaker.cache import CacheManager
+
+__cache_timeout__ = 600
+
+cache = CacheManager(cache_regions={
+      'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }
+      }) 
 
 ###############################################################################
 # Basic Define                                                            ####
@@ -61,7 +67,7 @@ class Store():
     def __init__(self,dbpool=None):
         self.dbpool = dbpool 
 
-    @cache.cache('all')
+    @cache.cache('get_param',expire=__cache_timeout__)   
     def get_param(self,param_name):
         with Cursor(self.dbpool) as cur:
             cur.execute("select param_value from  slc_param where param_name = %s",(param_name,))
@@ -72,14 +78,15 @@ class Store():
         with Cursor(self.dbpool) as cur:
             cur.execute("select param_name from  slc_param where param_name = %s",(param_name,))
             for param in cur:
-                cache.delete('all',self.get_param, param['param_name'])
+                cache.invalidate(self.get_param,'get_param', str(param['param_name']))
+                cache.invalidate(self.get_param,'get_param', unicode(param['param_name']))
 
     def list_bas(self):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from  slc_rad_bas")
             return [bas for bas in cur] 
 
-    @cache.cache('all')
+    @cache.cache('get_bas',expire=__cache_timeout__)   
     def get_bas(self,ipaddr):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_bas where ip_addr = %s",(ipaddr,))
@@ -87,9 +94,10 @@ class Store():
             return bas
 
     def update_bas_cache(self,ipaddr):
-        cache.delete('all',self.get_bas, ipaddr)
+        cache.invalidate(self.get_bas,'get_bas',str(ipaddr))
+        cache.invalidate(self.get_bas,'get_bas',unicode(ipaddr))
 
-    @cache.cache('all')
+    @cache.cache('get_user',expire=__cache_timeout__)   
     def get_user(self,username):
         with Cursor(self.dbpool) as cur:
             cur.execute("select a.*,p.product_policy from slc_rad_account a,slc_rad_product p "
@@ -97,7 +105,7 @@ class Store():
             user =  cur.fetchone()
             return user
 
-    @cache.cache('all')
+    @cache.cache('get_user_attrs',expire=__cache_timeout__)   
     def get_user_attrs(self,username):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_account_attr where account_number = %s ",(username,))
@@ -110,8 +118,10 @@ class Store():
             return b and b['balance'] or 0    
 
     def update_user_cache(self,username):
-        cache.delete('all',self.get_user, username)
-        cache.delete('all',self.get_user_attrs, username)
+        cache.invalidate(self.get_user,'get_user', str(username))
+        cache.invalidate(self.get_user,'get_user', unicode(username))
+        cache.invalidate(self.get_user_attrs,'get_user_attrs', str(username))
+        cache.invalidate(self.get_user_attrs,'get_user_attrs', unicode(username))
 
     def update_user_balance(self,username,balance):
         with Connect(self.dbpool) as conn:
@@ -145,30 +155,30 @@ class Store():
             conn.commit() 
             self.update_user_cache(username)     
 
-    @cache.cache('all')
+    @cache.cache('get_group',expire=__cache_timeout__)   
     def get_group(self,group_id):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_group where id = %s ",(group_id,))
             return cur.fetchone()
 
-    def clear_group_cache(self,group_id):
-        cache.delete('all',self.get_group, group_id)
+    def update_group_cache(self,group_id):
+        cache.invalidate(self.get_group,'get_group', group_id)
 
-    @cache.cache('all')
+    @cache.cache('get_product',expire=__cache_timeout__)   
     def get_product(self,product_id):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_product where id = %s ",(product_id,))
             return cur.fetchone()  
 
-    @cache.cache('all')
+    @cache.cache('get_product_attrs',expire=__cache_timeout__)  
     def get_product_attrs(self,product_id):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from slc_rad_product_attr where product_id = %s ",(product_id,))
             return cur.fetchall()  
 
-    def clear_product_cache(self,product_id):
-        cache.delete('all',self.get_product, product_id)
-        cache.delete('all',self.get_product_attrs, product_id)
+    def update_product_cache(self,product_id):
+        cache.invalidate(self.get_product,'get_product',product_id)
+        cache.invalidate(self.get_product_attrs,'get_product_attrs',product_id)
           
     def is_online(self,nas_addr,acct_session_id):
         with Cursor(self.dbpool) as cur: 

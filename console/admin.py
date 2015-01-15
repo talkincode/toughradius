@@ -16,6 +16,7 @@ from libs.paginator import Paginator
 from libs import utils
 from libs.radius_attrs import radius_attrs
 from hashlib import md5
+from ucache import ucache
 import bottle
 import models
 import forms
@@ -151,6 +152,7 @@ def param_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("param")
     redirect("/param")
 
 ###############################################################################
@@ -323,6 +325,7 @@ def bas_add_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("bas",ip_addr=bas.ip_addr)
     redirect("/bas")    
 
 @app.get('/bas/delete',apply=auth_opr)
@@ -429,6 +432,7 @@ def product_add_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("product",product_id=product.id)
     redirect("/product")    
 
 @app.get('/product/delete',apply=auth_opr)
@@ -446,6 +450,7 @@ def product_delete(db):
     db.add(ops_log)
 
     db.commit() 
+    ucache.push_message("product",product_id=product_id)
     redirect("/product")   
 
 @app.get('/product/attr/add',apply=auth_opr)
@@ -477,6 +482,7 @@ def product_attr_add(db):
     db.add(ops_log)
 
     db.commit()
+
     redirect("/product/detail?product_id="+form.d.product_id) 
 
 @app.get('/product/attr/update',apply=auth_opr)
@@ -505,6 +511,7 @@ def product_attr_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("product",product_id=form.d.product_id)
     redirect("/product/detail?product_id="+form.d.product_id) 
 
 @app.get('/product/attr/delete',apply=auth_opr)
@@ -522,6 +529,7 @@ def product_attr_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("product",product_id=product_id)
     redirect("/product/detail?product_id=%s"%product_id)     
 
 ###############################################################################
@@ -589,6 +597,7 @@ def group_add_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("group",group_id=group.id)
     redirect("/group")    
 
 @app.get('/group/delete',apply=auth_opr)
@@ -604,6 +613,7 @@ def group_delete(db):
     db.add(ops_log)
 
     db.commit() 
+    ucache.push_message("group",group_id=group_id)
     redirect("/group")    
 
 ###############################################################################
@@ -670,6 +680,7 @@ def roster_add_update(db):
     db.add(ops_log)
 
     db.commit()
+    ucache.push_message("roster",roster_id=roster.id)
     redirect("/roster")    
 
 @app.get('/roster/delete',apply=auth_opr)
@@ -685,6 +696,7 @@ def roster_delete(db):
     db.add(ops_log)
 
     db.commit() 
+    ucache.push_message("roster",roster_id=roster_id)
     redirect("/roster")        
 
 
@@ -720,6 +732,7 @@ def main():
         _console['debug'] = bool(args.debug)
 
     init_context(radaddr=_console['radaddr'],adminport=_console['adminport'])
+    ucache.connect(_console['radaddr'],_console['adminport'])
 
     from sqlalchemy import create_engine
     models.engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
@@ -731,7 +744,7 @@ def main():
         port=_console['httpport'] ,
         debug=bool(_console['debug']),
         reloader=bool(_console['debug']),
-        server="cherrypy"
+        server="twisted"
     )
 
 if __name__ == "__main__":

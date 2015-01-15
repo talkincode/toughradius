@@ -92,6 +92,7 @@ function release(account_number)
                 <th>用户资费</th>
                 <th>用户状态</th>
                 <th>到期时间</th>
+                <th>余额</th>
                 <th>创建时间</th>
                 <th>最近停机</th>
                 <th></th>
@@ -102,9 +103,11 @@ function release(account_number)
                 <td>${user.product_name}</td>
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
+                <td>${fen2yuan(user.balance)}</td>
                 <td>${user.create_time}</td>
                 <td>${user.last_pause or ''}</td>
                  <td>
+                 <a class="opt-btn btn-default" href="/bus/account/update?account_number=${user.account_number}">修改</a>
                     % if user.status == 2:
                         <a class="opt-btn btn-default" href="javascript:do_resume('${user.account_number}');">复机</a>
                     % elif user.status == 1:

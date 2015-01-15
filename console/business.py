@@ -18,6 +18,7 @@ import models
 import forms
 import decimal
 import datetime
+import ucache
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
@@ -150,14 +151,18 @@ def member_update(db):
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.user_open_form(nodes,products)
+    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
+    groups.insert(0,('',''))      
+    form = forms.user_open_form(nodes,products,groups)
     return render("open_form",form=form)
 
 @app.post('/member/open',apply=auth_opr)
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]    
-    form = forms.user_open_form(nodes,products)
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]  
+    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
+    groups.insert(0,('',''))        
+    form = forms.user_open_form(nodes,products,groups)
     if not form.validates(source=request.forms):
         return render("open_form", form=form)
 
@@ -259,15 +264,19 @@ def account_open(db):
     member_id =   request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.account_open_form(products)
+    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
+    groups.insert(0,('',''))  
+    form = forms.account_open_form(products,groups)
     form.member_id.set_value(member_id)
     form.realname.set_value(member.realname)
     return render("open_form",form=form)
 
 @app.post('/account/open',apply=auth_opr)
 def account_open(db): 
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]    
-    form = forms.account_open_form(products)
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]  
+    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
+    groups.insert(0,('',''))  
+    form = forms.account_open_form(products,groups)
     if not form.validates(source=request.forms):
         return render("open_form", form=form)
 
@@ -338,6 +347,54 @@ def account_open(db):
 
     db.commit()
     redirect("/bus/member/detail?member_id={}".format(form.d.member_id))
+
+
+
+###############################################################################
+# account update     
+###############################################################################
+
+@app.get('/account/update',apply=auth_opr)
+def account_update(db): 
+    account_number = request.params.get("account_number")
+    account = db.query(models.SlcRadAccount).get(account_number)
+    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
+    groups.insert(0,('',''))
+    form = forms.account_update_form(groups)
+    form.fill(account)
+    return render("base_form",form=form)
+
+@app.post('/account/update',apply=auth_opr)
+def account_update(db): 
+    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
+    groups.insert(0,('',''))
+    form = forms.account_update_form(groups)
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+
+    account = db.query(models.SlcRadAccount).get(form.d.account_number)
+    if form.d.group_id:
+        account.group_id = form.d.group_id
+    account.ip_address = form.d.ip_address
+    account.install_address = form.d.install_address
+    account.user_concur_number = form.d.user_concur_number
+    account.bind_mac = form.d.bind_mac
+    account.bind_vlan = form.d.bind_vlan
+    if form.d.new_password:
+        account.password =  utils.encrypt(form.d.new_password)
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    _d = form.d.copy()
+    del _d['new_password']
+    ops_log.operate_desc = u'操作员(%s)修改上网账号信息:%s'%(get_cookie("username"),json.dumps(_d))
+    db.add(ops_log)
+
+    db.commit()
+    ucache.push_message("account",account_number=account.account_number)
+    redirect("/bus/member/detail?member_id={}".format(account.member_id)) 
 
 ###############################################################################
 # account import     
@@ -487,6 +544,7 @@ def account_pause(db):
     db.add(accept_log)
 
     db.commit()
+    ucache.push_message("account",account_number=account.account_number)
     return dict(msg=u"操作成功")
 
 ###############################################################################
@@ -518,6 +576,7 @@ def account_resume(db):
     db.add(accept_log)
 
     db.commit()
+    ucache.push_message("account",account_number=account.account_number)
     return dict(msg=u"操作成功")
 
 
@@ -606,6 +665,7 @@ def account_next(db):
     account.expire_date = form.d.expire_date  
 
     db.commit()
+    ucache.push_message("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 ###############################################################################
@@ -661,6 +721,7 @@ def account_charge(db):
     account.balance += order.actual_fee
 
     db.commit()
+    ucache.push_message("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 ###############################################################################
@@ -715,6 +776,7 @@ def account_next(db):
     account.status = 3
 
     db.commit()
+    ucache.push_message("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 

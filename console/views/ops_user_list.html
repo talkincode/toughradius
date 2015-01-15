@@ -81,7 +81,7 @@
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
                 <td>${user.create_time}</td>
-                 <td><a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">释放绑定</a></td>
+                 <td><a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">释放绑定</a><a class="opt-btn btn-default" href="/bus/account/update?account_number=${user.account_number}">账号修改</a></td>
             </tr>
             % endfor
             </tbody>

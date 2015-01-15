@@ -39,7 +39,6 @@ def process(req=None,user=None,runstat=None):
         ticket.acct_stop_time= _datetime.strftime( "%Y-%m-%d %H:%M:%S")
         ticket.start_source = online['start_source']
         ticket.stop_source = STATUS_TYPE_STOP
-        print ticket
         store.add_ticket(ticket)
 
         if not user:return 

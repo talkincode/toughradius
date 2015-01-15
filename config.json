@@ -14,7 +14,8 @@
         "acctport": 1813,
         "adminport": 1815,
         "dictfile": "./radiusd/dict/dictionary",
-        "debug":1
+        "debug":1,
+        "cache_timeout":600
     },
     "console":
     {
