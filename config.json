@@ -5,7 +5,7 @@
         "passwd": "root",
         "charset": "utf8", 
         "db": "toughradius",
-        "host": "10.211.55.2",
+        "host": "127.0.0.1",
         "user": "root"
     },
     "radiusd":
