@@ -85,7 +85,8 @@ ToughRADIUS主要采用MySQL(5.0以上版本)存储数据，在部署ToughRADIUS
             "acctport": 1813,
             "adminport": 1815,
             "dictfile": "./radiusd/dict/dictionary",
-            "debug":1
+            "debug":1,
+            "cache_timeout":600
         },
         "console":
         {

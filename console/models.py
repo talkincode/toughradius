@@ -152,7 +152,7 @@ class SlcRadAccount(DeclarativeBase):
     """
     会员上网账号，每个会员可以同时拥有多个上网账号
     account_number 为每个套餐对应的上网账号，每个上网账号全局唯一
-    用户状态 1:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期", 5:"未激活"
+    用户状态 0:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期", 5:"未激活"
     """
 
     __tablename__ = 'slc_rad_account'
@@ -162,7 +162,7 @@ class SlcRadAccount(DeclarativeBase):
     account_number = Column('account_number', VARCHAR(length=32),primary_key=True,nullable=False)
     member_id = Column('member_id', INTEGER(),nullable=False)
     product_id = Column('product_id', INTEGER(),nullable=False)
-    group_id = Column('group_id', VARCHAR(length=32))
+    group_id = Column('group_id', INTEGER())
     password = Column('password', VARCHAR(length=128), nullable=False)
     status = Column('status', INTEGER(), nullable=False)
     install_address = Column('install_address', VARCHAR(length=128), nullable=False)

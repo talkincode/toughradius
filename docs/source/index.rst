@@ -29,8 +29,6 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
     RADIUS（Remote Authentication Dial In User Service）协议是在IETF的RFC2865和2866中定义的。RADIUS 是基于 UDP 的一种客户机/服务器协议。RADIUS客户机是网络访问服务器，它通常是一个路由器、交换机或无线访问点。RADIUS是AAA的一种实现协议。
 
-
-
 .. _install-docs:
 
 安装手册
@@ -40,11 +38,12 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
     :maxdepth: 3
 
     windows_install
+    linux_install
 
 
 .. _management-docs:
 
-管理手册
+系统管理
 --------
 
 .. toctree::
@@ -56,5 +55,24 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
     management/product
 
 
+.. _business-docs:
+
+营业管理
+--------
+
+.. toctree::
+    :maxdepth: 3
+
+    business/member
+
+.. _develop-docs:
+
+开发手册
+--------
+
+.. toctree::
+    :maxdepth: 3
+
+    develop/database
 
 
