@@ -24,6 +24,10 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 
+###############################################################################
+# member query     
+###############################################################################
+
 @app.route('/member',apply=auth_opr,method=['GET','POST'])
 @app.get('/member/export',apply=auth_opr)
 def member_query(db):   
@@ -98,12 +102,10 @@ def member_detail(db):
     )
     return  render("bus_member_detail",member=member,accounts=accounts,orders=orders)
 
-@app.get('/member/open',apply=auth_opr)
-def member_open(db): 
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.user_open_form(nodes,products)
-    return render("open_form",form=form)
+
+###############################################################################
+# member update     
+###############################################################################
 
 @app.get('/member/update',apply=auth_opr)
 def member_update(db): 
@@ -113,6 +115,43 @@ def member_update(db):
     form = forms.member_update_form(nodes)
     form.fill(member)
     return render("base_form",form=form)
+
+@app.post('/member/update',apply=auth_opr)
+def member_update(db): 
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    form=forms.member_update_form(nodes)
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+
+    member = db.query(models.SlcMember).get(form.d.member_id)
+    member.node_id = form.d.node_id
+    member.realname = form.d.realname
+    if form.d.new_password:
+        member.password =  md5(form.d.new_password.encode()).hexdigest()
+    member.idcard = form.d.idcard
+    member.mobile = form.d.mobile
+    member.address = form.d.address
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改用户信息:%s'%(get_cookie("username"),member.member_name)
+    db.add(ops_log)
+
+    db.commit()
+    redirect("/bus/member/detail?member_id={}".format(member.member_id)) 
+
+###############################################################################
+# member open     
+###############################################################################
+
+@app.get('/member/open',apply=auth_opr)
+def member_open(db): 
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    form = forms.user_open_form(nodes,products)
+    return render("open_form",form=form)
 
 @app.post('/member/open',apply=auth_opr)
 def member_open(db): 
@@ -211,6 +250,10 @@ def member_open(db):
     redirect("/bus/member")
 
 
+###############################################################################
+# account open     
+###############################################################################
+
 @app.get('/account/open',apply=auth_opr)
 def account_open(db): 
     member_id =   request.params.get('member_id')
@@ -295,6 +338,10 @@ def account_open(db):
 
     db.commit()
     redirect("/bus/member/detail?member_id={}".format(form.d.member_id))
+
+###############################################################################
+# account import     
+###############################################################################
 
 @app.get('/member/import',apply=auth_opr)
 def member_import(db): 
@@ -414,6 +461,10 @@ def member_import(db):
     db.commit()
     redirect("/bus/member")
 
+###############################################################################
+# account pause     
+###############################################################################    
+
 @app.post('/account/pause',apply=auth_opr)
 def account_pause(db): 
     account_number = request.params.get("account_number")
@@ -437,6 +488,10 @@ def account_pause(db):
 
     db.commit()
     return dict(msg=u"操作成功")
+
+###############################################################################
+# account resume     
+###############################################################################    
 
 @app.post('/account/resume',apply=auth_opr)
 def account_resume(db): 
@@ -494,6 +549,10 @@ def query_account(db,account_number):
     ).first()
 
 
+###############################################################################
+# account next     
+###############################################################################
+
 @app.get('/account/next',apply=auth_opr)
 def account_next(db): 
     account_number = request.params.get("account_number")
@@ -549,6 +608,10 @@ def account_next(db):
     db.commit()
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
+###############################################################################
+# account charge     
+###############################################################################
+
 @app.get('/account/charge',apply=auth_opr)
 def account_charge(db): 
     account_number = request.params.get("account_number")
@@ -599,6 +662,10 @@ def account_charge(db):
 
     db.commit()
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
+
+###############################################################################
+# account cancel     
+###############################################################################
 
 @app.get('/account/cancel',apply=auth_opr)
 def account_cancel(db): 
@@ -712,7 +779,7 @@ def opslog_query(db):
     query_end_time = request.params.get('query_end_time')  
     _query = db.query(models.SlcRadBilling)
     if account_number:
-        _query = _query.filter(models.SlcRadBilling.SlcRadAccount.account_number.like('%'+account_number+'%'))
+        _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
     if query_begin_time:
         _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time)
     if query_end_time:

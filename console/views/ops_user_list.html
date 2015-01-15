@@ -76,7 +76,7 @@
             % for user in page_data.result:
             <tr>
                 <td><a href="/ops/user/detail?account_number=${user.account_number}">${user.account_number}</a></td>
-                <td>${user.realname}</td>
+                <td><a href="/bus/member/detail?member_id=${user.member_id}">${user.realname}</a></td></td>
                 <td>${user.product_name}</td>
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
