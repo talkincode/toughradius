@@ -1,4 +1,4 @@
-# ToughRADIUS手册
+# ToughRADIUS
 
 ToughRADIUS是一个开源，免费，易用的Radius服务软件。
 
