@@ -103,7 +103,7 @@ def admin_login_post(db):
     set_cookie('login_ip', request.remote_addr)    
 
     ops_log = models.SlcRadOperateLog()
-    ops_log.operator_name = get_cookie("username")
+    ops_log.operator_name = uname
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
     ops_log.operate_desc = u'操作员(%s)登陆'%(get_cookie("username"),)
