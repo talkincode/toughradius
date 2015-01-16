@@ -74,6 +74,7 @@ class SlcRadGroup(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    node_id = Column('node_id', INTEGER(), nullable=False)
     group_name = Column(u'group_name', VARCHAR(length=64), nullable=False)
     group_desc = Column(u'group_desc', VARCHAR(length=255))
     bind_mac = Column(u'bind_mac', SMALLINT(), nullable=False)
@@ -93,6 +94,7 @@ class SlcRadRoster(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
+    node_id = Column('node_id', INTEGER(), nullable=False)
     mac_addr = Column('mac_addr', VARCHAR(length=17), nullable=False)
     account_number = Column('account_number', VARCHAR(length=32))
     begin_time = Column('begin_time', VARCHAR(length=19), nullable=False)
@@ -198,6 +200,7 @@ class SlcRadProduct(DeclarativeBase):
     __table_args__ = {}
 
     id = Column('id', INTEGER(),primary_key=True,autoincrement=1,nullable=False)
+    node_id = Column('node_id', INTEGER(), nullable=False)
     product_name = Column('product_name', VARCHAR(length=64), nullable=False)
     product_policy = Column('product_policy', INTEGER(), nullable=False)
     product_status = Column('product_status', SMALLINT(), nullable=False)    
@@ -375,6 +378,7 @@ def init_db(db):
 
     bas = SlcRadBas()
     bas.id = 1
+    bas.node_id = 1
     bas.vendor_id = '0'
     bas.ip_addr = '192.168.88.1'
     bas.bas_name = 'test_bas'
@@ -385,6 +389,7 @@ def init_db(db):
 
     product = SlcRadProduct()
     product.id = 1
+    product.node_id = 1
     product.product_name = u'10元包月套餐'
     product.product_policy = 0
     product.product_status = 1
@@ -402,6 +407,7 @@ def init_db(db):
 
     product2 = SlcRadProduct()
     product2.id = 2
+    product2.node_id = 1
     product2.product_name = u'2元每小时'
     product2.product_policy = 1
     product2.product_status = 1

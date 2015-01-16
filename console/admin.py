@@ -99,6 +99,7 @@ def admin_login_post(db):
     ).first()
     if not opr:return dict(code=1,msg=u"用户名密码不符")
     set_cookie('username',uname)
+    set_cookie('login_node',opr.node_id)
     set_cookie('login_time', utils.get_currtime())
     set_cookie('login_ip', request.remote_addr)    
 
@@ -191,7 +192,7 @@ def passwd_update(db):
 
 @app.get('/node',apply=auth_opr)
 def node(db):   
-    return render("node_list", page_data = get_page_data(db.query(models.SlcNode)))
+    return render("sys_node_list", page_data = get_page_data(db.query(models.SlcNode)))
 
 @app.get('/node/add',apply=auth_opr)
 def node_add(db):  
@@ -264,9 +265,9 @@ def node_delete(db):
 # bas manage    
 ###############################################################################
 
-@app.get('/bas',apply=auth_opr)
+@app.route('/bas',apply=auth_opr,method=['GET','POST'])
 def bas(db):   
-    return render("bas_list", 
+    return render("sys_bas_list", 
         bastype = forms.bastype,
         bas_list = db.query(models.SlcRadBas))
     
@@ -348,13 +349,20 @@ def bas_delete(db):
 # product manage       
 ###############################################################################
 
-@app.get('/product',apply=auth_opr)
+@app.route('/product',apply=auth_opr,method=['GET','POST'])
 def product(db):   
-    return render("product_list", page_data = get_page_data(db.query(models.SlcRadProduct)))
+    node_id = request.params.get("node_id")
+    _query = db.query(models.SlcRadProduct)
+    if node_id:
+        _query = _query.filter_by(node_id=node_id)
+    return render("sys_product_list", 
+        node_list=db.query(models.SlcNode),
+        page_data = get_page_data(_query),node_id=node_id)
 
 @app.get('/product/add',apply=auth_opr)
 def product_add(db):  
-    return render("base_form",form=forms.product_add_form())
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    return render("base_form",form=forms.product_add_form(nodes))
 
 @app.get('/product/detail',apply=auth_opr)
 def product_detail(db):
@@ -363,15 +371,17 @@ def product_detail(db):
     if not product:
         return render("error",msg=u"资费不存在")
     product_attrs = db.query(models.SlcRadProductAttr).filter_by(product_id=product_id)
-    return render("product_detail",product=product,product_attrs=product_attrs) 
+    return render("sys_product_detail",product=product,product_attrs=product_attrs) 
 
 
 @app.post('/product/add',apply=auth_opr)
 def product_add_post(db): 
-    form=forms.product_add_form()
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    form=forms.product_add_form(nodes)
     if not form.validates(source=request.forms):
         return render("base_form", form=form)      
     product = models.SlcRadProduct()
+    product.node_id = form.d.node_id
     product.product_name = form.d.product_name
     product.product_policy = form.d.product_policy
     product.product_status = form.d.product_status
@@ -460,13 +470,13 @@ def product_attr_add(db):
         return render("error",msg=u"资费不存在") 
     form = forms.product_attr_add_form()
     form.product_id.set_value(product_id)
-    return render("pattr_form",form=form,pattrs=radius_attrs)
+    return render("sys_pattr_form",form=form,pattrs=radius_attrs)
 
 @app.post('/product/attr/add',apply=auth_opr)
 def product_attr_add(db): 
     form = forms.product_attr_add_form()
     if not form.validates(source=request.forms):
-        return render("pattr_form", form=form,pattrs=radius_attrs)   
+        return render("sys_pattr_form", form=form,pattrs=radius_attrs)   
     attr = models.SlcRadProductAttr()
     attr.product_id = form.d.product_id
     attr.attr_name = form.d.attr_name
@@ -491,7 +501,7 @@ def product_attr_update(db):
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
     form = forms.product_attr_update_form()
     form.fill(attr)
-    return render("pattr_form",form=form,pattrs=radius_attrs)
+    return render("sys_pattr_form",form=form,pattrs=radius_attrs)
 
 @app.post('/product/attr/update',apply=auth_opr)
 def product_attr_update(db): 
@@ -536,21 +546,31 @@ def product_attr_update(db):
 # group manage      
 ###############################################################################
 
-@app.get('/group',apply=auth_opr)
+@app.route('/group',apply=auth_opr,method=['GET','POST'])
 def group(db):   
-    return render("group_list", page_data = get_page_data(db.query(models.SlcRadGroup)))
+    node_id = request.params.get("node_id")
+    _query = db.query(models.SlcRadGroup)
+    if node_id:
+        _query = _query.filter_by(node_id=node_id)
+
+    return render("sys_group_list", 
+        node_list=db.query(models.SlcNode),
+        page_data = get_page_data(_query),node_id=node_id)
 
    
 @app.get('/group/add',apply=auth_opr)
 def group_add(db):  
-    return render("base_form",form=forms.group_add_form())
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    return render("base_form",form=forms.group_add_form(nodes))
 
 @app.post('/group/add',apply=auth_opr)
 def group_add_post(db): 
-    form=forms.group_add_form()
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    form=forms.group_add_form(nodes)
     if not form.validates(source=request.forms):
         return render("base_form", form=form)    
     group = models.SlcRadGroup()
+    group.node_id = form.d.node_id
     group.group_name = form.d.group_name
     group.group_desc = form.d.group_desc
     group.bind_mac = form.d.bind_mac
@@ -620,22 +640,31 @@ def group_delete(db):
 # roster manage    
 ###############################################################################
 
-@app.get('/roster',apply=auth_opr)
+@app.route('/roster',apply=auth_opr,method=['GET','POST'])
 def roster(db):   
-    return render("roster_list", page_data = get_page_data(db.query(models.SlcRadRoster)))
+    node_id = request.params.get("node_id")
+    _query = db.query(models.SlcRadRoster)
+    if node_id:
+        _query = _query.filter_by(node_id=node_id)
+    return render("sys_roster_list", 
+        node_list=db.query(models.SlcNode),
+        page_data = get_page_data(_query),node_id=node_id)
 
 @app.get('/roster/add',apply=auth_opr)
 def roster_add(db):  
-    return render("roster_form",form=forms.roster_add_form())
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    return render("sys_roster_form",form=forms.roster_add_form(nodes))
 
 @app.post('/roster/add',apply=auth_opr)
 def roster_add_post(db): 
-    form=forms.roster_add_form()
+    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    form=forms.roster_add_form(nodes)
     if not form.validates(source=request.forms):
-        return render("roster_form", form=form)  
+        return render("sys_roster_form", form=form)  
     if db.query(models.SlcRadRoster.id).filter_by(mac_addr=form.d.mac_addr).count()>0:
-        return render("roster_form", form=form,msg=u"MAC地址已经存在")     
+        return render("sys_roster_form", form=form,msg=u"MAC地址已经存在")     
     roster = models.SlcRadRoster()
+    roster.node_id = form.d.node_id
     roster.mac_addr = form.d.mac_addr
     roster.account_number = form.d.account_number
     roster.begin_time = form.d.begin_time
@@ -658,13 +687,13 @@ def roster_update(db):
     roster_id = request.params.get("roster_id")
     form=forms.roster_update_form()
     form.fill(db.query(models.SlcRadRoster).get(roster_id))
-    return render("roster_form",form=form)
+    return render("sys_roster_form",form=form)
 
 @app.post('/roster/update',apply=auth_opr)
 def roster_add_update(db): 
     form=forms.roster_update_form()
     if not form.validates(source=request.forms):
-        return render("roster_form", form=form)       
+        return render("sys_roster_form", form=form)       
     roster = db.query(models.SlcRadRoster).get(form.d.id)
     roster.mac_addr = form.d.mac_addr
     roster.account_number = form.d.account_number

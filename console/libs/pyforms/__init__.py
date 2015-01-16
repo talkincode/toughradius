@@ -119,22 +119,21 @@ class Form(object):
         out = [] 
         out.append(self.rendernote(self.note)) 
         for i in self.inputs:
-            out.append('<div class="form-group">')
+            out.append('    <div class="form-group">\n')
             if not i.is_hidden():
-                out.append('<label class="col-sm-3 control-label"  for="%s">%s</label>' % (i.id, net.websafe(i.description)))
+                out.append('        <label class="col-sm-3 control-label"  for="%s">%s</label>\n' % (i.id, net.websafe(i.description)))
             out.append(i.pre)
-            out.append('<div class="col-sm-6">')
-            out.append(i.render())
-            out.append('</div>')
+            out.append('        <div class="col-sm-6">\n')
+            out.append("        %s\n"%i.render())
+            out.append('        </div>\n')
             if i.help:
-                out.append('<a id="%s_help" href="javascript:void" title="%s">'%(i.id,i.help))
-                out.append('<span class="input-help glyphicon glyphicon-question-sign"></span></a>')
+                out.append('    <a id="%s_help" href="javascript:void" title="%s">\n'%(i.id,i.help))
+                out.append('    <span class="input-help glyphicon glyphicon-question-sign"></span></a>\n')
             out.append(self.rendernote(i.note))
             out.append(i.post) 
-            out.append('\n')
-            out.append('</div>')
+            out.append('    </div>\n')
             if i.hr:
-                out.append("<hr/>")
+                out.append("<hr/>\n")
         return ''.join(out) 
         
     def rendernote(self, note):
@@ -299,7 +298,7 @@ class Dropdown(Input):
         for arg in self.args:
             x += self._render_option(arg)
 
-        x += '</select>\n'
+        x += '        </select>\n'
         return x
 
     def _render_option(self, arg, indent='  '):
@@ -312,7 +311,7 @@ class Dropdown(Input):
             select_p = ' selected="selected"'
         else:
             select_p = ''
-        return indent + '<option%s value="%s">%s</option>\n' % (select_p, net.websafe(value), net.websafe(desc))
+        return indent + '       <option%s value="%s">%s</option>\n' % (select_p, net.websafe(value), net.websafe(desc))
         
 
 class GroupedDropdown(Dropdown):
@@ -325,15 +324,15 @@ class GroupedDropdown(Dropdown):
         attrs = self.attrs.copy()
         attrs['name'] = self.name
         
-        x = '<select %s>\n' % attrs
+        x = '   <select %s>\n' % attrs
         
         for label, options in self.args:
             x += '  <optgroup label="%s">\n' % net.websafe(label)
             for arg in options:
                 x += self._render_option(arg, indent = '    ')
-            x +=  '  </optgroup>\n'
+            x +=  ' </optgroup>\n'
             
-        x += '</select>\n'
+        x += '  </select>\n'
         return x
 
 class Radio(Input):

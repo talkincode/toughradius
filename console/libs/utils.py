@@ -7,6 +7,7 @@ from Crypto import Random
 import binascii
 import hashlib
 import base64
+import calendar
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
@@ -81,6 +82,13 @@ def fmt_second(time_total):
     m = times % 3600 / 60
     s = times % 3600 % 60
     return "%s:%s:%s" % (_ck(h), _ck(m), _ck(s))
+
+def add_months(dt,months):
+    month = dt.month - 1 + months
+    year = dt.year + month / 12
+    month = month % 12 + 1
+    day = min(dt.day,calendar.monthrange(year,month)[1])
+    return dt.replace(year=year, month=month, day=day)    
 
 if __name__ == '__main__':
     print gen_order_id()

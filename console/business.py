@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 #coding:utf-8
-
 from bottle import Bottle
 from bottle import request
 from bottle import response
@@ -24,6 +23,44 @@ decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
+
+###############################################################################
+# ajax query        
+###############################################################################
+
+@app.get('/product/json',apply=auth_opr)
+def product_get(db):   
+    node_id = request.params.get('node_id')
+    if not node_id:return dict(code=1,data=[])
+    items = db.query(models.SlcRadProduct).filter_by(node_id=node_id)
+    return dict(
+        code=0,
+        data=[{'code': it.id,'name': it.product_name} for it in items]
+    )
+
+@app.get('/group/json',apply=auth_opr)
+def group_get(db):   
+    node_id = request.params.get('node_id')
+    if not node_id:return dict(code=1,data=[])
+    items = db.query(models.SlcRadGroup).filter_by(node_id=node_id)
+    return dict(
+        code=0,
+        data=[{'code': it.id,'name': it.group_name} for it in items]
+    )
+
+@app.get('/opencalc',apply=auth_opr)
+def group_get(db):   
+    months = request.params.get('months')
+    product_id = request.params.get("product_id")
+    product = db.query(models.SlcRadProduct).get(product_id)
+    if product.product_policy == 1:
+        return dict(code=0,data=dict(fee_value=0,expire_date="3000-12-30"))
+    else:
+        fee = decimal.Decimal(months) * decimal.Decimal(product.fee_price)
+        fee_value = utils.fen2yuan(int(fee.to_integral_value()))
+        expire_date = utils.add_months(datetime.datetime.now(),int(months))
+        expire_date = expire_date.strftime( "%Y-%m-%d")
+        return dict(code=0,data=dict(fee_value=fee_value,expire_date=expire_date))
 
 ###############################################################################
 # member query     
@@ -150,31 +187,31 @@ def member_update(db):
 @app.get('/member/open',apply=auth_opr)
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    products = []
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))      
     form = forms.user_open_form(nodes,products,groups)
-    return render("open_form",form=form)
+    return render("bus_open_form",form=form)
 
 @app.post('/member/open',apply=auth_opr)
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]  
+    products = []  
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))        
-    form = forms.user_open_form(nodes,products,groups)
+    form = forms.user_bus_open_form(nodes,products,groups)
     if not form.validates(source=request.forms):
-        return render("open_form", form=form)
+        return render("bus_open_form", form=form)
 
     if db.query(models.SlcRadAccount).filter_by(account_number=form.d.account_number).count()>0:
-        return render("open_form", form=form,msg=u"上网账号%s已经存在"%form.d.account_number)
+        return render("bus_open_form", form=form,msg=u"上网账号%s已经存在"%form.d.account_number)
 
     if form.d.ip_address and db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
-        return render("open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
+        return render("bus_open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
 
     if db.query(models.SlcMember).filter_by(
         member_name=form.d.member_name).count()>0:
-        return render("open_form", form=form,msg=u"用户名%s已经存在"%form.d.member_name)
+        return render("bus_open_form", form=form,msg=u"用户名%s已经存在"%form.d.member_name)
 
     member = models.SlcMember()
     member.node_id = form.d.node_id
@@ -263,29 +300,29 @@ def member_open(db):
 def account_open(db): 
     member_id =   request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct).filter_by(
+        node_id = member.node_id
+    )]
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))  
     form = forms.account_open_form(products,groups)
     form.member_id.set_value(member_id)
     form.realname.set_value(member.realname)
-    return render("open_form",form=form)
+    form.node_id.set_value(member.node_id)
+    return render("bus_open_form",form=form)
 
 @app.post('/account/open',apply=auth_opr)
 def account_open(db): 
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]  
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))  
-    form = forms.account_open_form(products,groups)
+    form = forms.account_open_form()
     if not form.validates(source=request.forms):
-        return render("open_form", form=form)
+        return render("bus_open_form", form=form)
 
     if db.query(models.SlcRadAccount).filter_by(
         account_number=form.d.account_number).count()>0:
-        return render("open_form", form=form,msg=u"上网账号已经存在")
+        return render("bus_open_form", form=form,msg=u"上网账号已经存在")
 
     if form.d.ip_address and db.query(models.SlcRadAccount).filter_by(ip_address=form.d.ip_address).count()>0:
-        return render("open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
+        return render("bus_open_form", form=form,msg=u"ip%s已经被使用"%form.d.ip_address)
 
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'open'
@@ -405,7 +442,7 @@ def member_import(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.user_import_form(nodes,products)
-    return render("import_form",form=form)
+    return render("bus_import_form",form=form)
 
 @app.post('/member/import',apply=auth_opr)
 def member_import(db): 
@@ -425,7 +462,7 @@ def member_import(db):
         if not line or u"用户姓名" in line:continue
         attr_array = line.split(",")
         if len(attr_array) < 5:
-            return render("import_form",form=iform,msg=u"line %s error: length must 5 "%_num)
+            return render("bus_import_form",form=iform,msg=u"line %s error: length must 5 "%_num)
 
         vform = forms.user_import_vform()
         if not vform.validates(dict(
@@ -434,7 +471,7 @@ def member_import(db):
                 password = attr_array[2],
                 expire_date = attr_array[3],
                 balance = attr_array[4])):
-            return render("import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
+            return render("bus_import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
 
         impusers.append(vform)
 
@@ -513,7 +550,7 @@ def member_import(db):
             db.add(account)
 
         except Exception as e:
-            return render("import_form",form=iform,msg=u"error : %s"%str(e))
+            return render("bus_import_form",form=iform,msg=u"error : %s"%str(e))
 
     db.commit()
     redirect("/bus/member")
@@ -618,7 +655,8 @@ def account_next(db):
     user = query_account(db,account_number)
     form = forms.account_next_form()
     form.account_number.set_value(account_number)
-    return render("account_form",user=user,form=form)
+    form.product_id.set_value(user.product_id)
+    return render("bus_account_next_form",user=user,form=form)
 
 @app.post('/account/next',apply=auth_opr)
 def account_next(db): 
@@ -626,10 +664,11 @@ def account_next(db):
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_next_form()
+    form.product_id.set_value(user.product_id)
     if account.status not in (1,4):
-        return render("account_form", user=user,form=form,msg=u"无效用户状态")    
+        return render("bus_account_next_form", user=user,form=form,msg=u"无效用户状态")    
     if not form.validates(source=request.forms):
-        return render("account_form", user=user,form=form)
+        return render("bus_account_next_form", user=user,form=form)
 
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'next'
@@ -678,7 +717,7 @@ def account_charge(db):
     user = query_account(db,account_number)
     form = forms.account_charge_form()
     form.account_number.set_value(account_number)
-    return render("account_form",user=user,form=form)
+    return render("bus_account_form",user=user,form=form)
 
 @app.post('/account/charge',apply=auth_opr)
 def account_charge(db): 
@@ -687,10 +726,10 @@ def account_charge(db):
     user = query_account(db,account_number)
     form = forms.account_charge_form()
     if account.status !=1 :
-        return render("account_form", user=user,form=form,msg=u"无效用户状态")  
+        return render("bus_account_form", user=user,form=form,msg=u"无效用户状态")  
 
     if not form.validates(source=request.forms):
-        return render("account_form", user=user,form=form)
+        return render("bus_account_form", user=user,form=form)
 
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'charge'
@@ -734,7 +773,7 @@ def account_cancel(db):
     user = query_account(db,account_number)
     form = forms.account_cancel_form()
     form.account_number.set_value(account_number)
-    return render("account_form",user=user,form=form)
+    return render("bus_account_form",user=user,form=form)
 
 
 @app.post('/account/cancel',apply=auth_opr)
@@ -744,9 +783,9 @@ def account_next(db):
     user = query_account(db,account_number)
     form = forms.account_cancel_form()
     if account.status !=1 :
-        return render("account_form", user=user,form=form,msg=u"无效用户状态")      
+        return render("bus_account_form", user=user,form=form,msg=u"无效用户状态")      
     if not form.validates(source=request.forms):
-        return render("account_form", user=user,form=form)
+        return render("bus_account_form", user=user,form=form)
 
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'cancel'
@@ -847,5 +886,7 @@ def opslog_query(db):
     if query_end_time:
         _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
     _query = _query.order_by(models.SlcRadBilling.create_time.desc())
-    return render("bus_billing_list", page_data = get_page_data(_query),**request.params)
+    return render("bus_billing_list", 
+        node_list=db.query(models.SlcNode),
+        page_data = get_page_data(_query),**request.params)
 
