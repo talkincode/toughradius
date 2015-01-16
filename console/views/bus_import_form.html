@@ -1,0 +1,48 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> ${form.title}<a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
+        <div class="panel-body">
+            % if msg:
+            <div class="alert alert-warning">${msg}</div>
+            % endif
+            <form class="form-horizontal" role="form" action="${form.action}" method="post" enctype="multipart/form-data">
+            ${form.render_css()}
+        </form>
+        <div class="col-md-offset-1 col-md-10 ">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th colspan="4">数据导入格式模板（使用csv文件格式，以英文逗号分隔）</th>
+            </tr>
+            <tr>
+                <th>用户姓名</th>
+                <th>上网账号</th>
+                <th>上网密码</th>
+                <th>过期时间</th>
+                <th>用户余额(分)</th>
+            </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>testuser</td>
+                <td>12010212</td>
+                <td>234234</td>
+                <td>2015-12-30</td>
+                <td>0</td>
+            </tr>
+              <tr>
+                <td>testuser</td>
+                <td>120102e12</td>
+                <td>2342e34</td>
+                <td>2015-12-30</td>
+                <td>0</td>
+            </tr>            
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+</%def>

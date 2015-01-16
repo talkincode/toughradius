@@ -1,0 +1,82 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script src="/static/js/bootstrap-datepicker.js"></script>
+<link rel="stylesheet" href="/static/js/datepicker.css"> 
+<script>
+
+//根据区域动态选择资费信息
+function updateProduct(){
+    var node_id = $("#node_id").val();
+    $.get("/bus/product/json?node_id="+node_id, {}, function (ev) {
+        $("#product_id").empty();
+        console.log("empty items");
+        $.each(ev.data, function (index, item) {
+            var is_sel = '${form.d.product_id}' == item.code ? "selected" : "";
+            $("#product_id").append(
+                "<option value='" + item.code + "'"+ is_sel+ ">" + item.name + "</option>"
+            );
+        });
+    }, "json");
+}
+
+//根据区域动态选择用户组信息
+function updateGroup(){
+    var node_id = $("#node_id").val();
+    $.get("/bus/group/json?node_id="+node_id, {}, function (ev) {
+        $("#group_id").empty();
+        console.log("empty items");
+        $.each(ev.data, function (index, item) {
+            var is_sel = '${form.d.group_id}' == item.code ? "selected" : "";
+            $("#group_id").append("<option value=''></option>");
+            $("#group_id").append(
+                "<option value='" + item.code + "'"+ is_sel+ ">" + item.name + "</option>"
+            );
+        });
+    }, "json");
+}
+
+function productCalc(){
+    var months = $("#months").val();
+    var product_id = $("#product_id").val();
+    $.get("/bus/opencalc?months="+months+"&product_id="+product_id, {}, function (ev) {
+        console.log(ev);
+        if(ev.code==0){
+            console.log(ev.data);
+            $("#fee_value").val(ev.data.fee_value);
+            $("#expire_date").val(ev.data.expire_date);
+        }
+    }, "json");
+}
+
+//页面初始化
+$(document).ready(function (){
+    $("#expire_date").datepicker();
+    updateProduct();
+    updateGroup();
+    $('#node_id').change(function() {
+        updateProduct();
+        updateGroup();
+    });
+    $('#product_id').change(function() {
+        productCalc();
+    });
+    $('#months').blur(function() {
+        productCalc();
+    });    
+});
+</script>
+
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> ${form.title}<a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
+        <div class="panel-body">
+            % if msg:
+            <div class="alert alert-warning">${msg}</div>
+            % endif
+            <form class="form-horizontal" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
+    </div>
+</div>
+</%def>

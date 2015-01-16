@@ -1,0 +1,45 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script>
+    function deleteNode(node_id) {
+        if (confirm("确认删除吗？")) {
+            window.location.href = "/node/delete?node_id=" + node_id;
+        }
+    }
+</script>
+
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 节点列表</div>
+    <div class="panel-body">
+        <div class="pull-right bottom10">
+             <a href="/node/add" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-plus"></span> 增加节点</a>
+        </div>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>区域名称</th>
+                <th>区域描述</th>
+                <th>操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for node in page_data.result:
+            <tr>
+                <td>${node.node_name}</td>
+                <td>${node.node_desc}</td>
+                <td><a class="opt-btn btn-default" href="/node/update?node_id=${node.id}">修改</a>
+                    <a class="opt-btn btn-default" href="javascript:deleteNode('${node.id}')">删除</a></td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+        ${page_data.render()}
+    </div>
+</div>
+
+
+</%def>
