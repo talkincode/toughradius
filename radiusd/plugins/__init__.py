@@ -17,7 +17,8 @@ __all__ = [
     'admin_trace_global',
     'admin_trace_user',
     'admin_unlock_online',
-    'admin_update_cache'
+    'admin_update_cache',
+    'admin_stat_query'
 ]
 
 def error_auth(resp,errmsg):

@@ -1,9 +1,34 @@
 <%inherit file="base.html"/>
 <%def name="head()">
+<script>
+var wsock = {
+    socket: null,
+    start: function (addr,port) {
+        var url = "ws://"+addr+":"+port;
+        wsock.socket = new WebSocket(url);
+        wsock.socket.onmessage = function (event) {
+            message = JSON.parse(event.data);
+            console.log(message);
+            for (p in message){
+                $("#"+p).html(message[p])
+            }
+        };
+
+        wsock.socket.onopen =function(event){
+            data = JSON.stringify({process:"admin_stat_query"});
+            wsock.socket.send(data);
+        };
+    }
+};
+
+$(document).ready(function () {
+    wsock.start('${radaddr}','${adminport}');
+});
+</script>
 </%def>
 <%def name="body()">
-    <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 系统信息 </div>
+<div class="panel panel-default">
+<div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 系统信息 </div>
         <div class="panel-body">
         <table class="table table-hover">
                 <thead>
@@ -29,5 +54,67 @@
         </table>
     </div>
 </div>
+
+
+
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 统计信息</div>
+    <div class="panel-body">
+        <div class="alert alert-info ">
+            当前在线用户数 ${online_count}/${user_total}
+        </div>
+        <div>
+        <ul class="list-group col-md-6">
+            <li class="list-group-item">
+                <span class="badge" id="auth_all"></span>
+                认证消息总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="auth_accept"></span>
+                认证成功总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="auth_reject"></span>
+                认证拒绝总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="auth_drop"></span>
+                认证丢弃总数
+            </li>
+        </ul>
+        <ul class="list-group col-md-6">
+            <li class="list-group-item">
+                <span class="badge" id="acct_all"></span>
+                记账消息总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_start"></span>
+                记账上线总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_update"></span>
+                记账更新总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_stop"></span>
+                记账下线总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_drop"></span>
+                记账丢弃总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_retry"></span>
+                记账重发总数
+            </li>
+        </ul>
+        </div>
+    </div>
 </div>
+
+
+
+</div>
+
+
 </%def>

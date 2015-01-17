@@ -66,7 +66,9 @@ def init_app():
 
 @app.route('/',apply=auth_opr)
 def index(db):    
-    return render("index")
+    online_count = db.query(models.SlcRadOnline.id).count()
+    user_total = db.query(models.SlcRadAccount.account_number).filter_by(status=1).count()
+    return render("index",**locals())
 
 @app.error(404)
 def error404(error):

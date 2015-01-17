@@ -27,6 +27,7 @@ import pprint
 import utils
 import json
 import os
+import socket
 
 ###############################################################################
 # Basic RADIUS                                                            ####
@@ -49,6 +50,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         self.midware = midware
         self.runstat = runstat
         self.auth_delay = utils.AuthDelay(int(store.get_param("reject_delay") or 0))
+        
 
     def processPacket(self, pkt):
         pass
@@ -241,6 +243,7 @@ def main():
         reactor.listenUDP(_radiusd['acctport'], acct_protocol)
         _task = task.LoopingCall(auth_protocol.process_delay)
         _task.start(2.7)
+        acct_protocol.transport.socket.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,1024000)
 
         from autobahn.twisted.websocket import WebSocketServerFactory
         factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = _debug)

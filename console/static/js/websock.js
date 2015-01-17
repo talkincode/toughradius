@@ -2,8 +2,8 @@ var wsock = {
     socket: null,
     timer: null,
 
-    start: function () {
-        var url = "ws://${radaddr}:${adminport}";
+    start: function (addr,port) {
+        var url = "ws://"+addr+":"+port;
         wsock.socket = new WebSocket(url);
         wsock.socket.onmessage = function (event) {
             wsock.onMessage(JSON.parse(event.data));

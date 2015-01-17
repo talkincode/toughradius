@@ -226,7 +226,7 @@ def account_open_form(products=[],groups=[]):
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("address", description=u"用户地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
-        pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
+        pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),

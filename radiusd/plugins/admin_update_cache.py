@@ -6,15 +6,15 @@ from settings import *
 import logging
 import json
 
-def process(req=None,trace=None,send=None):
+def process(req=None,admin=None):
     cache_class = req.get("cache_class") 
     if not cache_class:
         reply = json.dumps({'data':u'cache_class is empty','code':1})
-        return send(reply,False) 
+        return admin.sendMessage(reply,False) 
 
     def send_ok(op):
         reply = json.dumps({'data':u'%s ok'%op,'code':0})
-        send(reply,False)
+        admin.sendMessage(reply,False)
     
     if cache_class == 'param':
         store.update_param_cache()
@@ -33,7 +33,7 @@ def process(req=None,trace=None,send=None):
         send_ok("product cache update")
     else:
         reply = json.dumps({'data':u'do nothing','code':0})
-        send(reply,False)
+        admin.sendMessage(reply,False)
 
 
 

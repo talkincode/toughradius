@@ -4,8 +4,8 @@ from twisted.python import log
 import logging
 import json
 
-def process(req=None,trace=None,send=None):
-    pkt = trace.get_global_msg()
+def process(req=None,admin=None):
+    pkt = admin.user_trace.get_global_msg()
     if pkt is None: 
         return
     mtype = int(req.get('type'))
@@ -23,6 +23,6 @@ def process(req=None,trace=None,send=None):
     msg = json.dumps(reply)
     msg = msg.replace("\\n","<br>")
     msg = msg.replace("\\t","    ")
-    send(msg,False) 
+    admin.sendMessage(msg,False) 
 
 

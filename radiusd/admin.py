@@ -57,7 +57,8 @@ class AdminServerProtocol(WebSocketServerProtocol):
         log.msg("websocket trace query: %s"%str(req_msg))
         # log.msg("trace size info %s,%s"%self.user_trace.size_info(),level=logging.DEBUG)
         plugin = req_msg.get("process")
-        self.midware.process(plugin,req=req_msg,trace=self.user_trace,send=self.sendMessage)
+        # trace=self.user_trace,send=self.sendMessage
+        self.midware.process(plugin,req=req_msg,admin=self)
 
     def onClose(self, wasClean, code, reason):
         log.msg("WebSocket connection closed: {0}".format(reason))
