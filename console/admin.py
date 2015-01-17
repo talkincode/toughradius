@@ -15,6 +15,8 @@ from libs import sqla_plugin
 from libs.paginator import Paginator
 from libs import utils
 from libs.radius_attrs import radius_attrs
+from twisted.python import log
+from twisted.python.logfile import DailyLogFile
 from hashlib import md5
 from ucache import ucache
 import bottle
@@ -22,7 +24,6 @@ import models
 import forms
 import datetime
 import json
-
 
 ###############################################################################
 # init                
@@ -49,6 +50,7 @@ def init_app():
     app.install(sqla_pg)
     ops_app.install(sqla_pg)
     bus_app.install(sqla_pg)
+
     app.mount("/ops",ops_app)
     app.mount("/bus",bus_app)
 
@@ -722,6 +724,8 @@ def roster_delete(db):
 
 def main():
     import argparse,json
+    
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
     parser.add_argument('-raddr','--radaddr', type=str,default=None,dest='radaddr',help='raduis address')
@@ -755,6 +759,11 @@ def main():
             _mysql['user'],_mysql['passwd'],_mysql['host'],_mysql['db']))
 
     init_app()
+    if not _console['debug']:
+        print 'logging to file logs/access.log'
+        log.startLogging(DailyLogFile.fromFullPath("../logs/access.log"))
+    else:
+        log.startLogging(sys.stdout)    
     runserver(
         app, host='0.0.0.0', 
         port=_console['httpport'] ,

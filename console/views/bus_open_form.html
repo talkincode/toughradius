@@ -16,6 +16,7 @@ function updateProduct(){
                 "<option value='" + item.code + "'"+ is_sel+ ">" + item.name + "</option>"
             );
         });
+        productCalc();
     }, "json");
 }
 
@@ -44,7 +45,7 @@ function productCalc(){
 $(document).ready(function (){
     $("#expire_date").datepicker();
     updateProduct();
-    productCalc();
+    
     $('#node_id').change(function() {
         updateProduct();
     });
