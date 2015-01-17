@@ -11,7 +11,7 @@
  Target Server Version : 50613
  File Encoding         : utf-8
 
- Date: 01/15/2015 19:31:38 PM
+ Date: 01/18/2015 00:02:52 AM
 */
 
 SET NAMES utf8;
@@ -42,7 +42,7 @@ CREATE TABLE `slc_member` (
 --  Records of `slc_member`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_member` VALUES ('1000001', '1', 'tester', 'kqplHMRGQ4vbpJRSdkVdqJetnHjUupnvLgEKtHYRihg2hw2R6PFCWGFGJ3dSP78+', 'tester', '0', '1', '33', '6583805@qq.com', '1366666666', 'hunan changsha', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
+INSERT INTO `slc_member` VALUES ('1000001', '1', 'tester', 'bsCXFYmn1n/rOnZ2XHpd7CO9a0bc4NhcoeryBB8V0cfrSk5Np2HHlmx7WJA/yzDd', 'tester', '0', '1', '33', '6583805@qq.com', '1366666666', 'hunan changsha', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
 COMMIT;
 
 -- ----------------------------
@@ -123,7 +123,7 @@ CREATE TABLE `slc_rad_account` (
   `account_number` varchar(32) NOT NULL,
   `member_id` int(11) NOT NULL,
   `product_id` int(11) NOT NULL,
-  `group_id` varchar(32) DEFAULT NULL,
+  `group_id` int(11) DEFAULT NULL,
   `password` varchar(128) NOT NULL,
   `status` int(11) NOT NULL,
   `install_address` varchar(128) NOT NULL,
@@ -147,7 +147,7 @@ CREATE TABLE `slc_rad_account` (
 --  Records of `slc_rad_account`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_account` VALUES ('test01', '1000001', '1', '1', 'dHsNXFuKOto5cy5xmoNKX6PXWz5dBeAZRKmgptsYG4aicKbJlbqq70Wvq07TKimk', '1', 'hunan', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('test02', '1000001', '2', '1', 'Z9JfeXpJgL7O4p14WgHx9diYVR3G34yYzbb2lOIatwUACg+ttB8VQy9dtrmn7meG', '1', 'hunan', '1000', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21');
+INSERT INTO `slc_rad_account` VALUES ('test01', '1000001', '1', '1', 'dLqxGjc4xOTicak/OJx3fmQyO/5g2dRoUDyr4EV7qC/Ry5IKSpkAlXAHp6zWPbE8', '1', 'hunan', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('test02', '1000001', '2', '1', 'cc40iaFWWzXSbA5hTjU/4cPHgmO+Kzdl6M7Pr0+R4b9/2Osch0u7D3k6a5UxgiTR', '1', 'hunan', '1000', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21');
 COMMIT;
 
 -- ----------------------------
@@ -278,6 +278,7 @@ COMMIT;
 DROP TABLE IF EXISTS `slc_rad_product`;
 CREATE TABLE `slc_rad_product` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
+  `node_id` int(11) NOT NULL,
   `product_name` varchar(64) NOT NULL,
   `product_policy` int(11) NOT NULL,
   `product_status` smallint(6) NOT NULL,
@@ -285,6 +286,7 @@ CREATE TABLE `slc_rad_product` (
   `bind_vlan` smallint(6) NOT NULL,
   `concur_number` int(11) NOT NULL,
   `fee_period` varchar(11) DEFAULT NULL,
+  `fee_months` int(11) DEFAULT NULL,
   `fee_price` int(11) NOT NULL,
   `input_max_limit` int(11) NOT NULL,
   `output_max_limit` int(11) NOT NULL,
@@ -297,7 +299,7 @@ CREATE TABLE `slc_rad_product` (
 --  Records of `slc_rad_product`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_product` VALUES ('1', '10元包月套餐', '0', '1', '0', '0', '0', '0', '1000', '2097152', '2097152', '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('2', '2元每小时', '1', '1', '0', '0', '0', '0', '200', '2097152', '2097152', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
+INSERT INTO `slc_rad_product` VALUES ('1', '1', '10元包月套餐', '0', '1', '0', '0', '0', '0', null, '1000', '2097152', '2097152', '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('2', '1', '2元每小时', '1', '1', '0', '0', '0', '0', null, '200', '2097152', '2097152', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
 COMMIT;
 
 -- ----------------------------
@@ -362,9 +364,7 @@ CREATE TABLE `slc_rad_ticket` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SET FOREIGN_KEY_CHECKS = 1;
--  Table structure for `slc_rad_product_attr`
--- ----------------------------
-DROP TABLE IF EXISTS `slc_rad_product_attr`;
+BLE IF EXISTS `slc_rad_product_attr`;
 CREATE TABLE `slc_rad_product_attr` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `product_id` int(11) NOT NULL,
