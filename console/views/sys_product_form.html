@@ -1,0 +1,37 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script>
+
+//根据资费调整界面
+function updateUI(){
+    var policy = $("#product_policy").val();
+    if(policy=="0"||policy=="1"){
+        $("#fee_months").val(0);
+        $("#fee_months").parent().parent().hide();
+    }
+    else{
+        $("#fee_months").parent().parent().show();
+    }
+}
+//页面初始化
+$(document).ready(function (){
+    updateUI();
+    $('#product_policy').change(function() {
+        updateUI();
+    });  
+});
+</script>
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> ${form.title}<a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
+        <div class="panel-body">
+            % if msg:
+            <div class="alert alert-warning">${msg}</div>
+            % endif
+            <form class="form-horizontal" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
+    </div>
+</div>
+</%def>

@@ -7,7 +7,8 @@
 function productCalc(){
     var months = $("#months").val();
     var product_id = $("#product_id").val();
-    $.get("/bus/opencalc?months="+months+"&product_id="+product_id, {}, function (ev) {
+    var old_expire = $("#old_expire").val();
+    $.get("/bus/opencalc?months="+months+"&product_id="+product_id+"&old_expire="+old_expire, {}, function (ev) {
         console.log(ev);
         if(ev.code==0){
             console.log(ev.data);

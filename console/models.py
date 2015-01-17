@@ -208,6 +208,7 @@ class SlcRadProduct(DeclarativeBase):
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False)
     concur_number = Column('concur_number', INTEGER(), nullable=False)
     fee_period = Column('fee_period', VARCHAR(length=11))
+    fee_months = Column('fee_months', VARCHAR(length=4))
     fee_price = Column('fee_price', INTEGER(), nullable=False)
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False)
     output_max_limit = Column('output_max_limit', INTEGER(), nullable=False)

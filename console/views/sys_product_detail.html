@@ -35,8 +35,8 @@
                         <td>${fen2yuan(product.fee_price)}</td>
                         <td>计费时段</td>
                         <td>${product.fee_period}</td>
-                        <td>创建时间</td>
-                        <td>${product.create_time}</td>                        
+                        <td>买断月数</td>
+                        <td>${product.fee_months or  ''}</td>                        
                     </tr>  
                     <tr>
                         <td>绑定MAC</td>
@@ -46,15 +46,22 @@
                         <td>并发数</td>
                         <td>${product.concur_number}</td>
                     </tr>   
- 
                     <tr>
                         <td>最大上行速率</td>
                         <td>${product.input_max_limit}</td>
                         <td>最大下行速率</td>
                         <td>${product.output_max_limit}</td>
+                        <td></td>
+                        <td></td>                     
+                    </tr>   
+                    <tr>
+                        <td>创建时间</td>
+                        <td>${product.create_time}</td>  
                         <td>更新时间</td>
-                        <td>${product.update_time}</td>                        
-                    </tr>                                                                      
+                        <td>${product.update_time}</td>          
+                        <td></td>
+                        <td></td>                                      
+                    </tr>                                                                                          
             </tbody>
         </table>
 

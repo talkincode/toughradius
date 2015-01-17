@@ -52,13 +52,17 @@ def group_get(db):
 def group_get(db):   
     months = request.params.get('months')
     product_id = request.params.get("product_id")
+    old_expire = request.params.get("old_expire")
     product = db.query(models.SlcRadProduct).get(product_id)
     if product.product_policy == 1:
         return dict(code=0,data=dict(fee_value=0,expire_date="3000-12-30"))
     else:
         fee = decimal.Decimal(months) * decimal.Decimal(product.fee_price)
         fee_value = utils.fen2yuan(int(fee.to_integral_value()))
-        expire_date = utils.add_months(datetime.datetime.now(),int(months))
+        start_expire = datetime.datetime.now()   
+        if old_expire:
+            start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")    
+        expire_date = utils.add_months(start_expire,int(months))
         expire_date = expire_date.strftime( "%Y-%m-%d")
         return dict(code=0,data=dict(fee_value=fee_value,expire_date=expire_date))
 
@@ -166,7 +170,6 @@ def member_update(db):
         return render("base_form", form=form)
 
     member = db.query(models.SlcMember).get(form.d.member_id)
-    member.node_id = form.d.node_id
     member.realname = form.d.realname
     if form.d.new_password:
         member.password =  md5(form.d.new_password.encode()).hexdigest()
@@ -658,6 +661,7 @@ def account_next(db):
     user = query_account(db,account_number)
     form = forms.account_next_form()
     form.account_number.set_value(account_number)
+    form.old_expire.set_value(user.expire_date)
     form.product_id.set_value(user.product_id)
     return render("bus_account_next_form",user=user,form=form)
 

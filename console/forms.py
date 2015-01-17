@@ -75,7 +75,7 @@ bas_update_form = pyforms.Form(
         action="/bas/update"
     )
 
-product_policy = {0:u'包月',1:u"小时计费"}
+product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}
 product_status_dict = {0:u'正常',1:u"停用"}
 
 def product_add_form(nodes=[]):
@@ -83,14 +83,15 @@ def product_add_form(nodes=[]):
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"资费名称",  required="required",**input_style),
         pyforms.Dropdown("product_policy", args=product_policy.items(), description=u"计费策略", required="required",**input_style),
-        pyforms.Dropdown("product_status", args=product_status_dict.items(),description=u"资费状态", required="required", **input_style),
-        pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(包月价/每小时价)(元)", required="required", **input_style),
+        pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),
+        pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(包月价/小时价/买断价)(元)", required="required", **input_style),
         pyforms.Textbox("fee_period",rules.is_period,description=u"开放认证时段",**input_style),
         pyforms.Textbox("concur_number", rules.is_numberOboveZore,description=u"并发数控制(0表示不限制)",value="0", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC ",**input_style),
         pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN ",**input_style),
         pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率 ", **input_style),
         pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率 ",**input_style),
+        pyforms.Dropdown("product_status", args=product_status_dict.items(),description=u"资费状态", required="required", **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"增加资费",
         action="/product/add"
@@ -99,10 +100,12 @@ def product_add_form(nodes=[]):
 def product_update_form():
     return pyforms.Form(
         pyforms.Hidden("id",  description=u"编号"),
+        pyforms.Hidden("product_policy",  description=u""),
         pyforms.Textbox("product_name", rules.len_of(4, 32), description=u"资费名称", required="required",**input_style),
         pyforms.Textbox("product_policy_name", description=u"资费策略",readonly="readonly", required="required",**input_style),
         pyforms.Dropdown("product_status",args=product_status_dict.items(), description=u"资费状态", required="required", **input_style),
-        pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(包月价/每小时价)(元)", required="required", **input_style),
+        pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),
+        pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(包月价/小时价/买断价)(元)", required="required", **input_style),
         pyforms.Textbox("fee_period", rules.is_period,description=u"开放认证时段",**input_style),
         pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),
@@ -257,8 +260,9 @@ user_import_vform = dataform.Form(
 )
 
 account_next_form = pyforms.Form(
-        pyforms.Hidden("product_id", description=u"上网资费",  **input_style),
-        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Hidden("product_id", description=u"上网资费"),
+        pyforms.Hidden("old_expire", description=u""),
+        pyforms.Hidden("account_number", description=u"上网账号"),
         pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
@@ -287,7 +291,6 @@ account_cancel_form = pyforms.Form(
 def member_update_form(nodes=[]):
     return pyforms.Form(
         pyforms.Hidden("member_id", description=u"mid",  required="required", **input_style),
-        pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
         pyforms.Textbox("member_name", description=u"用户登陆名", readonly="readonly",**input_style),
         pyforms.Password("new_password", rules.len_of(0,128),value="", description=u"用户登陆密码(留空不修改)", **input_style),

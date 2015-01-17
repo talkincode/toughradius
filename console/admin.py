@@ -362,7 +362,7 @@ def product(db):
 @app.get('/product/add',apply=auth_opr)
 def product_add(db):  
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    return render("base_form",form=forms.product_add_form(nodes))
+    return render("sys_product_form",form=forms.product_add_form(nodes))
 
 @app.get('/product/detail',apply=auth_opr)
 def product_detail(db):
@@ -379,7 +379,7 @@ def product_add_post(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     form=forms.product_add_form(nodes)
     if not form.validates(source=request.forms):
-        return render("base_form", form=form)      
+        return render("sys_product_form", form=form)      
     product = models.SlcRadProduct()
     product.node_id = form.d.node_id
     product.product_name = form.d.product_name
@@ -415,13 +415,13 @@ def product_update(db):
     form.fill(product)
     form.product_policy_name.set_value(forms.product_policy[product.product_policy])
     form.fee_price.set_value(utils.fen2yuan(product.fee_price))
-    return render("base_form",form=form)
+    return render("sys_product_form",form=form)
 
 @app.post('/product/update',apply=auth_opr)
 def product_add_update(db): 
     form=forms.product_update_form()
     if not form.validates(source=request.forms):
-        return render("base_form", form=form)
+        return render("sys_product_form", form=form)
     product = db.query(models.SlcRadProduct).get(form.d.id)
     product.product_name = form.d.product_name
     product.product_status = form.d.product_status
