@@ -6,8 +6,10 @@ debug = True
 cache_timeout = 3600 #second
 reject_delay = 9
 
-FEE_BUYOUT = 0
+
+FEE_MONTH = 0
 FEE_TIMES = 1
+FEE_BUYOUT = 2
 
 STAT_AUTH_ALL = 'STAT_AUTH_ALL'
 STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'

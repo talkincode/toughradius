@@ -824,7 +824,7 @@ def account_next(db):
 ###############################################################################
 
 @app.route('/acceptlog',apply=auth_opr,method=['GET','POST'])
-def opslog_query(db): 
+def acceptlog_query(db): 
     node_id = request.params.get('node_id')
     accept_type = request.params.get('accept_type')
     account_number = request.params.get('account_number')  
@@ -874,11 +874,20 @@ def opslog_query(db):
 ###############################################################################
 
 @app.route('/billing',apply=auth_opr,method=['GET','POST'])
-def opslog_query(db): 
+def billing_query(db): 
+    node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')  
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
-    _query = db.query(models.SlcRadBilling)
+    _query = db.query(
+        models.SlcRadBilling,
+        models.SlcMember.node_id,
+    ).filter(
+        models.SlcRadBilling.account_number == models.SlcRadAccount.account_number,
+        models.SlcMember.member_id == models.SlcRadAccount.member_id
+    )
+    if node_id:
+        _query = _query.filter(models.SlcMember.node_id == node_id)
     if account_number:
         _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
     if query_begin_time:
@@ -888,5 +897,5 @@ def opslog_query(db):
     _query = _query.order_by(models.SlcRadBilling.create_time.desc())
     return render("bus_billing_list", 
         node_list=db.query(models.SlcNode),
-        page_data = get_page_data(_query),**request.params)
+        page_data=get_page_data(_query),**request.params)
 

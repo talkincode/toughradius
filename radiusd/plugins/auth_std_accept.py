@@ -13,7 +13,7 @@ def process(req=None,resp=None,user=None):
     product = store.get_product(user['product_id'])
     session_timeout = int(store.get_param("max_session_timeout"))
     acct_policy = user['product_policy'] or FEE_BUYOUT
-    if acct_policy == FEE_BUYOUT:
+    if acct_policy in (FEE_BUYOUT,FEE_MONTH):
         expire_date = user.get('expire_date')
         _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
         _datetime = datetime.datetime.now()

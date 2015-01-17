@@ -42,7 +42,7 @@ def process(req=None,user=None,runstat=None):
         store.add_online(online)    
 
     product = store.get_product(user['product_id'])
-    if not product or product['product_policy'] not in (FEE_BUYOUT,FEE_TIMES):
+    if not product or product['product_policy'] not in (FEE_BUYOUT,FEE_MONTH,FEE_TIMES):
         return
 
     if product['product_policy'] == FEE_TIMES:
