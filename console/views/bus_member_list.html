@@ -16,14 +16,24 @@
                     <select id="node_id" name="node_id" class="form-control" >
                     <option value=""></option>
                         % for node in node_list:
-                          <option value="${node.id}" ${node.id==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
                         % endfor
                     </select>
                 </div>            
                 <label for="realname" class="col-md-2 control-label">用户姓名</label>
                 <div class="col-md-3">
-                    <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value=${realname and unicode(realname,'utf-8') or ""}>
+                    <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value="${realname and unicode(realname,'utf-8') or ''}">
                 </div>
+            </div>
+            <div class="form-group">
+                <label for="idcard" class="col-md-2 control-label">证件号</label>
+                <div class="col-md-3">
+                    <input type="text" id="idcard" name="idcard" class="form-control" placeholder="身份证件号" value="${idcard or ''}">
+                </div>   
+                <label for="mobile" class="col-md-2 control-label">手机号</label>
+                <div class="col-md-3">
+                    <input type="text" id="mobile" name="mobile" class="form-control" placeholder="手机号" value="${mobile or ''}">
+                </div>                                            
             </div>
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">

@@ -71,30 +71,34 @@ def group_get(db):
 def member_query(db):   
     node_id = request.params.get('node_id')
     realname = request.params.get('realname')
+    idcard = request.params.get('idcard')
+    mobile = request.params.get('mobile')
     _query = db.query(
-            models.SlcMember.realname,
-            models.SlcMember.member_id,
-            models.SlcMember.mobile,
-            models.SlcMember.address,
-            models.SlcMember.create_time,
-            models.SlcNode.node_name
-        ).filter(
-            models.SlcNode.id == models.SlcMember.node_id
-        )
+        models.SlcMember.realname,
+        models.SlcMember.member_id,
+        models.SlcMember.mobile,
+        models.SlcMember.address,
+        models.SlcMember.create_time,
+        models.SlcNode.node_name
+    ).filter(
+        models.SlcNode.id == models.SlcMember.node_id
+    )
+    if idcard:
+        _query = _query.filter(models.SlcMember.idcard==idcard)
+    if mobile:
+        _query = _query.filter(models.SlcMember.mobile==mobile)
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
     if realname:
         _query = _query.filter(models.SlcMember.realname.like('%'+realname+'%'))
 
-
     if request.path == '/member':
         return render("bus_member_list", page_data = get_page_data(_query),
                        node_list=db.query(models.SlcNode),**request.params)
     elif request.path == "/member/export":
-        result = _query.all()
         data = Dataset()
         data.append((u'区域',u'姓名', u'联系电话', u'地址', u'创建时间'))
-        for i in result:
+        for i in _query:
             data.append((i.node_name, i.realname, i.mobile, i.address,i.create_time))
         name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
@@ -217,7 +221,7 @@ def member_open(db):
     member.node_id = form.d.node_id
     member.realname = form.d.realname
     member.member_name = form.d.member_name
-    member.password = md5(form.d.password.encode()).hexdigest()
+    member.password = md5(form.d.member_password.encode()).hexdigest()
     member.idcard = form.d.idcard
     member.sex = '1'
     member.age = '0'
@@ -286,7 +290,6 @@ def member_open(db):
     account.create_time = member.create_time
     account.update_time = member.create_time
     db.add(account)
-
 
     db.commit()
     redirect("/bus/member")

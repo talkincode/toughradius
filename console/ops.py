@@ -222,10 +222,18 @@ def ticket_query(db):
 
 @app.route('/opslog',apply=auth_opr,method=['GET','POST'])
 def opslog_query(db): 
+    node_id = request.params.get('node_id')
     operator_name = request.params.get('operator_name')
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
-    _query = db.query(models.SlcRadOperateLog)
+    _query = db.query(
+        models.SlcRadOperateLog,
+        models.SlcMember.node_id,
+    ).filter(
+        models.SlcRadOperateLog.operator_name == models.SlcOperator.operator_name,
+    )
+    if node_id:
+        _query = _query.filter(models.SlcOperator.node_id == node_id)    
     if operator_name:
         _query = _query.filter(models.SlcRadOperateLog.operator_name == operator_name)
     if query_begin_time:
@@ -233,4 +241,6 @@ def opslog_query(db):
     if query_end_time:
         _query = _query.filter(models.SlcRadOperateLog.operate_time <= query_end_time)
     _query = _query.order_by(models.SlcRadOperateLog.operate_time.desc())
-    return render("ops_log_list", page_data = get_page_data(_query),**request.params)
+    return render("ops_log_list", 
+        node_list=db.query(models.SlcNode),
+        page_data = get_page_data(_query),**request.params)

@@ -18,6 +18,15 @@
     <div class="panel-body">
         <form id="query_form" class="form-horizontal" role="form" action="/ops/opslog">
             <div class="form-group">
+                <label for="node_id" class="col-md-2 control-label">区域</label>
+                <div class="col-md-3">
+                    <select id="node_id" name="node_id" class="form-control" >
+                    <option value=""></option>
+                        % for node in node_list:
+                          <option value="${node.id}" >${node.node_name}</option>
+                        % endfor
+                    </select>
+                </div>              
                 <label for="operator_name" class="col-md-2 control-label">操作员名</label>
                 <div class="col-md-3">
                     <input type="text" id="operator_name" name="operator_name" class="form-control">
@@ -52,7 +61,7 @@
             </tr>
             </thead>
             <tbody>
-            % for opslog in page_data.result:
+            % for opslog,_ in page_data.result:
             <tr>
                 <td>${opslog.operator_name}</td>
                 <td>${opslog.operate_ip}</td>
