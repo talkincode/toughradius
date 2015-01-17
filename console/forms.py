@@ -140,9 +140,7 @@ product_attr_update_form = pyforms.Form(
 
 
 
-def group_add_form(nodes=[]):
-    return pyforms.Form(
-        pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
+group_add_form = pyforms.Form(
         pyforms.Textbox("group_name", rules.len_of(2,32), description=u"用户组名",required="required",**input_style),
         pyforms.Textbox("group_desc", rules.len_of(2,64), description=u"用户组描述",required="required",**input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(),description=u"绑定MAC", required="required",**input_style),
@@ -167,9 +165,7 @@ group_update_form = pyforms.Form(
 
 roster_type = {0:u"白名单", 1:u"黑名单"}
 
-def roster_add_form(nodes=[]):
-    return pyforms.Form(
-        pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
+roster_add_form = pyforms.Form(
         pyforms.Textbox("mac_addr", description=u"MAC地址",required="required",**input_style),
         pyforms.Textbox("account_number", rules.is_alphanum3(0,16), description=u"上网账号",**input_style),
         pyforms.Textbox("begin_time",description=u"开始时间", required="required",**input_style),
@@ -206,11 +202,11 @@ def user_open_form(nodes=[],products=[],groups=[]):
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
-        pyforms.Textbox("account_number", description=u"用户账号",  required="required", **input_style),
+        pyforms.Textbox("account_number", description=u"用户上网账号",  required="required", **input_style),
         pyforms.Dropdown("group_id",  args=groups, description=u"用户组",**input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
-        pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
+        pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),

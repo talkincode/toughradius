@@ -19,24 +19,9 @@ function updateProduct(){
     }, "json");
 }
 
-//根据区域动态选择用户组信息
-function updateGroup(){
-    var node_id = $("#node_id").val();
-    $.get("/bus/group/json?node_id="+node_id, {}, function (ev) {
-        $("#group_id").empty();
-        console.log("empty items");
-        $.each(ev.data, function (index, item) {
-            var is_sel = '${form.d.group_id}' == item.code ? "selected" : "";
-            $("#group_id").append("<option value=''></option>");
-            $("#group_id").append(
-                "<option value='" + item.code + "'"+ is_sel+ ">" + item.name + "</option>"
-            );
-        });
-    }, "json");
-}
 
 function productCalc(){
-    var months = $("#months").val();
+    var months = $("#months").val() || 0;
     var product_id = $("#product_id").val();
     $.get("/bus/opencalc?months="+months+"&product_id="+product_id, {}, function (ev) {
         console.log(ev);
@@ -44,18 +29,24 @@ function productCalc(){
             console.log(ev.data);
             $("#fee_value").val(ev.data.fee_value);
             $("#expire_date").val(ev.data.expire_date);
+            if(ev.data.policy == 0){
+                $("#months").parent().parent().show();
+            }else{
+                $("#months").val(0);
+                $("#months").parent().parent().hide();
+            }
         }
     }, "json");
 }
+
 
 //页面初始化
 $(document).ready(function (){
     $("#expire_date").datepicker();
     updateProduct();
-    updateGroup();
+    productCalc();
     $('#node_id').change(function() {
         updateProduct();
-        updateGroup();
     });
     $('#product_id').change(function() {
         productCalc();

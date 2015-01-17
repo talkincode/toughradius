@@ -5,7 +5,7 @@
 <script>
 
 function productCalc(){
-    var months = $("#months").val();
+    var months = $("#months").val() || 0 ;
     var product_id = $("#product_id").val();
     var old_expire = $("#old_expire").val();
     $.get("/bus/opencalc?months="+months+"&product_id="+product_id+"&old_expire="+old_expire, {}, function (ev) {
@@ -15,12 +15,19 @@ function productCalc(){
             $("#fee_value").val(ev.data.fee_value);
             $("#expire_date").val(ev.data.expire_date);
         }
+        if(ev.data.policy == 0){
+            $("#months").parent().parent().show();
+        }else{
+            $("#months").val(0);
+            $("#months").parent().parent().hide();
+        }
     }, "json");
 }
 
 //页面初始化
 $(document).ready(function (){
     $("#expire_date").datepicker();
+    productCalc();
     $('#product_id').change(function() {
         productCalc();
     });

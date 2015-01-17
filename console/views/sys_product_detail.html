@@ -26,7 +26,7 @@
                         <td>资费名称</td>
                         <td>${product.product_name}</td>
                         <td>资费策略</td>
-                        <td>${{0:u'包月',1:u"小时计费"}[product.product_policy]}</td>
+                        <td>${{0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}[product.product_policy]}</td>
                         <td>资费状态</td>
                         <td>${{0:u"正常", 1:u"停用"}[product.product_status]}</td>                 
                     </tr> 

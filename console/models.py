@@ -74,7 +74,6 @@ class SlcRadGroup(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
-    node_id = Column('node_id', INTEGER(), nullable=False)
     group_name = Column(u'group_name', VARCHAR(length=64), nullable=False)
     group_desc = Column(u'group_desc', VARCHAR(length=255))
     bind_mac = Column(u'bind_mac', SMALLINT(), nullable=False)
@@ -94,7 +93,6 @@ class SlcRadRoster(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False)
-    node_id = Column('node_id', INTEGER(), nullable=False)
     mac_addr = Column('mac_addr', VARCHAR(length=17), nullable=False)
     account_number = Column('account_number', VARCHAR(length=32))
     begin_time = Column('begin_time', VARCHAR(length=19), nullable=False)
@@ -208,7 +206,7 @@ class SlcRadProduct(DeclarativeBase):
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False)
     concur_number = Column('concur_number', INTEGER(), nullable=False)
     fee_period = Column('fee_period', VARCHAR(length=11))
-    fee_months = Column('fee_months', VARCHAR(length=4))
+    fee_months = Column('fee_months', INTEGER())
     fee_price = Column('fee_price', INTEGER(), nullable=False)
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False)
     output_max_limit = Column('output_max_limit', INTEGER(), nullable=False)

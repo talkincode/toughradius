@@ -112,7 +112,7 @@ function release(account_number)
                         <a class="opt-btn btn-default" href="javascript:do_resume('${user.account_number}');">复机</a>
                     % elif user.status == 1:
                     <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
-                        % if user.product_policy == 0:
+                        % if user.product_policy in (0,2):
                         <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
                         % elif user.product_policy == 1: 
                         <a class="opt-btn btn-default" href="/bus/account/charge?account_number=${user.account_number}">充值</a>

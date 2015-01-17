@@ -49,14 +49,14 @@ def group_get(db):
     )
 
 @app.get('/opencalc',apply=auth_opr)
-def group_get(db):   
-    months = request.params.get('months')
+def opencalc(db):   
+    months = request.params.get('months',0)
     product_id = request.params.get("product_id")
     old_expire = request.params.get("old_expire")
     product = db.query(models.SlcRadProduct).get(product_id)
     if product.product_policy == 1:
-        return dict(code=0,data=dict(fee_value=0,expire_date="3000-12-30"))
-    else:
+        return dict(code=0,data=dict(policy=product.product_policy,fee_value=0,expire_date="3000-12-30"))
+    elif product.product_policy == 0:
         fee = decimal.Decimal(months) * decimal.Decimal(product.fee_price)
         fee_value = utils.fen2yuan(int(fee.to_integral_value()))
         start_expire = datetime.datetime.now()   
@@ -64,7 +64,15 @@ def group_get(db):
             start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")    
         expire_date = utils.add_months(start_expire,int(months))
         expire_date = expire_date.strftime( "%Y-%m-%d")
-        return dict(code=0,data=dict(fee_value=fee_value,expire_date=expire_date))
+        return dict(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
+    elif product.product_policy == 2:
+        start_expire = datetime.datetime.now()   
+        if old_expire:
+            start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")           
+        fee_value = utils.fen2yuan(product.fee_price)
+        expire_date = utils.add_months(start_expire,product.fee_months)
+        expire_date = expire_date.strftime( "%Y-%m-%d")
+        return dict(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
 
 ###############################################################################
 # member query     
@@ -206,7 +214,7 @@ def member_open(db):
     products = []  
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))        
-    form = forms.user_bus_open_form(nodes,products,groups)
+    form = forms.user_open_form(nodes,products,groups)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
 

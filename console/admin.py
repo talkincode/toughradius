@@ -385,6 +385,7 @@ def product_add_post(db):
     product.product_name = form.d.product_name
     product.product_policy = form.d.product_policy
     product.product_status = form.d.product_status
+    product.fee_months = form.d.get("fee_months",0)
     product.bind_mac = form.d.bind_mac
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
@@ -425,6 +426,7 @@ def product_add_update(db):
     product = db.query(models.SlcRadProduct).get(form.d.id)
     product.product_name = form.d.product_name
     product.product_status = form.d.product_status
+    product.fee_months = form.d.get("fee_months",0)
     product.bind_mac = form.d.bind_mac
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
@@ -548,29 +550,21 @@ def product_attr_update(db):
 
 @app.route('/group',apply=auth_opr,method=['GET','POST'])
 def group(db):   
-    node_id = request.params.get("node_id")
     _query = db.query(models.SlcRadGroup)
-    if node_id:
-        _query = _query.filter_by(node_id=node_id)
-
     return render("sys_group_list", 
-        node_list=db.query(models.SlcNode),
-        page_data = get_page_data(_query),node_id=node_id)
+        page_data = get_page_data(_query))
 
    
 @app.get('/group/add',apply=auth_opr)
 def group_add(db):  
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    return render("base_form",form=forms.group_add_form(nodes))
+    return render("base_form",form=forms.group_add_form())
 
 @app.post('/group/add',apply=auth_opr)
 def group_add_post(db): 
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    form=forms.group_add_form(nodes)
+    form=forms.group_add_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)    
     group = models.SlcRadGroup()
-    group.node_id = form.d.node_id
     group.group_name = form.d.group_name
     group.group_desc = form.d.group_desc
     group.bind_mac = form.d.bind_mac
@@ -642,29 +636,22 @@ def group_delete(db):
 
 @app.route('/roster',apply=auth_opr,method=['GET','POST'])
 def roster(db):   
-    node_id = request.params.get("node_id")
     _query = db.query(models.SlcRadRoster)
-    if node_id:
-        _query = _query.filter_by(node_id=node_id)
     return render("sys_roster_list", 
-        node_list=db.query(models.SlcNode),
-        page_data = get_page_data(_query),node_id=node_id)
+        page_data = get_page_data(_query))
 
 @app.get('/roster/add',apply=auth_opr)
 def roster_add(db):  
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    return render("sys_roster_form",form=forms.roster_add_form(nodes))
+    return render("sys_roster_form",form=forms.roster_add_form())
 
 @app.post('/roster/add',apply=auth_opr)
 def roster_add_post(db): 
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    form=forms.roster_add_form(nodes)
+    form=forms.roster_add_form()
     if not form.validates(source=request.forms):
         return render("sys_roster_form", form=form)  
     if db.query(models.SlcRadRoster.id).filter_by(mac_addr=form.d.mac_addr).count()>0:
         return render("sys_roster_form", form=form,msg=u"MAC地址已经存在")     
     roster = models.SlcRadRoster()
-    roster.node_id = form.d.node_id
     roster.mac_addr = form.d.mac_addr
     roster.account_number = form.d.account_number
     roster.begin_time = form.d.begin_time

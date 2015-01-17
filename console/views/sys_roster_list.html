@@ -17,24 +17,7 @@
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 黑白名单列表</div>
     <div class="panel-body">
-        <div class="container">
-        <form id="query_form" class="form-horizontal" role="form" action="/roster" method="post">
-                    <div class="form-group">
-                        <label for="node_id" class="col-md-2 control-label">区域</label>
-                        <div class="col-md-3">
-                            <select id="node_id" name="node_id" class="form-control" >
-                            <option value=""></option>
-                                % for node in node_list:
-                                  <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
-                                % endfor
-                            </select>
-                        </div>            
-                        <div class="col-md-5">
-                             <button type="submit" class="btn btn-primary">查询</button>
-                        </div>
-                    </div>
-                </form>
-                <hr>        
+        <div class="container">    
             <div class="pull-right bottom10">
                 <a href="/roster/add" class="btn btn-sm btn-default">增加黑白名单</a>
             </div>
@@ -63,7 +46,7 @@
                     % endfor
                 </tbody>
             </table>
-             ${page_data.render(form_id="query_form")}
+             ${page_data.render()}
         </div>
     </div>
 </div>
