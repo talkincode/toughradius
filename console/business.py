@@ -86,11 +86,7 @@ def member_query(db):
     idcard = request.params.get('idcard')
     mobile = request.params.get('mobile')
     _query = db.query(
-        models.SlcMember.realname,
-        models.SlcMember.member_id,
-        models.SlcMember.mobile,
-        models.SlcMember.address,
-        models.SlcMember.create_time,
+        models.SlcMember,
         models.SlcNode.node_name
     ).filter(
         models.SlcNode.id == models.SlcMember.node_id
@@ -109,9 +105,9 @@ def member_query(db):
                        node_list=db.query(models.SlcNode),**request.params)
     elif request.path == "/member/export":
         data = Dataset()
-        data.append((u'区域',u'姓名', u'联系电话', u'地址', u'创建时间'))
-        for i in _query:
-            data.append((i.node_name, i.realname, i.mobile, i.address,i.create_time))
+        data.append((u'区域',u'姓名',u'用户名',u'证件号',u'邮箱', u'联系电话', u'地址', u'创建时间'))
+        for i,_node_name in _query:
+            data.append((_node_name, i.realname, i.member_name,i.idcard,i.email,i.mobile, i.address,i.create_time))
         name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)

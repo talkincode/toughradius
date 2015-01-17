@@ -55,10 +55,10 @@
             </tr>
             </thead>
             <tbody>
-            % for member in page_data.result:
+            % for member,node_name in page_data.result:
             <tr>
                 <td><a href="/bus/member/detail?member_id=${member.member_id}">${member.realname}</a></td>
-                <td>${member.node_name}</td>
+                <td>${node_name}</td>
                 <td>${member.mobile}</td>
                 <td>${member.address}</td>
                 <td>${member.create_time}</td>

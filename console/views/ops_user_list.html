@@ -73,11 +73,11 @@
             </tr>
             </thead>
             <tbody>
-            % for user in page_data.result:
+            % for user,_realname,_product_name in page_data.result:
             <tr>
                 <td><a href="/ops/user/detail?account_number=${user.account_number}">${user.account_number}</a></td>
-                <td><a href="/bus/member/detail?member_id=${user.member_id}">${user.realname}</a></td></td>
-                <td>${user.product_name}</td>
+                <td><a href="/bus/member/detail?member_id=${user.member_id}">${_realname}</a></td></td>
+                <td>${_product_name}</td>
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
                 <td>${user.create_time}</td>

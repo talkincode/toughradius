@@ -31,14 +31,8 @@ def user_query(db):
     user_name = request.params.get('user_name')
     status = request.params.get('status')
     _query = db.query(
+            models.SlcRadAccount,
             models.SlcMember.realname,
-            models.SlcRadAccount.member_id,
-            models.SlcRadAccount.account_number,
-            models.SlcRadAccount.expire_date,
-            models.SlcRadAccount.balance,
-            models.SlcRadAccount.time_length,
-            models.SlcRadAccount.status,
-            models.SlcRadAccount.create_time,
             models.SlcRadProduct.product_name
         ).filter(
             models.SlcRadProduct.id == models.SlcRadAccount.product_id,
@@ -60,9 +54,14 @@ def user_query(db):
     elif request.path == "/user/export":
         result = _query.all()
         data = Dataset()
-        data.append((u'上网账号',u'姓名', u'资费', u'过期时间', u'余额(元)',u'时长(秒)',u'状态',u'创建时间'))
-        for i in result:
-            data.append((i.account_number, i.realname, i.product_name, i.expire_date,utils.fen2yuan(i.balance),i.time_length,i.status,i.create_time))
+        data.append((u'上网账号',u'姓名', u'资费', u'过期时间', u'余额(元)',u'时长(秒)',u'并发数',u'ip地址',u'状态',u'创建时间'))
+        for i,_realname,_product_name in result:
+            data.append((
+                i.account_number, _realname, _product_name, 
+                i.expire_date,utils.fen2yuan(i.balance),
+                i.time_length,i.user_concur_number,i.ip_address,
+                i.status,i.create_time
+            ))
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
