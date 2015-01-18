@@ -52,6 +52,7 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
     :maxdepth: 3
 
     business/service
+    business/accept
 
 .. _develop-docs:
 

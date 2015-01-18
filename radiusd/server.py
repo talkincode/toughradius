@@ -243,7 +243,6 @@ def main():
         reactor.listenUDP(_radiusd['acctport'], acct_protocol)
         _task = task.LoopingCall(auth_protocol.process_delay)
         _task.start(2.7)
-        acct_protocol.transport.socket.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,1024000)
 
         from autobahn.twisted.websocket import WebSocketServerFactory
         factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = _debug)

@@ -1,110 +1,430 @@
 ToughRADIUS数据字典
 ====================================
 
-区域信息表  slc_node
--------------------------------------
 
-.. start_table slc_node;node_id
+slc_node
+------------------------------------ 
 
-=====================  ==============      ==========   ==============================================
-属性                    类型（长度）         可否为空      描述
-=====================  ==============      ==========   ==============================================
-id                     int(11)             no           区域编号
-node_name              varchar(32)         no           区域名称
-node_desc              varchar(64)         no           区域描述
-=====================  ==============      ==========   ==============================================
+区域表
 
-.. end_table
+.. start_table slc_node;id 
 
-用户信息表  slc_member
--------------------------------------
-
-.. start_table slc_member;member_id
-
-=====================  ==============      ==========   ==============================================
-属性                    类型（长度）         可否为空      描述
-=====================  ==============      ==========   ==============================================
-member_id               int(11)             no          用户id
-node_id                 int(11)             no          用户区域id
-member_name             varchar(64)         no          用户自助服务登陆名
-password                varchar(128)        no          用户自助服务密码
-realname                varchar(64)         no          用户姓名
-idcard                  varchar(32)         no          用户证件
-sex                     int(1)              no          用户性别
-age                     int(3)              no          用户年龄
-email                   varchar(128)        no          用户邮箱
-mobile                  varchar(16)         no          用户手机
-address                 varchar(128)        no          用户地址
-create_time             varchar(19)         no          创建时间 格式：yyyy-mm-dd hh:mm:ss
-update_time             varchar(19)         no          修改时间 格式：yyyy-mm-dd hh:mm:ss
-=====================  ==============      ==========   ==============================================
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             区域编号              
+node_name              VARCHAR(32)       False             区域名                 
+node_desc              VARCHAR(64)       False             区域描述              
+=====================  ================  ================  ====================================
 
 .. end_table
 
 
-用户订购表  slc_member_order
--------------------------------------
+slc_rad_operator
+------------------------------------ 
 
-::
+操作员表 操作员类型 0 系统管理员 1 普通操作员
 
-    # 交易支付状态：pay_status 0-未支付，1-已支付，2-已取消
-    # 订单受理渠道 console: 管理系统  customer: 客户自助服务
+.. start_table slc_rad_operator;id 
 
-.. start_table slc_member_order;order_id
-
-=====================  ==============      ==========   ==============================================
-属性                    类型（长度）         可否为空      描述
-=====================  ==============      ==========   ==============================================
-order_id                varchar(32)         no          订购时间
-member_id               int(11)             no          订单所属用户id
-product_id              int(11)             no          订单资费套餐id
-account_number          varchar(32)         no          订单上网账号
-order_fee               int(11)             no          订单应付费用
-actual_fee              int(11)             no          订单实际缴纳费用
-pay_status              int(1)              no          订单支付状态
-accept_id               int(11)             no          订单受理日志id
-order_source            varchar(16)         no          订单受理渠道
-order_desc              varchar(255)        yes         订单描述
-create_time             varchar(19)         no          创建时间 格式：yyyy-mm-dd hh:mm:ss
-=====================  ==============      ==========   ==============================================
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             操作员id               
+node_id                INTEGER           False             操作员区域           
+operator_type          INTEGER           False             操作员类型           
+operator_name          VARCHAR(32)       False             操作员名称           
+operator_pass          VARCHAR(128)      False             操作员密码           
+operator_status        INTEGER           False             操作员状态,0/1       
+operator_desc          VARCHAR(255)      False             操作员描述           
+=====================  ================  ================  ====================================
 
 .. end_table
 
 
+slc_param
+------------------------------------ 
 
-上网账号表  slc_rad_account
--------------------------------------
+系统参数表
 
-::
+.. start_table slc_param;param_name 
 
-    # 用户状态 0:"预授权",1:"正常", 2:"停机",3:"销户", 4:"到期", 5:"未激活"
-
-
-.. start_table slc_rad_account;account_number
-
-=====================  ==============      ==========   ==============================================
-属性                    类型（长度）         可否为空      描述
-=====================  ==============      ==========   ==============================================
-account_number          varchar(32)         no          上网账号
-member_id               int(11)             no          账号所属用户id
-product_id              int(11)             no          账号绑定资费
-group_id                int(11)             yes         账号绑定组
-password                varchar(64)         no          账号上网密码
-status                  int(1)              no          账号状态
-install_address         varchar(128)        yes         账号安装地址
-balance                 int(11)             no          账号余额，分
-time_length             int(11)             yes         账号上网时长
-expire_date             varchar(10)         no          账号过期时间
-user_concur_number      int(3)              no          账号认证并发数
-bind_mac                int(1)              no          账号是否绑定mac
-bind_vlan               int(1)              no          账号是否绑定vlan 
-mac_addr                varchar(19)         yes         账号绑定MAC
-vlan_id                 int(11)             yes         账号内层vlan
-vlan_id2                int(11)             yes         账号外层vlan
-ip_address              varchar(19)         yes         账号绑定ip地址
-last_pause              varchar(19)         no          最后停机时间 格式：yyyy-mm-dd hh:mm:ss
-create_time             varchar(19)         no          创建时间 格式：yyyy-mm-dd hh:mm:ss
-update_time             varchar(19)         no          修改时间 格式：yyyy-mm-dd hh:mm:ss
-=====================  ==============      ==========   ==============================================
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+param_name             VARCHAR(64)       False             参数名                 
+param_value            VARCHAR(255)      False             参数值                 
+param_desc             VARCHAR(255)      True              参数描述              
+=====================  ================  ================  ====================================
 
 .. end_table
+
+
+slc_rad_bas
+------------------------------------ 
+
+BAS设备表
+
+.. start_table slc_rad_bas;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             设备id                  
+vendor_id              VARCHAR(32)       False             厂商标识              
+ip_addr                VARCHAR(15)       False             IP地址                  
+bas_name               VARCHAR(64)       False             bas名称                 
+bas_secret             VARCHAR(64)       False             共享密钥              
+time_type              SMALLINT          False             时区类型              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_group
+------------------------------------ 
+
+认证策略用户组
+
+.. start_table slc_rad_group;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             用户组id               
+group_name             VARCHAR(64)       False             用户组名              
+group_desc             VARCHAR(255)      True              用户组描述           
+bind_mac               SMALLINT          False             是否绑定mac           
+bind_vlan              SMALLINT          False             是否绑定vlan          
+concur_number          INTEGER           False             并发数                 
+update_time            VARCHAR(19)       False             更新时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_roster
+------------------------------------ 
+
+黑白名单 0 白名单 1 黑名单
+
+.. start_table slc_rad_roster;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             黑白名单id            
+mac_addr               VARCHAR(17)       False             mac地址                 
+account_number         VARCHAR(32)       True              上网账号              
+begin_time             VARCHAR(19)       False             生效开始时间        
+end_time               VARCHAR(19)       False             生效结束时间        
+roster_type            SMALLINT          False             黑白名单类型        
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_member
+------------------------------------ 
+
+用户信息表
+
+.. start_table slc_member;member_id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+member_id              INTEGER           False             用户id                  
+node_id                INTEGER           False             区域id                  
+member_name            VARCHAR(64)       False             用户登录名           
+password               VARCHAR(128)      False             用户登录密码        
+realname               VARCHAR(64)       False                                       
+idcard                 VARCHAR(32)       True              用户证件号码        
+sex                    SMALLINT          True              用户性别0/1           
+age                    INTEGER           True              用户年龄              
+email                  VARCHAR(255)      True              用户邮箱              
+mobile                 VARCHAR(16)       True              用户手机              
+address                VARCHAR(255)      True              用户地址              
+create_time            VARCHAR(19)       False             创建时间              
+update_time            VARCHAR(19)       False             更新时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_member_order
+------------------------------------ 
+
+
+    订购信息表(交易记录)
+    pay_status交易支付状态：0-未支付，1-已支付，2-已取消
+    
+
+.. start_table slc_member_order;order_id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+order_id               VARCHAR(32)       False             订单id                  
+member_id              INTEGER           False             用户id                  
+product_id             INTEGER           False             资费id                  
+account_number         VARCHAR(32)       False             上网账号              
+order_fee              INTEGER           False             订单费用              
+actual_fee             INTEGER           False             实缴费用              
+pay_status             INTEGER           False             支付状态              
+accept_id              INTEGER           False             受理id                  
+order_source           VARCHAR(64)       False             订单来源              
+order_desc             VARCHAR(255)      True              订单描述              
+create_time            VARCHAR(19)       False             交易时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_account
+------------------------------------ 
+
+
+    上网账号表，每个会员可以同时拥有多个上网账号
+    account_number 为每个套餐对应的上网账号，每个上网账号全局唯一
+    用户状态 0:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期", 5:"未激活"
+    
+
+.. start_table slc_rad_account;account_number 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+account_number         VARCHAR(32)       False             上网账号              
+member_id              INTEGER           False             用户id                  
+product_id             INTEGER           False             资费id                  
+group_id               INTEGER           True              用户组id               
+password               VARCHAR(128)      False             上网密码              
+status                 INTEGER           False             用户状态              
+install_address        VARCHAR(128)      False             装机地址              
+balance                INTEGER           False             用户余额-分          
+time_length            INTEGER           False             用户时长-秒          
+expire_date            VARCHAR(10)       False             过期时间- ####-##-##  
+user_concur_number     INTEGER           False             用户并发数           
+bind_mac               SMALLINT          False             是否绑定mac           
+bind_vlan              SMALLINT          False             是否绑定vlan          
+mac_addr               VARCHAR(17)       True              mac地址                 
+vlan_id                INTEGER           True              内层vlan                
+vlan_id2               INTEGER           True              外层vlan                
+ip_address             VARCHAR(15)       True              静态IP地址            
+last_pause             VARCHAR(19)       True              最后停机时间        
+create_time            VARCHAR(19)       False             创建时间              
+update_time            VARCHAR(19)       False             更新时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_account_attr
+------------------------------------ 
+
+上网账号扩展策略属性表
+
+.. start_table slc_rad_account_attr;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             属性id                  
+account_number         VARCHAR(32)       False             上网账号              
+attr_name              VARCHAR(255)      False             属性名                 
+attr_value             VARCHAR(255)      False             属性值                 
+attr_desc              VARCHAR(255)      True              属性描述              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_product
+------------------------------------ 
+
+资费信息表
+
+.. start_table slc_rad_product;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             资费id                  
+node_id                INTEGER           False             区域id                  
+product_name           VARCHAR(64)       False             资费名称              
+product_policy         INTEGER           False             资费策略              
+product_status         SMALLINT          False             资费状态              
+bind_mac               SMALLINT          False             是否绑定mac           
+bind_vlan              SMALLINT          False             是否绑定vlan          
+concur_number          INTEGER           False             并发数                 
+fee_period             VARCHAR(11)       True              开放认证时段        
+fee_months             INTEGER           True              买断月数              
+fee_price              INTEGER           False             资费价格              
+input_max_limit        INTEGER           False             上行速率              
+output_max_limit       INTEGER           False             下行速率              
+create_time            VARCHAR(19)       False             创建时间              
+update_time            VARCHAR(19)       False             更新时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_product_attr
+------------------------------------ 
+
+资费扩展属性表
+
+.. start_table slc_rad_product_attr;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             属性id                  
+product_id             INTEGER           False             资费id                  
+attr_name              VARCHAR(255)      False             属性名                 
+attr_value             VARCHAR(255)      False             属性值                 
+attr_desc              VARCHAR(255)      True              属性描述              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_billing
+------------------------------------ 
+
+计费信息表 is_deduct 0 未扣费 1 已扣费
+
+.. start_table slc_rad_billing;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             计费id                  
+account_number         VARCHAR(253)      False             上网账号              
+nas_addr               VARCHAR(15)       False             bas地址                 
+acct_session_id        VARCHAR(253)      False             会话id                  
+acct_start_time        VARCHAR(19)       False             计费开始时间        
+acct_session_time      INTEGER           False             会话时长              
+acct_length            INTEGER           False             扣费时长              
+acct_fee               INTEGER           False             应扣费用              
+actual_fee             INTEGER           False             实扣费用              
+balance                INTEGER           False             当前余额              
+is_deduct              INTEGER           False             是否扣费              
+create_time            VARCHAR(19)       False             计费时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_ticket
+------------------------------------ 
+
+上网日志表
+
+.. start_table slc_rad_ticket;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             日志id                  
+account_number         VARCHAR(253)      False             上网账号              
+acct_input_gigawords   INTEGER           True              会话的上行的字（4字节）的吉倍数
+acct_output_gigawords  INTEGER           True              会话的下行的字（4字节）的吉倍数
+acct_input_octets      INTEGER           True              会话的上行流量（字节数）
+acct_output_octets     INTEGER           True              会话的下行流量（字节数）
+acct_input_packets     INTEGER           True              会话的上行包数量  
+acct_output_packets    INTEGER           True              会话的下行包数量  
+acct_session_id        VARCHAR(253)      False             会话id                  
+acct_session_time      INTEGER           False             会话时长              
+acct_start_time        VARCHAR(19)       False             会话开始时间        
+acct_stop_time         VARCHAR(19)       False             会话结束时间        
+acct_terminate_cause   INTEGER           True              会话中止原因        
+mac_addr               VARCHAR(128)      True              mac地址                 
+calling_station_id     VARCHAR(128)      True              用户接入物理信息  
+frame_id_netmask       VARCHAR(15)       True              地址掩码              
+framed_ipaddr          VARCHAR(15)       True              IP地址                  
+nas_class              VARCHAR(253)      True              bas class                 
+nas_addr               VARCHAR(15)       False             bas地址                 
+nas_port               VARCHAR(32)       True              接入端口              
+nas_port_id            VARCHAR(255)      True              接入端口物理信息  
+nas_port_type          INTEGER           True              接入端口类型        
+service_type           INTEGER           True              接入服务类型        
+session_timeout        INTEGER           True              会话超时时间        
+start_source           INTEGER           False             会话开始来源        
+stop_source            INTEGER           False             会话中止来源        
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_online
+------------------------------------ 
+
+用户在线信息表
+
+.. start_table slc_rad_online;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             在线id                  
+account_number         VARCHAR(32)       False             上网账号              
+nas_addr               VARCHAR(32)       False             bas地址                 
+acct_session_id        VARCHAR(64)       False             会话id                  
+acct_start_time        VARCHAR(19)       False             会话开始时间        
+framed_ipaddr          VARCHAR(32)       False             IP地址                  
+mac_addr               VARCHAR(32)       False             mac地址                 
+nas_port_id            VARCHAR(255)      False             接入端口物理信息  
+billing_times          INTEGER           False             已记账时间           
+start_source           SMALLINT          False             会话开始来源        
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_accept_log
+------------------------------------ 
+
+
+    业务受理日志表
+    open:开户 pause:停机 resume:复机 cancel:销户 next:续费 charge:充值
+    
+
+.. start_table slc_rad_accept_log;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             日志id                  
+accept_type            VARCHAR(16)       False             受理类型              
+accept_desc            VARCHAR(512)      True              受理描述              
+account_number         VARCHAR(32)       False             上网账号              
+operator_name          VARCHAR(32)       True              操作员名              
+accept_source          VARCHAR(128)      True              受理渠道来源        
+accept_time            VARCHAR(19)       False             受理时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+slc_rad_operate_log
+------------------------------------ 
+
+操作日志表
+
+.. start_table slc_rad_operate_log;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             日志id                  
+operator_name          VARCHAR(32)       False             操作员名称           
+operate_ip             VARCHAR(128)      True              操作员ip               
+operate_time           VARCHAR(19)       False             操作时间              
+operate_desc           VARCHAR(512)      True              操作描述              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+

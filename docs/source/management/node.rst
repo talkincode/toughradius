@@ -7,3 +7,16 @@
 
 区域对于业务统计，数据分析显得很有意义。
 
+同时可以通过区域来实现操作员权限控制，每个操作员只能管理某个区域下的数据。
+
+
+*区域管理界面*：
+
+.. image:: ../_static/images/sys_node_list.jpg
+
+*区域配置界面*：
+
+.. image:: ../_static/images/sys_node_add.jpg
+
+
+
