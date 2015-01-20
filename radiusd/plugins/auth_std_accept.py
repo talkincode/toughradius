@@ -8,6 +8,8 @@ import datetime
 def get_type_val(typ,src):
     if typ == 'integer' or typ == 'date':
         return int(src)
+    else:
+        return src
 
 def process(req=None,resp=None,user=None):
     product = store.get_product(user['product_id'])
@@ -39,6 +41,7 @@ def process(req=None,resp=None,user=None):
     for attr in store.get_product_attrs(user['product_id']):
         try:
             _type = resp.dict[attr['attr_name']].type
+            print _type
             resp[str(attr['attr_name'])] = get_type_val(_type,attr['attr_value'])
         except:
             import traceback

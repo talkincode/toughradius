@@ -247,10 +247,7 @@ class AuthPacket2(AuthPacket):
             challenge = self['CHAP-Challenge'][0] 
 
         _pwd =  md5_constructor("%s%s%s"%(chapid,userpwd,challenge)).digest()
-        for i in range(16):
-            if password[i] != _pwd[i]:
-                return False
-        return True      
+        return password == _pwd    
 
     def is_valid_pwd(self,userpwd):
         if not self.get_chappwd():

@@ -119,8 +119,8 @@ def product_update_form():
 
 product_attr_add_form = pyforms.Form(
     pyforms.Hidden("product_id",  description=u"资费编号"),
-    pyforms.Textbox("attr_name", rules.is_alphanum3(1, 255), description=u"策略名称",  required="required",help=u"策略参考",**input_style),
-    pyforms.Textbox("attr_value", rules.is_alphanum3(1, 255),description=u"策略值", required="required",**input_style),
+    pyforms.Textbox("attr_name", rules.len_of(1, 255), description=u"策略名称",  required="required",help=u"策略参考",**input_style),
+    pyforms.Textbox("attr_value", rules.len_of(1, 255),description=u"策略值", required="required",**input_style),
     pyforms.Textbox("attr_desc", rules.len_of(1, 255),description=u"策略描述", required="required",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"增加策略属性",
@@ -130,8 +130,8 @@ product_attr_add_form = pyforms.Form(
 product_attr_update_form = pyforms.Form(
     pyforms.Hidden("id",  description=u"编号"),
     pyforms.Hidden("product_id",  description=u"资费编号"),
-    pyforms.Textbox("attr_name", rules.is_alphanum3(1, 255), description=u"策略名称",  readonly="required",**input_style),
-    pyforms.Textbox("attr_value", rules.is_alphanum3(1, 255),description=u"策略值", required="required",**input_style),
+    pyforms.Textbox("attr_name", rules.len_of(1, 255), description=u"策略名称",  readonly="required",**input_style),
+    pyforms.Textbox("attr_value", rules.len_of(1, 255),description=u"策略值", required="required",**input_style),
     pyforms.Textbox("attr_desc", rules.len_of(1, 255),description=u"策略描述", required="required",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"修改策略属性",

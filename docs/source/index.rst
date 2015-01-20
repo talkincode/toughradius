@@ -53,6 +53,17 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
     business/service
     business/accept
+    
+.. _operate-docs:
+
+运维管理
+--------
+
+.. toctree::
+    :maxdepth: 3
+
+    operate/user_trace
+    
 
 .. _develop-docs:
 
@@ -63,5 +74,18 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
     :maxdepth: 3
 
     develop/database
+    
+
+.. _bas-docs:
+
+设备对接手册
+------------
+
+.. toctree::
+    :maxdepth: 3
+
+    case/routeros
+    case/routeros_pppoe
+    case/routeros_attrs
 
 
