@@ -189,7 +189,7 @@ requirements.txt中指定了ToughRADIUS依赖的python模块::
 
 也可以使用create.py脚本来创建，运行脚本::
 
-    python2.7 create.py -c config.json
+    python2.7 createdb.py -c config.json
 
 按提示完成操作::
 
