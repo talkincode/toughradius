@@ -140,6 +140,8 @@ requirements.txt中指定了ToughRADIUS依赖的python模块::
 
 在config.json文件中，可以指定几乎所有的配置参数，同时允许自定义命令行参数，命令行参数会覆盖配置文件的定义。
 
+修改配置文件mysql部分的主机，用户名，数据库名，密码和实际相符合。
+
 .. code-block:: javascript
 
     {
