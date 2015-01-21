@@ -216,11 +216,11 @@ requirements.txt中指定了ToughRADIUS依赖的python模块::
     
     cd console
 
-    python2.7 admin.py -c config.json
+    python2.7 admin.py -c ../config.json
 
 以守护进城模式运行::
 
-    nohup python2.7 admin.py -c config.json &
+    nohup python2.7 admin.py -c ../config.json &
 
 
 使用supervisor进程管理工具来部署ToughRADIUS
