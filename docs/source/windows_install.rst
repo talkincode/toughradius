@@ -158,8 +158,9 @@ console.bat脚本内容
 
 当启动web控制台服务后，就可以通过浏览器访问管理界面了，在浏览器地址栏输入：http://127.0.0.1:1816,默认的管理员密码为admin/root
 
+登陆界面：
 
-
+.. image:: ./_static/images/toughradius_login.jpg
 
 
 

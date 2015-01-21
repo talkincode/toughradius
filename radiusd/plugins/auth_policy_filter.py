@@ -15,4 +15,9 @@ def process(req=None,resp=None,user=None):
         user_balance = store.get_user_balance(user['account_number'])
         if user_balance <= 0:
             return error_auth(resp,'user balance poor')    
+
+    if user['user_concur_number'] > 0 :
+        if store.count_online(user['account_number']) >= user['user_concur_number']:
+            return error_auth(resp,'user session to limit')    
+
     return resp

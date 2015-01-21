@@ -186,6 +186,12 @@ class Store():
             cur.execute(sql,(nas_addr,acct_session_id)) 
             return cur.fetchone()['online'] > 0
 
+    def count_online(self,account_number):
+        with Cursor(self.dbpool) as cur: 
+            sql = 'select count(id) as online from slc_rad_online where  account_number = %s'
+            cur.execute(sql,(account_number,)) 
+            return cur.fetchone()['online']
+
     def get_online(self,nas_addr,acct_session_id):
         with Cursor(self.dbpool) as cur: 
             sql = 'select * from slc_rad_online where  nas_addr = %s and acct_session_id = %s'

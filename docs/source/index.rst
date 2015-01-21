@@ -7,6 +7,9 @@
 ToughRADIUS手册
 =======================================
 
+简介
+--------
+
 ToughRADIUS是一个开源，免费，易用的Radius服务软件。
 
 ToughRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，完美对接RouterOS，丰富的计费策略支持。
@@ -16,6 +19,12 @@ ToughRADIUS支持MySQL存储用户数据，并支持数据缓存，极大的提�
 ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
 提供了RADIUS核心服务引擎与Web管理控制台两个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。
+
+ToughRADIUS主站点:http://www.toughradius.org
+
+QQ交流群：247860313
+
+
 
 .. _install-docs:
 
