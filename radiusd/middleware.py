@@ -41,7 +41,7 @@ class Middleware():
             return False
              
 
-#第一次导入此模块时进行初始化加载
+#first init plugins
 Middleware.load_plugins()
 
 if __name__ == '__main__':

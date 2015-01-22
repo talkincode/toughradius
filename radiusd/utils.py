@@ -4,10 +4,12 @@ from pyrad import tools
 from twisted.internet.defer import Deferred
 from pyrad.packet import AuthPacket
 from pyrad.packet import AcctPacket
+from pyrad.packet import CoAPacket
 from pyrad.packet import AccessRequest
 from pyrad.packet import AccessAccept
 from pyrad.packet import AccountingRequest
 from pyrad.packet import AccountingResponse
+from pyrad.packet import CoARequest
 from twisted.python import log
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -64,13 +66,20 @@ def is_expire(dstr):
     return expire_date < now
     
 
-AcctStatusTypeMap = {
+PacketStatusTypeMap = {
     1 : 'AccessRequest',
     2 : 'AccessAccept',
     3 : 'AccessReject',
     4 : 'AccountingRequest',
-    5 : 'AccountingResponse'
+    5 : 'AccountingResponse',
+    40 : 'DisconnectRequest',
+    41 : 'DisconnectACK',
+    42 : 'DisconnectNAK',
+    43 : 'CoARequest',
+    44 : 'CoAACK',
+    45 : 'CoANAK',
 }
+
 
 class Storage(dict):
     def __getattr__(self, key): 
@@ -129,6 +138,34 @@ class AuthDelay():
             return None
 
 
+def format_packet_str(pkt):
+    attr_keys = pkt.keys()
+    _str = "\nRadius Packet::%s"%PacketStatusTypeMap[pkt.code]
+    _str += "\nhost:%s:%s" % pkt.source
+    _str += "\nid:%s" % pkt.id
+    _str += "\ncode:%s" % pkt.code
+    _str += "\nAttributes: "     
+    for attr in attr_keys:
+        try:
+            _str += "\n\t%s: %s" % (attr, pkt[attr][0])   
+        except:
+            _str += "\n\t%s: no display" % (attr)  
+    return _str  
+
+
+class CoAPacket2(CoAPacket):
+    def __init__(self, code=CoARequest, id=None, secret=six.b(''),
+            authenticator=None, **attributes):
+        CoAPacket.__init__(self, code, id, secret, authenticator, **attributes)
+        self.deferred = Deferred()
+        self.source_user = None
+        self.vendor_id = 0
+        self.client_macaddr = None
+        self.created = datetime.datetime.now()
+
+    def format_str(self):
+        return format_packet_str(self)    
+
 
 class AuthPacket2(AuthPacket):
 
@@ -144,21 +181,10 @@ class AuthPacket2(AuthPacket):
         self.created = datetime.datetime.now()
 
     def format_str(self):
-        attr_keys = self.keys()
-        _str = "\nRadius Packet::%s"%AcctStatusTypeMap[self.code]
-        _str += "\nhost:%s:%s" % self.source
-        _str += "\nid:%s" % self.id
-        _str += "\ncode:%s" % self.code
-        _str += "\nAttributes: "     
-        for attr in attr_keys:
-            try:
-                _str += "\n\t%s: %s" % (attr, self[attr][0])   
-            except:
-                _str += "\n\t%s: no display" % (attr)  
-        return _str  
+        return format_packet_str(self)
 
     def __str__(self):
-        _str = AcctStatusTypeMap[self.code]
+        _str = PacketStatusTypeMap[self.code]
         _str += " host=%s:%s" % self.source
         _str += ",id=%s"%self.id
         if self.code == 1:
@@ -267,21 +293,10 @@ class AcctPacket2(AcctPacket):
         self.created = datetime.datetime.now()
 
     def format_str(self):
-        attr_keys = self.keys()
-        _str = "\nRadius Packet::%s"%AcctStatusTypeMap[self.code]
-        _str += "\nhost:%s:%s" % self.source
-        _str += "\nid:%s" % self.id
-        _str += "\ncode:%s" % self.code
-        _str += "\nAttributes: "     
-        for attr in attr_keys:
-            try:
-                _str += "\n\t%s: %s" % (attr, self[attr][0])   
-            except:
-                _str += "\n\t%s: no display" % (attr)  
-        return _str  
+        return format_packet_str(self) 
 
     def __str__(self):
-        _str = AcctStatusTypeMap[self.code]
+        _str = PacketStatusTypeMap[self.code]
         _str += " host=%s:%s" % self.source
         _str += ",id=%s"%self.id
         if self.code == 4:
@@ -429,6 +444,8 @@ class AcctPacket2(AcctPacket):
             nas_port_id=self.get_nas_portid()
         )
         return self.ticket
+
+
 
 
 if __name__ == '__main__':

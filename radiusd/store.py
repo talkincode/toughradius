@@ -81,6 +81,10 @@ class Store():
                 cache.invalidate(self.get_param,'get_param', str(param['param_name']))
                 cache.invalidate(self.get_param,'get_param', unicode(param['param_name']))
 
+    ###############################################################################
+    # bas method                                                              ####
+    ############################################################################### 
+
     def list_bas(self):
         with Cursor(self.dbpool) as cur:
             cur.execute("select * from  slc_rad_bas")
@@ -96,6 +100,10 @@ class Store():
     def update_bas_cache(self,ipaddr):
         cache.invalidate(self.get_bas,'get_bas',str(ipaddr))
         cache.invalidate(self.get_bas,'get_bas',unicode(ipaddr))
+
+    ###############################################################################
+    # user method                                                              ####
+    ###############################################################################  
 
     @cache.cache('get_user',expire=__cache_timeout__)   
     def get_user(self,username):
@@ -155,6 +163,10 @@ class Store():
             conn.commit() 
             self.update_user_cache(username)     
 
+    ###############################################################################
+    # group method                                                              ####
+    ############################################################################### 
+
     @cache.cache('get_group',expire=__cache_timeout__)   
     def get_group(self,group_id):
         with Cursor(self.dbpool) as cur:
@@ -163,6 +175,10 @@ class Store():
 
     def update_group_cache(self,group_id):
         cache.invalidate(self.get_group,'get_group', group_id)
+
+    ###############################################################################
+    # product method                                                         ####
+    ############################################################################### 
 
     @cache.cache('get_product',expire=__cache_timeout__)   
     def get_product(self,product_id):
@@ -179,6 +195,10 @@ class Store():
     def update_product_cache(self,product_id):
         cache.invalidate(self.get_product,'get_product',product_id)
         cache.invalidate(self.get_product_attrs,'get_product_attrs',product_id)
+
+    ###############################################################################
+    # online method                                                            ####
+    ############################################################################### 
           
     def is_online(self,nas_addr,acct_session_id):
         with Cursor(self.dbpool) as cur: 
@@ -301,6 +321,9 @@ class Store():
 
         if acct_session_id:_unlock_one()
         else:_unlock_many()
+
+    
+
 
 
 store = Store(DbPool())

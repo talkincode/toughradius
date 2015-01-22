@@ -52,6 +52,7 @@ mdls = [
     models.SlcRadOperateLog
 ]
 
+
 def main():
     print "ToughRADIUS数据字典\n%s\n\n"%('='*36)
     for mdl in mdls:

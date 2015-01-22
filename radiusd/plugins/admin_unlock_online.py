@@ -11,7 +11,7 @@ def process(req=None,admin=None):
     if not nas_addr:
         reply = json.dumps({'data':u'nas_addr is empty','code':1})
         return admin.sendMessage(reply,False) 
-    session_id = req.get("session_id")
+    session_id = req.get("acct_session_id")
     store.unlock_online(nas_addr,session_id,STATUS_TYPE_UNLOCK)
     reply = json.dumps({'data':u'unlock ok','code':0})
     admin.sendMessage(reply,False)

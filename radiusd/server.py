@@ -10,13 +10,14 @@ from twisted.internet.defer import Deferred
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
+from admin import UserTrace,AdminServerProtocol
+from settings import auth_plugins,acct_plugins,acct_before_plugins
 from pyrad import dictionary
 from pyrad import host
 from pyrad import packet
 from store import store
-from admin import UserTrace,AdminServerProtocol
-from settings import auth_plugins,acct_plugins,acct_before_plugins
 from plugins import *
+import api as radapi
 import datetime
 import middleware
 import settings
@@ -29,20 +30,67 @@ import json
 import os
 import socket
 
+        
+class PacketError(Exception):pass
+
+###############################################################################
+# Coa Client                                                             ####
+###############################################################################
+
+class CoAClient(protocol.DatagramProtocol):
+
+    def __init__(self, bas,dict=None,debug=False):
+        assert bas 
+        self.bas = bas
+        self.dict = dict
+        self.secret = six.b(str(self.bas['bas_secret']))
+        self.addr = self.bas['ip_addr']
+        self.port = self.bas['coa_port']
+        self.debug=debug
+        reactor.listenUDP(0, self)
+
+    def processPacket(self, pkt):
+        pass
+
+    def createPacket(self, **kwargs):
+        return utils.CoAPacket2(dict=self.dict,secret=self.secret,**kwargs)
+
+    def createDisconnectPacket(self, **kwargs):
+        return utils.CoAPacket2(
+            code=packet.DisconnectRequest,
+            dict=self.dict,
+            secret=self.secret,
+            **kwargs)    
+    
+    def sendCoA(self,pkt):
+        log.msg("send radius Coa Request: %s"%(pkt),level=logging.INFO)
+        try:
+            self.transport.write(pkt.RequestPacket(),(self.addr, self.port))
+        except packet.PacketError as err:
+            log.err(err,'::send radius Coa Request error %s: %s'%((host, port),str(err)))
+
+    def datagramReceived(self, datagram, (host, port)):
+        if host != self.addr:
+            return log.msg('Dropping Radius Coa Packet from unknown host ' + host,level=logging.INFO)
+        try:
+            coaResponse = self.createPacket(packet=datagram)
+            coaResponse.source = (host, port)
+            log.msg("::Received Radius Coa Response: %s"%(str(coaResponse)),level=logging.INFO)
+            if self.debug:
+                log.msg(coaResponse.format_str(),level=logging.DEBUG)    
+            self.processPacket(coaResponse)
+        except packet.PacketError as err:
+            log.err(err,'::Dropping invalid CoA Response packet from %s: %s'%((host, port),str(err)))
+
+    def on_exception(self,err):
+        log.msg('CoA Packet process error：%s' % str(err))   
+
 ###############################################################################
 # Basic RADIUS                                                            ####
 ###############################################################################
 
-        
-class PacketError(Exception):pass
-
 class RADIUS(host.Host, protocol.DatagramProtocol):
-    def __init__(self, 
-                dict=None,
-                trace=None,
-                midware=None,
-                runstat=None,
-                debug=False):
+    def __init__(self, dict=None,trace=None,midware=None,runstat=None,debug=False):
         _dict = dictionary.Dictionary(dict)
         host.Host.__init__(self,dict=_dict)
         self.debug = debug
@@ -50,7 +98,6 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         self.midware = midware
         self.runstat = runstat
         self.auth_delay = utils.AuthDelay(int(store.get_param("reject_delay") or 0))
-        
 
     def processPacket(self, pkt):
         pass
@@ -143,6 +190,7 @@ class RADIUSAccess(RADIUS):
 ###############################################################################
 # Acct Server                                                              ####
 ############################################################################### 
+
 class RADIUSAccounting(RADIUS):
 
     def createPacket(self, **kwargs):
@@ -186,6 +234,7 @@ def main():
     parser.add_argument('-auth','--authport', type=int,default=0,dest='authport',help='auth port')
     parser.add_argument('-acct','--acctport', type=int,default=0,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
+    parser.add_argument('-api','--apiport', type=int,default=0,dest='apiport',help='api port')
     parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     args =  parser.parse_args(sys.argv[1:])
@@ -196,23 +245,21 @@ def main():
 
     _config = json.loads(open(args.conf).read())
     _mysql = _config['mysql']
-    _radiusd = _config['radiusd']    
+    _radiusd = _config['radiusd']  
 
-    if args.authport:
-        _radiusd['authport'] = args.authport
-    if args.acctport:
-        _radiusd['acctport'] = args.acctport
-    if args.adminport:
-        _radiusd['adminport'] = args.adminport
-    if args.dictfile:
-        _radiusd['dictfile'] = args.dictfile
-    if args.debug:
-        _radiusd['debug'] = bool(args.debug)   
+    # init args
+    if args.authport:_radiusd['authport'] = args.authport
+    if args.acctport:_radiusd['acctport'] = args.acctport
+    if args.adminport:_radiusd['adminport'] = args.adminport
+    if args.apiport:_radiusd['apiport'] = args.apiport
+    if args.dictfile:_radiusd['dictfile'] = args.dictfile
+    if args.debug:_radiusd['debug'] = bool(args.debug)   
 
-
+    #init dbconfig
     settings.db_config.update(**_config)
     store.__cache_timeout__ = _radiusd['cache_timeout']
 
+    # start logging
     if not _radiusd['debug']:
         print 'logging to file logs/radiusd.log'
         log.startLogging(DailyLogFile.fromFullPath("./logs/radiusd.log"))
@@ -224,20 +271,20 @@ def main():
     _middleware = middleware.Middleware()
     _debug = _radiusd['debug'] or settings.debug
 
+    # init coa clients
+    _coa_clients = {}
+    for bas in store.list_bas():
+        _coa_clients[bas['ip_addr']] = CoAClient(
+            bas,dictionary.Dictionary(_radiusd['dictfile']),debug=_debug)
+
     def start_servers():
         auth_protocol = RADIUSAccess(
-            dict=_radiusd['dictfile'],
-            trace=_trace,
-            midware=_middleware,
-            runstat=_runstat,
-            debug=_debug
+            dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
+            runstat=_runstat,debug=_debug
         )
         acct_protocol = RADIUSAccounting(
-            dict=_radiusd['dictfile'],
-            trace=_trace,
-            midware=_middleware,
-            runstat=_runstat,
-            debug=_debug
+            dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
+            runstat=_runstat,debug=_debug
         )
         reactor.listenUDP(_radiusd['authport'], auth_protocol)
         reactor.listenUDP(_radiusd['acctport'], acct_protocol)
@@ -245,12 +292,17 @@ def main():
         _task.start(2.7)
 
         from autobahn.twisted.websocket import WebSocketServerFactory
-        factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = _debug)
+        factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = False)
         factory.protocol = AdminServerProtocol
         factory.protocol.user_trace = _trace
         factory.protocol.midware = _middleware
         factory.protocol.runstat = _runstat
+        factory.protocol.coa_clients = _coa_clients
         reactor.listenTCP(_radiusd['adminport'], factory)
+
+        #setup api server
+        radapi.setup(_radiusd['apiport'])
+
 
     start_servers()
     reactor.run()

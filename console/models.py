@@ -42,7 +42,7 @@ class SlcOperator(DeclarativeBase):
     operator_desc = Column(u'operator_desc', VARCHAR(255), nullable=False,doc=u"操作员描述")    
 
 class SlcParam(DeclarativeBase):
-    """系统参数表"""
+    """系统参数表  <radiusd default table>"""
     __tablename__ = 'slc_param'
 
     __table_args__ = {}
@@ -55,7 +55,7 @@ class SlcParam(DeclarativeBase):
     #relation definitions
 
 class SlcRadBas(DeclarativeBase):
-    """BAS设备表"""
+    """BAS设备表 <radiusd default table>"""
     __tablename__ = 'slc_rad_bas'
 
     __table_args__ = {}
@@ -66,13 +66,14 @@ class SlcRadBas(DeclarativeBase):
     ip_addr = Column(u'ip_addr', VARCHAR(length=15), nullable=False,doc=u"IP地址")
     bas_name = Column(u'bas_name', VARCHAR(length=64), nullable=False,doc=u"bas名称")
     bas_secret = Column(u'bas_secret', VARCHAR(length=64), nullable=False,doc=u"共享密钥")
+    coa_port = Column(u'coa_port', INTEGER(), nullable=False,doc=u"CoA端口")
     time_type = Column(u'time_type', SMALLINT(), nullable=False,doc=u"时区类型")
 
     #relation definitions
 
 
 class SlcRadGroup(DeclarativeBase):
-    """认证策略用户组"""
+    """认证策略用户组 <radiusd default table>"""
     __tablename__ = 'slc_rad_group'
 
     __table_args__ = {}
@@ -90,7 +91,7 @@ class SlcRadGroup(DeclarativeBase):
 
 
 class SlcRadRoster(DeclarativeBase):
-    """黑白名单 0 白名单 1 黑名单"""
+    """黑白名单 0 白名单 1 黑名单 <radiusd default table>"""
     __tablename__ = 'slc_rad_roster'
 
     __table_args__ = {}
@@ -102,7 +103,6 @@ class SlcRadRoster(DeclarativeBase):
     begin_time = Column('begin_time', VARCHAR(length=19), nullable=False,doc=u"生效开始时间")
     end_time = Column('end_time', VARCHAR(length=19), nullable=False,doc=u"生效结束时间")
     roster_type = Column('roster_type', SMALLINT(), nullable=False,doc=u"黑白名单类型")
-
 
 
 class SlcMember(DeclarativeBase):
@@ -155,6 +155,7 @@ class SlcRadAccount(DeclarativeBase):
     上网账号表，每个会员可以同时拥有多个上网账号
     account_number 为每个套餐对应的上网账号，每个上网账号全局唯一
     用户状态 0:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期", 5:"未激活"
+    <radiusd default table>
     """
 
     __tablename__ = 'slc_rad_account'
@@ -194,7 +195,7 @@ class SlcRadAccountAttr(DeclarativeBase):
     attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")    
 
 class SlcRadProduct(DeclarativeBase):
-    '''资费信息表'''
+    '''资费信息表 <radiusd default table>'''
     __tablename__ = 'slc_rad_product'
 
     __table_args__ = {}
@@ -216,7 +217,7 @@ class SlcRadProduct(DeclarativeBase):
     update_time = Column('update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")
 
 class SlcRadProductAttr(DeclarativeBase):
-    '''资费扩展属性表'''
+    '''资费扩展属性表 <radiusd default table>'''
     __tablename__ = 'slc_rad_product_attr'
 
     __table_args__ = {}    
@@ -228,7 +229,7 @@ class SlcRadProductAttr(DeclarativeBase):
     attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")
 
 class SlcRadBilling(DeclarativeBase):
-    """计费信息表 is_deduct 0 未扣费 1 已扣费"""
+    """计费信息表 is_deduct 0 未扣费 1 已扣费 <radiusd default table>"""
     __tablename__ = 'slc_rad_billing'
 
     __table_args__ = { }  
@@ -250,7 +251,7 @@ class SlcRadBilling(DeclarativeBase):
 
     
 class SlcRadTicket(DeclarativeBase):
-    """上网日志表"""
+    """上网日志表 <radiusd default table>"""
     __tablename__ = 'slc_rad_ticket'
 
     __table_args__ = { }  
@@ -286,7 +287,7 @@ class SlcRadTicket(DeclarativeBase):
     #relation definitions 
 
 class SlcRadOnline(DeclarativeBase):
-    """用户在线信息表"""
+    """用户在线信息表 <radiusd default table>"""
     __tablename__ = 'slc_rad_online'
 
     __table_args__ = {
@@ -388,6 +389,7 @@ def init_db(db):
     bas.ip_addr = '192.168.88.1'
     bas.bas_name = 'test_bas'
     bas.bas_secret = '123456'
+    bas.coa_port = 3799
     bas.status = 1
     bas.time_type = 0
     db.add(bas)

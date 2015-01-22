@@ -28,6 +28,7 @@
                             <th>BAS地址</th>
                             <th>BAS类型</th>
                             <th>共享密钥</th>
+                            <th>CoA端口</th>
                             <th>时区</th>
                             <th>操作</th>
                         </tr>
@@ -39,6 +40,7 @@
                                 <td>${bas.ip_addr}</td>
                                 <td>${bastype[str(bas.vendor_id)]}</td>
                                 <td>${bas.bas_secret}</td>
+                                <td>${bas.coa_port}</td>
                                 <td>${{0:u"标准时区，北京时间",1:u"时间与时区相同"}[bas.time_type]}
                                 </td>
                                 <td><a class="opt-btn btn-default" href="/bas/update?bas_id=${bas.id}">修改</a>

@@ -28,7 +28,17 @@ var updater = {
         var message = {
             process : "admin_unlock_online",
             nas_addr : nas_addr,
-            session_id : session_id
+            acct_session_id : session_id
+        };
+        data = JSON.stringify(message);
+        updater.socket.send(data);
+    },
+    disconnect_online: function(nas_addr,session_id){
+        var message = {
+            process : "admin_coa_request",
+            nas_addr : nas_addr,
+            acct_session_id : session_id,
+            message_type : 'disconnect'
         };
         data = JSON.stringify(message);
         updater.socket.send(data);
@@ -138,7 +148,10 @@ $(document).ready(function (){
                 <td>${online.framed_ipaddr}</td>
                 <td>${online.mac_addr}</td>
                 <td>${fmt_second(online.billing_times)}</td>
-                <td><a class="opt-btn btn-default" href="javascript:updater.unlock_online('${online.nas_addr}','${online.acct_session_id}');">解锁</a></td>
+                <td>
+                <a class="opt-btn btn-default" href="javascript:updater.unlock_online('${online.nas_addr}','${online.acct_session_id}');">解锁</a>
+                <a class="opt-btn btn-default" href="javascript:updater.disconnect_online('${online.nas_addr}','${online.acct_session_id}');">强制下线</a>
+                </td>
             </tr>
                 % endfor
             </tbody>

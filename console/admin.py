@@ -292,6 +292,7 @@ def bas_add_post(db):
     bas.time_type = form.d.time_type
     bas.vendor_id = form.d.vendor_id
     bas.bas_secret = form.d.bas_secret
+    bas.coa_port = form.d.coa_port
     db.add(bas)
 
     ops_log = models.SlcRadOperateLog()
@@ -321,6 +322,7 @@ def bas_add_update(db):
     bas.time_type = form.d.time_type
     bas.vendor_id = form.d.vendor_id
     bas.bas_secret = form.d.bas_secret
+    bas.coa_port = form.d.coa_port
 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")

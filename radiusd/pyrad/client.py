@@ -100,6 +100,17 @@ class Client(host.Host):
         """
         return host.Host.CreateAcctPacket(self, secret=self.secret, **args)
 
+    def CreateCoAPacket(self, **args):
+        """Create a new RADIUS packet.
+        This utility function creates a new RADIUS packet which can
+        be used to communicate with the RADIUS server this client
+        talks to. This is initializing the new packet with the
+        dictionary and secret used for the client.
+        :return: a new empty packet instance
+        :rtype:  pyrad.packet.Packet
+        """
+        return host.Host.CreateCoAPacket(self, secret=self.secret, **args)        
+
     def _SendPacket(self, pkt, port):
         """Send a packet to a RADIUS server.
 
