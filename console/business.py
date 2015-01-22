@@ -17,7 +17,7 @@ import models
 import forms
 import decimal
 import datetime
-import ucache
+from websock import websock
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
@@ -440,7 +440,7 @@ def account_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("account",account_number=account.account_number)
+    websock.update_cache("account",account_number=account.account_number)
     redirect("/bus/member/detail?member_id={}".format(account.member_id)) 
 
 ###############################################################################
@@ -591,7 +591,14 @@ def account_pause(db):
     db.add(accept_log)
 
     db.commit()
-    ucache.push_message("account",account_number=account.account_number)
+    websock.update_cache("account",account_number=account.account_number)
+
+    onlines = db.query(models.SlcRadOnline).filter_by(account_number=account_number)
+    for _online in onlines:
+        websock.invoke_admin("coa_request",
+            nas_addr=_online.nas_addr,
+            acct_session_id=_online.acct_session_id,
+            message_type='disconnect')
     return dict(msg=u"操作成功")
 
 ###############################################################################
@@ -623,7 +630,7 @@ def account_resume(db):
     db.add(accept_log)
 
     db.commit()
-    ucache.push_message("account",account_number=account.account_number)
+    websock.update_cache("account",account_number=account.account_number)
     return dict(msg=u"操作成功")
 
 
@@ -715,7 +722,7 @@ def account_next(db):
     account.expire_date = form.d.expire_date  
 
     db.commit()
-    ucache.push_message("account",account_number=account_number)
+    websock.update_cache("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 ###############################################################################
@@ -771,7 +778,7 @@ def account_charge(db):
     account.balance += order.actual_fee
 
     db.commit()
-    ucache.push_message("account",account_number=account_number)
+    websock.update_cache("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 ###############################################################################
@@ -826,7 +833,14 @@ def account_next(db):
     account.status = 3
 
     db.commit()
-    ucache.push_message("account",account_number=account_number)
+
+    websock.update_cache("account",account_number=account_number)
+    onlines = db.query(models.SlcRadOnline).filter_by(account_number=account_number)
+    for _online in onlines:
+        websock.invoke_admin("coa_request",
+            nas_addr=_online.nas_addr,
+            acct_session_id=_online.acct_session_id,
+            message_type='disconnect')    
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
 

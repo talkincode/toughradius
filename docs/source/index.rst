@@ -20,10 +20,11 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
 提供了RADIUS核心服务引擎与Web管理控制台两个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。
 
-ToughRADIUS主站点:http://www.toughradius.org
+ToughRADIUS主站点:http://www.toughradius.net
 
-QQ交流群：247860313
+ToughRADIUS交流社区:http://forum.toughradius.net
 
+QToughRADIUSQ交流群：247860313
 
 
 .. _install-docs:
@@ -83,6 +84,7 @@ QQ交流群：247860313
     :maxdepth: 3
 
     develop/database
+    develop/admin_api
     
 
 .. _bas-docs:

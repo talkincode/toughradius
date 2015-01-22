@@ -18,7 +18,7 @@ from libs.radius_attrs import radius_attrs
 from twisted.python import log
 from twisted.python.logfile import DailyLogFile
 from hashlib import md5
-from ucache import ucache
+from websock import websock
 import bottle
 import models
 import forms
@@ -109,9 +109,9 @@ def admin_login_post(db):
 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = uname
-    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_ip = request.remote_addr
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)登陆'%(get_cookie("username"),)
+    ops_log.operate_desc = u'操作员(%s)登陆'%(uname,)
     db.add(ops_log)
     db.commit()
 
@@ -126,6 +126,10 @@ def admin_logout(db):
     ops_log.operate_desc = u'操作员(%s)登出'%(get_cookie("username"),)
     db.add(ops_log)    
     db.commit()
+    set_cookie('username',None)
+    set_cookie('login_node',None)
+    set_cookie('login_time', None)
+    set_cookie('login_ip', None)   
     request.cookies.clear()
     redirect('/login')
 
@@ -157,7 +161,7 @@ def param_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("param")
+    websock.update_cache("param")
     redirect("/param")
 
 ###############################################################################
@@ -332,7 +336,7 @@ def bas_add_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("bas",ip_addr=bas.ip_addr)
+    websock.update_cache("bas",ip_addr=bas.ip_addr)
     redirect("/bas")    
 
 @app.get('/bas/delete',apply=auth_opr)
@@ -450,7 +454,7 @@ def product_add_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("product",product_id=product.id)
+    websock.update_cache("product",product_id=product.id)
     redirect("/product")    
 
 @app.get('/product/delete',apply=auth_opr)
@@ -468,7 +472,7 @@ def product_delete(db):
     db.add(ops_log)
 
     db.commit() 
-    ucache.push_message("product",product_id=product_id)
+    websock.update_cache("product",product_id=product_id)
     redirect("/product")   
 
 @app.get('/product/attr/add',apply=auth_opr)
@@ -529,7 +533,7 @@ def product_attr_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("product",product_id=form.d.product_id)
+    websock.update_cache("product",product_id=form.d.product_id)
     redirect("/product/detail?product_id="+form.d.product_id) 
 
 @app.get('/product/attr/delete',apply=auth_opr)
@@ -547,7 +551,7 @@ def product_attr_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("product",product_id=product_id)
+    websock.update_cache("product",product_id=product_id)
     redirect("/product/detail?product_id=%s"%product_id)     
 
 ###############################################################################
@@ -617,7 +621,7 @@ def group_add_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("group",group_id=group.id)
+    websock.update_cache("group",group_id=group.id)
     redirect("/group")    
 
 @app.get('/group/delete',apply=auth_opr)
@@ -633,7 +637,7 @@ def group_delete(db):
     db.add(ops_log)
 
     db.commit() 
-    ucache.push_message("group",group_id=group_id)
+    websock.update_cache("group",group_id=group_id)
     redirect("/group")    
 
 ###############################################################################
@@ -702,7 +706,7 @@ def roster_add_update(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("roster",roster_id=roster.id)
+    websock.update_cache("roster",roster_id=roster.id)
     redirect("/roster")    
 
 @app.get('/roster/delete',apply=auth_opr)
@@ -718,7 +722,7 @@ def roster_delete(db):
     db.add(ops_log)
 
     db.commit() 
-    ucache.push_message("roster",roster_id=roster_id)
+    websock.update_cache("roster",roster_id=roster_id)
     redirect("/roster")        
 
 
@@ -756,7 +760,7 @@ def main():
         _console['debug'] = bool(args.debug)
 
     init_context(radaddr=_console['radaddr'],adminport=_console['adminport'])
-    ucache.connect(_console['radaddr'],_console['adminport'])
+    websock.connect(_console['radaddr'],_console['adminport'])
 
     from sqlalchemy import create_engine
     models.engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(

@@ -8,7 +8,7 @@ from bottle import redirect
 from bottle import static_file
 from bottle import mako_template as render
 from tablib import Dataset
-from ucache import ucache
+from websock import websock
 import bottle
 import models
 import forms
@@ -121,7 +121,7 @@ def user_release(db):
     db.add(ops_log)
 
     db.commit()
-    ucache.push_message("account",account_number=account_number)
+    websock.update_cache("account",account_number=account_number)
     return dict(code=0,msg=u"解绑成功")
 
 ###############################################################################
@@ -227,7 +227,7 @@ def opslog_query(db):
     query_end_time = request.params.get('query_end_time')  
     _query = db.query(
         models.SlcRadOperateLog,
-        models.SlcMember.node_id,
+        models.SlcOperator.node_id,
     ).filter(
         models.SlcRadOperateLog.operator_name == models.SlcOperator.operator_name,
     )
