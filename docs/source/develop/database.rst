@@ -45,7 +45,7 @@ operator_desc          VARCHAR(255)      False             操作员描述
 slc_param
 ------------------------------------ 
 
-系统参数表
+系统参数表  <radiusd default table>
 
 .. start_table slc_param;param_name 
 
@@ -63,7 +63,7 @@ param_desc             VARCHAR(255)      True              参数描述
 slc_rad_bas
 ------------------------------------ 
 
-BAS设备表
+BAS设备表 <radiusd default table>
 
 .. start_table slc_rad_bas;id 
 
@@ -75,6 +75,7 @@ vendor_id              VARCHAR(32)       False             厂商标识
 ip_addr                VARCHAR(15)       False             IP地址                  
 bas_name               VARCHAR(64)       False             bas名称                 
 bas_secret             VARCHAR(64)       False             共享密钥              
+coa_port               INTEGER           False             CoA端口                 
 time_type              SMALLINT          False             时区类型              
 =====================  ================  ================  ====================================
 
@@ -84,7 +85,7 @@ time_type              SMALLINT          False             时区类型
 slc_rad_group
 ------------------------------------ 
 
-认证策略用户组
+认证策略用户组 <radiusd default table>
 
 .. start_table slc_rad_group;id 
 
@@ -106,7 +107,7 @@ update_time            VARCHAR(19)       False             更新时间
 slc_rad_roster
 ------------------------------------ 
 
-黑白名单 0 白名单 1 黑名单
+黑白名单 0 白名单 1 黑名单 <radiusd default table>
 
 .. start_table slc_rad_roster;id 
 
@@ -188,6 +189,7 @@ slc_rad_account
     上网账号表，每个会员可以同时拥有多个上网账号
     account_number 为每个套餐对应的上网账号，每个上网账号全局唯一
     用户状态 0:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期", 5:"未激活"
+    <radiusd default table>
     
 
 .. start_table slc_rad_account;account_number 
@@ -243,7 +245,7 @@ attr_desc              VARCHAR(255)      True              属性描述
 slc_rad_product
 ------------------------------------ 
 
-资费信息表
+资费信息表 <radiusd default table>
 
 .. start_table slc_rad_product;id 
 
@@ -273,7 +275,7 @@ update_time            VARCHAR(19)       False             更新时间
 slc_rad_product_attr
 ------------------------------------ 
 
-资费扩展属性表
+资费扩展属性表 <radiusd default table>
 
 .. start_table slc_rad_product_attr;id 
 
@@ -293,7 +295,7 @@ attr_desc              VARCHAR(255)      True              属性描述
 slc_rad_billing
 ------------------------------------ 
 
-计费信息表 is_deduct 0 未扣费 1 已扣费
+计费信息表 is_deduct 0 未扣费 1 已扣费 <radiusd default table>
 
 .. start_table slc_rad_billing;id 
 
@@ -320,7 +322,7 @@ create_time            VARCHAR(19)       False             计费时间
 slc_rad_ticket
 ------------------------------------ 
 
-上网日志表
+上网日志表 <radiusd default table>
 
 .. start_table slc_rad_ticket;id 
 
@@ -361,7 +363,7 @@ stop_source            INTEGER           False             会话中止来源
 slc_rad_online
 ------------------------------------ 
 
-用户在线信息表
+用户在线信息表 <radiusd default table>
 
 .. start_table slc_rad_online;id 
 
