@@ -11,7 +11,7 @@
  Target Server Version : 50613
  File Encoding         : utf-8
 
- Date: 01/18/2015 00:02:52 AM
+ Date: 01/22/2015 20:55:55 PM
 */
 
 SET NAMES utf8;
@@ -42,7 +42,7 @@ CREATE TABLE `slc_member` (
 --  Records of `slc_member`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_member` VALUES ('1000001', '1', 'tester', 'bsCXFYmn1n/rOnZ2XHpd7CO9a0bc4NhcoeryBB8V0cfrSk5Np2HHlmx7WJA/yzDd', 'tester', '0', '1', '33', '6583805@qq.com', '1366666666', 'hunan changsha', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
+INSERT INTO `slc_member` VALUES ('1000001', '1', 'tester', 'VW6vxG283SRMLt9OF2a3J0jQfP8/qRcPyJLUvYqmSz5BKYqO/iECKfUds0BKyqgg', 'tester', '0', '1', '33', '6583805@qq.com', '1366666666', 'hunan changsha', '2014-12-10 23:23:21', '2014-12-10 23:23:21');
 COMMIT;
 
 -- ----------------------------
@@ -147,7 +147,7 @@ CREATE TABLE `slc_rad_account` (
 --  Records of `slc_rad_account`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_account` VALUES ('test01', '1000001', '1', '1', 'dLqxGjc4xOTicak/OJx3fmQyO/5g2dRoUDyr4EV7qC/Ry5IKSpkAlXAHp6zWPbE8', '1', 'hunan', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('test02', '1000001', '2', '1', 'cc40iaFWWzXSbA5hTjU/4cPHgmO+Kzdl6M7Pr0+R4b9/2Osch0u7D3k6a5UxgiTR', '1', 'hunan', '1000', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21');
+INSERT INTO `slc_rad_account` VALUES ('test01', '1000001', '1', '1', 'Or90a4sjQOP1rMEjm8OeVhJ4OE5yTC9S0PvDomnJLP/sRcwWU3V8xGsenyHOBKz4', '1', 'hunan', '0', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21'), ('test02', '1000001', '2', '1', 'D49+jiOpBwtSfDq+aiNPy0vC1VhemdpGQS2HDoome0qzMmgPROo2B4fn0cGgNsNu', '1', 'hunan', '1000', '0', '2015-12-30', '0', '0', '0', '', '0', '0', '', null, '2014-12-10 23:23:21', '2014-12-10 23:23:21');
 COMMIT;
 
 -- ----------------------------
@@ -173,6 +173,7 @@ CREATE TABLE `slc_rad_bas` (
   `ip_addr` varchar(15) NOT NULL,
   `bas_name` varchar(64) NOT NULL,
   `bas_secret` varchar(64) NOT NULL,
+  `coa_port` int(11) NOT NULL,
   `time_type` smallint(6) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
@@ -181,7 +182,7 @@ CREATE TABLE `slc_rad_bas` (
 --  Records of `slc_rad_bas`
 -- ----------------------------
 BEGIN;
-INSERT INTO `slc_rad_bas` VALUES ('1', '0', '192.168.88.1', 'test_bas', '123456', '0');
+INSERT INTO `slc_rad_bas` VALUES ('1', '0', '192.168.88.1', 'test_bas', '123456', '3799', '0');
 COMMIT;
 
 -- ----------------------------
@@ -337,10 +338,10 @@ CREATE TABLE `slc_rad_ticket` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `account_number` varchar(253) NOT NULL,
   `acct_input_gigawords` int(11) DEFAULT NULL,
-  `acct_input_octets` int(11) DEFAULT NULL,
-  `acct_input_packets` int(11) DEFAULT NULL,
   `acct_output_gigawords` int(11) DEFAULT NULL,
+  `acct_input_octets` int(11) DEFAULT NULL,
   `acct_output_octets` int(11) DEFAULT NULL,
+  `acct_input_packets` int(11) DEFAULT NULL,
   `acct_output_packets` int(11) DEFAULT NULL,
   `acct_session_id` varchar(253) NOT NULL,
   `acct_session_time` int(11) NOT NULL,
@@ -364,8 +365,7 @@ CREATE TABLE `slc_rad_ticket` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 SET FOREIGN_KEY_CHECKS = 1;
-BLE IF EXISTS `slc_rad_product_attr`;
-CREATE TABLE `slc_rad_product_attr` (
+REATE TABLE `slc_rad_product_attr` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `product_id` int(11) NOT NULL,
   `attr_name` varchar(255) NOT NULL,
