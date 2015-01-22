@@ -8,7 +8,6 @@ import logging
 import datetime
 import utils
 
-"""记账开始包处理"""
 def process(req=None,user=None,runstat=None):
     if not req.get_acct_status_type() == STATUS_TYPE_START:
         return

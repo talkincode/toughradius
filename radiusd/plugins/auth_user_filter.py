@@ -14,6 +14,4 @@ def process(req=None,resp=None,user=None):
     if not user['status'] == 1:
         return error_auth(resp,'user status not ok')
 
-
-
     return resp

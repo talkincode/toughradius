@@ -3,8 +3,9 @@
 from plugins import error_auth
 from store import store
 
-"""执行绑定校验，检查MAC地址与VLANID"""
+
 def process(req=None,resp=None,user=None):
+    """check mac bind & vlan bind"""
     macaddr = req.get_mac_addr()
     if macaddr and  user['mac_addr']:
         if user['bind_mac'] == 1 and macaddr not in user['mac_addr']:

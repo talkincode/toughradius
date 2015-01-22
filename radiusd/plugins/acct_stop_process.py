@@ -12,8 +12,6 @@ import utils
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
 
-
-"""记账结束包处理"""
 def process(req=None,user=None,runstat=None):
     if not req.get_acct_status_type() == STATUS_TYPE_STOP:
         return  

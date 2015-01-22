@@ -3,9 +3,8 @@
 from plugins import error_auth
 from store import store
 
-
-"""执行用户组策略校验，检查MAC与VLANID绑定，并发数限制 """
 def process(req=None,resp=None,user=None):
+    """执行用户组策略校验，检查MAC与VLANID绑定，并发数限制 """
     group = store.get_group(user['group_id'])
 
     if not group:

@@ -192,7 +192,7 @@ roster_update_form = pyforms.Form(
 
 
 userreg_state = {1:u"正常", 6:u"未激活"}
-user_state = {1:u"预定",1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期", 5:u"未激活"}
+user_state = {1:u"预定",1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期"}
 bind_state = {0: u"不绑定", 1: u"绑定"}
 
 def user_open_form(nodes=[],products=[],groups=[]):

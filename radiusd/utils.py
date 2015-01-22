@@ -149,7 +149,8 @@ def format_packet_str(pkt):
         try:
             _str += "\n\t%s: %s" % (attr, pkt[attr][0])   
         except:
-            _str += "\n\t%s: no display" % (attr)  
+            try:_str += "\n\t%s: no display" % (attr)
+            except:pass
     return _str  
 
 

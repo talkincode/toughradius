@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from twisted.internet.protocol import ReconnectingClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory 
 
-class UpdateCacheProtocol(WebSocketClientProtocol):  
+class WebSockProtocol(WebSocketClientProtocol):  
 
     messages = []
 
@@ -28,7 +28,7 @@ class UpdateCacheProtocol(WebSocketClientProtocol):
 
 class WSClientFactory(WebSocketClientFactory, ReconnectingClientFactory):
 
-   protocol = UpdateCacheProtocol
+   protocol = WebSockProtocol
 
    def clientConnectionFailed(self, connector, reason):
       print("Client connection failed .. retrying ..")

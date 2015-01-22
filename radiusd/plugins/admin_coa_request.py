@@ -31,6 +31,6 @@ def process(req=None,admin=None):
         }
         dmeq = coa_client.createDisconnectPacket(**attrs)
         coa_client.sendCoA(dmeq)
-        reply = {'code':1,'data':u"disconnect message send"}
+        reply = {'code':0,'data':u"disconnect message send"}
         admin.sendMessage(json.dumps(reply),False)
 

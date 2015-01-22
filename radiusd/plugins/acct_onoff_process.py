@@ -6,7 +6,6 @@ from settings import *
 import logging
 
 
-"""记账启动关闭处理"""
 def process(req=None,user=None,runstat=None):
     if  req.get_acct_status_type() not in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
         return

@@ -81,15 +81,15 @@ parse_radback = parse_ros
 parse_zte = parse_ros
 
 _parses = {
-        '0' : parse_std,
-        '9' : parse_cisco,
-        '3041' : parse_cisco,
-        '2352' : parse_radback,
-        '2011' : parse_std,
-        '25506' : parse_std,
-        '3902' : parse_zte,
-        '14988' : parse_ros
-    }
+    '0' : parse_std,
+    '9' : parse_cisco,
+    '3041' : parse_cisco,
+    '2352' : parse_radback,
+    '2011' : parse_std,
+    '25506' : parse_std,
+    '3902' : parse_zte,
+    '14988' : parse_ros
+}
 
 def process(req=None,resp=None,user=None):
     _parses[req.vendor_id](req)
