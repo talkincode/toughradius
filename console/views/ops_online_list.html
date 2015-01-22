@@ -7,7 +7,7 @@
 var updater = {
     socket: null,
     start: function () {
-        var url = "ws://127.0.0.1:${adminport}";
+        var url = "ws://${radaddr}:${adminport}";
         updater.socket = new WebSocket(url);
         updater.socket.onmessage = function (event) {
             updater.showMessage(JSON.parse(event.data));

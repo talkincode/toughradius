@@ -2,6 +2,8 @@ ToughRADIUS数据字典
 ====================================
 
 
+.. _slc_node_label:
+
 slc_node
 ------------------------------------ 
 
@@ -19,6 +21,8 @@ node_desc              VARCHAR(64)       False             区域描述
 
 .. end_table
 
+
+.. _slc_rad_operator_label:
 
 slc_rad_operator
 ------------------------------------ 
@@ -42,6 +46,8 @@ operator_desc          VARCHAR(255)      False             操作员描述
 .. end_table
 
 
+.. _slc_param_label:
+
 slc_param
 ------------------------------------ 
 
@@ -59,6 +65,8 @@ param_desc             VARCHAR(255)      True              参数描述
 
 .. end_table
 
+
+.. _slc_rad_bas_label:
 
 slc_rad_bas
 ------------------------------------ 
@@ -82,6 +90,8 @@ time_type              SMALLINT          False             时区类型
 .. end_table
 
 
+.. _slc_rad_group_label:
+
 slc_rad_group
 ------------------------------------ 
 
@@ -104,6 +114,8 @@ update_time            VARCHAR(19)       False             更新时间
 .. end_table
 
 
+.. _slc_rad_roster_label:
+
 slc_rad_roster
 ------------------------------------ 
 
@@ -124,6 +136,8 @@ roster_type            SMALLINT          False             黑白名单类型
 
 .. end_table
 
+
+.. _slc_member_label:
 
 slc_member
 ------------------------------------ 
@@ -153,6 +167,8 @@ update_time            VARCHAR(19)       False             更新时间
 .. end_table
 
 
+.. _slc_member_order_label:
+
 slc_member_order
 ------------------------------------ 
 
@@ -181,6 +197,8 @@ create_time            VARCHAR(19)       False             交易时间
 
 .. end_table
 
+
+.. _slc_rad_account_label:
 
 slc_rad_account
 ------------------------------------ 
@@ -222,6 +240,8 @@ update_time            VARCHAR(19)       False             更新时间
 .. end_table
 
 
+.. _slc_rad_account_attr_label:
+
 slc_rad_account_attr
 ------------------------------------ 
 
@@ -241,6 +261,8 @@ attr_desc              VARCHAR(255)      True              属性描述
 
 .. end_table
 
+
+.. _slc_rad_product_label:
 
 slc_rad_product
 ------------------------------------ 
@@ -272,6 +294,8 @@ update_time            VARCHAR(19)       False             更新时间
 .. end_table
 
 
+.. _slc_rad_product_attr_label:
+
 slc_rad_product_attr
 ------------------------------------ 
 
@@ -291,6 +315,8 @@ attr_desc              VARCHAR(255)      True              属性描述
 
 .. end_table
 
+
+.. _slc_rad_billing_label:
 
 slc_rad_billing
 ------------------------------------ 
@@ -318,6 +344,8 @@ create_time            VARCHAR(19)       False             计费时间
 
 .. end_table
 
+
+.. _slc_rad_ticket_label:
 
 slc_rad_ticket
 ------------------------------------ 
@@ -360,6 +388,8 @@ stop_source            INTEGER           False             会话中止来源
 .. end_table
 
 
+.. _slc_rad_online_label:
+
 slc_rad_online
 ------------------------------------ 
 
@@ -385,6 +415,8 @@ start_source           SMALLINT          False             会话开始来源
 .. end_table
 
 
+.. _slc_rad_accept_log_label:
+
 slc_rad_accept_log
 ------------------------------------ 
 
@@ -409,6 +441,8 @@ accept_time            VARCHAR(19)       False             受理时间
 
 .. end_table
 
+
+.. _slc_rad_operate_log_label:
 
 slc_rad_operate_log
 ------------------------------------ 

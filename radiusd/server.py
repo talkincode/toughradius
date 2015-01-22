@@ -17,7 +17,6 @@ from pyrad import host
 from pyrad import packet
 from store import store
 from plugins import *
-import api as radapi
 import datetime
 import middleware
 import settings
@@ -234,7 +233,6 @@ def main():
     parser.add_argument('-auth','--authport', type=int,default=0,dest='authport',help='auth port')
     parser.add_argument('-acct','--acctport', type=int,default=0,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
-    parser.add_argument('-api','--apiport', type=int,default=0,dest='apiport',help='api port')
     parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     args =  parser.parse_args(sys.argv[1:])
@@ -251,7 +249,6 @@ def main():
     if args.authport:_radiusd['authport'] = args.authport
     if args.acctport:_radiusd['acctport'] = args.acctport
     if args.adminport:_radiusd['adminport'] = args.adminport
-    if args.apiport:_radiusd['apiport'] = args.apiport
     if args.dictfile:_radiusd['dictfile'] = args.dictfile
     if args.debug:_radiusd['debug'] = bool(args.debug)   
 
@@ -300,8 +297,6 @@ def main():
         factory.protocol.coa_clients = _coa_clients
         reactor.listenTCP(_radiusd['adminport'], factory)
 
-        #setup api server
-        radapi.setup(_radiusd['apiport'])
 
 
     start_servers()

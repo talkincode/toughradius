@@ -14,6 +14,7 @@
         "acctport": 1813,
         "adminport": 1815,
         "apiport":1817,
+        "api_allows":"192.168.88.100,192.168.88.100",
         "dictfile": "./radiusd/dict/dictionary",
         "debug":1,
         "cache_timeout":600

@@ -14,6 +14,7 @@ def print_end():
     print '\n.. end_table\n'
 
 def print_model(tmdl):
+    print '.. _%s_label:\n'%tmdl.__tablename__
     print tmdl.__tablename__
     print '-'*36,"\n"
     if tmdl.__doc__ :

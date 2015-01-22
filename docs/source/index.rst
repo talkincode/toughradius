@@ -24,7 +24,7 @@ ToughRADIUS主站点:http://www.toughradius.net
 
 ToughRADIUS交流社区:http://forum.toughradius.net
 
-QToughRADIUSQ交流群：247860313
+ToughRADIUS QQ交流群：247860313
 
 
 .. _install-docs:
@@ -84,6 +84,7 @@ QToughRADIUSQ交流群：247860313
     :maxdepth: 3
 
     develop/database
+    develop/dbdev
     develop/admin_api
     
 
