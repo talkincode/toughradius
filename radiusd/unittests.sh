@@ -1,2 +1,2 @@
 #!/bin/sh
-cd tests && nosetests-3.3
+cd tests && nosetests-2.7
