@@ -8,7 +8,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from hashlib import md5
 from libs import utils
 
-engine = create_engine('mysql://root:root@127.0.0.1:3306/test?charset=utf8')
+engine = create_engine('mysql://root:root@127.0.0.1:3306/mysql?charset=utf8')
 DeclarativeBase = declarative_base()
 metadata = DeclarativeBase.metadata
 metadata.bind = engine
@@ -338,7 +338,7 @@ class SlcRadOperateLog(DeclarativeBase):
 
 def build_db(config=None):
     global engine
-    engine = create_engine('mysql://%s:%s@%s:3306/test?charset=utf8'%(
+    engine = create_engine('mysql://%s:%s@%s:3306/mysql?charset=utf8'%(
                     config['user'],config['passwd'],config['host']))
     conn = engine.connect()
     try:
