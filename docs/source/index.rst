@@ -37,6 +37,7 @@ ToughRADIUS QQ交流群：247860313
 
     windows_install
     linux_install
+    docker_install
 
 
 .. _management-docs:

@@ -22,13 +22,17 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
     mkdir /var/toughradius
 
-    docker run -d -v /var/toughradius:/var/toughradius \
+    docker run -d -P -v /var/toughradius:/var/toughradius \
+      -p 3306:3306 -p 1812:1812/udp -p 1813:1813/udp \
+      -p 1815:1815 -p 1816:1816 \
       --name toughradius talkincode/centos7-toughradius \
       sh /opt/startup.sh
 
 以上指令会在centos7中安装docker工具，并自动下载toughradius镜像以守护进程模式运行。
 
 运行 docker logs toughradius 即可看到运行日志输出。
+
+打开浏览器访问 http://serverip:1816,可以进入web管理登陆界面了。
 
 
 ## 关于AAA的概念

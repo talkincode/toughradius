@@ -257,11 +257,7 @@ def main():
     store.__cache_timeout__ = _radiusd['cache_timeout']
 
     # start logging
-    if not _radiusd['debug']:
-        print 'logging to file logs/radiusd.log'
-        log.startLogging(DailyLogFile.fromFullPath("./logs/radiusd.log"))
-    else:
-        log.startLogging(sys.stdout)
+    log.startLogging(sys.stdout)
 
     _trace = UserTrace()
     _runstat = statistics.RunStat()
@@ -296,8 +292,6 @@ def main():
         factory.protocol.runstat = _runstat
         factory.protocol.coa_clients = _coa_clients
         reactor.listenTCP(_radiusd['adminport'], factory)
-
-
 
     start_servers()
     reactor.run()

@@ -767,11 +767,8 @@ def main():
             _mysql['user'],_mysql['passwd'],_mysql['host'],_mysql['db']))
 
     init_app()
-    if not _console['debug']:
-        print 'logging to file logs/access.log'
-        log.startLogging(DailyLogFile.fromFullPath("../logs/access.log"))
-    else:
-        log.startLogging(sys.stdout)    
+    
+    log.startLogging(sys.stdout)    
     runserver(
         app, host='0.0.0.0', 
         port=_console['httpport'] ,
