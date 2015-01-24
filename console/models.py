@@ -562,6 +562,12 @@ def install(config=None):
                 for i in range(1000):
                     tf.write('test00%s,%s\n'%(i,utils.encrypt('888888')))
 
+def install2(config=None):
+    print 'starting create and init database...'
+    build_db(config=config)
+    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+    init_db(db)
+
 def update(config=None):
     print 'starting update database...'
     global engine
