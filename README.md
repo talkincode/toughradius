@@ -10,7 +10,26 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
 提供了RADIUS核心服务引擎与Web管理控制台两个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。
 
-[ToughRADIUS网站：http:://www.toughradius.org] (http:://www.toughradius.org)
+[ToughRADIUS网站：http:://www.toughradius.net] (http:://www.toughradius.net)
+
+## 使用Docker镜像 
+
+在centos7下部署::
+
+    yum install docker
+
+    service docker start
+
+    mkdir /var/toughradius
+
+    docker run -d -v /var/toughradius:/var/toughradius \
+      --name toughradius talkincode/centos7-toughradius \
+      sh /opt/startup.sh
+
+以上指令会在centos7中安装docker工具，并自动下载toughradius镜像以守护进程模式运行。
+
+运行 docker logs toughradius 即可看到运行日志输出。
+
 
 ## 关于AAA的概念
     
