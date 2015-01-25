@@ -76,7 +76,7 @@ class Store():
 
     def update_param_cache(self):
         with Cursor(self.dbpool) as cur:
-            cur.execute("select param_name from  slc_param where param_name = %s",(param_name,))
+            cur.execute("select param_name from  slc_param ")
             for param in cur:
                 cache.invalidate(self.get_param,'get_param', str(param['param_name']))
                 cache.invalidate(self.get_param,'get_param', unicode(param['param_name']))

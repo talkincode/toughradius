@@ -19,7 +19,7 @@ RUN chmod +x /opt/startup.sh
 
 # install lib
 RUN yum update -y
-RUN yum install -y wget git gcc python-devel python-setuptools 
+RUN yum install -y wget git gcc python-devel python-setuptools tcpdump
 
 # install mysql
 RUN rpm -ivh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
