@@ -15,7 +15,9 @@ ADD docker/my.cnf /etc/
 ADD docker/supervisord.conf /var/toughradius_run/
 ADD docker/radiusd.json /var/toughradius_run/
 ADD docker/startup.sh /opt/
+ADD docker/upgrade.sh /opt/
 RUN chmod +x /opt/startup.sh   
+RUN chmod +x /opt/upgrade.sh   
 
 # install lib
 RUN yum update -y
