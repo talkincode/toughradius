@@ -24,7 +24,7 @@ CentOS6
    
     $ sudo yum install docker-io
 
-    sudo service docker start
+    $ sudo service docker start
 
 
 CentOS7
@@ -34,7 +34,7 @@ CentOS7
 
     $ sudo yum install docker
 
-    sudo service docker start
+    $ sudo service docker start
 
 
 Ubuntu
@@ -66,13 +66,12 @@ Windows
 
 ::
 
-    mkdir /var/toughradius 
+    $ mkdir /var/toughradius 
 
-    docker run -d -P -v /var/toughradius:/var/toughradius \
+    $ docker run -d -P -v /var/toughradius:/var/toughradius \
       -p 3306:3306 -p 1812:1812/udp -p 1813:1813/udp \
       -p 1815:1815 -p 1816:1816 \
-      --name toughradius talkincode/centos7-toughradius \
-      sh /opt/startup.sh
+      --name toughradius talkincode/centos7-toughradius
 
 以上指令自动下载toughradius镜像,创建名称为toughradius的容器，以守护进程模式运行，容器只需创建一次，以上命令只需首次运行即可。
 
@@ -109,31 +108,32 @@ Windows
 
 ::
 
-    docker start toughradius
+    $ docker start toughradius
 
-    docker stop toughradius
+    $ docker stop toughradius
 
-    docker restart toughradius
+    $ docker restart toughradius
 
 
 ToughRADIUS版本更新
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-当ToughRADIUS版本更新时，不需要重新创建容器，只需要进入容器使用git更新即可::
+当ToughRADIUS版本更新时，不需要重新创建容器，只需要执行简单地更新指令即可::
 
-    docker exec -it toughradius /bin/bash 
+    $ docker exec toughradius sh /opt/upgrade.sh
 
-以上指令进入容器交互模式，执行版本更新::
+    # 输出以下内容说明更新成功
 
-    # master是最新主干版本，你也可以拉取指定的版本
-
-    cd /opt/toughradius && git pull origin master
-
-    exit
-
-重启容器::
-
-    docker restart toughradius
+    starting upgrade...
+    From https://github.com/talkincode/ToughRADIUS
+     * branch            master     -> FETCH_HEAD
+    ...
+    ...
+    rad_console: stopped
+    radiusd: stopped
+    radiusd: started
+    rad_console: started
+    upgrade ok
 
 
 配置文件修改
@@ -147,9 +147,10 @@ ToughRADIUS版本更新
 
 如果你修改了端口，必须同时改变容器映射端口，你可以删除容器再重新创建。
 
+
 删除容器::
 
-    docker rm toughradius
+    $ docker rm toughradius
 
 重新创建容器时，只要没有删除/var/toughradius下的mysql目录数据文件，是不会重新创建和覆盖数据文件和配置文件的。
 

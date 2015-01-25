@@ -43,7 +43,7 @@ EXPOSE 3306 1815 1816
 EXPOSE 1812/udp
 EXPOSE 1813/udp
 
-CMD ["/opt/startup.sh"]
+CMD ["/bin/sh","/opt/startup.sh"]
 
 
 
