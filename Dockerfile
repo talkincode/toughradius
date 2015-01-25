@@ -35,7 +35,7 @@ RUN easy_install pip
 RUN easy_install supervisor
 
 #install toughradius
-RUN git clone https://coding.net/jamiesun/ToughRADIUS.git /opt/toughradius
+RUN git clone https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 RUN pip install -r /opt/toughradius/requirements.txt
 
 
