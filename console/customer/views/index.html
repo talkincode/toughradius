@@ -6,13 +6,113 @@
 
 <%def name="main()">
 <div class="panel panel-default">
-    <div class="panel-heading-w">...</div>
     <div class="panel-heading">
     <div class="bar">
+        <span class="glyphicon glyphicon-user"></span> 用户信息
     </div>
     </div>
     <div class="panel-body posts">
+        <table class="table ">
+                <thead>
+                    <tr>
+                        <th colspan="6"> 基本信息</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>用户姓名</td>
+                        <td>${member.realname}</td>
+                        <td>证件号码</td>
+                        <td>${member.idcard}</td>
+                        <td>用户登陆名</td>
+                        <td>${member.member_name}</td>                 
+                    </tr>
+                    <tr>
+                        <td>年龄</td>
+                        <td>${member.age}</td>
+                        <td>性别</td>
+                        <td>${{0:u'女',1:u'男'}[member.sex]}</td>
+                        <td>联系电话</td>
+                        <td>${member.mobile}</td>
+                    </tr>      
+                    <tr>
+                        <td>创建时间</td>
+                        <td>${member.create_time}</td>
+                        <td>更新时间</td>
+                        <td>${member.update_time}</td> 
+                        <td>email</td>
+                        <td>${member.email}</td>                                            
+                    </tr>   
+                    <tr>
+                        <td>地址</td>
+                        <td colspan="5">${member.address}</td>                     
+                    </tr>                                                                                         
+            </tbody>
+        </table>
         
+        <table class="table ">
+            <thead>
+                <tr>
+                    <th colspan="8"> 上网账号列表</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr class="active">
+                <th>上网账号</th>
+                <th>用户资费</th>
+                <th>用户状态</th>
+                <th>到期时间</th>
+                <th>余额</th>
+                <th>创建时间</th>
+                <th>最近停机</th>
+                <th></th>
+            </tr>            
+            % for user in accounts:
+            <tr>
+                <td><a href="/account/detail?account_number=${user.account_number}">${user.account_number}</a></td>
+                <td>${user.product_name}</td>
+                <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
+                <td>${user.expire_date}</td>
+                <td>${fen2yuan(user.balance)}</td>
+                <td>${user.create_time}</td>
+                <td>${user.last_pause or ''}</td>
+                 <td>
+                 </td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>  
+        <table class="table ">
+            <thead>
+                <tr>
+                    <th colspan="8"> 订购记录</th>
+                </tr>
+            </thead>
+            <tbody>
+            <tr class="active">
+                <th>订单号</th>
+                <th>资费</th>
+                <th>上网账号</th>
+                <th>订单费用</th>
+                <th>实缴费用</th>
+                <th>订单状态</th>
+                <th>订单时间</th>
+                <th>订单描述</th>
+            </tr>            
+            % for order in orders:
+            <tr>
+                <td>${order.order_id}</td>
+                <td>${order.product_name}</td>
+                <td>${order.account_number}</td>
+                <td>${fen2yuan(order.order_fee)}</td>
+                <td>${fen2yuan(order.actual_fee)}</td>
+                <td>${{0:u"未支付",1:u"已支付",2:u"已取消"}[order.pay_status]}</td>
+                <td>${order.create_time}</td>
+                <td>${order.order_desc or ''}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
     </div>
 </div>
 </%def>

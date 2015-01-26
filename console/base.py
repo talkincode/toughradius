@@ -6,6 +6,7 @@ from bottle import response
 from bottle import redirect
 from libs.paginator import Paginator
 from libs import utils
+import logging
 import functools
 import urllib
 import models
@@ -21,6 +22,16 @@ cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': _
 secret='123321qweasd',
 get_cookie = lambda name: request.get_cookie(name,secret=secret)
 set_cookie = lambda name,value:response.set_cookie(name,value,secret=secret)
+
+class Logger:
+    def info(msg):
+        log.msg(msg,level=logging.INFO)
+    def debug(msg):
+        log.msg(msg,level=logging.DEBUG)
+    def error(msg,err=None):
+        log.err(msg,err)
+
+logger = Logger()
 
 def auth_opr(func):
     @functools.wraps(func)
@@ -41,7 +52,15 @@ def account_node_id(db,account_number):
 @cache.cache('get_member_node_id',expire=3600)   
 def member_node_id(db,member_id):
     return  db.query(models.SlcMember.node_id).filter_by(member_id = member_id).scalar()
-
+    
+@cache.cache('get_member_by_name',expire=3600)   
+def get_member_by_name(db,member_name):
+    return  db.query(models.SlcMember).filter_by(member_name = member_name).first()
+    
+@cache.cache('get_account_by_number',expire=300)   
+def get_account_by_number(db,account_number):
+    return  db.query(models.SlcRadAccount).filter_by(account_number = account_number).first()
+    
 @cache.cache('get_param_value',expire=3600)   
 def get_param_value(db,pname):
     return  db.query(models.SlcParam.param_value).filter_by(param_name = pname).scalar()

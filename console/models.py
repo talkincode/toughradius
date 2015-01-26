@@ -351,7 +351,7 @@ class SlcRadOperateLog(DeclarativeBase):
     operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
     operate_ip = Column(u'operate_ip', VARCHAR(length=128),doc=u"操作员ip")
     operate_time = Column(u'operate_time', VARCHAR(length=19), nullable=False,doc=u"操作时间")
-    operate_desc = Column(u'operate_desc', VARCHAR(length=512),doc=u"操作描述")
+    operate_desc = Column(u'operate_desc', VARCHAR(length=1024),doc=u"操作描述")
 
 def init_db(db):
     node = SlcNode()
@@ -377,6 +377,12 @@ def init_db(db):
     param02.param_desc = u'Radius服务IP地址'
     param02.param_value = u'192.168.59.103'
     db.add(param02)   
+    
+    param03 = SlcParam()
+    param03.param_name = u'4_radiusd_admin_port'
+    param03.param_desc = u'Radius服务管理端口'
+    param03.param_value = u'1815'
+    db.add(param03)       
 
     param1 = SlcParam()
     param1.param_name = u'max_session_timeout'

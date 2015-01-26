@@ -5,16 +5,13 @@ from bottle import Bottle
 from bottle import request
 from bottle import response
 from bottle import redirect
-from bottle import run as runserver
+from bottle import MakoTemplate
 from bottle import static_file
 from bottle import abort
 from bottle import mako_template as render
-from libs import sqla_plugin 
 from libs.paginator import Paginator
 from libs import utils
 from libs.radius_attrs import radius_attrs
-from twisted.python import log
-from twisted.python.logfile import DailyLogFile
 from hashlib import md5
 from websock import websock
 import bottle
@@ -111,13 +108,22 @@ def param(db):
 @app.post('/param',apply=auth_opr)
 def param_update(db): 
     params = db.query(models.SlcParam)
+    wsflag = False
     for param in params:
         if param.param_name in request.forms:
             _value = request.forms.get(param.param_name)
             if _value: _value = _value.decode('utf-8')
             if _value and param.param_value not in _value:
                 param.param_value = _value
-
+            if param.param_name == '3_radiusd_address':
+                if param.param_value != MakoTemplate.defaults['radaddr']:
+                    MakoTemplate.defaults['radaddr'] = param.param_value
+                    wsflag = True
+            if param.param_name == '4_radiusd_admin_port':
+                if param.param_value != MakoTemplate.defaults['adminport']:
+                    MakoTemplate.defaults['adminport'] = param.param_value
+                    wsflag = True            
+                
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
@@ -127,8 +133,13 @@ def param_update(db):
         json.dumps([ {c.name: getattr(p, c.name) for c in p.__table__.columns} for p in params ],ensure_ascii=False)
     )
     db.add(ops_log)
-
     db.commit()
+    if wsflag:
+        websock.reconnect(
+            MakoTemplate.defaults['radaddr'],
+            MakoTemplate.defaults['adminport'],
+        )
+        
     websock.update_cache("param")
     redirect("/param")
 

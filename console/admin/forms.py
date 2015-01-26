@@ -316,23 +316,6 @@ def account_update_form(groups=[]):
         action="/bus/account/update"
     )
 
-member_login_form = pyforms.Form(
-    pyforms.Textbox("username", rules.is_alphanum3(1, 32), description=u"用户名", size=32,required="required",**input_style),
-    pyforms.Password("password", rules.len_of(1,32), description=u"登录密码", size=32, required="required",**input_style),
-    pyforms.Button("submit", type="submit", html=u"<b>登陆</b>", **button_style),
-    pyforms.Hidden("next",value="/"),
-    action="/member/login",
-    title=u"用户登陆"
-)
-
-member_join_form = pyforms.Form(
-    pyforms.Textbox("username", rules.is_alphanum3(6, 32), description=u"用户名", size=32,required="required",**input_style),
-    pyforms.Password("password", rules.len_of(6,32), description=u"登录密码", size=32, required="required",**input_style),
-    pyforms.Textbox("email", rules.is_email, description=u"电子邮箱", size=64,required="required",**input_style),
-    pyforms.Button("submit", type="submit", html=u"<b>注册</b>", **button_style),
-    action="/member/join",
-    title=u"用户注册"
-)
 
 
 

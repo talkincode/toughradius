@@ -93,7 +93,8 @@ max-width:100%;height:auto;
     box-shadow: 1px 2px 3px rgba(174, 173, 173, 0.38);*/
 }
 
-.sidebar-box .login h3{
+.sidebar-box .login h3,
+.sidebar-box .userinfo h3{
     font-size: 15px;
     margin: 5px 0 0 0;
     padding: 0;
@@ -105,11 +106,13 @@ max-width:100%;height:auto;
     color: gray;
 }
 
-.sidebar-box .login{
+.sidebar-box .login,
+.sidebar-box .userinfo{
     padding: 5px 20px 10px 15px;
 }
 
-.sidebar-box .login p{
+.sidebar-box .login p,
+.sidebar-box .userinfo p{
     padding: 7px 0 0 0 ;
 }
 

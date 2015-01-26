@@ -43,6 +43,9 @@ class WebSock():
     def connect(self,radaddr,adminport):    
         self.factory = WSClientFactory("ws://%s:%s"%(radaddr,adminport), debug = False)  
         reactor.connectTCP(radaddr, int(adminport), self.factory)
+        
+    def reconnect(self,radaddr,adminport):    
+        self.connect(radaddr,adminport)
 
     def update_cache(self,cache_class,**kwargs):
         message = {
