@@ -242,7 +242,7 @@ def main():
         return
 
     _config = json.loads(open(args.conf).read())
-    _mysql = _config['mysql']
+    _database = _config['database']
     _radiusd = _config['radiusd']  
 
     # init args

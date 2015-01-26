@@ -55,7 +55,16 @@ class DbPool():
     dbpool = None
     def connect(self):
         if not self.dbpool:
-            self.dbpool = PooledDB(creator=MySQLdb,**settings.db_config['mysql'])
+            self.dbpool = PooledDB(
+                creator=MySQLdb,
+                db=settings.db_config['database']['db'],
+                host=settings.db_config['database']['host'],
+                port=settings.db_config['database']['port'],
+                user=settings.db_config['database']['user'],
+                passwd=settings.db_config['database']['passwd'],
+                charset=settings.db_config['database']['charset'],
+                maxusage=settings.db_config['database']['maxusage'],
+            )
         return self.dbpool.connection()
 
 ###############################################################################
@@ -323,9 +332,6 @@ class Store():
         else:_unlock_many()
 
     
-
-
-
 store = Store(DbPool())
 
 

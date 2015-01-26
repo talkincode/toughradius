@@ -32,7 +32,7 @@ STATUS_TYPE_ACCT_ON  = 7
 STATUS_TYPE_ACCT_OFF = 8
 
 db_config = {
-    'mysql':{
+    'database':{
         'maxusage': 10,
         'host': '127.0.0.1',
         'user': 'root',
