@@ -59,8 +59,6 @@ def main():
     import argparse,json
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
-    parser.add_argument('-raddr','--radaddr', type=str,default=None,dest='radaddr',help='raduis address')
-    parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
@@ -71,20 +69,18 @@ def main():
 
     _config = json.loads(open(args.conf).read())
     _database = _config['database']
-    _console = _config['console']
+    _admin = _config['admin']
 
-    if args.httpport:_console['httpport'] = args.httpport
-    if args.radaddr:_console['radaddr'] = args.radaddr
-    if args.adminport:_console['adminport'] = args.adminport
-    if args.debug:_console['debug'] = bool(args.debug)
+    if args.httpport:_admin['httpport'] = args.httpport
+    if args.debug:_admin['debug'] = bool(args.debug)
 
-    init_application(dbconf=_database,consconf=_console)
+    init_application(dbconf=_database,consconf=_admin)
     
     runserver(
         mainapp, host='0.0.0.0', 
-        port=_console['httpport'] ,
-        debug=bool(_console['debug']),
-        reloader=bool(_console['debug']),
+        port=_admin['httpport'] ,
+        debug=bool(_admin['debug']),
+        reloader=bool(_admin['debug']),
         server="twisted"
     )
 

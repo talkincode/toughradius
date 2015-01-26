@@ -1,11 +1,13 @@
 {
-    "mysql":
+    "database": 
     {
-        "maxusage": 10,
+        "dbtype":"mysql",
+        "maxusage": 10, 
         "passwd": "",
-        "charset": "utf8",
+        "charset": "utf8", 
         "db": "toughradius",
         "host": "127.0.0.1",
+        "port": 3306,
         "user": "root"
     },
     "radiusd":
@@ -13,16 +15,19 @@
         "authport": 1812,
         "acctport": 1813,
         "adminport": 1815,
-        "api_allows":"127.0.0.1",
+        "allows":"127.0.0.1",
         "dictfile": "./radiusd/dict/dictionary",
         "debug":1,
         "cache_timeout":600
     },
-    "console":
+    "admin":
     {
         "httpport":1816,
-        "radaddr":"127.0.0.1",
-        "adminport":1815,
         "debug":1
-    }
+    },
+    "customer":
+    {
+        "httpport":1817,
+        "debug":1
+    }    
 }
