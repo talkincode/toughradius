@@ -12,8 +12,8 @@ if __name__ == '__main__':
     parser.add_argument('-i','--install',nargs='?', type=bool,default=False,dest='install',help='install option')
     args =  parser.parse_args(sys.argv[1:])    
     if args.update:
-        models.update(config=json.loads(open(args.conf,'rb').read())['mysql'])
+        models.update(config=json.loads(open(args.conf,'rb').read())['database'])
     elif args.install:
-        models.install2(config=json.loads(open(args.conf,'rb').read())['mysql'])
+        models.install2(config=json.loads(open(args.conf,'rb').read())['database'])
     else:
-        models.install(config=json.loads(open(args.conf,'rb').read())['mysql'])
+        models.install(config=json.loads(open(args.conf,'rb').read())['database'])

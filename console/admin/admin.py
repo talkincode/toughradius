@@ -32,6 +32,7 @@ import json
 from base import *
 from ops import app as ops_app
 from business import app as bus_app
+from member import app as mem_app
 
 APP_DIR = os.path.split(__file__)[0]
 print APP_DIR
@@ -47,12 +48,15 @@ def init_app():
         commit=False, 
         use_kwargs=False 
     )
+    init_context(session=sqla_pg.new_session())
     app.install(sqla_pg)
     ops_app.install(sqla_pg)
     bus_app.install(sqla_pg)
+    mem_app.install(sqla_pg)
 
     app.mount("/ops",ops_app)
     app.mount("/bus",bus_app)
+    app.mount("/member",mem_app)
 
     #create dir
     try:
@@ -147,6 +151,7 @@ def param_update(db):
     for param in params:
         if param.param_name in request.forms:
             _value = request.forms.get(param.param_name)
+            if _value: _value = _value.decode('utf-8')
             if _value and param.param_value not in _value:
                 param.param_value = _value
 
@@ -747,7 +752,7 @@ def main():
         return
 
     _config = json.loads(open(args.conf).read())
-    _mysql = _config['mysql']
+    _database = _config['database']
     _console = _config['console']
 
     if args.httpport:
@@ -763,8 +768,7 @@ def main():
     websock.connect(_console['radaddr'],_console['adminport'])
 
     from sqlalchemy import create_engine
-    models.engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
-            _mysql['user'],_mysql['passwd'],_mysql['host'],_mysql['db']))
+    models.engine = create_engine(models.get_db_connstr(_database))
 
     init_app()
     

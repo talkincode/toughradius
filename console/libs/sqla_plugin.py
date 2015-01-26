@@ -144,6 +144,9 @@ class SQLAlchemyPlugin(object):
             return rv
 
         return wrapper
+
+    def new_session(self):
+        return self.create_session(bind=self.engine)
     
 
 Plugin = SQLAlchemyPlugin

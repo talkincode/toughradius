@@ -8,7 +8,24 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from hashlib import md5
 from libs import utils
 
-engine = create_engine('mysql://root:root@127.0.0.1:3306/mysql?charset=utf8')
+def get_db_connstr(dbconf=None):
+    default_str = 'mysql://root:root@127.0.0.1:3306/mysql?charset=utf8'
+    if not dbconf:
+        return default_str
+    if dbconf['dbtype'] == 'mysql':
+        return 'mysql://%s:%s@%s:%s/%s?charset=%s'%(
+            dbconf['user'],
+            dbconf['passwd'],
+            dbconf['host'],
+            dbconf['port'],
+            dbconf['db'],
+            dbconf['charset'])
+    else:
+        return default_str
+    
+
+
+engine = create_engine(get_db_connstr())
 DeclarativeBase = declarative_base()
 metadata = DeclarativeBase.metadata
 metadata.bind = engine
@@ -335,23 +352,6 @@ class SlcRadOperateLog(DeclarativeBase):
     operate_time = Column(u'operate_time', VARCHAR(length=19), nullable=False,doc=u"操作时间")
     operate_desc = Column(u'operate_desc', VARCHAR(length=512),doc=u"操作描述")
 
-
-def build_db(config=None):
-    global engine
-    engine = create_engine('mysql://%s:%s@%s:3306/mysql?charset=utf8'%(
-                    config['user'],config['passwd'],config['host']))
-    conn = engine.connect()
-    try:
-        conn.execute("drop database %s"%config['db'])
-    except:
-        pass
-    conn.execute("create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db'])
-    conn.execute("commit")
-    conn.close()
-    engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
-                    config['user'],config['passwd'],config['host'],config['db']))
-    metadata.create_all(engine,checkfirst=True)    
-
 def init_db(db):
     node = SlcNode()
     node.id = 1
@@ -359,16 +359,34 @@ def init_db(db):
     node.node_desc = u'测试区域'
     db.add(node)
 
+    param0 = SlcParam()
+    param0.param_name = u'1_system_name'
+    param0.param_desc = u'管理系统名称'
+    param0.param_value = u'ToughRADIUS管理控制台'
+    db.add(param0)
+
+    param01 = SlcParam()
+    param01.param_name = u'2_member_system_name'
+    param01.param_desc = u'自助服务系统名称'
+    param01.param_value = u'ToughRADIUS自助服务中心'
+    db.add(param01)   
+
+    param02 = SlcParam()
+    param02.param_name = u'3_radiusd_address'
+    param02.param_desc = u'Radius服务IP地址'
+    param02.param_value = u'192.168.59.103'
+    db.add(param02)   
+
     param1 = SlcParam()
-    param1.param_name = 'max_session_timeout'
-    param1.param_desc = u'最大会话时长(秒)'
-    param1.param_value = '86400'
+    param1.param_name = u'max_session_timeout'
+    param1.param_desc = u'Radius最大会话时长(秒)'
+    param1.param_value = u'86400'
     db.add(param1)
 
     param2 = SlcParam()
-    param2.param_name = 'reject_delay'
-    param2.param_desc = u'拒绝延迟时间(秒),0-9'
-    param2.param_value = '7'
+    param2.param_name = u'reject_delay'
+    param2.param_desc = u'拒绝延迟时间(秒)(0-9)'
+    param2.param_value = u'7'
     db.add(param2)
   
 
@@ -542,6 +560,24 @@ def init_test(db):
     db.commit()    
 
 
+def build_db(config=None):
+    if config['dbtype'] != 'mysql':
+       return update(config)
+    global engine
+    _copy = config.copy()
+    _copy['db'] = 'mysql'
+    engine = create_engine(get_db_connstr(_copy))
+    conn = engine.connect()
+    try:
+        conn.execute("drop database %s"%config['db'])
+    except:
+        pass
+    conn.execute("create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db'])
+    conn.execute("commit")
+    conn.close()
+    engine = create_engine(get_db_connstr(config))
+    metadata.create_all(engine,checkfirst=True)  
+
 
 def install(config=None):
 
@@ -571,8 +607,7 @@ def install2(config=None):
 def update(config=None):
     print 'starting update database...'
     global engine
-    engine = create_engine('mysql://%s:%s@%s:3306/%s?charset=utf8'%(
-                    config['user'],config['passwd'],config['host'],config['db']))
+    engine = create_engine(get_db_connstr(config))
 
     action = raw_input("rebuild database ?[n]")
     if action == 'y':

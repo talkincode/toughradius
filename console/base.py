@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
-
+from twisted.python import log
 from bottle import request
 from bottle import response
 from bottle import redirect
@@ -15,19 +15,10 @@ import models
 import os
 import json
 from beaker.cache import CacheManager
-import logging 
-
-logger = logging
-logger.basicConfig(filename='console.log', format=logging.BASIC_FORMAT)
 
 __cache_timeout__ = 600
 
-cache = CacheManager(cache_regions={
-      'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }
-      }) 
-
-""" define logging """
-
+cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
 
 secret='123321qweasd',
 
@@ -39,22 +30,39 @@ set_cookie = lambda name,value:response.set_cookie(name,value,secret=secret)
 bottle.TEMPLATE_PATH.append(os.path.split(__file__)[0]+"/views/")
 
 MakoTemplate.defaults.update(dict(
-        system_name = 'ToughRADIUS Console',
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
         request = request
 ))
 
-def init_context(**kwargs):
+@cache.cache('get_account_node_id',expire=3600)   
+def account_node_id(db,account_number):
+    return  db.query(models.SlcMember.node_id).filter(
+        models.SlcMember.member_id == models.SlcRadAccount.member_id,
+        models.SlcRadAccount.account_number == account_number).scalar()
+
+@cache.cache('get_member_node_id',expire=3600)   
+def member_node_id(db,member_id):
+    return  db.query(models.SlcMember.node_id).filter_by(member_id = member_id).scalar()
+
+@cache.cache('get_param_value',expire=3600)   
+def get_param_value(db,pname):
+    return  db.query(models.SlcParam.param_value).filter_by(param_name = pname).scalar()
+
+def init_context(session=None,**kwargs):
     MakoTemplate.defaults.update(**kwargs)
+    if session:
+        MakoTemplate.defaults.update(dict(
+            sys_param_value = functools.partial(get_param_value,session)
+        ))
 
 
 def auth_opr(func):
     @functools.wraps(func)
     def warp(*args,**kargs):
         if not get_cookie("username"):
-            logger.info("admin login timeout")
+            log.msg("admin login timeout")
             return redirect('/login')
         else:
             return func(*args,**kargs)
@@ -76,12 +84,9 @@ def serial_json(mdl):
     if not hasattr(mdl,'__table__'):return
     return json.dumps({c.name: getattr(mdl, c.name) for c in mdl.__table__.columns},ensure_ascii=False)
 
-@cache.cache('get_account_node_id',expire=3600)   
-def account_node_id(db,account_number):
-    return  db.query(models.SlcMember.node_id).filter(
-        models.SlcMember.member_id == models.SlcRadAccount.member_id,
-        models.SlcRadAccount.account_number == account_number).scalar()
 
-@cache.cache('get_member_node_id',expire=3600)   
-def member_node_id(db,member_id):
-    return  db.query(models.SlcMember.node_id).filter_by(member_id = member_id).scalar()
+
+
+
+
+

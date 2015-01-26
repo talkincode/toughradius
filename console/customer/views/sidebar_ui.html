@@ -1,0 +1,49 @@
+
+<%def name="login_box()">
+<div class="sidebar-box">
+% if not get_cookie('member'):
+    <div class="login">
+        <p><small></small></p>
+        <a class="btn btn-default btn-md" href="/member/join" role="button">立即注册</a> 
+        <p><small>已有账号请<a href="/member/login">登陆</a></small></p>
+    </div>
+% else:
+    <div class="media">
+      <a class="pull-left" href="/user/profile/${handler.encrypt_username(current_user.username)}">
+        <img class="media-object img-circle" src="${current_user.headurl or ''}!head" alt="...">
+      </a>
+      <div class="media-body">
+        <div class="media-heading">${current_user.nickname or current_user.username}</div>
+        <small>${current_user.signature or ''}</small>
+      </div>
+
+    </div>
+     <hr>
+     <div class="credit_bar" >
+       <div class="balance"><a href="/my/credit/log">我的硬币</a> <span class="glyphicon glyphicon-leaf"></span> ${str(current_user.credit)}</div>
+     </div>
+% endif
+</div>
+</%def>
+
+<%def name="user_box()">
+% if current_user:
+<div class="sidebar-box">
+<h4 class="list-group-item">我感兴趣的</h4>
+<hr>
+<div class="list-group">
+  <a href="/my/posts" class="list-group-item"><span class="glyphicon glyphicon-comment"></span> 我收藏的主题</a>
+  <a href="/my/follows" class="list-group-item"><span class="glyphicon glyphicon-user"></span> 我关注的用户主题</a>
+</div>
+</div>
+% endif
+</%def>
+
+<%def name="qrcode_box()">
+<div class="sidebar-box">
+  <h4 class="list-group-item">微信公众号</h4>
+  <hr>
+  <div class="img-center"><img src="http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230"></div>
+</div>
+</%def>
+
