@@ -80,9 +80,8 @@ bas_update_form = pyforms.Form(
 product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}
 product_status_dict = {0:u'正常',1:u"停用"}
 
-def product_add_form(nodes=[]):
+def product_add_form():
     return pyforms.Form(
-        pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"资费名称",  required="required",**input_style),
         pyforms.Dropdown("product_policy", args=product_policy.items(), description=u"计费策略", required="required",**input_style),
         pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),

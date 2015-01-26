@@ -198,7 +198,7 @@ def member_update(db):
 @app.get('/member/open',apply=auth_opr)
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    products = []
+    products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct)]
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))      
     form = forms.user_open_form(nodes,products,groups)
@@ -207,7 +207,7 @@ def member_open(db):
 @app.post('/member/open',apply=auth_opr)
 def member_open(db): 
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    products = []  
+    products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct)]
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))        
     form = forms.user_open_form(nodes,products,groups)
@@ -310,9 +310,7 @@ def member_open(db):
 def account_open(db): 
     member_id =   request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
-    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct).filter_by(
-        node_id = member.node_id
-    )]
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
     groups.insert(0,('',''))  
     form = forms.account_open_form(products,groups)

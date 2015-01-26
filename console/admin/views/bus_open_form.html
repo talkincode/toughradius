@@ -4,22 +4,6 @@
 <link rel="stylesheet" href="/static/js/datepicker.css"> 
 <script>
 
-//根据区域动态选择资费信息
-function updateProduct(){
-    var node_id = $("#node_id").val();
-    $.get("/bus/product/json?node_id="+node_id, {}, function (ev) {
-        $("#product_id").empty();
-        console.log("empty items");
-        $.each(ev.data, function (index, item) {
-            var is_sel = '${form.d.product_id}' == item.code ? "selected" : "";
-            $("#product_id").append(
-                "<option value='" + item.code + "'"+ is_sel+ ">" + item.name + "</option>"
-            );
-        });
-        productCalc();
-    }, "json");
-}
-
 
 function productCalc(){
     var months = $("#months").val() || 0;
@@ -44,11 +28,6 @@ function productCalc(){
 //页面初始化
 $(document).ready(function (){
     $("#expire_date").datepicker();
-    updateProduct();
-    
-    $('#node_id').change(function() {
-        updateProduct();
-    });
     $('#product_id').change(function() {
         productCalc();
     });

@@ -340,18 +340,14 @@ def bas_delete(db):
 
 @app.route('/product',apply=auth_opr,method=['GET','POST'])
 def product(db):   
-    node_id = request.params.get("node_id")
     _query = db.query(models.SlcRadProduct)
-    if node_id:
-        _query = _query.filter_by(node_id=node_id)
     return render("sys_product_list", 
         node_list=db.query(models.SlcNode),
-        page_data = get_page_data(_query),node_id=node_id)
+        page_data = get_page_data(_query))
 
 @app.get('/product/add',apply=auth_opr)
 def product_add(db):  
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    return render("sys_product_form",form=forms.product_add_form(nodes))
+    return render("sys_product_form",form=forms.product_add_form())
 
 @app.get('/product/detail',apply=auth_opr)
 def product_detail(db):
@@ -365,12 +361,10 @@ def product_detail(db):
 
 @app.post('/product/add',apply=auth_opr)
 def product_add_post(db): 
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
-    form=forms.product_add_form(nodes)
+    form=forms.product_add_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)      
     product = models.SlcRadProduct()
-    product.node_id = form.d.node_id
     product.product_name = form.d.product_name
     product.product_policy = form.d.product_policy
     product.product_status = form.d.product_status
