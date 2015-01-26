@@ -219,7 +219,6 @@ class SlcRadProduct(DeclarativeBase):
     __table_args__ = {}
 
     id = Column('id', INTEGER(),primary_key=True,autoincrement=1,nullable=False,doc=u"资费id")
-    node_id = Column('node_id', INTEGER(), nullable=False,doc=u"区域id")
     product_name = Column('product_name', VARCHAR(length=64), nullable=False,doc=u"资费名称")
     product_policy = Column('product_policy', INTEGER(), nullable=False,doc=u"资费策略")
     product_status = Column('product_status', SMALLINT(), nullable=False,doc=u"资费状态")    
