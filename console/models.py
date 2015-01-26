@@ -213,7 +213,10 @@ class SlcRadAccountAttr(DeclarativeBase):
     attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")    
 
 class SlcRadProduct(DeclarativeBase):
-    '''资费信息表 <radiusd default table>'''
+    '''
+    资费信息表 <radiusd default table>
+    销售状态 product_status 0 正常 1 停用 资费停用后不允许再订购
+    '''
     __tablename__ = 'slc_rad_product'
 
     __table_args__ = {}
