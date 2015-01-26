@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
 import sys,os
-sys.path.insert(0,os.path.split(__file__)[0])
-sys.path.insert(0,os.path.abspath(os.path.pardir))
 from bottle import Bottle
 from bottle import request
 from bottle import response
@@ -24,45 +22,10 @@ import models
 import forms
 import datetime
 import json
-
-###############################################################################
-# init                
-###############################################################################
-
 from base import *
-from ops import app as ops_app
-from business import app as bus_app
-from member import app as mem_app
 
-APP_DIR = os.path.split(__file__)[0]
-print APP_DIR
+
 app = Bottle()
-
-def init_app():
-    ''' install plugins'''
-    sqla_pg = sqla_plugin.Plugin(
-        models.engine, 
-        models.metadata, 
-        keyword='db', 
-        create=False, 
-        commit=False, 
-        use_kwargs=False 
-    )
-    init_context(session=sqla_pg.new_session())
-    app.install(sqla_pg)
-    ops_app.install(sqla_pg)
-    bus_app.install(sqla_pg)
-    mem_app.install(sqla_pg)
-
-    app.mount("/ops",ops_app)
-    app.mount("/bus",bus_app)
-    app.mount("/member",mem_app)
-
-    #create dir
-    try:
-        os.makedirs(os.path.join(APP_DIR,'static/xls'))
-    except:pass
-
 
 ###############################################################################
 # Basic handle         
@@ -731,55 +694,3 @@ def roster_delete(db):
     redirect("/roster")        
 
 
-###############################################################################
-# run server                                                                 
-###############################################################################
-
-def main():
-    import argparse,json
-    
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
-    parser.add_argument('-raddr','--radaddr', type=str,default=None,dest='radaddr',help='raduis address')
-    parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
-    parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
-    parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
-    args =  parser.parse_args(sys.argv[1:])
-
-    if not args.conf or not os.path.exists(args.conf):
-        print 'no config file user -c or --conf cfgfile'
-        return
-
-    _config = json.loads(open(args.conf).read())
-    _database = _config['database']
-    _console = _config['console']
-
-    if args.httpport:
-        _console['httpport'] = args.httpport
-    if args.radaddr:
-        _console['radaddr'] = args.radaddr
-    if args.adminport:
-        _console['adminport'] = args.adminport
-    if args.debug:
-        _console['debug'] = bool(args.debug)
-
-    init_context(radaddr=_console['radaddr'],adminport=_console['adminport'])
-    websock.connect(_console['radaddr'],_console['adminport'])
-
-    from sqlalchemy import create_engine
-    models.engine = create_engine(models.get_db_connstr(_database))
-
-    init_app()
-    
-    log.startLogging(sys.stdout)    
-    runserver(
-        app, host='0.0.0.0', 
-        port=_console['httpport'] ,
-        debug=bool(_console['debug']),
-        reloader=bool(_console['debug']),
-        server="twisted"
-    )
-
-if __name__ == "__main__":
-    main()
