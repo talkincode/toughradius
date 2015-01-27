@@ -12,4 +12,4 @@ chmod +x /opt/startup.sh
 chmod +x /opt/upgrade.sh
 supervisorctl restart all
 
-echo 'upgrade ok'
+echo 'upgrade done'
