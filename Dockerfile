@@ -35,7 +35,7 @@ RUN git clone https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 RUN pip install -r /opt/toughradius/requirements.txt
 
 
-EXPOSE 3306 1815 1816
+EXPOSE 3306 1815 1816 1817
 EXPOSE 1812/udp
 EXPOSE 1813/udp
 
