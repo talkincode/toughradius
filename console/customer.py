@@ -14,7 +14,8 @@ from base import (
     set_cookie,
     get_param_value,
     get_member_by_name,
-    get_account_by_number
+    get_account_by_number,
+    get_online_status
 )
 from libs import sqla_plugin,utils
 import functools
@@ -30,6 +31,7 @@ def init_application(dbconf=None,cusconf=None):
     _sys_param_value = functools.partial(get_param_value,session)
     _get_member_by_name = functools.partial(get_member_by_name,session)
     _get_account_by_number = functools.partial(get_account_by_number,session)
+    _get_online_status = functools.partial(get_online_status,session)
     MakoTemplate.defaults.update(**dict(
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
@@ -38,7 +40,8 @@ def init_application(dbconf=None,cusconf=None):
         sys_param_value = _sys_param_value,
         system_name = _sys_param_value("2_member_system_name"),
         get_member = _get_member_by_name,
-        get_account = _get_account_by_number
+        get_account = _get_account_by_number,
+        is_online = _get_online_status
     ))
     
     mainapp.install(sqla_pg)

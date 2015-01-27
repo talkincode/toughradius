@@ -6,6 +6,7 @@ from bottle import response
 from bottle import redirect
 from libs.paginator import Paginator
 from libs import utils
+from hashlib import md5
 import logging
 import functools
 import urllib
@@ -20,8 +21,8 @@ __cache_timeout__ = 600
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
 
 secret='123321qweasd',
-get_cookie = lambda name: request.get_cookie(name,secret=secret)
-set_cookie = lambda name,value:response.set_cookie(name,value,secret=secret)
+get_cookie = lambda name: request.get_cookie(md5(name).hexdigest(),secret=secret)
+set_cookie = lambda name,value:response.set_cookie(md5(name).hexdigest(),value,secret=secret)
 
 class Logger:
     def info(msg):
@@ -42,6 +43,16 @@ def auth_opr(func):
         else:
             return func(*args,**kargs)
     return warp
+    
+def auth_cus(func):
+    @functools.wraps(func)
+    def warp(*args,**kargs):
+        if not get_cookie("customer"):
+            log.msg("user login timeout")
+            return redirect('/login')
+        else:
+            return func(*args,**kargs)
+    return warp    
 
 @cache.cache('get_account_node_id',expire=3600)   
 def account_node_id(db,account_number):
@@ -60,6 +71,10 @@ def get_member_by_name(db,member_name):
 @cache.cache('get_account_by_number',expire=300)   
 def get_account_by_number(db,account_number):
     return  db.query(models.SlcRadAccount).filter_by(account_number = account_number).first()
+    
+@cache.cache('get_online_status',expire=60)   
+def get_online_status(db,account_number):
+    return  db.query(models.SlcRadOnline.id).filter_by(account_number = account_number).count() > 0
     
 @cache.cache('get_param_value',expire=3600)   
 def get_param_value(db,pname):

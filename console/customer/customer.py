@@ -12,7 +12,10 @@ from bottle import mako_template as render
 from hashlib import md5
 from tablib import Dataset
 from libs import sqla_plugin 
-from base import (logger,set_cookie,get_cookie,cache)
+from base import (
+    logger,set_cookie,get_cookie,cache,
+    auth_cus,get_member_by_name,get_page_data
+)
 from libs import utils
 from sqlalchemy.sql import exists
 import bottle
@@ -24,16 +27,6 @@ import functools
 
 app = Bottle()
 
-def auth_cus(func):
-    @functools.wraps(func)
-    def warp(*args,**kargs):
-        if not get_cookie("customer"):
-            log.msg("user login timeout")
-            return redirect('/login')
-        else:
-            return func(*args,**kargs)
-    return warp
-    
 ###############################################################################
 # Basic handle         
 ###############################################################################    
@@ -117,6 +110,7 @@ def member_login_post(db):
     if not member:
         return render("login", form=form,msg=u"用户名密码不符合")
  
+    set_cookie('customer_id',member.member_id)
     set_cookie('customer',form.d.username)
     set_cookie('customer_login_time', utils.get_currtime())
     set_cookie('customer_login_ip', request.remote_addr) 
@@ -200,3 +194,111 @@ def account_detail(db):
         return render("error",msg=u"账号不存在")
     return render("account_detail",user=user)
      
+@app.get('/product/list',apply=auth_cus)
+def product_list(db):
+    return render("product_list",products=db.query(models.SlcRadProduct).filter_by(
+        product_status = 0
+    ))
+    
+@app.route('/billing',apply=auth_cus,method=['GET','POST'])
+def billing_query(db): 
+    account_number = request.params.get('account_number')  
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(
+        models.SlcRadBilling,
+        models.SlcMember.node_id,
+    ).filter(
+        models.SlcRadBilling.account_number == models.SlcRadAccount.account_number,
+        models.SlcMember.member_id == models.SlcRadAccount.member_id,
+        models.SlcMember.member_id == get_cookie("customer_id")
+    )
+    if account_number:
+        _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
+    if query_begin_time:
+        _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
+    _query = _query.order_by(models.SlcRadBilling.create_time.desc())
+    return render("billing_list", 
+        accounts=db.query(models.SlcRadAccount).filter_by(member_id=get_cookie("customer_id")),
+        page_data=get_page_data(_query),**request.params)
+        
+
+###############################################################################
+# ticket query        
+###############################################################################
+
+@app.route('/ticket',apply=auth_cus,method=['GET','POST'])
+def ticket_query(db): 
+    account_number = request.params.get('account_number')  
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(
+        models.SlcRadTicket.id,
+        models.SlcRadTicket.account_number,
+        models.SlcRadTicket.nas_addr,
+        models.SlcRadTicket.acct_session_id,
+        models.SlcRadTicket.acct_start_time,
+        models.SlcRadTicket.acct_input_octets,
+        models.SlcRadTicket.acct_output_octets,
+        models.SlcRadTicket.acct_stop_time,
+        models.SlcRadTicket.framed_ipaddr,
+        models.SlcRadTicket.mac_addr,
+        models.SlcRadTicket.nas_port_id,
+        models.SlcMember.node_id,
+        models.SlcMember.realname
+    ).filter(
+        models.SlcRadTicket.account_number == models.SlcRadAccount.account_number,
+        models.SlcMember.member_id == models.SlcRadAccount.member_id,
+        models.SlcMember.member_id == get_cookie("customer_id")
+    )
+    if account_number:
+        _query = _query.filter(models.SlcRadTicket.account_number == account_number)
+    if query_begin_time:
+        _query = _query.filter(models.SlcRadTicket.acct_start_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcRadTicket.acct_stop_time <= query_end_time)
+
+    _query = _query.order_by(models.SlcRadTicket.acct_start_time.desc())
+    return render("ticket_list", 
+        accounts=db.query(models.SlcRadAccount).filter_by(member_id=get_cookie("customer_id")),
+        page_data = get_page_data(_query),
+        **request.params)    
+    
+@app.get('/password/update',apply=auth_cus)    
+def password_update_get(db):
+    form = forms.password_update_form()
+    account_number = request.params.get('account_number')  
+    account = db.query(models.SlcRadAccount).get(account_number)
+    if not account:
+        return render("base_form", form=form,msg=u'没有这个账号')
+        
+    if account.member_id != get_cookie("customer_id"):
+        return render("base_form", form=form,msg=u'该账号用用户不匹配')  
+          
+    form.account_number.set_value(account_number)
+    return render("base_form",form=form)
+    
+@app.post('/password/update',apply=auth_cus)    
+def password_update_post(db):
+    form = forms.password_update_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+        
+    account = db.query(models.SlcRadAccount).get(form.d.account_number)
+    if not account:
+        return render("base_form", form=form,msg=u'没有这个账号')
+        
+    if account.member_id != get_cookie("customer_id"):
+        return render("base_form", form=form,msg=u'该账号用用户不匹配')
+    
+    if account.password !=  form.d.old_password:
+        return render("base_form", form=form,msg=u'旧密码不正确')
+        
+    if form.d.new_password != form.d.new_password2:
+        return render("base_form", form=form,msg=u'确认新密码不匹配')
+    
+    account.password =  utils.encrypt(form.d.new_password)
+    db.commit()
+    redirect("/")

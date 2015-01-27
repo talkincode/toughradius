@@ -4,7 +4,11 @@
 </%def>
 <%def name="main()">
 <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-lock"></span> ${form.title}</div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-cog"></span> ${form.title}
+    <div class="bar pull-right">
+        <a href="javascript:history.go(-1);">返回上页</a>
+    </div>
+    </div>
         <div class="panel-body">
             % if msg:
             <p class="alert alert-warning">
@@ -20,6 +24,5 @@
 
 <%def name="sidebar()">
     ${sidebar_ui.login_box()}
-    ${sidebar_ui.service_box()}
-    ${sidebar_ui.qrcode_box()}
+    ${sidebar_ui.user_box()}
 </%def>

@@ -384,7 +384,25 @@ def init_db(db):
     param03.param_name = u'4_radiusd_admin_port'
     param03.param_desc = u'Radius服务管理端口'
     param03.param_value = u'1815'
-    db.add(param03)       
+    db.add(param03)     
+    
+    param04 = SlcParam()
+    param04.param_name = u'5_weixin_qrcode'
+    param04.param_desc = u'微信公众号二维码图片(宽度230px)'
+    param04.param_value = u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'
+    db.add(param04)    
+    
+    param05 = SlcParam()
+    param05.param_name = u'6_service_phone'
+    param05.param_desc = u'客户服务电话'
+    param05.param_value = u'000000'
+    db.add(param05)    
+    
+    param06 = SlcParam()
+    param06.param_name = u'7_service_qq'
+    param06.param_desc = u'客户服务QQ号码'
+    param06.param_value = u'000000'
+    db.add(param06)      
 
     param1 = SlcParam()
     param1.param_name = u'max_session_timeout'

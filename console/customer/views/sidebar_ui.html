@@ -17,19 +17,41 @@
 <h4 class="list-group-item"><span class="glyphicon glyphicon-cog"></span> 我的服务</h4>
 <hr>
 <div class="list-group">
-  <a href="/product/list" class="list-group-item">资费套餐订购</a>    
-  <a href="/my/billing" class="list-group-item">计费清单查询</a>
-  <a href="/my/ticket" class="list-group-item">上网记录查询</a>
+  <a href="/" class="list-group-item">用户账号信息</a>    
+  <a href="/billing" class="list-group-item">计费清单查询</a>
+  <a href="/ticket" class="list-group-item">上网记录查询</a>
 </div>
 </div>
 % endif
 </%def>
 
 <%def name="qrcode_box()">
+ % if sys_param_value('5_weixin_qrcode') :
 <div class="sidebar-box">
-  <h4 class="list-group-item">微信公众号</h4>
+  <h4 class="list-group-item"><span class="glyphicon glyphicon-qrcode"></span> 微信公众号</h4>
   <hr>
-  <div class="img-center"><img src="http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230"></div>
+  <div class="img-center"><img src="${sys_param_value('5_weixin_qrcode')}"></div>
 </div>
+% endif
+</%def>
+
+<%def name="service_box()">
+<div class="sidebar-box">
+<h4 class="list-group-item"><span class="glyphicon glyphicon-comment"></span> 客服信息</h4>
+<hr>
+<div class="list-group">
+  % if sys_param_value('7_service_qq') :
+  % for qq in sys_param_value('7_service_qq').split(','):
+  <a href="javascript:void();" class="list-group-item">客服QQ:${qq}</a>   
+  % endfor 
+  % endif
+  % if sys_param_value('6_service_phone') :
+  % for phone in sys_param_value('6_service_phone').split(','):
+  <a href="javascript:void();" class="list-group-item">客服电话:${phone}</a>   
+  % endfor 
+  % endif
+</div>
+</div>
+
 </%def>
 
