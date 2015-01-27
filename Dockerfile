@@ -9,11 +9,7 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME ["/var/toughradius"]
 
-RUN mkdir -p /var/toughradius_run
-
 ADD docker/my.cnf /etc/
-ADD docker/supervisord.conf /var/toughradius_run/
-ADD docker/radiusd.json /var/toughradius_run/
 ADD docker/startup.sh /opt/
 ADD docker/upgrade.sh /opt/
 RUN chmod +x /opt/startup.sh   

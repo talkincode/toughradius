@@ -5,8 +5,8 @@ if [ ! -f /var/toughradius/mysql/ibdata1 ]; then
     mkdir -p /var/toughradius/mysql
     mkdir -p /var/toughradius/log
 
-    cp /var/toughradius_run/radiusd.json /var/toughradius/radiusd.json
-    cp /var/toughradius_run/supervisord.conf /var/toughradius/supervisord.conf
+    yes | cp -f /opt/toughradius/docker/radiusd.json /var/toughradius/radiusd.json
+    yes | cp -f /opt/toughradius/docker/supervisord.conf /var/toughradius/supervisord.conf
 
     echo "starting install mysql database;"
 
