@@ -70,7 +70,7 @@ Windows
 
     $ docker run -d -P -v /var/toughradius:/var/toughradius \
       -p 3306:3306 -p 1812:1812/udp -p 1813:1813/udp \
-      -p 1815:1815 -p 1816:1816 \
+      -p 1815:1815 -p 1816:1816 -p 1817:1817\
       --name toughradius talkincode/centos7-toughradius
 
 以上指令自动下载toughradius镜像,创建名称为toughradius的容器，以守护进程模式运行，容器只需创建一次，以上命令只需首次运行即可。
@@ -129,10 +129,13 @@ ToughRADIUS版本更新
      * branch            master     -> FETCH_HEAD
     ...
     ...
-    rad_console: stopped
     radiusd: stopped
     radiusd: started
+    rad_console: stopped
     rad_console: started
+    rad_customer: stopped
+    rad_customer: started
+    
     upgrade ok
 
 
@@ -143,10 +146,7 @@ ToughRADIUS版本更新
 
 你可以修改其中的内容，你甚至可以指定另外的mysql数据库。
 
-你应该修改 console的radaddr参数，改成你主机的IP地址。
-
-如果你修改了端口，必须同时改变容器映射端口，你可以删除容器再重新创建。
-
+如果你修改了容器映射端口，你可以删除容器再重新创建。
 
 删除容器::
 

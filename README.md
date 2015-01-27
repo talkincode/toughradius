@@ -8,9 +8,9 @@ ToughRADIUS支持MySQL存储用户数据，支持数据缓存，极大的提高�
 
 ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
-提供了RADIUS核心服务引擎与Web管理控制台两个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。
+提供了RADIUS核心服务引擎与Web管理控制台,用户自助服务三个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。用户自助服务系统提供了一个面向终端用户的网上服务渠道。
 
-[ToughRADIUS网站：http:://www.toughradius.net] (http:://www.toughradius.net)
+[ToughRADIUS网站：http://www.toughradius.net] (http://www.toughradius.net)
 
 ## 使用Docker镜像 
 

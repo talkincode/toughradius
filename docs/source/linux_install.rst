@@ -43,12 +43,13 @@ MySQL数据库安装
 Python依赖模块安装
 --------------------------------------
 
-ToughRADIUS依赖一些特定的Python模块，我们也需要安装，才能保证ToughRADIUS的顺利运行::
+ToughRADIUS依赖一些特定的Python模块，我们也需要安装，才能保证ToughRADIUS的顺利运行
 
 安装pip模块管理工具与supervisor进程管理工具::
 
     $ easy_install pip supervisor
-    
+
+
 安装ToughRADIUS依赖的Python模块::
 
     $ pip install -r https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/requirements.txt
@@ -71,7 +72,7 @@ ToughRADIUS依赖一些特定的Python模块，我们也需要安装，才能保
     
 编辑/etc/toughradius.json文件，在配置文件中，可以指定几乎所有的配置参数。
 
-databse部分输数据库的配置，修改配置文件数据库部分的主机，端口，用户名，数据库名，密码和实际相符合。
+databse部分是数据库的配置，修改配置文件数据库部分的主机，端口，用户名，数据库名，密码和实际相符合。
 
 radiusd是Radius核心服务的配置，注意adminport是提供给web管理系统调用服务的端口，allows主要是web管理系统与自助服务系统的IP地址。
 
@@ -79,7 +80,7 @@ admin部分是web管理控制台配置，注意服务端口的配置，如果与
 
 customer是自助服务系统配置，注意服务端口的配置，如果与系统其他应用冲突请修改。
 
-.. code-block:: javascript::
+.. code-block:: javascript
 
     {
         "database": 
@@ -134,7 +135,7 @@ customer是自助服务系统配置，注意服务端口的配置，如果与系
     $ cd /opt/toughradius \
         && python radiusd/server.py -c /etc/toughradius.json 
 
-以守护进城模式运行::
+以守护进程模式运行::
 
     $ cd /opt/toughradius \
         && nohup python radiusd/server.py -c /etc/toughradius.json  &
@@ -144,7 +145,7 @@ customer是自助服务系统配置，注意服务端口的配置，如果与系
     $ cd /opt/toughradius/console \
         && python admin.py -c /etc/toughradius.json
 
-以守护进城模式运行::
+以守护进程模式运行::
 
     $ cd /opt/toughradius/console \
         && nohup python admin.py -c /etc/toughradius.json &

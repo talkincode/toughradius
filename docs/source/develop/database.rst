@@ -267,7 +267,10 @@ attr_desc              VARCHAR(255)      True              属性描述
 slc_rad_product
 ------------------------------------ 
 
-资费信息表 <radiusd default table>
+
+    资费信息表 <radiusd default table>
+    销售状态 product_status 0 正常 1 停用 资费停用后不允许再订购
+    
 
 .. start_table slc_rad_product;id 
 
@@ -275,7 +278,6 @@ slc_rad_product
 属性                    类型（长度）       可否为空           描述                              
 =====================  ================  ================  ====================================
 id                     INTEGER           False             资费id                  
-node_id                INTEGER           False             区域id                  
 product_name           VARCHAR(64)       False             资费名称              
 product_policy         INTEGER           False             资费策略              
 product_status         SMALLINT          False             资费状态              
@@ -458,7 +460,7 @@ id                     INTEGER           False             日志id
 operator_name          VARCHAR(32)       False             操作员名称           
 operate_ip             VARCHAR(128)      True              操作员ip               
 operate_time           VARCHAR(19)       False             操作时间              
-operate_desc           VARCHAR(512)      True              操作描述              
+operate_desc           VARCHAR(1024)     True              操作描述              
 =====================  ================  ================  ====================================
 
 .. end_table
