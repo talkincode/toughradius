@@ -549,21 +549,24 @@ def build_db(config=None):
        return update(config)
     _default = config.copy()
     _default['db'] = 'mysql'
-    engine,_ = get_engine(_default,echo=True)
+    engine,_ = get_engine(_default)
     conn = engine.connect()
     try:
         drop_sql = "drop database %s"%config['db']
-        conn.execute(drop_sql)
-        create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db']
-        conn.execute(create_sql)
-        conn.execute("commit")
-        conn.close()        
+        print drop_sql
+        conn.execute(drop_sql)      
     except:
-        conn.rollback()
         import traceback
         traceback.print_exc()
+    
+    create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db']
+    print create_sql
+    conn.execute(create_sql)
+    print 'commit'
+    conn.execute("commit")
+    conn.close()
 
-    engine,metadata = get_engine(config,echo=True)
+    engine,metadata = get_engine(config)
     metadata.create_all(engine,checkfirst=True)  
 
 
@@ -572,7 +575,7 @@ def install(config=None):
     action = raw_input("drop and create database ?[n]")
     if action == 'y':
         build_db(config=config)
-        engine,_ = get_engine(config,echo=True)
+        engine,_ = get_engine(config)
         db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
         action = raw_input("init database ?[n]")
         if action == 'y':
@@ -582,13 +585,13 @@ def install(config=None):
 def install2(config=None):
     print 'starting create and init database...'
     build_db(config=config)
-    engine,_ = get_engine(config,echo=True)
+    engine,_ = get_engine(config)
     db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
     init_db(db)
 
 def update(config=None):
     print 'starting update database...'
-    engine,metadata = get_engine(config,echo=True)
+    engine,metadata = get_engine(config)
     action = raw_input("rebuild database ?[n]")
     if action == 'y':
         metadata.drop_all(engine)      
