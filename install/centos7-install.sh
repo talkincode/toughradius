@@ -128,7 +128,7 @@ case "$1" in
   
   all)
     depend
-    mysql
+    mysql5
     radius
     setup
   ;;
