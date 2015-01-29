@@ -556,8 +556,7 @@ def build_db(config=None):
         print drop_sql
         conn.execute(drop_sql)      
     except:
-        import traceback
-        traceback.print_exc()
+        print "drop database error"
     
     create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db']
     print create_sql

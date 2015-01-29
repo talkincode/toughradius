@@ -81,7 +81,7 @@ setup()
 unsetup()
 {
     echo "shutdown mysql.."
-    mysql -uroot shutdown
+    mysqladmin -uroot shutdown
     echo "shutdown supervisord"
     supervisorctl shutdown
     echo "/var/toughradius"
