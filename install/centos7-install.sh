@@ -80,8 +80,6 @@ setup()
 
 unsetup()
 {
-    echo "to delete toughradius "
-    read -s -n1 -p "Press any key to continue ... "
     echo "shutdown mysql.."
     mysql -uroot shutdown
     echo "shutdown supervisord"
