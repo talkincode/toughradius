@@ -43,6 +43,7 @@ setup()
     mkdir -p /var/toughradius/mysql
     mkdir -p /var/toughradius/log
 
+    cp /etc/my.cnf /etc/my.cnf.$((`date +%s`))
     yes | cp -f /opt/toughradius/docker/my.cnf /etc/my.cnf
     yes | cp -f /opt/toughradius/docker/radiusd.json /var/toughradius/radiusd.json
     yes | cp -f /opt/toughradius/docker/supervisord.conf /var/toughradius/supervisord.conf    
