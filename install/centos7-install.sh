@@ -19,7 +19,7 @@ depend()
     echo "install depend done!"
 }
 
-mysql()
+mysql5()
 {
     echo "install mysql"
     rpm -ivh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
@@ -105,8 +105,8 @@ case "$1" in
     depend
   ;;
 
-  mysql)
-    mysql
+  mysql5)
+    mysql5
   ;;
 
   radius)
@@ -133,7 +133,7 @@ case "$1" in
   ;;
 
   *)
-    echo "Usage: $0 {all|depend|mysql|radius|setup|unsetup|upgrade}"
+    echo "Usage: $0 {all|depend|mysql5|radius|setup|unsetup|upgrade}"
   ;;
 
 esac
