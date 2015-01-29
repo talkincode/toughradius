@@ -16,6 +16,7 @@ depend()
     echo "python package"
     easy_install pip 
     easy_install supervisor
+    echo "install depend done!"
 }
 
 mysql()
@@ -23,15 +24,20 @@ mysql()
     echo "install mysql"
     rpm -ivh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
     yum install -y mysql-community-server mysql-community-devel 
+    echo "install mysql done!"
 }
 
 
 radius()
 {
-    echo "pull ToughRADIUS latest"
+    echo "fetch ToughRADIUS latest"
     git clone https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
     pip install -r /opt/toughradius/requirements.txt
+    echo "fetch ToughRADIUS done!"
+}
 
+setup()
+{
     echo "mkdir /var/toughradius"
     mkdir -p /var/toughradius
     mkdir -p /var/toughradius/mysql
@@ -40,12 +46,7 @@ radius()
     yes | cp -f /opt/toughradius/docker/my.cnf /etc/my.cnf
     yes | cp -f /opt/toughradius/docker/radiusd.json /var/toughradius/radiusd.json
     yes | cp -f /opt/toughradius/docker/supervisord.conf /var/toughradius/supervisord.conf    
-    ln -s /opt/toughradius/install/upgrade.sh /usr/bin/radius_upgrade
-    chmod +x /usr/bin/radius_upgrade
-}
-
-setup()
-{
+    
     echo "starting install mysql database;"
 
     sleep 1s
@@ -85,13 +86,18 @@ unsetup()
     mysql -uroot shutdown
     echo "shutdown supervisord"
     supervisorctl shutdown
-    echo "/opt/toughradius"
-    rm -fr /opt/toughradius
     echo "/var/toughradius"
     rm -fr /var/toughradius
-    echo "/usr/bin/radius_upgrade"
-    rm -f /usr/bin/radius_upgrade
     echo 'unsetup done!'
+}
+
+upgrade()
+{
+    echo 'starting upgrade...' 
+    cd /opt/toughradius && git pull origin master
+    supervisorctl restart all
+    supervisorctl status
+    echo 'upgrade done'
 }
 
 
@@ -117,6 +123,10 @@ case "$1" in
     unsetup
   ;;    
   
+  upgrade)
+    upgrade
+  ;;    
+  
   all)
     depend
     mysql
@@ -125,7 +135,7 @@ case "$1" in
   ;;
 
   *)
-    echo "Usage: $0 {depend|mysql|radius|setup|unsetup|all}"
+    echo "Usage: $0 {all|depend|mysql|radius|setup|unsetup|upgrade}"
   ;;
 
 esac
