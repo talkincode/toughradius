@@ -3,7 +3,7 @@ import copy
 import re
 import itertools
 
-from libs.pyforms import net
+from console.libs.pyforms import net
 
 
 __version__ = "0.01"
