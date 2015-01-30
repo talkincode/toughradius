@@ -4,6 +4,7 @@
 from bottle import Bottle
 from bottle import request
 from bottle import response
+from bottle import HTTPResponse
 from bottle import redirect
 from bottle import run as runserver
 from bottle import static_file
@@ -12,6 +13,7 @@ from bottle import mako_template as render
 from hashlib import md5
 from tablib import Dataset
 from libs import sqla_plugin 
+from urlparse import urljoin
 from base import (
     logger,set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
@@ -47,46 +49,46 @@ def route_static(path):
 ###############################################################################
 # login handle         
 ###############################################################################
-
+@cache.cache('customer_index_get_data',expire=300)  
+def get_data(db,member_name):
+    member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
+    accounts = db.query(
+        models.SlcMember.realname,
+        models.SlcRadAccount.member_id,
+        models.SlcRadAccount.account_number,
+        models.SlcRadAccount.expire_date,
+        models.SlcRadAccount.balance,
+        models.SlcRadAccount.time_length,
+        models.SlcRadAccount.status,
+        models.SlcRadAccount.last_pause,
+        models.SlcRadAccount.create_time,
+        models.SlcRadProduct.product_name,
+        models.SlcRadProduct.product_policy
+    ).filter(
+        models.SlcRadProduct.id == models.SlcRadAccount.product_id,
+        models.SlcMember.member_id == models.SlcRadAccount.member_id,
+        models.SlcRadAccount.member_id == member.member_id
+    )
+    orders = db.query(
+        models.SlcMemberOrder.order_id,
+        models.SlcMemberOrder.order_id,
+        models.SlcMemberOrder.product_id,
+        models.SlcMemberOrder.account_number,
+        models.SlcMemberOrder.order_fee,
+        models.SlcMemberOrder.actual_fee,
+        models.SlcMemberOrder.pay_status,
+        models.SlcMemberOrder.create_time,
+        models.SlcMemberOrder.order_desc,
+        models.SlcRadProduct.product_name
+    ).filter(
+        models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
+        models.SlcMemberOrder.member_id==member.member_id
+    )
+    return member,accounts,orders
+        
 @app.get('/',apply=auth_cus)
 def customer_index(db):
-    @cache.cache('customer_index_get_data',expire=300)  
-    def get_data(member_name):
-        member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
-        accounts = db.query(
-            models.SlcMember.realname,
-            models.SlcRadAccount.member_id,
-            models.SlcRadAccount.account_number,
-            models.SlcRadAccount.expire_date,
-            models.SlcRadAccount.balance,
-            models.SlcRadAccount.time_length,
-            models.SlcRadAccount.status,
-            models.SlcRadAccount.last_pause,
-            models.SlcRadAccount.create_time,
-            models.SlcRadProduct.product_name,
-            models.SlcRadProduct.product_policy
-        ).filter(
-            models.SlcRadProduct.id == models.SlcRadAccount.product_id,
-            models.SlcMember.member_id == models.SlcRadAccount.member_id,
-            models.SlcRadAccount.member_id == member.member_id
-        )
-        orders = db.query(
-            models.SlcMemberOrder.order_id,
-            models.SlcMemberOrder.order_id,
-            models.SlcMemberOrder.product_id,
-            models.SlcMemberOrder.account_number,
-            models.SlcMemberOrder.order_fee,
-            models.SlcMemberOrder.actual_fee,
-            models.SlcMemberOrder.pay_status,
-            models.SlcMemberOrder.create_time,
-            models.SlcMemberOrder.order_desc,
-            models.SlcRadProduct.product_name
-        ).filter(
-            models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
-            models.SlcMemberOrder.member_id==member.member_id
-        )
-        return member,accounts,orders
-    member,accounts,orders = get_data(get_cookie('customer'))
+    member,accounts,orders = get_data(db,get_cookie('customer'))
     return  render("index",member=member,accounts=accounts,orders=orders)    
 
 
@@ -305,7 +307,7 @@ def password_update_post(db):
     db.commit()
     redirect("/")
     
-@app.get('/portal/auth')
+@app.route('/portal/auth')
 def portal_auth(db):
     user = request.params.get("user")
     token = request.params.get("token")
@@ -318,10 +320,10 @@ def portal_auth(db):
         if not account:
             return render("error",msg=u"用户%s不存在!"%user)
         member = db.query(models.SlcMember).get(account.member_id)
-        set_cookie('customer_id',member.member_id)
-        set_cookie('customer',member.member_name)
-        set_cookie('customer_login_time', utils.get_currtime())
-        set_cookie('customer_login_ip', request.remote_addr) 
+        set_cookie('customer_id',member.member_id,path="/")
+        set_cookie('customer',member.member_name,path="/")
+        set_cookie('customer_login_time', utils.get_currtime(),path="/")
+        set_cookie('customer_login_ip', request.remote_addr,path="/") 
         redirect("/")
     else:
         return render("error",msg=u"无效的访问!")

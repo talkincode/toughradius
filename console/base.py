@@ -22,7 +22,7 @@ cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': _
 
 secret='123321qweasd',
 get_cookie = lambda name: request.get_cookie(md5(name).hexdigest(),secret=secret)
-set_cookie = lambda name,value:response.set_cookie(md5(name).hexdigest(),value,secret=secret)
+set_cookie = lambda name,value,**options:response.set_cookie(md5(name).hexdigest(),value,secret=secret,**options)
 
 class Logger:
     def info(msg):
