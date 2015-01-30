@@ -76,7 +76,7 @@ def get_account_by_number(db,account_number):
 def get_online_status(db,account_number):
     return  db.query(models.SlcRadOnline.id).filter_by(account_number = account_number).count() > 0
     
-@cache.cache('get_param_value',expire=3600)   
+@cache.cache('get_param_value',expire=600)   
 def get_param_value(db,pname):
     return  db.query(models.SlcParam.param_value).filter_by(param_name = pname).scalar()
 

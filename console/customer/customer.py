@@ -13,8 +13,9 @@ from hashlib import md5
 from tablib import Dataset
 from libs import sqla_plugin 
 from base import (
-    logger,set_cookie,get_cookie,cache,
-    auth_cus,get_member_by_name,get_page_data
+    logger,set_cookie,get_cookie,cache,get_param_value,
+    auth_cus,get_member_by_name,get_page_data,
+    get_account_by_number
 )
 from libs import utils
 from sqlalchemy.sql import exists
@@ -302,3 +303,24 @@ def password_update_post(db):
     account.password =  utils.encrypt(form.d.new_password)
     db.commit()
     redirect("/")
+    
+@app.get('/portal/auth')
+def portal_auth(db):
+    user = requset.params.get("user")
+    token = request.params.get("token")
+    secret = get_param_value(db,"8_portal_secret")
+    date = utils.get_currdate()
+    _token = md5("%s%s%s"%(user,secret,date)).hexdigest()
+    if _token == token:
+        account = get_account_by_number(db,user)
+        if not account:
+            return render("error",msg=u"用户%s不存在!"%user)
+        member = db.query(models.SlcMember).get(account.member_id)
+        set_cookie('customer_id',member.member_id)
+        set_cookie('customer',member.member_name)
+        set_cookie('customer_login_time', utils.get_currtime())
+        set_cookie('customer_login_ip', request.remote_addr) 
+        redirect("/")
+    else:
+        return render("error",msg=u"无效的访问!")
+        

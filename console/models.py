@@ -402,7 +402,13 @@ def init_db(db):
     param06.param_name = u'7_service_qq'
     param06.param_desc = u'客户服务QQ号码'
     param06.param_value = u'000000'
-    db.add(param06)      
+    db.add(param06)  
+    
+    param07 = SlcParam()
+    param07.param_name = u'8_portal_secret'
+    param07.param_desc = u'portal登陆密钥'
+    param07.param_value = u'abcdefg123456'
+    db.add(param07)           
 
     param1 = SlcParam()
     param1.param_name = u'max_session_timeout'
