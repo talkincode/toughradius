@@ -18,7 +18,7 @@ class Paginator():
         for _page in range(1, self.page_num + 1):
             _index = int(_page / 10)
             if not self.page_bars.has_key(_index):
-                self.page_bars[_index] = {_page}
+                self.page_bars[_index] = set([_page])
             else:
                 self.page_bars[_index].add(_page)
 
