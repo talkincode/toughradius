@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #coding:utf-8
-
+import test_config
 
 _plugins = [
     'auth_bind_filter',

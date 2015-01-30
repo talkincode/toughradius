@@ -8,8 +8,8 @@ import select
 import socket
 import time
 import six
-from pyrad import host
-from pyrad import packet
+import host
+import packet
 
 
 class Timeout(Exception):

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 #coding:utf-8
+import test_config
 from radiusd import utils
 
 def test_encrypt_decrypt():

@@ -62,9 +62,9 @@ These datatypes are parsed but not supported:
 
 __docformat__ = 'epytext en'
 
-from pyrad import bidict
-from pyrad import tools
-from pyrad import dictfile
+import bidict
+import tools
+import dictfile
 from copy import copy
 
 DATATYPES = frozenset(['string', 'ipaddr', 'integer', 'date',

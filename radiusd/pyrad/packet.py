@@ -15,7 +15,7 @@ except ImportError:
     import md5
     md5_constructor = md5.new
 import six
-from pyrad import tools
+import tools
 
 # Packet codes
 AccessRequest = 1

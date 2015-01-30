@@ -2,7 +2,7 @@
 #
 # Copyright 2003,2007 Wichert Akkerman <wichert@wiggy.net>
 
-from pyrad import packet
+import packet
 
 
 class Host:
