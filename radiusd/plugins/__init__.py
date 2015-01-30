@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 #coding=utf-8
-from radiusd.pyrad import packet
-from radiusd.plugins import *
+import sys,os
+sys.path.insert(0,os.path.abspath(os.path.pardir))
+from pyrad import packet
+from plugins import *
 __all__ = [
     'auth_bind_filter',
     'auth_group_filter',
