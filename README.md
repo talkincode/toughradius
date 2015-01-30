@@ -1,4 +1,4 @@
-# ToughRADIUS
+# ToughRADIUS  [![Build Status](https://travis-ci.org/talkincode/ToughRADIUS.svg?branch=master)](https://travis-ci.org/talkincode/ToughRADIUS)
 
 ToughRADIUS是一个开源，免费，易用的Radius服务软件。
 
