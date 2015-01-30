@@ -16,6 +16,7 @@ depend()
     echo "python package"
     easy_install pip 
     easy_install supervisor
+    easy_install argparse
     echo "install depend done!"
 }
 

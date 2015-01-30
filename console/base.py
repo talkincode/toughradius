@@ -94,7 +94,10 @@ def get_page_data(query):
 def serial_json(mdl):
     if not mdl:return
     if not hasattr(mdl,'__table__'):return
-    return json.dumps({c.name: getattr(mdl, c.name) for c in mdl.__table__.columns},ensure_ascii=False)
+    data = {}
+    for c in mdl.__table__.columns:
+        data[c.name] = getattr(mdl, c.name)
+    return json.dumps(data,ensure_ascii=False)
 
 
 
