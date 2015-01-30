@@ -7,13 +7,14 @@ import logging
 import json
 
 def process(req=None,admin=None):
+    msg_id = req.get("msg_id")
     cache_class = req.get("cache_class") 
     if not cache_class:
-        reply = json.dumps({'data':u'cache_class is empty','code':1})
+        reply = json.dumps({'msg_id':msg_id,'data':u'cache_class is empty','code':1})
         return admin.sendMessage(reply,False) 
 
     def send_ok(op):
-        reply = json.dumps({'data':u'%s ok'%op,'code':0})
+        reply = json.dumps({'msg_id':msg_id,'data':u'%s ok'%op,'code':0})
         admin.sendMessage(reply,False)
     
     if cache_class == 'param':
@@ -32,7 +33,7 @@ def process(req=None,admin=None):
         store.update_product_cache(req.get("product_id"))
         send_ok("product cache update")
     else:
-        reply = json.dumps({'data':u'do nothing','code':0})
+        reply = json.dumps({'msg_id':msg_id,'data':u'do nothing','code':0})
         admin.sendMessage(reply,False)
 
 

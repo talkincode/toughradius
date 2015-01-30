@@ -5,6 +5,7 @@ import logging
 import json
 
 def process(req=None,admin=None):
+    msg_id = req.get("msg_id")
     pkt = admin.user_trace.get_global_msg()
     if pkt is None: 
         return
@@ -19,7 +20,7 @@ def process(req=None,admin=None):
         if pkt.code in (2,3,5) and username not in pkt.source_user:return
     if basaddr:
         if basaddr not in pkt.source[0]:return
-    reply = {'data' : pkt.format_str(),'time':pkt.created.strftime("%Y-%m-%d %H:%M:%S"),'host':pkt.source}
+    reply = {'msg_id':msg_id,'data' : pkt.format_str(),'time':pkt.created.strftime("%Y-%m-%d %H:%M:%S"),'host':pkt.source}
     msg = json.dumps(reply)
     msg = msg.replace("\\n","<br>")
     msg = msg.replace("\\t","    ")

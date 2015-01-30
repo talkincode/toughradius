@@ -6,6 +6,12 @@
             $('#helpDig').modal({})
         });
     });    
+    
+    function selectAttr(name,desc){
+        $("#attr_name").val(name);
+        $("#attr_desc").val(desc);        
+        $('#helpDig').modal('hide')
+    }
 </script>
 </%def>
 <%def name="body()">
@@ -35,7 +41,7 @@
               <h4>${vendor}</h4>  
               % for pattr in attrs: 
               <div class="list-group-item">
-                <p>${pattr['attr_name']} : ${pattr['attr_desc']}</p>
+                <p>${pattr['attr_name']} : ${pattr['attr_desc']} <a href="javascript:selectAttr('${pattr['attr_name']}','${pattr['attr_desc']}');">选择</a></p>
               </div>
               % endfor
          % endfor

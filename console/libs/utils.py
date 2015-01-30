@@ -8,6 +8,9 @@ import binascii
 import hashlib
 import base64
 import calendar
+import random
+
+random_generator = random.SystemRandom()
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
@@ -15,6 +18,13 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 _base_id = 0
 
 _key = 't_o_u_g_h_radius'
+
+_CurrentID = random_generator.randrange(1, 1024)
+
+def CurrentID():
+    global _CurrentID
+    _CurrentID = (_CurrentID + 1) % 1024
+    return str(_CurrentID)
 
 class AESCipher:
 

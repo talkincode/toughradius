@@ -24,6 +24,19 @@ md5_constructor = hashlib.md5
 
 _key = 't_o_u_g_h_radius'
 
+PacketStatusTypeMap = {
+    1 : 'AccessRequest',
+    2 : 'AccessAccept',
+    3 : 'AccessReject',
+    4 : 'AccountingRequest',
+    5 : 'AccountingResponse',
+    40 : 'DisconnectRequest',
+    41 : 'DisconnectACK',
+    42 : 'DisconnectNAK',
+    43 : 'CoARequest',
+    44 : 'CoAACK',
+    45 : 'CoANAK',
+}
 
 def ndebug():
     import pdb
@@ -66,21 +79,6 @@ def is_expire(dstr):
     return expire_date < now
     
 
-PacketStatusTypeMap = {
-    1 : 'AccessRequest',
-    2 : 'AccessAccept',
-    3 : 'AccessReject',
-    4 : 'AccountingRequest',
-    5 : 'AccountingResponse',
-    40 : 'DisconnectRequest',
-    41 : 'DisconnectACK',
-    42 : 'DisconnectNAK',
-    43 : 'CoARequest',
-    44 : 'CoAACK',
-    45 : 'CoANAK',
-}
-
-
 class Storage(dict):
     def __getattr__(self, key): 
         try:
@@ -99,6 +97,8 @@ class Storage(dict):
     
     def __repr__(self):     
         return '<Storage ' + dict.__repr__(self) + '>'
+        
+
 
 class AuthDelay():
     

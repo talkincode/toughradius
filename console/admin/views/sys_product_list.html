@@ -34,6 +34,7 @@
                 <th>是否绑定VLAN</th>
                 <th>上行速率</th>
                 <th>下行速率</th>
+                <th>状态</th>                
             </tr>
             </thead>
             <tbody>
@@ -49,6 +50,7 @@
                 <td>${product.bind_vlan and u'是' or u'否'}</td>
                 <td>${product.input_max_limit}</td>
                 <td>${product.output_max_limit}</td>
+                <td>${product.product_status and u'停用' or u'正常'}</td>
                 <td><a class="opt-btn btn-default" href="/product/update?product_id=${product.id}">修改</a> <a
                         class="opt-btn btn-default"  href="javascript:deleteProduct('${product.id}')">删除</a></td>
             </tr>

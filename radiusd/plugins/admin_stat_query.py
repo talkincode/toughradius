@@ -3,6 +3,8 @@
 import json
 
 def process(req=None,admin=None):
-    admin.sendMessage(json.dumps(admin.runstat),False) 
+    data = admin.runstat.copy()
+    data['msg_id'] = req.get('msg_id')
+    admin.sendMessage(json.dumps(data),False) 
 
 
