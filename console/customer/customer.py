@@ -50,7 +50,7 @@ def route_static(path):
 
 @app.get('/',apply=auth_cus)
 def customer_index(db):
-    @cache.cache('customer_index_get_data',expire=300)   
+    @cache.cache('customer_index_get_data',expire=300)  
     def get_data(member_name):
         member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
         accounts = db.query(
@@ -119,6 +119,7 @@ def member_login_post(db):
 
 @app.get("/logout")
 def member_logout():
+    set_cookie('customer_id',None)
     set_cookie('customer',None)
     set_cookie('customer_login_time', None)
     set_cookie('customer_login_ip', None)     
@@ -306,13 +307,14 @@ def password_update_post(db):
     
 @app.get('/portal/auth')
 def portal_auth(db):
-    user = requset.params.get("user")
+    user = request.params.get("user")
     token = request.params.get("token")
     secret = get_param_value(db,"8_portal_secret")
     date = utils.get_currdate()
     _token = md5("%s%s%s"%(user,secret,date)).hexdigest()
     if _token == token:
         account = get_account_by_number(db,user)
+        print account
         if not account:
             return render("error",msg=u"用户%s不存在!"%user)
         member = db.query(models.SlcMember).get(account.member_id)
