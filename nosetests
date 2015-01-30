@@ -1,2 +1,2 @@
 #!/bin/sh
-cd tests && nosetests
+cd radiusd/tests && nosetests
