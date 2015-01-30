@@ -160,7 +160,7 @@ def member_join_post(db):
     db.add(member) 
     db.commit()
    
-    logger.info(u"新用户注册成功,member_name=%s"%form.d.member_name)
+    logger.info(u"新用户注册成功,member_name=%s"%member.member_name)
     redirect('/login')
    
 @app.get('/account/detail',apply=auth_cus)
