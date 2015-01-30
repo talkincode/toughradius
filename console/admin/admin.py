@@ -130,7 +130,7 @@ def param_update(db):
     ops_log.operate_time = utils.get_currtime()
     ops_log.operate_desc = u'操作员(%s)修改参数:%s'%(
         get_cookie("username"),
-        json.dumps([ {c.name: getattr(p, c.name) for c in p.__table__.columns} for p in params ],ensure_ascii=False)
+        json.dumps(','.join([ serial_json(param) for p in params ]),ensure_ascii=False)
     )
     db.add(ops_log)
     db.commit()
