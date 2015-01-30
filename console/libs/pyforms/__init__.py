@@ -4,7 +4,7 @@ sys.path.insert(0,os.path.abspath(os.path.pardir))
 import copy
 import re
 import itertools
-from libs.pyforms import net
+import net
 
 
 __version__ = "0.01"

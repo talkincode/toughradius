@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
-import sys,os
-sys.path.insert(0,os.path.abspath(os.path.pardir))
-from pyrad import packet
-from plugins import *
+
 __all__ = [
     'auth_bind_filter',
     'auth_group_filter',
@@ -25,7 +22,7 @@ __all__ = [
 ]
 
 def error_auth(resp,errmsg):
-    resp.code = packet.AccessReject
+    resp.code = 3 #packet.AccessReject
     resp['Reply-Message'] = errmsg
     return resp    
 
