@@ -49,6 +49,11 @@ setup()
     yes | cp -f ${appdir}/install/radiusd.json ${rundir}/radiusd.json
     yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf  
     
+    yes | cp -f ${appdir}/toughrad /etc/init.d/toughrad
+    chmod +x /etc/init.d/toughrad  
+    chkconfig --add toughrad
+    chkconfig toughrad on
+    
     ln -s ${appdir}/toughrad /usr/bin/toughrad 
     chmod +x /usr/bin/toughrad
     

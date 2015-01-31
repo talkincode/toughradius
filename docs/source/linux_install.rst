@@ -5,15 +5,10 @@ ToughRADIUS是基于Python及高性能异步网络框架Twisted开发，对linux
 
 目前在Linux环境下，ToughRADIUS提供了自动化安装脚本，可以轻松的帮你完成安装过程。
 
-.. topic:: 注意
-
-    1, 自动安装脚本会安装mysql数据库
-
 已支持自动化安装的linux系统
 ------------------------------------
 
 CentOS 6 , CentOS 7
-
 
 脚本路径
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -65,3 +60,33 @@ install/centos7-install.sh
 
     $ sh centos7-install.sh unsetup
 
+
+
+进程管理
+------------------------------------
+
+通过以上步骤安装完成后，会提供一个进程管理工具 toughrad
+
+启动ToughRADIUS进程::
+
+    $ toughrad start
+
+停止ToughRADIUS进程::
+
+    $ toughrad stop
+
+重启ToughRADIUS进程::
+
+    $ toughrad restart
+    
+升级ToughRADIUS到最新版本::
+
+    $ toughrad upgrade    
+
+启动mysql数据库进程::
+
+    $ toughrad startdb
+
+停止mysql数据库进程::
+
+    $ toughrad stopdb
