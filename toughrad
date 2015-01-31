@@ -18,7 +18,7 @@ start()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then 
-        supervisordctl start all 
+        supervisorctl start all 
     else 
         supervisord -c ${rundir}/supervisord.conf
     fi 
@@ -28,8 +28,8 @@ stop()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then 
-        supervisordctl stop all
-        supervisordctl shutdown
+        supervisorctl stop all
+        supervisorctl shutdown
     else
         echo "supervisord not running"
     fi 
@@ -39,7 +39,7 @@ status()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then 
-        supervisordctl status
+        supervisorctl status
     else 
         echo "supervisord not running"
     fi 
@@ -50,7 +50,7 @@ restart()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then 
-        supervisordctl restart all
+        supervisorctl restart all
     else 
         supervisord -c ${rundir}/supervisord.conf
     fi 
