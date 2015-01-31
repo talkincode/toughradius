@@ -1,0 +1,114 @@
+#!/bin/sh
+# /etc/rc.d/init.d/toughrad
+#
+# toughradius service script 
+# https://github.com/talkincode/ToughRADIUS
+#
+# chkconfig: 345 91 05
+# description: toughrad service
+# processname: toughrad
+
+# Source init functions
+. /etc/rc.d/init.d/functions
+
+appdir=/opt/toughradius
+rundir=/var/toughradius
+
+start()
+{
+    if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
+    then 
+        supervisordctl start all 
+    else 
+        supervisord -c ${rundir}/supervisord.conf
+    fi 
+}
+
+stop()
+{
+    if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
+    then 
+        supervisordctl stop all
+        supervisordctl shutdown
+    else
+        echo "supervisord not running"
+    fi 
+}
+
+status()
+{
+    if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
+    then 
+        supervisordctl status
+    else 
+        echo "supervisord not running"
+    fi 
+
+}
+
+restart()
+{
+    if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
+    then 
+        supervisordctl restart all
+    else 
+        supervisord -c ${rundir}/supervisord.conf
+    fi 
+}
+
+upgrade()
+{
+    echo 'starting upgrade...' 
+    cd ${appdir} && git pull origin master
+    supervisorctl restart all
+    supervisorctl status
+    echo 'upgrade done'
+}
+
+startdb()
+{
+    /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
+}
+
+stopdb()
+{
+    mysqladmin --defaults-file=${rundir}/mysql/my.cnf -uroot shutdown
+}
+
+
+case "$1" in
+
+  start)
+    start
+  ;;
+  
+  stop)
+    stop
+  ;;
+  
+  status)
+    status
+  ;;    
+  
+  restart)
+    restart
+  ;;    
+  
+  upgrade)
+    upgrade
+  ;;  
+  
+  startdb)
+    startdb
+  ;; 
+  
+  stopdb)
+    stopdb
+  ;;       
+
+
+  *)
+    echo "Usage: $0 {start|stop|status|restart|upgrade}"
+  ;;
+
+esac

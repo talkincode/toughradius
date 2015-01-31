@@ -6,6 +6,8 @@
 # 
 # =============================================================================
 
+appdir=/opt/toughradius
+rundir=/var/toughradius
 
 depend()
 {
@@ -31,44 +33,46 @@ mysql5()
 radius()
 {
     echo "fetch ToughRADIUS latest"
-    git clone https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
-    pip install -r /opt/toughradius/requirements.txt
+    git clone https://github.com/talkincode/ToughRADIUS.git ${appdir}
+    pip install -r ${appdir}/requirements.txt
     echo "fetch ToughRADIUS done!"
 }
 
 setup()
 {
     echo "mkdir /var/toughradius"
-    mkdir -p /var/toughradius
-    mkdir -p /var/toughradius/mysql
-    mkdir -p /var/toughradius/log
-
-    cp /etc/my.cnf /etc/my.cnf.$((`date +%s`))
-    yes | cp -f /opt/toughradius/docker/my.cnf /etc/my.cnf
-    yes | cp -f /opt/toughradius/docker/radiusd.json /var/toughradius/radiusd.json
-    yes | cp -f /opt/toughradius/docker/supervisord.conf /var/toughradius/supervisord.conf    
+    mkdir -p ${rundir}
+    mkdir -p ${rundir}/mysql
+    mkdir -p ${rundir}/log
+    
+    yes | cp -f ${appdir}/docker/my.cnf ${rundir}/mysql/my.cnf
+    yes | cp -f ${appdir}/docker/radiusd.json ${rundir}/radiusd.json
+    yes | cp -f ${appdir}/docker/supervisord.conf ${rundir}/supervisord.conf    
+    ln -s ${appdir}/toughrad /usr/bin/toughrad 
+    chmod +x /usr/bin/toughrad
+    
+    chown -R mysql:mysql ${rundir}/mysql
     
     echo "starting install mysql database;"
 
     sleep 1s
 
-    mysql_install_db 
+    mysql_install_db --defaults-file=${rundir}/mysql/my.cnf --user=mysql --datadir=${rundir}/mysql
 
-    chown -R mysql:mysql /var/toughradius/mysql
-
-    /usr/bin/mysqld_safe &
+    /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
 
     sleep 5s
 
-    echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY 'radius' WITH GRANT OPTION; FLUSH PRIVILEGES" | mysql
+    echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY 'radius' WITH GRANT OPTION; FLUSH PRIVILEGES" | mysql \
+        --defaults-file=${rundir}/mysql/my.cnf
 
     echo "setup toughradius database.."
 
-    python /opt/toughradius/createdb.py -c /var/toughradius/radiusd.json -i=1
+    python ${appdir}/createdb.py -c ${rundir}/radiusd.json -i=1
 
     echo "starting supervisord..."
 
-    supervisord -c /var/toughradius/supervisord.conf
+    supervisord -c ${rundir}/supervisord.conf
 
     sleep 3s
 
@@ -82,18 +86,19 @@ setup()
 unsetup()
 {
     echo "shutdown mysql.."
-    mysqladmin -uroot shutdown
+    mysqladmin --defaults-file=${rundir}/mysql/my.cnf -uroot shutdown
     echo "shutdown supervisord"
     supervisorctl shutdown
-    echo "/var/toughradius"
-    rm -fr /var/toughradius
+    echo ${rundir}
+    rm -fr ${rundir}
+    rm -f /usr/bin/toughrad
     echo 'unsetup done!'
 }
 
 upgrade()
 {
     echo 'starting upgrade...' 
-    cd /opt/toughradius && git pull origin master
+    cd ${appdir} && git pull origin master
     supervisorctl restart all
     supervisorctl status
     echo 'upgrade done'
