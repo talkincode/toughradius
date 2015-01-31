@@ -50,6 +50,8 @@ setup()
     yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf    
     yes | cp -f ${appdir}/install/toughrad.service /usr/lib/systemd/system/toughrad.service
     chmod 754 /usr/lib/systemd/system/toughrad.service
+    ln -s ${appdir}/toughrad /usr/bin/toughrad 
+    chmod +x /usr/bin/toughrad
     
     chown -R mysql:mysql ${rundir}/mysql
     
