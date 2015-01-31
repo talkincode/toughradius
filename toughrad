@@ -9,7 +9,10 @@
 # processname: toughrad
 
 # Source init functions
-. /etc/rc.d/init.d/functions
+if [ -f /etc/rc.d/init.d/functions ]
+then
+    . /etc/rc.d/init.d/functions
+fi
 
 appdir=/opt/toughradius
 rundir=/var/toughradius

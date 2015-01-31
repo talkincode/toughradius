@@ -45,11 +45,11 @@ setup()
     mkdir -p ${rundir}/mysql
     mkdir -p ${rundir}/log
     
-    yes | cp -f ${appdir}/docker/my.cnf ${rundir}/mysql/my.cnf
-    yes | cp -f ${appdir}/docker/radiusd.json ${rundir}/radiusd.json
-    yes | cp -f ${appdir}/docker/supervisord.conf ${rundir}/supervisord.conf    
-    ln -s ${appdir}/toughrad /usr/bin/toughrad 
-    chmod +x /usr/bin/toughrad
+    yes | cp -f ${appdir}/install/my.cnf ${rundir}/mysql/my.cnf
+    yes | cp -f ${appdir}/install/radiusd.json ${rundir}/radiusd.json
+    yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf    
+    yes | cp -f ${appdir}/install/toughrad.service /usr/lib/systemd/system/toughrad.service
+    chmod 754 /usr/lib/systemd/system/toughrad.service
     
     chown -R mysql:mysql ${rundir}/mysql
     
@@ -92,6 +92,7 @@ unsetup()
     echo ${rundir}
     rm -fr ${rundir}
     rm -f /usr/bin/toughrad
+    rm -f /usr/lib/systemd/system/toughrad.service
     echo 'unsetup done!'
 }
 

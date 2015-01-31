@@ -1,0 +1,14 @@
+[Unit]  
+Description=toughrad  
+After=network.target remote-fs.target nss-lookup.target  
+   
+[Service]  
+Type=forking  
+PIDFile=/var/toughradius/toughrad.pid
+ExecStart=/opt/toughradius/toughrad start 
+ExecReload=/opt/toughradius/toughrad restart 
+ExecStop=/opt/toughradius/toughrad stop 
+PrivateTmp=true  
+   
+[Install]  
+WantedBy=multi-user.target  
