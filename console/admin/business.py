@@ -24,6 +24,18 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 
+@app.error(403)
+def error404(error):
+    return render("error.html",msg=u"非授权的访问")
+    
+@app.error(404)
+def error404(error):
+    return render("error.html",msg=u"页面不存在 - 请联系管理员!")
+
+@app.error(500)
+def error500(error):
+    return render("error.html",msg=u"出错了： %s"%error.exception)
+
 ###############################################################################
 # ajax query        
 ###############################################################################
@@ -38,15 +50,6 @@ def product_get(db):
         data=[{'code': it.id,'name': it.product_name} for it in items]
     )
 
-@app.get('/group/json',apply=auth_opr)
-def group_get(db):   
-    node_id = request.params.get('node_id')
-    if not node_id:return dict(code=1,data=[])
-    items = db.query(models.SlcRadGroup).filter_by(node_id=node_id)
-    return dict(
-        code=0,
-        data=[{'code': it.id,'name': it.group_name} for it in items]
-    )
 
 @app.get('/opencalc',apply=auth_opr)
 def opencalc(db):   
@@ -205,10 +208,8 @@ def member_open(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
-    )]
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))      
-    form = forms.user_open_form(nodes,products,groups)
+    )]    
+    form = forms.user_open_form(nodes,products)
     return render("bus_open_form",form=form)
 
 @app.post('/member/open',apply=auth_opr)
@@ -216,10 +217,8 @@ def member_open(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
-    )]
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))        
-    form = forms.user_open_form(nodes,products,groups)
+    )]      
+    form = forms.user_open_form(nodes,products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
 
@@ -323,9 +322,7 @@ def account_open(db):
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     )]
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))  
-    form = forms.account_open_form(products,groups)
+    form = forms.account_open_form(products)
     form.member_id.set_value(member_id)
     form.realname.set_value(member.realname)
     form.node_id.set_value(member.node_id)
@@ -336,9 +333,7 @@ def account_open(db):
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     )]
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))
-    form = forms.account_open_form(products,groups)
+    form = forms.account_open_form(products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
 
@@ -420,23 +415,17 @@ permit.add_route("/bus/account/open",u"增开用户账号",u"营业管理",order
 def account_update(db): 
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))
-    form = forms.account_update_form(groups)
+    form = forms.account_update_form()
     form.fill(account)
     return render("base_form",form=form)
 
 @app.post('/account/update',apply=auth_opr)
 def account_update(db): 
-    groups = [ (n.id,n.group_name) for n in db.query(models.SlcRadGroup)]
-    groups.insert(0,('',''))
-    form = forms.account_update_form(groups)
+    form = forms.account_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
 
     account = db.query(models.SlcRadAccount).get(form.d.account_number)
-    if form.d.group_id:
-        account.group_id = form.d.group_id
     account.ip_address = form.d.ip_address
     account.install_address = form.d.install_address
     account.user_concur_number = form.d.user_concur_number
@@ -486,7 +475,7 @@ def member_import(db):
     for line in lines:
         _num += 1
         line = line.strip()
-        if not line or u"用户姓名" in line:continue
+        if not line or "用户姓名" in line:continue
         attr_array = line.split(",")
         if len(attr_array) < 5:
             return render("bus_import_form",form=iform,msg=u"line %s error: length must 5 "%_num)

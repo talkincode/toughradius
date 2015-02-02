@@ -114,7 +114,7 @@ permit.add_route("/ops/user/detail",u"账号详情",u"运维管理")
 @app.post('/user/release',apply=auth_opr)
 def user_release(db):   
     account_number = request.params.get('account_number')  
-    user = db.query(models.SlcRadAccount).filter_by(account_number=account_number)
+    user = db.query(models.SlcRadAccount).filter_by(account_number=account_number).first()
     user.mac_addr = ''
     user.vlan_id = 0
     user.vlan_id2 = 0

@@ -173,19 +173,6 @@ class Store():
             self.update_user_cache(username)     
 
     ###############################################################################
-    # group method                                                              ####
-    ############################################################################### 
-
-    @cache.cache('get_group',expire=__cache_timeout__)   
-    def get_group(self,group_id):
-        with Cursor(self.dbpool) as cur:
-            cur.execute("select * from slc_rad_group where id = %s ",(group_id,))
-            return cur.fetchone()
-
-    def update_group_cache(self,group_id):
-        cache.invalidate(self.get_group,'get_group', group_id)
-        
-    ###############################################################################
     # roster method                                                              ####
     ############################################################################### 
 

@@ -164,30 +164,6 @@ product_attr_update_form = pyforms.Form(
 )
 
 
-
-group_add_form = pyforms.Form(
-        pyforms.Textbox("group_name", rules.len_of(2,32), description=u"用户组名",required="required",**input_style),
-        pyforms.Textbox("group_desc", rules.len_of(2,64), description=u"用户组描述",required="required",**input_style),
-        pyforms.Dropdown("bind_mac",  args=boolean.items(),description=u"绑定MAC", required="required",**input_style),
-        pyforms.Dropdown("bind_vlan", args=boolean.items(), description=u"绑定VLAN", required="required",**input_style),
-        pyforms.Textbox("concur_number", rules.is_number,description=u"并发数",value=0, required="required",**input_style),
-        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
-        title=u"增加用户组",
-        action="/group/add"
-    )
-
-group_update_form = pyforms.Form(
-    pyforms.Hidden("id",  description=u"编号"),
-    pyforms.Textbox("group_name", rules.len_of(2,32), description=u"用户组名",required="required",**input_style),
-    pyforms.Textbox("group_desc", rules.len_of(2,64), description=u"用户组描述",required="required",**input_style),
-    pyforms.Dropdown("bind_mac",  args=boolean.items(),description=u"绑定MAC", required="required",**input_style),
-    pyforms.Dropdown("bind_vlan", args=boolean.items(), description=u"绑定VLAN", required="required",**input_style),
-    pyforms.Textbox("concur_number", rules.is_number,description=u"并发数", required="required",**input_style),
-    pyforms.Button("submit",  type="submit", html=u"<b>更新</b>", **button_style),
-    title=u"修改用户组",
-    action="/group/update"
-)
-
 roster_type = {0:u"白名单", 1:u"黑名单"}
 
 roster_add_form = pyforms.Form(
@@ -216,7 +192,7 @@ userreg_state = {1:u"正常", 6:u"未激活"}
 user_state = {1:u"预定",1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期"}
 bind_state = {0: u"不绑定", 1: u"绑定"}
 
-def user_open_form(nodes=[],products=[],groups=[]):
+def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
@@ -227,7 +203,6 @@ def user_open_form(nodes=[],products=[],groups=[]):
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
         pyforms.Textbox("account_number", description=u"用户上网账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
-        pyforms.Dropdown("group_id",  args=groups, description=u"用户组",**input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
         pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
@@ -239,14 +214,13 @@ def user_open_form(nodes=[],products=[],groups=[]):
         action="/bus/member/open"
     )
 
-def account_open_form(products=[],groups=[]):
+def account_open_form(products=[]):
     return pyforms.Form(
         pyforms.Hidden("node_id", description=u"区域", **input_style),
         pyforms.Hidden("member_id",  description=u"编号"),
         pyforms.Textbox("realname", description=u"用户姓名", readonly="readonly",**input_style),
         pyforms.Textbox("account_number", description=u"上网账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
-        pyforms.Dropdown("group_id",  args=groups, description=u"用户组",**input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("address", description=u"用户地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
@@ -322,10 +296,9 @@ def member_update_form(nodes=[]):
     )
 
 
-def account_update_form(groups=[]):
+def account_update_form():
     return pyforms.Form(
         pyforms.Textbox("account_number", description=u"上网账号",  readonly="readonly", **input_style),
-        pyforms.Dropdown("group_id",  args=groups, description=u"用户组",**input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("install_address", description=u"用户安装地址",**input_style),
         pyforms.Textbox("new_password", description=u"上网密码(留空不修改)", **input_style),

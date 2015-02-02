@@ -26,9 +26,6 @@ def process(req=None,admin=None):
     elif cache_class == 'bas' and req.get("ip_addr"):
         store.update_bas_cache(req.get("ip_addr"))
         send_ok("bas cache update")
-    elif cache_class == 'group' and req.get("group_id"):
-        store.update_group_cache(req.get("group_id"))  
-        send_ok("group cache update") 
     elif cache_class == 'roster' and req.get("mac_addr"):
         store.update_roster_cache(req.get("mac_addr"))  
         send_ok("roster cache update")     

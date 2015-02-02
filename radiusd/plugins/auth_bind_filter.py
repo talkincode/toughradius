@@ -17,6 +17,7 @@ def process(req=None,resp=None,user=None):
         store.update_user_mac(user['account_number'], macaddr)
 
     vlan_id,vlan_id2 = req.get_vlanids()
+    print vlan_id,vlan_id2
     if vlan_id and user['vlan_id']:
         if user['bind_vlan'] == 1 and vlan_id != user['vlan_id']:
             return error_auth(resp,"vlan_id bind not match")
