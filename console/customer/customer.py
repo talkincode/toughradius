@@ -21,6 +21,7 @@ from base import (
 )
 from libs import utils
 from sqlalchemy.sql import exists
+from websock import websock
 import bottle
 import models
 import forms
@@ -297,7 +298,7 @@ def password_update_post(db):
     if account.member_id != get_cookie("customer_id"):
         return render("base_form", form=form,msg=u'该账号用用户不匹配')
     
-    if account.password !=  form.d.old_password:
+    if utils.decrypt(account.password) !=  form.d.old_password:
         return render("base_form", form=form,msg=u'旧密码不正确')
         
     if form.d.new_password != form.d.new_password2:
@@ -305,6 +306,7 @@ def password_update_post(db):
     
     account.password =  utils.encrypt(form.d.new_password)
     db.commit()
+    websock.update_cache("account",account_number=account.account_number)
     redirect("/")
     
 @app.route('/portal/auth')

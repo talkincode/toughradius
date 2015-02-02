@@ -36,9 +36,9 @@ def member_join_form(nodes=[]):
     
 password_update_form =  pyforms.Form(
         pyforms.Textbox("account_number", description=u"上网账号",  readonly="readonly", **input_style),
-        pyforms.Textbox("old_password",description=u"旧密码(必填)", required="required",**input_style),
-        pyforms.Textbox("new_password", rules.is_alphanum3(6, 32),description=u"新密码(必填)", required="required",**input_style),
-        pyforms.Textbox("new_password2",rules.is_alphanum3(6, 32), description=u"确认新密码(必填)", required="required",**input_style),
+        pyforms.Password("old_password",description=u"旧密码(必填)", required="required",**input_style),
+        pyforms.Password("new_password", rules.is_alphanum3(6, 32),description=u"新密码(必填)", required="required",**input_style),
+        pyforms.Password("new_password2",rules.is_alphanum3(6, 32), description=u"确认新密码(必填)", required="required",**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"修改密码",
         action="/password/update"

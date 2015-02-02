@@ -18,18 +18,7 @@
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span>上网记录查询</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal" role="form" action="/ticket" method="post">
-            <div class="form-group">
-                <label for="account_number" class="col-md-2 control-label">上网账号</label>
-                <div class="col-md-3">
-                    <select id="account_number" name="account_number" class="form-control" >
-                    <option value=""></option>
-                    % for account in accounts:
-                      <option value="${account.account_number}"  ${account.account_number==account_number and "selected" or ""}>${account.account_number}</option>
-                    % endfor
-                    </select>
-                </div>  
-            </div>   
+        <form id="query_form" class="form-horizontal" role="form" action="/ticket" method="post">   
             <div class="form-group">
                 <label for="query_begin_time" class="col-md-2 control-label">开始时间</label>
 
@@ -42,10 +31,20 @@
                 </div>
             </div>
             <div class="form-group">
-                <div class="col-md-offset-5 col-md-7">
+                <label for="account_number" class="col-md-2 control-label">上网账号</label>
+                <div class="col-md-3">
+                    <select id="account_number" name="account_number" class="form-control" >
+                    <option value=""></option>
+                    % for account in accounts:
+                      <option value="${account.account_number}"  ${account.account_number==account_number and "selected" or ""}>${account.account_number}</option>
+                    % endfor
+                    </select>
+                </div>  
+                <div class="col-md-7">
                     <button type="submit" class="btn btn-primary">查询</button>
                 </div>
-            </div>
+            </div>            
+
         </form>
         <hr>
 

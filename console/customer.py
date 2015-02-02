@@ -18,6 +18,7 @@ from base import (
     get_online_status
 )
 from libs import sqla_plugin,utils
+from websock import websock
 import functools
 import models
 
@@ -43,6 +44,11 @@ def init_application(dbconf=None,cusconf=None):
         get_account = _get_account_by_number,
         is_online = _get_online_status
     ))
+
+    websock.connect(
+        _sys_param_value('3_radiusd_address'),
+        _sys_param_value('4_radiusd_admin_port')
+    )
     
     mainapp.install(sqla_pg)
 
