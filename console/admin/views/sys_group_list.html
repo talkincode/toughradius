@@ -21,7 +21,9 @@
     <div class="panel-body">
 
         <div class="pull-right bottom10">
+            % if permit.match('/group/add'):
             <a href="/group/add" class="btn btn-sm btn-default">添加用户组</a>
+            % endif
         </div>
         <table class="table table-hover">
             <thead>
@@ -43,8 +45,14 @@
                 <td>${group.bind_vlan and u'绑定' or u'不绑定'}</td>
                 <td>${group.update_time}</td>
                 <td>${group.group_desc}</td>
-                <td><a class="opt-btn btn-default" href="/group/update?group_id=${group.id}">修改</a>
-                    <a class="opt-btn btn-default" href="javascript:deletegroup('${group.id}')">删除</a></td>
+                <td>
+                    % if permit.match('/group/update'):
+                    <a class="opt-btn btn-default" href="/group/update?group_id=${group.id}">修改</a>
+                    % endif
+                    % if permit.match('/group/delete'):
+                    <a class="opt-btn btn-default" href="javascript:deletegroup('${group.id}')">删除</a>
+                    % endif
+                </td>
             </tr>
             % endfor
             </tbody>

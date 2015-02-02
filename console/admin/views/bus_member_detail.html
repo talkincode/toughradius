@@ -43,8 +43,12 @@ function release(account_number)
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户信息 <a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
         <div class="panel-body">
         <div class="pull-right bottom10 ">
+            % if permit.match('/bus/account/open'):
             <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开上网账号</a>
+            % endif
+             % if permit.match('/bus/member/update'):
             <a href="/bus/member/update?member_id=${member.member_id}" class="btn btn-sm btn-info">修改基本资料</a>
+             % endif
         </div>    
         <table class="table ">
                 <thead>
@@ -109,18 +113,45 @@ function release(account_number)
                  <td>
                  <a class="opt-btn btn-default" href="/bus/account/update?account_number=${user.account_number}">修改</a>
                     % if user.status == 2:
+                    
+                        % if permit.match('/bus/account/resume'):
                         <a class="opt-btn btn-default" href="javascript:do_resume('${user.account_number}');">复机</a>
-                    % elif user.status == 1:
-                    <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
-                        % if user.product_policy in (0,2):
-                        <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
-                        % elif user.product_policy == 1: 
-                        <a class="opt-btn btn-default" href="/bus/account/charge?account_number=${user.account_number}">充值</a>
                         % endif
-                    <a class="opt-btn btn-default" href="/bus/account/cancel?account_number=${user.account_number}">销户</a>
-                    <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">解绑</a>
+                        
+                    % elif user.status == 1:
+                    
+                        % if permit.match('/bus/account/pause'):
+                        <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
+                        % endif
+                        
+                        % if user.product_policy in (0,2):
+                        
+                            % if permit.match('/bus/account/next'):
+                            <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
+                            % endif
+                            
+                        % elif user.product_policy == 1: 
+                            
+                            % if permit.match('/bus/account/charge'):
+                            <a class="opt-btn btn-default" href="/bus/account/charge?account_number=${user.account_number}">充值</a>
+                            % endif
+                            
+                        % endif
+                        
+                        % if permit.match('/bus/account/cancel'):   
+                        <a class="opt-btn btn-default" href="/bus/account/cancel?account_number=${user.account_number}">销户</a>
+                        % endif
+                    
+                        % if permit.match('/ops/user/release'):
+                        <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">解绑</a>
+                        % endif
+                        
                     % elif user.status == 4:
-                    <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
+                    
+                        % if permit.match('/bus/account/next'):
+                        <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
+                        % endif
+                        
                     % endif
                  </td>
             </tr>

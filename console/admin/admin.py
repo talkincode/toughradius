@@ -34,6 +34,10 @@ def index(db):
     user_total = db.query(models.SlcRadAccount.account_number).filter_by(status=1).count()
     return render("index",**locals())
 
+@app.error(403)
+def error404(error):
+    return render("error.html",msg=u"非授权的访问")
+    
 @app.error(404)
 def error404(error):
     return render("error.html",msg=u"页面不存在 - 请联系管理员!")
@@ -67,9 +71,14 @@ def admin_login_post(db):
     ).first()
     if not opr:return dict(code=1,msg=u"用户名密码不符")
     set_cookie('username',uname)
-    set_cookie('login_node',opr.node_id)
+    set_cookie('opr_type',opr.operator_type)
     set_cookie('login_time', utils.get_currtime())
-    set_cookie('login_ip', request.remote_addr)    
+    set_cookie('login_ip', request.remote_addr)  
+    
+    if opr.operator_type > 0:
+        permit.unbind_opr(uname)
+        for rule in db.query(models.SlcOperatorRule).filter_by(operator_name=uname):
+            permit.bind_opr(rule.operator_name,rule.rule_path)  
 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = uname
@@ -90,9 +99,11 @@ def admin_logout(db):
     ops_log.operate_desc = u'操作员(%s)登出'%(get_cookie("username"),)
     db.add(ops_log)    
     db.commit()
+    if get_cookie('opt_type') > 0:
+        permit.unbind_opr(get_cookie("username"))
     set_cookie('username',None)
-    set_cookie('login_node',None)
     set_cookie('login_time', None)
+    set_cookie('opr_type',None)
     set_cookie('login_ip', None)   
     request.cookies.clear()
     redirect('/login')
@@ -142,6 +153,8 @@ def param_update(db):
         
     websock.update_cache("param")
     redirect("/param")
+    
+permit.add_route("/param",u"系统参数管理",u"系统管理",is_menu=True,order=0)
 
 ###############################################################################
 # password update     
@@ -180,6 +193,8 @@ def passwd_update(db):
 @app.get('/node',apply=auth_opr)
 def node(db):   
     return render("sys_node_list", page_data = get_page_data(db.query(models.SlcNode)))
+    
+permit.add_route("/node",u"区域信息管理",u"系统管理",is_menu=True,order=1)    
 
 @app.get('/node/add',apply=auth_opr)
 def node_add(db):  
@@ -204,6 +219,8 @@ def node_add_post(db):
 
     db.commit()
     redirect("/node")
+    
+permit.add_route("/node/add",u"新增区域",u"系统管理",order=1.01)
 
 @app.get('/node/update',apply=auth_opr)
 def node_update(db):  
@@ -230,6 +247,8 @@ def node_add_update(db):
 
     db.commit()
     redirect("/node")    
+    
+permit.add_route("/node/update",u"修改区域",u"系统管理",order=1.02)
 
 @app.get('/node/delete',apply=auth_opr)
 def node_delete(db):     
@@ -247,6 +266,8 @@ def node_delete(db):
 
     db.commit() 
     redirect("/node")  
+    
+permit.add_route("/node/delete",u"删除区域",u"系统管理",order=1.03)
 
 ###############################################################################
 # bas manage    
@@ -257,6 +278,8 @@ def bas(db):
     return render("sys_bas_list", 
         bastype = forms.bastype,
         bas_list = db.query(models.SlcRadBas))
+        
+permit.add_route("/bas",u"BAS信息管理",u"系统管理",is_menu=True,order=2)
     
 @app.get('/bas/add',apply=auth_opr)
 def bas_add(db):  
@@ -287,6 +310,8 @@ def bas_add_post(db):
 
     db.commit()
     redirect("/bas")
+    
+permit.add_route("/bas/add",u"新增BAS",u"系统管理",order=2.01)
 
 @app.get('/bas/update',apply=auth_opr)
 def bas_update(db):  
@@ -317,6 +342,8 @@ def bas_add_update(db):
     db.commit()
     websock.update_cache("bas",ip_addr=bas.ip_addr)
     redirect("/bas")    
+    
+permit.add_route("/bas/update",u"修改BAS",u"系统管理",order=2.02)
 
 @app.get('/bas/delete',apply=auth_opr)
 def bas_delete(db):     
@@ -333,6 +360,132 @@ def bas_delete(db):
     db.commit() 
     redirect("/bas")    
 
+permit.add_route("/bas/delete",u"删除BAS",u"系统管理",order=2.03)
+
+
+###############################################################################
+# opr manage    
+###############################################################################
+
+@app.route('/opr',apply=auth_opr,method=['GET','POST'])
+def opr(db):   
+    return render("sys_opr_list", 
+        oprtype = forms.opr_type,
+        oprstatus = forms.opr_status_dict,
+        opr_list = db.query(models.SlcOperator))
+        
+permit.add_route("/opr",u"操作员管理",u"系统管理",is_menu=True,order=3)
+    
+@app.get('/opr/add',apply=auth_opr)
+def opr_add(db):  
+    return render("sys_opr_form",form=forms.opr_add_form(),rules=[])
+
+@app.post('/opr/add',apply=auth_opr)
+def opr_add_post(db): 
+    form=forms.opr_add_form()
+    if not form.validates(source=request.forms):
+        return render("sys_opr_form", form=form)
+    if db.query(models.SlcOperator.id).filter_by(operator_name=form.d.operator_name).count()>0:
+        return render("sys_opr_form", form=form,msg=u"操作员已经存在")   
+        
+    opr = models.SlcOperator()
+    opr.operator_name = form.d.operator_name
+    opr.operator_type = 1
+    opr.operator_pass = md5(form.d.operator_pass).hexdigest()
+    opr.operator_desc = form.d.operator_desc
+    opr.operator_status = form.d.operator_status
+    db.add(opr)
+    
+    for path in request.params.getall("rule_item"):
+        item = permit.get_route(path)
+        if not item:continue
+        rule = models.SlcOperatorRule()
+        rule.operator_name = opr.operator_name
+        rule.rule_name = item['name']
+        rule.rule_path = item['path']
+        rule.rule_category = item['category']
+        db.add(rule)
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增操作员信息:%s'%(get_cookie("username"),serial_json(opr))
+    db.add(ops_log)
+
+    db.commit()
+    redirect("/opr")
+    
+permit.add_route("/opr/add",u"新增操作员",u"系统管理",order=3.01)
+
+@app.get('/opr/update',apply=auth_opr)
+def opr_update(db):  
+    opr_id = request.params.get("opr_id")
+    opr = db.query(models.SlcOperator).get(opr_id)
+    form=forms.opr_update_form()
+    form.fill(opr)
+    form.operator_pass.set_value('')
+    rules = db.query(models.SlcOperatorRule.rule_path).filter_by(operator_name=opr.operator_name)
+    rules = [r[0] for r in rules]
+    return render("sys_opr_form",form=form,rules=rules)
+
+@app.post('/opr/update',apply=auth_opr)
+def opr_add_update(db): 
+    form=forms.opr_update_form()
+    if not form.validates(source=request.forms):
+        return render("sys_opr_form", form=form)
+    opr = db.query(models.SlcOperator).get(form.d.id)
+    
+    if form.d.operator_pass:
+        opr.operator_pass = md5(form.d.operator_pass).hexdigest()
+    opr.operator_desc = form.d.operator_desc
+    opr.operator_status = form.d.operator_status
+    
+    # update rules
+    db.query(models.SlcOperatorRule).filter_by(operator_name=opr.operator_name).delete()
+    
+    for path in request.params.getall("rule_item"):
+        item = permit.get_route(path)
+        if not item:continue
+        rule = models.SlcOperatorRule()
+        rule.operator_name = opr.operator_name
+        rule.rule_name = item['name']
+        rule.rule_path = item['path']
+        rule.rule_category = item['category']
+        db.add(rule)
+        
+    permit.unbind_opr(opr.operator_name)
+    for rule in db.query(models.SlcOperatorRule).filter_by(operator_name=opr.operator_name):
+        permit.bind_opr(rule.operator_name,rule.rule_path)
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改操作员信息:%s'%(get_cookie("username"),serial_json(opr))
+    db.add(ops_log)
+
+    db.commit()
+    redirect("/opr")    
+    
+permit.add_route("/opr/update",u"修改操作员",u"系统管理",order=3.02)
+
+@app.get('/opr/delete',apply=auth_opr)
+def opr_delete(db):     
+    opr_id = request.params.get("opr_id")
+    db.query(models.SlcOperator).filter_by(id=opr_id).delete()
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除操作员信息:%s'%(get_cookie("username"),opr_id)
+    db.add(ops_log)
+
+    db.commit() 
+    redirect("/opr")    
+
+permit.add_route("/opr/delete",u"删除操作员",u"系统管理",order=3.03)
 
 ###############################################################################
 # product manage       
@@ -344,11 +497,7 @@ def product(db):
     return render("sys_product_list", 
         node_list=db.query(models.SlcNode),
         page_data = get_page_data(_query))
-
-@app.get('/product/add',apply=auth_opr)
-def product_add(db):  
-    return render("sys_product_form",form=forms.product_add_form())
-
+        
 @app.get('/product/detail',apply=auth_opr)
 def product_detail(db):
     product_id = request.params.get("product_id")   
@@ -358,7 +507,13 @@ def product_detail(db):
     product_attrs = db.query(models.SlcRadProductAttr).filter_by(product_id=product_id)
     return render("sys_product_detail",product=product,product_attrs=product_attrs) 
 
+permit.add_route("/product",u"资费信息管理",u"系统管理",is_menu=True,order=4)
+permit.add_route("/product/detail",u"资费详情查看",u"系统管理",order=4.01)
 
+@app.get('/product/add',apply=auth_opr)
+def product_add(db):  
+    return render("sys_product_form",form=forms.product_add_form())
+    
 @app.post('/product/add',apply=auth_opr)
 def product_add_post(db): 
     form=forms.product_add_form()
@@ -390,6 +545,8 @@ def product_add_post(db):
 
     db.commit()
     redirect("/product")
+    
+permit.add_route("/product/add",u"新增资费",u"系统管理",order=4.02)
 
 @app.get('/product/update',apply=auth_opr)
 def product_update(db):  
@@ -402,7 +559,7 @@ def product_update(db):
     return render("sys_product_form",form=form)
 
 @app.post('/product/update',apply=auth_opr)
-def product_add_update(db): 
+def product_update(db): 
     form=forms.product_update_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
@@ -429,6 +586,8 @@ def product_add_update(db):
     db.commit()
     websock.update_cache("product",product_id=product.id)
     redirect("/product")    
+    
+permit.add_route("/product/update",u"修改资费",u"系统管理",order=4.03)    
 
 @app.get('/product/delete',apply=auth_opr)
 def product_delete(db):     
@@ -447,6 +606,8 @@ def product_delete(db):
     db.commit() 
     websock.update_cache("product",product_id=product_id)
     redirect("/product")   
+    
+permit.add_route("/product/delete",u"删除资费",u"系统管理",order=4.04)
 
 @app.get('/product/attr/add',apply=auth_opr)
 def product_attr_add(db): 
@@ -479,6 +640,8 @@ def product_attr_add(db):
     db.commit()
 
     redirect("/product/detail?product_id="+form.d.product_id) 
+    
+permit.add_route("/product/attr/add",u"新增资费扩展属性",u"系统管理",order=4.05)
 
 @app.get('/product/attr/update',apply=auth_opr)
 def product_attr_update(db): 
@@ -508,6 +671,8 @@ def product_attr_update(db):
     db.commit()
     websock.update_cache("product",product_id=form.d.product_id)
     redirect("/product/detail?product_id="+form.d.product_id) 
+    
+permit.add_route("/product/attr/update",u"修改资费扩展属性",u"系统管理",order=4.06)
 
 @app.get('/product/attr/delete',apply=auth_opr)
 def product_attr_update(db): 
@@ -526,6 +691,8 @@ def product_attr_update(db):
     db.commit()
     websock.update_cache("product",product_id=product_id)
     redirect("/product/detail?product_id=%s"%product_id)     
+    
+permit.add_route("/product/attr/delete",u"删除资费扩展属性",u"系统管理",order=4.07)
 
 ###############################################################################
 # group manage      
@@ -537,6 +704,7 @@ def group(db):
     return render("sys_group_list", 
         page_data = get_page_data(_query))
 
+permit.add_route("/group",u"用户组管理",u"系统管理",is_menu=True,order=5)
    
 @app.get('/group/add',apply=auth_opr)
 def group_add(db):  
@@ -565,6 +733,8 @@ def group_add_post(db):
 
     db.commit()
     redirect("/group")
+    
+permit.add_route("/group/add",u"新增用户组",u"系统管理",order=5.01)
 
 @app.get('/group/update',apply=auth_opr)
 def group_update(db):  
@@ -596,6 +766,8 @@ def group_add_update(db):
     db.commit()
     websock.update_cache("group",group_id=group.id)
     redirect("/group")    
+    
+permit.add_route("/group/update",u"修改用户组",u"系统管理",order=5.02)
 
 @app.get('/group/delete',apply=auth_opr)
 def group_delete(db):     
@@ -612,6 +784,8 @@ def group_delete(db):
     db.commit() 
     websock.update_cache("group",group_id=group_id)
     redirect("/group")    
+    
+permit.add_route("/group/delete",u"删除用户组",u"系统管理",order=5.03)
 
 ###############################################################################
 # roster manage    
@@ -622,6 +796,8 @@ def roster(db):
     _query = db.query(models.SlcRadRoster)
     return render("sys_roster_list", 
         page_data = get_page_data(_query))
+        
+permit.add_route("/roster",u"黑名单管理",u"系统管理",is_menu=True,order=6)
 
 @app.get('/roster/add',apply=auth_opr)
 def roster_add(db):  
@@ -651,6 +827,8 @@ def roster_add_post(db):
 
     db.commit()
     redirect("/roster")
+    
+permit.add_route("/roster/add",u"新增黑名单",u"系统管理",order=6.01)    
 
 @app.get('/roster/update',apply=auth_opr)
 def roster_update(db):  
@@ -681,6 +859,8 @@ def roster_add_update(db):
     db.commit()
     websock.update_cache("roster",roster_id=roster.id)
     redirect("/roster")    
+    
+permit.add_route("/roster/update",u"修改黑名单",u"系统管理",order=6.02)    
 
 @app.get('/roster/delete',apply=auth_opr)
 def roster_delete(db):     
@@ -698,4 +878,4 @@ def roster_delete(db):
     websock.update_cache("roster",roster_id=roster_id)
     redirect("/roster")        
 
-
+permit.add_route("/roster/delete",u"删除黑名单",u"系统管理",order=6.03)

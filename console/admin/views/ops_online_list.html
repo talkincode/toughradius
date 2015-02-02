@@ -116,7 +116,10 @@ $(document).ready(function (){
 
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" class="btn btn-primary">查询</button>&nbsp;&nbsp;<button type="button" class="btn btn-default" id="realseAll">BAS用户下线</button>
+                    <button type="submit" class="btn btn-primary">查询</button>&nbsp;&nbsp;
+                    % if get_cookie("opr_type") == 0 :
+                    <button type="button" class="btn btn-default" id="realseAll">BAS用户下线</button>
+                    % endif
                 </div>
             </div>
         </form>

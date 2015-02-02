@@ -16,11 +16,15 @@ import models
 
 def init_application(dbconf=None,consconf=None):
     log.startLogging(sys.stdout)  
+    log.msg("start init application...")
     TEMPLATE_PATH.append("./admin/views/")
     ''' install plugins'''
+    log.msg("init plugins..")
     engine,metadata = models.get_engine(dbconf)
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
-    _sys_param_value = functools.partial(get_param_value,sqla_pg.new_session())
+    session = sqla_pg.new_session()
+    _sys_param_value = functools.partial(get_param_value,session)
+    log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
@@ -29,22 +33,32 @@ def init_application(dbconf=None,consconf=None):
         sys_param_value = _sys_param_value,
         system_name = _sys_param_value("1_system_name"),
         radaddr = _sys_param_value('3_radiusd_address'),
-        adminport = _sys_param_value('4_radiusd_admin_port')
+        adminport = _sys_param_value('4_radiusd_admin_port'),
+        permit = permit,
+        all_menus = permit.build_menus(order_cats=[u"系统管理",u"营业管理",u"运维管理"])
     ))
     
     # connect radiusd websocket admin port 
+    log.msg("init websocket client...")
     websock.connect(
         MakoTemplate.defaults['radaddr'],
         MakoTemplate.defaults['adminport'],
     )
+    
+    log.msg("init operator rules...")
+    for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
+        permit.bind_super(_super[0])
 
+    log.msg("install plugins...")
     mainapp.install(sqla_pg)
     ops_app.install(sqla_pg)
     bus_app.install(sqla_pg)
 
     mainapp.mount("/ops",ops_app)
     mainapp.mount("/bus",bus_app)
+    
 
+    
     #create dir
     try:
         os.makedirs(os.path.join(APP_DIR,'static/xls'))

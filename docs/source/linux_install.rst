@@ -14,6 +14,7 @@ CentOS 6 , CentOS 7
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 install/centos6-install.sh
+
 install/centos7-install.sh
 
 
@@ -22,14 +23,12 @@ install/centos7-install.sh
 
 自动化安装过程在终端下执行,以CentOS 7为例：
 
-1. 下载脚本
+1. 下载脚本::
 
-::
     $ curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/centos7-install.sh > centos7-install.sh
 
-2. 执行安装
+2. 执行安装::
 
-::
     $ sh centos7-install.sh all
 
 执行完成以上两步可完成所有安装并运行ToughRADIUS服务，然后就可以使用了。

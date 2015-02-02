@@ -18,7 +18,9 @@
         <div class="panel-body">
             <div class="container">
                 <div class="pull-right bottom10">
+                    % if permit.match('/bas/add'):
                      <a href="/bas/add" class="btn btn-sm btn-default">增加BAS</a>
+                    % endif
                 </div>
 
                 <table class="table table-hover">
@@ -43,8 +45,14 @@
                                 <td>${bas.coa_port}</td>
                                 <td>${{0:u"标准时区，北京时间",1:u"时间与时区相同"}[bas.time_type]}
                                 </td>
-                                <td><a class="opt-btn btn-default" href="/bas/update?bas_id=${bas.id}">修改</a>
-                                    <a class="opt-btn btn-default" href="javascript:deleteBas('${bas.id}')">删除</a></td>
+                                <td>
+                                    % if permit.match('/bas/update'):
+                                    <a class="opt-btn btn-default" href="/bas/update?bas_id=${bas.id}">修改</a>
+                                    % endif
+                                    % if permit.match('/bas/delete'):
+                                    <a class="opt-btn btn-default" href="javascript:deleteBas('${bas.id}')">删除</a>
+                                    % endif
+                                </td>
                             </tr>
                         % endfor
                     </tbody>

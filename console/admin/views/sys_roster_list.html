@@ -19,7 +19,9 @@
     <div class="panel-body">
         <div class="container">    
             <div class="pull-right bottom10">
+                % if permit.match('/roster/add'):
                 <a href="/roster/add" class="btn btn-sm btn-default">增加黑白名单</a>
+                % endif
             </div>
 
             <table class="table table-hover">
@@ -40,8 +42,14 @@
                             <td>${roster.account_number}</td>
                             <td>${roster.begin_time}</td>
                             <td>${roster.end_time}</td>
-                            <td><a class="opt-btn btn-default" href="/roster/update?roster_id=${roster.id}">修改</a>
-                                <a class="opt-btn btn-default" href="javascript:deleteRoster('${roster.id}')">删除</a></td>
+                            <td>
+                                % if permit.match('/roster/update'):
+                                <a class="opt-btn btn-default" href="/roster/update?roster_id=${roster.id}">修改</a>
+                                % endif
+                                % if permit.match('/roster/delete'):
+                                <a class="opt-btn btn-default" href="javascript:deleteRoster('${roster.id}')">删除</a>
+                                % endif
+                            </td>
                         </tr>
                     % endfor
                 </tbody>

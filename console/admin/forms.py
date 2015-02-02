@@ -76,6 +76,30 @@ bas_update_form = pyforms.Form(
         title=u"修改BAS",
         action="/bas/update"
     )
+    
+opr_type = {0:u'系统管理员',1:u"普通操作员"}    
+opr_status_dict = {0:u'正常',1:u"停用"}
+    
+opr_add_form = pyforms.Form(
+        pyforms.Textbox("operator_name", rules.len_of(2,32), description=u"操作员名称",required="required",**input_style),
+        pyforms.Textbox("operator_desc", rules.len_of(0,255),description=u"操作员姓名",**input_style),
+        pyforms.Password("operator_pass", rules.is_alphanum2(6, 128), description=u"操作员密码", required="required",**input_style),
+        pyforms.Dropdown("operator_status", description=u"操作员状态", args=opr_status_dict.items(), required="required",**input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"增加操作员",
+        action="/opr/add"
+    )  
+    
+opr_update_form = pyforms.Form(
+        pyforms.Hidden("id",  description=u"编号"),
+        pyforms.Textbox("operator_name", description=u"操作员名称",readonly="readonly",**input_style),
+        pyforms.Textbox("operator_desc", rules.len_of(0,255),description=u"操作员姓名",**input_style),
+        pyforms.Password("operator_pass", rules.is_alphanum2(0, 128), description=u"操作员密码(留空不修改)",**input_style),
+        pyforms.Dropdown("operator_status", description=u"操作员状态", args=opr_status_dict.items(), required="required",**input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"修改操作员",
+        action="/opr/update"
+    )        
 
 product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}
 product_status_dict = {0:u'正常',1:u"停用"}
@@ -90,8 +114,8 @@ def product_add_form():
         pyforms.Textbox("concur_number", rules.is_numberOboveZore,description=u"并发数控制(0表示不限制)",value="0", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC ",**input_style),
         pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN ",**input_style),
-        pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率 ", **input_style),
-        pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率 ",**input_style),
+        pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率(1M=1048576)bps", **input_style),
+        pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率(1M=1048576)bps",**input_style),
         pyforms.Dropdown("product_status", args=product_status_dict.items(),description=u"资费状态", required="required", **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"增加资费",
@@ -111,8 +135,8 @@ def product_update_form():
         pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),
         pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN",**input_style),
-        pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率", **input_style),
-        pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率",**input_style),
+        pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率(1M=1048576)bps", **input_style),
+        pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率(1M=1048576)bps",**input_style),
         pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
         title=u"修改资费",
         action="/product/update"
@@ -204,11 +228,11 @@ def user_open_form(nodes=[],products=[],groups=[]):
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
         pyforms.Textbox("account_number", description=u"用户上网账号",  required="required", **input_style),
+        pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Dropdown("group_id",  args=groups, description=u"用户组",**input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
         pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
-        pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
         pyforms.Hidden("status", args=userreg_state.items(),value=1, description=u"用户状态",  **input_style),
@@ -223,12 +247,12 @@ def account_open_form(products=[],groups=[]):
         pyforms.Hidden("member_id",  description=u"编号"),
         pyforms.Textbox("realname", description=u"用户姓名", readonly="readonly",**input_style),
         pyforms.Textbox("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Dropdown("group_id",  args=groups, description=u"用户组",**input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("address", description=u"用户地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
         pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
-        pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
         pyforms.Hidden("status", args=userreg_state.items(),value=1, description=u"用户状态",  **input_style),

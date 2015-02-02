@@ -66,12 +66,16 @@ def user_query(db):
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
         return static_file(name, root='./static/xls',download=True)
+        
+permit.add_route("/ops/user",u"上网账号查询",u"运维管理",is_menu=True,order=0)
+permit.add_route("/ops/user/export",u"账号查询导出",u"运维管理")
+
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
     return render("ops_user_trace", bas_list=db.query(models.SlcRadBas))
 
-
+permit.add_route("/ops/user/trace",u"用户消息跟踪",u"运维管理",is_menu=True,order=1)
                    
 @app.get('/user/detail',apply=auth_opr)
 def user_detail(db):   
@@ -104,6 +108,8 @@ def user_detail(db):
         return render("error",msg=u"用户不存在")
     user_attrs = db.query(models.SlcRadAccountAttr).filter_by(account_number=account_number)
     return render("ops_user_detail",user=user,user_attrs=user_attrs)
+    
+permit.add_route("/ops/user/detail",u"账号详情",u"运维管理")
 
 @app.post('/user/release',apply=auth_opr)
 def user_release(db):   
@@ -123,6 +129,8 @@ def user_release(db):
     db.commit()
     websock.update_cache("account",account_number=account_number)
     return dict(code=0,msg=u"解绑成功")
+    
+permit.add_route("/ops/user/release",u"用户释放绑定",u"运维管理")    
 
 ###############################################################################
 # online manage      
@@ -168,6 +176,7 @@ def online_query(db):
                    node_list=db.query(models.SlcNode), 
                    bas_list=db.query(models.SlcRadBas),**request.params)
 
+permit.add_route("/ops/online",u"在线用户查询",u"运维管理",is_menu=True,order=2)
 
 ###############################################################################
 # ticket manage        
@@ -214,6 +223,7 @@ def ticket_query(db):
     return render("ops_ticket_list", page_data = get_page_data(_query),
                node_list=db.query(models.SlcNode),**request.params)
 
+permit.add_route("/ops/ticket",u"上网日志查询",u"运维管理",is_menu=True,order=3)
 
 ###############################################################################
 # ops log manage        
@@ -221,20 +231,17 @@ def ticket_query(db):
 
 @app.route('/opslog',apply=auth_opr,method=['GET','POST'])
 def opslog_query(db): 
-    node_id = request.params.get('node_id')
     operator_name = request.params.get('operator_name')
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
-    _query = db.query(
-        models.SlcRadOperateLog,
-        models.SlcOperator.node_id,
-    ).filter(
+    keyword = request.params.get('keyword')
+    _query = db.query(models.SlcRadOperateLog).filter(
         models.SlcRadOperateLog.operator_name == models.SlcOperator.operator_name,
-    )
-    if node_id:
-        _query = _query.filter(models.SlcOperator.node_id == node_id)    
+    ) 
     if operator_name:
         _query = _query.filter(models.SlcRadOperateLog.operator_name == operator_name)
+    if keyword:
+        _query = _query.filter(models.SlcRadOperateLog.operator_desc.like("%"+keyword+"%"))        
     if query_begin_time:
         _query = _query.filter(models.SlcRadOperateLog.operate_time >= query_begin_time)
     if query_end_time:
@@ -243,3 +250,6 @@ def opslog_query(db):
     return render("ops_log_list", 
         node_list=db.query(models.SlcNode),
         page_data = get_page_data(_query),**request.params)
+
+
+permit.add_route("/ops/opslog",u"操作日志查询",u"运维管理",is_menu=True,order=4)

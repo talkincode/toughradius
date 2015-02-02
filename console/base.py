@@ -4,6 +4,7 @@ from twisted.python import log
 from bottle import request
 from bottle import response
 from bottle import redirect
+from bottle import HTTPError
 from libs.paginator import Paginator
 from libs import utils
 from hashlib import md5
@@ -12,6 +13,7 @@ import functools
 import urllib
 import models
 import json
+import time
 from beaker.cache import CacheManager
 
 page_size = 20
@@ -34,6 +36,63 @@ class Logger:
 
 logger = Logger()
 
+
+class Permit():
+    '''permission rules'''
+    routes = {}
+    
+    def add_route(self,path,name,category,is_menu=False,order=time.time()):
+        if not path:return
+        self.routes[path] = dict(path=path,name=name,category=category,is_menu=is_menu,oprs=[],order=order)
+    
+    def get_route(self,path):
+        return self.routes.get(path)    
+        
+    def bind_super(self,opr):
+        for path in self.routes:
+            route = self.routes.get(path)    
+            route['oprs'].append(opr)         
+    
+    def bind_opr(self,opr,path):
+        if not path or path not in self.routes:
+            return
+        oprs = self.routes[path]['oprs'] 
+        if opr not in oprs:
+            oprs.append(opr) 
+            
+    def unbind_opr(self,opr,path=None):
+        if path:
+            self.routes[path]['oprs'].remove(opr)
+        else:
+            for path in self.routes:
+                route = self.routes.get(path)    
+                if route and opr in route['oprs']:
+                    route['oprs'].remove(opr)
+                
+    def check_opr_category(self,opr,category):
+        print opr,category
+        for path in self.routes:
+            route = self.routes[path]
+            if opr in route['oprs'] and route['category'] == category:
+                return True
+        return False 
+        
+    def build_menus(self,order_cats=[]):
+        menus = [ {'category':_cat,'items':[]} for _cat in order_cats]
+        for path in self.routes:
+            route = self.routes[path]
+            for menu in menus:
+                if route['category'] == menu['category']:
+                    menu['items'].append(route)
+        return menus
+        
+    def match(self,path):
+        if not path:
+            return False
+        return get_cookie("username") in self.routes[path]['oprs']
+     
+permit = Permit()       
+
 def auth_opr(func):
     @functools.wraps(func)
     def warp(*args,**kargs):
@@ -41,6 +100,10 @@ def auth_opr(func):
             log.msg("admin login timeout")
             return redirect('/login')
         else:
+            opr = get_cookie("username")
+            rule = permit.get_route(request.fullpath)
+            if rule and opr not in rule['oprs']:
+                raise HTTPError(403, u'访问被拒绝')
             return func(*args,**kargs)
     return warp
     
@@ -53,6 +116,7 @@ def auth_cus(func):
         else:
             return func(*args,**kargs)
     return warp    
+    
 
 @cache.cache('get_account_node_id',expire=3600)   
 def account_node_id(db,account_number):

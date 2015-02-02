@@ -113,6 +113,8 @@ def member_query(db):
             f.write(data.xls)
         return static_file(name, root='./static/xls',download=True)    
 
+permit.add_route("/bus/member",u"用户信息管理",u"营业管理",is_menu=True,order=0)
+permit.add_route("/bus/member/export",u"用户信息导出",u"营业管理",order=0.01)
 
 @app.get('/member/detail',apply=auth_opr)
 def member_detail(db): 
@@ -152,6 +154,7 @@ def member_detail(db):
     )
     return  render("bus_member_detail",member=member,accounts=accounts,orders=orders)
 
+permit.add_route("/bus/member/detail",u"用户详情查看",u"营业管理",order=0.02)
 
 ###############################################################################
 # member update     
@@ -190,6 +193,8 @@ def member_update(db):
 
     db.commit()
     redirect("/bus/member/detail?member_id={}".format(member.member_id)) 
+
+permit.add_route("/bus/member/update",u"修改用户资料",u"营业管理",order=0.03)
 
 ###############################################################################
 # member open     
@@ -305,6 +310,7 @@ def member_open(db):
     db.commit()
     redirect("/bus/member")
 
+permit.add_route("/bus/member/open",u"用户快速开户",u"营业管理",is_menu=True,order=1)
 
 ###############################################################################
 # account open     
@@ -404,7 +410,7 @@ def account_open(db):
     db.commit()
     redirect("/bus/member/detail?member_id={}".format(form.d.member_id))
 
-
+permit.add_route("/bus/account/open",u"增开用户账号",u"营业管理",order=1.01)
 
 ###############################################################################
 # account update     
@@ -451,6 +457,8 @@ def account_update(db):
     db.commit()
     websock.update_cache("account",account_number=account.account_number)
     redirect("/bus/member/detail?member_id={}".format(account.member_id)) 
+    
+permit.add_route("/bus/account/update",u"修改用户上网账号",u"营业管理",order=1.02)
 
 ###############################################################################
 # account import     
@@ -573,6 +581,8 @@ def member_import(db):
 
     db.commit()
     redirect("/bus/member")
+    
+permit.add_route("/bus/member/import",u"用户数据导入",u"营业管理",is_menu=True,order=2)
 
 ###############################################################################
 # account pause     
@@ -609,6 +619,8 @@ def account_pause(db):
             acct_session_id=_online.acct_session_id,
             message_type='disconnect')
     return dict(msg=u"操作成功")
+    
+permit.add_route("/bus/account/pause",u"用户账号停机",u"营业管理",order=2.01)
 
 ###############################################################################
 # account resume     
@@ -641,6 +653,8 @@ def account_resume(db):
     db.commit()
     websock.update_cache("account",account_number=account.account_number)
     return dict(msg=u"操作成功")
+    
+permit.add_route("/bus/account/resume",u"用户账号复机",u"营业管理",order=2.02)
 
 
 def query_account(db,account_number):
@@ -734,6 +748,8 @@ def account_next(db):
     websock.update_cache("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
+permit.add_route("/bus/account/next",u"用户账号续费",u"营业管理",order=2.03)
+
 ###############################################################################
 # account charge     
 ###############################################################################
@@ -789,6 +805,8 @@ def account_charge(db):
     db.commit()
     websock.update_cache("account",account_number=account_number)
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
+    
+permit.add_route("/bus/account/charge",u"用户账号充值",u"营业管理",order=2.04)
 
 ###############################################################################
 # account cancel     
@@ -852,6 +870,7 @@ def account_next(db):
             message_type='disconnect')    
     redirect("/bus/member/detail?member_id={}".format(user.member_id))
 
+permit.add_route("/bus/account/cancel",u"用户账号销户",u"营业管理",order=2.05)
 
 ###############################################################################
 # accept log manage        
@@ -901,7 +920,7 @@ def acceptlog_query(db):
         **request.params
     )
 
-
+permit.add_route("/bus/acceptlog",u"用户受理查询",u"营业管理",is_menu=True,order=3)
 
 ###############################################################################
 # billing log query        
@@ -933,3 +952,4 @@ def billing_query(db):
         node_list=db.query(models.SlcNode),
         page_data=get_page_data(_query),**request.params)
 
+permit.add_route("/bus/billing",u"用户计费查询",u"营业管理",is_menu=True,order=4)

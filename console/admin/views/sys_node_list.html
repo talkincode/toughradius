@@ -16,7 +16,10 @@
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 节点列表</div>
     <div class="panel-body">
         <div class="pull-right bottom10">
-             <a href="/node/add" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-plus"></span> 增加节点</a>
+            % if permit.match('/node/add'):
+             <a href="/node/add" class="btn btn-sm btn-default">
+                 <span class="glyphicon glyphicon-plus"></span> 增加节点</a>
+            % endif
         </div>
         <table class="table table-hover">
             <thead>
@@ -31,8 +34,14 @@
             <tr>
                 <td>${node.node_name}</td>
                 <td>${node.node_desc}</td>
-                <td><a class="opt-btn btn-default" href="/node/update?node_id=${node.id}">修改</a>
-                    <a class="opt-btn btn-default" href="javascript:deleteNode('${node.id}')">删除</a></td>
+                <td>
+                    % if permit.match('/node/update'):
+                    <a class="opt-btn btn-default" href="/node/update?node_id=${node.id}">修改</a>
+                    % endif
+                    % if permit.match('/node/delete'):
+                    <a class="opt-btn btn-default" href="javascript:deleteNode('${node.id}')">删除</a>
+                    % endif
+                </td>
             </tr>
             % endfor
             </tbody>

@@ -46,18 +46,29 @@ class SlcNode(DeclarativeBase):
 
 class SlcOperator(DeclarativeBase):
     """操作员表 操作员类型 0 系统管理员 1 普通操作员"""
-    __tablename__ = 'slc_rad_operator'
+    __tablename__ = 'slc_operator'
 
     __table_args__ = {}
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"操作员id")
-    node_id = Column('node_id', INTEGER(), nullable=False,doc=u"操作员区域")
     operator_type = Column('operator_type', INTEGER(), nullable=False,doc=u"操作员类型")
     operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
     operator_pass = Column(u'operator_pass', VARCHAR(length=128), nullable=False,doc=u"操作员密码")
     operator_status = Column(u'operator_status', INTEGER(), nullable=False,doc=u"操作员状态,0/1")
-    operator_desc = Column(u'operator_desc', VARCHAR(255), nullable=False,doc=u"操作员描述")    
+    operator_desc = Column(u'operator_desc', VARCHAR(255), nullable=False,doc=u"操作员描述")   
+    
+class SlcOperatorRule(DeclarativeBase):
+    """操作员权限表"""
+    __tablename__ = 'slc_operator_rule'
+
+    __table_args__ = {} 
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
+    rule_path = Column(u'rule_path', VARCHAR(128), nullable=False,doc=u"权限URL")
+    rule_name = Column(u'rule_name', VARCHAR(128), nullable=False,doc=u"权限名称")
+    rule_category = Column(u'rule_category', VARCHAR(128), nullable=False,doc=u"权限分类")
+    
 
 class SlcParam(DeclarativeBase):
     """系统参数表  <radiusd default table>"""
@@ -425,12 +436,11 @@ def init_db(db):
 
     opr = SlcOperator()
     opr.id = 1
-    opr.node_id = 1
     opr.operator_name = 'admin'
-    opr.operator_type = 1
+    opr.operator_type = 0
     opr.operator_pass = md5('root').hexdigest()
     opr.operator_desc = 'admin'
-    opr.operator_status = 1
+    opr.operator_status = 0
     db.add(opr)
 
     bas = SlcRadBas()

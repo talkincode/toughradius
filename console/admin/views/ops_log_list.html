@@ -18,18 +18,13 @@
     <div class="panel-body">
         <form id="query_form" class="form-horizontal" role="form" action="/ops/opslog" method="post">
             <div class="form-group">
-                <label for="node_id" class="col-md-2 control-label">区域</label>
-                <div class="col-md-3">
-                    <select id="node_id" name="node_id" class="form-control" >
-                    <option value=""></option>
-                        % for node in node_list:
-                          <option value="${node.id}"  ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
-                        % endfor
-                    </select>
-                </div>              
                 <label for="operator_name" class="col-md-2 control-label">操作员名</label>
                 <div class="col-md-3">
-                    <input type="text" id="operator_name" name="operator_name" class="form-control">
+                    <input type="text" id="operator_name" name="operator_name" class="form-control" value="${operator_name or ''}">
+                </div>           
+                <label for="keyword" class="col-md-2 control-label">关键字</label>
+                <div class="col-md-3">
+                    <input type="text" id="keyword" name="keyword" class="form-control" value="${keyword or ''}">
                 </div>
             </div>   
             <div class="form-group">
@@ -61,12 +56,12 @@
             </tr>
             </thead>
             <tbody>
-            % for opslog,_ in page_data.result:
+            % for opslog in page_data.result:
             <tr>
                 <td>${opslog.operator_name}</td>
                 <td>${opslog.operate_ip}</td>
                 <td>${opslog.operate_time}</td>
-                <td>${opslog.operate_desc[:512]}</td>
+                <td>${opslog.operate_desc[:512]}...</td>
             </tr>
             % endfor
             </tbody>
