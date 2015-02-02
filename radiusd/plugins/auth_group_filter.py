@@ -5,8 +5,11 @@ from store import store
 
 def process(req=None,resp=None,user=None):
     """执行用户组策略校验，检查MAC与VLANID绑定，并发数限制 """
+    macaddr = req.get_mac_addr()
+    if store.is_white_roster(macaddr):
+        return resp
+        
     group = store.get_group(user['group_id'])
-
     if not group:
         return resp
 

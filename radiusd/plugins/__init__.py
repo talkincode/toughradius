@@ -2,6 +2,7 @@
 #coding=utf-8
 
 __all__ = [
+    'auth_roster_filter',
     'auth_bind_filter',
     'auth_group_filter',
     'auth_policy_filter',

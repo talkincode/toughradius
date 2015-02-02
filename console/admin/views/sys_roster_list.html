@@ -29,7 +29,6 @@
                 <tr>
                     <th>MAC地址</th>
                     <th>黑白名单类型</th>
-                    <th>用户账号</th>
                     <th>开始时间</th>
                     <th>结束时间</th>
                 </tr>
@@ -39,7 +38,6 @@
                         <tr>
                             <td>${roster.mac_addr}</td>
                             <td>${{0:u'白名单',1:u'黑名单'}.get(roster.roster_type)}</td>
-                            <td>${roster.account_number}</td>
                             <td>${roster.begin_time}</td>
                             <td>${roster.end_time}</td>
                             <td>

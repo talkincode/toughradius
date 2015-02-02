@@ -70,6 +70,7 @@ def admin_login_post(db):
         operator_pass=enpasswd
     ).first()
     if not opr:return dict(code=1,msg=u"用户名密码不符")
+    if opr.operator_status == 1:return dict(code=1,msg=u"该操作员账号已被停用")
     set_cookie('username',uname)
     set_cookie('opr_type',opr.operator_type)
     set_cookie('login_time', utils.get_currtime())
@@ -133,7 +134,9 @@ def param_update(db):
             if param.param_name == '4_radiusd_admin_port':
                 if param.param_value != MakoTemplate.defaults['adminport']:
                     MakoTemplate.defaults['adminport'] = param.param_value
-                    wsflag = True            
+                    wsflag = True     
+            if param.param_name == u'reject_delay':
+                websock.update_cache("reject_delay",reject_delay=param.param_value)       
                 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
@@ -145,6 +148,7 @@ def param_update(db):
     )
     db.add(ops_log)
     db.commit()
+    
     if wsflag:
         websock.reconnect(
             MakoTemplate.defaults['radaddr'],
@@ -797,7 +801,7 @@ def roster(db):
     return render("sys_roster_list", 
         page_data = get_page_data(_query))
         
-permit.add_route("/roster",u"黑名单管理",u"系统管理",is_menu=True,order=6)
+permit.add_route("/roster",u"黑白名单管理",u"系统管理",is_menu=True,order=6)
 
 @app.get('/roster/add',apply=auth_opr)
 def roster_add(db):  
@@ -811,8 +815,7 @@ def roster_add_post(db):
     if db.query(models.SlcRadRoster.id).filter_by(mac_addr=form.d.mac_addr).count()>0:
         return render("sys_roster_form", form=form,msg=u"MAC地址已经存在")     
     roster = models.SlcRadRoster()
-    roster.mac_addr = form.d.mac_addr
-    roster.account_number = form.d.account_number
+    roster.mac_addr = form.d.mac_addr.replace("-",":").upper()
     roster.begin_time = form.d.begin_time
     roster.end_time = form.d.end_time
     roster.roster_type = form.d.roster_type
@@ -826,9 +829,10 @@ def roster_add_post(db):
     db.add(ops_log)
 
     db.commit()
+    websock.update_cache("roster",mac_addr=roster.mac_addr)
     redirect("/roster")
     
-permit.add_route("/roster/add",u"新增黑名单",u"系统管理",order=6.01)    
+permit.add_route("/roster/add",u"新增黑白名单",u"系统管理",order=6.01)    
 
 @app.get('/roster/update',apply=auth_opr)
 def roster_update(db):  
@@ -843,8 +847,6 @@ def roster_add_update(db):
     if not form.validates(source=request.forms):
         return render("sys_roster_form", form=form)       
     roster = db.query(models.SlcRadRoster).get(form.d.id)
-    roster.mac_addr = form.d.mac_addr
-    roster.account_number = form.d.account_number
     roster.begin_time = form.d.begin_time
     roster.end_time = form.d.end_time
     roster.roster_type = form.d.roster_type
@@ -857,14 +859,15 @@ def roster_add_update(db):
     db.add(ops_log)
 
     db.commit()
-    websock.update_cache("roster",roster_id=roster.id)
+    websock.update_cache("roster",mac_addr=roster.mac_addr)
     redirect("/roster")    
     
-permit.add_route("/roster/update",u"修改黑名单",u"系统管理",order=6.02)    
+permit.add_route("/roster/update",u"修改白黑名单",u"系统管理",order=6.02)    
 
 @app.get('/roster/delete',apply=auth_opr)
 def roster_delete(db):     
     roster_id = request.params.get("roster_id")
+    mac_addr = db.query(models.SlcRadRoster).get(roster_id).mac_addr
     db.query(models.SlcRadRoster).filter_by(id=roster_id).delete()
 
     ops_log = models.SlcRadOperateLog()
@@ -875,7 +878,7 @@ def roster_delete(db):
     db.add(ops_log)
 
     db.commit() 
-    websock.update_cache("roster",roster_id=roster_id)
+    websock.update_cache("roster",mac_addr=mac_addr)
     redirect("/roster")        
 
-permit.add_route("/roster/delete",u"删除黑名单",u"系统管理",order=6.03)
+permit.add_route("/roster/delete",u"删除黑白名单",u"系统管理",order=6.03)

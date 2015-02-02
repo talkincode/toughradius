@@ -46,6 +46,8 @@ class AdminServerProtocol(WebSocketServerProtocol):
     midware = None
     runstat = None
     coa_clients = {}
+    auth_server = None
+    acct_server = None
 
     def onConnect(self, request):
         log.msg("Client connecting: {0}".format(request.peer))

@@ -184,6 +184,39 @@ class Store():
 
     def update_group_cache(self,group_id):
         cache.invalidate(self.get_group,'get_group', group_id)
+        
+    ###############################################################################
+    # roster method                                                              ####
+    ############################################################################### 
+
+    @cache.cache('get_roster',expire=__cache_timeout__)   
+    def get_roster(self,mac_addr):
+        if mac_addr:
+            mac_addr = mac_addr.upper()
+        roster = None
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select * from slc_rad_roster where mac_addr = %s ",(mac_addr,))
+            roster =  cur.fetchone()
+        print roster
+        if  roster:
+            now = create_time = datetime.datetime.now()
+            roster_start = datetime.datetime.strptime(roster['begin_time'],"%Y-%m-%d")
+            roster_end = datetime.datetime.strptime(roster['end_time'],"%Y-%m-%d")
+            if now < roster_start or now > roster_end:
+                return None
+            return roster
+            
+    def is_black_roster(self,mac_addr):
+        roster = self.get_roster(mac_addr)
+        return roster and roster['roster_type'] == 1 or False
+        
+    def is_white_roster(self,mac_addr):
+        roster = self.get_roster(mac_addr)
+        return roster and roster['roster_type'] == 0 or False
+    
+    def update_roster_cache(self,mac_addr):
+        cache.invalidate(self.get_roster,'get_roster', str(mac_addr))
+        cache.invalidate(self.get_roster,'get_roster', unicode(mac_addr))
 
     ###############################################################################
     # product method                                                         ####

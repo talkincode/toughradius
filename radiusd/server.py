@@ -291,6 +291,8 @@ def main():
         factory.protocol.midware = _middleware
         factory.protocol.runstat = _runstat
         factory.protocol.coa_clients = _coa_clients
+        factory.protocol.auth_server = auth_protocol
+        factory.protocol.acct_server = acct_protocol
         reactor.listenTCP(_radiusd['adminport'], factory)
 
     start_servers()

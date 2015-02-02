@@ -241,7 +241,7 @@ def opslog_query(db):
     if operator_name:
         _query = _query.filter(models.SlcRadOperateLog.operator_name == operator_name)
     if keyword:
-        _query = _query.filter(models.SlcRadOperateLog.operator_desc.like("%"+keyword+"%"))        
+        _query = _query.filter(models.SlcRadOperateLog.operate_desc.like("%"+keyword+"%"))        
     if query_begin_time:
         _query = _query.filter(models.SlcRadOperateLog.operate_time >= query_begin_time)
     if query_end_time:

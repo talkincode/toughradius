@@ -7,6 +7,9 @@ from store import store
 def process(req=None,resp=None,user=None):
     """check mac bind & vlan bind"""
     macaddr = req.get_mac_addr()
+    if store.is_white_roster(macaddr):
+        return resp
+        
     if macaddr and  user['mac_addr']:
         if user['bind_mac'] == 1 and macaddr not in user['mac_addr']:
             return error_auth(resp,"macaddr bind not match")

@@ -70,7 +70,6 @@ class Permit():
                     route['oprs'].remove(opr)
                 
     def check_opr_category(self,opr,category):
-        print opr,category
         for path in self.routes:
             route = self.routes[path]
             if opr in route['oprs'] and route['category'] == category:

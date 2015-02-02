@@ -28,10 +28,22 @@ def process(req=None,admin=None):
         send_ok("bas cache update")
     elif cache_class == 'group' and req.get("group_id"):
         store.update_group_cache(req.get("group_id"))  
-        send_ok("group cache update")      
+        send_ok("group cache update") 
+    elif cache_class == 'roster' and req.get("mac_addr"):
+        store.update_roster_cache(req.get("mac_addr"))  
+        send_ok("roster cache update")     
     elif cache_class == 'product' and req.get("product_id"):
         store.update_product_cache(req.get("product_id"))
         send_ok("product cache update")
+    elif cache_class == 'reject_delay' and req.get("reject_delay"):
+        try:
+            _delay = int(req.get("reject_delay"))
+            if _delay >= 0 and _delay <= 9:
+                admin.auth_server.auth_delay.reject_delay = _delay
+            send_ok("reject_delay update")
+        except:
+            reply = json.dumps({'msg_id':msg_id,'data':u'error reject_delay param','code':0})
+            admin.sendMessage(reply,False)
     else:
         reply = json.dumps({'msg_id':msg_id,'data':u'do nothing','code':0})
         admin.sendMessage(reply,False)

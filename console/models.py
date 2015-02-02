@@ -128,7 +128,6 @@ class SlcRadRoster(DeclarativeBase):
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"黑白名单id")
     mac_addr = Column('mac_addr', VARCHAR(length=17), nullable=False,doc=u"mac地址")
-    account_number = Column('account_number', VARCHAR(length=32),doc=u"上网账号")
     begin_time = Column('begin_time', VARCHAR(length=19), nullable=False,doc=u"生效开始时间")
     end_time = Column('end_time', VARCHAR(length=19), nullable=False,doc=u"生效结束时间")
     roster_type = Column('roster_type', SMALLINT(), nullable=False,doc=u"黑白名单类型")
