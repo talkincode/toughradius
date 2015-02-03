@@ -21,16 +21,18 @@
                 <label for="node_id" class="col-md-2 control-label">区域</label>
                 <div class="col-md-3">
                     <select id="node_id" name="node_id" class="form-control" >
+                        <option value=""></option>
                         % for node in node_list:
-                          <option value="${node.id}" ${node.id==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
                         % endfor
                     </select>
                 </div>            
                 <label for="product_id" class="col-md-2 control-label">产品套餐</label>
                 <div class="col-md-3">
                 <select id="product_id" name="product_id" class="form-control" >
+                    <option value=""></option>
                         % for product in product_list:
-                          <option value="${product.id}" ${product.id==product_id and "selected" or ""}>${product.product_name}</option>
+                          <option value="${product.id}" ${str(product.id)==product_id and "selected" or ""}>${product.product_name}</option>
                         % endfor
                 </select>
                 </div>

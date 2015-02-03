@@ -74,14 +74,9 @@
         </form>
         <hr>
 
-        <table class="table ">
+        <table class="table table-hover">
             <thead>
-                <tr>
-                    <th colspan="8"> 用户订购记录</th>
-                </tr>
-            </thead>
-            <tbody>
-            <tr class="active">
+            <tr>
                 <th>订单号</th>
                 <th>用户姓名</th>
                 <th>上网账号</th>
@@ -91,7 +86,9 @@
                 <th>订单状态</th>
                 <th>订单时间</th>
                 <th>订单描述</th>
-            </tr>            
+            </tr>   
+        </thead>
+        <tbody>         
             % for order,_,_realname,_product_name,_ in page_data.result:
             <tr>
                 <td>${order.order_id}</td>

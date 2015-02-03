@@ -60,7 +60,7 @@ def user_query(db):
                 i.account_number, _realname, _product_name, 
                 i.expire_date,utils.fen2yuan(i.balance),
                 i.time_length,i.user_concur_number,i.ip_address,
-                i.status,i.create_time
+                forms.user_state[i.status],i.create_time
             ))
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
