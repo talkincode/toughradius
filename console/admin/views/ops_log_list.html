@@ -1,14 +1,13 @@
 <%inherit file="base.html"/>
 
 <%def name="head()">
-<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
-<link rel="stylesheet" href="/static/js/bootstrap-datetimepicker.min.css">
+<script src="/static/js/bootstrap-datepicker.js"></script>
+<link rel="stylesheet" href="/static/js/datepicker.css"> 
    <script>
     $(document).ready(function(){
-        $("#query_begin_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
-        $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+        $("#query_begin_time").datepicker();
+        $("#query_end_time").datepicker();
     });
-
    </script>
 </%def>
 

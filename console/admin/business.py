@@ -901,9 +901,9 @@ def acceptlog_query(db):
     if accept_type:
         _query = _query.filter(models.SlcRadAcceptLog.accept_type == accept_type)
     if query_begin_time:
-        _query = _query.filter(models.SlcRadAcceptLog.accept_time >= query_begin_time)
+        _query = _query.filter(models.SlcRadAcceptLog.accept_time >= query_begin_time+' 00:00:00')
     if query_end_time:
-        _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time)
+        _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcRadAcceptLog.accept_time.desc())
     type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}   
     if request.path == '/acceptlog':
@@ -956,9 +956,9 @@ def billing_query(db):
     if account_number:
         _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
     if query_begin_time:
-        _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time)
+        _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time+' 00:00:00')
     if query_end_time:
-        _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
+        _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcRadBilling.create_time.desc())
     if request.path == '/billing':
         return render("bus_billing_list", 
@@ -1020,9 +1020,9 @@ def order_query(db):
     if pay_status:
         _query = _query.filter(models.SlcMemberOrder.pay_status == pay_status)        
     if query_begin_time:
-        _query = _query.filter(models.SlcMemberOrder.create_time >= query_begin_time)
+        _query = _query.filter(models.SlcMemberOrder.create_time >= query_begin_time+' 00:00:00')
     if query_end_time:
-        _query = _query.filter(models.SlcMemberOrder.create_time <= query_end_time)
+        _query = _query.filter(models.SlcMemberOrder.create_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcMemberOrder.create_time.desc())
     
     if request.path == '/orders':

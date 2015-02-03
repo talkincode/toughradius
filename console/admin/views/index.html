@@ -1,6 +1,8 @@
 <%inherit file="base.html"/>
 <%def name="head()">
+<script src="/static/js/Chart.js"></script>
 <script>
+
 var wsock = {
     socket: null,
     start: function (addr,port) {
@@ -21,9 +23,36 @@ var wsock = {
     }
 };
 
-$(document).ready(function () {
+function doQuery()
+{
+    $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (data) {
+        if (data.code == 0) {
+            var _data = {
+                labels: data.hours,
+                datasets: [
+                    {
+                        fillColor: "rgba(151,187,205,0.5)",
+                        strokeColor: "rgba(151,187,205,1)",
+                        pointColor: "rgba(151,187,205,1)",
+                        pointStrokeColor: "#fff",
+                        data: data.dataset
+                    }
+                ]
+            }
+            chart.Line(_data);
+        }
+    }, "json");
+}
+
+var chart;
+$(document).ready(function (){
     wsock.start('${radaddr}','${adminport}');
+    var ctx = $("#statChart").get(0).getContext("2d");
+    chart = new Chart(ctx)    
+    doQuery();
 });
+
+
 </script>
 </%def>
 <%def name="body()">
@@ -55,14 +84,20 @@ $(document).ready(function () {
     </div>
 </div>
 
-
-
 <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 统计信息</div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线统计</div>
     <div class="panel-body">
+        <div class="container center"><canvas id="statChart" width="720" height="160"></canvas></div>
         <div class="alert alert-info ">
             当前在线用户数 ${online_count}/${user_total}
         </div>
+    </div>
+</div>
+
+
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 消息统计</div>
+    <div class="panel-body">
         <div>
         <ul class="list-group col-md-6">
             <li class="list-group-item">

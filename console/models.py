@@ -343,6 +343,7 @@ class SlcRadOnlineStat(DeclarativeBase):
     __table_args__ = {}
 
     #column definitions
+    node_id = Column('node_id', INTEGER(),primary_key=True, nullable=False,autoincrement=False,doc=u"区域id")
     day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False)
     time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False)
     total = Column(u'total', INTEGER())

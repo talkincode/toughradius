@@ -3,6 +3,7 @@
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
+from twisted.internet import reactor
 from bottle import TEMPLATE_PATH,MakoTemplate
 from bottle import run as runserver
 from admin.admin import app as mainapp
@@ -11,6 +12,7 @@ from admin.business import app as bus_app
 from base import *
 from libs import sqla_plugin
 from websock import websock
+import tasks
 import functools
 import models
 
@@ -29,6 +31,7 @@ def init_application(dbconf=None,consconf=None):
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
+        currdate = utils.get_currdate,
         request = request,
         sys_param_value = _sys_param_value,
         system_name = _sys_param_value("1_system_name"),
@@ -40,11 +43,11 @@ def init_application(dbconf=None,consconf=None):
     
     # connect radiusd websocket admin port 
     log.msg("init websocket client...")
-    websock.connect(
-        MakoTemplate.defaults['radaddr'],
-        MakoTemplate.defaults['adminport'],
-    )
-    
+    wsparam = (MakoTemplate.defaults['radaddr'],MakoTemplate.defaults['adminport'],)
+    reactor.callLater(5, websock.connect,*wsparam)
+    log.msg("init tasks...")
+    reactor.callLater(7, tasks.start_jobs, sqla_pg.new_session)
+   
     log.msg("init operator rules...")
     for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
         permit.bind_super(_super[0])
@@ -56,8 +59,6 @@ def init_application(dbconf=None,consconf=None):
 
     mainapp.mount("/ops",ops_app)
     mainapp.mount("/bus",bus_app)
-    
-
     
     #create dir
     try:
