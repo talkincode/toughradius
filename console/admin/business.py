@@ -110,7 +110,10 @@ def member_query(db):
         data = Dataset()
         data.append((u'区域',u'姓名',u'用户名',u'证件号',u'邮箱', u'联系电话', u'地址', u'创建时间'))
         for i,_node_name in _query:
-            data.append((_node_name, i.realname, i.member_name,i.idcard,i.email,i.mobile, i.address,i.create_time))
+            data.append((
+                _node_name, i.realname, i.member_name,i.idcard,
+                i.email,i.mobile, i.address,i.create_time
+            ))
         name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
@@ -866,6 +869,7 @@ permit.add_route("/bus/account/cancel",u"用户账号销户",u"营业管理",ord
 ###############################################################################
 
 @app.route('/acceptlog',apply=auth_opr,method=['GET','POST'])
+@app.route('/acceptlog/export',apply=auth_opr)
 def acceptlog_query(db): 
     node_id = request.params.get('node_id')
     accept_type = request.params.get('accept_type')
@@ -882,9 +886,11 @@ def acceptlog_query(db):
         models.SlcRadAcceptLog.accept_source,
         models.SlcRadAcceptLog.account_number,
         models.SlcMember.node_id,
+        models.SlcNode.node_name
     ).filter(
             models.SlcRadAcceptLog.account_number == models.SlcRadAccount.account_number,
-            models.SlcMember.member_id == models.SlcRadAccount.member_id
+            models.SlcMember.member_id == models.SlcRadAccount.member_id,
+            models.SlcNode.id == models.SlcMember.node_id
     )
     if operator_name:
         _query = _query.filter(models.SlcRadAcceptLog.operator_name == operator_name)
@@ -900,22 +906,37 @@ def acceptlog_query(db):
         _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time)
     _query = _query.order_by(models.SlcRadAcceptLog.accept_time.desc())
     type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}   
-    return render(
-        "bus_acceptlog_list", 
-        page_data = get_page_data(_query),
-        node_list=db.query(models.SlcNode),
-        type_map = type_map,
-        get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar(),
-        **request.params
-    )
-
+    if request.path == '/acceptlog':
+        return render(
+            "bus_acceptlog_list", 
+            page_data = get_page_data(_query),
+            node_list=db.query(models.SlcNode),
+            type_map = type_map,
+            get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar(),
+            **request.params
+        )
+    elif request.path == '/acceptlog/export':
+        data = Dataset()
+        data.append((u'区域',u'上网账号',u'受理类型',u'受理时间',u'受理渠道',u'操作员',u'受理描述'))
+        for i in _query:
+            data.append((
+                i.node_name, i.account_number, type_map.get(i.accept_type),
+                i.accept_time,i.accept_source,i.operator_name,i.accept_desc
+            ))
+        name = u"RADIUS-ACCEPTLOG-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
+        with open(u'./static/xls/%s' % name, 'wb') as f:
+            f.write(data.xls)
+        return static_file(name, root='./static/xls',download=True)
+    
 permit.add_route("/bus/acceptlog",u"用户受理查询",u"营业管理",is_menu=True,order=3)
+permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",order=3.01)
 
 ###############################################################################
 # billing log query        
 ###############################################################################
 
 @app.route('/billing',apply=auth_opr,method=['GET','POST'])
+@app.route('/billing/export',apply=auth_opr)
 def billing_query(db): 
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')  
@@ -924,9 +945,11 @@ def billing_query(db):
     _query = db.query(
         models.SlcRadBilling,
         models.SlcMember.node_id,
+        models.SlcNode.node_name
     ).filter(
         models.SlcRadBilling.account_number == models.SlcRadAccount.account_number,
-        models.SlcMember.member_id == models.SlcRadAccount.member_id
+        models.SlcMember.member_id == models.SlcRadAccount.member_id,
+        models.SlcNode.id == models.SlcMember.node_id
     )
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
@@ -937,8 +960,95 @@ def billing_query(db):
     if query_end_time:
         _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
     _query = _query.order_by(models.SlcRadBilling.create_time.desc())
-    return render("bus_billing_list", 
-        node_list=db.query(models.SlcNode),
-        page_data=get_page_data(_query),**request.params)
+    if request.path == '/billing':
+        return render("bus_billing_list", 
+            node_list=db.query(models.SlcNode),
+            page_data=get_page_data(_query),**request.params)
+    elif request.path == '/billing/export':
+        data = Dataset()
+        data.append((
+            u'区域',u'上网账号',u'BAS地址',u'会话编号',u'记账开始时间',u'会话时长',
+            u'扣费时长',u'应扣费用',u'实扣费用',u'当前余额',u'是否扣费',u'扣费时间'
+        ))
+        _f2y = utils.fen2yuan
+        _fms = utils.fmt_second
+        for i,_,_node_name in _query:
+            data.append((
+                _node_name, i.account_number, i.nas_addr,i.acct_session_id,
+                i.acct_start_time,_fms(i.acct_session_time),_fms(i.acct_length),
+                _f2y(i.acct_fee),_f2y(i.actual_fee),_f2y(i.balance),
+                (i.is_deduct==0 and u'否' or u'是'),i.create_time
+            ))
+        name = u"RADIUS-BILLING-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
+        with open(u'./static/xls/%s' % name, 'wb') as f:
+            f.write(data.xls)
+        return static_file(name, root='./static/xls',download=True)
 
 permit.add_route("/bus/billing",u"用户计费查询",u"营业管理",is_menu=True,order=4)
+permit.add_route("/bus/billing/export",u"用户计费导出",u"营业管理",order=4.01)
+
+###############################################################################
+# billing log query        
+###############################################################################
+
+@app.route('/orders',apply=auth_opr,method=['GET','POST'])
+@app.route('/orders/export',apply=auth_opr)
+def order_query(db): 
+    node_id = request.params.get('node_id')
+    product_id = request.params.get('product_id')
+    pay_status = request.params.get('pay_status')
+    account_number = request.params.get('account_number')  
+    query_begin_time = request.params.get('query_begin_time')  
+    query_end_time = request.params.get('query_end_time')  
+    _query = db.query(
+        models.SlcMemberOrder,
+        models.SlcMember.node_id,
+        models.SlcMember.realname,
+        models.SlcRadProduct.product_name,
+        models.SlcNode.node_name
+    ).filter(
+        models.SlcMemberOrder.product_id == models.SlcRadProduct.id,
+        models.SlcMemberOrder.member_id == models.SlcMember.member_id,
+        models.SlcNode.id == models.SlcMember.node_id
+    )
+    if node_id:
+        _query = _query.filter(models.SlcMember.node_id == node_id)
+    if account_number:
+        _query = _query.filter(models.SlcMemberOrder.account_number.like('%'+account_number+'%'))
+    if product_id:
+        _query = _query.filter(models.SlcMemberOrder.product_id == product_id)
+    if pay_status:
+        _query = _query.filter(models.SlcMemberOrder.pay_status == pay_status)        
+    if query_begin_time:
+        _query = _query.filter(models.SlcMemberOrder.create_time >= query_begin_time)
+    if query_end_time:
+        _query = _query.filter(models.SlcMemberOrder.create_time <= query_end_time)
+    _query = _query.order_by(models.SlcMemberOrder.create_time.desc())
+    
+    if request.path == '/orders':
+        return render("bus_order_list", 
+            node_list=db.query(models.SlcNode),
+            products =  db.query(models.SlcRadProduct).filter_by(product_status = 0),
+            page_data=get_page_data(_query),**request.params)
+    elif request.path == '/orders/export':
+        data = Dataset()
+        data.append((
+            u'区域',u"用户姓名",u'上网账号',u'资费',u"订购时间",
+            u'订单费用',u'实缴费用',u'支付状态',u'订购渠道',u'订单描述'
+        ))
+        _f2y = utils.fen2yuan
+        _fms = utils.fmt_second
+        _pst = {0:u'未支付',1:u'已支付',2:u'已取消'}
+        for i,_,_realname,_product_name,_node_name in _query:
+            data.append((
+                _node_name, _realname, i.account_number, _product_name,
+                i.create_time, _f2y(i.order_fee), _f2y(i.actual_fee),
+                _pst.get(i.pay_status), i.order_source, i.order_desc
+            ))
+        name = u"RADIUS-ORDERS-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
+        with open(u'./static/xls/%s' % name, 'wb') as f:
+            f.write(data.xls)
+        return static_file(name, root='./static/xls',download=True)
+
+permit.add_route("/bus/orders",u"用户订购查询",u"营业管理",is_menu=True,order=5)
+permit.add_route("/bus/orders/export",u"用户订购导出",u"营业管理",order=5.01)

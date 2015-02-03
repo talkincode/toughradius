@@ -115,7 +115,10 @@ def auth_cus(func):
         else:
             return func(*args,**kargs)
     return warp    
-    
+
+@cache.cache('get_node_name',expire=3600)   
+def get_node_name(db,node_id):
+    return  db.query(models.SlcNode.node_name).filter_by(id=node_id).scalar()
 
 @cache.cache('get_account_node_id',expire=3600)   
 def account_node_id(db,account_number):

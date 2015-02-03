@@ -335,6 +335,19 @@ class SlcRadOnline(DeclarativeBase):
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=255), nullable=False,doc=u"接入端口物理信息")
     billing_times = Column(u'billing_times', INTEGER(), nullable=False,doc=u"已记账时间")
     start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"会话开始来源")
+    
+class SlcRadOnlineStat(DeclarativeBase):
+    """用户在线统计表 <radiusd default table>"""
+    __tablename__ = 'slc_rad_online_stat'
+
+    __table_args__ = {}
+
+    #column definitions
+    day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False)
+    time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False)
+    total = Column(u'total', INTEGER())
+
+    #relation definitions
 
 class SlcRadAcceptLog(DeclarativeBase):
     '''
