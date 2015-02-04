@@ -36,9 +36,9 @@ def print_model(tmdl):
 mdls = [
     models.SlcNode,
     models.SlcOperator,
+    models.SlcOperatorRule,
     models.SlcParam,
     models.SlcRadBas,
-    models.SlcRadGroup,
     models.SlcRadRoster,
     models.SlcMember,
     models.SlcMemberOrder,
@@ -49,6 +49,7 @@ mdls = [
     models.SlcRadBilling,
     models.SlcRadTicket,
     models.SlcRadOnline,
+    models.SlcRadOnlineStat,
     models.SlcRadAcceptLog,
     models.SlcRadOperateLog
 ]

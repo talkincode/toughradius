@@ -89,3 +89,23 @@ install/centos7-install.sh
 停止mysql数据库进程::
 
     $ toughrad stopdb
+
+备份ToughRADIUS主数据库,备份路径在/var/toughradius/databak,若要上传至ftp，请配置/var/toughradius/radiusd.json文件中的备份选项::
+
+    $ toughrad backupdb
+
+跟踪数据库日志::
+
+    $ toughrad tracedb
+    
+跟踪radius日志::
+
+    $ toughrad tracerad
+    
+跟踪管理控制台日志::
+
+    $ toughrad traceadmin
+    
+跟踪自助服务控制台日志::
+
+    $ toughrad tracecustomer    

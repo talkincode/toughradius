@@ -63,7 +63,7 @@ class SlcOperatorRule(DeclarativeBase):
     __tablename__ = 'slc_operator_rule'
 
     __table_args__ = {} 
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"权限id")
     operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
     rule_path = Column(u'rule_path', VARCHAR(128), nullable=False,doc=u"权限URL")
     rule_name = Column(u'rule_name', VARCHAR(128), nullable=False,doc=u"权限名称")
@@ -100,23 +100,6 @@ class SlcRadBas(DeclarativeBase):
 
     #relation definitions
 
-
-class SlcRadGroup(DeclarativeBase):
-    """认证策略用户组 <radiusd default table>"""
-    __tablename__ = 'slc_rad_group'
-
-    __table_args__ = {}
-
-    #column definitions
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"用户组id")
-    group_name = Column(u'group_name', VARCHAR(length=64), nullable=False,doc=u"用户组名")
-    group_desc = Column(u'group_desc', VARCHAR(length=255),doc=u"用户组描述")
-    bind_mac = Column(u'bind_mac', SMALLINT(), nullable=False,doc=u"是否绑定mac")
-    bind_vlan = Column(u'bind_vlan', SMALLINT(), nullable=False,doc=u"是否绑定vlan")
-    concur_number = Column(u'concur_number', INTEGER(), nullable=False,doc=u"并发数")
-    update_time = Column(u'update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")
-
-    #relation definitions
 
 
 class SlcRadRoster(DeclarativeBase):
@@ -344,9 +327,9 @@ class SlcRadOnlineStat(DeclarativeBase):
 
     #column definitions
     node_id = Column('node_id', INTEGER(),primary_key=True, nullable=False,autoincrement=False,doc=u"区域id")
-    day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False)
-    time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False)
-    total = Column(u'total', INTEGER())
+    day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False,doc=u"统计日期")
+    time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False,doc=u"统计小时")
+    total = Column(u'total', INTEGER(),doc=u"在线数")
 
     #relation definitions
 

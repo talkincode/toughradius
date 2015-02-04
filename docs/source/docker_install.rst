@@ -72,6 +72,11 @@ Windows
       -p 3306:3306 -p 1812:1812/udp -p 1813:1813/udp \
       -p 1815:1815 -p 1816:1816 -p 1817:1817\
       --name toughradius talkincode/centos7-toughradius
+      
+.. topic:: 注意
+
+    数据库3306端口并非必须开放，如果你不需要使用客户端工具连接管理，可以取消3306端口的映射。
+    如果你需要使用客户端工具连接管理，请注意修改默认数据库管理账号admin的密码，默认为radius。
 
 以上指令自动下载toughradius镜像,创建名称为toughradius的容器，以守护进程模式运行，容器只需创建一次，以上命令只需首次运行即可。
 
@@ -125,7 +130,7 @@ ToughRADIUS版本更新
 
 当ToughRADIUS版本更新时，不需要重新创建容器，只需要执行简单地更新指令即可::
 
-    $ docker exec toughradius sh /opt/upgrade.sh
+    $ docker exec toughradius toughrad upgrade
 
     # 输出以下内容说明更新成功
 
@@ -157,7 +162,7 @@ ToughRADIUS版本更新
 
     $ docker rm toughradius
 
-重新创建容器时，只要没有删除/var/toughradius下的mysql目录数据文件，是不会重新创建和覆盖数据文件和配置文件的。
+重新创建容器时，只要没有删除/var/toughradius下的install.log，是不会重新创建和覆盖数据文件和配置文件的。
 
 
 

@@ -22,25 +22,46 @@ node_desc              VARCHAR(64)       False             区域描述
 .. end_table
 
 
-.. _slc_rad_operator_label:
+.. _slc_operator_label:
 
-slc_rad_operator
+slc_operator
 ------------------------------------ 
 
 操作员表 操作员类型 0 系统管理员 1 普通操作员
 
-.. start_table slc_rad_operator;id 
+.. start_table slc_operator;id 
 
 =====================  ================  ================  ====================================
 属性                    类型（长度）       可否为空           描述                              
 =====================  ================  ================  ====================================
 id                     INTEGER           False             操作员id               
-node_id                INTEGER           False             操作员区域           
 operator_type          INTEGER           False             操作员类型           
 operator_name          VARCHAR(32)       False             操作员名称           
 operator_pass          VARCHAR(128)      False             操作员密码           
 operator_status        INTEGER           False             操作员状态,0/1       
 operator_desc          VARCHAR(255)      False             操作员描述           
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+.. _slc_operator_rule_label:
+
+slc_operator_rule
+------------------------------------ 
+
+操作员权限表
+
+.. start_table slc_operator_rule;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             权限id                  
+operator_name          VARCHAR(32)       False             操作员名称           
+rule_path              VARCHAR(128)      False             权限URL                 
+rule_name              VARCHAR(128)      False             权限名称              
+rule_category          VARCHAR(128)      False             权限分类              
 =====================  ================  ================  ====================================
 
 .. end_table
@@ -90,30 +111,6 @@ time_type              SMALLINT          False             时区类型
 .. end_table
 
 
-.. _slc_rad_group_label:
-
-slc_rad_group
------------------------------------- 
-
-认证策略用户组 <radiusd default table>
-
-.. start_table slc_rad_group;id 
-
-=====================  ================  ================  ====================================
-属性                    类型（长度）       可否为空           描述                              
-=====================  ================  ================  ====================================
-id                     INTEGER           False             用户组id               
-group_name             VARCHAR(64)       False             用户组名              
-group_desc             VARCHAR(255)      True              用户组描述           
-bind_mac               SMALLINT          False             是否绑定mac           
-bind_vlan              SMALLINT          False             是否绑定vlan          
-concur_number          INTEGER           False             并发数                 
-update_time            VARCHAR(19)       False             更新时间              
-=====================  ================  ================  ====================================
-
-.. end_table
-
-
 .. _slc_rad_roster_label:
 
 slc_rad_roster
@@ -128,7 +125,6 @@ slc_rad_roster
 =====================  ================  ================  ====================================
 id                     INTEGER           False             黑白名单id            
 mac_addr               VARCHAR(17)       False             mac地址                 
-account_number         VARCHAR(32)       True              上网账号              
 begin_time             VARCHAR(19)       False             生效开始时间        
 end_time               VARCHAR(19)       False             生效结束时间        
 roster_type            SMALLINT          False             黑白名单类型        
@@ -412,6 +408,27 @@ mac_addr               VARCHAR(32)       False             mac地址
 nas_port_id            VARCHAR(255)      False             接入端口物理信息  
 billing_times          INTEGER           False             已记账时间           
 start_source           SMALLINT          False             会话开始来源        
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+.. _slc_rad_online_stat_label:
+
+slc_rad_online_stat
+------------------------------------ 
+
+用户在线统计表 <radiusd default table>
+
+.. start_table slc_rad_online_stat;node_id,day_code,time_num 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+node_id                INTEGER           False             区域id                  
+day_code               VARCHAR(10)       False             统计日期              
+time_num               INTEGER           False             统计小时              
+total                  INTEGER           True              在线数                 
 =====================  ================  ================  ====================================
 
 .. end_table
