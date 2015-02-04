@@ -31,9 +31,12 @@ docker()
 {
     if [ ! -f ${rundir}/install.log ]
     then
-        sh ${appdir}/install/centos7-install.sh setup
+        sh ${appdir}/install/docker-install.sh setup
     else
-        start
+        if [ ! $( pgrep -f supervisord | wc -l ) -gt 0 ]
+        then 
+            supervisord -n ${rundir}/supervisord.conf
+        fi 
     fi
 }
 
