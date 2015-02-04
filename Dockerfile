@@ -9,10 +9,10 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME ["/var/toughradius"]
 
-RUN curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/centos7-install.sh > centos7-install.sh
-RUN sh centos7-install.sh depend
-RUN sh centos7-install.sh mysql5
-RUN sh centos7-install.sh radius
+RUN curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/docker-install.sh > docker-install.sh
+RUN sh docker-install.sh depend
+RUN sh docker-install.sh mysql5
+RUN sh docker-install.sh radius
 
 EXPOSE 3306 1815 1816 1817
 EXPOSE 1812/udp
