@@ -8,15 +8,18 @@ from ftplib import FTP
 
 def backup(**kwargs):
     import sh
+    bakdir = "/var/toughradius/databak"
+    if not os.path.exists(bakdir):
+        os.mkdir(bakdir)
     now = datetime.now()
     dbname = kwargs.pop('dbname','toughradius')
     ftphost = kwargs.pop('ftphost','127.0.0.1')
     ftpport = kwargs.pop('ftpport',21)
     ftpuser = kwargs.pop('ftpuser','')
     ftppwd = kwargs.pop('ftppwd','')
-    backfile = '/tmp/%s-backup-%s.gz'%(dbname,now.strftime( "%Y%m%d"))
+    backfile = '%s/%s-backup-%s.gz'%(bakdir,dbname,now.strftime( "%Y%m%d"))
     
-    sh.gzip(sh.mysqldump(u='root',B=dbname),'-cf',_out=backfile)
+    sh.gzip(sh.mysqldump(u='root',B=dbname,S="/var/toughradius/mysql/mysql.sock"),'-cf',_out=backfile)
 
     if '127.0.0.1' not in ftphost:
         ftp=FTP() 
@@ -38,12 +41,11 @@ if __name__ == '__main__':
     args =  parser.parse_args(sys.argv[1:])    
     config=json.loads(open(args.conf,'rb').read())
     
-    params =  dict(
+    backup(**dict(
         dbname= config['database']['db'],
         ftphost= config['backup']['ftphost'],
         ftpuser= config['backup']['ftpuser'],
         ftppwd= config['backup']['ftppwd']                                       
-    )
-    backup(**params)
+    ))
     
 

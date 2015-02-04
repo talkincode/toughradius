@@ -17,6 +17,30 @@ fi
 appdir=/opt/toughradius
 rundir=/var/toughradius
 
+usage () 
+{
+        cat <<EOF
+Usage: $0 [OPTIONS]
+  start              start toughradius and mysql (if mysql not running),not support docker
+  stop               stop toughradius 
+  restart            restart toughradius, not support docker
+  status             show toughradius run status
+  docker             start toughradius in docker container    
+  upgrade            update toughradius version and restart
+  startdb            start mysqld_safe
+  stopdb             stop mysqld_safe
+  backupdb           backup toughradius database and send to ftp
+  tracedb            trace mysqld log
+  tracerad           trace toughradius radius log
+  traceadmin         trace admin console log
+  tracecustomer      trace customer console log
+     
+All other options are passed to the toughrad program.
+
+EOF
+        exit 1
+}
+
 # not support docker
 start()
 {
@@ -115,11 +139,38 @@ stopdb()
 # support docker
 backupdb()
 {
-    python /opt/toughradius/backupdb.py -c /var/toughradius/radiusd.json
+    python ${appdir}/backupdb.py -c ${rundir}/radiusd.json
 }
 
+tracedb()
+{
+    echo 'type ctrl-c exit'
+    tail -f ${rundir}/log/mysqld.log
+}
+
+tracerad()
+{
+    echo 'type ctrl-c exit'
+    tail -f ${rundir}/log/radiusd.log
+}
+
+traceadmin()
+{
+    echo 'type ctrl-c exit'
+    tail -f ${rundir}/log/rad_console.log
+}
+
+tracecustomer()
+{
+    echo 'type ctrl-c exit'
+    tail -f ${rundir}/log/rad_customer.log
+}
 
 case "$1" in
+
+  help)
+    usage
+  ;;
 
   start)
     start
@@ -155,11 +206,27 @@ case "$1" in
   
   docker)
     docker
-  ;;        
+  ;;  
+  
+  tracedb)
+    tracedb
+  ;;     
+  
+  tracerad)
+    tracerad
+  ;;     
+  
+  traceadmin)
+    traceadmin
+  ;;     
+  
+  tracecustomer)
+    tracecustomer
+  ;;     
 
 
   *)
-    echo "Usage: $0 {start|stop|status|restart|upgrade|startdb|stopdb|backupdb|docker}"
+   usage
   ;;
 
 esac
