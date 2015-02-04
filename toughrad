@@ -29,7 +29,7 @@ start()
 
 docker()
 {
-    if [ -f ${rundir}/install.log ]
+    if [ ! -f ${rundir}/install.log ]
     then
         sh ${appdir}/install/centos7-install.sh setup
     else
