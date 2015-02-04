@@ -76,8 +76,7 @@ setup()
     
     echo "ok" > ${rundir}/install.log
 
-    supervisord -n ${rundir}/supervisord.conf
-    
+    supervisord -n -c ${rundir}/supervisord.conf
 }
 
 unsetup()

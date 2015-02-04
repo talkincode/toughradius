@@ -35,7 +35,7 @@ docker()
     else
         if [ ! $( pgrep -f supervisord | wc -l ) -gt 0 ]
         then 
-            supervisord -n ${rundir}/supervisord.conf
+            supervisord -n -c ${rundir}/supervisord.conf
         fi 
     fi
 }
