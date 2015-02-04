@@ -17,8 +17,14 @@ fi
 appdir=/opt/toughradius
 rundir=/var/toughradius
 
+# not support docker
 start()
 {
+    if [ ! $(pgrep -f mysqld_safe | wc -l) -gt 0 ]
+    then
+        /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
+    fi
+    
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then 
         supervisorctl start all 
@@ -27,12 +33,21 @@ start()
     fi 
 }
 
+# support docker start
 docker()
 {
     if [ ! -f ${rundir}/install.log ]
     then
+        # application not init,exec setup
         sh ${appdir}/install/docker-install.sh setup
     else
+        # database not running, start it
+        if [ ! $(pgrep -f mysqld_safe | wc -l) -gt 0 ]
+        then
+            /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
+        fi
+        
+         # toughradius not running, start it
         if [ ! $( pgrep -f supervisord | wc -l ) -gt 0 ]
         then 
             supervisord -n -c ${rundir}/supervisord.conf
@@ -40,6 +55,7 @@ docker()
     fi
 }
 
+# support docker
 stop()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
@@ -51,6 +67,7 @@ stop()
     fi 
 }
 
+# support docker
 status()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
@@ -62,6 +79,7 @@ status()
 
 }
 
+# not support docker
 restart()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
@@ -72,6 +90,7 @@ restart()
     fi 
 }
 
+# support docker
 upgrade()
 {
     echo 'starting upgrade...' 
@@ -81,16 +100,19 @@ upgrade()
     echo 'upgrade done'
 }
 
+# support docker
 startdb()
 {
     /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
 }
 
+# support docker
 stopdb()
 {
     mysqladmin --defaults-file=${rundir}/mysql/my.cnf -uroot shutdown
 }
 
+# support docker
 backupdb()
 {
     python /opt/toughradius/backupdb.py -c /var/toughradius/radiusd.json
