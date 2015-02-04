@@ -3,10 +3,12 @@ from twisted.python import log
 from twisted.internet import task
 from datetime import datetime
 import models
+import platform
 
 __last_online_stat_hour = -1
+__last_mysql_backup_day = ''
 
-def online_stat_job(mk_db):
+def __online_stat_job(mk_db):
     global __last_online_stat_hour
     now = datetime.now()
     if now.hour == __last_online_stat_hour:
@@ -48,11 +50,17 @@ def online_stat_job(mk_db):
             traceback.print_exc()
         finally:
             db.close()
+            
+def start_online_stat_job(mk_db):
+    log.msg('start online_stat_job...')
+    _task = task.LoopingCall(__online_stat_job,mk_db)
+    _task.start(30)
+            
+
+    
         
 
-def start_jobs(mk_db):
-    ot_task = task.LoopingCall(online_stat_job,mk_db)
-    ot_task.start(30)
+
 
         
     

@@ -9,37 +9,18 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME ["/var/toughradius"]
 
-ADD docker/my.cnf /etc/
-ADD docker/startup.sh /opt/
-ADD docker/upgrade.sh /opt/
-RUN chmod +x /opt/startup.sh   
-RUN chmod +x /opt/upgrade.sh   
-
-# install lib
-RUN yum update -y
-RUN yum install -y wget git gcc python-devel python-setuptools tcpdump
-
-# install mysql
-RUN rpm -ivh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
-RUN yum install -y mysql-community-server mysql-community-devel 
-
-# yum clean
-RUN rm -rf /var/cache/yum/*
-RUN yum clean all
-
-RUN easy_install pip 
-RUN easy_install supervisor
-
-#install toughradius
-RUN git clone https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
-RUN pip install -r /opt/toughradius/requirements.txt
-
+RUN curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/centos7-install.sh > centos7-install.sh
+RUN sh centos7-install.sh depend
+RUN sh centos7-install.sh mysql5
+RUN sh centos7-install.sh radius
+RUN sh centos7-install.sh setup
+RUN /usr/bin/toughrad stop
 
 EXPOSE 3306 1815 1816 1817
 EXPOSE 1812/udp
 EXPOSE 1813/udp
 
-ENTRYPOINT ["sh","/opt/startup.sh"]
+ENTRYPOINT ["/usr/bin/toughrad","start"]
 
 
 

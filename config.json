@@ -10,6 +10,13 @@
         "port": 3306,
         "user": "root"
     },
+    "backup":
+    {
+        "ftphost":"127.0.0.1",
+        "ftpport":21,
+        "ftpuser":"ftpuser",
+        "ftppwd":"ftppwd"
+    },
     "radiusd":
     {
         "authport": 1812,

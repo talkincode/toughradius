@@ -44,9 +44,9 @@ def init_application(dbconf=None,consconf=None):
     # connect radiusd websocket admin port 
     log.msg("init websocket client...")
     wsparam = (MakoTemplate.defaults['radaddr'],MakoTemplate.defaults['adminport'],)
-    reactor.callLater(5, websock.connect,*wsparam)
+    reactor.callLater(3, websock.connect,*wsparam)
     log.msg("init tasks...")
-    reactor.callLater(7, tasks.start_jobs, sqla_pg.new_session)
+    reactor.callLater(5, tasks.start_online_stat_job, sqla_pg.new_session)
    
     log.msg("init operator rules...")
     for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
@@ -61,8 +61,7 @@ def init_application(dbconf=None,consconf=None):
     mainapp.mount("/bus",bus_app)
     
     #create dir
-    try:
-        os.makedirs(os.path.join(APP_DIR,'static/xls'))
+    try:os.makedirs(os.path.join(APP_DIR,'static/xls'))
     except:pass
 
 

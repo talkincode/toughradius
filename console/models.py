@@ -572,6 +572,49 @@ def init_db(db):
 
     db.commit()
 
+def init_test(db):
+    import random
+    for i in range(1000):
+        member = SlcMember()
+        member.member_id = 100000 + i
+        member.member_name = 'tester%s'%i
+        member.password = utils.encrypt('888888')
+        member.node_id = 1
+        member.realname = 'test00%s'%i
+        member.idcard = '0'
+        member.sex = '1'
+        member.age = '33'
+        member.email = 'test@test.com'
+        member.mobile = '1366666666'
+        member.address = 'hunan changsha'
+        member.create_time = '2014-12-10 23:23:21'
+        member.update_time = '2014-12-10 23:23:21'
+        db.add(member)        
+        account = SlcRadAccount()
+        account.account_number = 'test00%s'%i
+        account.member_id = member.member_id
+        account.product_id = random.choice([1,2])
+        account.domain_name = 'cmcc'
+        account.group_id = 1
+        account.install_address = 'hunan'
+        account.ip_address = ''
+        account.mac_addr = ''
+        account.password = utils.encrypt('888888')
+        account.status = 1
+        account.balance = account.product_id == 2 and 10000 or 0
+        account.basic_fee = 0
+        account.time_length = 0
+        account.flow_length = 0
+        account.expire_date = '2015-12-30'
+        account.user_concur_number = 0
+        account.bind_mac = 0
+        account.bind_vlan = 0
+        account.vlan_id = 0
+        account.vlan_id2 = 0
+        account.create_time = '2014-12-10 23:23:21'
+        account.update_time = '2014-12-10 23:23:21'
+        db.add(account)
+    db.commit()    
 
 def build_db(config=None):
     if config['dbtype'] != 'mysql':
@@ -616,6 +659,15 @@ def install2(config=None):
     engine,_ = get_engine(config)
     db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
     init_db(db)
+    
+def install_test(config=None):
+    print 'starting init testdata...'
+    engine,_ = get_engine(config)
+    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+    init_test(db)
+    with open('./testusers.txt','wb') as tf:
+        for i in range(1000):
+            tf.write('test00%s,888888\n'%(i,))
 
 def update(config=None):
     print 'starting update database...'

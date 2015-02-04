@@ -10,6 +10,7 @@ if __name__ == '__main__':
     parser.add_argument('-c','--conf', type=str,default='./config.json',dest='conf',help='conf file')
     parser.add_argument('-u','--update',nargs='?', type=bool,default=False,dest='update',help='update option')
     parser.add_argument('-i','--install',nargs='?', type=bool,default=False,dest='install',help='install option')
+    parser.add_argument('-t','--test',nargs='?', type=bool,default=False,dest='test',help='install test data')
     args =  parser.parse_args(sys.argv[1:])    
     if args.update:
         models.update(config=json.loads(open(args.conf,'rb').read())['database'])
@@ -17,3 +18,7 @@ if __name__ == '__main__':
         models.install2(config=json.loads(open(args.conf,'rb').read())['database'])
     else:
         models.install(config=json.loads(open(args.conf,'rb').read())['database'])
+    
+    if args.test:
+        models.install_test(config=json.loads(open(args.conf,'rb').read())['database'])
+        

@@ -78,6 +78,11 @@ stopdb()
     mysqladmin --defaults-file=${rundir}/mysql/my.cnf -uroot shutdown
 }
 
+backupdb()
+{
+    python /opt/toughradius/backupdb.py -c /var/toughradius/radiusd.json
+}
+
 
 case "$1" in
 

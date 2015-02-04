@@ -46,7 +46,7 @@
                 <div class="col-md-offset-5 col-md-7">
                     <button type="submit" class="btn btn-primary">查询</button>
                     % if permit.match('/bus/billing/export'):
-                    <a href="/bus/billing/export" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出账号信息</a>
+                    <a href="/bus/billing/export" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出计费信息</a>
                     % endif
                 </div>
             </div>
@@ -68,7 +68,7 @@
             </tr>
             </thead>
             <tbody>
-            % for bill,_ in page_data.result:
+            % for bill,_,_ in page_data.result:
             <tr>
                 <td>${bill.account_number}</td>
                 <td>${bill.acct_session_id}</td>
