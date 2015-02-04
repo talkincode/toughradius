@@ -27,6 +27,16 @@ start()
     fi 
 }
 
+docker()
+{
+    if [ -f ${rundir}/install.log ]
+    then
+        sh ${appdir}/install/centos7-install.sh setup
+    else
+        start
+    fi
+}
+
 stop()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
@@ -112,11 +122,19 @@ case "$1" in
   
   stopdb)
     stopdb
-  ;;       
+  ;;  
+  
+  backupdb)
+    backupdb
+  ;;   
+  
+  docker)
+    docker
+  ;;        
 
 
   *)
-    echo "Usage: $0 {start|stop|status|restart|upgrade}"
+    echo "Usage: $0 {start|stop|status|restart|upgrade|startdb|stopdb|backupdb|docker}"
   ;;
 
 esac

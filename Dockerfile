@@ -13,14 +13,12 @@ RUN curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install
 RUN sh centos7-install.sh depend
 RUN sh centos7-install.sh mysql5
 RUN sh centos7-install.sh radius
-RUN sh centos7-install.sh setup
-RUN /usr/bin/toughrad stop
 
 EXPOSE 3306 1815 1816 1817
 EXPOSE 1812/udp
 EXPOSE 1813/udp
 
-ENTRYPOINT ["/usr/bin/toughrad","start"]
+ENTRYPOINT ["/usr/bin/toughrad","docker"]
 
 
 

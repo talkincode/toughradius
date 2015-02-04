@@ -35,6 +35,15 @@ radius()
     echo "fetch ToughRADIUS latest"
     git clone https://github.com/talkincode/ToughRADIUS.git ${appdir}
     pip install -r ${appdir}/requirements.txt
+    
+    ln -s ${appdir}/toughrad /usr/bin/toughrad 
+    chmod +x /usr/bin/toughrad
+    
+    yes | cp -f ${appdir}/toughrad /etc/init.d/toughrad
+    chmod +x /etc/init.d/toughrad  
+    chkconfig --add toughrad
+    chkconfig toughrad on
+    
     echo "fetch ToughRADIUS done!"
 }
 
@@ -48,14 +57,6 @@ setup()
     yes | cp -f ${appdir}/install/my.cnf ${rundir}/mysql/my.cnf
     yes | cp -f ${appdir}/install/radiusd.json ${rundir}/radiusd.json
     yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf  
-    
-    yes | cp -f ${appdir}/toughrad /etc/init.d/toughrad
-    chmod +x /etc/init.d/toughrad  
-    chkconfig --add toughrad
-    chkconfig toughrad on
-    
-    ln -s ${appdir}/toughrad /usr/bin/toughrad 
-    chmod +x /usr/bin/toughrad
     
     chown -R mysql:mysql ${rundir}/mysql
     
@@ -86,6 +87,8 @@ setup()
 
     supervisorctl status
     
+    echo "ok" > ${rundir}/install.log
+    
     echo "setup done!"
 }
 
@@ -97,7 +100,6 @@ unsetup()
     supervisorctl shutdown
     echo ${rundir}
     rm -fr ${rundir}
-    rm -f /usr/bin/toughrad
     echo 'unsetup done!'
 }
 
