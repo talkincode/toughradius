@@ -27,7 +27,7 @@ app = Bottle()
 @app.error(403)
 def error404(error):
     return render("error.html",msg=u"非授权的访问")
-    
+
 @app.error(404)
 def error404(error):
     return render("error.html",msg=u"页面不存在 - 请联系管理员!")
@@ -37,11 +37,11 @@ def error500(error):
     return render("error.html",msg=u"出错了： %s"%error.exception)
 
 ###############################################################################
-# ajax query        
+# ajax query
 ###############################################################################
 
 @app.get('/product/json',apply=auth_opr)
-def product_get(db):   
+def product_get(db):
     node_id = request.params.get('node_id')
     if not node_id:return dict(code=1,data=[])
     items = db.query(models.SlcRadProduct).filter_by(node_id=node_id)
@@ -52,7 +52,7 @@ def product_get(db):
 
 
 @app.get('/opencalc',apply=auth_opr)
-def opencalc(db):   
+def opencalc(db):
     months = request.params.get('months',0)
     product_id = request.params.get("product_id")
     old_expire = request.params.get("old_expire")
@@ -62,28 +62,28 @@ def opencalc(db):
     elif product.product_policy == 0:
         fee = decimal.Decimal(months) * decimal.Decimal(product.fee_price)
         fee_value = utils.fen2yuan(int(fee.to_integral_value()))
-        start_expire = datetime.datetime.now()   
+        start_expire = datetime.datetime.now()
         if old_expire:
-            start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")    
+            start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")
         expire_date = utils.add_months(start_expire,int(months))
         expire_date = expire_date.strftime( "%Y-%m-%d")
         return dict(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
     elif product.product_policy == 2:
-        start_expire = datetime.datetime.now()   
+        start_expire = datetime.datetime.now()
         if old_expire:
-            start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")           
+            start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")
         fee_value = utils.fen2yuan(product.fee_price)
         expire_date = utils.add_months(start_expire,product.fee_months)
         expire_date = expire_date.strftime( "%Y-%m-%d")
         return dict(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
 
 ###############################################################################
-# member query     
+# member query
 ###############################################################################
 
 @app.route('/member',apply=auth_opr,method=['GET','POST'])
 @app.get('/member/export',apply=auth_opr)
-def member_query(db):   
+def member_query(db):
     node_id = request.params.get('node_id')
     realname = request.params.get('realname')
     idcard = request.params.get('idcard')
@@ -117,13 +117,13 @@ def member_query(db):
         name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)    
+        return static_file(name, root='./static/xls',download=True)
 
 permit.add_route("/bus/member",u"用户信息管理",u"营业管理",is_menu=True,order=0)
 permit.add_route("/bus/member/export",u"用户信息导出",u"营业管理",order=0.01)
 
 @app.get('/member/detail',apply=auth_opr)
-def member_detail(db): 
+def member_detail(db):
     member_id =   request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
     accounts = db.query(
@@ -162,12 +162,14 @@ def member_detail(db):
 
 permit.add_route("/bus/member/detail",u"用户详情查看",u"营业管理",order=0.02)
 
+member_detail_url_formatter = "/bus/member/detail?member_id={0}".format
+
 ###############################################################################
-# member update     
+# member update
 ###############################################################################
 
 @app.get('/member/update',apply=auth_opr)
-def member_update(db): 
+def member_update(db):
     member_id = request.params.get("member_id")
     member = db.query(models.SlcMember).get(member_id)
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
@@ -176,7 +178,7 @@ def member_update(db):
     return render("base_form",form=form)
 
 @app.post('/member/update',apply=auth_opr)
-def member_update(db): 
+def member_update(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     form=forms.member_update_form(nodes)
     if not form.validates(source=request.forms):
@@ -198,29 +200,29 @@ def member_update(db):
     db.add(ops_log)
 
     db.commit()
-    redirect("/bus/member/detail?member_id={}".format(member.member_id)) 
+    redirect(member_detail_url_formatter(member.member_id))
 
 permit.add_route("/bus/member/update",u"修改用户资料",u"营业管理",order=0.03)
 
 ###############################################################################
-# member open     
+# member open
 ###############################################################################
 
 @app.get('/member/open',apply=auth_opr)
-def member_open(db): 
+def member_open(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
-    )]    
+    )]
     form = forms.user_open_form(nodes,products)
     return render("bus_open_form",form=form)
 
 @app.post('/member/open',apply=auth_opr)
-def member_open(db): 
+def member_open(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
-    )]      
+    )]
     form = forms.user_open_form(nodes,products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
@@ -248,7 +250,7 @@ def member_open(db):
     member.address = form.d.address
     member.create_time = utils.get_currtime()
     member.update_time = utils.get_currtime()
-    db.add(member) 
+    db.add(member)
     db.flush()
     db.refresh(member)
 
@@ -261,7 +263,7 @@ def member_open(db):
     accept_log.accept_desc = u"用户新开户：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
     db.add(accept_log)
     db.flush()
-    db.refresh(accept_log)    
+    db.refresh(accept_log)
 
     order_fee = 0
     balance = 0
@@ -315,11 +317,11 @@ def member_open(db):
 permit.add_route("/bus/member/open",u"用户快速开户",u"营业管理",is_menu=True,order=1)
 
 ###############################################################################
-# account open     
+# account open
 ###############################################################################
 
 @app.get('/account/open',apply=auth_opr)
-def account_open(db): 
+def account_open(db):
     member_id =   request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
@@ -332,7 +334,7 @@ def account_open(db):
     return render("bus_open_form",form=form)
 
 @app.post('/account/open',apply=auth_opr)
-def account_open(db): 
+def account_open(db):
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     )]
@@ -378,7 +380,7 @@ def account_open(db):
     order.order_fee = order_fee
     order.actual_fee = utils.yuan2fen(form.d.fee_value)
     order.pay_status = 1
-    order.accept_id = accept_log.id   
+    order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = _datetime
     order.order_desc = u"用户增开账号"
@@ -406,16 +408,16 @@ def account_open(db):
     db.add(account)
 
     db.commit()
-    redirect("/bus/member/detail?member_id={}".format(form.d.member_id))
+    redirect(member_detail_url_formatter(form.d.member_id))
 
 permit.add_route("/bus/account/open",u"增开用户账号",u"营业管理",order=1.01)
 
 ###############################################################################
-# account update     
+# account update
 ###############################################################################
 
 @app.get('/account/update',apply=auth_opr)
-def account_update(db): 
+def account_update(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     form = forms.account_update_form()
@@ -423,7 +425,7 @@ def account_update(db):
     return render("base_form",form=form)
 
 @app.post('/account/update',apply=auth_opr)
-def account_update(db): 
+def account_update(db):
     form = forms.account_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -448,23 +450,23 @@ def account_update(db):
 
     db.commit()
     websock.update_cache("account",account_number=account.account_number)
-    redirect("/bus/member/detail?member_id={}".format(account.member_id)) 
-    
+    redirect(member_detail_url_formatter(account.member_id))
+
 permit.add_route("/bus/account/update",u"修改用户上网账号",u"营业管理",order=1.02)
 
 ###############################################################################
-# account import     
+# account import
 ###############################################################################
 
 @app.get('/member/import',apply=auth_opr)
-def member_import(db): 
+def member_import(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.user_import_form(nodes,products)
     return render("bus_import_form",form=form)
 
 @app.post('/member/import',apply=auth_opr)
-def member_import(db): 
+def member_import(db):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     iform = forms.user_import_form(nodes,products)
@@ -486,7 +488,7 @@ def member_import(db):
         vform = forms.user_import_vform()
         if not vform.validates(dict(
                 realname = attr_array[0],
-                account_number = attr_array[1], 
+                account_number = attr_array[1],
                 password = attr_array[2],
                 expire_date = attr_array[3],
                 balance = attr_array[4])):
@@ -509,7 +511,7 @@ def member_import(db):
             member.address = 'address'
             member.create_time = utils.get_currtime()
             member.update_time = utils.get_currtime()
-            db.add(member) 
+            db.add(member)
             db.flush()
             db.refresh(member)
 
@@ -522,10 +524,10 @@ def member_import(db):
             accept_log.operator_name = get_cookie("username")
             db.add(accept_log)
             db.flush()
-            db.refresh(accept_log)            
+            db.refresh(accept_log)
 
             order_fee = 0
-            actual_fee = 0 
+            actual_fee = 0
             balance = 0
             expire_date = form.d.expire_date
             product = db.query(models.SlcRadProduct).get(product_id)
@@ -541,7 +543,7 @@ def member_import(db):
             order.order_fee = order_fee
             order.actual_fee = actual_fee
             order.pay_status = 1
-            order.accept_id = accept_log.id 
+            order.accept_id = accept_log.id
             order.order_source = 'console'
             order.create_time = member.create_time
             order.order_desc = u"用户导入开户"
@@ -573,15 +575,15 @@ def member_import(db):
 
     db.commit()
     redirect("/bus/member")
-    
+
 permit.add_route("/bus/member/import",u"用户数据导入",u"营业管理",is_menu=True,order=2)
 
 ###############################################################################
-# account pause     
-###############################################################################    
+# account pause
+###############################################################################
 
 @app.post('/account/pause',apply=auth_opr)
-def account_pause(db): 
+def account_pause(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
 
@@ -611,19 +613,19 @@ def account_pause(db):
             acct_session_id=_online.acct_session_id,
             message_type='disconnect')
     return dict(msg=u"操作成功")
-    
+
 permit.add_route("/bus/account/pause",u"用户账号停机",u"营业管理",order=2.01)
 
 ###############################################################################
-# account resume     
-###############################################################################    
+# account resume
+###############################################################################
 
 @app.post('/account/resume',apply=auth_opr)
-def account_resume(db): 
+def account_resume(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     if account.status != 2:
-        return dict(msg=u"用户当前状态不允许复机") 
+        return dict(msg=u"用户当前状态不允许复机")
 
     account.status = 1
     _datetime = datetime.datetime.now()
@@ -645,7 +647,7 @@ def account_resume(db):
     db.commit()
     websock.update_cache("account",account_number=account.account_number)
     return dict(msg=u"操作成功")
-    
+
 permit.add_route("/bus/account/resume",u"用户账号复机",u"营业管理",order=2.02)
 
 
@@ -678,11 +680,11 @@ def query_account(db,account_number):
 
 
 ###############################################################################
-# account next     
+# account next
 ###############################################################################
 
 @app.get('/account/next',apply=auth_opr)
-def account_next(db): 
+def account_next(db):
     account_number = request.params.get("account_number")
     user = query_account(db,account_number)
     form = forms.account_next_form()
@@ -692,14 +694,14 @@ def account_next(db):
     return render("bus_account_next_form",user=user,form=form)
 
 @app.post('/account/next',apply=auth_opr)
-def account_next(db): 
+def account_next(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_next_form()
     form.product_id.set_value(user.product_id)
     if account.status not in (1,4):
-        return render("bus_account_next_form", user=user,form=form,msg=u"无效用户状态")    
+        return render("bus_account_next_form", user=user,form=form,msg=u"无效用户状态")
     if not form.validates(source=request.forms):
         return render("bus_account_next_form", user=user,form=form)
 
@@ -731,23 +733,23 @@ def account_next(db):
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
     order.order_desc = u"用户续费"
-    db.add(order)  
+    db.add(order)
 
     account.status = 1
-    account.expire_date = form.d.expire_date  
+    account.expire_date = form.d.expire_date
 
     db.commit()
     websock.update_cache("account",account_number=account_number)
-    redirect("/bus/member/detail?member_id={}".format(user.member_id))
+    redirect(member_detail_url_formatter(user.member_id))
 
 permit.add_route("/bus/account/next",u"用户账号续费",u"营业管理",order=2.03)
 
 ###############################################################################
-# account charge     
+# account charge
 ###############################################################################
 
 @app.get('/account/charge',apply=auth_opr)
-def account_charge(db): 
+def account_charge(db):
     account_number = request.params.get("account_number")
     user = query_account(db,account_number)
     form = forms.account_charge_form()
@@ -755,13 +757,13 @@ def account_charge(db):
     return render("bus_account_form",user=user,form=form)
 
 @app.post('/account/charge',apply=auth_opr)
-def account_charge(db): 
+def account_charge(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_charge_form()
     if account.status !=1 :
-        return render("bus_account_form", user=user,form=form,msg=u"无效用户状态")  
+        return render("bus_account_form", user=user,form=form,msg=u"无效用户状态")
 
     if not form.validates(source=request.forms):
         return render("bus_account_form", user=user,form=form)
@@ -790,22 +792,22 @@ def account_charge(db):
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
     order.order_desc = u"用户充值"
-    db.add(order)  
+    db.add(order)
 
     account.balance += order.actual_fee
 
     db.commit()
     websock.update_cache("account",account_number=account_number)
-    redirect("/bus/member/detail?member_id={}".format(user.member_id))
-    
+    redirect(member_detail_url_formatter(user.member_id))
+
 permit.add_route("/bus/account/charge",u"用户账号充值",u"营业管理",order=2.04)
 
 ###############################################################################
-# account cancel     
+# account cancel
 ###############################################################################
 
 @app.get('/account/cancel',apply=auth_opr)
-def account_cancel(db): 
+def account_cancel(db):
     account_number = request.params.get("account_number")
     user = query_account(db,account_number)
     form = forms.account_cancel_form()
@@ -814,13 +816,13 @@ def account_cancel(db):
 
 
 @app.post('/account/cancel',apply=auth_opr)
-def account_next(db): 
+def account_next(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)
     form = forms.account_cancel_form()
     if account.status !=1 :
-        return render("bus_account_form", user=user,form=form,msg=u"无效用户状态")      
+        return render("bus_account_form", user=user,form=form,msg=u"无效用户状态")
     if not form.validates(source=request.forms):
         return render("bus_account_form", user=user,form=form)
 
@@ -847,7 +849,7 @@ def account_next(db):
     order.accept_id = accept_log.id
     order.create_time = utils.get_currtime()
     order.order_desc = u'用户销户'
-    db.add(order)  
+    db.add(order)
 
     account.status = 3
 
@@ -859,24 +861,24 @@ def account_next(db):
         websock.invoke_admin("coa_request",
             nas_addr=_online.nas_addr,
             acct_session_id=_online.acct_session_id,
-            message_type='disconnect')    
-    redirect("/bus/member/detail?member_id={}".format(user.member_id))
+            message_type='disconnect')
+    redirect(member_detail_url_formatter(user.member_id))
 
 permit.add_route("/bus/account/cancel",u"用户账号销户",u"营业管理",order=2.05)
 
 ###############################################################################
-# accept log manage        
+# accept log manage
 ###############################################################################
 
 @app.route('/acceptlog',apply=auth_opr,method=['GET','POST'])
 @app.route('/acceptlog/export',apply=auth_opr)
-def acceptlog_query(db): 
+def acceptlog_query(db):
     node_id = request.params.get('node_id')
     accept_type = request.params.get('accept_type')
-    account_number = request.params.get('account_number')  
+    account_number = request.params.get('account_number')
     operator_name = request.params.get('operator_name')
-    query_begin_time = request.params.get('query_begin_time')  
-    query_end_time = request.params.get('query_end_time')  
+    query_begin_time = request.params.get('query_begin_time')
+    query_end_time = request.params.get('query_end_time')
     _query = db.query(
         models.SlcRadAcceptLog.id,
         models.SlcRadAcceptLog.accept_type,
@@ -905,10 +907,10 @@ def acceptlog_query(db):
     if query_end_time:
         _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcRadAcceptLog.accept_time.desc())
-    type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}   
+    type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}
     if request.path == '/acceptlog':
         return render(
-            "bus_acceptlog_list", 
+            "bus_acceptlog_list",
             page_data = get_page_data(_query),
             node_list=db.query(models.SlcNode),
             type_map = type_map,
@@ -927,21 +929,21 @@ def acceptlog_query(db):
         with open(u'./static/xls/%s' % name, 'wb') as f:
             f.write(data.xls)
         return static_file(name, root='./static/xls',download=True)
-    
+
 permit.add_route("/bus/acceptlog",u"用户受理查询",u"营业管理",is_menu=True,order=3)
 permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",order=3.01)
 
 ###############################################################################
-# billing log query        
+# billing log query
 ###############################################################################
 
 @app.route('/billing',apply=auth_opr,method=['GET','POST'])
 @app.route('/billing/export',apply=auth_opr)
-def billing_query(db): 
+def billing_query(db):
     node_id = request.params.get('node_id')
-    account_number = request.params.get('account_number')  
-    query_begin_time = request.params.get('query_begin_time')  
-    query_end_time = request.params.get('query_end_time')  
+    account_number = request.params.get('account_number')
+    query_begin_time = request.params.get('query_begin_time')
+    query_end_time = request.params.get('query_end_time')
     _query = db.query(
         models.SlcRadBilling,
         models.SlcMember.node_id,
@@ -961,7 +963,7 @@ def billing_query(db):
         _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcRadBilling.create_time.desc())
     if request.path == '/billing':
-        return render("bus_billing_list", 
+        return render("bus_billing_list",
             node_list=db.query(models.SlcNode),
             page_data=get_page_data(_query),**request.params)
     elif request.path == '/billing/export':
@@ -988,18 +990,18 @@ permit.add_route("/bus/billing",u"用户计费查询",u"营业管理",is_menu=Tr
 permit.add_route("/bus/billing/export",u"用户计费导出",u"营业管理",order=4.01)
 
 ###############################################################################
-# billing log query        
+# billing log query
 ###############################################################################
 
 @app.route('/orders',apply=auth_opr,method=['GET','POST'])
 @app.route('/orders/export',apply=auth_opr)
-def order_query(db): 
+def order_query(db):
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
     pay_status = request.params.get('pay_status')
-    account_number = request.params.get('account_number')  
-    query_begin_time = request.params.get('query_begin_time')  
-    query_end_time = request.params.get('query_end_time')  
+    account_number = request.params.get('account_number')
+    query_begin_time = request.params.get('query_begin_time')
+    query_end_time = request.params.get('query_end_time')
     _query = db.query(
         models.SlcMemberOrder,
         models.SlcMember.node_id,
@@ -1018,15 +1020,15 @@ def order_query(db):
     if product_id:
         _query = _query.filter(models.SlcMemberOrder.product_id == product_id)
     if pay_status:
-        _query = _query.filter(models.SlcMemberOrder.pay_status == pay_status)        
+        _query = _query.filter(models.SlcMemberOrder.pay_status == pay_status)
     if query_begin_time:
         _query = _query.filter(models.SlcMemberOrder.create_time >= query_begin_time+' 00:00:00')
     if query_end_time:
         _query = _query.filter(models.SlcMemberOrder.create_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcMemberOrder.create_time.desc())
-    
+
     if request.path == '/orders':
-        return render("bus_order_list", 
+        return render("bus_order_list",
             node_list=db.query(models.SlcNode),
             products =  db.query(models.SlcRadProduct).filter_by(product_status = 0),
             page_data=get_page_data(_query),**request.params)
