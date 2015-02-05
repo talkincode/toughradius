@@ -12,7 +12,7 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
 [ToughRADIUS网站：http://www.toughradius.net] (http://www.toughradius.net)
 
-[文档地址:http://docs.toughradius.net/build/html/] (http://docs.toughradius.net/build/html/)
+[ToughRADIUS文档: http://docs.toughradius.net/build/html/] (http://docs.toughradius.net/build/html/)
 
 ## Linux下使用脚本自动安装
 
@@ -24,23 +24,59 @@ CentOS 6 , CentOS 7
 
 脚本路径
 
-    install/centos6-install.sh
+    install/centos-install
 
-    install/centos7-install.sh
     
 ### 安装过程
 
-自动化安装过程在终端下执行,以CentOS 7为例：
+自动化安装过程在终端下执行,以CentOS为例：
 
-下载脚本:
+下载脚本::
 
-    $ curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/centos7-install.sh > centos7-install.sh
+    $ curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/centos-install > centos-install
 
-执行安装:
+    $ chmod +x centos-install
 
-    $ sh centos7-install.sh all
+执行安装::
 
-执行完成以上两步可完成所有安装并运行ToughRADIUS服务，然后就可以使用了。
+    $ ./centos-install
+
+在安装过程中会需要用户进行一些交互，如配置选项设置，是否安装本地mysql数据库。
+
+执行完成以上两步可完成所有安装，然后就可以使用了。
+
+
+#### 分步安装
+
+同时该脚本也提供了分步骤安装的支持。
+
+安装系统必要的依赖库请执行::
+
+    $ ./centos-install depend
+    
+安装ToughRADIUS请执行::
+
+    $ ./centos-install radius
+
+安装mysql(可选)请执行::
+
+    $ ./centos-install mysql
+
+定义ToughRADIUS配置执行::
+    
+    # 如果你选择不在本机安装mysql数据库，应该注意配置你的远程数据库参数
+
+    $ ./centos-install config
+
+创建ToughRADIUS数据库请执行::
+
+    $ ./centos-install initdb
+    
+完成以上所有后快速启动ToughRADIUS::
+
+    # 在start之前请确认你的配置无误
+
+    $ ./centos-install start 
 
 ### 进程管理
 
@@ -69,6 +105,26 @@ CentOS 6 , CentOS 7
 停止mysql数据库进程::
 
     $ toughrad stopdb
+    
+备份ToughRADIUS主数据库,备份路径在/var/toughradius/databak,若要上传至ftp，请配置/var/toughradius/radiusd.json文件中的备份选项::
+
+    $ toughrad backupdb
+
+跟踪数据库日志::
+
+    $ toughrad tracedb
+    
+跟踪radius日志::
+
+    $ toughrad tracerad
+    
+跟踪管理控制台日志::
+
+    $ toughrad traceadmin
+    
+跟踪自助服务控制台日志::
+
+    $ toughrad tracecustomer    
 
 ## 使用Docker镜像 
 
