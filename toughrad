@@ -44,9 +44,12 @@ EOF
 # not support docker
 start()
 {
-    if [ ! $(pgrep -f mysqld_safe | wc -l) -gt 0 ]
+    if [ -x /usr/bin/mysqld_safe ]
     then
-        /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
+        if [ ! $(pgrep -f mysqld_safe | wc -l) -gt 0 ]
+        then
+            /usr/bin/mysqld_safe --defaults-file=${rundir}/mysql/my.cnf --user=mysql &
+        fi
     fi
     
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]

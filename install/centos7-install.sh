@@ -13,7 +13,7 @@ depend()
 {
     echo "install lib"
     yum update -y
-    yum install -y wget git gcc python-devel python-setuptools tcpdump
+    yum install -y wget git gcc python-devel python-setuptools tcpdump crontabs
 
     echo "python package"
     easy_install pip 
@@ -71,6 +71,10 @@ setup()
     echo "setup toughradius database.."
 
     python ${appdir}/createdb.py -c ${rundir}/radiusd.json -i=1
+    
+    echo "add crontab task"
+    
+    crontab ${appdir}/install/backupdb.cron
 
     echo "starting supervisord..."
 
