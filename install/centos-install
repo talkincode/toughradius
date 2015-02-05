@@ -34,7 +34,7 @@ def install_depend():
     _print('start install system depend')
     r = os.system("yum update -y")
     r = os.system("yum install -y wget git gcc python-devel " \
-                  "python-setuptools tcpdump crontabs mysql-devel MySQL-python")
+                  "python-setuptools tcpdump crontabs MySQL-python")
     if r == 0: _print("install depend success",1)
     r = os.system("easy_install pip && easy_install supervisor && easy_install argparse")
     _print("install pip and supervisor success",1)
@@ -143,6 +143,8 @@ def install_mysql():
             _print("mysql init done",1)
         else:
             _print("error",2)
+    
+    return mysql_ok
 
 
 ########################################################################    
