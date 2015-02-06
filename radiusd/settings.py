@@ -49,6 +49,7 @@ auth_plugins = [
     'auth_user_filter',
     'auth_bind_filter',
     'auth_policy_filter',
+    'auth_rate_limit',
     'auth_std_accept'
 ]
 

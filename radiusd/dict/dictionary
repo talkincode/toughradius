@@ -57,6 +57,7 @@ $INCLUDE dictionary.h3c
 $INCLUDE dictionary.huawei
 $INCLUDE dictionary.juniper
 $INCLUDE dictionary.mikrotik
+$INCLUDE dictionary.zte
 #
 #	Following are the proper new names. Use these.
 #

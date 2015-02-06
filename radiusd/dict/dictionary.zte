@@ -1,0 +1,16 @@
+# -*- text -*-
+##############################################################################
+#
+#   Dictionary for zte
+#
+#   $Id$
+#
+##############################################################################
+VENDOR      ZTE             3902
+
+BEGIN-VENDOR        ZTE
+
+ATTRIBUTE       ZTE-Rate-Ctrl-Scr-Down      83     integer
+ATTRIBUTE       ZTE-Rate-Ctrl-Scr-Up        89     integer
+
+END-VENDOR      ZTE

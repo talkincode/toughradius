@@ -12,6 +12,7 @@ __all__ = [
     'acct_stop_process',
     'acct_update_process',
     'acct_onoff_process',
+    'auth_rate_limit',
     'auth_std_accept',
     'admin_trace_global',
     'admin_trace_user',
