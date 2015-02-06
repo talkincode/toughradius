@@ -160,6 +160,47 @@ class SlcMemberOrder(DeclarativeBase):
     order_desc = Column('order_desc', VARCHAR(length=255),doc=u"订单描述")
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"交易时间")
 
+class SlcRechargerCard(DeclarativeBase):
+    """
+    充值卡表
+    批次号：batch_no，以年月开始紧跟顺序号，如201502001 
+    通用余额卡：无资费类型
+    资费套餐卡：买断流量卡，时长卡，包月，买断卡无面值
+    状态 card_status 0 未销售 1 已销售 2 已交易 3 已回收 4
+    """
+    __tablename__ = 'slc_recharge_card'
+
+    __table_args__ = {}
+    
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"充值卡id")
+    batch_no = Column('batch_no', INTEGER(), nullable=False,doc=u"批次号")
+    card_number = Column('card_number', VARCHAR(length=16),nullable=False,doc=u"充值卡号")
+    card_passwd = Column('card_passwd', VARCHAR(length=16),nullable=False,doc=u"充值卡密码")
+    card_type = Column('card_type', INTEGER(),nullable=False,doc=u"充值卡类型")
+    card_status = Column('card_status', INTEGER(), nullable=False,doc=u"状态")
+    product_id = Column('product_id', INTEGER(),nullable=True,doc=u"资费id")
+    fee_value = Column('fee_value', INTEGER(), nullable=False,doc=u"充值卡面值-元")
+    months = Column('months', INTEGER(),nullable=True,doc=u"买断月数")
+    time_length = Column('time_length', INTEGER(), nullable=False,doc=u"买断时长-分钟")
+    flow_length = Column('flow_length', INTEGER(), nullable=False,doc=u"买断流量-kb")
+    expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
+    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
+    
+class SlcRechargeLog(DeclarativeBase):
+    """
+    充值记录
+    """
+    __tablename__ = 'slc_recharge_log'
+
+    __table_args__ = {}
+    
+    recharge_id = Column('recharge_id', VARCHAR(length=32),primary_key=True,nullable=False,doc=u"交易ID")
+    card_number = Column('card_number', VARCHAR(length=16),nullable=False,doc=u"充值卡号")
+    member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
+    account_number = Column('account_number', VARCHAR(length=32),nullable=False,doc=u"上网账号")
+    recharge_status = Column('recharge_status', INTEGER(), nullable=False,doc=u"充值结果")
+    recharge_time = Column('recharge_time', VARCHAR(length=19), nullable=False,doc=u"充值时间")
+
 
 class SlcRadAccount(DeclarativeBase):
     """
@@ -181,7 +222,8 @@ class SlcRadAccount(DeclarativeBase):
     status = Column('status', INTEGER(), nullable=False,doc=u"用户状态")
     install_address = Column('install_address', VARCHAR(length=128), nullable=False,doc=u"装机地址")
     balance = Column('balance', INTEGER(), nullable=False,doc=u"用户余额-分")
-    time_length = Column('time_length', INTEGER(), nullable=False,doc=u"用户时长-秒")
+    time_length = Column('time_length', INTEGER(), nullable=False,default=0,doc=u"用户时长-秒")
+    flow_length = Column('flow_length', INTEGER(), nullable=False,default=0,doc=u"用户流量-kb")
     expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
     user_concur_number = Column('user_concur_number', INTEGER(), nullable=False,doc=u"用户并发数")
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False,doc=u"是否绑定mac")

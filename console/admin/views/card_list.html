@@ -1,0 +1,97 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script>
+
+</script>
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 充值卡管理</div>
+        <div class="panel-body">
+            <div class="container">
+
+                <form id="query_form" class="form-horizontal" role="form" action="/card/list" method="post">
+
+                    <div class="form-group">
+                        <label for="product_id" class="col-md-2 control-label">资费</label>
+                        <div class="col-md-3">
+                            <select id="product_id" name="product_id" class="form-control" >
+                            <option value=""></option>
+                                % for product in products:
+                                  <option value="${product.id}"  ${str(product.id)==product_id and "selected" or ""}>${product.product_name}</option>
+                                % endfor
+                            </select>
+                        </div>  
+                        <label for="card_type" class="col-md-2 control-label">充值卡类型</label>
+                        <div class="col-md-3">
+                            <select id="card_type" name="card_type" class="form-control" >
+                            <option value=""></option>
+                            <option value="0"  ${"0"==card_type and "selected" or ""}>资费套餐卡</option>
+                            <option value="1"  ${"1"==card_type and "selected" or ""}>普通余额卡</option>
+                            </select>
+                        </div>  
+                    </div>              
+                    <div class="form-group">
+                        <label for="query_begin_time" class="col-md-2 control-label">创建开始时间</label>
+
+                        <div class="col-md-3">
+                            <input type="text" id="query_begin_time" name="query_begin_time" value="${query_begin_time or ''}" class="form-control form_datetime"  >
+                        </div>
+                         <label for="query_end_time" class="col-md-2 control-label">创建结束时间</label>
+                        <div class="col-md-3">
+                            <input type="text" id="query_end_time" name="query_end_time" value="${query_end_time or ''}"  class="form-control form_datetime">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-offset-4 col-md-7">
+                            <button type="submit" class="btn btn-primary">查询</button>
+                            % if permit.match('/card/export'):
+                            <a href="/card/export" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出数据</a>
+                            % endif
+                            % if permit.match('/card/create'):
+                             <a href="/card/create" class="btn btn-default">充值卡生成</a>
+                            % endif
+                        </div>
+                    </div>
+                </form>
+                <hr>
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>充值卡类型</th>
+                            <th>批次号</th>
+                            <th>充值卡号</th>
+                            <th>资费套餐</th>
+                            <th>充值卡面值</th>
+                            <th>总月数</th>
+                            <th>总流量</th>
+                            <th>总时长</th>
+                            <th>充值卡状态</th>
+                            <th>创建时间</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        % for card in page_data.result:
+                            <tr>
+                                <td>${card_types[card.catd_type]}</td>
+                                <td>${card.batch_no}</td>
+                                <td>${card_number}</td>
+                                <td>${get_product_name(card.product_id)}</td>
+                                <td>${card.fee_value}</td>
+                                <td>${card.months}</td>
+                                <td>${card.time_length}</td>
+                                <td>${card.flow_length}</td>
+                                <td>${card.expire_date}</td>
+                                <td>${card.create_time}</td>
+                            </tr>
+                        % endfor
+                    </tbody>
+                </table>
+                ${page_data.render(form_id="query_form")}
+            </div>
+        </div>
+    </div>
+</%def>

@@ -9,6 +9,7 @@ from bottle import run as runserver
 from admin.admin import app as mainapp
 from admin.ops import app as ops_app
 from admin.business import app as bus_app
+from admin.card import app as card_app
 from base import *
 from libs import sqla_plugin
 from websock import websock
@@ -26,6 +27,7 @@ def init_application(dbconf=None,consconf=None):
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
     session = sqla_pg.new_session()
     _sys_param_value = functools.partial(get_param_value,session)
+    _get_product_name = functools.partial(get_product_name,session)
     log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(
         get_cookie = get_cookie,
@@ -34,6 +36,7 @@ def init_application(dbconf=None,consconf=None):
         currdate = utils.get_currdate,
         request = request,
         sys_param_value = _sys_param_value,
+        get_product_name = _get_product_name,
         system_name = _sys_param_value("1_system_name"),
         radaddr = _sys_param_value('3_radiusd_address'),
         adminport = _sys_param_value('4_radiusd_admin_port'),
@@ -56,9 +59,11 @@ def init_application(dbconf=None,consconf=None):
     mainapp.install(sqla_pg)
     ops_app.install(sqla_pg)
     bus_app.install(sqla_pg)
+    card_app.install(sqla_pg)
 
     mainapp.mount("/ops",ops_app)
     mainapp.mount("/bus",bus_app)
+    mainapp.mount("/card",card_app)
     
     #create dir
     try:os.makedirs(os.path.join(APP_DIR,'static/xls'))

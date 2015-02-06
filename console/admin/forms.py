@@ -310,6 +310,26 @@ def account_update_form():
         action="/bus/account/update"
     )
 
+card_types = {0:u'资费套餐卡',1:u'普通余额卡'}
+
+def recharge_card_form(products=[]):
+    return pyforms.Form(
+        pyforms.Dropdown("card_type",  args=card_types.items(), description=u"充值卡类型",**input_style),
+        pyforms.Textbox("batch_no", rules.is_number,maxlength=8,description=u"批次号(年+月+2位序号，如：20150201)", **input_style),
+        pyforms.Dropdown("product_id",args=products, description=u"上网资费",**input_style),
+        pyforms.Textbox("start_no",rules.is_number,maxlength=5, description=u"开始卡号(最大5位)",**input_style),
+        pyforms.Textbox("total", description=u"卡数量",**input_style),
+        pyforms.Textbox("stop_no", rules.is_number,maxlength=5,description=u"结束卡号(最大5位)",**input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"面值(元)",value=0,**input_style),
+        pyforms.Textbox("months", rules.is_number,description=u"总月数(元)",value=0,**input_style),
+        pyforms.Textbox("time_length",rules.is_number, description=u"总时长(元)",value=0,**input_style),
+        pyforms.Textbox("flow_length",rules.is_number, description=u"总流量(元)",value=0,**input_style),
+        pyforms.Textbox("expire_date",rules.is_date, description=u"过期时间",**input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"充值卡生成",
+        action="/cards/create"
+    )
+
 
 
 
