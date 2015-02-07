@@ -453,6 +453,12 @@ def init_db(db):
     param06.param_value = u'000000'
     db.add(param06)  
     
+    param061 = SlcParam()
+    param061.param_name = u'7_rcard_order_url'
+    param061.param_desc = u'充值卡订购网站地址'
+    param061.param_value = u'http://www.tmall.com'
+    db.add(param061)
+    
     param07 = SlcParam()
     param07.param_name = u'8_portal_secret'
     param07.param_desc = u'portal登陆密钥'
@@ -465,11 +471,13 @@ def init_db(db):
     param08.param_value = u'7'
     db.add(param08)
     
-    param08 = SlcParam()
-    param08.param_name = u'10_expire_addrpool'
-    param08.param_desc = u'到期提醒下发地址池'
-    param08.param_value = u'expire'
-    db.add(param08)                  
+    param09 = SlcParam()
+    param09.param_name = u'9_expire_addrpool'
+    param09.param_desc = u'到期提醒下发地址池'
+    param09.param_value = u'expire'
+    db.add(param09)
+    
+               
 
     param1 = SlcParam()
     param1.param_name = u'max_session_timeout'

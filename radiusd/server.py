@@ -247,7 +247,7 @@ def main():
     _secret = _config['secret']
     
     # update aescipher
-    utils.update_secret(secret)
+    utils.update_secret(_secret)
 
     # init args
     if args.authport:_radiusd['authport'] = args.authport

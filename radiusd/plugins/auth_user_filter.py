@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 from plugins import error_auth
+from store import store
 import utils
 
 def process(req=None,resp=None,user=None):
@@ -10,8 +11,12 @@ def process(req=None,resp=None,user=None):
 
     if not req.is_valid_pwd(utils.decrypt(user['password'])):
         return error_auth(resp,'user password not match')
+        
+    if user['status'] == 4:
+        resp['Framed-Pool'] = store.get_param("9_expire_addrpool")
+        return resp
 
-    if not user['status'] == 1:
+    if  user['status'] in (0,2,3):
         return error_auth(resp,'user status not ok')
 
     return resp

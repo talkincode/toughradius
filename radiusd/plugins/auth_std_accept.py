@@ -28,6 +28,11 @@ def process(req=None,resp=None,user=None):
         else:
             time_len = balance * 3600 / product['fee_price']
             session_timeout = time_len
+    
+    if "Framed-Pool" in resp:
+        if store.get_param("9_expire_addrpool") in resp['Framed-Pool']:
+            session_timeout = 120
+    
     resp['Session-Timeout'] = session_timeout
 
     input_limit = str(product['input_max_limit'])
