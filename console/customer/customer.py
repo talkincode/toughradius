@@ -22,6 +22,7 @@ from base import (
 from libs import utils
 from sqlalchemy.sql import exists
 from websock import websock
+import time
 import bottle
 import models
 import forms
@@ -31,6 +32,42 @@ import functools
 
 app = Bottle()
 
+###############################################################################
+# login , recharge error times limit    
+###############################################################################   
+
+class ValidateCache(object):
+    validates = {}
+    def incr(self,mid,vid):
+        key = "%s_%s"%(mid,vid)
+        if key not in self.validates:
+            self.validates[key] = [1,time.time()]
+        else:
+            self.validates[key][0] += 1
+            
+    def errs(self,mid,vid):
+        key = "%s_%s"%(mid,vid)    
+        if key in  self.validates:
+            return self.validates[key][0] 
+        return 0
+    
+    def clear(self,mid,vid):
+        key = "%s_%s"%(mid,vid)    
+        if key in  self.validates:
+            del self.validates[key]
+        
+    def is_over(self,mid,vid):
+        key = "%s_%s"%(mid,vid)
+        if key not in self.validates:
+            return False
+        elif (time.time() - self.validates[key][1]) > 3600:
+            del self.validates[key]
+            return False
+        else:
+            return self.validates[key][0] >= 5 
+
+vcache = ValidateCache() 
+              
 ###############################################################################
 # Basic handle         
 ###############################################################################    
@@ -90,8 +127,17 @@ def get_data(db,member_name):
 @app.get('/',apply=auth_cus)
 def customer_index(db):
     member,accounts,orders = get_data(db,get_cookie('customer'))
-    return  render("index",member=member,accounts=accounts,orders=orders)    
+    status_colors = {0:'',1:'',2:'class="warning"',3:'class="danger"',4:'class="warning"'}
+    return  render("index",
+        member=member,
+        accounts=accounts,
+        orders=orders,
+        status_colors=status_colors
+    )    
 
+###############################################################################
+# user login        
+###############################################################################
 
 @app.get('/login')
 def member_login_get(db):
@@ -105,14 +151,23 @@ def member_login_post(db):
     form = forms.member_login_form()
     if not form.validates(source=request.params):
         return render("login", form=form)
+    
+    if vcache.is_over(form.d.username,'0'):
+        return render("error",msg=u"用户一小时内登录错误超过5次，请一小时后再试")
 
     member = db.query(models.SlcMember).filter_by(
-        member_name=form.d.username,
-        password=md5(form.d.password.encode()).hexdigest()
+        member_name=form.d.username
     ).first()
-
+    
     if not member:
-        return render("login", form=form,msg=u"用户名密码不符合")
+        return render("login", form=form,msg=u"用户不存在")
+    
+    if member.password != md5(form.d.password.encode()).hexdigest():
+        vcache.incr(form.d.username,'0')
+        print vcache.validates
+        return render("login", form=form,msg=u"用户名密码错误第%s次"%vcache.errs(form.d.username,'0'))
+ 
+    vcache.clear(form.d.username,'0')
  
     set_cookie('customer_id',member.member_id)
     set_cookie('customer',form.d.username)
@@ -129,6 +184,9 @@ def member_logout():
     request.cookies.clear()
     redirect('login')
 
+###############################################################################
+# user join        
+###############################################################################
 
 @app.get('/join')
 def member_join_get(db):
@@ -168,6 +226,10 @@ def member_join_post(db):
     logger.info(u"新用户注册成功,member_name=%s"%member.member_name)
     redirect('/login')
    
+###############################################################################
+# account query        
+###############################################################################
+   
 @app.get('/account/detail',apply=auth_cus)
 def account_detail(db):
     account_number = request.params.get('account_number')  
@@ -204,6 +266,10 @@ def product_list(db):
     return render("product_list",products=db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     ))
+    
+###############################################################################
+# billing query        
+###############################################################################
     
 @app.route('/billing',apply=auth_cus,method=['GET','POST'])
 def billing_query(db): 
@@ -270,18 +336,15 @@ def ticket_query(db):
         accounts=db.query(models.SlcRadAccount).filter_by(member_id=get_cookie("customer_id")),
         page_data = get_page_data(_query),
         **request.params)    
+        
+###############################################################################
+# password update    
+###############################################################################    
     
 @app.get('/password/update',apply=auth_cus)    
 def password_update_get(db):
     form = forms.password_update_form()
-    account_number = request.params.get('account_number')  
-    account = db.query(models.SlcRadAccount).get(account_number)
-    if not account:
-        return render("base_form", form=form,msg=u'没有这个账号')
-        
-    if account.member_id != get_cookie("customer_id"):
-        return render("base_form", form=form,msg=u'该账号用用户不匹配')  
-          
+    account_number = request.params.get('account_number')      
     form.account_number.set_value(account_number)
     return render("base_form",form=form)
     
@@ -291,7 +354,7 @@ def password_update_post(db):
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
         
-    account = db.query(models.SlcRadAccount).get(form.d.account_number)
+    account = db.query(models.SlcRadAccount).filter_by(account_number=form.d.account_number).first()
     if not account:
         return render("base_form", form=form,msg=u'没有这个账号')
         
@@ -308,6 +371,10 @@ def password_update_post(db):
     db.commit()
     websock.update_cache("account",account_number=account.account_number)
     redirect("/")
+
+###############################################################################
+# portal auth        
+###############################################################################
     
 @app.route('/portal/auth')
 def portal_auth(db):
@@ -330,3 +397,251 @@ def portal_auth(db):
     else:
         return render("error",msg=u"无效的访问!")
         
+###############################################################################
+# account open      
+###############################################################################
+
+def check_card(card):
+    if not card:
+        return dict(code=1,data=u"充值卡不存在")
+    if card.card_status == 0:
+        return dict(code=1,data=u"充值卡未激活")
+    elif card.card_status == 2:
+        return dict(code=1,data=u"充值卡已被使用")
+    elif card.card_status == 3:
+        return dict(code=1,data=u"充值卡已被回收")
+    if card.expire_date < utils.get_currdate():
+        return dict(code=1,data=u"充值卡已过期")
+    return dict(code=0)
+
+@app.get('/querycp',apply=auth_cus)
+def query_card_products(db):
+    ''' query product by card'''
+    recharge_card = request.params.get('recharge_card')
+    card = db.query(models.SlcRechargerCard).filter_by(card_number=recharge_card).first()  
+
+    check_result = check_card(card)
+    if check_result['code'] > 0:
+        return check_result
+    
+    if card.card_type == 1:
+        products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter(
+            models.SlcRadProduct.product_status == 0,
+            models.SlcRadProduct.product_policy == 1
+        )]
+        return dict(code=0,data={'products':products})
+    elif card.card_type == 0:
+        product = db.query(models.SlcRadProduct).get(card.product_id)
+        return dict(code=0,data={'products':[(product.id,product.product_name)]})
+    
+
+@app.get('/open',apply=auth_cus)
+def account_open(db):
+    r = ['0','1','2','3','4','5','6','7','8','9']
+    rg = utils.random_generator
+    def random_account():
+        _num = ''.join([rg.choice(r) for _ in range(9)])
+        if db.query(models.SlcRadAccount).filter_by(account_number=_num).count() > 0:
+            return random_account()
+        else:
+            return _num
+    account_number = request.params.get('account_number')
+    form = forms.account_open_form()
+    form.recharge_card.set_value('')
+    form.recharge_pwd.set_value('')
+    form.account_number.set_value(random_account())
+    return render('card_open_form',form=form)    
+
+@app.post('/open',apply=auth_cus)
+def account_open(db):
+    form = forms.account_open_form()
+    if not form.validates(source=request.forms):
+        return render("card_open_form", form=form)
+    if vcache.is_over(get_cookie("customer_id"),form.d.recharge_card):
+         return render("card_open_form", form=form,msg=u"该充值卡一小时内密码输入错误超过5次，请一小时后再试") 
+
+    card = db.query(models.SlcRechargerCard).filter_by(card_number=form.d.recharge_card).first()  
+    check_result = check_card(card)
+    if check_result['code'] > 0:
+        return render('card_open_form',form=form,msg=check_result['data'])
+
+    if utils.decrypt(card.card_passwd) != form.d.recharge_pwd:
+        vcache.incr(get_cookie("customer_id"),form.d.recharge_card)
+        errs = vcache.errs(get_cookie("customer_id"),form.d.recharge_card)
+        return render('card_open_form',form=form,msg=u"充值卡密码错误%s次"%errs)
+    
+    vcache.clear(get_cookie("customer_id"),form.d.recharge_card)
+    
+    # start open
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'open'
+    accept_log.accept_source = 'customer'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = "customer"
+    accept_log.accept_desc = u"用户新开账号：上网账号:%s"%(form.d.account_number)
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)
+    
+    _datetime = utils.get_currtime()
+    order_fee = 0
+    balance = 0
+    expire_date = utils.add_months(datetime.datetime.now(),card.months).strftime("%Y-%m-%d") 
+    product = db.query(models.SlcRadProduct).get(form.d.product_id)
+    if product.product_policy == 0:
+        order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(card.months)
+        order_fee = int(order_fee.to_integral_value())
+    if product.product_policy == 2:
+        order_fee = decimal.Decimal(product.fee_price) 
+        order_fee = int(order_fee.to_integral_value())
+    elif product.product_policy == 1:
+        balance = card.fee_value
+        expire_date = '3000-11-11'
+    
+    order = models.SlcMemberOrder()
+    order.order_id = utils.gen_order_id()
+    order.member_id = get_cookie("customer_id")
+    order.product_id = product.id
+    order.account_number = form.d.account_number
+    order.order_fee = order_fee
+    order.actual_fee = card.fee_value
+    order.pay_status = 1
+    order.accept_id = accept_log.id
+    order.order_source = 'customer'
+    order.create_time = _datetime
+    order.order_desc = u"用户自助开户,使用充值卡[ %s ]"%form.d.recharge_card
+    db.add(order)
+    
+    account = models.SlcRadAccount()
+    account.account_number = form.d.account_number
+    account.ip_address = ''
+    account.member_id = get_cookie("customer_id")
+    account.product_id = order.product_id
+    account.install_address = ''
+    account.mac_addr = ''
+    account.password = utils.encrypt(form.d.password)
+    account.status = 1
+    account.balance = balance
+    account.time_length = 0
+    account.expire_date = expire_date
+    account.user_concur_number = product.concur_number
+    account.bind_mac = product.bind_mac
+    account.bind_vlan = product.bind_vlan
+    account.vlan_id = 0
+    account.vlan_id2 = 0
+    account.create_time = _datetime
+    account.update_time = _datetime
+    db.add(account)
+    
+    clog = models.SlcRechargeLog()
+    clog.member_id = get_cookie("customer_id")
+    clog.card_number = card.card_number
+    clog.account_number = form.d.account_number
+    clog.recharge_status = 0
+    clog.recharge_time = _datetime
+    db.add(clog)
+    
+    card.card_status = 2
+    
+    db.commit()
+    redirect('/')
+        
+
+###############################################################################
+# recharge         
+###############################################################################
+
+@app.get('/recharge')
+def account_recharge(db):
+    account_number = request.params.get('account_number')
+    form = forms.recharge_form()
+    form.recharge_card.set_value('')
+    form.recharge_pwd.set_value('')
+    form.account_number.set_value(account_number)  
+    return render('base_form',form=form)      
+
+@app.post('/recharge')
+def account_recharge(db):
+    form = forms.recharge_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+    if vcache.is_over(get_cookie("customer_id"),form.d.recharge_card):
+         return render("base_form", form=form,msg=u"该充值卡一小时内密码输入错误超过5次，请一小时后再试")
+    
+    # 1 check card     
+    card = db.query(models.SlcRechargerCard).filter_by(card_number=form.d.recharge_card).first()  
+    check_result = check_card(card)
+    if check_result['code'] > 0:
+        return render('base_form',form=form,msg=check_result['data'])
+
+    if utils.decrypt(card.card_passwd) != form.d.recharge_pwd:
+        vcache.incr(get_cookie("customer_id"),form.d.recharge_card)
+        errs = vcache.errs(get_cookie("customer_id"),form.d.recharge_card)
+        return render('base_form',form=form,msg=u"充值卡密码错误%s次"%errs)   
+        
+    vcache.clear(get_cookie("customer_id"),form.d.recharge_card)
+        
+    # 2 check account
+    account = db.query(models.SlcRadAccount).filter_by(account_number=form.d.account_number).first()
+    if not account:
+        return render("base_form", form=form,msg=u'没有这个账号')
+    if account.member_id != get_cookie("customer_id"):
+        return render("base_form", form=form,msg=u'该账号用用户不匹配')
+    if account.status not in (1,4):
+        return render("base_form", form=form,msg=u'只有正常或到期状态的用户才能充值')
+    
+    # 3 check product
+    user_product = db.query(models.SlcRadProduct).get(account.product_id)    
+    if card.card_type == 0 and card.product_id != account.product_id:
+        return render("base_form", form=form,msg=u'您使用的是资费套餐卡，但资费套餐与该账号资费不匹配')
+    if card.card_type == 1 and user_product.product_policy not in (1,):
+        return render("base_form", form=form,msg=u'您使用的是余额卡，不能为当前账号包月资费充值')
+    
+    # 4 start recharge
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'charge'
+    accept_log.accept_source = 'customer'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = "customer"
+    accept_log.accept_desc = u"用户自助充值：上网账号:%s"%(form.d.account_number)
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log) 
+    
+    _datetime = utils.get_currtime()
+    order_fee = 0
+    balance = 0
+    expire_date = account.expire_date
+    d_expire_date = datetime.datetime.strptime(expire_date,"%Y-%m-%d")
+    if user_product.product_policy == 0:
+        expire_date = utils.add_months(d_expire_date,card.months).strftime("%Y-%m-%d")
+        order_fee = decimal.Decimal(user_product.fee_price) * decimal.Decimal(card.months)
+        order_fee = int(order_fee.to_integral_value())
+    if user_product.product_policy == 2:
+        expire_date = utils.add_months(d_expire_date,card.months).strftime("%Y-%m-%d")
+        order_fee = decimal.Decimal(user_product.fee_price) 
+        order_fee = int(order_fee.to_integral_value())
+    elif user_product.product_policy == 1:
+        balance = card.fee_value
+    
+    order = models.SlcMemberOrder()
+    order.order_id = utils.gen_order_id()
+    order.member_id = get_cookie("customer_id")
+    order.product_id = account.product_id
+    order.account_number = form.d.account_number
+    order.order_fee = order_fee
+    order.actual_fee = card.fee_value
+    order.pay_status = 1
+    order.accept_id = accept_log.id
+    order.order_source = 'customer'
+    order.create_time = _datetime
+    order.order_desc = u"用户自助充值，充值卡[ %s ]"%form.d.recharge_card
+    db.add(order)
+         
+    account.expire_date = expire_date
+    account.balance += balance
+    
+    db.commit()
+    redirect("/") 

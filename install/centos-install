@@ -150,7 +150,14 @@ def install_mysql():
 ########################################################################    
 #  setup config json file  function
 ########################################################################  
+
 def setup_config():
+    def gen_secret():
+        import random
+        rg = random.SystemRandom()
+        r = list('1234567890abcdefghijklmnopqrstuvwxyz')
+        return ''.join([rg.choice(r) for _ in range(256)])
+        
     _print("please set config...")
     cjson = dict(
         database = {},
@@ -179,7 +186,6 @@ def setup_config():
     cjson['radiusd']['authport'] = int(raw_input("radiusd authport [1812]:") or 1812)
     cjson['radiusd']['acctport'] = int(raw_input("radiusd acctport [1813]:") or 1813)
     cjson['radiusd']['adminport'] = int(raw_input("radiusd adminport [1815]:") or 1815)
-    cjson['radiusd']['allows'] = raw_input("radiusd allows [127.0.0.1]:") or '127.0.0.1' 
     cjson['radiusd']['dictfile'] = raw_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
         or '%s/radiusd/dict/dictionary'%appdir 
     cjson['radiusd']['debug'] = int(raw_input("radiusd debug [1]") or 1)
@@ -189,6 +195,7 @@ def setup_config():
     cjson['admin']['debug'] = int(raw_input("admin debug [1]:") or 1)
     cjson['customer']['httpport'] = int(raw_input("customer httpport [1817]:") or 1817)
     cjson['customer']['debug'] = int(raw_input("customer debug [1]:") or 1) 
+    cjson['secret'] = raw_input("secret string [.]:") or gen_secret() 
     
     jsonstr = json.dumps(
         cjson, ensure_ascii=False,

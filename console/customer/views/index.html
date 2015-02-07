@@ -6,10 +6,7 @@
 
 <%def name="main()">
 <div class="panel panel-default">
-    <div class="panel-heading">
-    <div class="bar">
-        <span class="glyphicon glyphicon-user"></span> 用户信息
-    </div>
+    <div class="panel-heading"> <span class="glyphicon glyphicon-user"></span> 用户信息
     </div>
     <div class="panel-body posts">
         <table class="table ">
@@ -68,15 +65,22 @@
                 <th></th>
             </tr>            
             % for user in accounts:
-            <tr>
-                <td>${user.account_number}</td>
+            <tr ${status_colors[user.status]}>
+                <td><a href="/account/detail?account_number=${user.account_number}">${user.account_number}</a></td>
                 <td>${user.product_name}</td>
-                <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
+                <td >
+                    ${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}
+                </td>
                 <td>${user.expire_date}</td>
                 <td>${fen2yuan(user.balance)}</td>
                 <td>${user.create_time}</td>
                 <td>${is_online(user.account_number) and u'在线' or u'离线'}</td>
                  <td>
+                     % if user.product_policy in (0,2):
+                         <a class="opt-btn btn-default" href="/recharge?account_number=${user.account_number}">充值卡续费</a>
+                     % elif user.product_policy == 1: 
+                     <a class="opt-btn btn-default" href="/recharge?account_number=${user.account_number}">充值卡充值</a>
+                     % endif
                      <a class="opt-btn btn-default" href="/password/update?account_number=${user.account_number}">修改密码</a>
                  </td>
             </tr>
@@ -86,23 +90,23 @@
         <table class="table ">
             <thead>
                 <tr>
-                    <th colspan="8"> 订购记录</th>
+                    <th colspan="8"> 交易记录</th>
                 </tr>
             </thead>
             <tbody>
             <tr class="active">
-                <th>订单号</th>
+                <!-- <th>订单号</th> -->
                 <th>资费</th>
-                <th>上网账号</th>
+                <th>账号</th>
                 <th>订单费用</th>
                 <th>实缴费用</th>
-                <th>订单状态</th>
+                <th>状态</th>
                 <th>订单时间</th>
-                <th>订单描述</th>
+                <th>描述</th>
             </tr>            
             % for order in orders:
             <tr>
-                <td>${order.order_id}</td>
+                <!-- <td>${order.order_id}</td> -->
                 <td>${order.product_name}</td>
                 <td>${order.account_number}</td>
                 <td>${fen2yuan(order.order_fee)}</td>

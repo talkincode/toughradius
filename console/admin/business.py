@@ -82,7 +82,7 @@ def opencalc(db):
 ###############################################################################
 
 @app.route('/member',apply=auth_opr,method=['GET','POST'])
-@app.get('/member/export',apply=auth_opr)
+@app.post('/member/export',apply=auth_opr)
 def member_query(db):
     node_id = request.params.get('node_id')
     realname = request.params.get('realname')
@@ -368,6 +368,9 @@ def account_open(db):
     if product.product_policy == 0:
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
         order_fee = int(order_fee.to_integral_value())
+    if product.product_policy == 2:
+        order_fee = decimal.Decimal(product.fee_price) 
+        order_fee = int(order_fee.to_integral_value())
     elif product.product_policy == 1:
         balance = utils.yuan2fen(form.d.fee_value)
         expire_date = '3000-11-11'
@@ -491,7 +494,7 @@ def member_import(db):
                 account_number = attr_array[1],
                 password = attr_array[2],
                 expire_date = attr_array[3],
-                balance = attr_array[4])):
+                balance = str(utils.yuan2fen(attr_array[4])))):
             return render("bus_import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
 
         impusers.append(vform)
@@ -518,7 +521,9 @@ def member_import(db):
             accept_log = models.SlcRadAcceptLog()
             accept_log.accept_type = 'open'
             accept_log.accept_source = 'console'
-            accept_log.accept_desc = u"用户导入账号：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
+            _desc = u"用户导入账号：(%s)%s - 上网账号:%s"% \
+                    (member.member_name,member.realname,form.d.account_number)
+            accept_log.accept_desc = _desc
             accept_log.account_number = form.d.account_number
             accept_log.accept_time = member.create_time
             accept_log.operator_name = get_cookie("username")
@@ -871,7 +876,7 @@ permit.add_route("/bus/account/cancel",u"用户账号销户",u"营业管理",ord
 ###############################################################################
 
 @app.route('/acceptlog',apply=auth_opr,method=['GET','POST'])
-@app.route('/acceptlog/export',apply=auth_opr)
+@app.post('/acceptlog/export',apply=auth_opr)
 def acceptlog_query(db):
     node_id = request.params.get('node_id')
     accept_type = request.params.get('accept_type')
@@ -938,7 +943,7 @@ permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",o
 ###############################################################################
 
 @app.route('/billing',apply=auth_opr,method=['GET','POST'])
-@app.route('/billing/export',apply=auth_opr)
+@app.post('/billing/export',apply=auth_opr)
 def billing_query(db):
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')
@@ -994,7 +999,7 @@ permit.add_route("/bus/billing/export",u"用户计费导出",u"营业管理",ord
 ###############################################################################
 
 @app.route('/orders',apply=auth_opr,method=['GET','POST'])
-@app.route('/orders/export',apply=auth_opr)
+@app.post('/orders/export',apply=auth_opr)
 def order_query(db):
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')

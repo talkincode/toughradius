@@ -244,6 +244,10 @@ def main():
     _config = json.loads(open(args.conf).read())
     _database = _config['database']
     _radiusd = _config['radiusd']  
+    _secret = _config['secret']
+    
+    # update aescipher
+    utils.update_secret(secret)
 
     # init args
     if args.authport:_radiusd['authport'] = args.authport
@@ -263,6 +267,7 @@ def main():
     _runstat = statistics.RunStat()
     _middleware = middleware.Middleware()
     _debug = _radiusd['debug'] or settings.debug
+    
 
     # init coa clients
     _coa_clients = {}

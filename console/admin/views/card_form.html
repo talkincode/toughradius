@@ -3,8 +3,52 @@
 <script src="/static/js/bootstrap-datepicker.js"></script>
 <link rel="stylesheet" href="/static/js/datepicker.css"> 
 <script>
+function on_chtype(){
+    var ctype = $("#card_type").val()
+    if(parseInt(ctype) == 0){
+        $("#product_id").parent().parent().show();
+        $("#months").parent().parent().show();
+        //$("#time_length").parent().parent().show();
+        //$("#flow_length").parent().parent().show();
+    }else if(parseInt(ctype) == 1){
+        $("#product_id").parent().parent().hide();
+        $("#months").parent().parent().hide();
+        //$("#time_length").parent().parent().hide();
+        //$("#flow_length").parent().parent().hide();
+    }
+}
+
+function productCalc(){
+    if(parseInt($("#card_type").val())==1){
+        $("#fee_value").val('0.00');
+        return false;
+    }
+    var product_id = $("#product_id").val();
+    $.get("/card/calc?product_id="+product_id, {}, function (ev) {
+        console.log(ev);
+        if(ev.code==0){
+            console.log(ev.data);
+            $("#fee_value").val(ev.data.fee_value);
+            $("#months").val(ev.data.months);
+            //$("#time_length").val(ev.data.time_length);
+            //$("#flow_length").val(ev.data.flow_length);
+        }else{
+            alert(ev.data);
+        }
+    }, "json");
+}
+
 $(document).ready(function(){
     $("#expire_date").datepicker();
+    on_chtype();
+    productCalc();
+    $("#card_type").change(function(event){
+        on_chtype();
+        productCalc();
+    })
+    $("#product_id").change(function(event){
+        productCalc();
+    })
 });
 </script>
 </%def>

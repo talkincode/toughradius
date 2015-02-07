@@ -22,7 +22,6 @@
         "authport": 1812,
         "acctport": 1813,
         "adminport": 1815,
-        "allows":"127.0.0.1",
         "dictfile": "./radiusd/dict/dictionary",
         "debug":1,
         "cache_timeout":600
@@ -36,5 +35,6 @@
     {
         "httpport":1817,
         "debug":1
-    }    
+    },
+    "secret":"1qazxsw23edcvfr45tgbnhy67ujmki89"    
 }

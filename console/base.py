@@ -23,9 +23,26 @@ __cache_timeout__ = 600
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
 
 secret='123321qweasd',
-get_cookie = lambda name: request.get_cookie(md5(name).hexdigest(),secret=secret)
-set_cookie = lambda name,value,**options:response.set_cookie(md5(name).hexdigest(),value,secret=secret,**options)
 
+class SecureCookie(object):
+    
+    def __init__(self,secret):
+        self.secret = secret
+    
+    def get_cookie(self,name):
+        return request.get_cookie(md5(name).hexdigest(),secret=self.secret)
+        
+    def set_cookie(self,name,value,**options):
+        response.set_cookie(md5(name).hexdigest(),value,secret=self.secret,**options)
+        
+scookie = SecureCookie(secret)
+get_cookie = scookie.get_cookie
+set_cookie = scookie.set_cookie
+
+def update_secret(secret):
+    global scookie
+    scookie = SecureCookie(secret)
+    
 class Logger:
     def info(msg):
         log.msg(msg,level=logging.INFO)
@@ -122,6 +139,7 @@ def get_node_name(db,node_id):
     
 @cache.cache('get_product_name',expire=3600)   
 def get_product_name(db,product_id):
+    if not product_id:return
     return  db.query(models.SlcRadProduct.product_name).filter_by(id=product_id).scalar()
 
 @cache.cache('get_account_node_id',expire=3600)   

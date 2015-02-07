@@ -166,7 +166,7 @@ class SlcRechargerCard(DeclarativeBase):
     批次号：batch_no，以年月开始紧跟顺序号，如201502001 
     通用余额卡：无资费类型
     资费套餐卡：买断流量卡，时长卡，包月，买断卡无面值
-    状态 card_status 0 未销售 1 已销售 2 已交易 3 已回收 4
+    状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收 
     """
     __tablename__ = 'slc_recharge_card'
 
@@ -174,13 +174,13 @@ class SlcRechargerCard(DeclarativeBase):
     
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"充值卡id")
     batch_no = Column('batch_no', INTEGER(), nullable=False,doc=u"批次号")
-    card_number = Column('card_number', VARCHAR(length=16),nullable=False,doc=u"充值卡号")
-    card_passwd = Column('card_passwd', VARCHAR(length=16),nullable=False,doc=u"充值卡密码")
+    card_number = Column('card_number', VARCHAR(length=16),nullable=False,unique=True,doc=u"充值卡号")
+    card_passwd = Column('card_passwd', VARCHAR(length=128),nullable=False,doc=u"充值卡密码")
     card_type = Column('card_type', INTEGER(),nullable=False,doc=u"充值卡类型")
     card_status = Column('card_status', INTEGER(), nullable=False,doc=u"状态")
     product_id = Column('product_id', INTEGER(),nullable=True,doc=u"资费id")
     fee_value = Column('fee_value', INTEGER(), nullable=False,doc=u"充值卡面值-元")
-    months = Column('months', INTEGER(),nullable=True,doc=u"买断月数")
+    months = Column('months', INTEGER(),nullable=True,doc=u"授权月数")
     time_length = Column('time_length', INTEGER(), nullable=False,doc=u"买断时长-分钟")
     flow_length = Column('flow_length', INTEGER(), nullable=False,doc=u"买断流量-kb")
     expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
@@ -194,7 +194,7 @@ class SlcRechargeLog(DeclarativeBase):
 
     __table_args__ = {}
     
-    recharge_id = Column('recharge_id', VARCHAR(length=32),primary_key=True,nullable=False,doc=u"交易ID")
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
     card_number = Column('card_number', VARCHAR(length=16),nullable=False,doc=u"充值卡号")
     member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
     account_number = Column('account_number', VARCHAR(length=32),nullable=False,doc=u"上网账号")
@@ -457,7 +457,19 @@ def init_db(db):
     param07.param_name = u'8_portal_secret'
     param07.param_desc = u'portal登陆密钥'
     param07.param_value = u'abcdefg123456'
-    db.add(param07)           
+    db.add(param07)   
+    
+    param08 = SlcParam()
+    param08.param_name = u'9_expire_notify_days'
+    param08.param_desc = u'到期提醒提前天数'
+    param08.param_value = u'7'
+    db.add(param08)
+    
+    param08 = SlcParam()
+    param08.param_name = u'10_expire_addrpool'
+    param08.param_desc = u'到期提醒下发地址池'
+    param08.param_value = u'expire'
+    db.add(param08)                  
 
     param1 = SlcParam()
     param1.param_name = u'max_session_timeout'
@@ -533,7 +545,7 @@ def init_db(db):
     member = SlcMember()
     member.member_id = 1000001
     member.member_name = 'tester'
-    member.password = utils.encrypt('888888')
+    member.password = md5('888888').hexdigest()
     member.node_id = 1
     member.realname = 'tester'
     member.idcard = '0'

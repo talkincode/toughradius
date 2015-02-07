@@ -8,6 +8,14 @@
         $("#query_begin_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
         $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
     });
+    function do_submit(){
+        $("#query_form").attr("action", "/bus/billing");
+        $("#query_form").submit();
+    }
+    function do_export(){
+        $("#query_form").attr("action", "/bus/billing/export");
+        $("#query_form").submit();
+    }
    </script>
 </%def>
 
@@ -44,9 +52,9 @@
             </div>
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" class="btn btn-primary">查询</button>
+                    <button type="submit" onclick="do_submit();" class="btn btn-primary">查询</button>
                     % if permit.match('/bus/billing/export'):
-                    <a href="/bus/billing/export" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出计费信息</a>
+                    <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出计费信息</a>
                     % endif
                 </div>
             </div>

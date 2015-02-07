@@ -11,15 +11,18 @@ from admin.ops import app as ops_app
 from admin.business import app as bus_app
 from admin.card import app as card_app
 from base import *
-from libs import sqla_plugin
+from libs import sqla_plugin,utils
 from websock import websock
 import tasks
 import functools
 import models
+import base
 
-def init_application(dbconf=None,consconf=None):
+def init_application(dbconf=None,consconf=None,secret=None):
     log.startLogging(sys.stdout)  
     log.msg("start init application...")
+    base.update_secret(secret)
+    utils.update_secret(secret)
     TEMPLATE_PATH.append("./admin/views/")
     ''' install plugins'''
     log.msg("init plugins..")
@@ -89,11 +92,12 @@ def main():
     _config = json.loads(open(args.conf).read())
     _database = _config['database']
     _admin = _config['admin']
+    _secret = _config['secret']
 
     if args.httpport:_admin['httpport'] = args.httpport
     if args.debug:_admin['debug'] = bool(args.debug)
 
-    init_application(dbconf=_database,consconf=_admin)
+    init_application(dbconf=_database,consconf=_admin,secret=_secret)
     
     runserver(
         mainapp, host='0.0.0.0', 

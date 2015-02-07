@@ -17,7 +17,7 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 _base_id = 0
 
-_key = 't_o_u_g_h_radius'
+aes_key = 't_o_u_g_h_radius'
 
 _CurrentID = random_generator.randrange(1, 1024)
 
@@ -51,9 +51,13 @@ class AESCipher:
     def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
 
-_aes = AESCipher(_key)
-encrypt = _aes.encrypt
-decrypt = _aes.decrypt 
+aescipher = AESCipher(aes_key)
+encrypt = aescipher.encrypt
+decrypt = aescipher.decrypt 
+
+def update_secret(secret):
+    global aescipher
+    aescipher = AESCipher(secret)
 
 def fen2yuan(fen):
     f = decimal.Decimal(fen)

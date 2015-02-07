@@ -1,15 +1,23 @@
 <%inherit file="base.html"/>
 
 <%def name="head()">
-        <script>
-            function release(account_number)
-            {
-                params = {account_number:account_number};
-                $.post("/ops/user/release", params, function (data) {
-                    alert(data.msg)
-                },"json");
-            }
-        </script>
+<script>
+    function release(account_number)
+    {
+        params = {account_number:account_number};
+        $.post("/ops/user/release", params, function (data) {
+            alert(data.msg)
+        },"json");
+    }
+    function do_submit(){
+        $("#query_form").attr("action", "/ops/user");
+        $("#query_form").submit();
+    }
+    function do_export(){
+        $("#query_form").attr("action", "/ops/user/export");
+        $("#query_form").submit();
+    }
+</script>
 </%def>
 
 <%def name="body()">
@@ -56,9 +64,9 @@
             </div>
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" class="btn btn-primary">查询</button>
+                    <button type="button" onclick="do_submit();" class="btn btn-primary">查询</button>
                     % if permit.match('/ops/user/export'):
-                    <a href="/ops/user/export" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出账号信息</a>
+                    <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出账号信息</a>
                     % endif
                 </div>
             </div>

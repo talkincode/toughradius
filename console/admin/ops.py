@@ -25,7 +25,7 @@ app = Bottle()
 ###############################################################################
                    
 @app.route('/user',apply=auth_opr,method=['GET','POST'])
-@app.get('/user/export',apply=auth_opr)
+@app.post('/user/export',apply=auth_opr)
 def user_query(db):   
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
