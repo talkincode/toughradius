@@ -156,7 +156,7 @@ def setup_config():
         import random
         rg = random.SystemRandom()
         r = list('1234567890abcdefghijklmnopqrstuvwxyz')
-        return ''.join([rg.choice(r) for _ in range(256)])
+        return ''.join([rg.choice(r) for _ in range(128)])
         
     _print("please set config...")
     cjson = dict(

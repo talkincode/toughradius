@@ -3,6 +3,7 @@
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
 from console import models
+from console.libs import utils
 import argparse,json
 
 if __name__ == '__main__':
@@ -12,13 +13,15 @@ if __name__ == '__main__':
     parser.add_argument('-i','--install',nargs='?', type=bool,default=False,dest='install',help='install option')
     parser.add_argument('-t','--test',nargs='?', type=bool,default=False,dest='test',help='install test data')
     args =  parser.parse_args(sys.argv[1:])    
+    config =json.loads(open(args.conf,'rb').read())
+    utils.update_secret(config['secret'])
+    dbconf = config['database']
     if args.update:
-        models.update(config=json.loads(open(args.conf,'rb').read())['database'])
+        models.update(dbconf)
     elif args.install:
-        models.install2(config=json.loads(open(args.conf,'rb').read())['database'])
+        models.install2(dbconf)
     else:
-        models.install(config=json.loads(open(args.conf,'rb').read())['database'])
-    
+        models.install(dbconf)
     if args.test:
-        models.install_test(config=json.loads(open(args.conf,'rb').read())['database'])
+        models.install_test(dbconf)
         

@@ -22,7 +22,7 @@ import six
 
 md5_constructor = hashlib.md5
 
-_key = 't_o_u_g_h_radius'
+aes_key = 't_o_u_g_h_radius'
 
 PacketStatusTypeMap = {
     1 : 'AccessRequest',
@@ -67,9 +67,13 @@ class AESCipher:
     def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
 
-_aes = AESCipher(_key)
-encrypt = _aes.encrypt
-decrypt = _aes.decrypt
+aescipher = AESCipher(aes_key)
+encrypt = aescipher.encrypt
+decrypt = aescipher.decrypt 
+
+def update_secret(secret):
+    global aescipher
+    aescipher = AESCipher(secret)
 
 def is_expire(dstr):
     if not dstr:
