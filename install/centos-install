@@ -6,8 +6,10 @@ import json
 import time
 from string import Template
 
-os.system("echo 'start install' > /var/toughradius/install.log")
-vvv = ' >> /var/toughradius/install.log'
+vvv = ''
+if '-v' not in sys.argv:
+    os.system("echo 'start install' > /var/toughradius/install.log")
+    vvv = ' >> /var/toughradius/install.log'
 
 ########################################################################    
 #  tools function
@@ -34,7 +36,7 @@ def inwarn(s):
 
 def print_exr(msg,t=0,warn=False):
     _font = t ==0 and ingreen or inred 
-    if warn:_font = inwarn
+    if warn and t > 0:_font = inwarn
     print
     print _font("-"*120)
     _str = ''
@@ -42,7 +44,8 @@ def print_exr(msg,t=0,warn=False):
         _str = " >> \(^o^)/ Oh yeah! " + msg
     elif t > 0:
         _str = " >> ::>_<:: Failure! " + msg 
-    os.system("echo '%s' %s "%(_str.replace(vvv,''),vvv))
+    if vvv:
+        os.system("echo '%s' %s "%(_str.replace(vvv,''),vvv))
     print _font(_str) 
     print _font("-"*120)
 
@@ -51,7 +54,8 @@ def print_flow(msg):
     global _order
     _order += 1
     _str = "\r\n %s. >>  %s, ... \r\n"%(_order,msg)
-    os.system("echo '%s' %s "%(_str.replace(vvv,''),vvv))
+    if vvv:
+        os.system("echo '%s' %s "%(_str.replace(vvv,''),vvv))
     print inblue(_str)
     
 def os_run(cmd,warn=False):
@@ -238,11 +242,11 @@ def install_mysql():
 ########################################################################  
 
 def setup_config():
-    def gen_secret():
+    def gen_secret(slen=128):
         import random
         rg = random.SystemRandom()
         r = list('1234567890abcdefghijklmnopqrstuvwxyz')
-        return ''.join([rg.choice(r) for _ in range(128)])
+        return ''.join([rg.choice(r) for _ in range(slen)])
         
     print_flow("set config...")
     cjson = dict(
@@ -274,14 +278,18 @@ def setup_config():
     cjson['radiusd']['adminport'] = int(sys_input("radiusd adminport [1815]:") or 1815)
     cjson['radiusd']['dictfile'] = sys_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
         or '%s/radiusd/dict/dictionary'%appdir 
-    cjson['radiusd']['debug'] = int(sys_input("radiusd debug [1]") or 1)
+    cjson['radiusd']['debug'] = int(sys_input("radiusd debug [0/1] [1]") or 1)
     cjson['radiusd']['cache_timeout'] = int(sys_input("radiusd cache_timeout (second) [600]:") or 600)
     
     cjson['admin']['httpport'] = int(sys_input("admin httpport [1816]:") or 1816)
-    cjson['admin']['debug'] = int(sys_input("admin debug [1]:") or 1)
+    cjson['admin']['debug'] = int(sys_input("admin debug [0/1] [1]:") or 1)
     cjson['customer']['httpport'] = int(sys_input("customer httpport [1817]:") or 1817)
-    cjson['customer']['debug'] = int(sys_input("customer debug [1]:") or 1) 
-    cjson['secret'] = sys_input("secret string [.]:") or gen_secret() 
+    cjson['customer']['debug'] = int(sys_input("customer debug [0/1] [1]:") or 1) 
+    slen = 128
+    try:
+        slen = int(sys_input("secret string len, len%8=0 [128]:") or 128)
+    except:pass
+    cjson['secret'] = gen_secret(slen) 
     
     jsonstr = json.dumps(
         cjson, ensure_ascii=False,
@@ -305,12 +313,15 @@ def init_db():
     # mysql bug     
     sos = [ o for o in os.listdir("/usr/lib64/mysql") if 'libmysqlclient.so' in o]
     for so in sos:
-        os_run("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so),warn=True)
-        os_run("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so),warn=True)
+        if not os.path.exists("/usr/lib64/%s"%so):
+            os_run("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so),warn=True)
+        if not os.path.exists("/usr/lib/%s"%so):
+            os_run("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so),warn=True)
     if not sos:
         sos = [ o for o in os.listdir("/usr/lib/mysql") if 'libmysqlclient.so' in o]
         for so in sos:
-            os_run("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so),warn=True)
+            if not os.path.exists("/usr/lib/%s"%so):
+                os_run("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so),warn=True)
             
     sys.path.insert(0,"%s/console"%appdir)
     try:
@@ -330,14 +341,15 @@ def start():
     if os.path.exists("/usr/bin/toughrad"):
         os_run("/usr/bin/toughrad start%s"%vvv)
         time.sleep(2.0)
-        os_run("/usr/bin/toughrad status%s"%vvv)
+        if vvv:
+            os_run("/usr/bin/toughrad status%s"%vvv)
         os_run("/usr/bin/toughrad status")
     else:
         print_exr("The setup is not complete",0)
         
 def ihelp():
     print incblue("""
-    Usage: python %s [OPTIONS]
+    Usage: python %s [OPTIONS] [-v]
     
     depend      install system depend package
     radius      install ToughRADIUS latest
@@ -349,6 +361,14 @@ def ihelp():
     
     All other options are passed to the super-install program.
     """%sys.argv[0])
+    
+def exec_all():
+    install_depend()  
+    install_radius()
+    install_mysql()
+    setup_config()
+    init_db()
+    start()
         
 execs = {
     'depend' : install_depend,
@@ -359,16 +379,15 @@ execs = {
     'start'  : start,
     'help'   : ihelp
 }
- 
+
 if __name__ == '__main__':
     if len(sys.argv) >= 2:
         param = sys.argv[1]
-        execs[param]()
+        if param not in execs.keys():
+            exec_all()
+        else:
+            execs[param]()
     else:
-        install_depend()  
-        install_radius()
-        install_mysql()
-        setup_config()
-        init_db()
-        start()
+        exec_all()
+
         
