@@ -214,7 +214,9 @@ def install_mysql():
     if os.path.exists("/usr/bin/mysqld_safe"):
         mysql_ok = True
     else:
-        r = os_run("yum install -y mariadb mariadb-server mysql-libs mysql-server mysql-devel%s"%vvv)
+        r = os_run("yum install -y mariadb mariadb-server mariadb-devel%s"%vvv)
+        if r > 0:
+            r = os_run("yum install -y mysql-libs.i686 mysql-libs.x86_64 mysql-server mysql-devel%s"%vvv)
         mysql_ok = (r == 0)
             
     if mysql_ok:
@@ -312,14 +314,14 @@ def init_db():
         print_exr("radius not install,please install radius",1)
         return
     # mysql bug     
-    sos = [ o for o in os.listdir("/usr/lib64/mysql") if 'libmysqlclient.so' in o]
+    sos = [ o for o in os.listdir("/usr/lib64/mysql") if '.so' in o]
     for so in sos:
         if not os.path.exists("/usr/lib64/%s"%so):
             os_run("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so),warn=True)
         if not os.path.exists("/usr/lib/%s"%so):
             os_run("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so),warn=True)
     if not sos:
-        sos = [ o for o in os.listdir("/usr/lib/mysql") if 'libmysqlclient.so' in o]
+        sos = [ o for o in os.listdir("/usr/lib/mysql") if '.so' in o]
         for so in sos:
             if not os.path.exists("/usr/lib/%s"%so):
                 os_run("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so),warn=True)
