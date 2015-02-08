@@ -4,148 +4,234 @@ import os
 import shutil
 import json
 import time
+from string import Template
 
+os.system("echo 'start install' > /var/toughradius/install.log")
+vvv = ' >> /var/toughradius/install.log'
+
+########################################################################    
+#  tools function
+########################################################################
+# error
+def inred(s):
+    return "%s[31;2m%s%s[0m"%(chr(27),s, chr(27))
+    
+# success    
+def ingreen(s):
+    return "%s[32;2m%s%s[0m"%(chr(27),s, chr(27))
+    
+# operate
+def inblue(s):
+    return "%s[34;2m%s%s[0m"%(chr(27),s, chr(27))
+
+# info
+def incblue(s):
+    return "%s[36;2m%s%s[0m"%(chr(27),s, chr(27))
+
+# warning Magenta
+def inwarn(s):
+    return "%s[35;2m%s%s[0m"%(chr(27),s, chr(27))
+
+def print_exr(msg,t=0,warn=False):
+    _font = t ==0 and ingreen or inred 
+    if warn:_font = inwarn
+    print
+    print _font("-"*120)
+    _str = ''
+    if t == 0:
+        _str = " >> \(^o^)/ Oh yeah! " + msg
+    elif t > 0:
+        _str = " >> ::>_<:: Failure! " + msg 
+    os.system("echo '%s' %s "%(_str.replace(vvv,''),vvv))
+    print _font(_str) 
+    print _font("-"*120)
+
+_order = 0    
+def print_flow(msg):
+    global _order
+    _order += 1
+    _str = "\r\n %s. >>  %s, ... \r\n"%(_order,msg)
+    os.system("echo '%s' %s "%(_str.replace(vvv,''),vvv))
+    print inblue(_str)
+    
+def os_run(cmd,warn=False):
+    result = os.system(cmd)
+    print_exr(cmd,result,warn)
+    return result
+    
+def sys_input(ask):
+    result = raw_input(incblue(ask))
+    print_flow('%s %s'%(ask,result))
+    return result
+    
+
+########################################################################    
+#  define const
+########################################################################
 appdir='/opt/toughradius'
 rundir='/var/toughradius'
+log_dir =  "%s/log"%rundir
+mysql_rundir = "%s/mysql"%rundir
+my_cnf_path = "%s/my.cnf"%mysql_rundir
+mycnf_tpl = Template('''[client]
+#password=your_password
+port=3306
+socket=${rundir}/mysql/mysql.sock
+
+[mysqld]
+datadir=${rundir}/mysql
+socket=${rundir}/mysql/mysql.sock
+default-storage-engine=InnoDB
+symbolic-links=0
+
+wait_timeout=31536000
+interactive_timeout=31536000
+
+log-bin=mysql-bin
+
+# explicit_defaults_for_timestamp
+
+# Recommended in standard MySQL setup
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+
+[mysqld_safe]
+log-error=${rundir}/log/mysqld.log
+pid-file=${rundir}/mysql/mysqld.pid
+''')
 
 if not os.path.exists(rundir):
     os.mkdir(rundir)
-    os.mkdir("%s/log"%rundir)
-    
-########################################################################    
-#  print function
-########################################################################
-def _print(msg,t=0):
-    print
-    print "-"*80
-    if t == 0:
-        print "| (^_^) " + msg.ljust(70,' ') + " |"
-    elif t == 1:
-        print "| Y(^_^)Y " + msg.ljust(68,' ') + " |"
-    elif t == 2:
-        print "| ::>_<::orz " + msg.ljust(65,' ') + " |"        
-    print "-"*80 
-    print
-    
+    os.mkdir(log_dir)
+
+print
+print incblue("Installation logs are written to /var/toughradius/install.log")
+print
+print incblue("-"*30 + "Installation Information" + "-"*30)
+print incblue(" >> appdir: %s\r\n"%appdir)
+print incblue(" >> rundir: %s\r\n"%rundir)
+print incblue(" >> log_dir: %s\r\n"%log_dir)
+print incblue(" >> mysql_rundir: %s\r\n"%mysql_rundir)
+print incblue(" >> my_cnf_path: %s\r\n"%my_cnf_path)
+print incblue("-"*85)
+print
+
 ########################################################################    
 #  install system depend function
 ########################################################################
 def install_depend():
-    _print('start install system depend')
-    r = os.system("yum update -y")
-    r = os.system("yum install -y wget git gcc python-devel " \
-                  "python-setuptools tcpdump crontabs MySQL-python")
-    if r == 0: _print("install depend success",1)
-    r = os.system("easy_install pip && easy_install supervisor && easy_install argparse")
-    _print("install pip and supervisor success",1)
-    return r == 0
-
+    print_flow('start install system depend')
+    os_run("yum update -y%s"%vvv)
+    os_run("yum install -y wget git gcc python-devel python-setuptools tcpdump crontabs MySQL-python%s"%vvv)
+    os_run("easy_install pip%s"%vvv)
+    os_run("easy_install supervisor%s"%vvv)
+    os_run("easy_install argparse%s"%vvv)
 
 ########################################################################    
-#  fetch release and setup package function
+#  fetch ToughRADIUS and setup package function
 ########################################################################
 def install_radius():
     if os.path.exists(appdir):
-        isdel = raw_input("%s already exists and is not empty, delete it? [y/n][n]:"%appdir) or 'n'
+        isdel = sys_input("%s already exists and is not empty, delete it? [y/n][n]:"%appdir) or 'n'
         if isdel == 'y':
             shutil.rmtree(appdir)
         else:
-            return _print("do nothing")
+            return print_exr("do nothing",0)
         
-    _print("start install ToughRADIUS")
+    print_flow("start install ToughRADIUS from git repository ")
     mirrors = {
-        'github':"https://github.com/talkincode/ToughRADIUS.git",
-        'oschina':"https://git.oschina.net/jamiesun/ToughRADIUS.git",
-        'coding':"https://coding.net/jamiesun/ToughRADIUS.git",
-        'csdn':"https://code.csdn.net/talkincode.org/toughradius.git"
+        '1':"https://github.com/talkincode/ToughRADIUS.git",
+        '2':"https://git.oschina.net/jamiesun/ToughRADIUS.git",
+        '3':"https://coding.net/jamiesun/ToughRADIUS.git",
+        '4':"https://code.csdn.net/talkincode.org/toughradius.git"
     }
     fetch_ok = False
-    mirror = raw_input("type ToughRADIUS release mirror [ %s ][github]:"%(",".join(mirrors.keys()))) or 'github'
-    r = os.system("git clone %s %s"%(mirrors[mirror],appdir))
-    if r > 0:
-        _print("fetch release faild",2)
-        return False
-    
-    r = os.system("pip install -r %s/requirements.txt"%appdir)
-    if r > 0:
-        _print("install depend python package faild",2)
-        return False
-    
-    os.system("ln -s %s/toughrad /usr/bin/toughrad"%appdir)
-    os.system("chmod +x /usr/bin/toughrad")   
-    shutil.copy("%s/install/supervisord.conf"%appdir,"%s/supervisord.conf"%rundir) 
-    return True
-    
+    mirror_idx = sys_input("select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:") or '1'
+    r = os_run("git clone %s %s"%(mirrors[mirror_idx],appdir))
+    if r == 0:
+        r = os_run("pip install -r %s/requirements.txt%s"%(appdir,vvv))
+        if r > 0:return False
+        
+        if os.path.exists("/usr/bin/toughrad"):
+            os_run("rm -f /usr/bin/toughrad") 
+        if os.path.exists("/etc/init.d/toughrad"):
+            os_run("rm -f /etc/init.d/toughrad")
+        os_run("ln -s %s/toughrad /usr/bin/toughrad"%appdir)
+        os_run("ln -s %s/toughrad /etc/init.d/toughrad"%appdir)
+        os_run("chmod +x /usr/bin/toughrad") 
+        os_run("chmod +x /etc/init.d/toughrad") 
+        os_run("chkconfig --add toughrad",warn=True)
+        os_run("chkconfig toughrad on",warn=True)
+        
+        if os.path.exists("%s/supervisord.conf"%rundir):
+            os_run("rm -f %s/supervisord.conf"%rundir)
+        shutil.copy("%s/install/supervisord.conf"%appdir,"%s/supervisord.conf"%rundir) 
+        
+        # for centos 7
+        try:
+            if os.path.exists("/usr/lib/systemd/system"):
+                if os.path.exists("/usr/lib/systemd/system/toughrad.service"):
+                    os_run("rm -f /usr/lib/systemd/system/toughrad.service")
+                shutil.copy("%s/install/toughrad.service"%appdir,"/usr/lib/systemd/system/toughrad.service")
+                os_run("chmod 754 /usr/lib/systemd/system/toughrad.service")
+        except:
+            print_exr("not centos7",0)
+
 ########################################################################    
 #  install mysql and init  function
+#  mysql mysql-server mysql-devel 
 ########################################################################  
 
 def install_mysql():
-    
-    if (raw_input("install mysql, continue [y/n][n]") or 'n') == 'n' :
+    print_flow("start install mysql database server")
+    if (sys_input("install mysql, continue [y/n][n]") or 'n') == 'n' :
         return
     
     if os.path.exists("/usr/bin/mysqld_safe"):
-        _print("mysql already installed,try shutdown...")
-        os.system("mysqladmin --defaults-file=%s/mysql/my.cnf -uroot shutdown"%rundir)
+        print_flow("mysql already installed,try shutdown...")
+        os_run("mysqladmin --defaults-file=%s -uroot shutdown %s"%(my_cnf_path,vvv))
         
-    _print("install mysql")
-    if os.path.exists("%s/mysql"%rundir):
-        isdel = raw_input("%s/mysql already exists and is not empty, delete it? [y/n][n]:"%rundir) or 'n'
+    print_flow("install mysql")
+    if os.path.exists(mysql_rundir):
+        isdel = sys_input("%s/mysql already exists and is not empty, delete it? [y/n] [n]:"%rundir) or 'n'
         if isdel == 'y':
-            shutil.rmtree("%s/mysql"%rundir)
+            shutil.rmtree(mysql_rundir)
         else:
-            return _print("do nothing")
+            return print_exr("do nothing",0)
             
-    os.mkdir("%s/mysql"%rundir)
-    shutil.copy("%s/install/my.cnf"%appdir,"%s/mysql/my.cnf"%rundir)
+    os.mkdir(mysql_rundir)
+    print_flow("init mysql config")
+    with open(my_cnf_path,'wb') as fs:
+        mycnf_str = mycnf_tpl.safe_substitute(rundir=rundir)
+        fs.write(mycnf_str)
+        print_exr("write %s"%my_cnf_path,0)
+        
     mysql_ok = False
     if os.path.exists("/usr/bin/mysqld_safe"):
         mysql_ok = True
     else:
-        osvers = ["centos6","centos7"]
-        osver = raw_input("type your os version [ %s ][centos7]:"%(",".join(osvers))) or 'centos7'
-        if osver == 'centos6':
-            r = os.system("yum install -y mysql-server mysql-devel")
-            if r > 0 :
-                mysql_ok = False
-                _print("install mysql failed",2)
-            else:
-                mysql_ok = True
-        elif osver == 'centos7':
-            os.system("rpm -ivh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm")
-            r = os.system("yum install -y mysql-community-server mysql-community-devel")
-            if r > 0 :
-                mysql_ok = False
-                _print("install mysql failed",2)
-            else:
-                mysql_ok = True
+        r = os_run("yum install -y mysql mysql-server mysql-devel%s"%vvv)
+        mysql_ok = (r == 0)
             
     if mysql_ok:
-        _print("starting init mysql database;")
-        os.system("chown -R mysql:mysql %s/mysql"%rundir)
-        os.system("mysql_install_db --defaults-file=%s/mysql/my.cnf --user=mysql --datadir=%s/mysql"%(rundir,rundir))
-        os.system("mysqld_safe --defaults-file=%s/mysql/my.cnf --user=mysql &"%rundir)
-        for i in (5,4,3,2,1):
+        print_flow("starting init mysql database")
+        os_run("chown -R mysql:mysql %s"%mysql_rundir)
+        os_run("mysql_install_db --defaults-file=%s --user=mysql --datadir=%s %s"%(my_cnf_path,mysql_rundir,vvv))
+        os_run("mysqld_safe --defaults-file=%s --user=mysql &"%my_cnf_path)
+        for i in (3,2,1):
             print i
             time.sleep(1.0)
-        os.system("crontab %s/install/backupdb.cron"%appdir)
-        print
-        admin = raw_input("set mysql manage username, not root [admin]:") or 'admin'
-        print
-        pwd = raw_input("set mysql manage passwd, [radius]:") or 'radius'
-        r = os.system("echo \"GRANT ALL ON *.* TO %s@'%%' IDENTIFIED BY '%s' WITH GRANT OPTION;"\
-                  "FLUSH PRIVILEGES\" | mysql --defaults-file=%s/mysql/my.cnf"%(admin,pwd,rundir)
+        os_run("echo '30 1 * * * /usr/bin/toughrad backupdb > /dev/null' > /tmp/backup.cron")
+        os_run("crontab /tmp/backup.cron")
+        print_flow("set mysql manage user")
+        admin = sys_input("set mysql manage username, not root [admin]:") or 'admin'
+        pwd = sys_input("set mysql manage passwd, [radius]:") or 'radius'
+        r = os_run("echo \"GRANT ALL ON *.* TO %s@'%%' IDENTIFIED BY '%s' WITH GRANT OPTION;"\
+                  "FLUSH PRIVILEGES\" | mysql --defaults-file=%s"%(admin,pwd,my_cnf_path)
         )
-        _print("show database")
-        r = os.system("echo \"show databases;\" | mysql --defaults-file=%s/mysql/my.cnf"%rundir)
-        if r == 0:
-            _print("mysql init done",1)
-        else:
-            _print("error",2)
+        print_flow("show database")
+        os_run("echo \"show databases;\" | mysql --defaults-file=%s"%my_cnf_path)
     
     return mysql_ok
-
 
 ########################################################################    
 #  setup config json file  function
@@ -158,7 +244,7 @@ def setup_config():
         r = list('1234567890abcdefghijklmnopqrstuvwxyz')
         return ''.join([rg.choice(r) for _ in range(128)])
         
-    _print("please set config...")
+    print_flow("set config...")
     cjson = dict(
         database = {},
         backup = {},
@@ -166,36 +252,36 @@ def setup_config():
         admin = {},
         customer = {}
     )
-    _print("set database option")
-    cjson['database']['dbtype'] = raw_input("database type [mysql]:") or 'mysql' 
-    cjson['database']['host'] = raw_input("database host [127.0.0.1]:") or '127.0.0.1' 
-    cjson['database']['port'] = int(raw_input("database port [3306]:") or 3306)
-    cjson['database']['db'] = raw_input("database dbname [toughradius]:") or 'toughradius' 
-    cjson['database']['user'] = raw_input("database user [root]:") or 'root' 
-    cjson['database']['passwd'] = raw_input("database passwd []:") or '' 
-    cjson['database']['maxusage'] = int(raw_input("db pool maxusage [30]:") or 30)
-    cjson['database']['charset'] = raw_input("database charset [utf8]:") or 'utf8' 
+    print_flow("set database option")
+    cjson['database']['dbtype'] = sys_input("database type [mysql]:") or 'mysql' 
+    cjson['database']['host'] = sys_input("database host [127.0.0.1]:") or '127.0.0.1' 
+    cjson['database']['port'] = int(sys_input("database port [3306]:") or 3306)
+    cjson['database']['db'] = sys_input("database dbname [toughradius]:") or 'toughradius' 
+    cjson['database']['user'] = sys_input("database user [root]:") or 'root' 
+    cjson['database']['passwd'] = sys_input("database passwd []:") or '' 
+    cjson['database']['maxusage'] = int(sys_input("db pool maxusage [30]:") or 30)
+    cjson['database']['charset'] = sys_input("database charset [utf8]:") or 'utf8' 
     
-    _print("set backup option")
-    cjson['backup']['ftphost'] = raw_input("backup ftphost [127.0.0.1]:") or '127.0.0.1' 
-    cjson['backup']['ftpport'] = int(raw_input("backup ftpport [21]:") or 21)
-    cjson['backup']['ftpuser'] = raw_input("backup ftpuser [ftpuser]:") or 'ftpuser' 
-    cjson['backup']['ftppwd'] = raw_input("backup ftppwd [ftppwd]:") or 'ftppwd' 
+    print_flow("set mysql backup ftpserver option")
+    cjson['backup']['ftphost'] = sys_input("backup ftphost [127.0.0.1]:") or '127.0.0.1' 
+    cjson['backup']['ftpport'] = int(sys_input("backup ftpport [21]:") or 21)
+    cjson['backup']['ftpuser'] = sys_input("backup ftpuser [ftpuser]:") or 'ftpuser' 
+    cjson['backup']['ftppwd'] = sys_input("backup ftppwd [ftppwd]:") or 'ftppwd' 
     
-    _print("set radiusd option")
-    cjson['radiusd']['authport'] = int(raw_input("radiusd authport [1812]:") or 1812)
-    cjson['radiusd']['acctport'] = int(raw_input("radiusd acctport [1813]:") or 1813)
-    cjson['radiusd']['adminport'] = int(raw_input("radiusd adminport [1815]:") or 1815)
-    cjson['radiusd']['dictfile'] = raw_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
+    print_flow("set radiusd option")
+    cjson['radiusd']['authport'] = int(sys_input("radiusd authport [1812]:") or 1812)
+    cjson['radiusd']['acctport'] = int(sys_input("radiusd acctport [1813]:") or 1813)
+    cjson['radiusd']['adminport'] = int(sys_input("radiusd adminport [1815]:") or 1815)
+    cjson['radiusd']['dictfile'] = sys_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
         or '%s/radiusd/dict/dictionary'%appdir 
-    cjson['radiusd']['debug'] = int(raw_input("radiusd debug [1]") or 1)
-    cjson['radiusd']['cache_timeout'] = int(raw_input("radiusd cache_timeout (second) [600]:") or 600)
+    cjson['radiusd']['debug'] = int(sys_input("radiusd debug [1]") or 1)
+    cjson['radiusd']['cache_timeout'] = int(sys_input("radiusd cache_timeout (second) [600]:") or 600)
     
-    cjson['admin']['httpport'] = int(raw_input("admin httpport [1816]:") or 1816)
-    cjson['admin']['debug'] = int(raw_input("admin debug [1]:") or 1)
-    cjson['customer']['httpport'] = int(raw_input("customer httpport [1817]:") or 1817)
-    cjson['customer']['debug'] = int(raw_input("customer debug [1]:") or 1) 
-    cjson['secret'] = raw_input("secret string [.]:") or gen_secret() 
+    cjson['admin']['httpport'] = int(sys_input("admin httpport [1816]:") or 1816)
+    cjson['admin']['debug'] = int(sys_input("admin debug [1]:") or 1)
+    cjson['customer']['httpport'] = int(sys_input("customer httpport [1817]:") or 1817)
+    cjson['customer']['debug'] = int(sys_input("customer debug [1]:") or 1) 
+    cjson['secret'] = sys_input("secret string [.]:") or gen_secret() 
     
     jsonstr = json.dumps(
         cjson, ensure_ascii=False,
@@ -205,8 +291,8 @@ def setup_config():
     
     with open("%s/radiusd.json"%rundir,'wb') as fs:
         fs.write(jsonstr)
-    
-    _print("config done",1)
+        print_exr("config done",0)
+        
     print jsonstr
        
 ########################################################################    
@@ -214,39 +300,43 @@ def setup_config():
 ########################################################################   
 def init_db():
     if not os.path.exists(appdir):
-        _print("radius not install,please install radius",2)
+        print_exr("radius not install,please install radius",1)
         return
     # mysql bug     
     sos = [ o for o in os.listdir("/usr/lib64/mysql") if 'libmysqlclient.so' in o]
     for so in sos:
-        os.system("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so))
-        os.system("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so))
+        os_run("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so),warn=True)
+        os_run("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so),warn=True)
     if not sos:
         sos = [ o for o in os.listdir("/usr/lib/mysql") if 'libmysqlclient.so' in o]
         for so in sos:
-            os.system("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so))
+            os_run("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so),warn=True)
             
     sys.path.insert(0,"%s/console"%appdir)
     try:
         import models
         models.install2(config=json.loads(open("%s/radiusd.json"%rundir,'rb').read())['database'])
-        _print("init db success",2)
+        print_exr("init db success",0)
     except:
-        _print("init db faild",2)
+        print_exr("init db faild",1)
         import traceback
         traceback.print_exc()
         
+########################################################################    
+#  start service
+########################################################################   
 def start():
-    _print("start server...")
+    print_flow("start server...")
     if os.path.exists("/usr/bin/toughrad"):
-        os.system("/usr/bin/toughrad start")
-        _print("server status")
-        os.system("/usr/bin/toughrad status")
+        os_run("/usr/bin/toughrad start%s"%vvv)
+        time.sleep(2.0)
+        os_run("/usr/bin/toughrad status%s"%vvv)
+        os_run("/usr/bin/toughrad status")
     else:
-        _print("The setup is not complete",2)
+        print_exr("The setup is not complete",0)
         
 def ihelp():
-    print """
+    print incblue("""
     Usage: python %s [OPTIONS]
     
     depend      install system depend package
@@ -258,7 +348,7 @@ def ihelp():
     help        display help
     
     All other options are passed to the super-install program.
-    """%sys.argv[0]
+    """%sys.argv[0])
         
 execs = {
     'depend' : install_depend,
