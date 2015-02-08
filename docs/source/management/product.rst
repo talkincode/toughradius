@@ -83,7 +83,7 @@ ToughRADIUS系统的console/lib目录下有个radius_attrs.py文件，你可以�
 
 完成后，在资费扩展属性配置表单界面，你可以获得一个快捷的参考提示，如图：
 
-.. image:: ../_static/images/radius_attrs.png
+.. image:: ../_static/images/radius_attrs.jpg
 
 
 一个典型的资费配置，如图：

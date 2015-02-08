@@ -220,6 +220,7 @@ status                 INTEGER           False             用户状态
 install_address        VARCHAR(128)      False             装机地址              
 balance                INTEGER           False             用户余额-分          
 time_length            INTEGER           False             用户时长-秒          
+flow_length            INTEGER           False             用户流量-kb           
 expire_date            VARCHAR(10)       False             过期时间- ####-##-##  
 user_concur_number     INTEGER           False             用户并发数           
 bind_mac               SMALLINT          False             是否绑定mac           
@@ -478,6 +479,67 @@ operator_name          VARCHAR(32)       False             操作员名称
 operate_ip             VARCHAR(128)      True              操作员ip               
 operate_time           VARCHAR(19)       False             操作时间              
 operate_desc           VARCHAR(1024)     True              操作描述              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+.. _slc_recharge_card_label:
+
+slc_recharge_card
+------------------------------------ 
+
+
+    充值卡表
+    批次号：batch_no，以年月开始紧跟顺序号，如201502001 
+    通用余额卡：无资费类型
+    资费套餐卡：买断流量卡，时长卡，包月，买断卡无面值
+    状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收 
+    
+
+.. start_table slc_recharge_card;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             充值卡id               
+batch_no               INTEGER           False             批次号                 
+card_number            VARCHAR(16)       False             充值卡号              
+card_passwd            VARCHAR(128)      False             充值卡密码           
+card_type              INTEGER           False             充值卡类型           
+card_status            INTEGER           False             状态                    
+product_id             INTEGER           True              资费id                  
+fee_value              INTEGER           False             充值卡面值-元       
+months                 INTEGER           True              授权月数              
+time_length            INTEGER           False             买断时长-分钟       
+flow_length            INTEGER           False             买断流量-kb           
+expire_date            VARCHAR(10)       False             过期时间- ####-##-##  
+create_time            VARCHAR(19)       False             创建时间              
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+.. _slc_recharge_log_label:
+
+slc_recharge_log
+------------------------------------ 
+
+
+    充值记录
+    
+
+.. start_table slc_recharge_log;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             日志id                  
+card_number            VARCHAR(16)       False             充值卡号              
+member_id              INTEGER           False             用户id                  
+account_number         VARCHAR(32)       False             上网账号              
+recharge_status        INTEGER           False             充值结果              
+recharge_time          VARCHAR(19)       False             充值时间              
 =====================  ================  ================  ====================================
 
 .. end_table

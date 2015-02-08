@@ -46,7 +46,7 @@ ToughRADIUS主要采用MySQL(5.0以上版本)存储数据，在部署ToughRADIUS
 
     #按提示进行操作
 
-    Z:\github\ToughRADIUS>toughrad.exe createdb.py  -c config.json  || pause
+    Z:\github\ToughRADIUS>toughrad.exe ..\createdb.py -c ../config.json || pause
 
     starting create and init database...
 
@@ -80,19 +80,19 @@ customer是自助服务系统配置，注意服务端口的配置，如果与系
         {
             "dbtype":"mysql",
             "maxusage": 10, 
-            "passwd": "radius",
+            "passwd": "",
             "charset": "utf8", 
             "db": "toughradius",
-            "host": "192.168.59.103",
+            "host": "127.0.0.1",
             "port": 3306,
-            "user": "admin"
-        },
+            "user": "root"
+        },   
         "radiusd":
         {
             "authport": 1812,
             "acctport": 1813,
             "adminport": 1815,
-            "allows":"192.168.88.100,192.168.88.100",
+            "allows":"127.0.0.1",
             "dictfile": "./radiusd/dict/dictionary",
             "debug":1,
             "cache_timeout":600
@@ -106,7 +106,8 @@ customer是自助服务系统配置，注意服务端口的配置，如果与系
         {
             "httpport":1817,
             "debug":1
-        }    
+        },
+        "secret":"1qazxsw23edcvfr45tgbnhy67ujmki89"        
     }
 
 
@@ -119,7 +120,7 @@ radiusd.bat内容
 
 .. code-block:: bash
 
-    toughrad.exe radiusd/server.py -c config.json || pause   
+    toughrad.exe ../radiusd/server.py -c ../config.json  -dict ../radiusd/dict/dictionary || pause   
 
 
 运行web管理服务
@@ -131,7 +132,7 @@ console.bat脚本内容
 
 .. code-block:: bash
 
-    cd console && ..\toughrad.exe admin.py -c ../config.json || pause
+    cd ..\console && ..\windows\toughrad.exe admin.py -c ../config.json || pause
 
 
 当启动web控制台服务后，就可以通过浏览器访问管理界面了，在浏览器地址栏输入：http://127.0.0.1:1816,默认的管理员密码为admin/root
@@ -150,6 +151,6 @@ customer.bat脚本内容
 
 .. code-block:: bash
 
-    cd console && ..\toughrad.exe customer.py -c ../config.json || pause
+    cd ..\console && ..\windows\toughrad.exe customer.py -c ../config.json || pause
 
 

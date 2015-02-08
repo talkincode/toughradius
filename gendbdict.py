@@ -51,7 +51,9 @@ mdls = [
     models.SlcRadOnline,
     models.SlcRadOnlineStat,
     models.SlcRadAcceptLog,
-    models.SlcRadOperateLog
+    models.SlcRadOperateLog,
+    models.SlcRechargerCard,
+    models.SlcRechargeLog
 ]
 
 
