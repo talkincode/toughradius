@@ -217,12 +217,12 @@ def init_db():
         _print("radius not install,please install radius",2)
         return
     # mysql bug     
-    sos = [ o for o in os.listdir("/usr/lib64/mysqll") if 'libmysqlclient.so' in o]
+    sos = [ o for o in os.listdir("/usr/lib64/mysql") if 'libmysqlclient.so' in o]
     for so in sos:
         os.system("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so))
         os.system("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so))
     if not sos:
-        sos = [ o for o in os.listdir("/usr/lib/mysqll") if 'libmysqlclient.so' in o]
+        sos = [ o for o in os.listdir("/usr/lib/mysql") if 'libmysqlclient.so' in o]
         for so in sos:
             os.system("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so))
             
