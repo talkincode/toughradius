@@ -214,7 +214,7 @@ def install_mysql():
     if os.path.exists("/usr/bin/mysqld_safe"):
         mysql_ok = True
     else:
-        r = os_run("yum install -y mariadb mariadb-server mysql-server mysql-devel%s"%vvv)
+        r = os_run("yum install -y mariadb mariadb-server mysql-libs mysql-server mysql-devel%s"%vvv)
         mysql_ok = (r == 0)
             
     if mysql_ok:
