@@ -123,6 +123,16 @@ def install_mysql():
             
     if mysql_ok:
         _print("starting init mysql database;")
+        
+        sos = [ o for o in os.listdir("/usr/lib64/mysqll") if 'libmysqlclient.so' in o]
+        for so in sos:
+            os.system("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so))
+            os.system("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so))
+        if not sos:
+            sos = [ o for o in os.listdir("/usr/lib/mysqll") if 'libmysqlclient.so' in o]
+            for so in sos:
+                os.system("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so))
+
         os.system("chown -R mysql:mysql %s/mysql"%rundir)
         os.system("mysql_install_db --defaults-file=%s/mysql/my.cnf --user=mysql --datadir=%s/mysql"%(rundir,rundir))
         os.system("mysqld_safe --defaults-file=%s/mysql/my.cnf --user=mysql &"%rundir)
