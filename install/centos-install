@@ -108,7 +108,8 @@ if not os.path.exists(rundir):
     os.mkdir(log_dir)
 
 print
-print incblue("Installation logs are written to /var/toughradius/install.log")
+if vvv:
+    print incblue("Installation logs are written to /var/toughradius/install.log")
 print
 print incblue("-"*30 + "Installation Information" + "-"*30)
 print incblue(" >> appdir: %s\r\n"%appdir)
