@@ -1,0 +1,241 @@
+#!/usr/bin/env python
+#coding:utf-8
+
+from bottle import Bottle
+from bottle import request
+from bottle import response
+from bottle import redirect
+from bottle import static_file
+from bottle import mako_template as render
+from tablib import Dataset
+from websock import websock
+import bottle
+import models
+import forms
+import datetime
+from libs import utils
+from base import *
+from sqlalchemy import func
+
+__prefix__ = "/product"
+
+app = Bottle()
+app.config['__prefix__'] = __prefix__
+###############################################################################
+# product manage       
+###############################################################################
+
+@app.route('/',apply=auth_opr,method=['GET','POST'])
+def product(db):   
+    _query = db.query(models.SlcRadProduct)
+    return render(
+        "sys_product_list", 
+        product_policys = forms.product_policy,
+        node_list=db.query(models.SlcNode),
+        page_data = get_page_data(_query)
+    )
+        
+@app.get('/detail',apply=auth_opr)
+def product_detail(db):
+    product_id = request.params.get("product_id")   
+    product = db.query(models.SlcRadProduct).get(product_id)
+    if not product:
+        return render("error",msg=u"资费不存在")
+    product_attrs = db.query(models.SlcRadProductAttr).filter_by(product_id=product_id)
+    return render("sys_product_detail",
+        product_policys = forms.product_policy,
+        product=product,product_attrs=product_attrs) 
+
+permit.add_route(__prefix__,u"资费信息管理",u"系统管理",is_menu=True,order=4)
+permit.add_route("%s/detail"%__prefix__,u"资费详情查看",u"系统管理",order=4.01)
+
+@app.get('/add',apply=auth_opr)
+def product_add(db):  
+    return render("sys_product_form",form=forms.product_add_form())
+    
+@app.post('/add',apply=auth_opr)
+def product_add_post(db): 
+    form=forms.product_add_form()
+    if not form.validates(source=request.forms):
+        return render("sys_product_form", form=form)      
+    product = models.SlcRadProduct()
+    product.product_name = form.d.product_name
+    product.product_policy = form.d.product_policy
+    product.product_status = form.d.product_status
+    product.fee_months = int(form.d.get("fee_months",0))
+    product.fee_times = int(form.d.get("fee_times",0))
+    product.fee_flows = int(form.d.get("fee_flows",0))
+    product.bind_mac = form.d.bind_mac
+    product.bind_vlan = form.d.bind_vlan
+    product.concur_number = form.d.concur_number
+    product.fee_period = form.d.fee_period
+    product.fee_price = utils.yuan2fen(form.d.fee_price)
+    product.input_max_limit = form.d.input_max_limit
+    product.output_max_limit = form.d.output_max_limit
+    _datetime = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
+    product.create_time = _datetime
+    product.update_time = _datetime
+    db.add(product)
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增资费信息:%s'%(get_cookie("username"),serial_json(product))
+    db.add(ops_log)
+
+    db.commit()
+    redirect(__prefix__)
+    
+permit.add_route("%s/add"%__prefix__,u"新增资费",u"系统管理",order=4.02)
+
+@app.get('/update',apply=auth_opr)
+def product_update(db):  
+    product_id = request.params.get("product_id")
+    form=forms.product_update_form()
+    product = db.query(models.SlcRadProduct).get(product_id)
+    form.fill(product)
+    form.product_policy_name.set_value(forms.product_policy[product.product_policy])
+    form.fee_price.set_value(utils.fen2yuan(product.fee_price))
+    return render("sys_product_form",form=form)
+
+@app.post('/update',apply=auth_opr)
+def product_update(db): 
+    form=forms.product_update_form()
+    if not form.validates(source=request.forms):
+        return render("sys_product_form", form=form)
+    product = db.query(models.SlcRadProduct).get(form.d.id)
+    product.product_name = form.d.product_name
+    product.product_status = form.d.product_status
+    product.fee_months = int(form.d.get("fee_months",0))
+    product.fee_times = int(form.d.get("fee_times",0))
+    product.fee_flows = int(form.d.get("fee_flows",0))
+    product.bind_mac = form.d.bind_mac
+    product.bind_vlan = form.d.bind_vlan
+    product.concur_number = form.d.concur_number
+    product.fee_period = form.d.fee_period
+    product.fee_price = utils.yuan2fen(form.d.fee_price)
+    product.input_max_limit = form.d.input_max_limit
+    product.output_max_limit = form.d.output_max_limit
+    product.update_time = utils.get_currtime()
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改资费信息:%s'%(get_cookie("username"),serial_json(product))
+    db.add(ops_log)
+
+    db.commit()
+    websock.update_cache("product",product_id=product.id)
+    redirect(__prefix__)    
+    
+permit.add_route("%s/update"%__prefix__,u"修改资费",u"系统管理",order=4.03)    
+
+@app.get('/delete',apply=auth_opr)
+def product_delete(db):     
+    product_id = request.params.get("product_id")
+    if db.query(models.SlcRadAccount).filter_by(product_id=product_id).count()>0:
+        return render("error",msg=u"该套餐有用户使用，不允许删除") 
+    if db.query(models.SlcRechargerCard).filter_by(product_id=product_id).count()>0:
+        return render("error",msg=u"该套餐有发行充值卡，不允许删除")   
+        
+    db.query(models.SlcRadProduct).filter_by(id=product_id).delete()
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除资费信息:%s'%(get_cookie("username"),product_id)
+    db.add(ops_log)
+
+    db.commit() 
+    websock.update_cache("product",product_id=product_id)
+    redirect(__prefix__)   
+    
+permit.add_route("%s/delete"%__prefix__,u"删除资费",u"系统管理",order=4.04)
+
+@app.get('/attr/add',apply=auth_opr)
+def product_attr_add(db): 
+    product_id = request.params.get("product_id")
+    if db.query(models.SlcRadProduct).filter_by(id=product_id).count()<=0:
+        return render("error",msg=u"资费不存在") 
+    form = forms.product_attr_add_form()
+    form.product_id.set_value(product_id)
+    return render("sys_pattr_form",form=form,pattrs=radius_attrs)
+
+@app.post('/attr/add',apply=auth_opr)
+def product_attr_add(db): 
+    form = forms.product_attr_add_form()
+    if not form.validates(source=request.forms):
+        return render("sys_pattr_form", form=form,pattrs=radius_attrs)   
+    attr = models.SlcRadProductAttr()
+    attr.product_id = form.d.product_id
+    attr.attr_name = form.d.attr_name
+    attr.attr_value = form.d.attr_value
+    attr.attr_desc = form.d.attr_desc
+    db.add(attr)
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)新增资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    db.add(ops_log)
+
+    db.commit()
+
+    redirect("%s/detail?product_id=%s"%(__prefix__,form.d.product_id)) 
+    
+permit.add_route("%s/attr/add"%__prefix__,u"新增资费扩展属性",u"系统管理",order=4.05)
+
+@app.get('/attr/update',apply=auth_opr)
+def product_attr_update(db): 
+    attr_id = request.params.get("attr_id")
+    attr = db.query(models.SlcRadProductAttr).get(attr_id)
+    form = forms.product_attr_update_form()
+    form.fill(attr)
+    return render("sys_pattr_form",form=form,pattrs=radius_attrs)
+
+@app.post('/attr/update',apply=auth_opr)
+def product_attr_update(db): 
+    form = forms.product_attr_update_form()
+    if not form.validates(source=request.forms):
+        return render("pattr_form", form=form,pattrs=radius_attrs)   
+    attr = db.query(models.SlcRadProductAttr).get(form.d.id)
+    attr.attr_name = form.d.attr_name
+    attr.attr_value = form.d.attr_value
+    attr.attr_desc = form.d.attr_desc
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    db.add(ops_log)
+
+    db.commit()
+    websock.update_cache("product",product_id=form.d.product_id)
+    redirect("%s/detail?product_id=%s"%(__prefix__,form.d.product_id))
+    
+permit.add_route("%s/attr/update",u"修改资费扩展属性",u"系统管理",order=4.06)
+
+@app.get('/attr/delete',apply=auth_opr)
+def product_attr_update(db): 
+    attr_id = request.params.get("attr_id")
+    attr = db.query(models.SlcRadProductAttr).get(attr_id)
+    product_id = attr.product_id
+    db.query(models.SlcRadProductAttr).filter_by(id=attr_id).delete()
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    db.add(ops_log)
+
+    db.commit()
+    websock.update_cache("product",product_id=product_id)
+    redirect("%s/detail?product_id=%s"%(__prefix__,product_id))
+    
+permit.add_route("%s/attr/delete"%__prefix__,u"删除资费扩展属性",u"系统管理",order=4.07)
