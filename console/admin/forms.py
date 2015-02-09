@@ -201,7 +201,7 @@ def user_open_form(nodes=[],products=[]):
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
-        pyforms.Textbox("account_number", description=u"用户上网账号",  required="required", **input_style),
+        pyforms.Textbox("account_number", description=u"用户用户账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
@@ -219,7 +219,7 @@ def account_open_form(products=[]):
         pyforms.Hidden("node_id", description=u"区域", **input_style),
         pyforms.Hidden("member_id",  description=u"编号"),
         pyforms.Textbox("realname", description=u"用户姓名", readonly="readonly",**input_style),
-        pyforms.Textbox("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Textbox("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("address", description=u"用户地址",**input_style),
@@ -255,7 +255,7 @@ user_import_vform = dataform.Form(
 account_next_form = pyforms.Form(
         pyforms.Hidden("product_id", description=u"上网资费"),
         pyforms.Hidden("old_expire", description=u""),
-        pyforms.Hidden("account_number", description=u"上网账号"),
+        pyforms.Hidden("account_number", description=u"用户账号"),
         pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
@@ -265,7 +265,7 @@ account_next_form = pyforms.Form(
 )
 
 account_charge_form = pyforms.Form(
-        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Hidden("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户充值",
@@ -274,7 +274,7 @@ account_charge_form = pyforms.Form(
 
 
 account_cancel_form = pyforms.Form(
-        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Hidden("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"退费金额",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户销户",
@@ -298,7 +298,7 @@ def member_update_form(nodes=[]):
 
 def account_update_form():
     return pyforms.Form(
-        pyforms.Textbox("account_number", description=u"上网账号",  readonly="readonly", **input_style),
+        pyforms.Textbox("account_number", description=u"用户账号",  readonly="readonly", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("install_address", description=u"用户安装地址",**input_style),
         pyforms.Textbox("new_password", description=u"上网密码(留空不修改)", **input_style),
