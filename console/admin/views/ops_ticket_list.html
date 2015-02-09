@@ -73,6 +73,7 @@
                 <th>BAS地址</th>
                 <th>开始时间</th>
                 <th>结束时间</th>
+                <th>上传/下载</th>
                 <th>MAC地址</th>
                 <th>端口信息</th>
             </tr>
@@ -86,6 +87,7 @@
                 <td>${ticket.nas_addr}</td>
                 <td>${ticket.acct_start_time}</td>
                 <td>${ticket.acct_stop_time}</td>
+                <td>${kb2mb(ticket.acct_input_octets)}M/${kb2mb(ticket.acct_output_octets)}M</td>
                 <td>${ticket.mac_addr}</td>
                 <td>${ticket.nas_port_id}</td>
 

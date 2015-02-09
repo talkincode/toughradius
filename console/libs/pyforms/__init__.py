@@ -124,7 +124,7 @@ class Form(object):
         for i in self.inputs:
             out.append('    <div class="form-group">\n')
             if not i.is_hidden():
-                out.append('        <label class="col-sm-4 control-label"  for="%s">%s</label>\n' % (i.id, net.websafe(i.description)))
+                out.append('        <label class="col-sm-4 control-label" id="lab_%s" for="%s">%s</label>\n' % (i.id,i.id, net.websafe(i.description)))
             out.append(i.pre)
             out.append('        <div class="col-sm-6">\n')
             out.append("        %s\n"%i.render())

@@ -17,8 +17,10 @@ from libs import utils
 from base import *
 from sqlalchemy import func
 
-app = Bottle()
+__prefix__ = "/ops"
 
+app = Bottle()
+app.config['__prefix__'] = __prefix__
 
 ###############################################################################
 # user manage        
@@ -68,15 +70,15 @@ def user_query(db):
             f.write(data.xls)
         return static_file(name, root='./static/xls',download=True)
         
-permit.add_route("/ops/user",u"上网账号查询",u"运维管理",is_menu=True,order=0)
-permit.add_route("/ops/user/export",u"账号查询导出",u"运维管理",order=0.01)
+permit.add_route("%s/user"%__prefix__,u"上网账号查询",u"运维管理",is_menu=True,order=0)
+permit.add_route("%s/user/export"%__prefix__,u"账号查询导出",u"运维管理",order=0.01)
 
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
     return render("ops_user_trace", bas_list=db.query(models.SlcRadBas))
 
-permit.add_route("/ops/user/trace",u"用户消息跟踪",u"运维管理",is_menu=True,order=1)
+permit.add_route("%s/user/trace"%__prefix__,u"用户消息跟踪",u"运维管理",is_menu=True,order=1)
                    
 @app.get('/user/detail',apply=auth_opr)
 def user_detail(db):   
@@ -110,7 +112,7 @@ def user_detail(db):
     user_attrs = db.query(models.SlcRadAccountAttr).filter_by(account_number=account_number)
     return render("ops_user_detail",user=user,user_attrs=user_attrs)
     
-permit.add_route("/ops/user/detail",u"账号详情",u"运维管理",order=1.01)
+permit.add_route("%s/user/detail"%__prefix__,u"账号详情",u"运维管理",order=1.01)
 
 @app.post('/user/release',apply=auth_opr)
 def user_release(db):   
@@ -131,7 +133,7 @@ def user_release(db):
     websock.update_cache("account",account_number=account_number)
     return dict(code=0,msg=u"解绑成功")
     
-permit.add_route("/ops/user/release",u"用户释放绑定",u"运维管理",order=1.02)    
+permit.add_route("%s/user/release"%__prefix__,u"用户释放绑定",u"运维管理",order=1.02)    
 
 ###############################################################################
 # online manage      
@@ -177,7 +179,7 @@ def online_query(db):
                    node_list=db.query(models.SlcNode), 
                    bas_list=db.query(models.SlcRadBas),**request.params)
 
-permit.add_route("/ops/online",u"在线用户查询",u"运维管理",is_menu=True,order=2)
+permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"运维管理",is_menu=True,order=2)
 
 ###############################################################################
 # ticket manage        
@@ -198,6 +200,8 @@ def ticket_query(db):
         models.SlcRadTicket.acct_session_id,
         models.SlcRadTicket.acct_start_time,
         models.SlcRadTicket.acct_stop_time,
+        models.SlcRadTicket.acct_input_octets,
+        models.SlcRadTicket.acct_output_octets,
         models.SlcRadTicket.framed_ipaddr,
         models.SlcRadTicket.mac_addr,
         models.SlcRadTicket.nas_port_id,
@@ -224,7 +228,7 @@ def ticket_query(db):
     return render("ops_ticket_list", page_data = get_page_data(_query),
                node_list=db.query(models.SlcNode),**request.params)
 
-permit.add_route("/ops/ticket",u"上网日志查询",u"运维管理",is_menu=True,order=3)
+permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"运维管理",is_menu=True,order=3)
 
 ###############################################################################
 # ops log manage        
@@ -253,7 +257,7 @@ def opslog_query(db):
         page_data = get_page_data(_query),**request.params)
 
 
-permit.add_route("/ops/opslog",u"操作日志查询",u"运维管理",is_menu=True,order=4)
+permit.add_route("%s/opslog"%__prefix__,u"操作日志查询",u"运维管理",is_menu=True,order=4)
 
 ###############################################################################
 # ops log manage        
@@ -284,4 +288,15 @@ def online_stat_data(db):
         dataset.append(int(hour_total))
     return dict(code=0,hours=hours,dataset=dataset)
         
-permit.add_route("/ops/online/stat",u"在线用户统计",u"运维管理",is_menu=True,order=5)
+permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"运维管理",is_menu=True,order=5)
+
+# @app.route('/traffic/statdata',apply=auth_opr,method=['GET','POST'])
+# def traffic_stat_data(db):
+#     hours = [str(i) for i in range(24)]
+#     packet_in_set = []
+#     packet_out_set = []
+#     traffic_in_set = []
+#     traffic_out_set = []
+#     for hour in hours:
+#         _query = db.query(func.sum(models.SlcRadOnlineStat.total))
+        

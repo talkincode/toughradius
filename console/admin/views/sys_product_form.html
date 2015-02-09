@@ -2,16 +2,45 @@
 <%def name="head()">
 <script>
 
+prices = {
+    "0":"每月单价(元)",
+    "1":"每小时单价(元)",
+    "2":"买断包月总价(元)",
+    "3":"买断时长总价(元)",
+    "4":"每kb流量单价(元)",
+    "5":"买断流量总价(元)"
+}
 //根据资费调整界面
 function updateUI(){
     var policy = $("#product_policy").val();
-    if(policy=="0"||policy=="1"){
-        $("#fee_months").val(0);
+    $("#lab_fee_price").html(prices[policy]);
+    if(policy=="0"||policy=="1"||policy=="4"){
+        // $("#fee_months").val(0);
+        // $("#fee_times").val(0);
+        // $("#fee_flows").val(0);
         $("#fee_months").parent().parent().hide();
-    }
-    else{
+        $("#fee_times").parent().parent().hide();
+        $("#fee_flows").parent().parent().hide();
+    }else if(policy=="2"){
+        // $("#fee_times").val(0);
+        // $("#fee_flows").val(0);
         $("#fee_months").parent().parent().show();
+        $("#fee_times").parent().parent().hide();
+        $("#fee_flows").parent().parent().hide();
+    }else if(policy=="3"){
+        // $("#fee_months").val(0);
+        // $("#fee_flows").val(0);
+        $("#fee_months").parent().parent().hide();
+        $("#fee_times").parent().parent().show();
+        $("#fee_flows").parent().parent().hide();
+    }else if(policy=="5"){
+        // $("#fee_months").val(0);
+        // $("#fee_flows").val(0);
+        $("#fee_months").parent().parent().hide();
+        $("#fee_times").parent().parent().hide();
+        $("#fee_flows").parent().parent().show();
     }
+
 }
 //页面初始化
 $(document).ready(function (){

@@ -101,15 +101,17 @@ opr_update_form = pyforms.Form(
         action="/opr/update"
     )        
 
-product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}
+product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月",3:u"买断时长",4:u"预付费流量",5:u"买断流量"}
 product_status_dict = {0:u'正常',1:u"停用"}
 
 def product_add_form():
     return pyforms.Form(
         pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"资费名称",  required="required",**input_style),
         pyforms.Dropdown("product_policy", args=product_policy.items(), description=u"计费策略", required="required",**input_style),
-        pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),
-        pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(包月价/小时价/买断价)(元)", required="required", **input_style),
+        pyforms.Textbox("fee_months", rules.is_number, description=u"买断授权月数",value=0, **input_style),
+        pyforms.Textbox("fee_times", rules.is_number, description=u"买断时长(小时)",value=0, **input_style),
+        pyforms.Textbox("fee_flows", rules.is_number, description=u"买断流量(MB)",value=0, **input_style),
+        pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(元)", required="required", **input_style),
         pyforms.Textbox("fee_period",rules.is_period,description=u"开放认证时段",**input_style),
         pyforms.Textbox("concur_number", rules.is_numberOboveZore,description=u"并发数控制(0表示不限制)",value="0", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC ",**input_style),
@@ -129,8 +131,10 @@ def product_update_form():
         pyforms.Textbox("product_name", rules.len_of(4, 32), description=u"资费名称", required="required",**input_style),
         pyforms.Textbox("product_policy_name", description=u"资费策略",readonly="readonly", required="required",**input_style),
         pyforms.Dropdown("product_status",args=product_status_dict.items(), description=u"资费状态", required="required", **input_style),
-        pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),
-        pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(包月价/小时价/买断价)(元)", required="required", **input_style),
+        pyforms.Textbox("fee_months", rules.is_number, description=u"买断授权月数",value=0, **input_style),
+        pyforms.Textbox("fee_times", rules.is_number, description=u"买断时长(小时)",value=0, **input_style),
+        pyforms.Textbox("fee_flows", rules.is_number, description=u"买断流量(MB)",value=0, **input_style),
+        pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(元)", required="required", **input_style),
         pyforms.Textbox("fee_period", rules.is_period,description=u"开放认证时段",**input_style),
         pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),

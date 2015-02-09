@@ -264,8 +264,10 @@ class SlcRadProduct(DeclarativeBase):
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False,doc=u"是否绑定vlan")
     concur_number = Column('concur_number', INTEGER(), nullable=False,doc=u"并发数")
     fee_period = Column('fee_period', VARCHAR(length=11),doc=u"开放认证时段")
-    fee_months = Column('fee_months', INTEGER(),doc=u"买断月数")
-    fee_price = Column('fee_price', INTEGER(), nullable=False,doc=u"资费价格")
+    fee_months = Column('fee_months', INTEGER(),doc=u"买断授权月数")
+    fee_times = Column('fee_times', INTEGER(),doc=u"买断时长(分钟)")
+    fee_flows = Column('fee_flows', INTEGER(),doc=u"买断流量(kb)")
+    fee_price = Column('fee_price', INTEGER(),nullable=False,doc=u"资费价格")
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False,doc=u"上行速率")
     output_max_limit = Column('output_max_limit', INTEGER(), nullable=False,doc=u"下行速率")
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
@@ -296,6 +298,8 @@ class SlcRadBilling(DeclarativeBase):
     acct_session_id = Column(u'acct_session_id', VARCHAR(length=253), nullable=False,doc=u"会话id")
     acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False,doc=u"计费开始时间")
     acct_session_time = Column(u'acct_session_time', INTEGER(), nullable=False,doc=u"会话时长")
+    input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
+    output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
     acct_length = Column(u'acct_length', INTEGER(), nullable=False,doc=u"扣费时长")
     acct_fee = Column(u'acct_fee', INTEGER(), nullable=False,doc=u"应扣费用")
     actual_fee = Column('actual_fee', INTEGER(), nullable=False,doc=u"实扣费用")
@@ -304,7 +308,6 @@ class SlcRadBilling(DeclarativeBase):
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"计费时间")
 
 
-    
 class SlcRadTicket(DeclarativeBase):
     """上网日志表 <radiusd default table>"""
     __tablename__ = 'slc_rad_ticket'
@@ -359,6 +362,8 @@ class SlcRadOnline(DeclarativeBase):
     mac_addr = Column(u'mac_addr', VARCHAR(length=32), nullable=False,doc=u"mac地址")
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=255), nullable=False,doc=u"接入端口物理信息")
     billing_times = Column(u'billing_times', INTEGER(), nullable=False,doc=u"已记账时间")
+    input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
+    output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
     start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"会话开始来源")
     
 class SlcRadOnlineStat(DeclarativeBase):
@@ -372,6 +377,21 @@ class SlcRadOnlineStat(DeclarativeBase):
     day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False,doc=u"统计日期")
     time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False,doc=u"统计小时")
     total = Column(u'total', INTEGER(),doc=u"在线数")
+
+    #relation definitions
+    
+class SlcRadTrafficStat(DeclarativeBase):
+    """用户在线统计表 <radiusd default table>"""
+    __tablename__ = 'slc_rad_traffic_stat'
+
+    __table_args__ = {}
+
+    #column definitions
+    node_id = Column('node_id', INTEGER(),primary_key=True, nullable=False,autoincrement=False,doc=u"区域id")
+    day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False,doc=u"统计日期")
+    time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False,doc=u"统计小时")
+    input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
+    output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
 
     #relation definitions
 

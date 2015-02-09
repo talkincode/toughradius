@@ -17,19 +17,11 @@ from libs import utils
 from base import *
 from sqlalchemy import func
 
+__prefix__ = "/card"
+
 app = Bottle()
+app.config['__prefix__'] = __prefix__
 
-@app.error(403)
-def error404(error):
-    return render("error",msg=u"非授权的访问")
-    
-@app.error(404)
-def error404(error):
-    return render("error",msg=u"页面不存在 - 请联系管理员!")
-
-@app.error(500)
-def error500(error):
-    return render("error",msg=u"出错了： %s"%error.exception)
 
 @app.get('/calc',apply=auth_opr)
 def card_calc(db):
@@ -105,8 +97,8 @@ def card_list(db):
         return static_file(name, root='./static/xls',download=True)
         
     
-permit.add_route("/card/list",u"充值卡管理",u"系统管理",is_menu=True,order=6)
-permit.add_route("/card/export",u"充值卡导出",u"系统管理",order=6.01)
+permit.add_route("%s/list"%__prefix__,u"充值卡管理",u"系统管理",is_menu=True,order=7)
+permit.add_route("%s/export"%__prefix__,u"充值卡导出",u"系统管理",order=7.01)
 
 @app.get('/create',apply=auth_opr)
 def card_create(db):
@@ -178,12 +170,12 @@ def card_create(db):
     ops_log.operate_desc = u'操作员(%s)生成批次[%s]的[%s]'%(get_cookie("username"),batch_no,forms.card_types[card_type])
     db.add(ops_log)
     db.commit()
-    path = "/card/list?card_type=%s&query_begin_time=%s"%(card_type,utils.get_currdate())
+    path = "%s/list?card_type=%s&query_begin_time=%s"%(__prefix__,card_type,utils.get_currdate())
     if form.d.product_id:
         path = "%s&product_id=%s"%(path,form.d.product_id)
     redirect(path)
 
-permit.add_route("/card/create",u"充值卡生成",u"系统管理",order=6.02)
+permit.add_route("%s/create"%__prefix__,u"充值卡生成",u"系统管理",order=7.02)
 
 @app.get('/active',apply=auth_opr)
 def card_active(db):
@@ -204,7 +196,7 @@ def card_active(db):
     return dict(code=0,msg=u"激活成功，充值卡已可使用")
     
 
-permit.add_route("/card/active",u"充值卡激活",u"系统管理",order=6.03)
+permit.add_route("%s/active"%__prefix__,u"充值卡激活",u"系统管理",order=7.03)
 
 
 @app.get('/recycle',apply=auth_opr)
@@ -226,4 +218,4 @@ def card_recycle(db):
     return dict(code=0,msg=u"回收成功，充值卡已不可使用")
     
 
-permit.add_route("/card/recycle",u"充值卡回收",u"系统管理",order=6.04)
+permit.add_route("%s/recycle"%__prefix__,u"充值卡回收",u"系统管理",order=7.04)
