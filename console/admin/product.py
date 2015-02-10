@@ -21,6 +21,7 @@ __prefix__ = "/product"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
+
 ###############################################################################
 # product manage       
 ###############################################################################
@@ -63,8 +64,8 @@ def product_add_post(db):
     product.product_policy = form.d.product_policy
     product.product_status = form.d.product_status
     product.fee_months = int(form.d.get("fee_months",0))
-    product.fee_times = int(form.d.get("fee_times",0))
-    product.fee_flows = int(form.d.get("fee_flows",0))
+    product.fee_times = utils.hour2sec(form.d.get("fee_times",0))
+    product.fee_flows = utils.mb2kb(form.d.get("fee_flows",0))
     product.bind_mac = form.d.bind_mac
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number

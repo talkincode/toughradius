@@ -133,6 +133,18 @@ class Store():
             cur.execute("select balance from slc_rad_account where account_number = %s ",(username,))
             b = cur.fetchone()  
             return b and b['balance'] or 0    
+    
+    def get_user_time_length(self,username):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select time_length from slc_rad_account where account_number = %s ",(username,))
+            b = cur.fetchone()  
+            return b and b['time_length'] or 0
+    
+    def get_user_flow_length(self,username):
+        with Cursor(self.dbpool) as cur:
+            cur.execute("select flow_length from slc_rad_account where account_number = %s ",(username,))
+            b = cur.fetchone()  
+            return b and b['flow_length'] or 0
 
     def update_user_cache(self,username):
         cache.invalidate(self.get_user,'get_user', str(username))
@@ -145,6 +157,22 @@ class Store():
             cur = conn.cursor()
             sql = "update slc_rad_account set balance = %s where account_number = %s"
             cur.execute(sql,(balance,username))
+            conn.commit()
+            self.update_user_cache(username)
+            
+    def update_user_time_length(self,username,time_length):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor()
+            sql = "update slc_rad_account set time_length = %s where account_number = %s"
+            cur.execute(sql,(time_length,username))
+            conn.commit()
+            self.update_user_cache(username)
+    
+    def update_user_flow_length(self,username,flow_length):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor()
+            sql = "update slc_rad_account set flow_length = %s where account_number = %s"
+            cur.execute(sql,(flow_length,username))
             conn.commit()
             self.update_user_cache(username)
 
@@ -261,22 +289,64 @@ class Store():
             sql = 'insert into slc_rad_online (%s) values(%s)'%(keys,vals)
             cur.execute(sql)
             conn.commit()
-
-    def update_billing(self,billing,update_online):
+            
+    def update_online(self,online):
         with Connect(self.dbpool) as conn:
             cur = conn.cursor()
-            balan_sql = "update slc_rad_account set balance = %s where account_number = %s"
-            cur.execute(balan_sql,(billing.balance,billing.account_number))
+            online_sql = """update slc_rad_online set 
+                billing_times = %s,
+                input_total = %s,
+                output_total = %s
+                where nas_addr = %s and acct_session_id = %s
+            """
+            cur.execute(online_sql,(
+                online['billing_times'],
+                online['input_total'],
+                online['output_total'],
+                online['nas_addr'],
+                online['acct_session_id']
+            ))
+            conn.commit()
 
-            if update_online:
-                online_sql = "update slc_rad_online set billing_times=%s where nas_addr = %s and acct_session_id = %s"
-                cur.execute(online_sql,(billing.acct_session_time,billing.nas_addr,billing.acct_session_id))
-
+    def update_billing(self,billing,time_length=0,flow_length=0):
+        with Connect(self.dbpool) as conn:
+            cur = conn.cursor()
+            # update account
+            balan_sql = """update slc_rad_account set 
+                balance = %s,
+                time_length=%s,
+                flow_length=%s
+                where account_number = %s
+            """
+            cur.execute(balan_sql,(
+                billing.balance,
+                time_length,
+                flow_length,
+                billing.account_number
+            ))
+            
+            # update online
+            online_sql = """update slc_rad_online set 
+                billing_times = %s,
+                input_total = %s,
+                output_total = %s
+                where nas_addr = %s and acct_session_id = %s
+            """
+            cur.execute(online_sql,(
+                billing.acct_session_time,
+                billing.input_total,
+                billing.output_total,
+                billing.nas_addr,
+                billing.acct_session_id
+            ))
+            
+            # update billing
             keys = ','.join(billing.keys())
             vals = ",".join(["'%s'"% c for c in billing.values()])
             billing_sql = 'insert into slc_rad_billing (%s) values(%s)'%(keys,vals)
             cur.execute(billing_sql)
             conn.commit()
+            
         self.update_user_cache(billing.account_number) 
     
     def del_online(self,nas_addr,acct_session_id):

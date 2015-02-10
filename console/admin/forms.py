@@ -200,7 +200,7 @@ def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
-        pyforms.Textbox("member_name", rules.len_of(6,64), description=u"用户登陆名", required="required",**input_style),
+        pyforms.Textbox("member_name", rules.len_of(4,64), description=u"用户登陆名", required="required",**input_style),
         pyforms.Textbox("member_password", rules.len_of(6,128), description=u"用户登陆密码", required="required",**input_style),
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
@@ -253,6 +253,9 @@ user_import_vform = dataform.Form(
         dataform.Item("password",rules.not_null,description=u"用户密码"),
         dataform.Item("expire_date", rules.is_date,description=u"过期日期"),
         dataform.Item("balance",rules.is_rmb,description=u"用户余额"),
+        dataform.Item("balance",rules.is_rmb,description=u"用户余额"),
+        dataform.Item("time_length",rules.is_rmb,description=u"用户时长"),
+        dataform.Item("flow_length",rules.is_rmb,description=u"用户流量"),
         title="import"
 )
 
@@ -314,7 +317,7 @@ def account_update_form():
         action="/bus/account/update"
     )
 
-card_types = {0:u'资费套餐卡',1:u'普通余额卡'}
+card_types = {0:u'资费卡',1:u'余额卡'}
 card_states = {0:u'未激活',1:u'已激活',2:u"已使用",3:u"已回收"}
 
 def recharge_card_form(products=[]):
@@ -327,8 +330,8 @@ def recharge_card_form(products=[]):
         pyforms.Textbox("pwd_len", rules.is_number,description=u"密码长度(最大为16)",value=8,**input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"面值/销售价(元)",value=0,**input_style),
         pyforms.Textbox("months", rules.is_number,description=u"授权时间(月)",readonly="readonly",value=0,**input_style),
-        # pyforms.Textbox("time_length",rules.is_number, description=u"总时长(小时)",readonly="readonly",value=0,**input_style),
-        # pyforms.Textbox("flow_length",rules.is_number, description=u"总流量(MB)",readonly="readonly",value=0,**input_style),
+        pyforms.Textbox("times",description=u"总时长(小时)",readonly="readonly",value=0,**input_style),
+        pyforms.Textbox("flows",description=u"总流量(MB)",readonly="readonly",value=0,**input_style),
         pyforms.Textbox("expire_date",rules.is_date, description=u"过期时间",**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"充值卡生成",

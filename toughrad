@@ -171,8 +171,7 @@ tracecustomer()
 
 unitest()
 {
-    cd ${appdir}/radiusd/tests && nosetests-2.7 
-    cd ${appdir}/console/tests && nosetests-2.7
+    cd ${appdir}/tests && nosetests-2.7 
 }
 
 case "$1" in

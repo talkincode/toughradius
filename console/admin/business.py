@@ -42,7 +42,7 @@ def product_get(db):
     )
 
 
-@app.get('/opencalc',apply=auth_opr)
+@app.post('/opencalc',apply=auth_opr)
 def opencalc(db):
     months = request.params.get('months',0)
     product_id = request.params.get("product_id")
@@ -304,8 +304,8 @@ def member_open(db):
     account.password = utils.encrypt(form.d.password)
     account.status = form.d.status
     account.balance = balance
-    account.time_length = utils.hour2sec(form.d.fee_times)
-    account.flow_length = utils.mb2kb(form.d.fee_flows)
+    account.time_length = int(product.fee_times)
+    account.flow_length = int(product.fee_flows)
     account.expire_date = expire_date
     account.user_concur_number = product.concur_number
     account.bind_mac = product.bind_mac
@@ -406,8 +406,8 @@ def account_open(db):
     account.password = utils.encrypt(form.d.password)
     account.status = form.d.status
     account.balance = balance
-    account.time_length = utils.hour2sec(form.d.fee_times)
-    account.flow_length = utils.mb2kb(form.d.fee_flows)
+    account.time_length = int(product.fee_times)
+    account.flow_length = int(product.fee_flows)
     account.expire_date = expire_date
     account.user_concur_number = product.concur_number
     account.bind_mac = product.bind_mac
@@ -542,11 +542,20 @@ def member_import(db):
             order_fee = 0
             actual_fee = 0
             balance = 0
+            time_length = 0
+            flow_length = 0
             expire_date = form.d.expire_date
             product = db.query(models.SlcRadProduct).get(product_id)
-            if product.product_policy == 1:
-                balance = int(form.d.balance)
-                expire_date = '3000-11-11'
+            # 买断时长
+            if product.product_policy == 3:
+                time_length = int(form.d.time_length)
+            # 买断流量
+            elif product.product_policy == 5:
+                flow_length = int(form.d.flow_length)
+            #预付费时长,预付费流量
+            elif product.product_policy in (1,4):
+                balance = utils.yuan2fen(form.d.balance)
+                expire_date = '3000-11-11'                
 
             order = models.SlcMemberOrder()
             order.order_id = utils.gen_order_id()
@@ -572,7 +581,8 @@ def member_import(db):
             account.password = utils.encrypt(form.d.password)
             account.status = 1
             account.balance = balance
-            account.time_length = 0
+            account.time_length = time_length
+            account.flow_length = flow_length
             account.expire_date = expire_date
             account.user_concur_number = product.concur_number
             account.bind_mac = product.bind_mac
@@ -673,6 +683,7 @@ def query_account(db,account_number):
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
+        models.SlcRadAccount.flow_length,
         models.SlcRadAccount.user_concur_number,
         models.SlcRadAccount.status,
         models.SlcRadAccount.mac_addr,

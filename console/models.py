@@ -181,8 +181,8 @@ class SlcRechargerCard(DeclarativeBase):
     product_id = Column('product_id', INTEGER(),nullable=True,doc=u"资费id")
     fee_value = Column('fee_value', INTEGER(), nullable=False,doc=u"充值卡面值-元")
     months = Column('months', INTEGER(),nullable=True,doc=u"授权月数")
-    time_length = Column('time_length', INTEGER(), nullable=False,doc=u"买断时长-分钟")
-    flow_length = Column('flow_length', INTEGER(), nullable=False,doc=u"买断流量-kb")
+    times = Column('times', INTEGER(),nullable=True,doc=u"授权时长(秒)")
+    flows = Column('flows', INTEGER(),nullable=True,doc=u"授权流量(kb)")
     expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
     
@@ -265,7 +265,7 @@ class SlcRadProduct(DeclarativeBase):
     concur_number = Column('concur_number', INTEGER(), nullable=False,doc=u"并发数")
     fee_period = Column('fee_period', VARCHAR(length=11),doc=u"开放认证时段")
     fee_months = Column('fee_months', INTEGER(),doc=u"买断授权月数")
-    fee_times = Column('fee_times', INTEGER(),doc=u"买断时长(分钟)")
+    fee_times = Column('fee_times', INTEGER(),doc=u"买断时长(秒)")
     fee_flows = Column('fee_flows', INTEGER(),doc=u"买断流量(kb)")
     fee_price = Column('fee_price', INTEGER(),nullable=False,doc=u"资费价格")
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False,doc=u"上行速率")
@@ -300,7 +300,8 @@ class SlcRadBilling(DeclarativeBase):
     acct_session_time = Column(u'acct_session_time', INTEGER(), nullable=False,doc=u"会话时长")
     input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
     output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
-    acct_length = Column(u'acct_length', INTEGER(), nullable=False,doc=u"扣费时长")
+    acct_times = Column(u'acct_times', INTEGER(), nullable=False,doc=u"扣费时长(秒)")
+    acct_flows = Column(u'acct_flows', INTEGER(), nullable=False,doc=u"扣费流量(kb)")
     acct_fee = Column(u'acct_fee', INTEGER(), nullable=False,doc=u"应扣费用")
     actual_fee = Column('actual_fee', INTEGER(), nullable=False,doc=u"实扣费用")
     balance = Column('balance', INTEGER(), nullable=False,doc=u"当前余额")
@@ -496,9 +497,7 @@ def init_db(db):
     param09.param_desc = u'到期提醒下发地址池'
     param09.param_value = u'expire'
     db.add(param09)
-    
-               
-
+      
     param1 = SlcParam()
     param1.param_name = u'max_session_timeout'
     param1.param_desc = u'Radius最大会话时长(秒)'
@@ -521,165 +520,9 @@ def init_db(db):
     opr.operator_status = 0
     db.add(opr)
 
-    bas = SlcRadBas()
-    bas.id = 1
-    bas.node_id = 1
-    bas.vendor_id = '0'
-    bas.ip_addr = '192.168.88.1'
-    bas.bas_name = 'test_bas'
-    bas.bas_secret = '123456'
-    bas.coa_port = 3799
-    bas.status = 1
-    bas.time_type = 0
-    db.add(bas)
-
-    product = SlcRadProduct()
-    product.id = 1
-    product.node_id = 1
-    product.product_name = u'10元包月套餐'
-    product.product_policy = 0
-    product.product_status = 0
-    product.bind_mac = 0
-    product.bind_vlan = 0
-    product.concur_number = 0
-    product.fee_num = 0
-    product.fee_period = ''
-    product.fee_price = 1000
-    product.input_max_limit = 2097152
-    product.output_max_limit = 2097152
-    product.create_time = '2014-12-10 23:23:21'
-    product.update_time = '2014-12-10 23:23:21'
-    db.add(product)
-
-    product2 = SlcRadProduct()
-    product2.id = 2
-    product2.node_id = 1
-    product2.product_name = u'2元每小时'
-    product2.product_policy = 1
-    product2.product_status = 0
-    product2.bind_mac = 0
-    product2.bind_vlan = 0
-    product2.concur_number = 0
-    product2.fee_num = 0
-    product2.fee_period = ''
-    product2.fee_price = 200
-    product2.input_max_limit = 2097152
-    product2.output_max_limit = 2097152
-    product2.create_time = '2014-12-10 23:23:21'
-    product2.update_time = '2014-12-10 23:23:21'
-    db.add(product2)
-
-
-    member = SlcMember()
-    member.member_id = 1000001
-    member.member_name = 'tester'
-    member.password = md5('888888').hexdigest()
-    member.node_id = 1
-    member.realname = 'tester'
-    member.idcard = '0'
-    member.sex = '1'
-    member.age = '33'
-    member.email = '6583805@qq.com'
-    member.mobile = '1366666666'
-    member.address = 'hunan changsha'
-    member.create_time = '2014-12-10 23:23:21'
-    member.update_time = '2014-12-10 23:23:21'
-    db.add(member)        
-    account = SlcRadAccount()
-    account.account_number = 'test01'
-    account.member_id = member.member_id
-    account.product_id = 1
-    account.domain_name = 'cmcc'
-    account.group_id = 1
-    account.install_address = 'hunan'
-    account.ip_address = ''
-    account.mac_addr = ''
-    account.password = utils.encrypt('888888')
-    account.status = 1
-    account.balance = 0
-    account.basic_fee = 0
-    account.time_length = 0
-    account.flow_length = 0
-    account.expire_date = '2015-12-30'
-    account.user_concur_number = 0
-    account.bind_mac = 0
-    account.bind_vlan = 0
-    account.vlan_id = 0
-    account.vlan_id2 = 0
-    account.create_time = '2014-12-10 23:23:21'
-    account.update_time = '2014-12-10 23:23:21'
-    db.add(account)
-
-    account2 = SlcRadAccount()
-    account2.account_number = 'test02'
-    account2.member_id = member.member_id
-    account2.product_id = 2
-    account2.domain_name = 'cmcc'
-    account2.group_id = 1
-    account2.install_address = 'hunan'
-    account2.ip_address = ''
-    account2.mac_addr = ''
-    account2.password = utils.encrypt('888888')
-    account2.status = 1
-    account2.balance = 1000
-    account2.basic_fee = 0
-    account2.time_length = 0
-    account2.flow_length = 0
-    account2.expire_date = '2015-12-30'
-    account2.user_concur_number = 0
-    account2.bind_mac = 0
-    account2.bind_vlan = 0
-    account2.vlan_id = 0
-    account2.vlan_id2 = 0
-    account2.create_time = '2014-12-10 23:23:21'
-    account2.update_time = '2014-12-10 23:23:21'
-    db.add(account2)    
-
     db.commit()
 
-def init_test(db):
-    import random
-    for i in range(1000):
-        member = SlcMember()
-        member.member_id = 100000 + i
-        member.member_name = 'tester%s'%i
-        member.password = utils.encrypt('888888')
-        member.node_id = 1
-        member.realname = 'test00%s'%i
-        member.idcard = '0'
-        member.sex = '1'
-        member.age = '33'
-        member.email = 'test@test.com'
-        member.mobile = '1366666666'
-        member.address = 'hunan changsha'
-        member.create_time = '2014-12-10 23:23:21'
-        member.update_time = '2014-12-10 23:23:21'
-        db.add(member)        
-        account = SlcRadAccount()
-        account.account_number = 'test00%s'%i
-        account.member_id = member.member_id
-        account.product_id = random.choice([1,2])
-        account.domain_name = 'cmcc'
-        account.group_id = 1
-        account.install_address = 'hunan'
-        account.ip_address = ''
-        account.mac_addr = ''
-        account.password = utils.encrypt('888888')
-        account.status = 1
-        account.balance = account.product_id == 2 and 10000 or 0
-        account.basic_fee = 0
-        account.time_length = 0
-        account.flow_length = 0
-        account.expire_date = '2015-12-30'
-        account.user_concur_number = 0
-        account.bind_mac = 0
-        account.bind_vlan = 0
-        account.vlan_id = 0
-        account.vlan_id2 = 0
-        account.create_time = '2014-12-10 23:23:21'
-        account.update_time = '2014-12-10 23:23:21'
-        db.add(account)
-    db.commit()    
+
 
 def build_db(config=None):
     if config['dbtype'] != 'mysql':
@@ -724,15 +567,6 @@ def install2(config=None):
     engine,_ = get_engine(config)
     db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
     init_db(db)
-    
-def install_test(config=None):
-    print 'starting init testdata...'
-    engine,_ = get_engine(config)
-    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
-    init_test(db)
-    with open('./testusers.txt','wb') as tf:
-        for i in range(1000):
-            tf.write('test00%s,888888\n'%(i,))
 
 def update(config=None):
     print 'starting update database...'

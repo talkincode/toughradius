@@ -6,19 +6,21 @@
 
 
 function productCalc(){
-    var months = $("#months").val() || 0;
-    var product_id = $("#product_id").val();
-    $.get("/bus/opencalc?months="+months+"&product_id="+product_id, {}, function (ev) {
+    param = {
+        'month': $("#months").val() || 0,
+        'product_id':$("#product_id").val()
+    }
+    $.post("/bus/opencalc", param, function (ev) {
         console.log(ev);
         if(ev.code==0){
             console.log(ev.data);
             $("#fee_value").val(ev.data.fee_value);
             $("#expire_date").val(ev.data.expire_date);
             if(ev.data.policy == 0){
-                $("#months").parent().parent().show();
+               $("#months").parent().parent().show();
             }else{
-                $("#months").val(0);
-                $("#months").parent().parent().hide();
+               $("#months").val(0);
+               $("#months").parent().parent().hide();
             }
         }
     }, "json");

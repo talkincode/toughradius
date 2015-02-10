@@ -24,6 +24,25 @@ from base import *
 
 app = Bottle()
 
+##############################################################################
+# test handle
+##############################################################################
+@app.get('/test/pid',apply=auth_opr)
+def product_id(db):
+    name = request.params.get("name")   
+    product = db.query(models.SlcRadProduct).filter(
+        models.SlcRadProduct.product_name == name
+    ).first()
+    return dict(pid=product.id)
+    
+@app.get('/test/mid',apply=auth_opr)
+def member_id(db):
+    name = request.params.get("name")   
+    member = db.query(models.SlcMember).filter(
+        models.SlcMember.member_name == name
+    ).first()
+    return dict(mid=member.member_id)
+
 ###############################################################################
 # Basic handle         
 ###############################################################################

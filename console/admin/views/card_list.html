@@ -111,14 +111,16 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>卡类型</th>
-                            <th>批次号</th>
-                            <th>充值卡号</th>
+                            <th>类型</th>
+                            <th>批次</th>
+                            <th>卡号</th>
                             <!-- <th>资费套餐</th> -->
                             <th>面值/售价</th>
-                            <th>授权时间(月)</th>
-                            <th>过期时间</th>
-                            <th>卡状态</th>
+                            <th>时间(月)</th>
+                            <th>时长(小时)</th>
+                            <th>流量(MB)</th>
+                            <th>过期</th>
+                            <th>状态</th>
                             <th>创建时间</th>
                             <th>操作</th>
                         </tr>
@@ -132,9 +134,11 @@
                                 <!-- <td>${get_product_name(card.product_id) or ''}</td> -->
                                 <td>${fen2yuan(card.fee_value)}</td>
                                 <td>${card.months or 'N/A'}</td>
+                                <td>${card.times and sec2hour(card.times) or 'N/A'}</td>
+                                <td>${card.flows and kb2mb(card.flows) or 'N/A'}</td>
                                 <td>${card.expire_date}</td>
                                 <td>${card_states[card.card_status]}</td>
-                                <td>${card.create_time}</td>
+                                <td>${card.create_time[:10]}</td>
                                 <td>
                                      % if permit.match('/card/active') and card.card_status == 0:
                                     <a href="javascript:active_card('${card.id}')" class="opt-btn btn-default">激活</a>
@@ -142,7 +146,6 @@
                                      % if permit.match('/card/recycle') and card.card_status == 0:
                                      <a href="javascript:recycle_card('${card.id}')" class="opt-btn btn-default">回收</a>
                                      % endif
-                                     
                                 </td>
                             </tr>
                         % endfor

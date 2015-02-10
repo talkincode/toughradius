@@ -2,11 +2,11 @@
 #coding:utf-8
 from console.libs import utils
 
-def TestMb2kb():
-    m = None
-    kb = utils.mb2kb(m)
-    assert kb == 0 
-    k = 0
-    mb = utils.kb2mb(k)
-    assert mb == '0.00'
+def test_mb2kb2mb():
+    assert utils.mb2kb(0) == 0 
+    assert utils.mb2kb('') == 0 
+    assert utils.mb2kb(None) == 0 
+    assert utils.kb2mb(0) == '0.00'
+    assert utils.kb2mb(None) == '0.00'
+    assert utils.kb2mb('') == '0.00'
     

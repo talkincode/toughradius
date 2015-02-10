@@ -8,13 +8,13 @@ function on_chtype(){
     if(parseInt(ctype) == 0){
         $("#product_id").parent().parent().show();
         $("#months").parent().parent().show();
-        //$("#time_length").parent().parent().show();
-        //$("#flow_length").parent().parent().show();
+        $("#times").parent().parent().show();
+        $("#flows").parent().parent().show();
     }else if(parseInt(ctype) == 1){
         $("#product_id").parent().parent().hide();
         $("#months").parent().parent().hide();
-        //$("#time_length").parent().parent().hide();
-        //$("#flow_length").parent().parent().hide();
+        $("#times").parent().parent().hide();
+        $("#flows").parent().parent().hide();
     }
 }
 
@@ -30,8 +30,8 @@ function productCalc(){
             console.log(ev.data);
             $("#fee_value").val(ev.data.fee_value);
             $("#months").val(ev.data.months);
-            //$("#time_length").val(ev.data.time_length);
-            //$("#flow_length").val(ev.data.flow_length);
+            $("#times").val(ev.data.times);
+            $("#flows").val(ev.data.flows);
         }else{
             alert(ev.data);
         }

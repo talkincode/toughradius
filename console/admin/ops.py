@@ -90,6 +90,7 @@ def user_detail(db):
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
+        models.SlcRadAccount.flow_length,
         models.SlcRadAccount.user_concur_number,
         models.SlcRadAccount.status,
         models.SlcRadAccount.mac_addr,
@@ -157,6 +158,8 @@ def online_query(db):
         models.SlcRadOnline.nas_port_id,
         models.SlcRadOnline.start_source,
         models.SlcRadOnline.billing_times,
+        models.SlcRadOnline.input_total,
+        models.SlcRadOnline.output_total,
         models.SlcMember.node_id,
         models.SlcMember.realname
     ).filter(

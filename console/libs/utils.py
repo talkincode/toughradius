@@ -12,7 +12,7 @@ import random
 
 random_generator = random.SystemRandom()
 
-decimal.getcontext().prec = 11
+decimal.getcontext().prec = 32
 decimal.getcontext().rounding = decimal.ROUND_UP
 
 _base_id = 0
@@ -59,21 +59,30 @@ def update_secret(secret):
     global aescipher
     aescipher = AESCipher(secret)
     
-
-def kb2mb(ibytes):
-    _kb = decimal.Decimal(ibytes or 0)
+def bb2mb(ik):
+    _kb = decimal.Decimal(ik or 0)
     _mb = _kb / decimal.Decimal(1024*1024)
+    return str(_mb.quantize(decimal.Decimal('1.00')))
+    
+def kb2mb(ik):
+    _kb = decimal.Decimal(ik or 0)
+    _mb = _kb / decimal.Decimal(1024)
     return str(_mb.quantize(decimal.Decimal('1.00')))
     
 def mb2kb(im=0):
     _mb = decimal.Decimal(im or 0)
-    _kb = _mb * decimal.Decimal(1024*1024)
+    _kb = _mb * decimal.Decimal(1024)
     return int(_kb.to_integral_value())
     
 def hour2sec(hor=0):
     _hor = decimal.Decimal(hor or 0)
     _sec = _hor * decimal.Decimal(3600)
     return int(_sec.to_integral_value())
+
+def sec2hour(sec=0):
+    _sec = decimal.Decimal(sec or 0)
+    _hor = _sec / decimal.Decimal(3600)
+    return str(_hor.quantize(decimal.Decimal('1.00')))
 
 def fen2yuan(fen=0):
     f = decimal.Decimal(fen or 0)

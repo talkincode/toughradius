@@ -18,7 +18,10 @@ import base64
 import datetime
 import hashlib
 import six
+import decimal
 
+decimal.getcontext().prec = 11
+decimal.getcontext().rounding = decimal.ROUND_UP
 
 md5_constructor = hashlib.md5
 
@@ -419,7 +422,19 @@ class AcctPacket2(AcctPacket):
 
     def get_nas_portid(self):
         try:return tools.DecodeString(self.get(87)[0])
-        except:return None        
+        except:return None    
+        
+    def get_input_total(self):
+        bl = decimal.Decimal(self.get_acct_input_octets())/decimal.Decimal(1024)
+        gl = decimal.Decimal(self.get_acct_input_gigawords())*decimal.Decimal(4*1024*1024)
+        tl = bl + gl
+        return int(tl.to_integral_value())   
+        
+    def get_output_total(self):
+        bl = decimal.Decimal(self.get_acct_output_octets())/decimal.Decimal(1024)
+        gl = decimal.Decimal(self.get_acct_output_gigawords())*decimal.Decimal(4*1024*1024)
+        tl = bl + gl
+        return int(tl.to_integral_value())   
 
     def get_ticket(self):
         if self.ticket:return self.ticket

@@ -27,15 +27,19 @@ app.config['__prefix__'] = __prefix__
 def card_calc(db):
     product_id = request.params.get('product_id')
     product = db.query(models.SlcRadProduct).get(product_id)
+    #预付费包月
     if product and product.product_policy == 0:
         return dict(code=0,data={
             'fee_value' : utils.fen2yuan(product.fee_price),
             'months' : 1
         })
-    elif product and product.product_policy == 2:
+    # 买断包月 买断时长 买断流量
+    elif product and product.product_policy in (2,3,5):
         return dict(code=0,data={
             'fee_value' : utils.fen2yuan(product.fee_price),
-            'months' : product.fee_months
+            'months' : product.fee_months,
+            'times' : utils.sec2hour(product.fee_times),
+            'flows' : utils.kb2mb(product.fee_flows)
         })
     else:
         return dict(code=1,data=u"不支持的资费")
@@ -66,7 +70,7 @@ def card_list(db):
     
     products = db.query(models.SlcRadProduct).filter(
         models.SlcRadProduct.product_status == 0,
-        models.SlcRadProduct.product_policy.in_([0,2])
+        models.SlcRadProduct.product_policy.in_([0,2,3,5])
     )
     if request.path == '/list':
         print "total:",_query.count()
@@ -82,14 +86,14 @@ def card_list(db):
         data = Dataset()
         data.append((
             u'批次号',u'充值卡号',u'充值卡密码',u'充值卡类型',u'状态',
-            u'资费id', u'面值/售价',u"授权月数",u"过期时间",u'创建时间'
+            u'资费id', u'面值/售价',u"授权月数",u"授权时长(小时)",u"授权流量(MB)",u"过期时间",u'创建时间'
          ))
         print "total:",_query.count()
         for i in _query:
             data.append((
                 i.batch_no, i.card_number, utils.decrypt(i.card_passwd),forms.card_types[i.card_type],
                 forms.card_states[i.card_status],get_product_name(db,i.product_id),utils.fen2yuan(i.fee_value),
-                i.months,i.expire_date,i.create_time
+                i.months,utils.sec2hour(i.times),utils.kb2mb(i.flows),i.expire_date,i.create_time
             ))
         name = u"RADIUS-CARD-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         with open(u'./static/xls/%s' % name, 'wb') as f:
@@ -104,7 +108,7 @@ permit.add_route("%s/export"%__prefix__,u"充值卡导出",u"系统管理",order
 def card_create(db):
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter(
         models.SlcRadProduct.product_status == 0,
-        models.SlcRadProduct.product_policy.in_([0,2])
+        models.SlcRadProduct.product_policy.in_([0,2,3,5])
     )]
     batch_no = datetime.datetime.now().strftime("%Y%m%d")
     form = forms.recharge_card_form(products)
@@ -120,7 +124,7 @@ def card_create(db):
         
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter(
         models.SlcRadProduct.product_status == 0,
-        models.SlcRadProduct.product_policy.in_([0,2])
+        models.SlcRadProduct.product_policy.in_([0,2,3,5])
     )]
     form = forms.recharge_card_form(products)
     if not form.validates(source=request.forms):
@@ -157,8 +161,8 @@ def card_create(db):
         card_obj.product_id = card_type==0 and form.d.product_id or -1
         card_obj.fee_value = fee_value
         card_obj.months = card_type==0 and int(form.d.months) or 0
-        card_obj.time_length = 0
-        card_obj.flow_length = 0
+        card_obj.times = card_type==0 and utils.hour2sec(form.d.times) or 0
+        card_obj.flows = card_type==0 and utils.mb2kb(form.d.flows) or 0
         card_obj.expire_date = form.d.expire_date
         card_obj.create_time = utils.get_currtime()
         db.add(card_obj)
