@@ -374,8 +374,8 @@ def account_open(db):
     if product.product_policy == 0:
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
         order_fee = int(order_fee.to_integral_value())
-    # 买断包月,买断流量
-    elif product.product_policy in (2,5):
+    # 买断包月,买断时长,买断流量
+    elif product.product_policy in (2,3,5):
         order_fee = int(product.fee_price)
     #预付费时长,预付费流量
     elif product.product_policy in (1,4):
@@ -994,14 +994,15 @@ def billing_query(db):
         data = Dataset()
         data.append((
             u'区域',u'上网账号',u'BAS地址',u'会话编号',u'记账开始时间',u'会话时长',
-            u'扣费时长',u'应扣费用',u'实扣费用',u'当前余额',u'是否扣费',u'扣费时间'
+            u'已扣时长',u"已扣流量",u'应扣费用',u'实扣费用',u'当前余额',u'是否扣费',u'扣费时间'
         ))
         _f2y = utils.fen2yuan
         _fms = utils.fmt_second
+        _k2m = utils.kb2mb
         for i,_,_node_name in _query:
             data.append((
                 _node_name, i.account_number, i.nas_addr,i.acct_session_id,
-                i.acct_start_time,_fms(i.acct_session_time),_fms(i.acct_length),
+                i.acct_start_time,_fms(i.acct_session_time),_fms(i.acct_times),_k2m(i.acct_flows),
                 _f2y(i.acct_fee),_f2y(i.actual_fee),_f2y(i.balance),
                 (i.is_deduct==0 and u'否' or u'是'),i.create_time
             ))

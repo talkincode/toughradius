@@ -11,7 +11,6 @@ from bottle import abort
 from bottle import mako_template as render
 from libs.paginator import Paginator
 from libs import utils
-from libs.radius_attrs import radius_attrs
 from hashlib import md5
 from websock import websock
 import bottle

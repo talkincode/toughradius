@@ -16,9 +16,23 @@ import json
 import time
 from beaker.cache import CacheManager
 
+########################################################################
+# const define
+########################################################################
+
+FEES = (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows) = (0,1,2,3,4,5)
+
+ACCOUNT_STATUS = (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire) = (0,1,2,3,4)
+
+CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
+
+CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
+
 page_size = 20
 
 __cache_timeout__ = 600
+
+
 
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
 
@@ -44,11 +58,11 @@ def update_secret(secret):
     scookie = SecureCookie(secret)
     
 class Logger:
-    def info(msg):
+    def info(self,msg):
         log.msg(msg,level=logging.INFO)
-    def debug(msg):
+    def debug(self,msg):
         log.msg(msg,level=logging.DEBUG)
-    def error(msg,err=None):
+    def error(self,msg,err=None):
         log.err(msg,err)
 
 logger = Logger()
@@ -160,7 +174,7 @@ def get_member_by_name(db,member_name):
 def get_account_by_number(db,account_number):
     return  db.query(models.SlcRadAccount).filter_by(account_number = account_number).first()
     
-@cache.cache('get_online_status',expire=60)   
+# @cache.cache('get_online_status',expire=30)   
 def get_online_status(db,account_number):
     return  db.query(models.SlcRadOnline.id).filter_by(account_number = account_number).count() > 0
     

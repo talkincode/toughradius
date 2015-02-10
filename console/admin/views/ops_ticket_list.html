@@ -87,7 +87,10 @@
                 <td>${ticket.nas_addr}</td>
                 <td>${ticket.acct_start_time}</td>
                 <td>${ticket.acct_stop_time}</td>
-                <td>${bb2mb(ticket.acct_input_octets)}M/${bb2mb(ticket.acct_output_octets)}M</td>
+                <td>
+                    ${bbgb2mb(ticket.acct_input_octets,ticket.acct_input_gigawords)}M/
+                    ${bbgb2mb(ticket.acct_output_octets,ticket.acct_output_gigawords)}M
+                </td>
                 <td>${ticket.mac_addr}</td>
                 <td>${ticket.nas_port_id}</td>
 

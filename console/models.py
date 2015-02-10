@@ -507,7 +507,7 @@ def init_db(db):
     param2 = SlcParam()
     param2.param_name = u'reject_delay'
     param2.param_desc = u'拒绝延迟时间(秒)(0-9)'
-    param2.param_value = u'7'
+    param2.param_value = u'0'
     db.add(param2)
   
 

@@ -64,6 +64,12 @@ def bb2mb(ik):
     _mb = _kb / decimal.Decimal(1024*1024)
     return str(_mb.quantize(decimal.Decimal('1.00')))
     
+def bbgb2mb(bb,gb):
+    bl = decimal.Decimal(bb)/decimal.Decimal(1024*1024)
+    gl = decimal.Decimal(gb)*decimal.Decimal(4*1024*1024*1024)
+    tl = bl + gl
+    return str(tl.quantize(decimal.Decimal('1.00')))
+    
 def kb2mb(ik):
     _kb = decimal.Decimal(ik or 0)
     _mb = _kb / decimal.Decimal(1024)

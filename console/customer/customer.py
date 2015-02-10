@@ -17,8 +17,12 @@ from urlparse import urljoin
 from base import (
     logger,set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
-    get_account_by_number
+    get_account_by_number,get_online_status
 )
+from base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
+from base import  (CardInActive,CardActive,CardUsed,CardRecover)
+from base import (ProductCard,BalanceCard)
+from base import (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire) 
 from libs import utils
 from sqlalchemy.sql import exists
 from websock import websock
@@ -85,9 +89,9 @@ def route_static(path):
     return static_file(path, root='./static')    
 
 ###############################################################################
-# login handle         
+# index handle         
 ###############################################################################
-@cache.cache('customer_index_get_data',expire=300)  
+@cache.cache('customer_index_get_data',expire=180)  
 def get_data(db,member_name):
     member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
     accounts = db.query(
@@ -97,6 +101,7 @@ def get_data(db,member_name):
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
+        models.SlcRadAccount.flow_length,
         models.SlcRadAccount.status,
         models.SlcRadAccount.last_pause,
         models.SlcRadAccount.create_time,
@@ -128,11 +133,13 @@ def get_data(db,member_name):
 def customer_index(db):
     member,accounts,orders = get_data(db,get_cookie('customer'))
     status_colors = {0:'',1:'',2:'class="warning"',3:'class="danger"',4:'class="warning"'}
+    online_colors = lambda a : get_online_status(db,a) and 'class="success"' or ''
     return  render("index",
         member=member,
         accounts=accounts,
         orders=orders,
-        status_colors=status_colors
+        status_colors=status_colors,
+        online_colors = online_colors
     )    
 
 ###############################################################################
@@ -240,6 +247,7 @@ def account_detail(db):
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
+        models.SlcRadAccount.flow_length,
         models.SlcRadAccount.user_concur_number,
         models.SlcRadAccount.status,
         models.SlcRadAccount.mac_addr,
@@ -276,24 +284,29 @@ def billing_query(db):
     account_number = request.params.get('account_number')  
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
-    _query = db.query(
-        models.SlcRadBilling,
-        models.SlcMember.node_id,
-    ).filter(
-        models.SlcRadBilling.account_number == models.SlcRadAccount.account_number,
-        models.SlcMember.member_id == models.SlcRadAccount.member_id,
-        models.SlcMember.member_id == get_cookie("customer_id")
-    )
-    if account_number:
-        _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
-    if query_begin_time:
-        _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time)
-    if query_end_time:
-        _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
-    _query = _query.order_by(models.SlcRadBilling.create_time.desc())
+    
+    @cache.cache('billing_query_result',expire=180)  
+    def query_result(account_number,query_begin_time,query_end_time):
+        _query = db.query(
+            models.SlcRadBilling,
+            models.SlcMember.node_id,
+        ).filter(
+            models.SlcRadBilling.account_number == models.SlcRadAccount.account_number,
+            models.SlcMember.member_id == models.SlcRadAccount.member_id,
+            models.SlcMember.member_id == get_cookie("customer_id")
+        )
+        if account_number:
+            _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
+        if query_begin_time:
+            _query = _query.filter(models.SlcRadBilling.create_time >= query_begin_time)
+        if query_end_time:
+            _query = _query.filter(models.SlcRadBilling.create_time <= query_end_time)
+        return _query.order_by(models.SlcRadBilling.create_time.desc())
+        
+    query = query_result(account_number,query_begin_time,query_end_time)
     return render("billing_list", 
         accounts=db.query(models.SlcRadAccount).filter_by(member_id=get_cookie("customer_id")),
-        page_data=get_page_data(_query),**request.params)
+        page_data=get_page_data(query),**request.params)
         
 
 ###############################################################################
@@ -313,6 +326,8 @@ def ticket_query(db):
         models.SlcRadTicket.acct_start_time,
         models.SlcRadTicket.acct_input_octets,
         models.SlcRadTicket.acct_output_octets,
+        models.SlcRadTicket.acct_input_gigawords,
+        models.SlcRadTicket.acct_output_gigawords,
         models.SlcRadTicket.acct_stop_time,
         models.SlcRadTicket.framed_ipaddr,
         models.SlcRadTicket.mac_addr,
@@ -404,11 +419,11 @@ def portal_auth(db):
 def check_card(card):
     if not card:
         return dict(code=1,data=u"充值卡不存在")
-    if card.card_status == 0:
+    if card.card_status == CardInActive:
         return dict(code=1,data=u"充值卡未激活")
-    elif card.card_status == 2:
+    elif card.card_status == CardUsed:
         return dict(code=1,data=u"充值卡已被使用")
-    elif card.card_status == 3:
+    elif card.card_status == CardRecover:
         return dict(code=1,data=u"充值卡已被回收")
     if card.expire_date < utils.get_currdate():
         return dict(code=1,data=u"充值卡已过期")
@@ -424,13 +439,13 @@ def query_card_products(db):
     if check_result['code'] > 0:
         return check_result
     
-    if card.card_type == 1:
+    if card.card_type == BalanceCard:
         products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter(
             models.SlcRadProduct.product_status == 0,
-            models.SlcRadProduct.product_policy == 1
+            models.SlcRadProduct.product_policy.in_((PPTimes,PPFlow))
         )]
         return dict(code=0,data={'products':products})
-    elif card.card_type == 0:
+    elif card.card_type == ProductCard:
         product = db.query(models.SlcRadProduct).get(card.product_id)
         return dict(code=0,data={'products':[(product.id,product.product_name)]})
     
@@ -445,7 +460,7 @@ def account_open(db):
             return random_account()
         else:
             return _num
-    account_number = request.params.get('account_number')
+
     form = forms.account_open_form()
     form.recharge_card.set_value('')
     form.recharge_pwd.set_value('')
@@ -479,7 +494,7 @@ def account_open(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = "customer"
-    accept_log.accept_desc = u"用户新开账号：上网账号:%s"%(form.d.account_number)
+    accept_log.accept_desc = u"用户自助开户:%s"%(form.d.account_number)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -489,13 +504,15 @@ def account_open(db):
     balance = 0
     expire_date = utils.add_months(datetime.datetime.now(),card.months).strftime("%Y-%m-%d") 
     product = db.query(models.SlcRadProduct).get(form.d.product_id)
-    if product.product_policy == 0:
+    # 预付费包月
+    if product.product_policy == PPMonth:
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(card.months)
         order_fee = int(order_fee.to_integral_value())
-    if product.product_policy == 2:
-        order_fee = decimal.Decimal(product.fee_price) 
-        order_fee = int(order_fee.to_integral_value())
-    elif product.product_policy == 1:
+    # 买断包月,买断时长,买断流量
+    elif product.product_policy in (BOMonth,BOTimes,BOFlows):
+        order_fee = int(product.fee_price)
+    #预付费时长,预付费流量
+    elif product.product_policy in (PPTimes,PPFlow):
         balance = card.fee_value
         expire_date = '3000-11-11'
     
@@ -510,7 +527,7 @@ def account_open(db):
     order.accept_id = accept_log.id
     order.order_source = 'customer'
     order.create_time = _datetime
-    order.order_desc = u"用户自助开户,使用充值卡[ %s ]"%form.d.recharge_card
+    order.order_desc = u"用户使用充值卡[ %s ]开户"%form.d.recharge_card
     db.add(order)
     
     account = models.SlcRadAccount()
@@ -523,7 +540,8 @@ def account_open(db):
     account.password = utils.encrypt(form.d.password)
     account.status = 1
     account.balance = balance
-    account.time_length = 0
+    account.time_length = int(product.fee_times)
+    account.flow_length = int(product.fee_flows)
     account.expire_date = expire_date
     account.user_concur_number = product.concur_number
     account.bind_mac = product.bind_mac
@@ -588,15 +606,15 @@ def account_recharge(db):
         return render("base_form", form=form,msg=u'没有这个账号')
     if account.member_id != get_cookie("customer_id"):
         return render("base_form", form=form,msg=u'该账号用用户不匹配')
-    if account.status not in (1,4):
-        return render("base_form", form=form,msg=u'只有正常或到期状态的用户才能充值')
+    if account.status not in (UsrNormal,UsrExpire):
+        return render("base_form", form=form,msg=u'只有正常状态的用户才能充值')
     
     # 3 check product
     user_product = db.query(models.SlcRadProduct).get(account.product_id)    
-    if card.card_type == 0 and card.product_id != account.product_id:
-        return render("base_form", form=form,msg=u'您使用的是资费套餐卡，但资费套餐与该账号资费不匹配')
-    if card.card_type == 1 and user_product.product_policy not in (1,):
-        return render("base_form", form=form,msg=u'您使用的是余额卡，不能为当前账号包月资费充值')
+    if card.card_type == ProductCard and card.product_id != account.product_id:
+        return render("base_form", form=form,msg=u'您使用的是资费卡，但资费套餐与该账号资费不匹配')
+    if card.card_type == BalanceCard and user_product.product_policy not in (PPTimes,PPFlow):
+        return render("base_form", form=form,msg=u'您使用的是余额卡，只能为预付费时长或预付费流量账号充值')
     
     # 4 start recharge
     accept_log = models.SlcRadAcceptLog()
@@ -605,7 +623,7 @@ def account_recharge(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = "customer"
-    accept_log.accept_desc = u"用户自助充值：上网账号:%s"%(form.d.account_number)
+    accept_log.accept_desc = u"用户自助充值：上网账号:%s，充值卡:%s"%(form.d.account_number,form.d.recharge_card)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log) 
@@ -615,15 +633,17 @@ def account_recharge(db):
     balance = 0
     expire_date = account.expire_date
     d_expire_date = datetime.datetime.strptime(expire_date,"%Y-%m-%d")
-    if user_product.product_policy == 0:
+    # 预付费包月
+    if user_product.product_policy == PPMonth:
         expire_date = utils.add_months(d_expire_date,card.months).strftime("%Y-%m-%d")
         order_fee = decimal.Decimal(user_product.fee_price) * decimal.Decimal(card.months)
         order_fee = int(order_fee.to_integral_value())
-    if user_product.product_policy == 2:
+    # 买断包月,买断时长,买断流量
+    if user_product.product_policy in (BOMonth,BOTimes,BOFlows):
         expire_date = utils.add_months(d_expire_date,card.months).strftime("%Y-%m-%d")
-        order_fee = decimal.Decimal(user_product.fee_price) 
-        order_fee = int(order_fee.to_integral_value())
-    elif user_product.product_policy == 1:
+        order_fee = user_product.fee_price
+    #预付费时长,预付费流量
+    elif user_product.product_policy in (PPTimes,PPFlow):
         balance = card.fee_value
     
     order = models.SlcMemberOrder()
@@ -642,6 +662,9 @@ def account_recharge(db):
          
     account.expire_date = expire_date
     account.balance += balance
+    account.time_length += card.times
+    account.flow_length += card.flows
+    account.status = 1
     
     db.commit()
     redirect("/") 

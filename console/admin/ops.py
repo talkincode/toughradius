@@ -57,12 +57,15 @@ def user_query(db):
     elif request.path == "/user/export":
         result = _query.all()
         data = Dataset()
-        data.append((u'上网账号',u'姓名', u'资费', u'过期时间', u'余额(元)',u'时长(秒)',u'并发数',u'ip地址',u'状态',u'创建时间'))
+        data.append((
+            u'上网账号',u'密码',u'姓名', u'资费', u'过期时间', u'余额(元)',
+            u'时长(小时)',u'流量(MB)',u'并发数',u'ip地址',u'状态',u'创建时间'
+        ))
         for i,_realname,_product_name in result:
             data.append((
-                i.account_number, _realname, _product_name, 
+                i.account_number,utils.decrypt(i.password),_realname, _product_name, 
                 i.expire_date,utils.fen2yuan(i.balance),
-                i.time_length,i.user_concur_number,i.ip_address,
+                utils.sec2hour(i.time_length),utils.kb2mb(i.flow_length),i.user_concur_number,i.ip_address,
                 forms.user_state[i.status],i.create_time
             ))
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"

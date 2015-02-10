@@ -14,6 +14,7 @@ import models
 import forms
 import datetime
 from libs import utils
+from libs.radius_attrs import radius_attrs
 from base import *
 from sqlalchemy import func
 
@@ -219,7 +220,7 @@ def product_attr_update(db):
     websock.update_cache("product",product_id=form.d.product_id)
     redirect("%s/detail?product_id=%s"%(__prefix__,form.d.product_id))
     
-permit.add_route("%s/attr/update",u"修改资费扩展属性",u"系统管理",order=4.06)
+permit.add_route("%s/attr/update"%__prefix__,u"修改资费扩展属性",u"系统管理",order=4.06)
 
 @app.get('/attr/delete',apply=auth_opr)
 def product_attr_update(db): 

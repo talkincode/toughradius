@@ -56,6 +56,7 @@ def init_application(dbconf=None,consconf=None,secret=None):
         fmt_second = utils.fmt_second,
         currdate = utils.get_currdate,
         bb2mb = utils.bb2mb,
+        bbgb2mb = utils.bbgb2mb,
         kb2mb = utils.kb2mb,
         mb2kb = utils.mb2kb,
         sec2hour = utils.sec2hour,
