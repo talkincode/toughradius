@@ -75,7 +75,8 @@ def init_application(dbconf=None,consconf=None,secret=None):
     wsparam = (MakoTemplate.defaults['radaddr'],MakoTemplate.defaults['adminport'],)
     reactor.callLater(3, websock.connect,*wsparam)
     log.msg("init tasks...")
-    reactor.callLater(5, tasks.start_online_stat_job, sqla_pg.new_session)
+    reactor.callLater(4, tasks.start_online_stat_job, sqla_pg.new_session)
+    reactor.callLater(5, tasks.start_flow_stat_job, sqla_pg.new_session)
    
     log.msg("init operator rules...")
     for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
@@ -87,10 +88,6 @@ def init_application(dbconf=None,consconf=None,secret=None):
         _app.install(sqla_pg)
         mainapp.mount(_app.config['__prefix__'],_app)
     
-    #create dir
-    try:os.makedirs(os.path.join(APP_DIR,'static/xls'))
-    except:pass
-
 
 ###############################################################################
 # run server                                                                 

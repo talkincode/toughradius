@@ -5,6 +5,7 @@ from bottle import request
 from bottle import response
 from bottle import redirect
 from bottle import HTTPError
+from bottle import static_file
 from libs.paginator import Paginator
 from libs import utils
 from hashlib import md5
@@ -14,6 +15,7 @@ import urllib
 import models
 import json
 import time
+import tempfile
 from beaker.cache import CacheManager
 
 ########################################################################
@@ -28,11 +30,11 @@ CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
 
 CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
 
+TMPDIR = tempfile.gettempdir()
+
 page_size = 20
 
 __cache_timeout__ = 600
-
-
 
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
 
@@ -122,6 +124,11 @@ class Permit():
         return get_cookie("username") in self.routes[path]['oprs']
      
 permit = Permit()       
+
+def export_file(name,data):
+    with open(u'%s/%s' % (TMPDIR,name), 'wb') as f:
+        f.write(data.xls)
+    return static_file(name, root=TMPDIR,download=True)
 
 def auth_opr(func):
     @functools.wraps(func)

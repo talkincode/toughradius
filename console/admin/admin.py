@@ -55,7 +55,7 @@ def index(db):
 @app.route('/static/:path#.+#')
 def route_static(path):
     return static_file(path, root='./static')
-
+    
 ###############################################################################
 # login handle         
 ###############################################################################
@@ -221,7 +221,7 @@ def node_add_post(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)新增区域信息:%s'%(get_cookie("username"),serial_json(node))
+    ops_log.operate_desc = u'操作员(%s)新增区域信息:%s'%(get_cookie("username"),node.node_name)
     db.add(ops_log)
 
     db.commit()
@@ -249,7 +249,7 @@ def node_add_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改区域信息:%s'%(get_cookie("username"),serial_json(node))
+    ops_log.operate_desc = u'操作员(%s)修改区域信息:%s'%(get_cookie("username"),node.node_name)
     db.add(ops_log)
 
     db.commit()
@@ -312,7 +312,7 @@ def bas_add_post(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)新增BAS信息:%s'%(get_cookie("username"),serial_json(bas))
+    ops_log.operate_desc = u'操作员(%s)新增BAS信息:%s'%(get_cookie("username"),bas.ip_addr)
     db.add(ops_log)
 
     db.commit()
@@ -343,7 +343,7 @@ def bas_add_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改BAS信息:%s'%(get_cookie("username"),serial_json(bas))
+    ops_log.operate_desc = u'操作员(%s)修改BAS信息:%s'%(get_cookie("username"),bas.ip_addr)
     db.add(ops_log)
 
     db.commit()
@@ -417,7 +417,7 @@ def opr_add_post(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)新增操作员信息:%s'%(get_cookie("username"),serial_json(opr))
+    ops_log.operate_desc = u'操作员(%s)新增操作员信息:%s'%(get_cookie("username"),opr.operator_name)
     db.add(ops_log)
 
     db.commit()
@@ -469,7 +469,7 @@ def opr_add_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改操作员信息:%s'%(get_cookie("username"),serial_json(opr))
+    ops_log.operate_desc = u'操作员(%s)修改操作员信息:%s'%(get_cookie("username"),opr.operator_name)
     db.add(ops_log)
 
     db.commit()
@@ -530,7 +530,7 @@ def roster_add_post(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)新增黑白名单信息:%s'%(get_cookie("username"),serial_json(roster))
+    ops_log.operate_desc = u'操作员(%s)新增黑白名单信息:%s'%(get_cookie("username"),roster.mac_addr)
     db.add(ops_log)
 
     db.commit()
@@ -560,7 +560,7 @@ def roster_add_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改黑白名单信息:%s'%(get_cookie("username"),serial_json(roster))
+    ops_log.operate_desc = u'操作员(%s)修改黑白名单信息:%s'%(get_cookie("username"),roster.mac_addr)
     db.add(ops_log)
 
     db.commit()

@@ -96,9 +96,7 @@ def card_list(db):
                 i.months,utils.sec2hour(i.times),utils.kb2mb(i.flows),i.expire_date,i.create_time
             ))
         name = u"RADIUS-CARD-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
         
     
 permit.add_route("%s/list"%__prefix__,u"充值卡管理",u"系统管理",is_menu=True,order=7)

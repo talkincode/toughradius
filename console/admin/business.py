@@ -113,9 +113,7 @@ def member_query(db):
                 i.email,i.mobile, i.address,i.create_time
             ))
         name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/member",u"用户信息管理",u"营业管理",is_menu=True,order=0)
 permit.add_route("/bus/member/export",u"用户信息导出",u"营业管理",order=0.01)
@@ -454,9 +452,7 @@ def account_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    _d = form.d.copy()
-    del _d['new_password']
-    ops_log.operate_desc = u'操作员(%s)修改上网账号信息:%s'%(get_cookie("username"),json.dumps(_d))
+    ops_log.operate_desc = u'操作员(%s)修改上网账号信息:%s'%(get_cookie("username"),account.account_number)
     db.add(ops_log)
 
     db.commit()
@@ -502,7 +498,9 @@ def member_import(db):
                 account_number = attr_array[1],
                 password = attr_array[2],
                 expire_date = attr_array[3],
-                balance = str(utils.yuan2fen(attr_array[4])))):
+                balance = str(utils.yuan2fen(attr_array[4])),
+                time_length = utils.hour2sec(attr_array[5]),
+                flow_length = utils.mb2kb(attr_array[6]))):
             return render("bus_import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
 
         impusers.append(vform)
@@ -950,9 +948,7 @@ def acceptlog_query(db):
                 i.accept_time,i.accept_source,i.operator_name,i.accept_desc
             ))
         name = u"RADIUS-ACCEPTLOG-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/acceptlog",u"用户受理查询",u"营业管理",is_menu=True,order=3)
 permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",order=3.01)
@@ -1007,9 +1003,7 @@ def billing_query(db):
                 (i.is_deduct==0 and u'否' or u'是'),i.create_time
             ))
         name = u"RADIUS-BILLING-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/billing",u"用户计费查询",u"营业管理",is_menu=True,order=4)
 permit.add_route("/bus/billing/export",u"用户计费导出",u"营业管理",order=4.01)
@@ -1073,9 +1067,7 @@ def order_query(db):
                 _pst.get(i.pay_status), i.order_source, i.order_desc
             ))
         name = u"RADIUS-ORDERS-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/orders",u"用户订购查询",u"营业管理",is_menu=True,order=5)
 permit.add_route("/bus/orders/export",u"用户订购导出",u"营业管理",order=5.01)

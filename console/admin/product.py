@@ -83,7 +83,7 @@ def product_add_post(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)新增资费信息:%s'%(get_cookie("username"),serial_json(product))
+    ops_log.operate_desc = u'操作员(%s)新增资费信息:%s'%(get_cookie("username"),product.product_name)
     db.add(ops_log)
 
     db.commit()
@@ -125,7 +125,7 @@ def product_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改资费信息:%s'%(get_cookie("username"),serial_json(product))
+    ops_log.operate_desc = u'操作员(%s)修改资费信息:%s'%(get_cookie("username"),product.product_name)
     db.add(ops_log)
 
     db.commit()
@@ -182,7 +182,7 @@ def product_attr_add(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)新增资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    ops_log.operate_desc = u'操作员(%s)新增资费属性信息:%s'%(get_cookie("username"),attr.attr_name)
     db.add(ops_log)
 
     db.commit()
@@ -213,7 +213,7 @@ def product_attr_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改资费属性信息:%s'%(get_cookie("username"),serial_json(attr))
+    ops_log.operate_desc = u'操作员(%s)修改资费属性信息:%s'%(get_cookie("username"),attr.attr_name)
     db.add(ops_log)
 
     db.commit()

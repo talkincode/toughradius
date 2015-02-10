@@ -374,25 +374,25 @@ class SlcRadOnlineStat(DeclarativeBase):
     __table_args__ = {}
 
     #column definitions
-    node_id = Column('node_id', INTEGER(),primary_key=True, nullable=False,autoincrement=False,doc=u"区域id")
-    day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False,doc=u"统计日期")
-    time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False,doc=u"统计小时")
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    node_id = Column('node_id', INTEGER(),nullable=False,doc=u"区域id")
+    stat_time = Column(u'stat_time', INTEGER(),  nullable=False,doc=u"统计时间")
     total = Column(u'total', INTEGER(),doc=u"在线数")
 
     #relation definitions
     
-class SlcRadTrafficStat(DeclarativeBase):
+class SlcRadFlowStat(DeclarativeBase):
     """用户在线统计表 <radiusd default table>"""
-    __tablename__ = 'slc_rad_traffic_stat'
+    __tablename__ = 'slc_rad_flow_stat'
 
     __table_args__ = {}
 
     #column definitions
-    node_id = Column('node_id', INTEGER(),primary_key=True, nullable=False,autoincrement=False,doc=u"区域id")
-    day_code = Column(u'day_code', VARCHAR(length=10), primary_key=True, nullable=False,doc=u"统计日期")
-    time_num = Column(u'time_num', INTEGER(), primary_key=True, nullable=False,autoincrement=False,doc=u"统计小时")
-    input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
-    output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    node_id = Column('node_id', INTEGER(),nullable=False,doc=u"区域id")
+    stat_time = Column(u'stat_time', INTEGER(),  nullable=False,doc=u"统计时间")
+    input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
+    output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
 
     #relation definitions
 

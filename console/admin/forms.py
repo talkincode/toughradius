@@ -239,10 +239,10 @@ def account_open_form(products=[]):
 def user_import_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"用户区域", args=nodes, **input_style),
-        pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
-        pyforms.File("import_file", description=u"数据文件",  required="required", **input_style),
-        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
-        title=u"用户导入",
+        pyforms.Dropdown("product_id",args=products, description=u"用户资费",  required="required", **input_style),
+        pyforms.File("import_file", description=u"用户数据文件",  required="required", **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>立即导入</b>", **button_style),
+        title=u"用户数据导入",
         action="/bus/member/import"
 )
 
@@ -252,8 +252,8 @@ user_import_vform = dataform.Form(
         dataform.Item("password",rules.not_null,description=u"用户密码"),
         dataform.Item("expire_date", rules.is_date,description=u"过期日期"),
         dataform.Item("balance",rules.is_rmb,description=u"用户余额"),
-        dataform.Item("time_length",rules.is_rmb,description=u"用户时长"),
-        dataform.Item("flow_length",rules.is_rmb,description=u"用户流量"),
+        dataform.Item("time_length",description=u"用户时长"),
+        dataform.Item("flow_length",description=u"用户流量"),
         title="import"
 )
 

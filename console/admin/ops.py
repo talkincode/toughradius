@@ -69,9 +69,7 @@ def user_query(db):
                 forms.user_state[i.status],i.create_time
             ))
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
         
 permit.add_route("%s/user"%__prefix__,u"上网账号查询",u"运维管理",is_menu=True,order=0)
 permit.add_route("%s/user/export"%__prefix__,u"账号查询导出",u"运维管理",order=0.01)
@@ -208,6 +206,8 @@ def ticket_query(db):
         models.SlcRadTicket.acct_stop_time,
         models.SlcRadTicket.acct_input_octets,
         models.SlcRadTicket.acct_output_octets,
+        models.SlcRadTicket.acct_input_gigawords,
+        models.SlcRadTicket.acct_output_gigawords,
         models.SlcRadTicket.framed_ipaddr,
         models.SlcRadTicket.mac_addr,
         models.SlcRadTicket.nas_port_id,
@@ -269,6 +269,12 @@ permit.add_route("%s/opslog"%__prefix__,u"操作日志查询",u"运维管理",is
 # ops log manage        
 ###############################################################################
 
+def default_start_end():
+    day_code = datetime.datetime.now().strftime("%Y-%m-%d")
+    begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
+    end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
+    return time.mktime(begin.timetuple()),time.mktime(end.timetuple())
+
 @app.get('/online/stat',apply=auth_opr)
 def online_stat_query(db): 
     return render(
@@ -278,31 +284,55 @@ def online_stat_query(db):
         day_code=utils.get_currdate()
     )
 
-@app.route('/online/statdata',apply=auth_opr,method=['GET','POST'])
+@app.route('/online/stat',apply=auth_opr,method=['GET','POST'])
 def online_stat_data(db):    
     node_id = request.params.get('node_id')
-    day_code = request.params.get('day_code')     
-    hours = [str(i) for i in range(24)]
-    dataset = []
-    for hour in hours:
-        _query = db.query(func.sum(models.SlcRadOnlineStat.total))
-        if node_id:
-            _query = _query.filter(models.SlcRadOnlineStat.node_id == node_id)
-        if day_code:
-            _query = _query.filter(models.SlcRadOnlineStat.day_code == day_code)
-        hour_total = _query.filter(models.SlcRadOnlineStat.time_num == hour).scalar() or 0
-        dataset.append(int(hour_total))
-    return dict(code=0,hours=hours,dataset=dataset)
+    day_code = request.params.get('day_code',datetime.datetime.now().strftime("%Y-%m-%d"))     
+    begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
+    end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
+    begin_time,end_time = time.mktime(begin.timetuple()),time.mktime(end.timetuple())
+    
+    _query = db.query(models.SlcRadOnlineStat)
+    
+    if node_id:
+        _query = _query.filter(models.SlcRadOnlineStat.node_id == node_id)
+    
+    _query = _query.filter(
+        models.SlcRadOnlineStat.stat_time >= begin_time,
+        models.SlcRadOnlineStat.stat_time <= end_time,
+    )
+    _data = [ (q.stat_time*1000,q.total) for q in _query ]
+    return dict(code=0,data=[{'data':_data}])
         
 permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"运维管理",is_menu=True,order=5)
 
-# @app.route('/traffic/statdata',apply=auth_opr,method=['GET','POST'])
-# def traffic_stat_data(db):
-#     hours = [str(i) for i in range(24)]
-#     packet_in_set = []
-#     packet_out_set = []
-#     traffic_in_set = []
-#     traffic_out_set = []
-#     for hour in hours:
-#         _query = db.query(func.sum(models.SlcRadOnlineStat.total))
+
+@app.route('/flow/stat',apply=auth_opr,method=['GET','POST'])
+def flow_stat_data(db):    
+    node_id = request.params.get('node_id')
+    day_code = request.params.get('day_code',datetime.datetime.now().strftime("%Y-%m-%d"))     
+    begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
+    end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
+    begin_time,end_time = time.mktime(begin.timetuple()),time.mktime(end.timetuple())
+    
+    _query = db.query(models.SlcRadFlowStat)
+    
+    if node_id:
+        _query = _query.filter(models.SlcRadFlowStat.node_id == node_id)
+    
+    _query = _query.filter(
+        models.SlcRadOnlineStat.stat_time >= begin_time,
+        models.SlcRadOnlineStat.stat_time <= end_time,
+    )
+    
+    in_data = {"name":u"上行流量","data":[]}
+    out_data = {"name":u"下行流量","data":[]}
+    
+    for q in _query:
+        _stat_time = q.stat_time * 1000
+        in_data['data'].append([_stat_time,float(utils.kb2mb(q.input_total))])
+        out_data['data'].append([_stat_time,float(utils.kb2mb(q.output_total))])
+
+    return dict(code=0,data=[in_data,out_data])
         
+permit.add_route("%s/flow/stat"%__prefix__,u"流量统计",u"运维管理",is_menu=True,order=5)        
