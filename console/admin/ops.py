@@ -284,7 +284,7 @@ def online_stat_query(db):
         day_code=utils.get_currdate()
     )
 
-@app.route('/online/stat',apply=auth_opr,method=['GET','POST'])
+@app.route('/online/statdata',apply=auth_opr,method=['GET','POST'])
 def online_stat_data(db):    
     node_id = request.params.get('node_id')
     day_code = request.params.get('day_code',datetime.datetime.now().strftime("%Y-%m-%d"))     
@@ -307,7 +307,17 @@ def online_stat_data(db):
 permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"运维管理",is_menu=True,order=5)
 
 
-@app.route('/flow/stat',apply=auth_opr,method=['GET','POST'])
+@app.get('/flow/stat',apply=auth_opr)
+def online_stat_query(db): 
+    return render(
+        "ops_flow_stat",
+        node_list=db.query(models.SlcNode),
+        node_id=None,
+        day_code=utils.get_currdate()
+    )
+
+
+@app.route('/flow/statdata',apply=auth_opr,method=['GET','POST'])
 def flow_stat_data(db):    
     node_id = request.params.get('node_id')
     day_code = request.params.get('day_code',datetime.datetime.now().strftime("%Y-%m-%d"))     
@@ -335,4 +345,4 @@ def flow_stat_data(db):
 
     return dict(code=0,data=[in_data,out_data])
         
-permit.add_route("%s/flow/stat"%__prefix__,u"流量统计",u"运维管理",is_menu=True,order=5)        
+permit.add_route("%s/flow/stat"%__prefix__,u"用户流量统计",u"运维管理",is_menu=True,order=5)        

@@ -3,7 +3,6 @@
 <script src="/static/js/highcharts.js"></script>
 <script src="/static/js/charttheme.js"></script>
 <script src="/static/js/exporting.js"></script>
-<script src="/static/js/Chart.js"></script>
 <script>
 
 var wsock = {
@@ -34,7 +33,6 @@ var online_options = {
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
     yAxis: {
         title: {text: '在线数'},
-        tickInterval: 1,
         labels: {formatter: function() {return this.value + '人';}}            
     },
     tooltip: {shared: true},
@@ -66,7 +64,7 @@ var flow_options = {
 
 function update_online()
 {
-    $.post("/ops/online/stat", {day_code:'${currdate()}'} , function (ev) {
+    $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             online_options.series = ev.data;
             var chart = new Highcharts.Chart(online_options);
@@ -76,7 +74,7 @@ function update_online()
 
 function update_flow()
 {
-    $.post("/ops/flow/stat", {day_code:'${currdate()}'} , function (ev) {
+    $.post("/ops/flow/statdata", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             flow_options.series = ev.data;
             var chart = new Highcharts.Chart(flow_options);
@@ -124,7 +122,11 @@ $(document).ready(function (){
 </div>
 
 <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线统计</div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线统计
+    <div class="bar pull-right">
+        <a href="javascript:update_online();">刷新数据</a>
+    </div>
+    </div>
     <div class="panel-body">
         <div class="container center" id="online-chart"> </div>
         <div class="well well-sm">
@@ -134,7 +136,11 @@ $(document).ready(function (){
 </div>
 
 <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 流量统计</div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 流量统计
+    <div class="bar pull-right">
+        <a href="javascript:update_flow();">刷新数据</a>
+    </div>
+    </div>
     <div class="panel-body">
         <div class="container center" id="flow-chart"></div>
     </div>
