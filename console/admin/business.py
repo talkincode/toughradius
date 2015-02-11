@@ -19,22 +19,13 @@ import decimal
 import datetime
 from websock import websock
 
+__prefix__ = "/bus"
+
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
-
-@app.error(403)
-def error404(error):
-    return render("error.html",msg=u"非授权的访问")
-
-@app.error(404)
-def error404(error):
-    return render("error.html",msg=u"页面不存在 - 请联系管理员!")
-
-@app.error(500)
-def error500(error):
-    return render("error.html",msg=u"出错了： %s"%error.exception)
+app.config['__prefix__'] = __prefix__
 
 ###############################################################################
 # ajax query
@@ -51,14 +42,20 @@ def product_get(db):
     )
 
 
-@app.get('/opencalc',apply=auth_opr)
+@app.post('/opencalc',apply=auth_opr)
 def opencalc(db):
     months = request.params.get('months',0)
     product_id = request.params.get("product_id")
     old_expire = request.params.get("old_expire")
     product = db.query(models.SlcRadProduct).get(product_id)
-    if product.product_policy == 1:
+    # 预付费时长，预付费流量，
+    if product.product_policy in (1,4):
         return dict(code=0,data=dict(policy=product.product_policy,fee_value=0,expire_date="3000-12-30"))
+    # 买断时长 买断流量
+    elif product.product_policy in (3,5):
+        fee_value = utils.fen2yuan(product.fee_price)
+        return dict(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date="3000-12-30"))
+    # 预付费包月 
     elif product.product_policy == 0:
         fee = decimal.Decimal(months) * decimal.Decimal(product.fee_price)
         fee_value = utils.fen2yuan(int(fee.to_integral_value()))
@@ -68,6 +65,7 @@ def opencalc(db):
         expire_date = utils.add_months(start_expire,int(months))
         expire_date = expire_date.strftime( "%Y-%m-%d")
         return dict(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
+    # 买断包月
     elif product.product_policy == 2:
         start_expire = datetime.datetime.now()
         if old_expire:
@@ -115,9 +113,7 @@ def member_query(db):
                 i.email,i.mobile, i.address,i.create_time
             ))
         name = u"RADIUS-MEMBER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/member",u"用户信息管理",u"营业管理",is_menu=True,order=0)
 permit.add_route("/bus/member/export",u"用户信息导出",u"营业管理",order=0.01)
@@ -133,6 +129,7 @@ def member_detail(db):
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
+        models.SlcRadAccount.flow_length,
         models.SlcRadAccount.status,
         models.SlcRadAccount.last_pause,
         models.SlcRadAccount.create_time,
@@ -269,10 +266,15 @@ def member_open(db):
     balance = 0
     expire_date = form.d.expire_date
     product = db.query(models.SlcRadProduct).get(form.d.product_id)
+    # 预付费包月
     if product.product_policy == 0:
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
         order_fee = int(order_fee.to_integral_value())
-    elif product.product_policy == 1:
+    # 买断包月,买断流量
+    elif product.product_policy in (2,5):
+        order_fee = int(product.fee_price)
+    #预付费时长,预付费流量
+    elif product.product_policy in (1,4):
         balance = utils.yuan2fen(form.d.fee_value)
         expire_date = '3000-11-11'
 
@@ -300,7 +302,8 @@ def member_open(db):
     account.password = utils.encrypt(form.d.password)
     account.status = form.d.status
     account.balance = balance
-    account.time_length = 0
+    account.time_length = int(product.fee_times)
+    account.flow_length = int(product.fee_flows)
     account.expire_date = expire_date
     account.user_concur_number = product.concur_number
     account.bind_mac = product.bind_mac
@@ -365,13 +368,15 @@ def account_open(db):
     balance = 0
     expire_date = form.d.expire_date
     product = db.query(models.SlcRadProduct).get(form.d.product_id)
+    # 预付费包月
     if product.product_policy == 0:
         order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
         order_fee = int(order_fee.to_integral_value())
-    if product.product_policy == 2:
-        order_fee = decimal.Decimal(product.fee_price) 
-        order_fee = int(order_fee.to_integral_value())
-    elif product.product_policy == 1:
+    # 买断包月,买断时长,买断流量
+    elif product.product_policy in (2,3,5):
+        order_fee = int(product.fee_price)
+    #预付费时长,预付费流量
+    elif product.product_policy in (1,4):
         balance = utils.yuan2fen(form.d.fee_value)
         expire_date = '3000-11-11'
 
@@ -399,7 +404,8 @@ def account_open(db):
     account.password = utils.encrypt(form.d.password)
     account.status = form.d.status
     account.balance = balance
-    account.time_length = 0
+    account.time_length = int(product.fee_times)
+    account.flow_length = int(product.fee_flows)
     account.expire_date = expire_date
     account.user_concur_number = product.concur_number
     account.bind_mac = product.bind_mac
@@ -446,9 +452,7 @@ def account_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    _d = form.d.copy()
-    del _d['new_password']
-    ops_log.operate_desc = u'操作员(%s)修改上网账号信息:%s'%(get_cookie("username"),json.dumps(_d))
+    ops_log.operate_desc = u'操作员(%s)修改上网账号信息:%s'%(get_cookie("username"),account.account_number)
     db.add(ops_log)
 
     db.commit()
@@ -485,8 +489,8 @@ def member_import(db):
         line = line.strip()
         if not line or "用户姓名" in line:continue
         attr_array = line.split(",")
-        if len(attr_array) < 5:
-            return render("bus_import_form",form=iform,msg=u"line %s error: length must 5 "%_num)
+        if len(attr_array) < 7:
+            return render("bus_import_form",form=iform,msg=u"line %s error: length must 7 "%_num)
 
         vform = forms.user_import_vform()
         if not vform.validates(dict(
@@ -494,7 +498,9 @@ def member_import(db):
                 account_number = attr_array[1],
                 password = attr_array[2],
                 expire_date = attr_array[3],
-                balance = str(utils.yuan2fen(attr_array[4])))):
+                balance = str(utils.yuan2fen(attr_array[4])),
+                time_length = utils.hour2sec(attr_array[5]),
+                flow_length = utils.mb2kb(attr_array[6]))):
             return render("bus_import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
 
         impusers.append(vform)
@@ -534,11 +540,20 @@ def member_import(db):
             order_fee = 0
             actual_fee = 0
             balance = 0
+            time_length = 0
+            flow_length = 0
             expire_date = form.d.expire_date
             product = db.query(models.SlcRadProduct).get(product_id)
-            if product.product_policy == 1:
-                balance = int(form.d.balance)
-                expire_date = '3000-11-11'
+            # 买断时长
+            if product.product_policy == 3:
+                time_length = int(form.d.time_length)
+            # 买断流量
+            elif product.product_policy == 5:
+                flow_length = int(form.d.flow_length)
+            #预付费时长,预付费流量
+            elif product.product_policy in (1,4):
+                balance = utils.yuan2fen(form.d.balance)
+                expire_date = '3000-11-11'                
 
             order = models.SlcMemberOrder()
             order.order_id = utils.gen_order_id()
@@ -564,7 +579,8 @@ def member_import(db):
             account.password = utils.encrypt(form.d.password)
             account.status = 1
             account.balance = balance
-            account.time_length = 0
+            account.time_length = time_length
+            account.flow_length = flow_length
             account.expire_date = expire_date
             account.user_concur_number = product.concur_number
             account.bind_mac = product.bind_mac
@@ -665,6 +681,7 @@ def query_account(db,account_number):
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
+        models.SlcRadAccount.flow_length,
         models.SlcRadAccount.user_concur_number,
         models.SlcRadAccount.status,
         models.SlcRadAccount.mac_addr,
@@ -931,9 +948,7 @@ def acceptlog_query(db):
                 i.accept_time,i.accept_source,i.operator_name,i.accept_desc
             ))
         name = u"RADIUS-ACCEPTLOG-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/acceptlog",u"用户受理查询",u"营业管理",is_menu=True,order=3)
 permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",order=3.01)
@@ -975,21 +990,20 @@ def billing_query(db):
         data = Dataset()
         data.append((
             u'区域',u'上网账号',u'BAS地址',u'会话编号',u'记账开始时间',u'会话时长',
-            u'扣费时长',u'应扣费用',u'实扣费用',u'当前余额',u'是否扣费',u'扣费时间'
+            u'已扣时长',u"已扣流量",u'应扣费用',u'实扣费用',u'当前余额',u'是否扣费',u'扣费时间'
         ))
         _f2y = utils.fen2yuan
         _fms = utils.fmt_second
+        _k2m = utils.kb2mb
         for i,_,_node_name in _query:
             data.append((
                 _node_name, i.account_number, i.nas_addr,i.acct_session_id,
-                i.acct_start_time,_fms(i.acct_session_time),_fms(i.acct_length),
+                i.acct_start_time,_fms(i.acct_session_time),_fms(i.acct_times),_k2m(i.acct_flows),
                 _f2y(i.acct_fee),_f2y(i.actual_fee),_f2y(i.balance),
                 (i.is_deduct==0 and u'否' or u'是'),i.create_time
             ))
         name = u"RADIUS-BILLING-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/billing",u"用户计费查询",u"营业管理",is_menu=True,order=4)
 permit.add_route("/bus/billing/export",u"用户计费导出",u"营业管理",order=4.01)
@@ -1053,9 +1067,7 @@ def order_query(db):
                 _pst.get(i.pay_status), i.order_source, i.order_desc
             ))
         name = u"RADIUS-ORDERS-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        with open(u'./static/xls/%s' % name, 'wb') as f:
-            f.write(data.xls)
-        return static_file(name, root='./static/xls',download=True)
+        return export_file(name,data)
 
 permit.add_route("/bus/orders",u"用户订购查询",u"营业管理",is_menu=True,order=5)
 permit.add_route("/bus/orders/export",u"用户订购导出",u"营业管理",order=5.01)

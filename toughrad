@@ -169,6 +169,11 @@ tracecustomer()
     tail -f ${rundir}/log/rad_customer.log
 }
 
+unitest()
+{
+    cd ${appdir}/tests && nosetests-2.7 
+}
+
 case "$1" in
 
   help)

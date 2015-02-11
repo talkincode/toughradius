@@ -12,3 +12,4 @@ tablib==0.10.0
 zope.interface==4.1.1
 pycrypto==2.6.1
 sh==1.11
+nose

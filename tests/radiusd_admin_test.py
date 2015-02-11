@@ -1,7 +1,5 @@
 #!/usr/bin/python
 #coding:utf-8
-import test_config
-
 
 def test_user_trace():
     from radiusd.admin import UserTrace

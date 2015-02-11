@@ -23,7 +23,7 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>上网账号</td>
+                        <td>用户账号</td>
                         <td>${user.account_number}</td>
                         <td>资费名称</td>
                         <td>${user.product_name}</td>
@@ -36,11 +36,11 @@
                         <td>余额</td>
                         <td>${fen2yuan(user.balance)}</td>
                         <td>剩余时长</td>
-                        <td>${user.time_length}</td>
+                        <td>${sec2hour(user.time_length)}小时</td>
                     </tr>      
                     <tr>
-                        <td>MAC地址</td>
-                        <td>${user.mac_addr}</td>
+                        <td>剩余流量</td>
+                        <td>${kb2mb(user.flow_length)}MB</td>
                         <td>并发数</td>
                         <td>${user.user_concur_number}</td>
                         <td>绑定MAC</td>
@@ -49,10 +49,10 @@
                     <tr>
                         <td>绑定VLAN</td>
                         <td>${{0:u"否", 1:u"是"}[user.bind_vlan]}</td>
-                        <td>VLANID1</td>
-                        <td>${user.vlan_id}</td>
-                        <td>VLANID2</td>
-                        <td>${user.vlan_id2}</td>                        
+                        <td>VLANID1/VLANID2</td>
+                        <td>${user.vlan_id}/${user.vlan_id2}</td>
+                        <td>MAC地址</td>
+                        <td>${user.mac_addr}</td>                        
                     </tr>   
                     <tr>
                         <td>IP地址</td>

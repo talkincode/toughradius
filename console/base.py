@@ -5,6 +5,7 @@ from bottle import request
 from bottle import response
 from bottle import redirect
 from bottle import HTTPError
+from bottle import static_file
 from libs.paginator import Paginator
 from libs import utils
 from hashlib import md5
@@ -14,7 +15,22 @@ import urllib
 import models
 import json
 import time
+import tempfile
 from beaker.cache import CacheManager
+
+########################################################################
+# const define
+########################################################################
+
+FEES = (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows) = (0,1,2,3,4,5)
+
+ACCOUNT_STATUS = (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire) = (0,1,2,3,4)
+
+CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
+
+CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
+
+TMPDIR = tempfile.gettempdir()
 
 page_size = 20
 
@@ -44,11 +60,11 @@ def update_secret(secret):
     scookie = SecureCookie(secret)
     
 class Logger:
-    def info(msg):
+    def info(self,msg):
         log.msg(msg,level=logging.INFO)
-    def debug(msg):
+    def debug(self,msg):
         log.msg(msg,level=logging.DEBUG)
-    def error(msg,err=None):
+    def error(self,msg,err=None):
         log.err(msg,err)
 
 logger = Logger()
@@ -109,6 +125,11 @@ class Permit():
      
 permit = Permit()       
 
+def export_file(name,data):
+    with open(u'%s/%s' % (TMPDIR,name), 'wb') as f:
+        f.write(data.xls)
+    return static_file(name, root=TMPDIR,download=True)
+
 def auth_opr(func):
     @functools.wraps(func)
     def warp(*args,**kargs):
@@ -160,7 +181,7 @@ def get_member_by_name(db,member_name):
 def get_account_by_number(db,account_number):
     return  db.query(models.SlcRadAccount).filter_by(account_number = account_number).first()
     
-@cache.cache('get_online_status',expire=60)   
+# @cache.cache('get_online_status',expire=30)   
 def get_online_status(db,account_number):
     return  db.query(models.SlcRadOnline.id).filter_by(account_number = account_number).count() > 0
     

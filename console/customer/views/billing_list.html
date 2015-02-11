@@ -31,7 +31,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label for="account_number" class="col-md-2 control-label">上网账号</label>
+                <label for="account_number" class="col-md-2 control-label">用户账号</label>
                 <div class="col-md-3">
                     <select id="account_number" name="account_number" class="form-control" >
                     <option value=""></option>
@@ -50,11 +50,12 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>上网账号</th>
-                <th>会话编号</th>
+                <th>账号</th>
+                <!-- <th>会话编号</th> -->
                 <th>记账开始时间</th>
                 <th>会话时长</th>
-                <th>扣费时长</th>
+                <th>已扣时长</th>
+                <th>已扣流量</th>
                 <th>应扣费用</th>
                 <th>实扣费用</th>
                 <th>账号余额</th>
@@ -65,10 +66,11 @@
             % for bill,_ in page_data.result:
             <tr>
                 <td>${bill.account_number}</td>
-                <td>${bill.acct_session_id}</td>
+                <!-- <td>${bill.acct_session_id}</td> -->
                 <td>${bill.acct_start_time}</td>
                 <td>${fmt_second(bill.acct_session_time)}</td>
-                <td>${fmt_second(bill.acct_length)}</td>
+                <td>${fmt_second(bill.acct_times)}</td>
+                <td>${kb2mb(bill.acct_flows)}M</td>
                 <td>${fen2yuan(bill.acct_fee)}</td>
                 <td>${fen2yuan(bill.actual_fee)}</td>
                 <td>${fen2yuan(bill.balance)}</td>

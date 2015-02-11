@@ -31,18 +31,20 @@ $(document).ready(function (){
               <button id="delCheckAll" type="button" class="btn btn-default">取消选择</button>
             </div>
               <hr>
-              <div class="container-fluid">
-              <div class="row menus">
+              
+
               % for menu in all_menus:
-              <div class="panel panel-default col-md-4">
+              <div class="panel panel-default">
                 <div class="panel-heading">
                     <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> 
                     ${menu['category']}</div>
                 <!-- List group -->
                 <ul class="list-group">
+                    <div class="container-fluid">
                   % for item in sorted(menu['items'],key=lambda r:r['order']):
-                      <li class="list-group-item">
-                          <font color="gray">${loop.index}&nbsp;</font>
+                  <div class='row col-md-3'>
+                      <li class="list-group-item ">
+                          <!-- <font color="gray">${loop.index}&nbsp;</font> -->
                           <label>
                           <input type="checkbox" 
                           id="rule_item" 
@@ -51,12 +53,13 @@ $(document).ready(function (){
                            &nbsp;${item['name']}
                          </label>
                       </li>
+                    </div>
                   % endfor
+                  </div>
                 </ul>
               </div>
                % endfor
-            </div>
-             </div>
+
         </form>
         
     </div>

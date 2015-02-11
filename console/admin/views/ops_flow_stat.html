@@ -9,17 +9,16 @@
 <script>
 //页面初始化
 
-var online_options = {
+var flow_options = {
     credits : {enabled:false},
-    chart: {type: 'area',renderTo: 'online-chart'},
-    title: {text: '在线用户统计'},
+    chart: {type: 'area',renderTo: 'flow-chart'},
+    title: {text: '流量统计'},
     subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
-    yAxis: {
-        title: {text: '在线数'},
-        labels: {formatter: function() {return this.value + '人';}}            
+    yAxis: {title: {text: '使用流量'},
+        labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
     },
-    tooltip: {shared: true},
+    tooltip: {shared: true, valueSuffix: 'MB'},
     legend: {enabled: false},    
     plotOptions: {area: {
         stacking: 'normal',
@@ -27,17 +26,16 @@ var online_options = {
     }},           
     series: [{}]
 };
-
 $(document).ready(function (){
     $("#day_code").datepicker();   
 });
 
 function doQuery()
 {
-    $.post("/ops/online/statdata", {day_code:$("#day_code").val()} , function (ev) {
+    $.post("/ops/flow/statdata", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
-            online_options.series = ev.data;
-            var chart = new Highcharts.Chart(online_options);
+            flow_options.series = ev.data;
+            var chart = new Highcharts.Chart(flow_options);
         }
     }, "json");
 }
@@ -73,7 +71,7 @@ function doQuery()
             </div>
         </form>
         <hr>
-        <div class="container center"  id="online-chart" >
+        <div class="container center"  id="flow-chart" >
         </div>
     </div>
 </div>

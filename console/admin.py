@@ -5,11 +5,13 @@ sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.internet import reactor
 from bottle import TEMPLATE_PATH,MakoTemplate
+from bottle import mako_template as render
 from bottle import run as runserver
 from admin.admin import app as mainapp
 from admin.ops import app as ops_app
 from admin.business import app as bus_app
 from admin.card import app as card_app
+from admin.product import app as product_app
 from base import *
 from libs import sqla_plugin,utils
 from websock import websock
@@ -18,25 +20,46 @@ import functools
 import models
 import base
 
+subapps = [ops_app,bus_app,card_app,product_app]
+
+def error403(error):
+    return render("error",msg=u"非授权的访问 %s"%error.exception)
+    
+def error404(error):
+    return render("error",msg=u"页面不存在 - 请联系管理员! %s"%error.exception)
+
+def error500(error):
+    return render("error",msg=u"出错了： %s"%error.exception)
+
 def init_application(dbconf=None,consconf=None,secret=None):
     log.startLogging(sys.stdout)  
     log.msg("start init application...")
     base.update_secret(secret)
     utils.update_secret(secret)
     TEMPLATE_PATH.append("./admin/views/")
-    ''' install plugins'''
+    for _app in [mainapp]+subapps:
+        _app.error_handler[403] = error403
+        _app.error_handler[404] = error404
+        _app.error_handler[500] = error500
+        
     log.msg("init plugins..")
     engine,metadata = models.get_engine(dbconf)
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
     session = sqla_pg.new_session()
     _sys_param_value = functools.partial(get_param_value,session)
     _get_product_name = functools.partial(get_product_name,session)
+    
     log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
         currdate = utils.get_currdate,
+        bb2mb = utils.bb2mb,
+        bbgb2mb = utils.bbgb2mb,
+        kb2mb = utils.kb2mb,
+        mb2kb = utils.mb2kb,
+        sec2hour = utils.sec2hour,
         request = request,
         sys_param_value = _sys_param_value,
         get_product_name = _get_product_name,
@@ -52,26 +75,19 @@ def init_application(dbconf=None,consconf=None,secret=None):
     wsparam = (MakoTemplate.defaults['radaddr'],MakoTemplate.defaults['adminport'],)
     reactor.callLater(3, websock.connect,*wsparam)
     log.msg("init tasks...")
-    reactor.callLater(5, tasks.start_online_stat_job, sqla_pg.new_session)
+    reactor.callLater(4, tasks.start_online_stat_job, sqla_pg.new_session)
+    reactor.callLater(5, tasks.start_flow_stat_job, sqla_pg.new_session)
    
     log.msg("init operator rules...")
     for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
         permit.bind_super(_super[0])
 
-    log.msg("install plugins...")
+    log.msg("mount app and install plugins...")
     mainapp.install(sqla_pg)
-    ops_app.install(sqla_pg)
-    bus_app.install(sqla_pg)
-    card_app.install(sqla_pg)
-
-    mainapp.mount("/ops",ops_app)
-    mainapp.mount("/bus",bus_app)
-    mainapp.mount("/card",card_app)
+    for _app in subapps:
+        _app.install(sqla_pg)
+        mainapp.mount(_app.config['__prefix__'],_app)
     
-    #create dir
-    try:os.makedirs(os.path.join(APP_DIR,'static/xls'))
-    except:pass
-
 
 ###############################################################################
 # run server                                                                 

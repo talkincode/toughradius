@@ -17,6 +17,7 @@ from base import (
     get_account_by_number,
     get_online_status
 )
+
 from libs import sqla_plugin,utils
 from websock import websock
 import functools
@@ -41,6 +42,11 @@ def init_application(dbconf=None,cusconf=None,secret=None):
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
+        bb2mb = utils.bb2mb,
+        bbgb2mb = utils.bbgb2mb,
+        kb2mb = utils.kb2mb,
+        mb2kb = utils.mb2kb,
+        sec2hour = utils.sec2hour,
         request = request,
         sys_param_value = _sys_param_value,
         system_name = _sys_param_value("2_member_system_name"),

@@ -28,7 +28,7 @@
                         <td>资费名称</td>
                         <td>${product.product_name}</td>
                         <td>资费策略</td>
-                        <td>${{0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}[product.product_policy]}</td>
+                        <td>${product_policys[product.product_policy]}</td>
                         <td>资费状态</td>
                         <td>${{0:u"正常", 1:u"停用"}[product.product_status]}</td>                 
                     </tr> 
@@ -50,9 +50,9 @@
                     </tr>   
                     <tr>
                         <td>最大上行速率</td>
-                        <td>${product.input_max_limit}</td>
+                        <td>${product.input_max_limit/1024} kbps</td>
                         <td>最大下行速率</td>
-                        <td>${product.output_max_limit}</td>
+                        <td>${product.output_max_limit/1024} kbps</td>
                         <td></td>
                         <td></td>                     
                     </tr>   

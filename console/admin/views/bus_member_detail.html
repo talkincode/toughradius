@@ -92,13 +92,14 @@ function release(account_number)
             </thead>
             <tbody>
             <tr class="active">
-                <th>上网账号</th>
-                <th>用户资费</th>
-                <th>用户状态</th>
-                <th>到期时间</th>
+                <th>账号</th>
+                <th>资费</th>
+                <th>状态</th>
+                <th>到期</th>
                 <th>余额</th>
-                <th>创建时间</th>
-                <th>最近停机</th>
+                <th>时长</th>
+                <th>流量</th>
+                <!-- <th>最近停机</th> -->
                 <th></th>
             </tr>            
             % for user in accounts:
@@ -107,9 +108,10 @@ function release(account_number)
                 <td>${user.product_name}</td>
                 <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>
                 <td>${user.expire_date}</td>
-                <td>${fen2yuan(user.balance)}</td>
-                <td>${user.create_time}</td>
-                <td>${user.last_pause or ''}</td>
+                <td>${fen2yuan(user.balance)} 元</td>
+                <td>${sec2hour(user.time_length)}小时</td>
+                <td>${kb2mb(user.flow_length)}M</td>
+                <!-- <td>${(user.last_pause or '')[:10]}</td> -->
                  <td>
                  <a class="opt-btn btn-default" href="/bus/account/update?account_number=${user.account_number}">修改</a>
                     % if user.status == 2:
@@ -124,13 +126,13 @@ function release(account_number)
                         <a class="opt-btn btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
                         % endif
                         
-                        % if user.product_policy in (0,2):
+                        % if user.product_policy in (0,2,3,5):
                         
                             % if permit.match('/bus/account/next'):
                             <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
                             % endif
                             
-                        % elif user.product_policy == 1: 
+                        % elif user.product_policy in (1,4): 
                             
                             % if permit.match('/bus/account/charge'):
                             <a class="opt-btn btn-default" href="/bus/account/charge?account_number=${user.account_number}">充值</a>
@@ -169,7 +171,7 @@ function release(account_number)
             <tr class="active">
                 <th>订单号</th>
                 <th>资费</th>
-                <th>上网账号</th>
+                <th>用户账号</th>
                 <th>订单费用</th>
                 <th>实缴费用</th>
                 <th>订单状态</th>

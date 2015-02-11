@@ -129,13 +129,13 @@ $(document).ready(function (){
             <thead>
             <tr>
                 <th>用户姓名</th> 
-                <th>上网账号</th>
+                <th>用户账号</th>
                 <th>BAS地址</th>
-                <th>会话标识</th>
                 <th>上线时间</th>
-                <th>用户IP地址</th>
-                <th>用户MAC地址</th>
+                <th>IP地址</th>
+                <th>MAC地址</th>
                 <th>已记账时间</th>
+                <th>上传/下载</th>
                 <th></th>
             </tr>
             </thead>
@@ -146,11 +146,11 @@ $(document).ready(function (){
                 <td>${online.realname}</td>
                 <td>${online.account_number}</td>
                 <td>${online.nas_addr}</td>
-                <td>${online.acct_session_id}</td>
                 <td>${online.acct_start_time}</td>
                 <td>${online.framed_ipaddr}</td>
                 <td>${online.mac_addr}</td>
                 <td>${fmt_second(online.billing_times)}</td>
+                <td>${kb2mb(online.input_total)}M/${kb2mb(online.output_total)}M</td>
                 <td>
                 <a class="opt-btn btn-default" href="javascript:updater.unlock_online('${online.nas_addr}','${online.acct_session_id}');">解锁</a>
                 <a class="opt-btn btn-default" href="javascript:updater.disconnect_online('${online.nas_addr}','${online.acct_session_id}');">强制下线</a>

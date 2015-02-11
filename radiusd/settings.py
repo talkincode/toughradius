@@ -6,6 +6,7 @@ debug = True
 cache_timeout = 3600 #second
 reject_delay = 9
 
+FEES = (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows) = (0,1,2,3,4,5)
 
 FEE_MONTH = 0
 FEE_TIMES = 1
@@ -61,7 +62,8 @@ acct_plugins = [
     'acct_start_process',
     'acct_stop_process',
     'acct_update_process',
-    'acct_onoff_process'
+    'acct_bill_process',
+    'acct_onoff_process',
 ]
 
 admin_plugins = [

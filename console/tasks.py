@@ -1,62 +1,69 @@
 #!/usr/bin/env python
-from twisted.python import log
 from twisted.internet import task
-from datetime import datetime
+from sqlalchemy.sql import func
 import models
-import platform
-
-__last_online_stat_hour = -1
-__last_mysql_backup_day = ''
+import time
 
 def __online_stat_job(mk_db):
-    global __last_online_stat_hour
-    now = datetime.now()
-    if now.hour == __last_online_stat_hour:
-        return 
-    if now.minute >= 58:
-        log.msg('start exec online_stat_job @ %s...'%now.hour)
-        db = mk_db()
-        try:
-            day_code = now.strftime( "%Y-%m-%d")
-            nodes = db.query(models.SlcNode)
-            for node in nodes:
-                online_count = db.query(models.SlcRadOnline.id).filter(
-                    models.SlcRadOnline.account_number == models.SlcRadAccount.account_number,
-                    models.SlcRadAccount.member_id == models.SlcMember.member_id,
-                    models.SlcMember.node_id == node.id
-                ).count()
-                stat = db.query(models.SlcRadOnlineStat).filter_by(
-                    node_id = node.id,
-                    day_code = day_code,
-                    time_num = now.hour
-                ).first()
-                if not stat:
-                    stat = models.SlcRadOnlineStat()
-                    stat.node_id = node.id
-                    stat.day_code = day_code
-                    stat.time_num = now.hour
-                    stat.total = online_count
-                    db.add(stat)
-                else:
-                    stat.total = online_count
-                log.msg('online_stat %s,%s,%s,%s'%(node.id,day_code,now.hour,stat.total))
-            db.commit()
-            __last_online_stat_hour = now.hour
-            log.msg('exec online_stat_job done @ %s'%now.hour)
-        except:
-            log.err('exec online_stat_job error @ %s'%now.hour)
-            db.rollback()
-            import traceback
-            traceback.print_exc()
-        finally:
-            db.close()
+    db = mk_db()
+    try:
+        nodes = db.query(models.SlcNode)
+        for node in nodes:
+            online_count = db.query(models.SlcRadOnline.id).filter(
+                models.SlcRadOnline.account_number == models.SlcRadAccount.account_number,
+                models.SlcRadAccount.member_id == models.SlcMember.member_id,
+                models.SlcMember.node_id == node.id
+            ).count()
+            stat = models.SlcRadOnlineStat()
+            stat.node_id = node.id
+            stat.stat_time = int(time.time())
+            stat.total = online_count
+            db.add(stat)
+        db.commit()
+    except:
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+    finally:
+        db.close()
+        
+def __flow_stat_job(mk_db):
+    db = mk_db()
+    try:
+        nodes = db.query(models.SlcNode)
+        for node in nodes:
+            r = db.query(
+                func.sum(models.SlcRadOnline.input_total).label("input_total"),
+                func.sum(models.SlcRadOnline.output_total).label("output_total")
+            ).filter(
+                models.SlcRadOnline.account_number == models.SlcRadAccount.account_number,
+                models.SlcRadAccount.member_id == models.SlcMember.member_id,
+                models.SlcMember.node_id == node.id
+            ).first()
+            if r:
+                stat = models.SlcRadFlowStat()
+                stat.node_id = node.id
+                stat.stat_time = int(time.time())
+                stat.input_total = r.input_total
+                stat.output_total = r.output_total
+                db.add(stat)
+        db.commit()
+    except:
+        db.rollback()
+        import traceback
+        traceback.print_exc()
+    finally:
+        db.close()
             
 def start_online_stat_job(mk_db):
-    log.msg('start online_stat_job...')
+    print ('start online_stat_job...')
     _task = task.LoopingCall(__online_stat_job,mk_db)
-    _task.start(30)
+    _task.start(300)
             
-
+def start_flow_stat_job(mk_db):
+    print ('start flow_stat_job...')
+    _task = task.LoopingCall(__flow_stat_job,mk_db)
+    _task.start(300)
     
         
 

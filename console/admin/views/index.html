@@ -1,6 +1,8 @@
 <%inherit file="base.html"/>
 <%def name="head()">
-<script src="/static/js/Chart.js"></script>
+<script src="/static/js/highcharts.js"></script>
+<script src="/static/js/charttheme.js"></script>
+<script src="/static/js/exporting.js"></script>
 <script>
 
 var wsock = {
@@ -23,23 +25,69 @@ var wsock = {
     }
 };
 
-function doQuery()
+var online_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'online-chart',height:300},
+    title: {text: '在线用户统计'},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
+    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    yAxis: {
+        title: {text: '在线数'},
+        labels: {formatter: function() {return this.value + '人';}}            
+    },
+    tooltip: {shared: true},
+    legend: {enabled: false},    
+    plotOptions: {areaspline: {
+        stacking: 'normal',
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{}]
+};
+
+var flow_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'flow-chart',height:300},
+    title: {text: '流量统计'},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
+    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    yAxis: {title: {text: '使用流量'},
+        labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
+    },
+    tooltip: {shared: true, valueSuffix: 'MB'},
+    legend: {
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+                x: 150,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },  
+    plotOptions: {areaspline: {
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{}]
+};
+
+function update_online()
 {
-    $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (data) {
-        if (data.code == 0) {
-            var _data = {
-                labels: data.hours,
-                datasets: [
-                    {
-                        fillColor: "rgba(151,187,205,0.5)",
-                        strokeColor: "rgba(151,187,205,1)",
-                        pointColor: "rgba(151,187,205,1)",
-                        pointStrokeColor: "#fff",
-                        data: data.dataset
-                    }
-                ]
-            }
-            chart.Line(_data);
+    $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (ev) {
+        if (ev.code == 0) {
+            online_options.series = ev.data;
+            var chart = new Highcharts.Chart(online_options);
+        }
+    }, "json");
+}
+
+function update_flow()
+{
+    $.post("/ops/flow/statdata", {day_code:'${currdate()}'} , function (ev) {
+        if (ev.code == 0) {
+            flow_options.series = ev.data;
+            var chart = new Highcharts.Chart(flow_options);
         }
     }, "json");
 }
@@ -47,9 +95,8 @@ function doQuery()
 var chart;
 $(document).ready(function (){
     wsock.start('${radaddr}','${adminport}');
-    var ctx = $("#statChart").get(0).getContext("2d");
-    chart = new Chart(ctx)    
-    doQuery();
+    update_online();
+    update_flow();
 });
 
 
@@ -85,12 +132,27 @@ $(document).ready(function (){
 </div>
 
 <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线统计</div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线统计
+    <div class="bar pull-right">
+        <a href="javascript:update_online();">刷新数据</a>
+    </div>
+    </div>
     <div class="panel-body">
-        <div class="container center"><canvas id="statChart" width="720" height="160"></canvas></div>
-        <div class="alert alert-info ">
+        <div class="container center" id="online-chart"> </div>
+        <div class="well well-sm">
             当前在线用户数 ${online_count}/${user_total}
         </div>
+    </div>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 流量统计
+    <div class="bar pull-right">
+        <a href="javascript:update_flow();">刷新数据</a>
+    </div>
+    </div>
+    <div class="panel-body">
+        <div class="container center" id="flow-chart"></div>
     </div>
 </div>
 

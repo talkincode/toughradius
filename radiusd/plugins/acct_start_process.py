@@ -30,6 +30,8 @@ def process(req=None,user=None,runstat=None):
         mac_addr = req.get_mac_addr(),
         nas_port_id = req.get_nas_portid(),
         billing_times = 0,
+        input_total = 0,
+        output_total = 0,
         start_source = STATUS_TYPE_START
     )
 

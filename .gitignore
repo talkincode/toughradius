@@ -37,3 +37,4 @@ build
 console/testusers.txt
 xls/
 testusers.txt
+testdata.py

@@ -101,15 +101,17 @@ opr_update_form = pyforms.Form(
         action="/opr/update"
     )        
 
-product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}
+product_policy = {0:u'预付费包月',1:u"预付费时长",2:u"买断包月",3:u"买断时长",4:u"预付费流量",5:u"买断流量"}
 product_status_dict = {0:u'正常',1:u"停用"}
 
 def product_add_form():
     return pyforms.Form(
         pyforms.Textbox("product_name", rules.len_of(4, 64), description=u"资费名称",  required="required",**input_style),
         pyforms.Dropdown("product_policy", args=product_policy.items(), description=u"计费策略", required="required",**input_style),
-        pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),
-        pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(包月价/小时价/买断价)(元)", required="required", **input_style),
+        pyforms.Textbox("fee_months", rules.is_number, description=u"买断授权月数",value=0, **input_style),
+        pyforms.Textbox("fee_times", rules.is_number, description=u"买断时长(小时)",value=0, **input_style),
+        pyforms.Textbox("fee_flows", rules.is_number, description=u"买断流量(MB)",value=0, **input_style),
+        pyforms.Textbox("fee_price", rules.is_rmb, description=u"资费价格(元)", required="required", **input_style),
         pyforms.Textbox("fee_period",rules.is_period,description=u"开放认证时段",**input_style),
         pyforms.Textbox("concur_number", rules.is_numberOboveZore,description=u"并发数控制(0表示不限制)",value="0", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC ",**input_style),
@@ -129,8 +131,10 @@ def product_update_form():
         pyforms.Textbox("product_name", rules.len_of(4, 32), description=u"资费名称", required="required",**input_style),
         pyforms.Textbox("product_policy_name", description=u"资费策略",readonly="readonly", required="required",**input_style),
         pyforms.Dropdown("product_status",args=product_status_dict.items(), description=u"资费状态", required="required", **input_style),
-        pyforms.Textbox("fee_months", rules.is_number, description=u"买断月数", **input_style),
-        pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(包月价/小时价/买断价)(元)", required="required", **input_style),
+        pyforms.Textbox("fee_months", rules.is_number, description=u"买断授权月数",value=0, **input_style),
+        pyforms.Textbox("fee_times", rules.is_number, description=u"买断时长(小时)",value=0, **input_style),
+        pyforms.Textbox("fee_flows", rules.is_number, description=u"买断流量(MB)",value=0, **input_style),
+        pyforms.Textbox("fee_price", rules.is_rmb,description=u"资费价格(元)", required="required", **input_style),
         pyforms.Textbox("fee_period", rules.is_period,description=u"开放认证时段",**input_style),
         pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),
@@ -188,27 +192,26 @@ roster_update_form = pyforms.Form(
 )
 
 
-userreg_state = {1:u"正常", 6:u"未激活"}
-user_state = {1:u"预定",1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期"}
+user_state = {1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期"}
 bind_state = {0: u"不绑定", 1: u"绑定"}
 
 def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
-        pyforms.Textbox("member_name", rules.len_of(6,64), description=u"用户登陆名", required="required",**input_style),
+        pyforms.Textbox("member_name", rules.len_of(4,64), description=u"用户登陆名", required="required",**input_style),
         pyforms.Textbox("member_password", rules.len_of(6,128), description=u"用户登陆密码", required="required",**input_style),
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
-        pyforms.Textbox("account_number", description=u"用户上网账号",  required="required", **input_style),
+        pyforms.Textbox("account_number", description=u"用户用户账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
         pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
-        pyforms.Hidden("status", args=userreg_state.items(),value=1, description=u"用户状态",  **input_style),
+        pyforms.Hidden("status",value=1, description=u"用户状态",  **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户开户",
         action="/bus/member/open"
@@ -219,7 +222,7 @@ def account_open_form(products=[]):
         pyforms.Hidden("node_id", description=u"区域", **input_style),
         pyforms.Hidden("member_id",  description=u"编号"),
         pyforms.Textbox("realname", description=u"用户姓名", readonly="readonly",**input_style),
-        pyforms.Textbox("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Textbox("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"上网密码", required="required", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("address", description=u"用户地址",**input_style),
@@ -227,7 +230,7 @@ def account_open_form(products=[]):
         pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
-        pyforms.Hidden("status", args=userreg_state.items(),value=1, description=u"用户状态",  **input_style),
+        pyforms.Hidden("status",value=1, description=u"用户状态",  **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户新开账号",
         action="/bus/account/open"
@@ -236,10 +239,10 @@ def account_open_form(products=[]):
 def user_import_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"用户区域", args=nodes, **input_style),
-        pyforms.Dropdown("product_id",args=products, description=u"上网资费",  required="required", **input_style),
-        pyforms.File("import_file", description=u"数据文件",  required="required", **input_style),
-        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
-        title=u"用户导入",
+        pyforms.Dropdown("product_id",args=products, description=u"用户资费",  required="required", **input_style),
+        pyforms.File("import_file", description=u"用户数据文件",  required="required", **input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>立即导入</b>", **button_style),
+        title=u"用户数据导入",
         action="/bus/member/import"
 )
 
@@ -249,13 +252,15 @@ user_import_vform = dataform.Form(
         dataform.Item("password",rules.not_null,description=u"用户密码"),
         dataform.Item("expire_date", rules.is_date,description=u"过期日期"),
         dataform.Item("balance",rules.is_rmb,description=u"用户余额"),
+        dataform.Item("time_length",description=u"用户时长"),
+        dataform.Item("flow_length",description=u"用户流量"),
         title="import"
 )
 
 account_next_form = pyforms.Form(
         pyforms.Hidden("product_id", description=u"上网资费"),
         pyforms.Hidden("old_expire", description=u""),
-        pyforms.Hidden("account_number", description=u"上网账号"),
+        pyforms.Hidden("account_number", description=u"用户账号"),
         pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
@@ -265,7 +270,7 @@ account_next_form = pyforms.Form(
 )
 
 account_charge_form = pyforms.Form(
-        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Hidden("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户充值",
@@ -274,7 +279,7 @@ account_charge_form = pyforms.Form(
 
 
 account_cancel_form = pyforms.Form(
-        pyforms.Hidden("account_number", description=u"上网账号",  required="required", **input_style),
+        pyforms.Hidden("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"退费金额",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户销户",
@@ -298,7 +303,7 @@ def member_update_form(nodes=[]):
 
 def account_update_form():
     return pyforms.Form(
-        pyforms.Textbox("account_number", description=u"上网账号",  readonly="readonly", **input_style),
+        pyforms.Textbox("account_number", description=u"用户账号",  readonly="readonly", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Textbox("install_address", description=u"用户安装地址",**input_style),
         pyforms.Textbox("new_password", description=u"上网密码(留空不修改)", **input_style),
@@ -310,7 +315,7 @@ def account_update_form():
         action="/bus/account/update"
     )
 
-card_types = {0:u'资费套餐卡',1:u'普通余额卡'}
+card_types = {0:u'资费卡',1:u'余额卡'}
 card_states = {0:u'未激活',1:u'已激活',2:u"已使用",3:u"已回收"}
 
 def recharge_card_form(products=[]):
@@ -323,8 +328,8 @@ def recharge_card_form(products=[]):
         pyforms.Textbox("pwd_len", rules.is_number,description=u"密码长度(最大为16)",value=8,**input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"面值/销售价(元)",value=0,**input_style),
         pyforms.Textbox("months", rules.is_number,description=u"授权时间(月)",readonly="readonly",value=0,**input_style),
-        # pyforms.Textbox("time_length",rules.is_number, description=u"总时长(小时)",readonly="readonly",value=0,**input_style),
-        # pyforms.Textbox("flow_length",rules.is_number, description=u"总流量(MB)",readonly="readonly",value=0,**input_style),
+        pyforms.Textbox("times",description=u"总时长(小时)",readonly="readonly",value=0,**input_style),
+        pyforms.Textbox("flows",description=u"总流量(MB)",readonly="readonly",value=0,**input_style),
         pyforms.Textbox("expire_date",rules.is_date, description=u"过期时间",**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"充值卡生成",

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+python createdb.py -c config.json -i=1
+
+cd console 
+python admin.py & 
+cd ..
+
+sleep 4
+
+python httptests/alls.py
+
+sleep 4
+
+echo "print any key to exist:"
+
+read var1
+
+ps aux | grep admin.py | awk '{print $2}' | xargs  kill
