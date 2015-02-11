@@ -58,12 +58,12 @@ def __flow_stat_job(mk_db):
 def start_online_stat_job(mk_db):
     print ('start online_stat_job...')
     _task = task.LoopingCall(__online_stat_job,mk_db)
-    _task.start(30)
+    _task.start(300)
             
 def start_flow_stat_job(mk_db):
     print ('start flow_stat_job...')
     _task = task.LoopingCall(__flow_stat_job,mk_db)
-    _task.start(30)
+    _task.start(300)
     
         
 
