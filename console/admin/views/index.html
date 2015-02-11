@@ -27,7 +27,7 @@ var wsock = {
 
 var online_options = {
     credits : {enabled:false},
-    chart: {type: 'area',renderTo: 'online-chart',height:300},
+    chart: {type: 'areaspline',renderTo: 'online-chart',height:300},
     title: {text: '在线用户统计'},
     subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
@@ -37,16 +37,17 @@ var online_options = {
     },
     tooltip: {shared: true},
     legend: {enabled: false},    
-    plotOptions: {area: {
+    plotOptions: {areaspline: {
         stacking: 'normal',
-        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}}
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
     }},           
     series: [{}]
 };
 
 var flow_options = {
     credits : {enabled:false},
-    chart: {type: 'area',renderTo: 'flow-chart',height:300},
+    chart: {type: 'areaspline',renderTo: 'flow-chart',height:300},
     title: {text: '流量统计'},
     subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
@@ -54,10 +55,19 @@ var flow_options = {
         labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
     },
     tooltip: {shared: true, valueSuffix: 'MB'},
-    legend: {enabled: false},    
-    plotOptions: {area: {
-        stacking: 'normal',
-        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}}
+    legend: {
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+                x: 150,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },  
+    plotOptions: {areaspline: {
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
     }},           
     series: [{}]
 };
