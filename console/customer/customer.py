@@ -395,14 +395,17 @@ def password_update_post(db):
 def portal_auth(db):
     user = request.params.get("user")
     token = request.params.get("token")
+    if not user:return abort(403,'user is empty')
+    if not token:return abort(403,'token is empty')
+    account = db.query(models.SlcRadAccount).filter_by(
+        account_number=user
+    ).first()
+    if not account:
+        return abort(403,'user not exists')
     secret = get_param_value(db,"8_portal_secret")
     date = utils.get_currdate()
-    _token = md5("%s%s%s"%(user,secret,date)).hexdigest()
+    _token = md5("%s%s%s%s"%(user,utils.decrypt(account.password),secret,date)).hexdigest()
     if _token == token:
-        account = get_account_by_number(db,user)
-        print account
-        if not account:
-            return render("error",msg=u"用户%s不存在!"%user)
         member = db.query(models.SlcMember).get(account.member_id)
         set_cookie('customer_id',member.member_id,path="/")
         set_cookie('customer',member.member_name,path="/")
@@ -410,7 +413,7 @@ def portal_auth(db):
         set_cookie('customer_login_ip', request.remote_addr,path="/") 
         redirect("/")
     else:
-        return render("error",msg=u"无效的访问!")
+        return abort(403,'token is invalid')
         
 ###############################################################################
 # account open      

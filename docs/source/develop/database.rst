@@ -266,6 +266,7 @@ slc_rad_product
 
 
     资费信息表 <radiusd default table>
+    资费类型 product_policy 0 预付费包月 1 预付费时长 2 买断包月 3 买断时长 4 预付费流量 5 买断流量
     销售状态 product_status 0 正常 1 停用 资费停用后不允许再订购
     
 
@@ -413,9 +414,9 @@ framed_ipaddr          VARCHAR(32)       False             IP地址
 mac_addr               VARCHAR(32)       False             mac地址                 
 nas_port_id            VARCHAR(255)      False             接入端口物理信息  
 billing_times          INTEGER           False             已记账时间           
-input_total            INTEGER           True              会话的上行流量（kb）
-output_total           INTEGER           True              会话的下行流量（kb）
-start_source           SMALLINT          False             会话开始来源        
+input_total            INTEGER           True              上行流量（kb）      
+output_total           INTEGER           True              下行流量（kb）      
+start_source           SMALLINT          False             记账开始来源        
 =====================  ================  ================  ====================================
 
 .. end_table
@@ -426,7 +427,7 @@ start_source           SMALLINT          False             会话开始来源
 slc_rad_online_stat
 ------------------------------------ 
 
-用户在线统计表 <radiusd default table>
+用户在线统计表 
 
 .. start_table slc_rad_online_stat;id 
 
@@ -437,6 +438,28 @@ id                     INTEGER           False             id
 node_id                INTEGER           False             区域id                  
 stat_time              INTEGER           False             统计时间              
 total                  INTEGER           True              在线数                 
+=====================  ================  ================  ====================================
+
+.. end_table
+
+
+.. _slc_rad_flow_stat_label:
+
+slc_rad_flow_stat
+------------------------------------ 
+
+用户在线统计表 
+
+.. start_table slc_rad_flow_stat;id 
+
+=====================  ================  ================  ====================================
+属性                    类型（长度）       可否为空           描述                              
+=====================  ================  ================  ====================================
+id                     INTEGER           False             id                        
+node_id                INTEGER           False             区域id                  
+stat_time              INTEGER           False             统计时间              
+input_total            INTEGER           True              上行流量（kb）      
+output_total           INTEGER           True              下行流量（kb）      
 =====================  ================  ================  ====================================
 
 .. end_table
@@ -498,9 +521,8 @@ slc_recharge_card
 
 
     充值卡表
-    批次号：batch_no，以年月开始紧跟顺序号，如201502001 
-    通用余额卡：无资费类型
-    资费套餐卡：买断流量卡，时长卡，包月，买断卡无面值
+    批次号：batch_no，以年月开始紧跟顺序号，如20150201
+    卡类型 0 资费卡   1 余额卡
     状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收 
     
 

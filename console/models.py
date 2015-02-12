@@ -163,9 +163,8 @@ class SlcMemberOrder(DeclarativeBase):
 class SlcRechargerCard(DeclarativeBase):
     """
     充值卡表
-    批次号：batch_no，以年月开始紧跟顺序号，如201502001 
-    通用余额卡：无资费类型
-    资费套餐卡：买断流量卡，时长卡，包月，买断卡无面值
+    批次号：batch_no，以年月开始紧跟顺序号，如20150201
+    卡类型 0 资费卡   1 余额卡
     状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收 
     """
     __tablename__ = 'slc_recharge_card'
@@ -250,6 +249,7 @@ class SlcRadAccountAttr(DeclarativeBase):
 class SlcRadProduct(DeclarativeBase):
     '''
     资费信息表 <radiusd default table>
+    资费类型 product_policy 0 预付费包月 1 预付费时长 2 买断包月 3 买断时长 4 预付费流量 5 买断流量
     销售状态 product_status 0 正常 1 停用 资费停用后不允许再订购
     '''
     __tablename__ = 'slc_rad_product'
@@ -363,12 +363,12 @@ class SlcRadOnline(DeclarativeBase):
     mac_addr = Column(u'mac_addr', VARCHAR(length=32), nullable=False,doc=u"mac地址")
     nas_port_id = Column(u'nas_port_id', VARCHAR(length=255), nullable=False,doc=u"接入端口物理信息")
     billing_times = Column(u'billing_times', INTEGER(), nullable=False,doc=u"已记账时间")
-    input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
-    output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
-    start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"会话开始来源")
+    input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
+    output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
+    start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"记账开始来源")
     
 class SlcRadOnlineStat(DeclarativeBase):
-    """用户在线统计表 <radiusd default table>"""
+    """用户在线统计表 """
     __tablename__ = 'slc_rad_online_stat'
 
     __table_args__ = {}
@@ -382,7 +382,7 @@ class SlcRadOnlineStat(DeclarativeBase):
     #relation definitions
     
 class SlcRadFlowStat(DeclarativeBase):
-    """用户在线统计表 <radiusd default table>"""
+    """用户在线统计表 """
     __tablename__ = 'slc_rad_flow_stat'
 
     __table_args__ = {}
@@ -521,8 +521,6 @@ def init_db(db):
     db.add(opr)
 
     db.commit()
-
-
 
 def build_db(config=None):
     if config['dbtype'] != 'mysql':

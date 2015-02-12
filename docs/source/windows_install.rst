@@ -67,7 +67,7 @@ ToughRADIUS主要采用MySQL(5.0以上版本)存储数据，在部署ToughRADIUS
 
 databse部分是数据库的配置，修改配置文件数据库部分的主机，端口，用户名，数据库名，密码和实际相符合。
 
-radiusd是Radius核心服务的配置，注意adminport是提供给web管理系统调用服务的端口，allows主要是web管理系统与自助服务系统的IP地址。
+radiusd是Radius核心服务的配置，注意adminport是提供给web管理系统调用服务的端口。
 
 admin部分是web管理控制台配置，注意服务端口的配置，如果与系统其他应用冲突请修改。
 
@@ -92,7 +92,6 @@ customer是自助服务系统配置，注意服务端口的配置，如果与系
             "authport": 1812,
             "acctport": 1813,
             "adminport": 1815,
-            "allows":"127.0.0.1",
             "dictfile": "./radiusd/dict/dictionary",
             "debug":1,
             "cache_timeout":600
@@ -107,6 +106,7 @@ customer是自助服务系统配置，注意服务端口的配置，如果与系
             "httpport":1817,
             "debug":1
         },
+        "tz":"Asia/Shanghai",
         "secret":"1qazxsw23edcvfr45tgbnhy67ujmki89"        
     }
 
