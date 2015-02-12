@@ -2,7 +2,9 @@
 #coding=utf-8
 from plugins import error_auth
 from store import store
+from utils import timeit
 
+@timeit("auth_roster_filter")
 def process(req=None,resp=None,user=None):
     """check block roster"""
     macaddr = req.get_mac_addr()

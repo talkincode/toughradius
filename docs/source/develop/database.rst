@@ -282,7 +282,9 @@ bind_mac               SMALLINT          False             是否绑定mac
 bind_vlan              SMALLINT          False             是否绑定vlan          
 concur_number          INTEGER           False             并发数                 
 fee_period             VARCHAR(11)       True              开放认证时段        
-fee_months             INTEGER           True              买断月数              
+fee_months             INTEGER           True              买断授权月数        
+fee_times              INTEGER           True              买断时长(秒)         
+fee_flows              INTEGER           True              买断流量(kb)          
 fee_price              INTEGER           False             资费价格              
 input_max_limit        INTEGER           False             上行速率              
 output_max_limit       INTEGER           False             下行速率              
@@ -333,7 +335,10 @@ nas_addr               VARCHAR(15)       False             bas地址
 acct_session_id        VARCHAR(253)      False             会话id                  
 acct_start_time        VARCHAR(19)       False             计费开始时间        
 acct_session_time      INTEGER           False             会话时长              
-acct_length            INTEGER           False             扣费时长              
+input_total            INTEGER           True              会话的上行流量（kb）
+output_total           INTEGER           True              会话的下行流量（kb）
+acct_times             INTEGER           False             扣费时长(秒)         
+acct_flows             INTEGER           False             扣费流量(kb)          
 acct_fee               INTEGER           False             应扣费用              
 actual_fee             INTEGER           False             实扣费用              
 balance                INTEGER           False             当前余额              
@@ -408,6 +413,8 @@ framed_ipaddr          VARCHAR(32)       False             IP地址
 mac_addr               VARCHAR(32)       False             mac地址                 
 nas_port_id            VARCHAR(255)      False             接入端口物理信息  
 billing_times          INTEGER           False             已记账时间           
+input_total            INTEGER           True              会话的上行流量（kb）
+output_total           INTEGER           True              会话的下行流量（kb）
 start_source           SMALLINT          False             会话开始来源        
 =====================  ================  ================  ====================================
 
@@ -421,14 +428,14 @@ slc_rad_online_stat
 
 用户在线统计表 <radiusd default table>
 
-.. start_table slc_rad_online_stat;node_id,day_code,time_num 
+.. start_table slc_rad_online_stat;id 
 
 =====================  ================  ================  ====================================
 属性                    类型（长度）       可否为空           描述                              
 =====================  ================  ================  ====================================
+id                     INTEGER           False             id                        
 node_id                INTEGER           False             区域id                  
-day_code               VARCHAR(10)       False             统计日期              
-time_num               INTEGER           False             统计小时              
+stat_time              INTEGER           False             统计时间              
 total                  INTEGER           True              在线数                 
 =====================  ================  ================  ====================================
 
@@ -511,8 +518,8 @@ card_status            INTEGER           False             状态
 product_id             INTEGER           True              资费id                  
 fee_value              INTEGER           False             充值卡面值-元       
 months                 INTEGER           True              授权月数              
-time_length            INTEGER           False             买断时长-分钟       
-flow_length            INTEGER           False             买断流量-kb           
+times                  INTEGER           True              授权时长(秒)         
+flows                  INTEGER           True              授权流量(kb)          
 expire_date            VARCHAR(10)       False             过期时间- ####-##-##  
 create_time            VARCHAR(19)       False             创建时间              
 =====================  ================  ================  ====================================

@@ -16,6 +16,7 @@ from pyrad import dictionary
 from pyrad import host
 from pyrad import packet
 from store import store
+from utils import timeit
 from plugins import *
 import datetime
 import middleware
@@ -157,6 +158,7 @@ class RADIUSAccess(RADIUS):
         pkt.vendor_id = vendor_id
         return pkt
 
+    @timeit("RADIUSAccess")
     def processPacket(self, req):
         self.runstat.auth_all += 1
         if req.code != packet.AccessRequest:
@@ -200,6 +202,7 @@ class RADIUSAccounting(RADIUS):
         pkt.vendor_id = vendor_id
         return pkt
 
+    @timeit("RADIUSAccounting")
     def processPacket(self, req):
         self.runstat.acct_all += 1
         if req.code != packet.AccountingRequest:
@@ -266,7 +269,8 @@ def main():
     _trace = UserTrace()
     _runstat = statistics.RunStat()
     _middleware = middleware.Middleware()
-    _debug = _radiusd['debug'] or settings.debug
+    _debug = _radiusd['debug']  
+    settings.debug = _debug
     
 
     # init coa clients

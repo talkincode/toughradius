@@ -2,7 +2,7 @@
 
 __verson__ = '0.1'
 
-debug = True
+debug = False
 cache_timeout = 3600 #second
 reject_delay = 9
 

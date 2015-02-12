@@ -94,7 +94,7 @@ def init_application(dbconf=None,consconf=None,secret=None):
 ###############################################################################
 
 def main():
-    import argparse,json
+    import argparse,json,traceback
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
@@ -102,7 +102,7 @@ def main():
     args =  parser.parse_args(sys.argv[1:])
 
     if not args.conf or not os.path.exists(args.conf):
-        print 'no config file user -c or --conf cfgfile'
+        print 'no config file use -c or --conf cfgfile'
         return
 
     _config = json.loads(open(args.conf).read())
@@ -113,15 +113,19 @@ def main():
     if args.httpport:_admin['httpport'] = args.httpport
     if args.debug:_admin['debug'] = bool(args.debug)
 
-    init_application(dbconf=_database,consconf=_admin,secret=_secret)
-    
-    runserver(
-        mainapp, host='0.0.0.0', 
-        port=_admin['httpport'] ,
-        debug=bool(_admin['debug']),
-        reloader=bool(_admin['debug']),
-        server="twisted"
-    )
-
+    try:
+        init_application(dbconf=_database,consconf=_admin,secret=_secret)
+        runserver(
+            mainapp, host='0.0.0.0', 
+            port=_admin['httpport'] ,
+            debug=bool(_admin['debug']),
+            reloader=bool(_admin['debug']),
+            server="twisted"
+        )
+    except:
+        log.err("start admin server fail..")
+        traceback.print_exc()
+        
+        
 if __name__ == "__main__":
     main()

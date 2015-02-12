@@ -4,6 +4,7 @@ from plugins import error_auth
 from store import store
 import utils
 
+@utils.timeit("auth_user_filter")
 def process(req=None,resp=None,user=None):
 
     if not user:

@@ -2,8 +2,9 @@
 #coding=utf-8
 from plugins import error_auth
 from store import store
+from utils import timeit
 
-
+@timeit("auth_bind_filter")
 def process(req=None,resp=None,user=None):
     """check mac bind & vlan bind"""
     macaddr = req.get_mac_addr()

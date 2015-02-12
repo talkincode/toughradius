@@ -2,6 +2,7 @@
 #coding=utf-8
 from twisted.python import log
 from store import store
+from utils import timeit
 from settings import *
 import datetime
 
@@ -50,6 +51,7 @@ rate_funcs = {
     '14988' : ros_rate
 }
 
+@timeit("auth_rate_filter")
 def process(req=None,resp=None,user=None):
     product = store.get_product(user['product_id']) 
     if not product:return resp

@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
+sys.path.insert(0,os.path.abspath(os.path.pardir))
 from console import models
 
 def print_header():
@@ -50,6 +51,7 @@ mdls = [
     models.SlcRadTicket,
     models.SlcRadOnline,
     models.SlcRadOnlineStat,
+    models.SlcRadFlowStat,
     models.SlcRadAcceptLog,
     models.SlcRadOperateLog,
     models.SlcRechargerCard,

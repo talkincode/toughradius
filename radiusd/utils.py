@@ -18,7 +18,10 @@ import base64
 import datetime
 import hashlib
 import six
+import time
 import decimal
+import functools
+import settings
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
@@ -44,6 +47,20 @@ PacketStatusTypeMap = {
 def ndebug():
     import pdb
     pdb.set_trace()
+    
+def timeit(proc,is_debug=False):
+    def _handler(func):
+        @functools.wraps(func)
+        def wrapper(*args,**kwargs):
+            if settings.debug:
+                start = time.clock()
+                # print '---- start invoke %s.%s timer ----'%(proc,func.__name__)
+                result = func(*args,**kwargs)
+                print ':: %s.%s cast -> %.6f sec'%(proc,func.__name__,(time.clock() - start))
+                # print '---- end invoke %s.%s timer ----'%(proc,func.__name__)
+                return result
+        return wrapper
+    return _handler
 
 class AESCipher:
 

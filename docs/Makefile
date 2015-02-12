@@ -41,6 +41,11 @@ help:
 clean:
 	-rm -rf $(BUILDDIR)/*
 
+dbdoc:
+	python gendbdict.py > source/develop/database.rst
+	@echo
+	@echo "Build finished. The database dict gen."
+
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
