@@ -29,6 +29,7 @@ import utils
 import json
 import os
 import socket
+import time
 
         
 class PacketError(Exception):pass
@@ -248,9 +249,14 @@ def main():
     _database = _config['database']
     _radiusd = _config['radiusd']  
     _secret = _config['secret']
+
     
     # update aescipher
     utils.update_secret(_secret)
+    
+    # set timezone
+    os.environ["TZ"] = _config.get('tz','Asia/Shanghai')
+    time.tzset()
 
     # init args
     if args.authport:_radiusd['authport'] = args.authport
@@ -272,7 +278,6 @@ def main():
     _debug = _radiusd['debug']  
     settings.debug = _debug
     
-
     # init coa clients
     _coa_clients = {}
     for bas in store.list_bas():

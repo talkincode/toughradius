@@ -19,6 +19,7 @@ import tasks
 import functools
 import models
 import base
+import time
 
 subapps = [ops_app,bus_app,card_app,product_app]
 
@@ -109,6 +110,10 @@ def main():
     _database = _config['database']
     _admin = _config['admin']
     _secret = _config['secret']
+    
+    # set timezone
+    os.environ["TZ"] = _config.get('tz','Asia/Shanghai')
+    time.tzset()
 
     if args.httpport:_admin['httpport'] = args.httpport
     if args.debug:_admin['debug'] = bool(args.debug)

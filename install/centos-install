@@ -288,6 +288,7 @@ def setup_config():
     cjson['admin']['debug'] = int(sys_input("admin debug [0/1] [1]:") or 1)
     cjson['customer']['httpport'] = int(sys_input("customer httpport [1817]:") or 1817)
     cjson['customer']['debug'] = int(sys_input("customer debug [0/1] [1]:") or 1) 
+    cjson['tz']= sys_input("time zone [ Asia/Shanghai ]:") or 'Asia/Shanghai'
     slen = 128
     try:
         slen = int(sys_input("secret string len, len%8=0 [128]:") or 128)

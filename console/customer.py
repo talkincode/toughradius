@@ -23,6 +23,7 @@ from websock import websock
 import functools
 import models
 import base
+import time
 
 def init_application(dbconf=None,cusconf=None,secret=None):
     log.startLogging(sys.stdout)  
@@ -83,6 +84,10 @@ def main():
     _database = _config['database']
     _customer = _config['customer']
     _secret = _config['secret']
+    
+    # set timezone
+    os.environ["TZ"] = _config.get('tz','Asia/Shanghai')
+    time.tzset()
 
     if args.httpport:_customer['httpport'] = args.httpport
     if args.debug:_customer['debug'] = bool(args.debug)
