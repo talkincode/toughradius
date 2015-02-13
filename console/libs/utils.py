@@ -9,6 +9,8 @@ import hashlib
 import base64
 import calendar
 import random
+import os
+import time
 
 random_generator = random.SystemRandom()
 
@@ -16,8 +18,6 @@ decimal.getcontext().prec = 32
 decimal.getcontext().rounding = decimal.ROUND_UP
 
 _base_id = 0
-
-aes_key = 't_o_u_g_h_radius'
 
 _CurrentID = random_generator.randrange(1, 1024)
 
@@ -28,7 +28,7 @@ def CurrentID():
 
 class AESCipher:
 
-    def __init__(self, key): 
+    def setup(self, key): 
         self.bs = 32
         self.key = hashlib.sha256(key.encode()).digest()
 
@@ -51,13 +51,13 @@ class AESCipher:
     def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
 
-aescipher = AESCipher(aes_key)
+aescipher = AESCipher()
 encrypt = aescipher.encrypt
 decrypt = aescipher.decrypt 
 
-def update_secret(secret):
-    global aescipher
-    aescipher = AESCipher(secret)
+def update_tz(tz_val,default_val="CST-8"):
+    os.environ["TZ"] = tz_val or default_val
+    time.tzset()
     
 def bb2mb(ik):
     _kb = decimal.Decimal(ik or 0)

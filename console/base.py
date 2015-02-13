@@ -8,6 +8,7 @@ from bottle import HTTPError
 from bottle import static_file
 from libs.paginator import Paginator
 from libs import utils
+from beaker.cache import CacheManager
 from hashlib import md5
 import logging
 import functools
@@ -16,7 +17,6 @@ import models
 import json
 import time
 import tempfile
-from beaker.cache import CacheManager
 
 ########################################################################
 # const define
@@ -38,11 +38,9 @@ __cache_timeout__ = 600
 
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
 
-secret='123321qweasd',
-
 class SecureCookie(object):
     
-    def __init__(self,secret):
+    def setup(self,secret):
         self.secret = secret
     
     def get_cookie(self,name):
@@ -51,32 +49,26 @@ class SecureCookie(object):
     def set_cookie(self,name,value,**options):
         response.set_cookie(md5(name).hexdigest(),value,secret=self.secret,**options)
         
-scookie = SecureCookie(secret)
+scookie = SecureCookie()
 get_cookie = scookie.get_cookie
 set_cookie = scookie.set_cookie
 
-def update_secret(secret):
-    global scookie
-    scookie = SecureCookie(secret)
-    
-class Logger:
-    def info(self,msg):
-        log.msg(msg,level=logging.INFO)
-    def debug(self,msg):
-        log.msg(msg,level=logging.DEBUG)
-    def error(self,msg,err=None):
-        log.err(msg,err)
-
-logger = Logger()
-
+########################################################################
+# permission manage
+########################################################################
 
 class Permit():
-    '''permission rules'''
     routes = {}
-    
     def add_route(self,path,name,category,is_menu=False,order=time.time()):
         if not path:return
-        self.routes[path] = dict(path=path,name=name,category=category,is_menu=is_menu,oprs=[],order=order)
+        self.routes[path] = dict(
+            path=path,
+            name=name,
+            category=category,
+            is_menu=is_menu,
+            oprs=[],
+            order=order
+        )
     
     def get_route(self,path):
         return self.routes.get(path)    
@@ -125,6 +117,10 @@ class Permit():
      
 permit = Permit()       
 
+########################################################################
+# web plugin funtion
+########################################################################
+
 def export_file(name,data):
     with open(u'%s/%s' % (TMPDIR,name), 'wb') as f:
         f.write(data.xls)
@@ -153,6 +149,10 @@ def auth_cus(func):
         else:
             return func(*args,**kargs)
     return warp    
+
+########################################################################
+# cache function
+########################################################################
 
 @cache.cache('get_node_name',expire=3600)   
 def get_node_name(db,node_id):

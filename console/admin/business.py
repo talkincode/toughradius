@@ -165,7 +165,7 @@ member_detail_url_formatter = "/bus/member/detail?member_id={0}".format
 # member delete
 ###############################################################################
 @app.get('/member/delete',apply=auth_opr)
-def member_update(db):
+def member_delete(db):
     member_id = request.params.get("member_id")
     if not member_id:
         raise abort(404,'member_id is empty')
@@ -179,7 +179,16 @@ def member_update(db):
         db.query(models.SlcRechargeLog).filter_by(account_number=account.account_number).delete()
     db.query(models.SlcRadAccount).filter_by(member_id=member_id).delete()
     db.query(models.SlcMemberOrder).filter_by(member_id=member_id).delete()
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除用户%s'%(get_cookie("username"),member_id)
+    db.add(ops_log)
+    
     db.commit()
+    
     return redirect("/bus/member")
     
 permit.add_route("/bus/member/delete",u"删除用户信息",u"营业管理",order=0.03)
@@ -980,7 +989,7 @@ permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",o
 # member update
 ###############################################################################
 @app.get('/account/delete',apply=auth_opr)
-def member_update(db):
+def account_delete(db):
     account_number = request.params.get("account_number")
     if not account_number:
         raise abort(404,'account_number is empty')
@@ -995,6 +1004,14 @@ def member_update(db):
     db.query(models.SlcRechargeLog).filter_by(account_number=account.account_number).delete()
     db.query(models.SlcRadAccount).filter_by(account_number=account.account_number).delete()
     db.query(models.SlcMemberOrder).filter_by(account_number=account.account_number).delete()
+    
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)删除用户账号%s'%(get_cookie("username"),account_number)
+    db.add(ops_log)
+    
     db.commit()
     return redirect(member_detail_url_formatter(member_id))
     

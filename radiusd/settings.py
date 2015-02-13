@@ -1,16 +1,7 @@
+#!/usr/bin/env python
 #coding:utf-8
 
-__verson__ = '0.1'
-
-debug = False
-cache_timeout = 3600 #second
-reject_delay = 9
-
 FEES = (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows) = (0,1,2,3,4,5)
-
-FEE_MONTH = 0
-FEE_TIMES = 1
-FEE_BUYOUT = 2
 
 STAT_AUTH_ALL = 'STAT_AUTH_ALL'
 STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'
@@ -31,17 +22,6 @@ STATUS_TYPE_UPDATE  = 3
 STATUS_TYPE_UNLOCK = 4
 STATUS_TYPE_ACCT_ON  = 7
 STATUS_TYPE_ACCT_OFF = 8
-
-db_config = {
-    'database':{
-        'maxusage': 10,
-        'host': '127.0.0.1',
-        'user': 'root',
-        'passwd': 'root',
-        'db': 'slcrms',
-        'charset': "utf8",
-    }
-}
 
 auth_plugins = [
     'mac_parse',

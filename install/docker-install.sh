@@ -48,7 +48,7 @@ setup()
     mkdir -p ${rundir}/log
     
     yes | cp -f ${appdir}/install/my.cnf ${rundir}/mysql/my.cnf
-    yes | cp -f ${appdir}/install/radiusd.json ${rundir}/radiusd.json
+    yes | cp -f ${appdir}/install/radiusd.json ${rundir}/radiusd.conf
     yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf    
     yes | cp -f ${appdir}/install/toughrad.service /usr/lib/systemd/system/toughrad.service
     chmod 754 /usr/lib/systemd/system/toughrad.service
@@ -70,7 +70,7 @@ setup()
 
     echo "setup toughradius database.."
 
-    python ${appdir}/createdb.py -c ${rundir}/radiusd.json -i=1
+    python ${appdir}/createdb.py -c ${rundir}/radiusd.conf -i=1
     
     echo "add crontab task"
     

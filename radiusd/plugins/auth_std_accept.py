@@ -2,7 +2,6 @@
 #coding=utf-8
 from twisted.python import log
 from store import store
-from utils import timeit
 from settings import *
 import datetime
 
@@ -12,7 +11,6 @@ def get_type_val(typ,src):
     else:
         return src
 
-@timeit("auth_std_accept")
 def process(req=None,resp=None,user=None):
     product = store.get_product(user['product_id'])
     session_timeout = int(store.get_param("max_session_timeout"))

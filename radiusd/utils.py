@@ -13,6 +13,7 @@ from pyrad.packet import CoARequest
 from twisted.python import log
 from Crypto.Cipher import AES
 from Crypto import Random
+import os
 import binascii
 import base64
 import datetime
@@ -28,8 +29,6 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 md5_constructor = hashlib.md5
 
-aes_key = 't_o_u_g_h_radius'
-
 PacketStatusTypeMap = {
     1 : 'AccessRequest',
     2 : 'AccessAccept',
@@ -44,27 +43,20 @@ PacketStatusTypeMap = {
     45 : 'CoANAK',
 }
 
-def ndebug():
-    import pdb
-    pdb.set_trace()
-    
-def timeit(proc,is_debug=False):
-    def _handler(func):
-        @functools.wraps(func)
-        def wrapper(*args,**kwargs):
-            if settings.debug:
-                start = time.clock()
-                # print '---- start invoke %s.%s timer ----'%(proc,func.__name__)
-                result = func(*args,**kwargs)
-                print ':: %s.%s cast -> %.6f sec'%(proc,func.__name__,(time.clock() - start))
-                # print '---- end invoke %s.%s timer ----'%(proc,func.__name__)
-                return result
-        return wrapper
-    return _handler
+def is_expire(dstr):
+    if not dstr:
+        return False
+    expire_date = datetime.datetime.strptime("%s 23:59:59"%dstr,"%Y-%m-%d %H:%M:%S")
+    now = datetime.datetime.now()
+    return expire_date < now
+
+def update_tz(tz_val,default_val="CST-8"):
+    os.environ["TZ"] = tz_val or default_val
+    time.tzset()
 
 class AESCipher:
 
-    def __init__(self, key): 
+    def setup(self, key): 
         self.bs = 32
         self.key = hashlib.sha256(key.encode()).digest()
 
@@ -87,21 +79,9 @@ class AESCipher:
     def _unpad(s):
         return s[:-ord(s[len(s)-1:])]
 
-aescipher = AESCipher(aes_key)
+aescipher = AESCipher()
 encrypt = aescipher.encrypt
 decrypt = aescipher.decrypt 
-
-def update_secret(secret):
-    global aescipher
-    aescipher = AESCipher(secret)
-
-def is_expire(dstr):
-    if not dstr:
-        return False
-    expire_date = datetime.datetime.strptime("%s 23:59:59"%dstr,"%Y-%m-%d %H:%M:%S")
-    now = datetime.datetime.now()
-    return expire_date < now
-    
 
 class Storage(dict):
     def __getattr__(self, key): 
@@ -122,7 +102,69 @@ class Storage(dict):
     def __repr__(self):     
         return '<Storage ' + dict.__repr__(self) + '>'
         
+class RunStat(dict):
 
+    def __init__(self):
+        self.online = 0
+        self.auth_all = 0
+        self.auth_accept = 0
+        self.auth_reject = 0
+        self.auth_drop = 0
+        self.acct_all = 0
+        self.acct_start = 0
+        self.acct_stop = 0
+        self.acct_update = 0
+        self.acct_on = 0
+        self.acct_off = 0
+        self.acct_retry = 0
+        self.acct_drop = 0
+
+    def __getattr__(self, key): 
+        try:
+            return self[key]
+        except KeyError, k:
+            raise AttributeError, k
+    
+    def __setattr__(self, key, value): 
+        self[key] = value
+    
+    def __delattr__(self, key):
+        try:
+            del self[key]
+        except KeyError, k:
+            raise AttributeError, k        
+
+
+class UserTrace():
+
+    def __init__(self,user_size=10,gl_size=20):
+        self.user_size = user_size
+        self.gl_szie = gl_size
+        self.user_cache = {}
+        self.global_trace = []
+        
+    def size_info(self):
+        return len(self.user_cache),len(self.global_trace)
+        
+    def push(self,username,pkt):
+        _cache = self.user_cache.get(username)
+        if not _cache:
+            _cache = self.user_cache[username] = []
+            
+        if len(_cache) >= self.user_size:
+            _cache.pop()
+        _cache.insert(0,pkt)
+        
+        if len(self.global_trace) >= self.gl_szie:
+            self.global_trace.pop()
+        self.global_trace.insert(0,pkt)
+        
+    def get_global_msg(self):
+        if len(self.global_trace) == 0:return None
+        return self.global_trace.pop()
+        
+    def get_user_msg(self,username):
+        return self.user_cache.get(username) or []
 
 class AuthDelay():
     

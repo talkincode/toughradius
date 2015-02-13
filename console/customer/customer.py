@@ -15,7 +15,7 @@ from tablib import Dataset
 from libs import sqla_plugin 
 from urlparse import urljoin
 from base import (
-    logger,set_cookie,get_cookie,cache,get_param_value,
+    set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
     get_account_by_number,get_online_status
 )

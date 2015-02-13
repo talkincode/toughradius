@@ -5,7 +5,6 @@ from settings import *
 from store import store
 import utils
 
-@utils.timeit("auth_policy_filter")
 def process(req=None,resp=None,user=None):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""
     acct_policy = user['product_policy'] or FEE_MONTH

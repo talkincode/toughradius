@@ -25,14 +25,12 @@ import models
 import base
 import time
 
-def init_application(dbconf=None,cusconf=None,secret=None):
+def init_application(config):
     log.startLogging(sys.stdout)  
-    base.update_secret(secret)
-    utils.update_secret(secret)
     log.msg("start init application...")
     TEMPLATE_PATH.append("./customer/views/")
     ''' install plugins'''
-    engine,metadata = models.get_engine(dbconf)
+    engine,metadata = models.get_engine(config)
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
     session = sqla_pg.new_session()
     _sys_param_value = functools.partial(get_param_value,session)
@@ -50,7 +48,6 @@ def init_application(dbconf=None,cusconf=None,secret=None):
         sec2hour = utils.sec2hour,
         request = request,
         sys_param_value = _sys_param_value,
-        system_name = _sys_param_value("customer_system_name"),
         get_member = _get_member_by_name,
         get_account = _get_account_by_number,
         is_online = _get_online_status
@@ -69,38 +66,37 @@ def init_application(dbconf=None,cusconf=None,secret=None):
 ###############################################################################
 
 def main():
-    import argparse,json
+    import argparse,ConfigParser
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
-    parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
+    parser.add_argument('-c','--conf', type=str,default="../radiusd.conf",dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
 
     if not args.conf or not os.path.exists(args.conf):
         print 'no config file user -c or --conf cfgfile'
         return
 
-    _config = json.loads(open(args.conf).read())
-    _database = _config['database']
-    _customer = _config['customer']
-    _secret = _config['secret']
+    # read config file
+    config = ConfigParser.ConfigParser()
+    config.read(args.conf)
     
-    # set timezone
-    os.environ["TZ"] = _config.get('tz','CST-8')
-    time.tzset()
+    # update aescipher,timezone
+    utils.aescipher.setup(config.get('default','secret'))
+    base.scookie.setup(config.get('default','secret'))
+    utils.update_tz(config.get('default','tz'))
 
-    if args.httpport:_customer['httpport'] = args.httpport
-    if args.debug:_customer['debug'] = bool(args.debug)
-
-    init_application(dbconf=_database,cusconf=_customer,secret=_secret)
-    
-    runserver(
-        mainapp, host='0.0.0.0', 
-        port=_customer['httpport'] ,
-        debug=bool(_customer['debug']),
-        reloader=bool(_customer['debug']),
-        server="twisted"
-    )
+    try:
+        init_application(config)
+        runserver(
+            mainapp, host='0.0.0.0', 
+            port=args.httpport or config.get("customer","port") ,
+            debug=config.getboolean('default','debug') ,
+            reloader=False,
+            server="twisted"
+        )
+    except:
+        log.err()
 
 if __name__ == "__main__":
     main()

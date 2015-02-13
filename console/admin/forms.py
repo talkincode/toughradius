@@ -9,6 +9,7 @@ boolean = {0:u"否", 1:u"是"}
 param_form = pyforms.Form(
     pyforms.Textbox("system_name", description=u"管理系统名称", **input_style),
     pyforms.Textbox("customer_system_name", description=u"自助服务系统名称",hr=True, **input_style),
+    pyforms.Textbox("is_debug", description=u"DEBUG模式(0|1)",**input_style),
     pyforms.Textbox("radiusd_address", description=u"Radius服务IP地址",**input_style),
     pyforms.Textbox("radiusd_admin_port",rules.is_number, description=u"Radius服务管理端口",**input_style),
     pyforms.Textbox("max_session_timeout",rules.is_number, description=u"Radius最大会话时长(秒)", **input_style),

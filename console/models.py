@@ -7,24 +7,22 @@ from sqlalchemy.orm import relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from hashlib import md5
 from libs import utils
+import functools
 
 DeclarativeBase = declarative_base()
 
-def get_db_connstr(dbconf=None):
-    default_str = 'mysql://root:root@127.0.0.1:3306/mysql?charset=utf8'
-    if not dbconf:
-        return default_str
-    if dbconf['dbtype'] == 'mysql':
+def get_db_connstr(config):
+    conf_str = functools.partial(config.get,"database")
+    conf_int = functools.partial(config.getint,"database")
+    if conf_str("dbtype") == 'mysql':
         return 'mysql://%s:%s@%s:%s/%s?charset=%s'%(
-            dbconf['user'],
-            dbconf['passwd'],
-            dbconf['host'],
-            dbconf['port'],
-            dbconf['db'],
-            dbconf['charset'])
-    else:
-        return default_str
-    
+            conf_str("user"),
+            conf_str("passwd"),
+            conf_str("host"),
+            conf_int("port"),
+            conf_str("db"),
+            conf_str("charset"))
+
 def get_engine(dbconf=None,echo=False):
     engine = create_engine(get_db_connstr(dbconf),echo=echo)
     metadata = DeclarativeBase.metadata
@@ -437,6 +435,7 @@ def init_db(db):
         ('customer_system_name',u'自助服务系统名称',u'ToughRADIUS自助服务中心'),
         ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),
         ('radiusd_admin_port',u'Radius服务管理端口','1815'),
+        ('is_debug',u'DEBUG模式','0'),
         ('weixin_qrcode',u'微信公众号二维码图片(宽度230px)',u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'),
         ('service_phone',u'客户服务电话',u'000000'),
         ('service_qq',u'客户服务QQ号码',u'000000'),
@@ -471,20 +470,18 @@ def init_db(db):
     db.commit()
 
 def build_db(config=None):
-    if config['dbtype'] != 'mysql':
+    if config.get("database","dbtype") != 'mysql':
        return update(config)
-    _default = config.copy()
-    _default['db'] = 'mysql'
-    engine,_ = get_engine(_default)
+    engine,_ = get_engine(config)
     conn = engine.connect()
     try:
-        drop_sql = "drop database %s"%config['db']
+        drop_sql = "drop database %s"%config.get("database","db")
         print drop_sql
         conn.execute(drop_sql)      
     except:
         print "drop database error"
     
-    create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config['db']
+    create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config.get("database","db")
     print create_sql
     conn.execute(create_sql)
     print 'commit'

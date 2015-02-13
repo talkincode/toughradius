@@ -5,32 +5,31 @@
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
+from twisted.python import log
 from twisted.internet import task
 from twisted.internet.defer import Deferred
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.python import log
-from admin import UserTrace,AdminServerProtocol
+from autobahn.twisted.websocket import WebSocketServerProtocol
+from autobahn.twisted.websocket import WebSocketServerFactory
 from settings import auth_plugins,acct_plugins,acct_before_plugins
 from pyrad import dictionary
 from pyrad import host
 from pyrad import packet
 from store import store
-from utils import timeit
-from plugins import *
-import datetime
 import middleware
+import datetime
 import settings
-import statistics
 import logging
-import six
 import pprint
-import utils
-import json
-import os
 import socket
+import utils
 import time
+import json
+import six
+import os
 
+__verson__ = '0.6'
         
 class PacketError(Exception):pass
 
@@ -39,7 +38,7 @@ class PacketError(Exception):pass
 ###############################################################################
 
 class CoAClient(protocol.DatagramProtocol):
-
+    
     def __init__(self, bas,dict=None,debug=False):
         assert bas 
         self.bas = bas
@@ -49,7 +48,7 @@ class CoAClient(protocol.DatagramProtocol):
         self.port = self.bas['coa_port']
         self.debug=debug
         reactor.listenUDP(0, self)
-
+        
     def processPacket(self, pkt):
         pass
 
@@ -159,7 +158,6 @@ class RADIUSAccess(RADIUS):
         pkt.vendor_id = vendor_id
         return pkt
 
-    @timeit("RADIUSAccess")
     def processPacket(self, req):
         self.runstat.auth_all += 1
         if req.code != packet.AccessRequest:
@@ -203,7 +201,6 @@ class RADIUSAccounting(RADIUS):
         pkt.vendor_id = vendor_id
         return pkt
 
-    @timeit("RADIUSAccounting")
     def processPacket(self, req):
         self.runstat.acct_all += 1
         if req.code != packet.AccountingRequest:
@@ -223,91 +220,107 @@ class RADIUSAccounting(RADIUS):
         # middleware execute
         for plugin in acct_plugins:
             self.midware.process(plugin,req=req,user=user,runstat=self.runstat)
-                
+ 
+ ###############################################################################
+ # admin  Server                                                            ####
+ ###############################################################################
+ 
+class AdminServerProtocol(WebSocketServerProtocol):
+
+    user_trace = None
+    midware = None
+    runstat = None
+    coa_clients = {}
+    auth_server = None
+    acct_server = None
+
+def onConnect(self, request):
+    log.msg("Client connecting: {0}".format(request.peer))
+
+def onOpen(self):
+    log.msg("WebSocket connection open.")
+
+def onMessage(self, payload, isBinary):
+    req_msg = json.loads(payload)
+    log.msg("websocket admin request: %s"%str(req_msg))
+    plugin = req_msg.get("process")
+    self.midware.process(plugin,req=req_msg,admin=self)
+
+def onClose(self, wasClean, code, reason):
+    log.msg("WebSocket connection closed: {0}".format(reason))
 
 ###############################################################################
 # Run  Server                                                              ####
 ###############################################################################     
                  
 def main():
-    import argparse,json
+    import argparse,ConfigParser
     from twisted.python.logfile import DailyLogFile
+    # start logging
+    log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser()
     parser.add_argument('-dict','--dictfile', type=str,default=None,dest='dictfile',help='dict file')
     parser.add_argument('-auth','--authport', type=int,default=0,dest='authport',help='auth port')
     parser.add_argument('-acct','--acctport', type=int,default=0,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
-    parser.add_argument('-c','--conf', type=str,default=None,dest='conf',help='conf file')
+    parser.add_argument('-c','--conf', type=str,default="radiusd.conf",dest='conf',help='conf file')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
     args =  parser.parse_args(sys.argv[1:])
 
     if not args.conf or not os.path.exists(args.conf):
-        print 'no config file user -c or --conf cfgfile'
+        print 'Configuration file is not specified, use the -c or --conf param'
         return
-
-    _config = json.loads(open(args.conf).read())
-    _database = _config['database']
-    _radiusd = _config['radiusd']  
-    _secret = _config['secret']
-
     
-    # update aescipher
-    utils.update_secret(_secret)
-    
-    # set timezone
-    os.environ["TZ"] = _config.get('tz','CST-8')
-    time.tzset()
-
-    # init args
-    if args.authport:_radiusd['authport'] = args.authport
-    if args.acctport:_radiusd['acctport'] = args.acctport
-    if args.adminport:_radiusd['adminport'] = args.adminport
-    if args.dictfile:_radiusd['dictfile'] = args.dictfile
-    if args.debug:_radiusd['debug'] = bool(args.debug)   
-
-    #init dbconfig
-    settings.db_config.update(**_config)
-    store.__cache_timeout__ = _radiusd['cache_timeout']
-
-    # start logging
-    log.startLogging(sys.stdout)
-
-    _trace = UserTrace()
-    _runstat = statistics.RunStat()
+    # read config file
+    config = ConfigParser.ConfigParser()
+    config.read(args.conf)
+    #init dbstore
+    store.setup(config)
+    # update aescipher,timezone
+    utils.aescipher.setup(config.get('default','secret'))
+    utils.update_tz(config.get('default','tz'))
+    # over args
+    _radiusd = {}
+    _radiusd['authport'] = args.authport or config.get('radiusd','authport')
+    _radiusd['acctport'] = args.acctport or config.get('radiusd','acctport')
+    _radiusd['adminport'] = args.adminport or config.get('radiusd','adminport')
+    _radiusd['dictfile'] = args.dictfile  or config.get('radiusd','dictfile')
+    _radiusd['debug'] = bool(args.debug) or config.getboolean('default','debug')  
+    # rundata
+    _trace = utils.UserTrace()
+    _runstat = utils.RunStat()
     _middleware = middleware.Middleware()
-    _debug = _radiusd['debug']  
-    settings.debug = _debug
-    
     # init coa clients
-    _coa_clients = {}
+    coa_pool = {}
     for bas in store.list_bas():
-        _coa_clients[bas['ip_addr']] = CoAClient(
-            bas,dictionary.Dictionary(_radiusd['dictfile']),debug=_debug)
+        coa_pool[bas['ip_addr']] = CoAClient(bas,
+            dictionary.Dictionary(_radiusd['dictfile']),
+            debug=_radiusd['debug']
+        )
 
     def start_servers():
         auth_protocol = RADIUSAccess(
             dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
-            runstat=_runstat,debug=_debug
+            runstat=_runstat,debug=_radiusd['debug']
         )
         acct_protocol = RADIUSAccounting(
             dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
-            runstat=_runstat,debug=_debug
+            runstat=_runstat,debug=_radiusd['debug']
         )
-        reactor.listenUDP(_radiusd['authport'], auth_protocol)
-        reactor.listenUDP(_radiusd['acctport'], acct_protocol)
+        reactor.listenUDP(int(_radiusd['authport']), auth_protocol)
+        reactor.listenUDP(int(_radiusd['acctport']), acct_protocol)
         _task = task.LoopingCall(auth_protocol.process_delay)
         _task.start(2.7)
 
-        from autobahn.twisted.websocket import WebSocketServerFactory
-        factory = WebSocketServerFactory("ws://0.0.0.0:%s"%args.adminport, debug = False)
+        factory = WebSocketServerFactory("ws://0.0.0.0:%s"%_radiusd['adminport'], debug = False)
         factory.protocol = AdminServerProtocol
         factory.protocol.user_trace = _trace
         factory.protocol.midware = _middleware
         factory.protocol.runstat = _runstat
-        factory.protocol.coa_clients = _coa_clients
+        factory.protocol.coa_clients = coa_pool
         factory.protocol.auth_server = auth_protocol
         factory.protocol.acct_server = acct_protocol
-        reactor.listenTCP(_radiusd['adminport'], factory)
+        reactor.listenTCP(int(_radiusd['adminport']), factory)
 
     start_servers()
     reactor.run()

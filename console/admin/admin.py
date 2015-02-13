@@ -20,7 +20,6 @@ import datetime
 import json
 from base import *
 
-
 app = Bottle()
 
 ##############################################################################
@@ -55,6 +54,14 @@ def index(db):
 @app.route('/static/:path#.+#')
 def route_static(path):
     return static_file(path, root='./static')
+    
+###############################################################################
+# update all cache      
+###############################################################################    
+@app.get('/cache/clean')
+def clear_cache():
+    websock.update_cache("all")
+    return dict(code=0,msg=u"已发送同步请求")
     
 ###############################################################################
 # login handle         
@@ -137,17 +144,7 @@ def param_update(db):
             _value = request.forms.get(param.param_name)
             if _value: _value = _value.decode('utf-8')
             if _value and param.param_value not in _value:
-                param.param_value = _value
-            if param.param_name == 'radiusd_address':
-                if param.param_value != MakoTemplate.defaults['radaddr']:
-                    MakoTemplate.defaults['radaddr'] = param.param_value
-                    wsflag = True
-            if param.param_name == 'radiusd_admin_port':
-                if param.param_value != MakoTemplate.defaults['adminport']:
-                    MakoTemplate.defaults['adminport'] = param.param_value
-                    wsflag = True     
-            if param.param_name == u'reject_delay':
-                websock.update_cache("reject_delay",reject_delay=param.param_value)       
+                param.param_value = _value  
                 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
@@ -157,12 +154,20 @@ def param_update(db):
     db.add(ops_log)
     db.commit()
     
+    MakoTemplate.defaults['radaddr'] = request.forms.get('radiusd_address')
+    MakoTemplate.defaults['adminport'] = request.forms.get('radiusd_admin_port')
+     
     if wsflag:
         websock.reconnect(
             MakoTemplate.defaults['radaddr'],
             MakoTemplate.defaults['adminport'],
         )
         
+    is_debug = request.forms.get('is_debug')
+    bottle.debug(is_debug == '1')
+    
+    websock.update_cache("is_debug",is_debug=is_debug)
+    websock.update_cache("reject_delay",reject_delay=request.forms.get('reject_delay'))
     websock.update_cache("param")
     redirect("/param")
     

@@ -4,6 +4,9 @@
 <script>
 function updateProduct(){
     var recharge_card = $("#recharge_card").val();
+    if(recharge_card==''){
+        return;
+    }
     $.get("/querycp?recharge_card="+recharge_card, {}, function (ev) {
         if(ev.code==1){
             $("#alert").show();

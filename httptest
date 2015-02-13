@@ -1,6 +1,6 @@
 #!/bin/sh
 
-python createdb.py -c config.json -i=1
+python createdb.py -c radiusd.conf -i=1
 
 cd console 
 python admin.py & 

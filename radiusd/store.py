@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 #coding=utf-8
-import MySQLdb
-from MySQLdb import cursors
 from DBUtils.PooledDB import PooledDB
+from beaker.cache import CacheManager
+import functools
 import settings
 import datetime
-from beaker.cache import CacheManager
+try:
+    import MySQLdb
+except:
+    pass
 
 __cache_timeout__ = 600
 
@@ -28,8 +31,6 @@ ticket_fds = [
     'session_timeout','start_source','stop_source',"mac_addr"
 ]
 
-get_cursor = lambda conn: conn.cursor(cursors.DictCursor)
-
 class Connect:
     def __init__(self, dbpool):
         self.conn = dbpool.connect()
@@ -43,7 +44,7 @@ class Connect:
 class Cursor:
     def __init__(self, dbpool):
         self.conn = dbpool.connect()
-        self.cursor = get_cursor(self.conn)
+        self.cursor = dbpool.cursor(self.conn)
 
     def __enter__(self):
         return self.cursor 
@@ -51,21 +52,30 @@ class Cursor:
     def __exit__(self, exc_type, exc_value, exc_tb):
         self.conn.close()
 
-class DbPool():
-    dbpool = None
+class MySQLPool():
+    
+    def __init__(self,config):
+        conf_str = functools.partial(config.get,"database")
+        conf_int = functools.partial(config.getint,"database")
+        self.dbpool = PooledDB(
+            creator=MySQLdb,
+            db=conf_str("db"),
+            host=conf_str("host"),
+            port=conf_int("port"),
+            user=conf_str("user"),
+            passwd=conf_str("passwd"),
+            charset=conf_str("charset"),
+            maxusage=conf_int("maxusage")
+        )
+
+    def cursor(self,conn):
+        return conn.cursor(MySQLdb.cursors.DictCursor)
+
     def connect(self):
-        if not self.dbpool:
-            self.dbpool = PooledDB(
-                creator=MySQLdb,
-                db=settings.db_config['database']['db'],
-                host=settings.db_config['database']['host'],
-                port=settings.db_config['database']['port'],
-                user=settings.db_config['database']['user'],
-                passwd=settings.db_config['database']['passwd'],
-                charset=settings.db_config['database']['charset'],
-                maxusage=settings.db_config['database']['maxusage'],
-            )
         return self.dbpool.connection()
+        
+
+pool_clss = {'mysql':MySQLPool}
 
 ###############################################################################
 # Database Store                                                          ####
@@ -73,8 +83,10 @@ class DbPool():
 
 class Store():
 
-    def __init__(self,dbpool=None):
-        self.dbpool = dbpool 
+    def setup(self,config):
+        self.dbpool = pool_clss[config.get("database",'dbtype')](config)
+        global __cache_timeout__
+        __cache_timeout__ = config.get("radiusd",'cache_timeout')
 
     @cache.cache('get_param',expire=__cache_timeout__)   
     def get_param(self,param_name):
@@ -252,6 +264,16 @@ class Store():
     def update_product_cache(self,product_id):
         cache.invalidate(self.get_product,'get_product',product_id)
         cache.invalidate(self.get_product_attrs,'get_product_attrs',product_id)
+        
+    ###############################################################################
+    # cache method                                                            ####
+    ###############################################################################
+    
+    def update_all_cache(self):
+        from beaker.cache import cache_managers
+        for _cache in cache_managers.values():
+            # _cache.clear()
+            print repr(_cache)
 
     ###############################################################################
     # online method                                                            ####
@@ -422,7 +444,7 @@ class Store():
         else:_unlock_many()
 
     
-store = Store(DbPool())
+store = Store()
 
 
 

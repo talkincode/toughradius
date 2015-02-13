@@ -2,8 +2,8 @@
 import sys
 import os
 import shutil
-import json
 import time
+import ConfigParser
 from string import Template
 
 vvv = ''
@@ -245,67 +245,65 @@ def install_mysql():
 ########################################################################  
 
 def setup_config():
-    def gen_secret(slen=128):
+    def gen_secret(slen=32):
         import random
         rg = random.SystemRandom()
         r = list('1234567890abcdefghijklmnopqrstuvwxyz')
         return ''.join([rg.choice(r) for _ in range(slen)])
         
     print_flow("set config...")
-    cjson = dict(
-        database = {},
-        backup = {},
-        radiusd = {},
-        admin = {},
-        customer = {}
-    )
+    config = ConfigParser.RawConfigParser()
+    
+    print_flow("set default option")
+    config.add_section('default')
+    config.set('default', 'debug', (sys_input("admin debug [0/1] [0]:") or '0') )
+    config.set('default', 'tz', (sys_input("time zone [ CST-8 ]::") or 'CST-8') )
+    slen = '32'
+    try:
+        slen = sys_input("secret string len, len%8=0 [32]:") or '32'
+    except:pass
+    config.set('default','secret',slen)
+    
     print_flow("set database option")
-    cjson['database']['dbtype'] = sys_input("database type [mysql]:") or 'mysql' 
-    cjson['database']['host'] = sys_input("database host [127.0.0.1]:") or '127.0.0.1' 
-    cjson['database']['port'] = int(sys_input("database port [3306]:") or 3306)
-    cjson['database']['db'] = sys_input("database dbname [toughradius]:") or 'toughradius' 
-    cjson['database']['user'] = sys_input("database user [root]:") or 'root' 
-    cjson['database']['passwd'] = sys_input("database passwd []:") or '' 
-    cjson['database']['maxusage'] = int(sys_input("db pool maxusage [30]:") or 30)
-    cjson['database']['charset'] = sys_input("database charset [utf8]:") or 'utf8' 
+    config.add_section('database')
+    config.set('database','dbtype', (sys_input("database type [mysql]:") or 'mysql' ))
+    config.set('database','host',( sys_input("database host [127.0.0.1]:") or '127.0.0.1' ))
+    config.set('database','port',(sys_input("database port [3306]:") or '3306'))
+    config.set('database','db',(sys_input("database dbname [toughradius]:") or 'toughradius' ))
+    config.set('database','user',(sys_input("database user [root]:") or 'root' ))
+    config.set('database','passwd',(sys_input("database passwd []:") or '' ))
+    config.set('database','maxusage',(sys_input("db pool maxusage [30]:") or '30'))
+    config.set('database','charset',(sys_input("database charset [utf8]:") or 'utf8' ))
     
     print_flow("set mysql backup ftpserver option")
-    cjson['backup']['ftphost'] = sys_input("backup ftphost [127.0.0.1]:") or '127.0.0.1' 
-    cjson['backup']['ftpport'] = int(sys_input("backup ftpport [21]:") or 21)
-    cjson['backup']['ftpuser'] = sys_input("backup ftpuser [ftpuser]:") or 'ftpuser' 
-    cjson['backup']['ftppwd'] = sys_input("backup ftppwd [ftppwd]:") or 'ftppwd' 
+    config.add_section('backup')
+    config.set('backup','ftphost',(sys_input("backup ftphost [127.0.0.1]:") or '127.0.0.1' ))
+    config.set('backup','ftpport',(sys_input("backup ftpport [21]:") or '21'))
+    config.set('backup','ftpuser',(sys_input("backup ftpuser [ftpuser]:") or 'ftpuser' ))
+    config.set('backup','ftppwd',(sys_input("backup ftppwd [ftppwd]:") or 'ftppwd' ))
     
     print_flow("set radiusd option")
-    cjson['radiusd']['authport'] = int(sys_input("radiusd authport [1812]:") or 1812)
-    cjson['radiusd']['acctport'] = int(sys_input("radiusd acctport [1813]:") or 1813)
-    cjson['radiusd']['adminport'] = int(sys_input("radiusd adminport [1815]:") or 1815)
-    cjson['radiusd']['dictfile'] = sys_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
-        or '%s/radiusd/dict/dictionary'%appdir 
-    cjson['radiusd']['debug'] = int(sys_input("radiusd debug [0/1] [1]") or 1)
-    cjson['radiusd']['cache_timeout'] = int(sys_input("radiusd cache_timeout (second) [600]:") or 600)
+    config.add_section('radiusd')
+    config.set('radiusd','authport',(sys_input("radiusd authport [1812]:") or '1812'))
+    config.set('radiusd','acctport',(sys_input("radiusd acctport [1813]:") or '1813'))
+    config.set('radiusd','adminport',(sys_input("radiusd adminport [1815]:") or '1815'))
+    config.set('radiusd','dictfile',(sys_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
+        or '%s/radiusd/dict/dictionary'%appdir ))
+    config.set('radiusd','cache_timeout',(sys_input("radiusd cache_timeout (second) [600]:") or '600'))
     
-    cjson['admin']['httpport'] = int(sys_input("admin httpport [1816]:") or 1816)
-    cjson['admin']['debug'] = int(sys_input("admin debug [0/1] [1]:") or 1)
-    cjson['customer']['httpport'] = int(sys_input("customer httpport [1817]:") or 1817)
-    cjson['customer']['debug'] = int(sys_input("customer debug [0/1] [1]:") or 1) 
-    cjson['tz']= sys_input("time zone [ Asia/Shanghai ]:") or 'Asia/Shanghai'
-    slen = 128
-    try:
-        slen = int(sys_input("secret string len, len%8=0 [128]:") or 128)
-    except:pass
-    cjson['secret'] = gen_secret(slen) 
+    print_flow("set admin option")
+    config.add_section('admin')
+    condif.set('admin','port',(sys_input("admin http port [1816]:") or '1816'))
     
-    jsonstr = json.dumps(
-        cjson, ensure_ascii=False,
-        sort_keys=True,indent=4, 
-        separators=(',', ': ')
-    )
+    print_flow("set customer option")
+    config.add_section('customer')
+    condif.set('customer','port',(sys_input("customer http port [1817]:") or '1817'))
     
-    with open("%s/radiusd.json"%rundir,'wb') as fs:
-        fs.write(jsonstr)
+    with open("%s/radiusd.conf"%rundir,'wb') as configfile:
+        config.write(configfile)
         print_exr("config done",0)
         
-    print jsonstr
+    os_run("cat %s/radiusd.conf"%rundir)
        
 ########################################################################    
 #  create radius db  function
@@ -330,7 +328,9 @@ def init_db():
     sys.path.insert(0,"%s/console"%appdir)
     try:
         import models
-        models.install2(config=json.loads(open("%s/radiusd.json"%rundir,'rb').read())['database'])
+        config = ConfigParser.RawConfigParser()
+        config.read("%s/radiusd.conf"%rundir)
+        models.install2(config)
         print_exr("init db success",0)
     except:
         print_exr("init db faild",1)

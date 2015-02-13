@@ -2,9 +2,8 @@
 #coding=utf-8
 from twisted.python import log
 from settings import *
-from utils import timeit
+
 #  vlan parse          
-@timeit("vlan_parse")
 def parse_cisco(req):
     '''phy_slot/phy_subslot/phy_port:XPI.XCI'''
     nasportid = req.get('NAS-Port-Id')
@@ -30,7 +29,7 @@ def parse_cisco(req):
     parse_vlanid()
     parse_vlanid2()
 
-@timeit("vlan_parse")
+
 def parse_std(req):
     ''''''
     nasportid = req.get('NAS-Port-Id')
@@ -57,7 +56,6 @@ def parse_std(req):
     parse_vlanid()
     parse_vlanid2() 
 
-@timeit("vlan_parse")
 def parse_ros(req):
     ''''''
     nasportid = req.get('NAS-Port-Id')
@@ -93,7 +91,6 @@ _parses = {
     '14988' : parse_ros
 }
 
-@timeit("vlan_parse")
 def process(req=None,resp=None,user=None):
     _parses[req.vendor_id](req)
 

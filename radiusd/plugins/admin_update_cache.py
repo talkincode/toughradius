@@ -3,8 +3,10 @@
 from twisted.python import log
 from store import store
 from settings import *
-import logging
+import settings
 import json
+
+cache_class = []
 
 def process(req=None,admin=None):
     msg_id = req.get("msg_id")
@@ -17,7 +19,10 @@ def process(req=None,admin=None):
         reply = json.dumps({'msg_id':msg_id,'data':u'%s ok'%op,'code':0})
         admin.sendMessage(reply,False)
     
-    if cache_class == 'param':
+    if cache_class == 'all':
+        store.update_all_cache()
+        send_ok("all cache update")
+    elif cache_class == 'param':
         store.update_param_cache()
         send_ok("param cache update")
     elif cache_class == 'account' and req.get("account_number"):
@@ -32,6 +37,12 @@ def process(req=None,admin=None):
     elif cache_class == 'product' and req.get("product_id"):
         store.update_product_cache(req.get("product_id"))
         send_ok("product cache update")
+    elif cache_class == 'is_debug' and req.get("is_debug"):
+        _is_debug = bool(int(req.get("is_debug"))) 
+        settings.set_debug(_is_debug)
+        admin.auth_server.debug = _is_debug
+        admin.acct_server.debug = _is_debug
+        send_ok("radiusd debug mode update")
     elif cache_class == 'reject_delay' and req.get("reject_delay"):
         try:
             _delay = int(req.get("reject_delay"))

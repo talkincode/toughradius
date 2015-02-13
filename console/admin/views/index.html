@@ -94,7 +94,7 @@ function update_flow()
 
 var chart;
 $(document).ready(function (){
-    wsock.start('${radaddr}','${adminport}');
+    wsock.start("${sys_param_value('radiusd_address')}","${sys_param_value('radiusd_admin_port')}");
     update_online();
     update_flow();
 });
@@ -122,8 +122,8 @@ $(document).ready(function (){
                     <tr>
                         <td>登录IP地址</td>
                         <td>${get_cookie("login_ip")}</td>
-                        <td></td>
-                        <td></td>
+                        <td>系统版本</td>
+                        <td>${sys_version or 'unknow'}</td>
                     </tr>
             </tbody>
 

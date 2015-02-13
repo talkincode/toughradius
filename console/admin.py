@@ -21,22 +21,22 @@ import models
 import base
 import time
 
+__version__ = 'v0.6'
+
 subapps = [ops_app,bus_app,card_app,product_app]
 
 def error403(error):
-    return render("error",msg=u"非授权的访问 %s"%error.exception)
+    return render("error",msg=u"Unauthorized access %s"%error.exception)
     
 def error404(error):
-    return render("error",msg=u"页面不存在 - 请联系管理员! %s"%error.exception)
+    return render("error",msg=u"Page not found %s"%error.exception)
 
 def error500(error):
-    return render("error",msg=u"出错了： %s"%error.exception)
+    return render("error",msg=u"Server Internal error %s"%error.exception)
 
-def init_application(dbconf=None,consconf=None,secret=None):
+def init_application(config):
     log.startLogging(sys.stdout)  
     log.msg("start init application...")
-    base.update_secret(secret)
-    utils.update_secret(secret)
     TEMPLATE_PATH.append("./admin/views/")
     for _app in [mainapp]+subapps:
         _app.error_handler[403] = error403
@@ -44,7 +44,7 @@ def init_application(dbconf=None,consconf=None,secret=None):
         _app.error_handler[500] = error500
         
     log.msg("init plugins..")
-    engine,metadata = models.get_engine(dbconf)
+    engine,metadata = models.get_engine(config)
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
     session = sqla_pg.new_session()
     _sys_param_value = functools.partial(get_param_value,session)
@@ -52,6 +52,7 @@ def init_application(dbconf=None,consconf=None,secret=None):
     
     log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(
+        sys_version = __version__,
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
@@ -64,16 +65,16 @@ def init_application(dbconf=None,consconf=None,secret=None):
         request = request,
         sys_param_value = _sys_param_value,
         get_product_name = _get_product_name,
-        system_name = _sys_param_value("system_name"),
-        radaddr = _sys_param_value('radiusd_address'),
-        adminport = _sys_param_value('radiusd_admin_port'),
         permit = permit,
         all_menus = permit.build_menus(order_cats=[u"系统管理",u"营业管理",u"运维管理"])
     ))
     
     # connect radiusd websocket admin port 
     log.msg("init websocket client...")
-    wsparam = (MakoTemplate.defaults['radaddr'],MakoTemplate.defaults['adminport'],)
+    wsparam = (
+        _sys_param_value('radiusd_address'),
+        _sys_param_value('radiusd_admin_port')
+    )
     reactor.callLater(3, websock.connect,*wsparam)
     log.msg("init tasks...")
     reactor.callLater(4, tasks.start_online_stat_job, sqla_pg.new_session)
@@ -98,41 +99,37 @@ def init_application(dbconf=None,consconf=None,secret=None):
 ###############################################################################
 
 def main():
-    import argparse,json,traceback
+    import argparse,ConfigParser,traceback
     parser = argparse.ArgumentParser()
     parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
     parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
-    parser.add_argument('-c','--conf', type=str,default="../config.json",dest='conf',help='conf file')
+    parser.add_argument('-c','--conf', type=str,default="../radiusd.conf",dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])
 
     if not args.conf or not os.path.exists(args.conf):
         print 'no config file use -c or --conf cfgfile'
         return
-
-    _config = json.loads(open(args.conf).read())
-    _database = _config['database']
-    _admin = _config['admin']
-    _secret = _config['secret']
+        
+    # read config file
+    config = ConfigParser.ConfigParser()
+    config.read(args.conf)
     
-    # set timezone
-    os.environ["TZ"] = _config.get('tz','CST-8')
-    time.tzset()
-
-    if args.httpport:_admin['httpport'] = args.httpport
-    if args.debug:_admin['debug'] = bool(args.debug)
+    # update aescipher,timezone
+    utils.aescipher.setup(config.get('default','secret'))
+    base.scookie.setup(config.get('default','secret'))
+    utils.update_tz(config.get('default','tz'))
 
     try:
-        init_application(dbconf=_database,consconf=_admin,secret=_secret)
+        init_application(config)
         runserver(
             mainapp, host='0.0.0.0', 
-            port=_admin['httpport'] ,
-            debug=bool(_admin['debug']),
-            reloader=bool(_admin['debug']),
+            port=args.httpport or config.getint('admin','port') ,
+            debug=config.getboolean('default','debug') ,
+            reloader=False,
             server="twisted"
         )
     except:
-        log.err("start admin server fail..")
-        traceback.print_exc()
+        log.err()
         
         
 if __name__ == "__main__":
