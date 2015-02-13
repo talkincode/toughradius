@@ -2,7 +2,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import sys,os
-import argparse,json
+import argparse,ConfigParser
 from datetime import datetime
 from ftplib import FTP
 
@@ -21,7 +21,7 @@ def backup(**kwargs):
     
     sh.gzip(sh.mysqldump(u='root',B=dbname,S="/var/toughradius/mysql/mysql.sock"),'-cf',_out=backfile)
 
-    if '127.0.0.1' not in ftphost:
+    if ftphost and '127.0.0.1' not in ftphost:
         ftp=FTP() 
         ftp.set_debuglevel(2)
         ftp.connect(ftphost,ftpport)
@@ -37,15 +37,18 @@ def backup(**kwargs):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c','--conf', type=str,default='./config.json',dest='conf',help='conf file')
+    parser.add_argument('-c','--conf', type=str,default='./radiusd.conf',dest='conf',help='conf file')
     args =  parser.parse_args(sys.argv[1:])    
-    config=json.loads(open(args.conf,'rb').read())
+    # read config file
+    config = ConfigParser.ConfigParser()
+    config.read(args.conf)
     
-    backup(**dict(
-        dbname= config['database']['db'],
-        ftphost= config['backup']['ftphost'],
-        ftpuser= config['backup']['ftpuser'],
-        ftppwd= config['backup']['ftppwd']                                       
-    ))
+    backup(
+        dbname=config.get('database','db'),
+        ftphost=config.get('database','ftphost'),
+        ftpport=config.get('database','ftpport'),
+        ftpuser=config.get('database','ftpuser'),
+        ftppwd=config.get('database','ftppwd')                        
+    )
     
 
