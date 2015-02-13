@@ -4,6 +4,10 @@ from twisted.python import log
 from store import store
 from settings import *
 import datetime
+import decimal
+
+decimal.getcontext().prec = 32
+decimal.getcontext().rounding = decimal.ROUND_UP
 
 def get_type_val(typ,src):
     if typ == 'integer' or typ == 'date':
@@ -11,24 +15,28 @@ def get_type_val(typ,src):
     else:
         return src
 
-def process(req=None,resp=None,user=None):
+def process(req=None,resp=None,user=None,**kwargs):
     product = store.get_product(user['product_id'])
     session_timeout = int(store.get_param("max_session_timeout"))
-    acct_policy = user['product_policy'] or FEE_BUYOUT
-    if acct_policy in (FEE_BUYOUT,FEE_MONTH):
+    acct_policy = user['product_policy'] or BOMonth
+    if acct_policy in (PPMonth,BOMonth):
         expire_date = user.get('expire_date')
         _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
         _datetime = datetime.datetime.now()
         if _datetime > _expire_datetime:
             session_timeout += (_expire_datetime - _datetime).seconds 
-    elif acct_policy == FEE_TIMES:
-        balance = int(user.get("balance",0))
+            
+    elif acct_policy  == PPTimes:
+        balance = decimal.Decimal(user.get("balance",0))
         if balance == 0:
             session_timeout = 0
         else:
-            time_len = balance * 3600 / product['fee_price']
-            session_timeout = time_len
-    
+            time_len = balance * decimal.Decimal(3600) / decimal.Decimal(product['fee_price'])
+            session_timeout = int(time_len.to_integral_value())
+
+    elif acct_policy  == BOTimes:
+        session_timeout = user.get("time_length",0)
+
     if "Framed-Pool" in resp:
         if store.get_param("expire_addrpool") in resp['Framed-Pool']:
             session_timeout = 120

@@ -6,7 +6,7 @@ from settings import *
 import logging
 
 
-def process(req=None,user=None,runstat=None):
+def process(req=None,user=None,runstat=None,**kwargs):
     if  req.get_acct_status_type() not in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
         return
 

@@ -7,7 +7,7 @@
 var updater = {
     socket: null,
     start: function () {
-        var url = "ws://${radaddr}:${adminport}";
+            var url = "ws://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
         updater.socket = new WebSocket(url);
         updater.socket.onmessage = function (event) {
             updater.showMessage(JSON.parse(event.data));

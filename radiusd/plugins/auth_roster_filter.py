@@ -3,7 +3,7 @@
 from plugins import error_auth
 from store import store
 
-def process(req=None,resp=None,user=None):
+def process(req=None,resp=None,user=None,**kwargs):
     """check block roster"""
     macaddr = req.get_mac_addr()
     if store.is_black_roster(macaddr):

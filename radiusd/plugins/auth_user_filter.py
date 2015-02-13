@@ -4,7 +4,7 @@ from plugins import error_auth
 from store import store
 import utils
 
-def process(req=None,resp=None,user=None):
+def process(req=None,resp=None,user=None,**kwargs):
 
     if not user:
         return error_auth(resp,'user %s not exists'%req.get_user_name())

@@ -6,7 +6,7 @@ from settings import *
 import logging
 import json
 
-def process(req=None,admin=None):
+def process(req=None,admin=None,**kwargs):
     msg_id = req.get("msg_id")
     nas_addr = req.get("nas_addr") 
     if not nas_addr:

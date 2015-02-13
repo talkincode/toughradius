@@ -3,7 +3,7 @@
 from store import store
 import json
 
-def process(req=None,admin=None):
+def process(req=None,admin=None,**kwargs):
     msg_id = req.get("msg_id") 
     nas_addr = req.get("nas_addr") 
     acct_session_id = req.get("acct_session_id")

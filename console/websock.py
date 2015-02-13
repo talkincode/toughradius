@@ -27,7 +27,7 @@ class WebSockProtocol(WebSocketClientProtocol):
         resp = json.loads(msg)
         if 'msg_id' in resp:
             callback = self.callbacks.get(resp['msg_id'])
-            if callback and callable(callback):callback()
+            if callback and callable(callback):callback(resp)
             
     def onClose(self, wasClean, code, reason):
         print("WebSocket connection closed: {0}".format(reason))

@@ -50,7 +50,7 @@ rate_funcs = {
     '14988' : ros_rate
 }
 
-def process(req=None,resp=None,user=None):
+def process(req=None,resp=None,user=None,**kwargs):
     product = store.get_product(user['product_id']) 
     if not product:return resp
     input_limit = product['input_max_limit']

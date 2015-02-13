@@ -8,7 +8,7 @@ import json
 
 cache_class = []
 
-def process(req=None,admin=None):
+def process(req=None,admin=None,**kwargs):
     msg_id = req.get("msg_id")
     cache_class = req.get("cache_class") 
     if not cache_class:
@@ -39,7 +39,6 @@ def process(req=None,admin=None):
         send_ok("product cache update")
     elif cache_class == 'is_debug' and req.get("is_debug"):
         _is_debug = bool(int(req.get("is_debug"))) 
-        settings.set_debug(_is_debug)
         admin.auth_server.debug = _is_debug
         admin.acct_server.debug = _is_debug
         send_ok("radiusd debug mode update")

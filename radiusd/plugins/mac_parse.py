@@ -45,7 +45,7 @@ _parses = {
         }
 
 
-def process(req=None,resp=None,user=None):
+def process(req=None,resp=None,user=None,**kwargs):
     if req.vendor_id in _parses:
         _parses[req.vendor_id](req)
 

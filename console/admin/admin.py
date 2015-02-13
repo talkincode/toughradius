@@ -60,7 +60,9 @@ def route_static(path):
 ###############################################################################    
 @app.get('/cache/clean')
 def clear_cache():
-    websock.update_cache("all")
+    def cbk(resp):
+        print 'cbk',resp
+    websock.update_cache("all",callback=cbk)
     return dict(code=0,msg=u"已发送同步请求")
     
 ###############################################################################

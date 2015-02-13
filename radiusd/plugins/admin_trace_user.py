@@ -6,7 +6,7 @@ import json
 import datetime
 
 
-def process(req=None,admin=None):
+def process(req=None,admin=None,**kwargs):
     msg_id = req.get("msg_id")
     now_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     if not req.get("username"):

@@ -15,6 +15,7 @@ from admin.product import app as product_app
 from base import *
 from libs import sqla_plugin,utils
 from websock import websock
+import bottle
 import tasks
 import functools
 import models
@@ -49,6 +50,8 @@ def init_application(config):
     session = sqla_pg.new_session()
     _sys_param_value = functools.partial(get_param_value,session)
     _get_product_name = functools.partial(get_product_name,session)
+    
+    bottle.debug(_sys_param_value('radiusd_address')=='1')
     
     log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(

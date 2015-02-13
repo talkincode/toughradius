@@ -90,13 +90,14 @@ class CoAClient(protocol.DatagramProtocol):
 ###############################################################################
 
 class RADIUS(host.Host, protocol.DatagramProtocol):
-    def __init__(self, dict=None,trace=None,midware=None,runstat=None,debug=False):
+    def __init__(self, dict=None,trace=None,midware=None,runstat=None,coa_clients=None,debug=False):
         _dict = dictionary.Dictionary(dict)
         host.Host.__init__(self,dict=_dict)
         self.debug = debug
         self.user_trace = trace
         self.midware = midware
         self.runstat = runstat
+        self.coa_clients = coa_clients
         self.auth_delay = utils.AuthDelay(int(store.get_param("reject_delay") or 0))
 
     def processPacket(self, pkt):
@@ -219,7 +220,10 @@ class RADIUSAccounting(RADIUS):
         req.deferred.callback(reply)
         # middleware execute
         for plugin in acct_plugins:
-            self.midware.process(plugin,req=req,user=user,runstat=self.runstat)
+            self.midware.process(plugin,req=req,user=user,
+            runstat=self.runstat,coa_clients=self.coa_clients
+        )
+        
  
  ###############################################################################
  # admin  Server                                                            ####
@@ -234,20 +238,20 @@ class AdminServerProtocol(WebSocketServerProtocol):
     auth_server = None
     acct_server = None
 
-def onConnect(self, request):
-    log.msg("Client connecting: {0}".format(request.peer))
+    def onConnect(self, request):
+        log.msg("Client connecting: {0}".format(request.peer))
 
-def onOpen(self):
-    log.msg("WebSocket connection open.")
+    def onOpen(self):
+        log.msg("WebSocket connection open.")
 
-def onMessage(self, payload, isBinary):
-    req_msg = json.loads(payload)
-    log.msg("websocket admin request: %s"%str(req_msg))
-    plugin = req_msg.get("process")
-    self.midware.process(plugin,req=req_msg,admin=self)
+    def onMessage(self, payload, isBinary):
+        req_msg = json.loads(payload)
+        log.msg("websocket admin request: %s"%str(req_msg))
+        plugin = req_msg.get("process")
+        self.midware.process(plugin,req=req_msg,admin=self)
 
-def onClose(self, wasClean, code, reason):
-    log.msg("WebSocket connection closed: {0}".format(reason))
+    def onClose(self, wasClean, code, reason):
+        log.msg("WebSocket connection closed: {0}".format(reason))
 
 ###############################################################################
 # Run  Server                                                              ####
@@ -286,6 +290,8 @@ def main():
     _radiusd['adminport'] = args.adminport or config.get('radiusd','adminport')
     _radiusd['dictfile'] = args.dictfile  or config.get('radiusd','dictfile')
     _radiusd['debug'] = bool(args.debug) or config.getboolean('default','debug')  
+    
+    print _radiusd
     # rundata
     _trace = utils.UserTrace()
     _runstat = utils.RunStat()
@@ -301,11 +307,11 @@ def main():
     def start_servers():
         auth_protocol = RADIUSAccess(
             dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
-            runstat=_runstat,debug=_radiusd['debug']
+            runstat=_runstat,coa_clients=coa_pool,debug=_radiusd['debug']
         )
         acct_protocol = RADIUSAccounting(
             dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
-            runstat=_runstat,debug=_radiusd['debug']
+            runstat=_runstat,coa_clients=coa_pool,debug=_radiusd['debug']
         )
         reactor.listenUDP(int(_radiusd['authport']), auth_protocol)
         reactor.listenUDP(int(_radiusd['acctport']), acct_protocol)

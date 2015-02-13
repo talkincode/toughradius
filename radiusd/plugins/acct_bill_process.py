@@ -12,7 +12,21 @@ import utils
 decimal.getcontext().prec = 32
 decimal.getcontext().rounding = decimal.ROUND_UP
 
-def process(req=None,user=None,runstat=None):
+def send_dm(coa_clients,online):
+    try:
+        coa_client = coa_clients.get(online['nas_addr'])
+        attrs = {
+            'User-Name' : online['account_number'],
+            'Acct-Session-Id' : online['acct_session_id'],
+            'NAS-IP-Address' : online['nas_addr'],
+            'Framed-IP-Address' : online['framed_ipaddr']
+        }
+        dmeq = coa_client.createDisconnectPacket(**attrs)
+        coa_client.sendCoA(dmeq)
+    except:
+        log.err('send dm error')
+
+def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
     if req.get_acct_status_type() not in (STATUS_TYPE_UPDATE,STATUS_TYPE_STOP):
         return   
         
@@ -43,6 +57,8 @@ def process(req=None,user=None,runstat=None):
         if balance < 0 :  
             balance = 0
             actual_fee = user_balance
+            # disconnect
+            send_dm(coa_clients,online)
             
         store.update_billing(utils.Storage(
             account_number = online['account_number'],
@@ -71,6 +87,7 @@ def process(req=None,user=None,runstat=None):
         user_time_length = time_length - acct_times
         if user_time_length < 0 :
             user_time_length = 0
+            send_dm(coa_clients,online)
 
         store.update_billing(utils.Storage(
             account_number = online['account_number'],
@@ -104,6 +121,7 @@ def process(req=None,user=None,runstat=None):
         if balance < 0 :  
             balance = 0
             actual_fee = user_balance
+            send_dm(coa_clients,online)
             
         store.update_billing(utils.Storage(
             account_number = online['account_number'],
@@ -132,6 +150,7 @@ def process(req=None,user=None,runstat=None):
         use_flow_length = flow_length - acct_flows
         if use_flow_length < 0 :
             use_flow_length = 0
+            send_dm(coa_clients,online)
             
         store.update_billing(utils.Storage(
             account_number = online['account_number'],

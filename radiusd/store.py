@@ -272,8 +272,8 @@ class Store():
     def update_all_cache(self):
         from beaker.cache import cache_managers
         for _cache in cache_managers.values():
-            # _cache.clear()
-            print repr(_cache)
+            _cache.clear()
+
 
     ###############################################################################
     # online method                                                            ####

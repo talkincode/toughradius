@@ -91,6 +91,6 @@ _parses = {
     '14988' : parse_ros
 }
 
-def process(req=None,resp=None,user=None):
+def process(req=None,resp=None,user=None,**kwargs):
     _parses[req.vendor_id](req)
 
