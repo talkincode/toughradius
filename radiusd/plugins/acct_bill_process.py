@@ -57,8 +57,6 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
         if balance < 0 :  
             balance = 0
             actual_fee = user_balance
-            # disconnect
-            send_dm(coa_clients,online)
             
         store.update_billing(utils.Storage(
             account_number = online['account_number'],
@@ -77,6 +75,9 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ))
         
+        if balance == 0 :
+            send_dm(coa_clients,online)
+        
     def process_botimes():
         #买断时长
         log.msg('%s > Buyout long time billing '%req.get_user_name(),level=logging.INFO)
@@ -87,7 +88,6 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
         user_time_length = time_length - acct_times
         if user_time_length < 0 :
             user_time_length = 0
-            send_dm(coa_clients,online)
 
         store.update_billing(utils.Storage(
             account_number = online['account_number'],
@@ -105,6 +105,9 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ),time_length=user_time_length)
+    
+        if user_time_length == 0 :
+            send_dm(coa_clients,online)
         
     def process_ppflows():
         #预付费流量
@@ -121,7 +124,6 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
         if balance < 0 :  
             balance = 0
             actual_fee = user_balance
-            send_dm(coa_clients,online)
             
         store.update_billing(utils.Storage(
             account_number = online['account_number'],
@@ -139,6 +141,9 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ))
+        
+        if balance == 0 :  
+            send_dm(coa_clients,online)
         
     def process_boflows():
         #买断流量
@@ -168,6 +173,9 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ),flow_length=use_flow_length)
+        
+        if use_flow_length == 0 :
+            send_dm(coa_clients,online)
     
     process_funcs = {
         PPTimes:process_pptimes,

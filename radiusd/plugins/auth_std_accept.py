@@ -25,14 +25,6 @@ def process(req=None,resp=None,user=None,**kwargs):
         _datetime = datetime.datetime.now()
         if _datetime > _expire_datetime:
             session_timeout += (_expire_datetime - _datetime).seconds 
-            
-    elif acct_policy  == PPTimes:
-        balance = decimal.Decimal(user.get("balance",0))
-        if balance == 0:
-            session_timeout = 0
-        else:
-            time_len = balance * decimal.Decimal(3600) / decimal.Decimal(product['fee_price'])
-            session_timeout = int(time_len.to_integral_value())
 
     elif acct_policy  == BOTimes:
         session_timeout = user.get("time_length",0)
