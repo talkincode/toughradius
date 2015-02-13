@@ -432,85 +432,33 @@ def init_db(db):
     node.node_desc = u'测试区域'
     db.add(node)
 
-    param0 = SlcParam()
-    param0.param_name = u'1_system_name'
-    param0.param_desc = u'管理系统名称'
-    param0.param_value = u'ToughRADIUS管理控制台'
-    db.add(param0)
-
-    param01 = SlcParam()
-    param01.param_name = u'2_member_system_name'
-    param01.param_desc = u'自助服务系统名称'
-    param01.param_value = u'ToughRADIUS自助服务中心'
-    db.add(param01)   
-
-    param02 = SlcParam()
-    param02.param_name = u'3_radiusd_address'
-    param02.param_desc = u'Radius服务IP地址'
-    param02.param_value = u'192.168.59.103'
-    db.add(param02)   
-    
-    param03 = SlcParam()
-    param03.param_name = u'4_radiusd_admin_port'
-    param03.param_desc = u'Radius服务管理端口'
-    param03.param_value = u'1815'
-    db.add(param03)     
-    
-    param04 = SlcParam()
-    param04.param_name = u'5_weixin_qrcode'
-    param04.param_desc = u'微信公众号二维码图片(宽度230px)'
-    param04.param_value = u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'
-    db.add(param04)    
-    
-    param05 = SlcParam()
-    param05.param_name = u'6_service_phone'
-    param05.param_desc = u'客户服务电话'
-    param05.param_value = u'000000'
-    db.add(param05)    
-    
-    param06 = SlcParam()
-    param06.param_name = u'7_service_qq'
-    param06.param_desc = u'客户服务QQ号码'
-    param06.param_value = u'000000'
-    db.add(param06)  
-    
-    param061 = SlcParam()
-    param061.param_name = u'7_rcard_order_url'
-    param061.param_desc = u'充值卡订购网站地址'
-    param061.param_value = u'http://www.tmall.com'
-    db.add(param061)
-    
-    param07 = SlcParam()
-    param07.param_name = u'8_portal_secret'
-    param07.param_desc = u'portal登陆密钥'
-    param07.param_value = u'abcdefg123456'
-    db.add(param07)   
-    
-    param08 = SlcParam()
-    param08.param_name = u'9_expire_notify_days'
-    param08.param_desc = u'到期提醒提前天数'
-    param08.param_value = u'7'
-    db.add(param08)
-    
-    param09 = SlcParam()
-    param09.param_name = u'9_expire_addrpool'
-    param09.param_desc = u'到期提醒下发地址池'
-    param09.param_value = u'expire'
-    db.add(param09)
+    params = [
+        ('system_name',u'管理系统名称',u'ToughRADIUS管理控制台'),
+        ('customer_system_name',u'自助服务系统名称',u'ToughRADIUS自助服务中心'),
+        ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),
+        ('radiusd_admin_port',u'Radius服务管理端口','1815'),
+        ('weixin_qrcode',u'微信公众号二维码图片(宽度230px)',u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'),
+        ('service_phone',u'客户服务电话',u'000000'),
+        ('service_qq',u'客户服务QQ号码',u'000000'),
+        ('rcard_order_url',u'充值卡订购网站地址',u'http://www.tmall.com'),
+        ('portal_secret',u'portal登陆密钥', u'abcdefg123456'),
+        ('expire_notify_days','到期提醒提前天数','7'),
+        ('expire_addrpool',u'到期提醒下发地址池',u'expire'),
+        ('smtp_server',u'SMTP服务器地址',u'smtp.163.com'),
+        ('smtp_user',u'SMTP用户名',u'toughradius@163.com'),
+        ('smtp_pwd',u'SMTP密码',u'toughmail'),
+        ('sms_secret',u'短信网关密钥',u'sdfwrfdr453ff4r'),
+        ('max_session_timeout',u'Radius最大会话时长(秒)',u'86400'),
+        ('reject_delay',u'拒绝延迟时间(秒)(0-9)','0')
+    ]  
       
-    param1 = SlcParam()
-    param1.param_name = u'max_session_timeout'
-    param1.param_desc = u'Radius最大会话时长(秒)'
-    param1.param_value = u'86400'
-    db.add(param1)
-
-    param2 = SlcParam()
-    param2.param_name = u'reject_delay'
-    param2.param_desc = u'拒绝延迟时间(秒)(0-9)'
-    param2.param_value = u'0'
-    db.add(param2)
+    for p in params:
+        param = SlcParam()
+        param.param_name = p[0]
+        param.param_desc = p[1]
+        param.param_value = p[2]
+        db.add(param)
   
-
     opr = SlcOperator()
     opr.id = 1
     opr.operator_name = 'admin'

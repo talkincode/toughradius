@@ -6,13 +6,29 @@ from libs.pyforms.rules import button_style,input_style
 
 boolean = {0:u"否", 1:u"是"}
 
-def param_form(params=[]):
-    inputs = []
-    for param in params:
-        _input = pyforms.Textbox(param.param_name, description=param.param_desc,value=param.param_value, **input_style)
-        inputs.append(_input)
-    inputs.append(pyforms.Button("submit", type="submit", html=u"<b>提交</b>",**button_style))
-    return pyforms.Form(*inputs,title=u"参数管理",action="/param")
+param_form = pyforms.Form(
+    pyforms.Textbox("system_name", description=u"管理系统名称", **input_style),
+    pyforms.Textbox("customer_system_name", description=u"自助服务系统名称",hr=True, **input_style),
+    pyforms.Textbox("radiusd_address", description=u"Radius服务IP地址",**input_style),
+    pyforms.Textbox("radiusd_admin_port",rules.is_number, description=u"Radius服务管理端口",**input_style),
+    pyforms.Textbox("max_session_timeout",rules.is_number, description=u"Radius最大会话时长(秒)", **input_style),
+    pyforms.Textbox("reject_delay",rules.is_number, description=u"拒绝延迟时间(秒)(0-9)",**input_style),
+    pyforms.Textbox("portal_secret", description=u"portal登陆密钥", **input_style),
+    pyforms.Textbox("expire_notify_days",rules.is_number, description=u"到期提醒提前天数", **input_style),
+    pyforms.Textbox("expire_addrpool", description=u"到期提醒下发地址池", hr=True,**input_style),    
+    pyforms.Textbox("weixin_qrcode", description=u"微信公众号二维码图片(宽度230px)", **input_style),
+    pyforms.Textbox("service_phone", description=u"客户服务电话", **input_style),
+    pyforms.Textbox("service_qq", description=u"客户服务QQ号码", **input_style),
+    pyforms.Textbox("rcard_order_url", description=u"充值卡订购网站地址",hr=True,**input_style),
+    pyforms.Textbox("smtp_server", description=u"smtp服务器地址", **input_style),
+    pyforms.Textbox("smtp_user", description=u"smtp用户名", **input_style),
+    pyforms.Textbox("smtp_pwd", description=u"smtp密码", **input_style),
+    pyforms.Textbox("sms_secret", description=u"短信网关密钥", **input_style),
+    pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
+    title=u"参数配置管理",
+    action="/param"
+)
+
 
 passwd_update_form = pyforms.Form(
     pyforms.Textbox("operator_name", description=u"管理员名", size=32, readonly="readonly", **input_style),

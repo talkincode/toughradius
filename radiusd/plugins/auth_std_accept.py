@@ -32,7 +32,7 @@ def process(req=None,resp=None,user=None):
             session_timeout = time_len
     
     if "Framed-Pool" in resp:
-        if store.get_param("9_expire_addrpool") in resp['Framed-Pool']:
+        if store.get_param("expire_addrpool") in resp['Framed-Pool']:
             session_timeout = 120
     
     resp['Session-Timeout'] = session_timeout

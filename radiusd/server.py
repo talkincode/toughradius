@@ -255,7 +255,7 @@ def main():
     utils.update_secret(_secret)
     
     # set timezone
-    os.environ["TZ"] = _config.get('tz','Asia/Shanghai')
+    os.environ["TZ"] = _config.get('tz','CST-8')
     time.tzset()
 
     # init args

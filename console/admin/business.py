@@ -164,6 +164,29 @@ member_detail_url_formatter = "/bus/member/detail?member_id={0}".format
 ###############################################################################
 # member update
 ###############################################################################
+@app.get('/member/delete',apply=auth_opr)
+def member_update(db):
+    member_id = request.params.get("member_id")
+    if not member_id:
+        raise abort(404,'member_id is empty')
+    db.query(models.SlcMember).filter_by(member_id=member_id).delete()
+    for account in db.query(models.SlcRadAccount).filter_by(member_id=member_id):
+        db.query(models.SlcRadAcceptLog).filter_by(account_number=account.account_number).delete()
+        db.query(models.SlcRadAccountAttr).filter_by(account_number=account.account_number).delete()
+        db.query(models.SlcRadBilling).filter_by(account_number=account.account_number).delete()
+        db.query(models.SlcRadTicket).filter_by(account_number=account.account_number).delete()
+        db.query(models.SlcRadOnline).filter_by(account_number=account.account_number).delete()
+        db.query(models.SlcRechargeLog).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRadAccount).filter_by(member_id=member_id).delete()
+    db.query(models.SlcMemberOrder).filter_by(member_id=member_id).delete()
+    db.commit()
+    return redirect("/bus/member")
+    
+permit.add_route("/bus/member/delete",u"用户详情查看",u"营业管理",order=0.03)
+
+###############################################################################
+# member update
+###############################################################################
 
 @app.get('/member/update',apply=auth_opr)
 def member_update(db):

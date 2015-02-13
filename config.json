@@ -31,6 +31,6 @@
         "debug": 1,
         "dictfile": "./radiusd/dict/dictionary"
     },
-    "tz":"Asia/Shanghai",
+    "tz":"CST-8",
     "secret": "ztBLgQ5dMyc5KfhWFmFSS90yusLQXZoCOEqOSc1cTeQrA96FwcNpyK7FUsVwEkRVzHmLuzZUtiNrjePdUA8YFOB1CmqF9bXIP3XOD8Au4UsV4XQWXBEAhq1Hz9LLPGVw"
 }

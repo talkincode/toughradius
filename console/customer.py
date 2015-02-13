@@ -50,15 +50,15 @@ def init_application(dbconf=None,cusconf=None,secret=None):
         sec2hour = utils.sec2hour,
         request = request,
         sys_param_value = _sys_param_value,
-        system_name = _sys_param_value("2_member_system_name"),
+        system_name = _sys_param_value("customer_system_name"),
         get_member = _get_member_by_name,
         get_account = _get_account_by_number,
         is_online = _get_online_status
     ))
 
     websock.connect(
-        _sys_param_value('3_radiusd_address'),
-        _sys_param_value('4_radiusd_admin_port')
+        _sys_param_value('radiusd_address'),
+        _sys_param_value('radiusd_admin_port')
     )
     
     mainapp.install(sqla_pg)
@@ -86,7 +86,7 @@ def main():
     _secret = _config['secret']
     
     # set timezone
-    os.environ["TZ"] = _config.get('tz','Asia/Shanghai')
+    os.environ["TZ"] = _config.get('tz','CST-8')
     time.tzset()
 
     if args.httpport:_customer['httpport'] = args.httpport

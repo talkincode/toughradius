@@ -14,7 +14,7 @@ def process(req=None,resp=None,user=None):
         return error_auth(resp,'user password not match')
         
     if user['status'] == 4:
-        resp['Framed-Pool'] = store.get_param("9_expire_addrpool")
+        resp['Framed-Pool'] = store.get_param("expire_addrpool")
         return resp
 
     if  user['status'] in (0,2,3):

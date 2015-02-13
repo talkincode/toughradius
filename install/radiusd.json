@@ -37,6 +37,6 @@
         "httpport":1817,
         "debug":1
     },
-    "tz":"Asia/Shanghai",
+    "tz":"CST-8",
     "secret":"1qazxsw23edcvfr45tgbnhy67ujmki89"        
 }

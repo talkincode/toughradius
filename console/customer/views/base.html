@@ -7,7 +7,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <link rel="shortcut icon" href="/static/favicon.ico"/>
-<title>${sys_param_value('2_member_system_name') or ''}</title>
+<title>${sys_param_value('customer_system_name') or ''}</title>
 <link href="/static/css/bootstrap.min.css" rel="stylesheet">
 <link href="/static/css/customer.css" rel="stylesheet">
 <script src="/static/js/jquery-1.11.0.min.js"></script>
@@ -32,7 +32,7 @@ ${self.head()}
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="/">${sys_param_value('2_member_system_name') or ''}</a>
+      <a class="navbar-brand" href="/">${sys_param_value('customer_system_name') or ''}</a>
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
@@ -58,7 +58,7 @@ ${self.head()}
     <ul>
     </ul>
     <div class="copy">
-        <p class="pull-left">© 2015 ${sys_param_value('2_member_system_name') or ''}</p> 
+        <p class="pull-left">© 2015 ${sys_param_value('customer_system_name') or ''}</p> 
     </div>
   </div>
 </div>

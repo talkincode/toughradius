@@ -121,7 +121,12 @@ def admin_logout(db):
 
 @app.get('/param',apply=auth_opr)
 def param(db):   
-    return render("base_form",form=forms.param_form(db.query(models.SlcParam)))
+    form = forms.param_form()
+    fparam = {}
+    for p in db.query(models.SlcParam):
+        fparam[p.param_name] = p.param_value
+    form.fill(fparam)
+    return render("base_form",form=form)
 
 @app.post('/param',apply=auth_opr)
 def param_update(db): 
@@ -133,11 +138,11 @@ def param_update(db):
             if _value: _value = _value.decode('utf-8')
             if _value and param.param_value not in _value:
                 param.param_value = _value
-            if param.param_name == '3_radiusd_address':
+            if param.param_name == 'radiusd_address':
                 if param.param_value != MakoTemplate.defaults['radaddr']:
                     MakoTemplate.defaults['radaddr'] = param.param_value
                     wsflag = True
-            if param.param_name == '4_radiusd_admin_port':
+            if param.param_name == 'radiusd_admin_port':
                 if param.param_value != MakoTemplate.defaults['adminport']:
                     MakoTemplate.defaults['adminport'] = param.param_value
                     wsflag = True     

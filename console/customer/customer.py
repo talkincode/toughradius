@@ -402,7 +402,7 @@ def portal_auth(db):
     ).first()
     if not account:
         return abort(403,'user not exists')
-    secret = get_param_value(db,"8_portal_secret")
+    secret = get_param_value(db,"portal_secret")
     date = utils.get_currdate()
     _token = md5("%s%s%s%s"%(user,utils.decrypt(account.password),secret,date)).hexdigest()
     if _token == token:

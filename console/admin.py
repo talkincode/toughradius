@@ -64,9 +64,9 @@ def init_application(dbconf=None,consconf=None,secret=None):
         request = request,
         sys_param_value = _sys_param_value,
         get_product_name = _get_product_name,
-        system_name = _sys_param_value("1_system_name"),
-        radaddr = _sys_param_value('3_radiusd_address'),
-        adminport = _sys_param_value('4_radiusd_admin_port'),
+        system_name = _sys_param_value("system_name"),
+        radaddr = _sys_param_value('radiusd_address'),
+        adminport = _sys_param_value('radiusd_admin_port'),
         permit = permit,
         all_menus = permit.build_menus(order_cats=[u"系统管理",u"营业管理",u"运维管理"])
     ))
@@ -82,6 +82,9 @@ def init_application(dbconf=None,consconf=None,secret=None):
     log.msg("init operator rules...")
     for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
         permit.bind_super(_super[0])
+        
+    log.msg("init sendmail..")
+    
 
     log.msg("mount app and install plugins...")
     mainapp.install(sqla_pg)
@@ -112,7 +115,7 @@ def main():
     _secret = _config['secret']
     
     # set timezone
-    os.environ["TZ"] = _config.get('tz','Asia/Shanghai')
+    os.environ["TZ"] = _config.get('tz','CST-8')
     time.tzset()
 
     if args.httpport:_admin['httpport'] = args.httpport
