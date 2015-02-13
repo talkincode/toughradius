@@ -162,7 +162,7 @@ permit.add_route("/bus/member/detail",u"用户详情查看",u"营业管理",orde
 member_detail_url_formatter = "/bus/member/detail?member_id={0}".format
 
 ###############################################################################
-# member update
+# member delete
 ###############################################################################
 @app.get('/member/delete',apply=auth_opr)
 def member_update(db):
@@ -182,7 +182,7 @@ def member_update(db):
     db.commit()
     return redirect("/bus/member")
     
-permit.add_route("/bus/member/delete",u"用户详情查看",u"营业管理",order=0.03)
+permit.add_route("/bus/member/delete",u"删除用户信息",u"营业管理",order=0.03)
 
 ###############################################################################
 # member update
@@ -222,7 +222,7 @@ def member_update(db):
     db.commit()
     redirect(member_detail_url_formatter(member.member_id))
 
-permit.add_route("/bus/member/update",u"修改用户资料",u"营业管理",order=0.03)
+permit.add_route("/bus/member/update",u"修改用户资料",u"营业管理",order=0.04)
 
 ###############################################################################
 # member open
@@ -975,6 +975,30 @@ def acceptlog_query(db):
 
 permit.add_route("/bus/acceptlog",u"用户受理查询",u"营业管理",is_menu=True,order=3)
 permit.add_route("/bus/acceptlog/export",u"用户受理导出",u"营业管理",order=3.01)
+
+###############################################################################
+# member update
+###############################################################################
+@app.get('/account/delete',apply=auth_opr)
+def member_update(db):
+    account_number = request.params.get("account_number")
+    if not account_number:
+        raise abort(404,'account_number is empty')
+    account = db.query(models.SlcRadAccount).get(account_number)
+    member_id = account.member_id
+        
+    db.query(models.SlcRadAcceptLog).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRadAccountAttr).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRadBilling).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRadTicket).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRadOnline).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRechargeLog).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcRadAccount).filter_by(account_number=account.account_number).delete()
+    db.query(models.SlcMemberOrder).filter_by(account_number=account.account_number).delete()
+    db.commit()
+    return redirect(member_detail_url_formatter(member_id))
+    
+permit.add_route("/bus/account/delete",u"删除用户账号",u"营业管理",order=3.02)
 
 ###############################################################################
 # billing log query

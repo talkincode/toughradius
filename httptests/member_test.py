@@ -14,6 +14,25 @@ member = dict(
     status = 1
 )
 
+def test_post_member_100():
+    req = session.login()    
+    r0 = req.get(session.sub_path(u"/test/pid?name=预付费包月30元"))
+    assert r0.status_code == 200
+    pid0 = r0.json()['pid']
+    
+    for i in range(100):
+        memberi = member.copy()
+        memberi['member_name'] = 'ppmuser%s'%(i+1)
+        memberi['realname'] = u"测试包月用户%s"%(i+1)
+        memberi['account_number'] = 'ppm%s'%(i+1)
+        memberi['ip_address'] = '192.168.1.%s'%(i+1)
+        memberi['product_id'] = pid0
+        r = req.post(session.sub_path("/bus/member/open"),data=memberi)
+        assert r.status_code == 200
+        assert '<span class="wrong">' not in  r.text
+        
+    
+
         
 def test_post_member():
     req = session.login()    

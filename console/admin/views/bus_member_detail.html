@@ -35,6 +35,13 @@ function release(account_number)
     },"json");
 }
 
+function do_delete(account_number)
+{
+    if(confirm("删除账号将删除账号所有相关数据，包括账号，日志，订单等，不可恢复，确认操作吗？")) {
+        window.location.href = "/bus/account/delete?account_number="+account_number;
+    }
+    
+}
 
 </script>
 </%def>
@@ -154,6 +161,9 @@ function release(account_number)
                         <a class="opt-btn btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
                         % endif
                         
+                    % endif
+                    % if permit.match('/bus/account/delete'):
+                    <a class="opt-btn btn-default" href="javascript:do_delete('${user.account_number}');">删除</a>
                     % endif
                  </td>
             </tr>
