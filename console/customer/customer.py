@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
-
+from twisted.internet import reactor
 from bottle import Bottle
 from bottle import request
 from bottle import response
@@ -24,6 +24,7 @@ from base import  (CardInActive,CardActive,CardUsed,CardRecover)
 from base import (ProductCard,BalanceCard)
 from base import (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire) 
 from libs import utils
+from libs.smail import mail
 from sqlalchemy.sql import exists
 from websock import websock
 import time
@@ -190,6 +191,24 @@ def member_logout():
     set_cookie('customer_login_ip', None)     
     request.cookies.clear()
     redirect('login')
+    
+
+@app.get("/active/<code>")
+def active_user(db,code):
+    member = db.query(models.SlcMember).filter(
+        models.SlcMember.active_code == active_code,
+    ).first()
+
+    if not member:
+        return render("error",msg="无效的激活码")
+
+    if member.email_active == 1:
+        return render("error",msg="用户已经激活")
+
+    member.email_active  = 1
+    db.commit()
+    
+    return render("msg",msg=u"恭喜您, 激活成功, 请登录系统")
 
 ###############################################################################
 # user join        
@@ -227,12 +246,97 @@ def member_join_post(db):
     member.address = form.d.address
     member.create_time = utils.get_currtime()
     member.update_time = utils.get_currtime()
+    member.email_active = 0
+    member.mobile_active = 0
+    member.active_code = utils.get_uuid()
     db.add(member) 
     db.commit()
+    
+    topic = u'%s,请验证您在%s注册的电子邮件地址'%(member.realname,get_param_value(db,"customer_system_name"))
+    ctx = dict(
+        username = member.realname,
+        customer_name = get_param_value(db,"customer_system_name"),
+        customer_url = get_param_value(db,"customer_system_url"),
+        active_code = member.active_code
+    )
+    reactor.callInThread(mail.sendmail,member.email,topic,render("mail",**ctx))
+    return render('msg',msg=u"新用户注册成功,请注意查收您的注册邮箱，及时激活账户")
+    
+###############################################################################
+# user update
+###############################################################################
+
+@app.get('/user/update',apply=auth_cus)
+def member_update(db):
+    member = db.query(models.SlcMember).get(get_cookie("customer_id"))
+    form = forms.member_update_form()
+    form.fill(member)
+    form.new_password.set_value("")
+    return render("base_form",form=form)
+
+@app.post('/user/update',apply=auth_cus)
+def member_update(db):
+    form=forms.member_update_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+
+    member = db.query(models.SlcMember).get(get_cookie("customer_id"))
+    oldemail = member.email
+    member.realname = form.d.realname
+    if form.d.new_password:
+        member.password =  md5(form.d.new_password.encode()).hexdigest()
+    member.email = form.d.email
+    member.address = form.d.address
+    
+    if oldemail != member.email:
+        member.email_active = 0
+        member.active_code = utils.get_uuid()
+    
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)修改用户信息:%s'%(get_cookie("username"),member.member_name)
+    db.add(ops_log)
+
+    db.commit()
+    
+    if member.email and (oldemail != member.email):
+        topic = u'%s,请验证您在%s注册的电子邮件地址'%(member.realname,get_param_value(db,"customer_system_name"))
+        ctx = dict(
+            username = member.realname,
+            customer_name = get_param_value(db,"customer_system_name"),
+            customer_url = get_param_value(db,"customer_system_url"),
+            active_code = member.active_code
+        )
+        reactor.callInThread(mail.sendmail,member.email,topic,render("mail",**ctx))
+        return render("msg",msg=u"您修改了email地址，系统已发送激活邮件，请重新激活绑定")
+    else:
+        return redirect("/")
    
-    logger.info(u"新用户注册成功,member_name=%s"%member.member_name)
-    redirect('/login')
-   
+@app.post('/email/reactive',apply=auth_cus)
+def email_reactive(db):
+    last_send = get_cookie("last_send_active") 
+    if last_send:
+        sec = int(time.time()) - int(float(last_send))
+        if sec < 60:
+            return dict(code=1,msg=u"每间隔60秒才能发送一次,还需等待%s秒"% int(60-sec))
+
+    set_cookie("last_send_active", str(time.time()))
+    member = db.query(models.SlcMember).get(get_cookie("customer_id"))
+    try:
+        topic = u'%s,请验证您在%s注册的电子邮件地址'%(member.realname,get_param_value(db,"customer_system_name"))
+        ctx = dict(
+            username = member.realname,
+            customer_name = get_param_value(db,"customer_system_name"),
+            customer_url = get_param_value(db,"customer_system_url"),
+            active_code = member.active_code
+        )
+        reactor.callInThread(mail.sendmail,member.email,topic,render("mail",**ctx))
+        return dict(code=0,msg=u"激活邮件已经发送")  
+    except :
+        return dict(code=0,msg=u"激活邮件发送失败,请稍后再试")   
+ 
 ###############################################################################
 # account query        
 ###############################################################################
@@ -455,6 +559,10 @@ def query_card_products(db):
 
 @app.get('/open',apply=auth_cus)
 def account_open(db):
+    member = db.query(models.SlcMember).get(get_cookie("customer_id"))
+    if member.email_active == 0 and get_param_value(db,"customer_must_active") == "1":
+        return render("error",msg=u"激活您的电子邮箱才能使用此功能")
+    
     r = ['0','1','2','3','4','5','6','7','8','9']
     rg = utils.random_generator
     def random_account():
@@ -575,6 +683,9 @@ def account_open(db):
 
 @app.get('/recharge')
 def account_recharge(db):
+    member = db.query(models.SlcMember).get(get_cookie("customer_id"))
+    if member.email_active == 0 and get_param_value(db,"customer_must_active") == "1":
+        return render("error",msg=u"激活您的电子邮箱才能使用此功能")    
     account_number = request.params.get('account_number')
     form = forms.recharge_form()
     form.recharge_card.set_value('')

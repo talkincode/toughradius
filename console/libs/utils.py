@@ -11,6 +11,7 @@ import calendar
 import random
 import os
 import time
+import uuid
 
 random_generator = random.SystemRandom()
 
@@ -58,6 +59,9 @@ decrypt = aescipher.decrypt
 def update_tz(tz_val,default_val="CST-8"):
     os.environ["TZ"] = tz_val or default_val
     time.tzset()
+    
+def get_uuid():
+    return uuid.uuid1().hex.upper()
     
 def bb2mb(ik):
     _kb = decimal.Decimal(ik or 0)

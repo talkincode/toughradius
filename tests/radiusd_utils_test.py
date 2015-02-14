@@ -4,6 +4,7 @@
 from radiusd import utils
 
 def test_encrypt_decrypt():
+    utils.aescipher.setup("12345678")
     a = utils.encrypt('888888')
     assert a
     b = utils.decrypt(a)

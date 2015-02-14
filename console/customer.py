@@ -19,6 +19,7 @@ from base import (
 )
 
 from libs import sqla_plugin,utils
+from libs.smail import mail
 from websock import websock
 import functools
 import models
@@ -52,6 +53,14 @@ def init_application(config):
         get_account = _get_account_by_number,
         is_online = _get_online_status
     ))
+    
+    mail.setup(
+        server=_sys_param_value('smtp_server'),
+        user=_sys_param_value('smtp_user'),
+        pwd=_sys_param_value('smtp_pwd'),
+        fromaddr=_sys_param_value('smtp_user'),
+        sender=_sys_param_value('smtp_sender')
+    )
 
     websock.connect(
         _sys_param_value('radiusd_address'),

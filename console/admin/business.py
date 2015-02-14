@@ -217,6 +217,7 @@ def member_update(db):
     member.realname = form.d.realname
     if form.d.new_password:
         member.password =  md5(form.d.new_password.encode()).hexdigest()
+    member.email = form.d.email
     member.idcard = form.d.idcard
     member.mobile = form.d.mobile
     member.address = form.d.address
@@ -279,6 +280,9 @@ def member_open(db):
     member.address = form.d.address
     member.create_time = utils.get_currtime()
     member.update_time = utils.get_currtime()
+    member.email_active = 0
+    member.mobile_active = 0
+    member.active_code = utils.get_uuid()
     db.add(member)
     db.flush()
     db.refresh(member)
@@ -548,10 +552,13 @@ def member_import(db):
             member.sex = '1'
             member.age = '0'
             member.email = ''
-            member.mobile = '123456'
-            member.address = 'address'
+            member.mobile = ''
+            member.address = 'no address'
             member.create_time = utils.get_currtime()
             member.update_time = utils.get_currtime()
+            member.email_active = 0
+            member.mobile_active = 0
+            member.active_code = utils.get_uuid()
             db.add(member)
             db.flush()
             db.refresh(member)

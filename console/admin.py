@@ -14,6 +14,7 @@ from admin.card import app as card_app
 from admin.product import app as product_app
 from base import *
 from libs import sqla_plugin,utils
+from libs.smail import mail
 from websock import websock
 import bottle
 import tasks
@@ -23,6 +24,8 @@ import base
 import time
 
 __version__ = 'v0.6'
+
+reactor.suggestThreadPoolSize(30)
 
 subapps = [ops_app,bus_app,card_app,product_app]
 
@@ -78,17 +81,24 @@ def init_application(config):
         _sys_param_value('radiusd_address'),
         _sys_param_value('radiusd_admin_port')
     )
-    reactor.callLater(3, websock.connect,*wsparam)
+    reactor.callLater(1, websock.connect,*wsparam)
     log.msg("init tasks...")
-    reactor.callLater(4, tasks.start_online_stat_job, sqla_pg.new_session)
-    reactor.callLater(5, tasks.start_flow_stat_job, sqla_pg.new_session)
+    reactor.callLater(2, tasks.start_online_stat_job, sqla_pg.new_session)
+    reactor.callLater(3, tasks.start_flow_stat_job, sqla_pg.new_session)
+    reactor.callLater(4, tasks.start_expire_notify_job, sqla_pg.new_session)
    
     log.msg("init operator rules...")
     for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
         permit.bind_super(_super[0])
         
     log.msg("init sendmail..")
-    
+    mail.setup(
+        server=_sys_param_value('smtp_server'),
+        user=_sys_param_value('smtp_user'),
+        pwd=_sys_param_value('smtp_pwd'),
+        fromaddr=_sys_param_value('smtp_user'),
+        sender=_sys_param_value('smtp_sender')
+    )
 
     log.msg("mount app and install plugins...")
     mainapp.install(sqla_pg)

@@ -2,6 +2,14 @@
 <%namespace name="main_ui" file="main_ui.html"/>
 <%namespace name="sidebar_ui" file="sidebar_ui.html"/>
 <%def name="head()">
+
+<script>
+function reactive(){
+    $.post("/email/reactive",{},function(ev){
+        alert(ev.msg);
+    },"json");
+}   
+</script>
 </%def>
 
 <%def name="main()">
@@ -9,6 +17,9 @@
     <div class="panel-heading"> <span class="glyphicon glyphicon-user"></span> 用户信息
     </div>
     <div class="panel-body posts">
+        <div class="pull-right">
+            <a href="/user/update" class="btn btn-sm btn-info">修改基本资料</a>
+        </div>
         <table class="table ">
                 <thead>
                     <tr>
@@ -33,16 +44,25 @@
                         <td>${member.mobile}</td>
                     </tr>      
                     <tr>
-                        <td>创建时间</td>
+                        <td>注册时间</td>
                         <td>${member.create_time}</td>
-                        <td>更新时间</td>
+                        <td>最后更新</td>
                         <td>${member.update_time}</td> 
-                        <td>email</td>
-                        <td>${member.email}</td>                                            
+                        <td>地址</td>
+                        <td>${member.address}</td>
+                                           
                     </tr>   
                     <tr>
-                        <td>地址</td>
-                        <td colspan="5">${member.address}</td>                     
+                        <td>email</td>
+                        <td colspan="5">
+                            ${member.email} 
+                            % if member.email:
+                            (${member.email_active == 1 and u'已绑定' or u'未绑定'})
+                            % if member.email_active == 0:
+                                <button type="button" class="opt-btn btn-default" onclick="javascript:reactive();" >发送激活邮件</button>
+                             % endif
+                             % endif
+                        </td>                  
                     </tr>                                                                                         
             </tbody>
         </table>

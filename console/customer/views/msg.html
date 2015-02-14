@@ -1,0 +1,22 @@
+<%inherit file="base.html"/>
+<%namespace name="sidebar_ui" file="sidebar_ui.html"/>
+<%def name="head()">
+</%def>
+<%def name="main()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-cog"></span> 消息提示</div>
+        <div class="panel-body ">
+        <p class="alert alert-info">
+        ${msg}. 
+        </p>
+</div>
+</div>
+
+</%def>
+
+<%def name="sidebar()">
+    ${sidebar_ui.login_box()}
+    ${sidebar_ui.service_box()}
+    ${sidebar_ui.qrcode_box()}
+
+</%def>

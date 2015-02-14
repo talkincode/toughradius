@@ -11,7 +11,7 @@ import functools
 
 DeclarativeBase = declarative_base()
 
-def get_db_connstr(config):
+def get_db_connstr(config,tmpdb=None):
     conf_str = functools.partial(config.get,"database")
     conf_int = functools.partial(config.getint,"database")
     if conf_str("dbtype") == 'mysql':
@@ -20,15 +20,15 @@ def get_db_connstr(config):
             conf_str("passwd"),
             conf_str("host"),
             conf_int("port"),
-            conf_str("db"),
+            tmpdb or conf_str("db"),
             conf_str("charset"))
 
-def get_engine(dbconf=None,echo=False):
-    engine = create_engine(get_db_connstr(dbconf),echo=echo)
+def get_engine(dbconf=None,echo=False,tmpdb=None):
+    engine = create_engine(get_db_connstr(dbconf,tmpdb=tmpdb),echo=echo)
     metadata = DeclarativeBase.metadata
     metadata.bind = engine
     return engine,metadata
-    
+
 class SlcNode(DeclarativeBase):
     """区域表"""
     __tablename__ = 'slc_node'
@@ -54,19 +54,19 @@ class SlcOperator(DeclarativeBase):
     operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
     operator_pass = Column(u'operator_pass', VARCHAR(length=128), nullable=False,doc=u"操作员密码")
     operator_status = Column(u'operator_status', INTEGER(), nullable=False,doc=u"操作员状态,0/1")
-    operator_desc = Column(u'operator_desc', VARCHAR(255), nullable=False,doc=u"操作员描述")   
-    
+    operator_desc = Column(u'operator_desc', VARCHAR(255), nullable=False,doc=u"操作员描述")
+
 class SlcOperatorRule(DeclarativeBase):
     """操作员权限表"""
     __tablename__ = 'slc_operator_rule'
 
-    __table_args__ = {} 
+    __table_args__ = {}
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"权限id")
     operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
     rule_path = Column(u'rule_path', VARCHAR(128), nullable=False,doc=u"权限URL")
     rule_name = Column(u'rule_name', VARCHAR(128), nullable=False,doc=u"权限名称")
     rule_category = Column(u'rule_category', VARCHAR(128), nullable=False,doc=u"权限分类")
-    
+
 
 class SlcParam(DeclarativeBase):
     """系统参数表  <radiusd default table>"""
@@ -120,7 +120,7 @@ class SlcMember(DeclarativeBase):
 
     __table_args__ = {}
 
-    member_id = Column('member_id', INTEGER(), 
+    member_id = Column('member_id', INTEGER(),
         Sequence('member_id_seq', start=100001, increment=1),
         primary_key=True,nullable=False,doc=u"用户id")
     node_id = Column('node_id', INTEGER(), nullable=False,doc=u"区域id")
@@ -131,11 +131,14 @@ class SlcMember(DeclarativeBase):
     sex = Column('sex', SMALLINT(), nullable=True,doc=u"用户性别0/1")
     age = Column('age', INTEGER(), nullable=True,doc=u"用户年龄")
     email = Column('email', VARCHAR(length=255), nullable=True,doc=u"用户邮箱")
+    email_active = Column('email_active', SMALLINT(), default=0,doc=u"用户邮箱激活状态")
+    active_code =  Column('active_code', VARCHAR(length=32), nullable=False,doc=u"邮箱激活码")
     mobile = Column('mobile', VARCHAR(length=16), nullable=True,doc=u"用户手机")
+    mobile_active = Column('mobile_active', SMALLINT(), default=0,doc=u"用户手机绑定状态")
     address = Column('address', VARCHAR(length=255), nullable=True,doc=u"用户地址")
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
-    update_time = Column('update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")    
-    
+    update_time = Column('update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")
+
 
 class SlcMemberOrder(DeclarativeBase):
     """
@@ -158,17 +161,18 @@ class SlcMemberOrder(DeclarativeBase):
     order_desc = Column('order_desc', VARCHAR(length=255),doc=u"订单描述")
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"交易时间")
 
+
 class SlcRechargerCard(DeclarativeBase):
     """
     充值卡表
     批次号：batch_no，以年月开始紧跟顺序号，如20150201
     卡类型 0 资费卡   1 余额卡
-    状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收 
+    状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收
     """
     __tablename__ = 'slc_recharge_card'
 
     __table_args__ = {}
-    
+
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"充值卡id")
     batch_no = Column('batch_no', INTEGER(), nullable=False,doc=u"批次号")
     card_number = Column('card_number', VARCHAR(length=16),nullable=False,unique=True,doc=u"充值卡号")
@@ -182,7 +186,7 @@ class SlcRechargerCard(DeclarativeBase):
     flows = Column('flows', INTEGER(),nullable=True,doc=u"授权流量(kb)")
     expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
     create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
-    
+
 class SlcRechargeLog(DeclarativeBase):
     """
     充值记录
@@ -190,7 +194,7 @@ class SlcRechargeLog(DeclarativeBase):
     __tablename__ = 'slc_recharge_log'
 
     __table_args__ = {}
-    
+
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
     card_number = Column('card_number', VARCHAR(length=16),nullable=False,doc=u"充值卡号")
     member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
@@ -242,7 +246,7 @@ class SlcRadAccountAttr(DeclarativeBase):
     account_number = Column('account_number', VARCHAR(length=32),nullable=False,doc=u"上网账号")
     attr_name = Column(u'attr_name', VARCHAR(length=255), nullable=False,doc=u"属性名")
     attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False,doc=u"属性值")
-    attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")    
+    attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")
 
 class SlcRadProduct(DeclarativeBase):
     '''
@@ -257,7 +261,7 @@ class SlcRadProduct(DeclarativeBase):
     id = Column('id', INTEGER(),primary_key=True,autoincrement=1,nullable=False,doc=u"资费id")
     product_name = Column('product_name', VARCHAR(length=64), nullable=False,doc=u"资费名称")
     product_policy = Column('product_policy', INTEGER(), nullable=False,doc=u"资费策略")
-    product_status = Column('product_status', SMALLINT(), nullable=False,doc=u"资费状态")    
+    product_status = Column('product_status', SMALLINT(), nullable=False,doc=u"资费状态")
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False,doc=u"是否绑定mac")
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False,doc=u"是否绑定vlan")
     concur_number = Column('concur_number', INTEGER(), nullable=False,doc=u"并发数")
@@ -275,7 +279,7 @@ class SlcRadProductAttr(DeclarativeBase):
     '''资费扩展属性表 <radiusd default table>'''
     __tablename__ = 'slc_rad_product_attr'
 
-    __table_args__ = {}    
+    __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"属性id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
@@ -287,7 +291,7 @@ class SlcRadBilling(DeclarativeBase):
     """计费信息表 is_deduct 0 未扣费 1 已扣费 <radiusd default table>"""
     __tablename__ = 'slc_rad_billing'
 
-    __table_args__ = { }  
+    __table_args__ = { }
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"计费id")
@@ -311,7 +315,7 @@ class SlcRadTicket(DeclarativeBase):
     """上网日志表 <radiusd default table>"""
     __tablename__ = 'slc_rad_ticket'
 
-    __table_args__ = { }  
+    __table_args__ = { }
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
@@ -341,7 +345,7 @@ class SlcRadTicket(DeclarativeBase):
     start_source = Column(u'start_source', INTEGER(), nullable=False,doc=u"会话开始来源")
     stop_source = Column(u'stop_source', INTEGER(), nullable=False,doc=u"会话中止来源")
 
-    #relation definitions 
+    #relation definitions
 
 class SlcRadOnline(DeclarativeBase):
     """用户在线信息表 <radiusd default table>"""
@@ -349,7 +353,7 @@ class SlcRadOnline(DeclarativeBase):
 
     __table_args__ = {
         'mysql_engine' : 'MEMORY'
-    }  
+    }
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"在线id")
@@ -364,7 +368,7 @@ class SlcRadOnline(DeclarativeBase):
     input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
     output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
     start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"记账开始来源")
-    
+
 class SlcRadOnlineStat(DeclarativeBase):
     """用户在线统计表 """
     __tablename__ = 'slc_rad_online_stat'
@@ -378,7 +382,7 @@ class SlcRadOnlineStat(DeclarativeBase):
     total = Column(u'total', INTEGER(),doc=u"在线数")
 
     #relation definitions
-    
+
 class SlcRadFlowStat(DeclarativeBase):
     """用户在线统计表 """
     __tablename__ = 'slc_rad_flow_stat'
@@ -433,6 +437,8 @@ def init_db(db):
     params = [
         ('system_name',u'管理系统名称',u'ToughRADIUS管理控制台'),
         ('customer_system_name',u'自助服务系统名称',u'ToughRADIUS自助服务中心'),
+        ('customer_system_url',u"自助服务系统地址",u"http://forum.toughradius.net"),
+        ('customer_must_active',u"激活邮箱才能自助开户充值(0:否|1:是)",u"1"),
         ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),
         ('radiusd_admin_port',u'Radius服务管理端口','1815'),
         ('is_debug',u'DEBUG模式','0'),
@@ -442,22 +448,24 @@ def init_db(db):
         ('rcard_order_url',u'充值卡订购网站地址',u'http://www.tmall.com'),
         ('portal_secret',u'portal登陆密钥', u'abcdefg123456'),
         ('expire_notify_days','到期提醒提前天数','7'),
+        ('expire_notify_tpl','到期提醒邮件模板','账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
+        ('expire_notify_url',u'到期通知url',u'http://your_notify_url?account={account}&expire={expire}&email={email}&mobile={mobile}'),
         ('expire_addrpool',u'到期提醒下发地址池',u'expire'),
         ('smtp_server',u'SMTP服务器地址',u'smtp.163.com'),
         ('smtp_user',u'SMTP用户名',u'toughradius@163.com'),
         ('smtp_pwd',u'SMTP密码',u'toughmail'),
-        ('sms_secret',u'短信网关密钥',u'sdfwrfdr453ff4r'),
+        ('smtp_sender',u'SMTP发送人名称',u'运营中心'),
         ('max_session_timeout',u'Radius最大会话时长(秒)',u'86400'),
         ('reject_delay',u'拒绝延迟时间(秒)(0-9)','0')
-    ]  
-      
+    ]
+
     for p in params:
         param = SlcParam()
         param.param_name = p[0]
         param.param_desc = p[1]
         param.param_value = p[2]
         db.add(param)
-  
+
     opr = SlcOperator()
     opr.id = 1
     opr.operator_name = 'admin'
@@ -470,17 +478,17 @@ def init_db(db):
     db.commit()
 
 def build_db(config=None):
-    if config.get("database","dbtype") != 'mysql':
-       return update(config)
-    engine,_ = get_engine(config)
+    tmpdbs = {'mysql':'mysql'}
+    dbtype = config.get("database","dbtype")
+    engine,_ = get_engine(config,tmpdb=tmpdbs.get(dbtype))
     conn = engine.connect()
     try:
         drop_sql = "drop database %s"%config.get("database","db")
         print drop_sql
-        conn.execute(drop_sql)      
+        conn.execute(drop_sql)
     except:
         print "drop database error"
-    
+
     create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config.get("database","db")
     print create_sql
     conn.execute(create_sql)
@@ -489,7 +497,7 @@ def build_db(config=None):
     conn.close()
 
     engine,metadata = get_engine(config)
-    metadata.create_all(engine,checkfirst=True)  
+    metadata.create_all(engine,checkfirst=True)
 
 
 def install(config=None):
@@ -498,7 +506,7 @@ def install(config=None):
     if action == 'y':
         build_db(config=config)
         engine,_ = get_engine(config)
-        db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+        db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
         action = raw_input("init database ?[n]")
         if action == 'y':
             init_db(db)
@@ -508,7 +516,7 @@ def install2(config=None):
     print 'starting create and init database...'
     build_db(config=config)
     engine,_ = get_engine(config)
-    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
     init_db(db)
 
 def update(config=None):
@@ -516,14 +524,13 @@ def update(config=None):
     engine,metadata = get_engine(config)
     action = raw_input("rebuild database ?[n]")
     if action == 'y':
-        metadata.drop_all(engine)      
-    metadata.create_all(engine,checkfirst=True)    
+        metadata.drop_all(engine)
+    metadata.create_all(engine,checkfirst=True)
     print 'starting update database done'
-    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
+    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
     action = raw_input("init database ?[n]")
     if action == 'y':
-        init_db(db)    
+        init_db(db)
 
 if __name__ == '__main__':
     install()
-
