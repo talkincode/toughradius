@@ -255,14 +255,13 @@ def setup_config():
     config = ConfigParser.RawConfigParser()
     
     print_flow("set default option")
-    config.add_section('default')
-    config.set('default', 'debug', (sys_input("admin debug [0/1] [0]:") or '0') )
-    config.set('default', 'tz', (sys_input("time zone [ CST-8 ]::") or 'CST-8') )
+    config.set('DEFAULT', 'debug', (sys_input("admin debug [0/1] [0]:") or '0') )
+    config.set('DEFAULT', 'tz', (sys_input("time zone [ CST-8 ]::") or 'CST-8') )
     slen = '32'
     try:
         slen = sys_input("secret string len, len%8=0 [32]:") or '32'
     except:pass
-    config.set('default','secret',slen)
+    config.set('DEFAULT','secret',slen)
     
     print_flow("set database option")
     config.add_section('database')
@@ -293,11 +292,11 @@ def setup_config():
     
     print_flow("set admin option")
     config.add_section('admin')
-    condif.set('admin','port',(sys_input("admin http port [1816]:") or '1816'))
+    config.set('admin','port',(sys_input("admin http port [1816]:") or '1816'))
     
     print_flow("set customer option")
     config.add_section('customer')
-    condif.set('customer','port',(sys_input("customer http port [1817]:") or '1817'))
+    config.set('customer','port',(sys_input("customer http port [1817]:") or '1817'))
     
     with open("%s/radiusd.conf"%rundir,'wb') as configfile:
         config.write(configfile)

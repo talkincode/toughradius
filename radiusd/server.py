@@ -281,8 +281,8 @@ def main():
     #init dbstore
     store.setup(config)
     # update aescipher,timezone
-    utils.aescipher.setup(config.get('default','secret'))
-    utils.update_tz(config.get('default','tz'))
+    utils.aescipher.setup(config.get('DEFAULT','secret'))
+    utils.update_tz(config.get('DEFAULT','tz'))
     # over args
     _radiusd = {}
     _radiusd['authport'] = args.authport or config.get('radiusd','authport')

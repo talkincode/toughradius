@@ -91,9 +91,9 @@ def main():
     config.read(args.conf)
     
     # update aescipher,timezone
-    utils.aescipher.setup(config.get('default','secret'))
-    base.scookie.setup(config.get('default','secret'))
-    utils.update_tz(config.get('default','tz'))
+    utils.aescipher.setup(config.get('DEFAULT','secret'))
+    base.scookie.setup(config.get('DEFAULT','secret'))
+    utils.update_tz(config.get('DEFAULT','tz'))
 
     try:
         init_application(config)

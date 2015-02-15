@@ -20,13 +20,12 @@ def update(conf_file,secret_len=32):
     shutil.copy(conf_file,"%s.%s"%(conf_file,int(time.time())))
     config = ConfigParser.ConfigParser()
     config.read(args.conf)
-    # utils.aescipher.setup(config.get('default','secret'))
 
-    old_secret = config.get('default','secret')
-    config.set('default','secret',gen_secret(secret_len))
+    old_secret = config.get('DEFAULT','secret')
+    config.set('DEFAULT','secret',gen_secret(secret_len))
 
     old_AESCipher = utils.AESCipher(old_secret)
-    new_AESCipher = utils.AESCipher(config.get('default','secret'))
+    new_AESCipher = utils.AESCipher(config.get('DEFAULT','secret'))
 
     engine,_ = models.get_engine(config)
     conn = engine.connect()

@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # read config file
     config = ConfigParser.ConfigParser()
     config.read(args.conf)
-    utils.aescipher.setup(config.get('default','secret'))
+    utils.aescipher.setup(config.get('DEFAULT','secret'))
     
     if args.update:
         models.update(config)
