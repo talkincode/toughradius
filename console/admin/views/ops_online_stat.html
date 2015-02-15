@@ -11,7 +11,7 @@
 
 var online_options = {
     credits : {enabled:false},
-    chart: {type: 'area',renderTo: 'online-chart'},
+    chart: {type: 'areaspline',renderTo: 'online-chart'},
     title: {text: '在线用户统计'},
     subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
@@ -21,10 +21,11 @@ var online_options = {
     },
     tooltip: {shared: true},
     legend: {enabled: false},    
-    plotOptions: {area: {
+    plotOptions: {areaspline: {
         stacking: 'normal',
-        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}}
-    }},           
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},            
     series: [{}]
 };
 

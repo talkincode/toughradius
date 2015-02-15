@@ -28,6 +28,9 @@ def CurrentID():
     return str(_CurrentID)
 
 class AESCipher:
+    
+    def __init__(self,key=None):
+        if key:self.setup(key)
 
     def setup(self, key): 
         self.bs = 32

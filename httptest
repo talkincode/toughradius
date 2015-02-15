@@ -2,7 +2,7 @@
 
 ps aux | grep admin.py | awk '{print $2}' | xargs  kill
 
-python createdb.py -c radiusd.conf -i=1
+python createdb.py -c radiusd.conf -i
 
 cd console 
 python admin.py & 

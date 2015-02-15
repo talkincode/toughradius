@@ -48,12 +48,12 @@ def update(conf_file,secret_len=32):
         
     db.commit()
     
-    print 'update secret succ'
+    print 'update secret success'
     
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-c','--conf', type=str,default='./config.json',dest='conf',help='conf file')
-    parser.add_argument('-l','--len', type=int,default=128,dest='len',help='secret len')
+    parser.add_argument('-c','--conf', type=str,default='./radiusd.conf',dest='conf',help='conf file')
+    parser.add_argument('-l','--len', type=int,default=32,dest='len',help='secret len')
     args =  parser.parse_args(sys.argv[1:])
     update(args.conf,secret_len=args.len)

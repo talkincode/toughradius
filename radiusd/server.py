@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #coding=utf-8
-# from twisted.internet import kqreactor
-# kqreactor.install()
 import sys,os
+from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.python import log
@@ -268,7 +268,7 @@ def main():
     parser.add_argument('-acct','--acctport', type=int,default=0,dest='acctport',help='acct port')
     parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
     parser.add_argument('-c','--conf', type=str,default="radiusd.conf",dest='conf',help='conf file')
-    parser.add_argument('-d','--debug', nargs='?',type=bool,default=False,dest='debug',help='debug')
+    parser.add_argument('-d','--debug',action='store_true',default=False,dest='debug',help='debug')
     args =  parser.parse_args(sys.argv[1:])
 
     if not args.conf or not os.path.exists(args.conf):

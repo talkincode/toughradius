@@ -10,6 +10,7 @@ function do_submit(){
 function do_export(){
     $("#query_form").attr("action", "/bus/member/export");
     $("#query_form").submit();
+    setTimeout(function(){$("#query_form").attr("action", "/bus/member");}, 0);
 }
 
 function do_delete(member_id)

@@ -34,6 +34,7 @@
     function do_export(){
         $("#query_form").attr("action", "/card/export");
         $("#query_form").submit();
+        setTimeout(function(){$("#query_form").attr("action", "/card/list");}, 0);
     }
 
 </script>

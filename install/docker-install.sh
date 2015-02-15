@@ -70,7 +70,7 @@ setup()
 
     echo "setup toughradius database.."
 
-    python ${appdir}/createdb.py -c ${rundir}/radiusd.conf -i=1
+    python ${appdir}/createdb.py -c ${rundir}/radiusd.conf -i
     
     echo "add crontab task"
     

@@ -56,6 +56,9 @@ def update_tz(tz_val,default_val="CST-8"):
 
 class AESCipher:
 
+    def __init__(self,key=None):
+        if key:self.setup(key)
+
     def setup(self, key): 
         self.bs = 32
         self.key = hashlib.sha256(key.encode()).digest()

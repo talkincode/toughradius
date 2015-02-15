@@ -16,6 +16,7 @@
     function do_export(){
         $("#query_form").attr("action", "/ops/user/export");
         $("#query_form").submit();
+        setTimeout(function(){$("#query_form").attr("action", "/ops/user");}, 0);
     }
 </script>
 </%def>

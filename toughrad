@@ -142,7 +142,7 @@ stopdb()
 # support docker
 backupdb()
 {
-    python ${appdir}/backupdb.py -c ${rundir}/radiusd.json
+    python ${appdir}/backupdb.py -c ${rundir}/radiusd.conf
 }
 
 tracedb()

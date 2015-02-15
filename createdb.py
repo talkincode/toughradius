@@ -9,8 +9,8 @@ import argparse,ConfigParser
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-c','--conf', type=str,default='./radiusd.conf',dest='conf',help='conf file')
-    parser.add_argument('-u','--update',nargs='?', type=bool,default=False,dest='update',help='update option')
-    parser.add_argument('-i','--install',nargs='?', type=bool,default=False,dest='install',help='install option')
+    parser.add_argument('-u','--update',action='store_true',default=False,dest='update',help='update option')
+    parser.add_argument('-i','--install',action='store_true',default=False,dest='install',help='install option')
     args =  parser.parse_args(sys.argv[1:])    
     # read config file
     config = ConfigParser.ConfigParser()
