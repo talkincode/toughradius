@@ -1,1 +1,1 @@
-cd ..\console && ..\windows\toughrad.exe customer.py -c ../config.json || pause
+cd ..\console && ..\windows\toughrad.exe customer.py -c ../radiusd.conf || pause

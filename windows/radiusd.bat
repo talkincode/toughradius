@@ -1,1 +1,1 @@
-toughrad.exe ../radiusd/server.py -c ../config.json  -dict ../radiusd/dict/dictionary || pause
+toughrad.exe ../radiusd/server.py -c ../radiusd.conf  -dict ../radiusd/dict/dictionary || pause

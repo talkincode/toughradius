@@ -51,8 +51,11 @@ def is_expire(dstr):
     return expire_date < now
 
 def update_tz(tz_val,default_val="CST-8"):
-    os.environ["TZ"] = tz_val or default_val
-    time.tzset()
+    try:
+        os.environ["TZ"] = tz_val or default_val
+        time.tzset()
+    except:
+        pass
 
 class AESCipher:
 

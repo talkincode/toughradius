@@ -1,1 +1,1 @@
-toughrad.exe ..\createdb.py -c ../config.json || pause
+toughrad.exe ..\createdb.py -c ../radiusd.conf || pause

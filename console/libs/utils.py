@@ -60,8 +60,11 @@ encrypt = aescipher.encrypt
 decrypt = aescipher.decrypt 
 
 def update_tz(tz_val,default_val="CST-8"):
-    os.environ["TZ"] = tz_val or default_val
-    time.tzset()
+    try:
+        os.environ["TZ"] = tz_val or default_val
+        time.tzset()
+    except:
+        pass
     
 def get_uuid():
     return uuid.uuid1().hex.upper()
