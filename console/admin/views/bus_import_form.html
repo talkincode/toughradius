@@ -8,11 +8,12 @@
             % if msg:
             <div class="alert alert-warning">${msg}</div>
             % endif
-            <form class="form-horizontal" role="form" action="${form.action}" method="post" enctype="multipart/form-data">
+            <form class="form-horizontal form-well" role="form" action="${form.action}" method="post" enctype="multipart/form-data">
             ${form.render_css()}
         </form>
+        <hr>
         <div class="">
-        <div class="well">
+        <div class="form-well">
             <h4>导入操作必读：</h4>
 <p>1. 在导入之前，请仔细了解本系统的资费规则，针对您数据来源系统进行对照，在本系统中创建相对应的资费规则。</p>
 <p>2. 导入数据是一项需要谨慎对待的工作，导入前备份您当前的数据库是必要的。</p>

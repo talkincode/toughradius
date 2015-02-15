@@ -12,6 +12,7 @@ from bottle import mako_template as render
 from libs.paginator import Paginator
 from libs import utils
 from hashlib import md5
+from beaker.cache import cache_managers
 from websock import websock
 import bottle
 import models
@@ -63,6 +64,8 @@ def clear_cache():
     def cbk(resp):
         print 'cbk',resp
     websock.update_cache("all",callback=cbk)
+    for _cache in cache_managers.values():
+        _cache.clear()
     return dict(code=0,msg=u"已发送同步请求")
     
 ###############################################################################

@@ -58,7 +58,7 @@ def user_query(db):
         result = _query.all()
         data = Dataset()
         data.append((
-            u'上网账号',u'密码',u'姓名', u'资费', u'过期时间', u'余额(元)',
+            u'用户账号',u'密码',u'姓名', u'资费', u'过期时间', u'余额(元)',
             u'时长(小时)',u'流量(MB)',u'并发数',u'ip地址',u'状态',u'创建时间'
         ))
         for i,_realname,_product_name in result:
@@ -71,7 +71,7 @@ def user_query(db):
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         return export_file(name,data)
         
-permit.add_route("%s/user"%__prefix__,u"上网账号查询",u"运维管理",is_menu=True,order=0)
+permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"运维管理",is_menu=True,order=0)
 permit.add_route("%s/user/export"%__prefix__,u"账号查询导出",u"运维管理",order=0.01)
 
 

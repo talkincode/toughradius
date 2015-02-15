@@ -264,6 +264,15 @@ form .footbotron {
     margin-top: 10px;
 }
 
+.form-well{
+    min-height: 20px;
+    padding: 19px;
+    background-color: rgba(247, 247, 247, 0.66);
+    border: 1px solid rgba(240, 240, 240, 0.42);
+    border-radius: 9px;
+    margin-bottom:20px;
+}
+
 .top10 {
     margin-top: 10px;
 }
