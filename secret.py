@@ -33,12 +33,14 @@ def update(conf_file,secret_len=32):
     
     # update 
     db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()  
-    user_query = db.query(models.SlcRadAccount.password)
+    user_query = db.query(models.SlcRadAccount)
+    total1 = user_query.count()
     for user in user_query:
         oldpwd = old_AESCipher.decrypt(user.password)
         user.password = new_AESCipher.encrypt(oldpwd)
         
-    vcard_query = db.query(models.SlcRechargerCard.card_passwd)
+    vcard_query = db.query(models.SlcRechargerCard)
+    total2 = vcard_query.count()
     for vcard in vcard_query:
         oldpwd = old_AESCipher.decrypt(vcard.card_passwd)
         vcard.card_passwd = new_AESCipher.encrypt(oldpwd)
@@ -48,7 +50,7 @@ def update(conf_file,secret_len=32):
         
     db.commit()
     
-    print 'update secret success'
+    print 'update secret success user %s,vcard %s'%(total1,total2)
     
     
 if __name__ == '__main__':
