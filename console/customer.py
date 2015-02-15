@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #coding:utf-8
 import sys,os
+from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.python import log
@@ -25,6 +27,7 @@ import functools
 import models
 import base
 import time
+
 
 def init_application(config):
     log.startLogging(sys.stdout)  

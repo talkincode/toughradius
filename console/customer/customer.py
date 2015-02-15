@@ -75,15 +75,18 @@ vcache = ValidateCache()
               
 ###############################################################################
 # Basic handle         
-###############################################################################    
+###############################################################################   
+@app.error(403) 
+def error403(error):
+    return render("error",msg=u"Unauthorized access %s"%error.exception)
     
 @app.error(404)
 def error404(error):
-    return render("error.html",msg=u"页面不存在 - 请联系管理员!")
+    return render("error",msg=u"Not found %s"%error.exception)
 
 @app.error(500)
 def error500(error):
-    return render("error.html",msg=u"出错了： %s"%error.exception)
+    return render("error",msg=u"Server Internal error %s"%error.exception)
 
 @app.route('/static/:path#.+#')
 def route_static(path):
@@ -191,7 +194,6 @@ def member_logout():
     set_cookie('customer_login_ip', None)     
     request.cookies.clear()
     redirect('login')
-    
 
 @app.get("/active/<code>")
 def active_user(db,code):
@@ -285,7 +287,7 @@ def password_reset_mail(db):
     member_name = request.params.get("member_name")
     member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
     if not member:
-        return abort(404,u"用户名不存在")
+        return render("error",msg=u"用户不存在")
     try:
         member.active_code = utils.get_uuid()
         db.commit()
@@ -300,7 +302,7 @@ def password_reset_mail(db):
         return render("msg",msg=u"激活邮件已经发送置您的邮箱 *****%s,请注意查收。"%member.email[member.email.find('@'):])  
     except :
         return render('error',msg=u"激活邮件发送失败,请稍后再试")  
-        
+
 @app.get("/password/reset/<code>")
 def password_reset(db,code):
     form = forms.password_reset_form() 

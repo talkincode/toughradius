@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #coding:utf-8
 import sys,os
+from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.internet import reactor
@@ -33,7 +35,7 @@ def error403(error):
     return render("error",msg=u"Unauthorized access %s"%error.exception)
     
 def error404(error):
-    return render("error",msg=u"Page not found %s"%error.exception)
+    return render("error",msg=u"Not found %s"%error.exception)
 
 def error500(error):
     return render("error",msg=u"Server Internal error %s"%error.exception)

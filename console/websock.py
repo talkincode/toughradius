@@ -13,7 +13,7 @@ class WebSockProtocol(WebSocketClientProtocol):
     callbacks = {}
 
     def onConnect(self, response):
-        print("Radius Admin Server connected: {0}".format(response.peer))
+        print("Radius Server connected: {0}".format(response.peer))
 
     def onOpen(self): 
         def send_message():
