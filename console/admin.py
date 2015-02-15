@@ -137,7 +137,7 @@ def main():
         runserver(
             mainapp, host='0.0.0.0', 
             port=args.httpport or config.getint('admin','port') ,
-            debug=config.getboolean('default','debug') ,
+            debug=config.getboolean('DEFAULT','debug')  ,
             reloader=False,
             server="twisted"
         )

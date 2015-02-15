@@ -289,7 +289,7 @@ def main():
     _radiusd['acctport'] = args.acctport or config.get('radiusd','acctport')
     _radiusd['adminport'] = args.adminport or config.get('radiusd','adminport')
     _radiusd['dictfile'] = args.dictfile  or config.get('radiusd','dictfile')
-    _radiusd['debug'] = bool(args.debug) or config.getboolean('default','debug')  
+    _radiusd['debug'] = bool(args.debug) or config.getboolean('DEFAULT','debug')   
     
     print _radiusd
     # rundata

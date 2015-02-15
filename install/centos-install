@@ -255,7 +255,7 @@ def setup_config():
     config = ConfigParser.RawConfigParser()
     
     print_flow("set default option")
-    config.set('DEFAULT', 'debug', (sys_input("admin debug [0/1] [0]:") or '0') )
+    config.set('DEFAULT', 'debug', (sys_input("set debug [0/1] [0]:") or '0') )
     config.set('DEFAULT', 'tz', (sys_input("time zone [ CST-8 ]::") or 'CST-8') )
     slen = '32'
     try:
