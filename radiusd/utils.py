@@ -530,11 +530,3 @@ class AcctPacket2(AcctPacket):
         )
         return self.ticket
 
-
-
-
-if __name__ == '__main__':
-    print AES.block_size
-    a = encrypt('888888')
-    print a 
-    print decrypt(a)
