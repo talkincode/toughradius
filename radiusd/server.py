@@ -29,7 +29,7 @@ import json
 import six
 import os
 
-__verson__ = '0.6'
+__verson__ = '0.7'
         
 class PacketError(Exception):pass
 

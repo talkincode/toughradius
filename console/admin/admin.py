@@ -63,10 +63,10 @@ def route_static(path):
 def clear_cache():
     def cbk(resp):
         print 'cbk',resp
-    websock.update_cache("all",callback=cbk)
     for _cache in cache_managers.values():
         _cache.clear()
-    return dict(code=0,msg=u"已发送同步请求")
+    websock.update_cache("all",callback=cbk)
+    return dict(code=0,msg=u"已刷新缓存")
     
 ###############################################################################
 # login handle         
@@ -143,12 +143,10 @@ def param(db):
 @app.post('/param',apply=auth_opr)
 def param_update(db): 
     params = db.query(models.SlcParam)
-    wsflag = False
     for param in params:
         if param.param_name in request.forms:
             _value = request.forms.get(param.param_name)
-            if _value: _value = _value.decode('utf-8')
-            if _value and param.param_value not in _value:
+            if _value: 
                 param.param_value = _value  
                 
     ops_log = models.SlcRadOperateLog()
@@ -159,14 +157,11 @@ def param_update(db):
     db.add(ops_log)
     db.commit()
     
-    MakoTemplate.defaults['radaddr'] = request.forms.get('radiusd_address')
-    MakoTemplate.defaults['adminport'] = request.forms.get('radiusd_admin_port')
-     
-    if wsflag:
-        websock.reconnect(
-            MakoTemplate.defaults['radaddr'],
-            MakoTemplate.defaults['adminport'],
-        )
+
+    websock.reconnect(
+        request.forms.get('radiusd_address'),
+        request.forms.get('radiusd_admin_port'),
+    )
         
     is_debug = request.forms.get('is_debug')
     bottle.debug(is_debug == '1')

@@ -25,7 +25,7 @@ import models
 import base
 import time
 
-__version__ = 'v0.6'
+__version__ = 'v0.7'
 
 reactor.suggestThreadPoolSize(30)
 
