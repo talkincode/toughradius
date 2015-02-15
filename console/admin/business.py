@@ -548,7 +548,7 @@ def member_import(db):
             member.realname = form.d.realname
             member.idcard = '123456'
             member.member_name = form.d.account_number
-            member.password = form.d.account_number
+            member.password = md5(form.d.password.encode()).hexdigest()
             member.sex = '1'
             member.age = '0'
             member.email = ''
