@@ -76,7 +76,11 @@ function do_delete(account_number)
                         <td>年龄</td>
                         <td>${member.age}</td>
                         <td>email</td>
-                        <td>${member.email}</td>
+                        <td>${member.email}
+                        % if member.email:
+                        (${member.email_active == 1 and u'已绑定' or u'未绑定'})
+                        % endif
+                        </td>
                         <td>联系电话</td>
                         <td>${member.mobile}</td>
                     </tr>      

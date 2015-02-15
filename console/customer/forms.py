@@ -44,6 +44,23 @@ password_update_form =  pyforms.Form(
         action="/password/update"
     )
 
+password_mail_form =  pyforms.Form(
+        pyforms.Textbox("member_name", rules.len_of(1, 64),description=u"请输入登录名", required="required",**input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
+        title=u"重置密码请求",
+        action="/password/mail"
+    )
+    
+password_reset_form =  pyforms.Form(
+        pyforms.Hidden("active_code", description=u"", **input_style),
+        pyforms.Password("new_password", rules.is_alphanum3(6, 32),description=u"新密码(必填)", required="required",**input_style),
+        pyforms.Password("new_password2",rules.is_alphanum3(6, 32), description=u"确认新密码(必填)", required="required",**input_style),
+        pyforms.Button("submit",  type="submit", html=u"<b>重置密码</b>", **button_style),
+        title=u"重置密码",
+        action="/password/reset"
+    )
+
+
 
 def account_open_form(products=[]):
     return pyforms.Form(

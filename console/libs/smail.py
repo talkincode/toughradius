@@ -26,6 +26,9 @@ class Mail(object):
         mail['To'] = mailto
         mail["Accept-Language"]="zh-CN"
         mail["Accept-Charset"]="ISO-8859-1,utf-8"
+        if '@toughradius.org' in self.fromaddr:
+            mail['X-Mailgun-SFlag'] = 'yes'
+            mail['X-Mailgun-SScore'] = 'yes'
         try:
             serv = smtplib.SMTP()
             # serv.set_debuglevel(True)

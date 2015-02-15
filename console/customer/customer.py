@@ -196,14 +196,14 @@ def member_logout():
 @app.get("/active/<code>")
 def active_user(db,code):
     member = db.query(models.SlcMember).filter(
-        models.SlcMember.active_code == active_code,
+        models.SlcMember.active_code == code,
     ).first()
 
     if not member:
-        return render("error",msg="无效的激活码")
+        return render("error",msg=u"无效的激活码")
 
     if member.email_active == 1:
-        return render("error",msg="用户已经激活")
+        return render("error",msg=u"用户已经激活")
 
     member.email_active  = 1
     db.commit()
@@ -261,6 +261,72 @@ def member_join_post(db):
     )
     reactor.callInThread(mail.sendmail,member.email,topic,render("mail",**ctx))
     return render('msg',msg=u"新用户注册成功,请注意查收您的注册邮箱，及时激活账户")
+    
+###############################################################################
+# user password reset
+###############################################################################
+@app.get('/password/mail')
+def password_reset_mail(db):
+    form = forms.password_mail_form()
+    return render("base_form",form=form)
+
+@app.post('/password/mail')
+def password_reset_mail(db):
+    form = forms.password_mail_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+
+    last_send = get_cookie("last_send_active") 
+    if last_send:
+        sec = int(time.time()) - int(float(last_send))
+        if sec < 60:
+            return render("error",msg=u"每间隔60秒才能提交一次,还需等待%s秒"% int(60-sec))
+    set_cookie("last_send_active", str(time.time()))
+    member_name = request.params.get("member_name")
+    member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
+    if not member:
+        return abort(404,u"用户名不存在")
+    try:
+        member.active_code = utils.get_uuid()
+        db.commit()
+        topic = u'%s,请重置您在%s的密码'%(member.realname,get_param_value(db,"customer_system_name"))
+        ctx = dict(
+            username = member.realname,
+            customer_name = get_param_value(db,"customer_system_name"),
+            customer_url = get_param_value(db,"customer_system_url"),
+            active_code = member.active_code
+        )
+        reactor.callInThread(mail.sendmail,member.email,topic,render("pwdmail",**ctx))
+        return render("msg",msg=u"激活邮件已经发送置您的邮箱 *****%s,请注意查收。"%member.email[member.email.find('@'):])  
+    except :
+        return render('error',msg=u"激活邮件发送失败,请稍后再试")  
+        
+@app.get("/password/reset/<code>")
+def password_reset(db,code):
+    form = forms.password_reset_form() 
+    form.active_code.set_value(code)
+    return render("base_form",form=form)
+
+@app.post("/password/reset")
+def password_reset(db):
+    form = forms.password_reset_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+        
+    member = db.query(models.SlcMember).filter(
+        models.SlcMember.active_code == form.d.active_code,
+    ).first()
+    
+    if not member:
+        return render("error",msg=u"无效的验证码")
+        
+    if form.d.new_password != form.d.new_password2:
+        return render("base_form", form=form,msg=u'确认新密码不匹配')
+    
+    member.password =  md5(form.d.new_password.encode()).hexdigest()
+    member.active_code = utils.get_uuid()
+    db.commit()
+    return render("msg",msg=u"密码重置成功，请重新登录系统。")
     
 ###############################################################################
 # user update
@@ -490,7 +556,7 @@ def password_update_post(db):
     db.commit()
     websock.update_cache("account",account_number=account.account_number)
     redirect("/")
-
+ 
 ###############################################################################
 # portal auth        
 ###############################################################################

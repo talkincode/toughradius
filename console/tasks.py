@@ -72,6 +72,11 @@ def __flow_stat_job(mk_db):
 
 
 def __expire_notify(mk_db):
+    def _getpage(url):
+        errback = lambda x:log.err(x,'getPage error')
+        d = getPage(url)
+        d.addErrback(errback)
+        
     log.msg("start expire notify task..")
     db = mk_db()
     try:
@@ -112,7 +117,7 @@ def __expire_notify(mk_db):
             url = url.replace('{mobile}',mobile)
             url = url.encode('utf-8')
             url = quote(url,":?=/")
-            commands.append( (getPage,[url],{}) )
+            commands.append( (_getpage,[url],{}) )
 
         threads.callMultipleInThread(commands)
         log.msg("expire_notify to ansync task")
