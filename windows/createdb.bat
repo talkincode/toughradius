@@ -1,1 +1,0 @@
-toughrad.exe ..\createdb.py -c ../radiusd.conf || pause

@@ -1,1 +1,0 @@
-cd ..\console && ..\windows\toughrad.exe admin.py -c ../radiusd.conf || pause
