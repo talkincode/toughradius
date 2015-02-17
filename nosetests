@@ -1,2 +1,2 @@
 #!/bin/sh
-cd tests && nosetests-2.7 *test*
+cd tests/unittests && nosetests-2.7 *test*
