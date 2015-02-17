@@ -15,9 +15,9 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.base import *
+from toughradius.console.admin import forms
 from hashlib import md5
 import bottle
-import forms
 import datetime
 import json
 
@@ -54,7 +54,8 @@ def index(db):
 
 @app.route('/static/:path#.+#')
 def route_static(path):
-    return static_file(path, root='./static')
+    static_path = os.path.join(os.path.split(os.path.split(__file__)[0])[0],'static')
+    return static_file(path, root=static_path)
     
 ###############################################################################
 # update all cache      

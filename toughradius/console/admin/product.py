@@ -9,7 +9,7 @@ from bottle import static_file
 from bottle import mako_template as render
 from tablib import Dataset
 from toughradius.console import models
-from toughradius.console import forms
+from toughradius.console.admin import forms
 from toughradius.console.websock import websock
 from toughradius.console.libs import utils
 from toughradius.console.libs.radius_attrs import radius_attrs

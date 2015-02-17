@@ -1,0 +1,7 @@
+recursive-include bin *
+recursive-include etc *
+recursive-include install *
+include LICENSE
+include README.md
+include Dockerfile
+include requirements.txt

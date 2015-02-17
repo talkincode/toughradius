@@ -15,7 +15,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 import bottle
-import forms
+from toughradius.console.admin import forms
 import decimal
 import datetime
 

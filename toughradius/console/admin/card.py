@@ -11,9 +11,9 @@ from tablib import Dataset
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.libs import utils
+from toughradius.console.admin import forms
 from toughradius.console.base import *
 import bottle
-import forms
 import datetime
 from sqlalchemy import func
 

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #coding:utf-8
-import sys,os
 from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
+import sys,os
 from twisted.internet import reactor
 from bottle import TEMPLATE_PATH,MakoTemplate
 from bottle import mako_template as render
@@ -110,22 +110,8 @@ def init_application(config):
 # run server                                                                 
 ###############################################################################
 
-def main():
-    import argparse,ConfigParser,traceback
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-http','--httpport', type=int,default=0,dest='httpport',help='http port')
-    parser.add_argument('-d','--debug', action='store_true',default=False,dest='debug',help='debug')
-    parser.add_argument('-c','--conf', type=str,default="../radiusd.conf",dest='conf',help='conf file')
-    args =  parser.parse_args(sys.argv[1:])
-
-    if not args.conf or not os.path.exists(args.conf):
-        print 'no config file use -c or --conf cfgfile'
-        return
-        
-    # read config file
-    config = ConfigParser.ConfigParser()
-    config.read(args.conf)
-    
+def run(config):
+    log.startLogging(sys.stdout)
     # update aescipher,timezone
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))
@@ -135,14 +121,10 @@ def main():
         init_application(config)
         runserver(
             mainapp, host='0.0.0.0', 
-            port=args.httpport or config.getint('admin','port') ,
+            port=config.getint('admin','port') ,
             debug=config.getboolean('DEFAULT','debug')  ,
             reloader=False,
             server="twisted"
         )
     except:
         log.err()
-        
-        
-if __name__ == "__main__":
-    main()

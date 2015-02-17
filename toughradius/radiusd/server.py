@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 #coding=utf-8
-import sys,os
 from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
+import sys,os
+import ConfigParser
+from twisted.python.logfile import DailyLogFile
 from twisted.python import log
 from twisted.internet import task
 from twisted.internet.defer import Deferred
@@ -255,41 +257,21 @@ class AdminServerProtocol(WebSocketServerProtocol):
 # Run  Server                                                              ####
 ###############################################################################     
                  
-def main():
-    import argparse,ConfigParser
-    from twisted.python.logfile import DailyLogFile
-    # start logging
+def run(config):
     log.startLogging(sys.stdout)
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-dict','--dictfile', type=str,default=None,dest='dictfile',help='dict file')
-    parser.add_argument('-auth','--authport', type=int,default=0,dest='authport',help='auth port')
-    parser.add_argument('-acct','--acctport', type=int,default=0,dest='acctport',help='acct port')
-    parser.add_argument('-admin','--adminport', type=int,default=0,dest='adminport',help='admin port')
-    parser.add_argument('-c','--conf', type=str,default="radiusd.conf",dest='conf',help='conf file')
-    parser.add_argument('-d','--debug',action='store_true',default=False,dest='debug',help='debug')
-    args =  parser.parse_args(sys.argv[1:])
-
-    if not args.conf or not os.path.exists(args.conf):
-        print 'Configuration file is not specified, use the -c or --conf param'
-        return
+    secret = config.get('DEFAULT','secret')
+    dictfile = config.get('radiusd','dictfile')
+    tz = config.get('DEFAULT','tz')
+    is_debug = config.getboolean('DEFAULT','debug')
+    authport = config.getint('radiusd','authport')
+    acctport = config.getint('radiusd','acctport')
+    adminport = config.getint('radiusd','adminport')
     
-    # read config file
-    config = ConfigParser.ConfigParser()
-    config.read(args.conf)
     #init dbstore
     store.setup(config)
     # update aescipher,timezone
-    utils.aescipher.setup(config.get('DEFAULT','secret'))
-    utils.update_tz(config.get('DEFAULT','tz'))
-    # over args
-    _radiusd = {}
-    _radiusd['authport'] = args.authport or config.get('radiusd','authport')
-    _radiusd['acctport'] = args.acctport or config.get('radiusd','acctport')
-    _radiusd['adminport'] = args.adminport or config.get('radiusd','adminport')
-    _radiusd['dictfile'] = args.dictfile  or config.get('radiusd','dictfile')
-    _radiusd['debug'] = bool(args.debug) or config.getboolean('DEFAULT','debug')   
-    
-    print _radiusd
+    utils.aescipher.setup(secret)
+    utils.update_tz(tz)
     # rundata
     _trace = utils.UserTrace()
     _runstat = utils.RunStat()
@@ -298,37 +280,34 @@ def main():
     coa_pool = {}
     for bas in store.list_bas():
         coa_pool[bas['ip_addr']] = CoAClient(bas,
-            dictionary.Dictionary(_radiusd['dictfile']),
-            debug=_radiusd['debug']
+            dictionary.Dictionary(dictfile),
+            debug=is_debug
         )
 
-    def start_servers():
-        auth_protocol = RADIUSAccess(
-            dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
-            runstat=_runstat,coa_clients=coa_pool,debug=_radiusd['debug']
-        )
-        acct_protocol = RADIUSAccounting(
-            dict=_radiusd['dictfile'],trace=_trace,midware=_middleware,
-            runstat=_runstat,coa_clients=coa_pool,debug=_radiusd['debug']
-        )
-        reactor.listenUDP(int(_radiusd['authport']), auth_protocol)
-        reactor.listenUDP(int(_radiusd['acctport']), acct_protocol)
-        _task = task.LoopingCall(auth_protocol.process_delay)
-        _task.start(2.7)
+    auth_protocol = RADIUSAccess(
+        dict=dictfile,trace=_trace,midware=_middleware,
+        runstat=_runstat,coa_clients=coa_pool,debug=is_debug
+    )
+    
+    acct_protocol = RADIUSAccounting(
+        dict=dictfile,trace=_trace,midware=_middleware,
+        runstat=_runstat,coa_clients=coa_pool,debug=is_debug
+    )
+    
+    reactor.listenUDP(authport, auth_protocol)
+    reactor.listenUDP(acctport, acct_protocol)
+    _task = task.LoopingCall(auth_protocol.process_delay)
+    _task.start(2.7)
 
-        factory = WebSocketServerFactory("ws://0.0.0.0:%s"%_radiusd['adminport'], debug = False)
-        factory.protocol = AdminServerProtocol
-        factory.protocol.user_trace = _trace
-        factory.protocol.midware = _middleware
-        factory.protocol.runstat = _runstat
-        factory.protocol.coa_clients = coa_pool
-        factory.protocol.auth_server = auth_protocol
-        factory.protocol.acct_server = acct_protocol
-        reactor.listenTCP(int(_radiusd['adminport']), factory)
+    factory = WebSocketServerFactory("ws://0.0.0.0:%s"%adminport, debug = False)
+    factory.protocol = AdminServerProtocol
+    factory.protocol.user_trace = _trace
+    factory.protocol.midware = _middleware
+    factory.protocol.runstat = _runstat
+    factory.protocol.coa_clients = coa_pool
+    factory.protocol.auth_server = auth_protocol
+    factory.protocol.acct_server = acct_protocol
+    reactor.listenTCP(adminport, factory)
 
-    start_servers()
     reactor.run()
 
-
-if __name__ == '__main__':
-    main()

@@ -153,16 +153,13 @@ def install_radius():
     mirror_idx = sys_input("select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:") or '1'
     r = os_run("git clone %s %s"%(mirrors[mirror_idx],appdir))
     if r == 0:
-        r = os_run("pip install -r %s/requirements.txt%s"%(appdir,vvv))
+        r = os_run("pip install -e %s %s"%(appdir,vvv))
         if r > 0:return False
         
-        if os.path.exists("/usr/bin/toughrad"):
-            os_run("rm -f /usr/bin/toughrad") 
         if os.path.exists("/etc/init.d/toughrad"):
             os_run("rm -f /etc/init.d/toughrad")
-        os_run("ln -s %s/toughrad /usr/bin/toughrad"%appdir)
+            
         os_run("ln -s %s/toughrad /etc/init.d/toughrad"%appdir)
-        os_run("chmod +x /usr/bin/toughrad") 
         os_run("chmod +x /etc/init.d/toughrad") 
         os_run("chkconfig --add toughrad",warn=True)
         os_run("chkconfig toughrad on",warn=True)
@@ -286,8 +283,8 @@ def setup_config():
     config.set('radiusd','authport',(sys_input("radiusd authport [1812]:") or '1812'))
     config.set('radiusd','acctport',(sys_input("radiusd acctport [1813]:") or '1813'))
     config.set('radiusd','adminport',(sys_input("radiusd adminport [1815]:") or '1815'))
-    config.set('radiusd','dictfile',(sys_input("radiusd dictfile [%s/radiusd/dict/dictionary]:"%appdir) \
-        or '%s/radiusd/dict/dictionary'%appdir ))
+    config.set('radiusd','dictfile',(sys_input("radiusd dictfile [%s/etc/dicts/dictionary]:"%appdir) \
+        or '%s/etc/dicts/dictionary'%appdir ))
     config.set('radiusd','cache_timeout',(sys_input("radiusd cache_timeout (second) [600]:") or '600'))
     
     print_flow("set admin option")
@@ -341,12 +338,12 @@ def init_db():
 ########################################################################   
 def start():
     print_flow("start server...")
-    if os.path.exists("/usr/bin/toughrad"):
-        os_run("/usr/bin/toughrad start%s"%vvv)
+    if os.path.exists("/usr/local/bin/toughrad"):
+        os_run("/usr/local/bin/toughrad start%s"%vvv)
         time.sleep(2.0)
         if vvv:
-            os_run("/usr/bin/toughrad status%s"%vvv)
-        os_run("/usr/bin/toughrad status")
+            os_run("/usr/local/bin/toughrad status%s"%vvv)
+        os_run("/usr/local/bin/toughrad status")
     else:
         print_exr("The setup is not complete",0)
         

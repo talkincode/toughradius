@@ -34,9 +34,7 @@ radius()
 {
     echo "fetch ToughRADIUS latest"
     git clone https://github.com/talkincode/ToughRADIUS.git ${appdir}
-    pip install -r ${appdir}/requirements.txt
-    ln -s ${appdir}/toughrad /usr/bin/toughrad 
-    chmod +x /usr/bin/toughrad
+    pip install -e ${appdir}
     echo "fetch ToughRADIUS done!"
 }
 
@@ -48,7 +46,7 @@ setup()
     mkdir -p ${rundir}/log
     
     yes | cp -f ${appdir}/install/my.cnf ${rundir}/mysql/my.cnf
-    yes | cp -f ${appdir}/install/radiusd.json ${rundir}/radiusd.conf
+    yes | cp -f ${appdir}/install/radiusd.conf ${rundir}/radiusd.conf
     yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf    
     yes | cp -f ${appdir}/install/toughrad.service /usr/lib/systemd/system/toughrad.service
     chmod 754 /usr/lib/systemd/system/toughrad.service
@@ -70,11 +68,13 @@ setup()
 
     echo "setup toughradius database.."
 
-    python ${appdir}/createdb.py -c ${rundir}/radiusd.conf -i
+    toughctl -initdb -c ${rundir}/radiusd.conf 
     
     echo "add crontab task"
     
-    crontab ${appdir}/install/tasks.cron
+    echo '30 1 * * * toughctl -backup > /dev/null' > /tmp/backup.cron
+    
+    crontab /tmp/backup.cron
 
     echo "starting supervisord..."
     
@@ -98,7 +98,7 @@ unsetup()
 upgrade()
 {
     echo 'starting upgrade...' 
-    cd ${appdir} && git pull origin master
+    cd ${appdir} && git pull 
     supervisorctl restart all
     supervisorctl status
     echo 'upgrade done'

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
+import sys,os
 from twisted.internet import reactor
 from bottle import Bottle
 from bottle import request
@@ -27,10 +28,10 @@ from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import models
+from toughradius.console.customer import forms
 from sqlalchemy.sql import exists
 import time
 import bottle
-import forms
 import decimal
 import datetime
 import functools
@@ -90,7 +91,8 @@ def error500(error):
 
 @app.route('/static/:path#.+#')
 def route_static(path):
-    return static_file(path, root='./static')    
+    static_path = os.path.join(os.path.split(os.path.split(__file__)[0])[0],'static')
+    return static_file(path, root=static_path)
 
 ###############################################################################
 # index handle         
