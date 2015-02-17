@@ -1,0 +1,55 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script src="/static/js/bootstrap-datepicker.js"></script>
+<link rel="stylesheet" href="/static/js/datepicker.css"> 
+<script>
+
+
+function productCalc(){
+    param = {
+        'month': $("#months").val() || 0,
+        'product_id':$("#product_id").val()
+    }
+    $.post("/bus/opencalc", param, function (ev) {
+        console.log(ev);
+        if(ev.code==0){
+            console.log(ev.data);
+            $("#fee_value").val(ev.data.fee_value);
+            $("#expire_date").val(ev.data.expire_date);
+            if(ev.data.policy == 0){
+               $("#months").parent().parent().show();
+            }else{
+               $("#months").val(0);
+               $("#months").parent().parent().hide();
+            }
+        }
+    }, "json");
+}
+
+
+//页面初始化
+$(document).ready(function (){
+    $("#expire_date").datepicker();
+    $('#product_id').change(function() {
+        productCalc();
+    });
+    $('#months').blur(function() {
+        productCalc();
+    });    
+});
+</script>
+
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> ${form.title}<a class="badge pull-right" href="javascript:history.go(-1);">返回</a></div>
+        <div class="panel-body">
+            % if msg:
+            <div class="alert alert-warning">${msg}</div>
+            % endif
+            <form class="form-horizontal form-well" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
+    </div>
+</div>
+</%def>

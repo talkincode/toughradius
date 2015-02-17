@@ -1,0 +1,100 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script>
+function do_submit(){
+    $("#query_form").attr("action", "/bus/member");
+    $("#query_form").submit();
+}
+
+function do_export(){
+    $("#query_form").attr("action", "/bus/member/export");
+    $("#query_form").submit();
+    setTimeout(function(){$("#query_form").attr("action", "/bus/member");}, 0);
+}
+
+function do_delete(member_id)
+{
+    if(confirm("删除用户将删除用户所有相关数据，包括账号，日志，订单等，不可恢复，确认操作吗？")) {
+        window.location.href = "/bus/member/delete?member_id="+member_id;
+    }
+    
+}
+</script>
+</%def>
+
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户列表</div>
+    <div class="panel-body">
+        <form id="query_form" class="form-horizontal form-well" role="form" action="/bus/member" method="post">
+            <div class="form-group">
+                <label for="node_id" class="col-md-2 control-label">区域</label>
+                <div class="col-md-3">
+                    <select id="node_id" name="node_id" class="form-control" >
+                    <option value=""></option>
+                        % for node in node_list:
+                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
+                        % endfor
+                    </select>
+                </div>            
+                <label for="realname" class="col-md-2 control-label">用户姓名</label>
+                <div class="col-md-3">
+                    <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value="${realname and unicode(realname,'utf-8') or ''}">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="idcard" class="col-md-2 control-label">证件号</label>
+                <div class="col-md-3">
+                    <input type="text" id="idcard" name="idcard" class="form-control" placeholder="身份证件号" value="${idcard or ''}">
+                </div>   
+                <label for="mobile" class="col-md-2 control-label">手机号</label>
+                <div class="col-md-3">
+                    <input type="text" id="mobile" name="mobile" class="form-control" placeholder="手机号" value="${mobile or ''}">
+                </div>                                            
+            </div>
+            <div class="form-group">
+                <div class="col-md-offset-5 col-md-7">
+                    <button type="button" onclick="do_submit();" class="btn btn-primary">查询</button>
+                    % if permit.match('/bus/member/export'):
+                    <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出用户信息</a>
+                    % endif
+                </div>
+            </div>
+        </form>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>用户姓名</th>
+                <th>区域</th>
+                <th>联系电话</th>
+                <th>地址</th>
+                <th>创建时间</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            % for member,node_name in page_data.result:
+            <tr>
+                <td><a href="/bus/member/detail?member_id=${member.member_id}">${member.realname}</a></td>
+                <td>${node_name}</td>
+                <td>${member.mobile}</td>
+                <td>${member.address}</td>
+                <td>${member.create_time}</td>
+                <td>
+                    % if permit.match('/bus/member/delete'):
+                    <a class="opt-btn btn-default" href="javascript:do_delete('${member.member_id}');">删除用户</a>
+                    % endif
+                    <a class="opt-btn btn-default" href="/bus/member/detail?member_id=${member.member_id}">用户受理</a>
+                </td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+        ${page_data.render(form_id="query_form")}
+    </div>
+</div>
+
+
+</%def>

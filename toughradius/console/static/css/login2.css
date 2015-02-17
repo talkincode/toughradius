@@ -1,0 +1,34 @@
+@charset "utf-8";
+*{margin:0;padding:0;}
+body{background:#7c7f7a url(/static/img/login-bg.jpg) repeat top;overflow:-moz-scrollbars-vertical;}
+div,td{font:12px/15px Arial,Helvetica,sans-serif; color:#565555; font-size:12px;}
+input{font:12px/15px Arial,Helvetica,sans-serif; outline:none;}
+select{font:12px/15px Arial,Helvetica,sans-serif;}
+a{ text-decoration:none;color:#288db9;}
+a:hover{color:#b70305; text-decoration:underline;}
+li,h1,h2,h3,h4,h5,h6,p{margin:0;padding:0;list-style:none;}
+.cls{ clear:both;}
+img{ border:0;}
+
+.loginarea{width:426px; margin:0 auto;}
+.loginarea .login_title{float:left; width:426px; height:47px; background:url(/static/img/login_03.png) no-repeat; margin:120px 0 15px 0;}
+.loginarea .logobox{float:left; width:157px; height:139px; background:url(/static/img/login_05.png) no-repeat;}
+.loginarea ul.inputbox{float:left; width:269px; margin:32px 0 0 0;}
+.loginarea ul.inputbox li{ margin:0 0 13px 0;}
+.loginarea ul.inputbox li.user input{ background:url(/static/img/login_07.png) no-repeat; border:0; width:219px; height:46px; line-height:46px; padding:0 0 0 50px; color:#FFFFFF; font-size:16px;}
+.loginarea ul.inputbox li.user input:hover{ background:url(/static/img/login_07_on.png) no-repeat;}
+.loginarea ul.inputbox li.pw p{float:left;position:relative}
+.loginarea ul.inputbox li.pw p span.loginbtn{ position:absolute; right:1px; top:3px;}
+.loginarea ul.inputbox li.pw input{background:url(/static/img/login_09.png) no-repeat; border:0; width:219px; height:48px; line-height:48px; padding:0 0 0 50px; color:#FFFFFF; font-size:16px; margin:-1px 0 0 0;}
+.loginarea ul.inputbox li.pw input:hover{ background:url(/static/img/login_09_on.png) no-repeat;}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+/* 针对Google Chrome、Safari 3.0、Opera 9 的CSS样式 */
+.loginarea ul.inputbox li.user input{ background:url(/static/img/login_07.png) no-repeat; border:0; width:219px; height:46px; line-height:25px; padding:0 0 0 50px; color:#FFFFFF; font-size:16px;}
+.loginarea ul.inputbox li.pw input{ background:url(/static/img/login_09.png) no-repeat; border:0; width:219px; height:48px; line-height:25px; padding:0 0 0 50px; color:#FFFFFF; font-size:16px;  margin:0;}
+}
+
+.loginarea .copyrightbox{float:left;width:422px;margin:100px 0 0 0; font-size:12px; color:#FFFFFF; text-align:center;}
+
+.loginbtn a:link,.loginbtn a:visited{width:61px; height:43px; display:block;background:url(/static/img/login_10.png);}
+.loginbtn a:hover,.loginbtn a:active{background:url(/static/img/login_10_on.png)}
