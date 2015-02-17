@@ -3,15 +3,18 @@
 import sys,os
 from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
-sys.path.insert(0,os.path.split(__file__)[0])
-sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.python import log
 from bottle import request
 from bottle import response
 from bottle import TEMPLATE_PATH,MakoTemplate
 from bottle import run as runserver
-from customer.customer import app as mainapp
-from base import (
+from toughradius.console.customer.customer import app as mainapp
+from toughradius.console.libs import sqla_plugin,utils
+from toughradius.console.libs.smail import mail
+from toughradius.console.websock import websock
+from toughradius.console import base
+from toughradius.console import models
+from toughradius.console.base import (
     get_cookie,
     set_cookie,
     get_param_value,
@@ -19,13 +22,7 @@ from base import (
     get_account_by_number,
     get_online_status
 )
-
-from libs import sqla_plugin,utils
-from libs.smail import mail
-from websock import websock
 import functools
-import models
-import base
 import time
 
 

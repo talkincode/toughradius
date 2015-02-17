@@ -1,6 +1,6 @@
 #coding=utf-8
 from twisted.python import log
-import plugins
+from toughradius.radiusd import plugins
 import logging
 
 class Middleware():
@@ -13,8 +13,8 @@ class Middleware():
             return
         for name in plugins.__all__:
             try:
-                __import__('plugins.%s' % name)
-                cls.add_plugin(name,getattr(plugins, name))
+                __import__('toughradius.radiusd.plugins',globals(),locals(), [name])
+                cls.add_plugin(name,getattr(plugins,name))
                 log.msg('Plugin %s loaded success.' % name,level=logging.INFO)
             except Exception as err:
                 log.err(err,'Fail to load plugin %s' % (name),level=logging.INFO)

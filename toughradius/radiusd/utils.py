@@ -1,15 +1,16 @@
 #!/usr/bin/env python
 #coding=utf-8
-from pyrad import tools
 from twisted.internet.defer import Deferred
-from pyrad.packet import AuthPacket
-from pyrad.packet import AcctPacket
-from pyrad.packet import CoAPacket
-from pyrad.packet import AccessRequest
-from pyrad.packet import AccessAccept
-from pyrad.packet import AccountingRequest
-from pyrad.packet import AccountingResponse
-from pyrad.packet import CoARequest
+from toughradius.radiusd.pyrad import tools
+from toughradius.radiusd.pyrad.packet import AuthPacket
+from toughradius.radiusd.pyrad.packet import AcctPacket
+from toughradius.radiusd.pyrad.packet import CoAPacket
+from toughradius.radiusd.pyrad.packet import AccessRequest
+from toughradius.radiusd.pyrad.packet import AccessAccept
+from toughradius.radiusd.pyrad.packet import AccountingRequest
+from toughradius.radiusd.pyrad.packet import AccountingResponse
+from toughradius.radiusd.pyrad.packet import CoARequest
+from toughradius.radiusd import settings
 from twisted.python import log
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -22,7 +23,6 @@ import six
 import time
 import decimal
 import functools
-import settings
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP

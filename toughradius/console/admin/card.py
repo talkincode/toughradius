@@ -8,13 +8,13 @@ from bottle import redirect
 from bottle import static_file
 from bottle import mako_template as render
 from tablib import Dataset
-from websock import websock
+from toughradius.console.websock import websock
+from toughradius.console import models
+from toughradius.console.libs import utils
+from toughradius.console.base import *
 import bottle
-import models
 import forms
 import datetime
-from libs import utils
-from base import *
 from sqlalchemy import func
 
 __prefix__ = "/card"

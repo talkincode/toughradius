@@ -9,17 +9,17 @@ from bottle import MakoTemplate
 from bottle import static_file
 from bottle import abort
 from bottle import mako_template as render
-from libs.paginator import Paginator
-from libs import utils
-from hashlib import md5
 from beaker.cache import cache_managers
-from websock import websock
+from toughradius.console.libs.paginator import Paginator
+from toughradius.console.libs import utils
+from toughradius.console.websock import websock
+from toughradius.console import models
+from toughradius.console.base import *
+from hashlib import md5
 import bottle
-import models
 import forms
 import datetime
 import json
-from base import *
 
 app = Bottle()
 

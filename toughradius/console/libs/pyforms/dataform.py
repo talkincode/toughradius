@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #coding=utf-8
 import copy
-from libs.pyforms import  attrget
-from libs.pyforms import storage
-from libs.pyforms import AttributeList
+from toughradius.console.libs.pyforms import  attrget
+from toughradius.console.libs.pyforms import storage
+from toughradius.console.libs.pyforms import AttributeList
 
 class Form(object):
 

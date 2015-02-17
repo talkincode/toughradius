@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from settings import *
+from toughradius.radiusd.settings import *
 
 #  vlan parse          
 def parse_cisco(req):

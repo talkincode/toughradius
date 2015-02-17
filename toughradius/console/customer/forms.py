@@ -1,8 +1,8 @@
 #coding:utf-8
-from libs import pyforms
-from libs.pyforms import dataform
-from libs.pyforms import rules
-from libs.pyforms.rules import button_style,input_style
+from toughradius.console.libs import pyforms
+from toughradius.console.libs.pyforms import dataform
+from toughradius.console.libs.pyforms import rules
+from toughradius.console.libs.pyforms.rules import button_style,input_style
 
 boolean = {0:u"否", 1:u"是"}
 

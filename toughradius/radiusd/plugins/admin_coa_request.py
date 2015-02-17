@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
-from store import store
+from toughradius.radiusd.store import store
 import json
 
 def process(req=None,admin=None,**kwargs):

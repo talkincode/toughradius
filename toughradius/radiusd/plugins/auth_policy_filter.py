@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #coding=utf-8
-from plugins import error_auth
-from settings import *
-from store import store
-import utils
+from toughradius.radiusd.plugins import error_auth
+from toughradius.radiusd.settings import *
+from toughradius.radiusd.store import store
+from toughradius.radiusd import utils
 
 def process(req=None,resp=None,user=None,**kwargs):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""

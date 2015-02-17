@@ -5,10 +5,10 @@ from twisted.internet import threads
 from twisted.web.client import getPage
 from twisted.internet import task
 from sqlalchemy.sql import func
-from libs.smail import mail
+from toughradius.console import models
+from toughradius.console.libs.smail import mail
 from urllib import quote
 import datetime
-import models
 import time
 
 def __online_stat_job(mk_db):

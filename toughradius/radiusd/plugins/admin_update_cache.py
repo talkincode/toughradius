@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from store import store
-from settings import *
-import settings
+from toughradius.radiusd.store import store
+from toughradius.radiusd.settings import *
+from toughradius.radiusd import settings
 import json
 
 cache_class = []

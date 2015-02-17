@@ -10,14 +10,14 @@ from bottle import abort
 from bottle import mako_template as render
 from hashlib import md5
 from tablib import Dataset
-from base import *
-from libs import utils
+from toughradius.console.base import *
+from toughradius.console.libs import utils
+from toughradius.console.websock import websock
+from toughradius.console import models
 import bottle
-import models
 import forms
 import decimal
 import datetime
-from websock import websock
 
 __prefix__ = "/bus"
 

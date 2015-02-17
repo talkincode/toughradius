@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
-from plugins import error_auth
-from store import store
+from toughradius.radiusd.plugins import error_auth
+from toughradius.radiusd.store import store
 
 def process(req=None,resp=None,user=None,**kwargs):
     """check mac bind & vlan bind"""

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from store import store
-from settings import *
+from toughradius.radiusd.store import store
+from toughradius.radiusd.settings import *
 import datetime
 
 def std_rate(resp,_in,_out):

@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #coding=utf-8
-from plugins import error_auth
-from store import store
-import utils
+from toughradius.radiusd.plugins import error_auth
+from toughradius.radiusd.store import store
+from toughradius.radiusd import utils
 
 def process(req=None,resp=None,user=None,**kwargs):
 

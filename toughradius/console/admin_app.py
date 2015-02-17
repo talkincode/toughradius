@@ -3,29 +3,26 @@
 import sys,os
 from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
-sys.path.insert(0,os.path.split(__file__)[0])
-sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.internet import reactor
 from bottle import TEMPLATE_PATH,MakoTemplate
 from bottle import mako_template as render
 from bottle import run as runserver
-from admin.admin import app as mainapp
-from admin.ops import app as ops_app
-from admin.business import app as bus_app
-from admin.card import app as card_app
-from admin.product import app as product_app
-from base import *
-from libs import sqla_plugin,utils
-from libs.smail import mail
-from websock import websock
+from toughradius.console.admin.admin import app as mainapp
+from toughradius.console.admin.ops import app as ops_app
+from toughradius.console.admin.business import app as bus_app
+from toughradius.console.admin.card import app as card_app
+from toughradius.console.admin.product import app as product_app
+from toughradius.console.base import *
+from toughradius.console.libs import sqla_plugin,utils
+from toughradius.console.libs.smail import mail
+from toughradius.console.websock import websock
+from toughradius.console import tasks
+from toughradius.console import models
+from toughradius.console import base
+import toughradius
 import bottle
-import tasks
 import functools
-import models
-import base
 import time
-
-__version__ = 'v0.7'
 
 reactor.suggestThreadPoolSize(30)
 
@@ -60,7 +57,7 @@ def init_application(config):
     
     log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(
-        sys_version = __version__,
+        sys_version = toughradius.__version__,
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,

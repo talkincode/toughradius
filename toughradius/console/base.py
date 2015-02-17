@@ -6,14 +6,14 @@ from bottle import response
 from bottle import redirect
 from bottle import HTTPError
 from bottle import static_file
-from libs.paginator import Paginator
-from libs import utils
+from toughradius.console.libs.paginator import Paginator
+from toughradius.console.libs import utils
+from toughradius.console import models
 from beaker.cache import CacheManager
 from hashlib import md5
 import logging
 import functools
 import urllib
-import models
 import json
 import time
 import tempfile

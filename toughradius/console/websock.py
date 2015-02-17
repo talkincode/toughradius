@@ -5,7 +5,7 @@ from bottle import MakoTemplate
 from twisted.internet import reactor  
 from twisted.internet.protocol import ReconnectingClientFactory
 from autobahn.twisted.websocket import WebSocketClientProtocol, WebSocketClientFactory 
-from libs import utils
+from toughradius.console.libs import utils
 
 class WebSockProtocol(WebSocketClientProtocol):  
 

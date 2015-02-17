@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-from libs import pyforms
+from toughradius.console.libs import pyforms
 
 not_null = pyforms.notnull
 is_not_empty = pyforms.regexp('.+', u"不允许为空")

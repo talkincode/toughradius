@@ -8,15 +8,15 @@ from bottle import redirect
 from bottle import static_file
 from bottle import mako_template as render
 from tablib import Dataset
-from websock import websock
-import bottle
-import models
-import forms
-import datetime
-from libs import utils
-from libs.radius_attrs import radius_attrs
-from base import *
+from toughradius.console import models
+from toughradius.console import forms
+from toughradius.console.websock import websock
+from toughradius.console.libs import utils
+from toughradius.console.libs.radius_attrs import radius_attrs
+from toughradius.console.base import *
 from sqlalchemy import func
+import datetime
+import bottle
 
 __prefix__ = "/product"
 

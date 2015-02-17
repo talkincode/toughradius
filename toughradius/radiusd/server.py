@@ -3,8 +3,6 @@
 import sys,os
 from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
-sys.path.insert(0,os.path.split(__file__)[0])
-sys.path.insert(0,os.path.abspath(os.path.pardir))
 from twisted.python import log
 from twisted.internet import task
 from twisted.internet.defer import Deferred
@@ -12,14 +10,14 @@ from twisted.internet import protocol
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerProtocol
 from autobahn.twisted.websocket import WebSocketServerFactory
-from settings import auth_plugins,acct_plugins,acct_before_plugins
-from pyrad import dictionary
-from pyrad import host
-from pyrad import packet
-from store import store
-import middleware
+from toughradius.radiusd.settings import *
+from toughradius.radiusd.pyrad import dictionary
+from toughradius.radiusd.pyrad import host
+from toughradius.radiusd.pyrad import packet
+from toughradius.radiusd.store import store
+from toughradius.radiusd import middleware
+from toughradius.radiusd import settings
 import datetime
-import settings
 import logging
 import pprint
 import socket
