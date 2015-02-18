@@ -2,7 +2,7 @@
 #coding:utf-8
 
 def test_user_trace():
-    from radiusd.admin import UserTrace
+    from toughradius.radiusd.utils import UserTrace
     trace = UserTrace()
     assert trace
     assert trace.size_info() == (0,0)

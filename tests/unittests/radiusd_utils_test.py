@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #coding:utf-8
 
-from radiusd import utils
+from toughradius.radiusd import utils
 
 def test_encrypt_decrypt():
     utils.aescipher.setup("12345678")

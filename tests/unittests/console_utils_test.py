@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
-from console.libs import utils
+from toughradius.console.libs import utils
 
 def test_mb2kb2mb():
     assert utils.mb2kb(0) == 0 
