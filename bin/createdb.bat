@@ -1,0 +1,1 @@
+toughrad.exe toughctl -initdb -c ../etc/radiusd.conf || pause

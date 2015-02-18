@@ -7,7 +7,6 @@
 #mbgen.bat
 logs
 *.log
-bin
 #data
 *.lok
 *.tmp

@@ -1,0 +1,2 @@
+#!/bin/sh
+cd tests/unittests && nosetests-2.7 *test*

@@ -1,0 +1,37 @@
+#!/bin/sh
+
+ps aux | grep admin | awk '{print $2}' | xargs  kill
+
+ps aux | grep customer | awk '{print $2}' | xargs  kill
+
+ps aux | grep radiusd | awk '{print $2}' | xargs  kill
+
+python toughctl -initdb 2 -c ../etc/radiusd.conf 
+
+python toughctl -radiusd -c ../etc/radiusd.conf & 
+
+sleep 4
+
+python toughctl -admin -c ../etc/radiusd.conf & 
+
+sleep 4
+
+python toughctl -customer -c ../etc/radiusd.conf & 
+
+sleep 4
+
+cd ../tests/httptests/ && python alls.py
+
+cd ../../
+
+sleep 4
+
+echo "print any key to exist:"
+
+read var1
+
+ps aux | grep admin | awk '{print $2}' | xargs  kill
+
+ps aux | grep customer | awk '{print $2}' | xargs  kill
+
+ps aux | grep radiusd | awk '{print $2}' | xargs  kill
