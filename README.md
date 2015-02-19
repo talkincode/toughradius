@@ -1,14 +1,13 @@
 # ToughRADIUS  [![Build Status](https://travis-ci.org/talkincode/ToughRADIUS.svg?branch=master)](https://travis-ci.org/talkincode/ToughRADIUS)
 
-ToughRADIUS是一个开源，免费，易用的Radius服务软件。
+ToughRADIUS是一个开源的Radius服务软件，基于BSD许可协议发布。
 
-ToughRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，完美对接RouterOS，支持包月，时长计费。
+ToughRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
-ToughRADIUS支持MySQL存储用户数据，支持数据缓存，极大的提高了性能。
+ToughRADIUS支持使用Oracle, MySQL, PostgreSQL, MSSQL等主流数据库存储用户数据，并支持数据缓存，极大的提高了性能。
+ToughRADIUS支持Windows，Linux，BSD跨平台部署，部署使用简单。
 
-ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
-
-提供了RADIUS核心服务引擎与Web管理控制台,用户自助服务三个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。用户自助服务系统提供了一个面向终端用户的网上服务渠道。
+ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助服务三个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。用户自助服务系统提供了一个面向终端用户的网上服务渠道。
 
 [ToughRADIUS网站：http://www.toughradius.net] (http://www.toughradius.net)
 
@@ -16,67 +15,115 @@ ToughRADIUS支持Windows，Linux跨平台部署，部署使用简单。
 
 ## Linux下使用脚本自动安装
 
-目前在Linux环境下，ToughRADIUS提供了自动化安装脚本，可以轻松的帮你完成安装过程。
-
-已支持自动化安装的linux系统
-
-CentOS 6 , CentOS 7
-
-脚本路径
-
-    install/centos-install
-
-    
-### 安装过程
-
-自动化安装过程在终端下执行,以CentOS为例：
 
 下载脚本::
 
-    $ curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/install/centos-install > centos-install
+    $ curl https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/bin/installer > installer
 
-    $ chmod +x centos-install
+    $ chmod +x installer
 
-执行安装::
+执行安装脚本，根据终端提示进行交互::
 
-    $ ./centos-install
-
-在安装过程中会需要用户进行一些交互，如配置选项设置，是否安装本地mysql数据库。
-
-执行完成以上两步可完成所有安装，然后就可以使用了。
-
-
-#### 分步安装
-
-同时该脚本也提供了分步骤安装的支持。
-
-安装系统必要的依赖库请执行::
-
-    $ ./centos-install depend
+    $ ./installer
     
-安装ToughRADIUS请执行::
+选择你的操作系统类型,默认为centos,注意不同的OS类型的流程提示不一样::
 
-    $ ./centos-install radius
-
-安装mysql(可选)请执行::
-
-    $ ./centos-install mysql
-
-定义ToughRADIUS配置执行::
+    [INPUT] - select your os type : 1:centos,2:ubuntu,3:freebsd [1]1
+    [INFO] - >> Installation Information
+    [INFO] - >> installdir: /usr/local/toughradius
+    [INFO] - >> rundir: /var/toughradius
+    [INFO] - >> log_dir: /var/toughradius/log
+    [INFO] - >> mysql_rundir: /var/toughradius/mysql
+    [INFO] - >> my_cnf_path: /var/toughradius/mysql/my.cnf
+    [INFO] - >> start install centos depend
+    [INFO] - >> run command : yum update -y
+    [SUCC] - >> run command : yum update -y success!
+    [INFO] - >> run command : yum install -y wget git gcc tcpdump crontabs
+    [SUCC] - >> run command : yum install -y wget git gcc tcpdump crontabs success!
+    [INFO] - >> run command : yum install -y mariadb-devel mysql-devel
+    [SUCC] - >> run command : yum install -y mariadb-devel mysql-devel success!
+    [INFO] - >> run command : yum install -y python-devel python-setuptools MySQL-python
+    [SUCC] - >> run command : yum install -y python-devel python-setuptools MySQL-python success!
+    [INFO] - >> run command : easy_install pip
+    [SUCC] - >> run command : easy_install pip success!
+    [INFO] - >> run command : pip install supervisor
+    [SUCC] - >> run command : pip install supervisor success!
+    [INFO] - >> run command : pip install argparse
+    [SUCC] - >> run command : pip install argparse success!
+    [INFO] - >> run command : pip install pycrypto>=2.6.1
+    [SUCC] - >> run command : pip install pycrypto>=2.6.1 success!
+    [INFO] - >> run command : pip install zope.interface>=4.1.1
+    [SUCC] - >> run command : pip install zope.interface>=4.1.1 success!
+    [INFO] - >> run command : pip install Twisted>=14.0.2
+    [SUCC] - >> run command : pip install Twisted>=14.0.2 success!
+    [INFO] - >> run command : pip install autobahn>=0.9.3-3
+    [SUCC] - >> run command : pip install autobahn>=0.9.3-3 success!
+    [INFO] - >> run command : pip install SQLAlchemy>=0.9.8
+    [SUCC] - >> run command : pip install SQLAlchemy>=0.9.8 success!
+    [INFO] - >> run command : pip install DBUtils>=1.1
+    [SUCC] - >> run command : pip install DBUtils>=1.1 success!
+    [INFO] - >> run command : pip install Mako>=0.9.0
+    [SUCC] - >> run command : pip install Mako>=0.9.0 success!
+    [INFO] - >> run command : pip install Beaker>=1.6.4
+    [SUCC] - >> run command : pip install Beaker>=1.6.4 success!
+    [INFO] - >> run command : pip install MarkupSafe>=0.18
+    [SUCC] - >> run command : pip install MarkupSafe>=0.18 success!
+    [INFO] - >> run command : pip install PyYAML>=3.10
+    [SUCC] - >> run command : pip install PyYAML>=3.10 success!
+    [INFO] - >> run command : pip install bottle>=0.12.7
+    [SUCC] - >> run command : pip install bottle>=0.12.7 success!
+    [INFO] - >> run command : pip install nose
+    [SUCC] - >> run command : pip install nose success!
+    [INFO] - >> run command : pip install sh>=1.11
+    [SUCC] - >> run command : pip install sh>=1.11 success!
     
-    # 如果你选择不在本机安装mysql数据库，应该注意配置你的远程数据库参数
+选择是否安装mysql，如果你的系统已经安装mysql，或者使用外部mysql数据库，请选择不安装::
 
-    $ ./centos-install config
-
-创建ToughRADIUS数据库请执行::
-
-    $ ./centos-install initdb
+    [INFO] - start install mysql database server
+    [INPUT] - install mysql, continue [y/n][n]y
+    [INFO] - install mysql
+    [INFO] - init mysql config
+    [INFO] - write /var/toughradius/mysql/my.cnf
+    [INFO] - >> run command : yum install -y mariadb mariadb-server mariadb-devel
+    [SUCC] - >> run command : yum install -y mariadb mariadb-server mariadb-devel success!
+    [INFO] - starting init mysql database
+    [INFO] - >> run command : chown -R mysql:mysql /var/toughradius/mysql
+    [SUCC] - >> run command : chown -R mysql:mysql /var/toughradius/mysql success!
+    [INFO] - >> run command : mysql_install_db --defaults-file=/var/toughradius/mysql/my.cnf --user=mysql --datadir=/var/toughradius/mysql
+    [SUCC] - >> run command : mysql_install_db --defaults-file=/var/toughradius/mysql/my.cnf --user=mysql --datadir=/var/toughradius/mysql  success!
+    [INFO] - >> run command : mysqld_safe --defaults-file=/var/toughradius/mysql/my.cnf --user=mysql &
+    [DEBUG] - 5
+    [DEBUG] - 4
+    [DEBUG] - 3
+    [DEBUG] - 2
+    [DEBUG] - 1
+    150220 05:33:21 mysqld_safe Logging to '/var/toughradius/log/mysqld.log'.
+    150220 05:33:21 mysqld_safe Starting mysqld daemon with databases from /var/toughradius/mysql
+    [INFO] - >> run command : echo '30 1 * * * $(which toughctl) -backupdb -c /var/toughradius/radiusd.conf > /dev/null' > /tmp/backup.cron
+    [SUCC] - >> run command : echo '30 1 * * * $(which toughctl) -backupdb -c /var/toughradius/radiusd.conf > /dev/null' > /tmp/backup.cron success!
+    [INFO] - >> run command : crontab /tmp/backup.cron
+    [SUCC] - >> run command : crontab /tmp/backup.cron success!
     
-完成以上所有后快速启动ToughRADIUS::
+选择是否创建mysql管理用户，如果不需要，直接跳过::
 
-    # 在start之前请确认你的配置无误
+    [INFO] - set mysql manage user
+    [INPUT] - create a mysql admin user? y/n [n]y
+    [INPUT] - set mysql manage username, not root [admin]:
+    [INFO] - >> run command : set mysql manage passwd, [radius]:
+    [SUCC] - >> run command : set mysql manage passwd, [radius]: success!
+    [INFO] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY '(0, '', '')' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
+    [SUCC] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY '(0, '', '')' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf success!
+    [INFO] - show database
+    [INFO] - >> run command : echo "show databases;" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
+    [DEBUG] - 1
+    Database
+    information_schema
+    mysql
+    performance_schema
+    test
+    [INFO] - >> install centos depend done
+    
 
-    $ ./centos-install start 
 
 ### 进程管理
 

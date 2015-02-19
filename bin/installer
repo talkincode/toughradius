@@ -240,7 +240,7 @@ def install_centos_mysql():
                       "FLUSH PRIVILEGES\" | mysql --defaults-file=%s"%(admin,pwd,my_cnf_path)
             )
         sh.info("show database")
-        sh.run("echo \"show databases;\" | mysql --defaults-file=%s"%my_cnf_path)
+        sh.run("echo \"show databases;\" | mysql --defaults-file=%s"%my_cnf_path,wait=1)
     
     return mysql_ok
     
@@ -250,8 +250,8 @@ def install_service_centos():
         
     sh.run("ln -s $(which toughrad) /etc/init.d/toughrad")
     sh.run("chmod +x /etc/init.d/toughrad") 
-    sh.run("chkconfig --add toughrad",warn=True)
-    sh.run("chkconfig toughrad on",warn=True)
+    sh.run("chkconfig --add toughrad")
+    sh.run("chkconfig toughrad on")
     
     if os.path.exists("%s/supervisord.conf"%rundir):
         sh.run("rm -f %s/supervisord.conf"%rundir)
@@ -309,24 +309,29 @@ def install_mysql():
             
 
 def install_radius():
+    def _install():
+        sh.run("pip install -e %s" %installdir)
+        if os_type == 'centos':
+            install_service_centos()
+            
     if os.path.exists(installdir):
         isdel = sh.read("%s already exists and is not empty, delete it? [y/n] [n]:"%installdir) or 'n'
         if isdel == 'y':
             shutil.rmtree(installdir)
         else:
-            sh.info("start fetch ToughRADIUS from git repository ")
-            mirrors = {
-                '1':"https://github.com/talkincode/ToughRADIUS.git",
-                '2':"https://git.oschina.net/jamiesun/ToughRADIUS.git",
-                '3':"https://coding.net/jamiesun/ToughRADIUS.git",
-                '4':"https://code.csdn.net/talkincode.org/toughradius.git"
-            }
-            fetch_ok = False
-            mirror_idx = sh.read("select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:") or '1'
-            sh.run("git clone %s %s"%(mirrors[mirror_idx],installdir))
-    sh.run("pip install -e %s" %installdir)
-    if os_type == 'centos':
-        install_service_centos()
+            return _install()
+      
+    sh.info("start fetch ToughRADIUS from git repository ")
+    mirrors = {
+        '1':"https://github.com/talkincode/ToughRADIUS.git",
+        '2':"https://git.oschina.net/jamiesun/ToughRADIUS.git",
+        '3':"https://coding.net/jamiesun/ToughRADIUS.git",
+        '4':"https://code.csdn.net/talkincode.org/toughradius.git"
+    }
+    fetch_ok = False
+    mirror_idx = sh.read("select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:") or '1'
+    sh.run("git clone %s %s"%(mirrors[mirror_idx],installdir))
+    _install()
 
 
 def setup_config():
@@ -401,7 +406,7 @@ def start():
     sh.info("start server...")
     sh.run("toughrad start")
     sh.wait(3.0)
-    sh.run("toughrad status")
+    sh.run("toughrad status",wait=1)
     sh.info("The setup is not complete")
 
 def ihelp():
