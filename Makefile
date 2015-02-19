@@ -1,9 +1,7 @@
-install:
-	pip install -e .
-
 build:
 	pip install virtualenv
 	virtualenv venv
+	venv/bin/pip install -r requirements.txt
 	venv/bin/pip install -e .
 
 test:
@@ -17,4 +15,4 @@ clean:
 	@find . -type f -name "*.py[co]" -delete
 	@find . -type d -name "__pycache__" -delete
 
-.PHONY: install build clean coverage test
+.PHONY: build clean coverage test
