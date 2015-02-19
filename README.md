@@ -95,11 +95,6 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
     [INFO] - >> run command : mysql_install_db --defaults-file=/var/toughradius/mysql/my.cnf --user=mysql --datadir=/var/toughradius/mysql
     [SUCC] - >> run command : mysql_install_db --defaults-file=/var/toughradius/mysql/my.cnf --user=mysql --datadir=/var/toughradius/mysql  success!
     [INFO] - >> run command : mysqld_safe --defaults-file=/var/toughradius/mysql/my.cnf --user=mysql &
-    [DEBUG] - 5
-    [DEBUG] - 4
-    [DEBUG] - 3
-    [DEBUG] - 2
-    [DEBUG] - 1
     150220 05:33:21 mysqld_safe Logging to '/var/toughradius/log/mysqld.log'.
     150220 05:33:21 mysqld_safe Starting mysqld daemon with databases from /var/toughradius/mysql
     [INFO] - >> run command : echo '30 1 * * * $(which toughctl) -backupdb -c /var/toughradius/radiusd.conf > /dev/null' > /tmp/backup.cron
@@ -112,13 +107,11 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
     [INFO] - set mysql manage user
     [INPUT] - create a mysql admin user? y/n [n]y
     [INPUT] - set mysql manage username, not root [admin]:
-    [INFO] - >> run command : set mysql manage passwd, [radius]:
-    [SUCC] - >> run command : set mysql manage passwd, [radius]: success!
+    [INPUT] - set mysql manage passwd, [radius]:
     [INFO] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY 'radius' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
     [SUCC] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY 'radius' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf success!
     [INFO] - show database
     [INFO] - >> run command : echo "show databases;" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
-    [DEBUG] - 1
     Database
     information_schema
     mysql
@@ -185,10 +178,7 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
     [INFO] - start server...
     [INFO] - >> run command : toughrad start
     [SUCC] - >> run command : toughrad start success!
-    [DEBUG] - 3
-    [DEBUG] - 2
-    [DEBUG] - 1
-    [DEBUG] - 1
+
     # RUNNING 表示服务已经成功启动
     [INFO] - >> run command : toughrad status
     rad_console                      RUNNING   pid 2148, uptime 0:00:06
