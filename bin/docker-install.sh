@@ -6,27 +6,35 @@
 # 
 # =============================================================================
 
-appdir=/opt/toughradius
+appdir=/usr/local/toughradius
 rundir=/var/toughradius
 
 depend()
 {
     echo "install lib"
     yum update -y
-    yum install -y wget git gcc python-devel python-setuptools tcpdump crontabs
-
-    echo "python package"
-    easy_install pip 
-    easy_install supervisor
-    echo "install depend done!"
-}
-
-mysql5()
-{
+    yum install -y wget git gcc tcpdump crontabs python-devel python-setuptools 
     echo "install mysql"
-    rpm -ivh http://dev.mysql.com/get/mysql-community-release-el7-5.noarch.rpm
-    yum install -y mysql-community-server mysql-community-devel 
-    echo "install mysql done!"
+    yum install -y mariadb mariadb-server mariadb-devel MySQL-python
+    echo "install python package"
+    easy_install pip 
+    pip install supervisor
+    pip install DBUtils==1.1
+    pip install Mako==0.9.0
+    pip install Beaker==1.6.4
+    pip install MarkupSafe==0.18
+    pip install PyYAML==3.10
+    pip install SQLAlchemy==0.9.8
+    pip install Twisted==14.0.2
+    pip install autobahn==0.9.3-3
+    pip install bottle==0.12.7
+    pip install six==1.8.0
+    pip install tablib==0.10.0
+    pip install zope.interface==4.1.1
+    pip install pycrypto==2.6.1
+    pip install sh==1.11
+    pip install nose
+    echo "install depend done!"
 }
 
 
@@ -45,11 +53,9 @@ setup()
     mkdir -p ${rundir}/mysql
     mkdir -p ${rundir}/log
     
-    yes | cp -f ${appdir}/install/my.cnf ${rundir}/mysql/my.cnf
-    yes | cp -f ${appdir}/install/radiusd.conf ${rundir}/radiusd.conf
-    yes | cp -f ${appdir}/install/supervisord.conf ${rundir}/supervisord.conf    
-    yes | cp -f ${appdir}/install/toughrad.service /usr/lib/systemd/system/toughrad.service
-    chmod 754 /usr/lib/systemd/system/toughrad.service
+    yes | cp -f ${appdir}/bin/my.cnf ${rundir}/mysql/my.cnf
+    yes | cp -f ${appdir}/bin/radiusd.conf ${rundir}/radiusd.conf
+    yes | cp -f ${appdir}/bin/supervisord.conf ${rundir}/supervisord.conf    
 
     chown -R mysql:mysql ${rundir}/mysql
     
@@ -72,7 +78,7 @@ setup()
     
     echo "add crontab task"
     
-    echo '30 1 * * * toughctl -backup > /dev/null' > /tmp/backup.cron
+    echo '30 1 * * * $(which toughctl) -backup -c ${rundir}/radiusd.conf > /dev/null' > /tmp/backup.cron
     
     crontab /tmp/backup.cron
 
@@ -91,7 +97,6 @@ unsetup()
     supervisorctl shutdown
     echo ${rundir}
     rm -fr ${rundir}
-    rm -f /usr/lib/systemd/system/toughrad.service
     echo 'unsetup done!'
 }
 
@@ -111,9 +116,6 @@ case "$1" in
     depend
   ;;
 
-  mysql5)
-    mysql5
-  ;;
 
   radius)
     radius

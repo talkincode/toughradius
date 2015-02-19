@@ -1,0 +1,450 @@
+#!/usr/bin/env python
+#coding:utf-8
+import sys,os
+import subprocess
+import shutil
+import time
+import ConfigParser
+from string import Template
+
+
+
+########################################################################    
+#  define const
+########################################################################
+
+installdir='/usr/local/toughradius'
+rundir='/var/toughradius'
+log_dir =  "%s/log"%rundir
+mysql_rundir = "%s/mysql"%rundir
+my_cnf_path = "%s/my.cnf"%mysql_rundir
+
+mycnf_tpl = Template('''[client]
+port=3306
+socket=${rundir}/mysql/mysql.sock
+[mysqld]
+datadir=${rundir}/mysql
+socket=${rundir}/mysql/mysql.sock
+default-storage-engine=InnoDB
+symbolic-links=0
+wait_timeout=31536000
+interactive_timeout=31536000
+log-bin=mysql-bin
+# explicit_defaults_for_timestamp
+sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+[mysqld_safe]
+log-error=${rundir}/log/mysqld.log
+pid-file=${rundir}/mysql/mysqld.pid
+''')
+
+install_log = '/var/toughradius/install.log'
+install_os_info = '1:centos,2:ubuntu,3:freebsd'
+install_os_dict = {'1':'centos','2':'ubuntu','3':'freebsd'}
+
+
+
+if not os.path.exists(rundir):
+    os.mkdir(rundir)
+    os.mkdir(log_dir)
+
+class ToughError(Exception):
+    def __init__(self, message):
+        self.message = message
+
+class ToughShell(object):
+    
+    def __init__(self,logfile=None,debug=False):
+        self.logfile = logfile
+        self.is_debug = debug
+    # error
+    def inred(self,s):
+        return "%s[31;2m%s%s[0m"%(chr(27),s, chr(27))
+    
+    # success    
+    def ingreen(self,s):
+        return "%s[32;2m%s%s[0m"%(chr(27),s, chr(27))
+    
+    # operate
+    def inblue(self,s):
+        return "%s[34;2m%s%s[0m"%(chr(27),s, chr(27))
+
+    # info
+    def incblue(self,s):
+        return "%s[36;2m%s%s[0m"%(chr(27),s, chr(27))
+
+    # warning Magenta
+    def inwarn(self,s):
+        return "%s[35;2m%s%s[0m"%(chr(27),s, chr(27))
+
+    def log(self,msg,_font=None,logfile=None):
+        print _font(msg) 
+        if self.logfile:
+            with open(self.logfile,'ab') as fs:
+                fs.write(msg)
+                fs.write('\n')
+                
+    def info(self,msg):
+        self.log('[INFO] - %s'%msg,_font=self.incblue)
+        
+    def debug(self,msg):
+        self.log('[DEBUG] - %s'%msg,_font=self.inblue)
+    
+    def succ(self,msg):
+        self.log('[SUCC] - %s'%msg,_font=self.ingreen)
+    
+    def err(self,msg):
+        self.log('[ERROR] - %s'%msg,_font=self.inred)
+        
+    def warn(self,msg):
+        self.log('[WARN] - %s'%msg,_font=self.inwarn)
+        
+    def read(self,ask):
+        result = raw_input(self.incblue('[INPUT] - %s'%ask))
+        if self.is_debug:
+            self.debug('<question - %s | answer - %s>'%(ask,result))
+        return result
+    
+    def wait(self,sec=0):
+        if not sec:return
+        sec = int(sec)
+        _range = range(1,sec+1)
+        _range.reverse()
+        for i in _range:
+            self.debug(str(i))
+            time.sleep(1.0)
+    
+    def run(self,command, raise_on_fail=False, shell=True, env=None,wait=0):
+        self.info(">> run command : %s"%command)
+        _result = dict(code=0)
+        run_env = os.environ.copy()
+        if env:run_env.update(env)
+        if wait > 0:
+            subprocess.Popen(command, shell=True)
+            sh.wait(wait)
+        else:    
+            proc = subprocess.Popen(command,shell=shell,
+                                    stdout=subprocess.PIPE,stderr=subprocess.PIPE,
+                                    env=run_env)
+            stdout, stderr = proc.communicate('through stdin to stdout')
+            result = proc.returncode, stdout, stderr
+            if proc.returncode > 0 and raise_on_fail:
+                error_string = "# Could not run command (return code= %s)\n" % proc.returncode
+                error_string += "# Error was:\n%s\n" % (stderr.strip())
+                error_string += "# Command was:\n%s\n" % command
+                error_string += "# Output was:\n%s\n" % (stdout.strip())
+                if proc.returncode == 127:  # File not found, lets print path
+                    path = os.getenv("PATH")
+                    error_string += "# Check if y/our path is correct: %s" % path
+                self.err(error_string)
+                raise ToughError(error_string)
+            else:
+                if sh.is_debug:
+                    if stdout.strip():
+                        sh.debug(stdout)
+                    if stderr.strip():
+                        sh.err(stderr)
+                if proc.returncode == 0:
+                    self.succ(">> run command : %s success!"%command)
+                else:
+                    self.err(">> run command : %s failure!"%command)
+                return result    
+
+
+        
+sh = ToughShell(install_log)
+
+os_sel = sh.read('select your os type : %s [1]'%install_os_info) or '1'
+os_type = install_os_dict.get(os_sel)
+
+sh.info(">> Installation Information\r\n")
+sh.info(">> installdir: %s\r\n"%installdir)
+sh.info(">> rundir: %s\r\n"%rundir)
+sh.info(">> log_dir: %s\r\n"%log_dir)
+sh.info(">> mysql_rundir: %s\r\n"%mysql_rundir)
+sh.info(">> my_cnf_path: %s\r\n"%my_cnf_path)
+
+def install_pypkg():
+    sh.run("easy_install pip",raise_on_fail=True)
+    sh.run("pip install supervisor",raise_on_fail=True)
+    sh.run("pip install argparse",raise_on_fail=True)
+    sh.run("pip install pycrypto>=2.6.1",raise_on_fail=True)
+    sh.run("pip install zope.interface>=4.1.1",raise_on_fail=True)
+    sh.run("pip install Twisted>=14.0.2",raise_on_fail=True)
+    sh.run("pip install autobahn>=0.9.3-3",raise_on_fail=True)
+    sh.run("pip install SQLAlchemy>=0.9.8",raise_on_fail=True)
+    sh.run("pip install DBUtils>=1.1",raise_on_fail=True)
+    sh.run("pip install Mako>=0.9.0",raise_on_fail=True)
+    sh.run("pip install Beaker>=1.6.4",raise_on_fail=True)
+    sh.run("pip install MarkupSafe>=0.18",raise_on_fail=True)
+    sh.run("pip install PyYAML>=3.10",raise_on_fail=True)
+    sh.run("pip install bottle>=0.12.7",raise_on_fail=True)
+    sh.run("pip install nose",raise_on_fail=True)
+    sh.run("pip install sh>=1.11",raise_on_fail=True)
+    
+def move_mysql_so():  
+    sos = [ o for o in os.listdir("/usr/lib64/mysql") if '.so' in o]
+    for so in sos:
+        if not os.path.exists("/usr/lib64/%s"%so):
+            sh.run("ln -s /usr/lib64/mysql/%s /usr/lib64/%s"%(so,so))
+        if not os.path.exists("/usr/lib/%s"%so):
+            sh.run("ln -s /usr/lib64/mysql/%s /usr/lib/%s"%(so,so))
+    if not sos:
+        sos = [ o for o in os.listdir("/usr/lib/mysql") if '.so' in o]
+        for so in sos:
+            if not os.path.exists("/usr/lib/%s"%so):
+                sh.run("ln -s /usr/lib/mysql/%s /usr/lib/%s"%(so,so))
+
+def install_centos_mysql():
+    sh.info("start install mysql database server")
+    if (sh.read("install mysql, continue [y/n][n]") or 'n') == 'n' :
+        return
+    if os.path.exists("/usr/bin/mysqld_safe"):
+        sh.info("mysql already installed,try shutdown...")
+        sh.run("mysqladmin --defaults-file=%s -uroot shutdown"%(my_cnf_path))
+        
+    sh.info("install mysql")
+    if os.path.exists(mysql_rundir):
+        isdel = sh.read("%s/mysql already exists and is not empty, delete it? [y/n] [n]:"%rundir) or 'n'
+        if isdel == 'y':
+            shutil.rmtree(mysql_rundir)
+        else:
+            return sh.warn("do nothing")
+            
+    os.mkdir(mysql_rundir)
+    sh.info("init mysql config")
+    with open(my_cnf_path,'wb') as fs:
+        mycnf_str = mycnf_tpl.safe_substitute(rundir=rundir)
+        fs.write(mycnf_str)
+        sh.info("write %s"%my_cnf_path)
+        
+    mysql_ok = False
+    if os.path.exists("/usr/bin/mysqld_safe"):
+        mysql_ok = True
+    else:
+        r,_,_ = sh.run("yum install -y mariadb mariadb-server mariadb-devel")
+        if r > 0:
+            r,_,_ = sh.run("yum install -y mysql-libs.i686 mysql-libs.x86_64 mysql-server mysql-devel")
+        mysql_ok = (r == 0)
+    if mysql_ok:
+        sh.info("starting init mysql database")
+        sh.run("chown -R mysql:mysql %s"%mysql_rundir)
+        sh.run("mysql_install_db --defaults-file=%s --user=mysql --datadir=%s "%(my_cnf_path,mysql_rundir))
+        sh.run("mysqld_safe --defaults-file=%s --user=mysql &"%my_cnf_path,wait=5)
+        sh.run("echo '30 1 * * * $(which toughctl) -backupdb -c %s/radiusd.conf > /dev/null' > /tmp/backup.cron"%rundir)
+        sh.run("crontab /tmp/backup.cron")
+        sh.info("set mysql manage user")
+        if (sh.read("create a mysql admin user? y/n [n]") or 'n') == 'y':
+            admin = sh.read("set mysql manage username, not root [admin]:") or 'admin'
+            pwd = sh.run("set mysql manage passwd, [radius]:") or 'radius'
+            r = sh.run("echo \"GRANT ALL ON *.* TO %s@'%%' IDENTIFIED BY '%s' WITH GRANT OPTION;"\
+                      "FLUSH PRIVILEGES\" | mysql --defaults-file=%s"%(admin,pwd,my_cnf_path)
+            )
+        sh.info("show database")
+        sh.run("echo \"show databases;\" | mysql --defaults-file=%s"%my_cnf_path)
+    
+    return mysql_ok
+    
+def install_service_centos():
+    if os.path.exists("/etc/init.d/toughrad"):
+        sh.run("rm -f /etc/init.d/toughrad")
+        
+    sh.run("ln -s $(which toughrad) /etc/init.d/toughrad")
+    sh.run("chmod +x /etc/init.d/toughrad") 
+    sh.run("chkconfig --add toughrad",warn=True)
+    sh.run("chkconfig toughrad on",warn=True)
+    
+    if os.path.exists("%s/supervisord.conf"%rundir):
+        sh.run("rm -f %s/supervisord.conf"%rundir)
+    shutil.copy("%s/bin/supervisord.conf"%installdir,"%s/supervisord.conf"%rundir) 
+    
+    # for centos 7
+    try:
+        if os.path.exists("/usr/lib/systemd/system"):
+            if os.path.exists("/usr/lib/systemd/system/toughrad.service"):
+                sh.run("rm -f /usr/lib/systemd/system/toughrad.service")
+            shutil.copy("%s/bin/toughrad.service"%installdir,"/usr/lib/systemd/system/toughrad.service")
+            sh.run("chmod 754 /usr/lib/systemd/system/toughrad.service")
+    except:
+        sh.warn("not centos7")
+
+
+def install_depend_centos():
+    sh.info('>> start install centos depend')
+    sh.run("yum update -y",raise_on_fail=True)
+    sh.run("yum install -y wget git gcc tcpdump crontabs",raise_on_fail=True)
+    sh.run("yum install -y mariadb-devel mysql-devel",raise_on_fail=True)
+    sh.run("yum install -y python-devel python-setuptools MySQL-python",raise_on_fail=True)
+    install_pypkg()
+    install_centos_mysql()
+    move_mysql_so()
+    sh.info('>> install centos depend done')
+
+def install_depend_ubuntu():
+    sh.info("do nothing")
+
+def install_depend_freebsd():
+    sh.info("do nothing")
+
+os_depend_funcs = {
+    'centos':install_depend_centos,
+    'ubuntu':install_depend_ubuntu,
+    'freebsd':install_depend_freebsd
+}
+
+def install_depend():
+    if os_type not in os_depend_funcs:
+        sh.warn("not support install")
+    else:
+        os_depend_funcs[os_type]()
+
+os_mysql_funcs = {
+    'centos':install_centos_mysql,
+}
+
+def install_mysql():
+    if os_type not in os_mysql_funcs:
+        sh.warn("not support install")
+    else:
+        os_mysql_funcs[os_type]()
+            
+
+def install_radius():
+    if os.path.exists(installdir):
+        isdel = sh.read("%s already exists and is not empty, delete it? [y/n] [n]:"%installdir) or 'n'
+        if isdel == 'y':
+            shutil.rmtree(installdir)
+        else:
+            sh.info("start fetch ToughRADIUS from git repository ")
+            mirrors = {
+                '1':"https://github.com/talkincode/ToughRADIUS.git",
+                '2':"https://git.oschina.net/jamiesun/ToughRADIUS.git",
+                '3':"https://coding.net/jamiesun/ToughRADIUS.git",
+                '4':"https://code.csdn.net/talkincode.org/toughradius.git"
+            }
+            fetch_ok = False
+            mirror_idx = sh.read("select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:") or '1'
+            sh.run("git clone %s %s"%(mirrors[mirror_idx],installdir))
+    sh.run("pip install -e %s" %installdir)
+    if os_type == 'centos':
+        install_service_centos()
+
+
+def setup_config():
+    def gen_secret(slen=32):
+        import random
+        rg = random.SystemRandom()
+        r = list('1234567890abcdefghijklmnopqrstuvwxyz')
+        return ''.join([rg.choice(r) for _ in range(slen)])
+        
+    sh.info("set config...")
+    config = ConfigParser.RawConfigParser()
+    
+    sh.info("set default option")
+    config.set('DEFAULT', 'debug', (sh.read("set debug [0/1] [0]:") or '0') )
+    config.set('DEFAULT', 'tz', (sh.read("time zone [ CST-8 ]:") or 'CST-8') )
+    config.set('DEFAULT','secret',gen_secret(32))
+    
+    sh.info("set database option")
+    config.add_section('database')
+    config.set('database','dbtype', (sh.read("database type [mysql]:") or 'mysql' ))
+    config.set('database','host',( sh.read("database host [127.0.0.1]:") or '127.0.0.1' ))
+    config.set('database','port',(sh.read("database port [3306]:") or '3306'))
+    config.set('database','db',(sh.read("database dbname [toughradius]:") or 'toughradius' ))
+    config.set('database','user',(sh.read("database user [root]:") or 'root' ))
+    config.set('database','passwd',(sh.read("database passwd []:") or '' ))
+    config.set('database','maxusage',(sh.read("db pool maxusage [30]:") or '30'))
+    config.set('database','charset','utf8' )
+    
+    sh.info("set mysql backup ftpserver option")
+    config.add_section('backup')
+    config.set('backup','ftphost',(sh.read("backup ftphost [127.0.0.1]:") or '127.0.0.1' ))
+    config.set('backup','ftpport',(sh.read("backup ftpport [21]:") or '21'))
+    config.set('backup','ftpuser',(sh.read("backup ftpuser [ftpuser]:") or 'ftpuser' ))
+    config.set('backup','ftppwd',(sh.read("backup ftppwd [ftppwd]:") or 'ftppwd' ))
+    
+    sh.info("set radiusd option")
+    config.add_section('radiusd')
+    config.set('radiusd','authport',(sh.read("radiusd authport [1812]:") or '1812'))
+    config.set('radiusd','acctport',(sh.read("radiusd acctport [1813]:") or '1813'))
+    config.set('radiusd','adminport',(sh.read("radiusd adminport [1815]:") or '1815'))
+    config.set('radiusd','dictfile','%s/etc/dicts/dictionary'%installdir)
+    config.set('radiusd','cache_timeout',(sh.read("radiusd cache_timeout (second) [600]:") or '600'))
+    
+    sh.info("set admin option")
+    config.add_section('admin')
+    config.set('admin','port',(sh.read("admin http port [1816]:") or '1816'))
+    
+    sh.info("set customer option")
+    config.add_section('customer')
+    config.set('customer','port',(sh.read("customer http port [1817]:") or '1817'))
+    
+    with open("%s/radiusd.conf"%rundir,'wb') as configfile:
+        config.write(configfile)
+        sh.succ("config done")
+        
+    sh.run("cat %s/radiusd.conf"%rundir)
+    
+def init_db():
+    if not os.path.exists("%s/radiusd.conf"%rundir):
+        return sh.warn("%s/radiusd.conf not exists,please install config"%rundir)
+    sys.path.insert(0,"%s/toughradius/console"%installdir)
+    try:
+        import models
+        config = ConfigParser.RawConfigParser()
+        config.read("%s/radiusd.conf"%rundir)
+        models.install2(config)
+        sh.succ("init db success")
+    except Exception as err:
+        sh.err("init db faild %s"%str(err))
+    
+def start():
+    sh.info("start server...")
+    sh.run("toughrad start")
+    sh.wait(3.0)
+    sh.run("toughrad status")
+    sh.info("The setup is not complete")
+
+def ihelp():
+    sh.info("""
+    Usage: python %s [OPTIONS] [-v]
+    
+    depend      install system depend package
+    radius      install ToughRADIUS latest
+    mysql       install mysql and init database (optional)
+    config      init config file
+    initdb      create ToughRADIUS database
+    start       start server
+    help        display help
+    
+    All other options are passed to the installer program.
+    """%sys.argv[0])
+    
+def exec_all():
+    install_depend()  
+    install_radius()
+    setup_config()
+    init_db()
+    start()
+    
+execs = {
+    'depend' : install_depend,
+    'radius' : install_radius,
+    'mysql'  : install_mysql,
+    'config' : setup_config,
+    'initdb' : init_db,
+    'start'  : start,
+    'help'   : ihelp
+}
+
+if __name__ == '__main__':
+    if '-v' in sys.argv:
+        sh.is_debug = True
+        
+    if len(sys.argv) >= 2:
+        param = sys.argv[1]
+        if param not in execs.keys():
+            exec_all()
+        else:
+            execs[param]()
+    else:
+        exec_all()
