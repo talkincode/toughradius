@@ -178,6 +178,7 @@ def install_pypkg():
     sh.run("pip install MarkupSafe>=0.18",raise_on_fail=True)
     sh.run("pip install PyYAML>=3.10",raise_on_fail=True)
     sh.run("pip install bottle>=0.12.7",raise_on_fail=True)
+    sh.run("pip install tablib>=0.10.0",raise_on_fail=True)
     sh.run("pip install nose",raise_on_fail=True)
     sh.run("pip install sh>=1.11",raise_on_fail=True)
     
@@ -235,7 +236,7 @@ def install_centos_mysql():
         sh.info("set mysql manage user")
         if (sh.read("create a mysql admin user? y/n [n]") or 'n') == 'y':
             admin = sh.read("set mysql manage username, not root [admin]:") or 'admin'
-            pwd = sh.run("set mysql manage passwd, [radius]:") or 'radius'
+            pwd = sh.read("set mysql manage passwd, [radius]:") or 'radius'
             r = sh.run("echo \"GRANT ALL ON *.* TO %s@'%%' IDENTIFIED BY '%s' WITH GRANT OPTION;"\
                       "FLUSH PRIVILEGES\" | mysql --defaults-file=%s"%(admin,pwd,my_cnf_path)
             )
@@ -387,14 +388,14 @@ def setup_config():
         config.write(configfile)
         sh.succ("config done")
         
-    sh.run("cat %s/radiusd.conf"%rundir)
+    sh.run("cat %s/radiusd.conf"%rundir,wait=1)
     
 def init_db():
     if not os.path.exists("%s/radiusd.conf"%rundir):
         return sh.warn("%s/radiusd.conf not exists,please install config"%rundir)
-    sys.path.insert(0,"%s/toughradius/console"%installdir)
+    sys.path.insert(0,installdir)
     try:
-        import models
+        from toughradius.console import models
         config = ConfigParser.RawConfigParser()
         config.read("%s/radiusd.conf"%rundir)
         models.install2(config)
@@ -407,7 +408,7 @@ def start():
     sh.run("toughrad start")
     sh.wait(3.0)
     sh.run("toughrad status",wait=1)
-    sh.info("The setup is not complete")
+    sh.info("done!")
 
 def ihelp():
     sh.info("""

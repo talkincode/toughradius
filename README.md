@@ -13,8 +13,9 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
 
 [ToughRADIUS文档: http://docs.toughradius.net/build/html/] (http://docs.toughradius.net/build/html/)
 
-## Linux下使用脚本自动安装
+## Linux下使用脚本在线安装
 
+请保证你的Linux服务器处于联网状态
 
 下载脚本::
 
@@ -72,6 +73,8 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
     [SUCC] - >> run command : pip install PyYAML>=3.10 success!
     [INFO] - >> run command : pip install bottle>=0.12.7
     [SUCC] - >> run command : pip install bottle>=0.12.7 success!
+    [INFO] - >> run command : pip install tablib>=0.10.0
+    [SUCC] - >> run command : pip install tablib>=0.10.0 success!
     [INFO] - >> run command : pip install nose
     [SUCC] - >> run command : pip install nose success!
     [INFO] - >> run command : pip install sh>=1.11
@@ -111,8 +114,8 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
     [INPUT] - set mysql manage username, not root [admin]:
     [INFO] - >> run command : set mysql manage passwd, [radius]:
     [SUCC] - >> run command : set mysql manage passwd, [radius]: success!
-    [INFO] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY '(0, '', '')' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
-    [SUCC] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY '(0, '', '')' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf success!
+    [INFO] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY 'radius' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
+    [SUCC] - >> run command : echo "GRANT ALL ON *.* TO admin@'%' IDENTIFIED BY 'radius' WITH GRANT OPTION;FLUSH PRIVILEGES" | mysql --defaults-file=/var/toughradius/mysql/my.cnf success!
     [INFO] - show database
     [INFO] - >> run command : echo "show databases;" | mysql --defaults-file=/var/toughradius/mysql/my.cnf
     [DEBUG] - 1
@@ -123,6 +126,75 @@ ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
     test
     [INFO] - >> install centos depend done
     
+安装ToughRADIUS包，根据你的网络情况，选择软件源镜像::
+    
+    [INFO] - start fetch ToughRADIUS from git repository
+    [INPUT] - select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:
+    [INFO] - >> run command : git clone https://github.com/talkincode/ToughRADIUS.git /usr/local/toughradius
+    [SUCC] - >> run command : git clone https://github.com/talkincode/ToughRADIUS.git /usr/local/toughradius success!
+    [INFO] - >> run command : pip install -e /usr/local/toughradius
+    [SUCC] - >> run command : pip install -e /usr/local/toughradius success!
+    [INFO] - >> run command : ln -s $(which toughrad) /etc/init.d/toughrad
+    [SUCC] - >> run command : ln -s $(which toughrad) /etc/init.d/toughrad success!
+    [INFO] - >> run command : chmod +x /etc/init.d/toughrad
+    [SUCC] - >> run command : chmod +x /etc/init.d/toughrad success!
+    [INFO] - >> run command : chkconfig --add toughrad
+    [SUCC] - >> run command : chkconfig --add toughrad success!
+    [INFO] - >> run command : chkconfig toughrad on
+    [SUCC] - >> run command : chkconfig toughrad on success!
+    [INFO] - >> run command : chmod 754 /usr/lib/systemd/system/toughrad.service
+    [SUCC] - >> run command : chmod 754 /usr/lib/systemd/system/toughrad.service success!
+    
+配置文件生成，根据你的实际环境进行配置::
+
+    [INFO] - set config...
+    [INFO] - set default option
+    [INPUT] - set debug [0/1] [0]:
+    [INPUT] - time zone [ CST-8 ]:
+    [INFO] - set database option
+    [INPUT] - database type [mysql]:
+    [INPUT] - database host [127.0.0.1]:
+    [INPUT] - database port [3306]:
+    [INPUT] - database dbname [toughradius]:
+    [INPUT] - database user [root]:
+    [INPUT] - database passwd []:
+    [INPUT] - db pool maxusage [30]:
+    [INFO] - set mysql backup ftpserver option
+    [INPUT] - backup ftphost [127.0.0.1]:
+    [INPUT] - backup ftpport [21]:
+    [INPUT] - backup ftpuser [ftpuser]:
+    [INPUT] - backup ftppwd [ftppwd]:
+    [INFO] - set radiusd option
+    [INPUT] - radiusd authport [1812]:
+    [INPUT] - radiusd acctport [1813]:
+    [INPUT] - radiusd adminport [1815]:
+    [INPUT] - radiusd cache_timeout (second) [600]:
+    [INFO] - set admin option
+    [INPUT] - admin http port [1816]:
+    [INFO] - set customer option
+    [INPUT] - customer http port [1817]:
+    [SUCC] - config done
+    
+初始化数据库并启动服务::
+
+    starting create and init database...
+    drop database toughradius
+    create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci
+    commit
+    [SUCC] - init db success
+    [INFO] - start server...
+    [INFO] - >> run command : toughrad start
+    [SUCC] - >> run command : toughrad start success!
+    [DEBUG] - 3
+    [DEBUG] - 2
+    [DEBUG] - 1
+    [DEBUG] - 1
+    # RUNNING 表示服务已经成功启动
+    [INFO] - >> run command : toughrad status
+    rad_console                      RUNNING   pid 2148, uptime 0:00:06
+    rad_customer                     RUNNING   pid 2147, uptime 0:00:06
+    radiusd                          RUNNING   pid 2153, uptime 0:00:05
+    [INFO] - done
 
 
 ### 进程管理

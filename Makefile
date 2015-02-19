@@ -2,6 +2,7 @@ install:
 	pip install -e .
 
 build:
+	pip install virtualenv
 	virtualenv venv
 	venv/bin/pip install -e .
 
