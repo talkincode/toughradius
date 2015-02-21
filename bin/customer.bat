@@ -1,1 +1,1 @@
-toughrad.exe toughctl -customer -c ../etc/radiusd.conf || pause
+toughrad.exe toughctl -customer -c radiusd.conf || pause

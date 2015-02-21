@@ -120,7 +120,7 @@ class ToughShell(object):
         if env:run_env.update(env)
         if wait > 0:
             subprocess.Popen(command, shell=True)
-            sh.wait(wait)
+            self.wait(wait)
         else:    
             proc = subprocess.Popen(command,shell=shell,
                                     stdout=subprocess.PIPE,stderr=subprocess.PIPE,
@@ -138,11 +138,11 @@ class ToughShell(object):
                 self.err(error_string)
                 raise ToughError(error_string)
             else:
-                if sh.is_debug:
+                if self.is_debug:
                     if stdout.strip():
-                        sh.debug(stdout)
+                        self.debug(stdout)
                     if stderr.strip():
-                        sh.err(stderr)
+                        self.err(stderr)
                 if proc.returncode == 0:
                     self.succ(">> run command : %s success!"%command)
                 else:
@@ -157,7 +157,6 @@ os_sel = sh.read('select your os type : %s [1]'%install_os_info) or '1'
 os_type = install_os_dict.get(os_sel)
 
 sh.info(">> Installation Information\r\n")
-sh.info(">> installdir: %s\r\n"%installdir)
 sh.info(">> rundir: %s\r\n"%rundir)
 sh.info(">> log_dir: %s\r\n"%log_dir)
 sh.info(">> mysql_rundir: %s\r\n"%mysql_rundir)
@@ -253,20 +252,13 @@ def install_service_centos():
     sh.run("chmod +x /etc/init.d/toughrad") 
     sh.run("chkconfig --add toughrad")
     sh.run("chkconfig toughrad on")
-    
-    if os.path.exists("%s/supervisord.conf"%rundir):
-        sh.run("rm -f %s/supervisord.conf"%rundir)
-    shutil.copy("%s/bin/supervisord.conf"%installdir,"%s/supervisord.conf"%rundir) 
+    sh.run("toughctl --echo_supervisord_cnf > %s/supervisord.conf"%rundir)
     
     # for centos 7
-    try:
-        if os.path.exists("/usr/lib/systemd/system"):
-            if os.path.exists("/usr/lib/systemd/system/toughrad.service"):
-                sh.run("rm -f /usr/lib/systemd/system/toughrad.service")
-            shutil.copy("%s/bin/toughrad.service"%installdir,"/usr/lib/systemd/system/toughrad.service")
-            sh.run("chmod 754 /usr/lib/systemd/system/toughrad.service")
-    except:
-        sh.warn("not centos7")
+    if os.path.exists("/usr/lib/systemd/system"):
+        sh.run("toughctl --echo_centos7_service > /usr/lib/systemd/system/toughrad.service")
+        sh.run("chmod 754 /usr/lib/systemd/system/toughrad.service")
+
 
 
 def install_depend_centos():

@@ -6,21 +6,20 @@ import toughradius
 version = toughradius.__version__
 
 install_requires = [
-    # 'DBUtils>=1.1',
-    # 'MySQL-python>=1.2.5',
-    # 'Mako>=0.9.0',
-    # 'Beaker>=1.6.4',
-    # 'MarkupSafe>=0.18',
-    # 'PyYAML>=3.10',
-    # 'SQLAlchemy>=0.9.8',
-    # 'Twisted>=13.0.0',
-    # 'autobahn>=0.9.3-3',
-    # 'bottle>=0.12.7',
-    # 'six>=1.8.0',
-    # 'tablib>=0.10.0',
-    # 'zope.interface>=4.1.1',
-    # 'pycrypto==2.6.1',
-    # 'nose'
+    'DBUtils>=1.1',
+    'MySQL-python>=1.2.5',
+    'Mako>=0.9.0',
+    'Beaker>=1.6.4',
+    'MarkupSafe>=0.18',
+    'PyYAML>=3.10',
+    'SQLAlchemy>=0.9.8',
+    'Twisted>=13.0.0',
+    'autobahn>=0.9.3-3',
+    'bottle>=0.12.7',
+    'six>=1.8.0',
+    'tablib>=0.10.0',
+    'zope.interface>=4.1.1',
+    'pycrypto==2.6.1'
 ]
 install_requires_empty = []
 
@@ -30,10 +29,6 @@ package_data={
         'console/customer/views/*',
         'console/static/**/*',
         'console/static/*.*'
-    ],
-    'etc': [
-        '*.*',
-        'dicts/*',
     ]
 }
 
@@ -56,13 +51,11 @@ setup(name='toughradius',
        'Topic :: Software Development :: Libraries :: Python Modules',
        'Topic :: System :: Systems Administration :: Authentication/Directory',
        ],
-      packages=find_packages(exclude=['tests']),
+      packages=find_packages(),
       package_data=package_data,
       keywords=['radius', 'authentication'],
       zip_safe=True,
       include_package_data=True,
       install_requires=install_requires,
-      tests_require='nose>=1.3.1',
-      test_suite='nose.collector',
-      scripts=['bin/toughrad','bin/toughctl'],
+      scripts=['bin/toughrad','bin/toughctl']
 )

@@ -3,70 +3,11 @@
 import sys,os
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
-import argparse,ConfigParser
-
-def run_radiusd(config):
-    from toughradius.radiusd import server 
-    server.run(config)
-    
-def run_admin(config):
-    from toughradius.console import admin_app
-    admin_app.run(config)
-    
-def run_customer(config):
-    from toughradius.console import customer_app
-    customer_app.run(config)
-
-def run_secret_update(config,cfgfile):
-    from toughradius.tools import secret 
-    secret.update(config,cfgfile)
-    
-def run_initdb(config):
-    from toughradius.console import models
-    if args.initdb == '1':
-        models.install(config)
-    elif args.initdb == '2':
-        models.install2(config)
-    elif args.initdb == '3':
-        models.update(config)
-        
-def run_dbdict(config):
-    from toughradius.tools import dbdictgen 
-    dbdictgen.main()   
-    
-def run_backup(config):
-    from toughradius.tools import backupdb 
-    backupdb.backup(config)
-    
-
+from toughradius.tools.toughctl import run as runctl
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-radiusd','--radiusd', action='store_true',default=False,dest='radiusd',help='run radiusd')
-    parser.add_argument('-admin','--admin', action='store_true',default=False,dest='admin',help='run admin')
-    parser.add_argument('-customer','--customer', action='store_true',default=False,dest='customer',help='run customer')
-    parser.add_argument('-initdb','--initdb', type=str,default='1',dest='initdb',help='run initdb 1,2,3')
-    parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='run secret')
-    parser.add_argument('-backup','--backup', action='store_true',default=False,dest='backup',help='run backup')
-    parser.add_argument('-dbdict','--dbdict', action='store_true',default=False,dest='dbdict',help='run dbdict')
-    parser.add_argument('-c','--conf', type=str,default="../radiusd.conf",dest='conf',help='config file')
-    args =  parser.parse_args(sys.argv[1:])   
-    
-    if not args.conf:
-        print 'Please specify a configuration file'
-        sys.exit(0)
-        
-    config = ConfigParser.ConfigParser()
-    config.read(args.conf)
-        
-    if args.radiusd:run_radiusd(config)
-    elif args.admin:run_admin(config)
-    elif args.customer:run_customer(config)
-    elif args.secret:run_secret_update(config,args.conf)
-    elif args.initdb:run_initdb(config)
-    elif args.dbdict:run_dbdict(config)
-    elif args.backup:run_backup(config)
-    else: print 'do nothing'
+    runctl()
+
     
         
 

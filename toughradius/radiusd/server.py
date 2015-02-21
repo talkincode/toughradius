@@ -260,12 +260,16 @@ class AdminServerProtocol(WebSocketServerProtocol):
 def run(config):
     log.startLogging(sys.stdout)
     secret = config.get('DEFAULT','secret')
-    dictfile = config.get('radiusd','dictfile')
     tz = config.get('DEFAULT','tz')
     is_debug = config.getboolean('DEFAULT','debug')
     authport = config.getint('radiusd','authport')
     acctport = config.getint('radiusd','acctport')
     adminport = config.getint('radiusd','adminport')
+    
+    #parse dictfile
+    dictfile = config.get('radiusd','dictfile')
+    if not dictfile or not os.path.exists(dictfile):
+        dictfile = os.path.join(os.path.split(__file__)[0],'dicts/dictionary')
     
     #init dbstore
     store.setup(config)
