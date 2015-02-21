@@ -45,19 +45,19 @@ passwd_update_form = pyforms.Form(
 )
 
 node_add_form = pyforms.Form(
-    pyforms.Textbox("node_name", rules.len_of(2,32), description=u"节点名称",required="required",**input_style),
-    pyforms.Textarea("node_desc", rules.len_of(0, 128), description=u"节点描述",**input_style),
+    pyforms.Textbox("node_name", rules.len_of(2,32), description=u"区域名称",required="required",**input_style),
+    pyforms.Textarea("node_desc", rules.len_of(0, 128), description=u"区域描述",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>",**button_style),
-    title=u"增加节点",
+    title=u"增加区域",
     action="/node/add"
 )
 
 node_update_form = pyforms.Form(
-    pyforms.Hidden("id",  description=u"节点编号"),
-    pyforms.Textbox("node_name", rules.len_of(2, 32), description=u"节点名称", required="required",**input_style),
-    pyforms.Textarea("node_desc", rules.len_of(0, 128), description=u"节点描述", **input_style),
+    pyforms.Hidden("id",  description=u"区域编号"),
+    pyforms.Textbox("node_name", rules.len_of(2, 32), description=u"区域名称", required="required",**input_style),
+    pyforms.Textarea("node_desc", rules.len_of(0, 128), description=u"区域描述", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
-    title=u"修改节点",
+    title=u"修改区域",
     action="/node/update"
 )
 
