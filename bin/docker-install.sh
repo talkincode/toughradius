@@ -41,7 +41,7 @@ depend()
 radius()
 {
     echo "fetch ToughRADIUS latest"
-    git clone https://github.com/talkincode/ToughRADIUS.git ${appdir}
+    git clone -b stable https://github.com/talkincode/ToughRADIUS.git ${appdir}
     pip install -e ${appdir}
     echo "fetch ToughRADIUS done!"
 }
@@ -53,9 +53,9 @@ setup()
     mkdir -p ${rundir}/mysql
     mkdir -p ${rundir}/log
     
-    yes | cp -f ${appdir}/bin/my.cnf ${rundir}/mysql/my.cnf
-    yes | cp -f ${appdir}/bin/radiusd.conf ${rundir}/radiusd.conf
-    yes | cp -f ${appdir}/bin/supervisord.conf ${rundir}/supervisord.conf    
+    toughctl --echo_my_cnf > ${rundir}/mysql/my.cnf
+    toughctl --echo_radiusd_cnf > ${rundir}/radiusd.conf
+    toughctl --echo_supervisord_cnf ${rundir}/supervisord.conf    
 
     chown -R mysql:mysql ${rundir}/mysql
     
@@ -78,7 +78,7 @@ setup()
     
     echo "add crontab task"
     
-    echo '30 1 * * * $(which toughctl) -backup -c ${rundir}/radiusd.conf > /dev/null' > /tmp/backup.cron
+    echo '30 1 * * * $(which toughctl) --backup -c ${rundir}/radiusd.conf > /dev/null' > /tmp/backup.cron
     
     crontab /tmp/backup.cron
 

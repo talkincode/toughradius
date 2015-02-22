@@ -142,7 +142,7 @@ stopdb()
 # support docker
 backupdb()
 {
-    python ${appdir}/bin/toughctl -backup -c ${rundir}/etc/radiusd.conf
+    python ${appdir}/bin/toughctl -backup -c ${rundir}/radiusd.conf
 }
 
 tracedb()

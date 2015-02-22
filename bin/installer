@@ -42,7 +42,6 @@ install_os_info = '1:centos,2:ubuntu,3:freebsd'
 install_os_dict = {'1':'centos','2':'ubuntu','3':'freebsd'}
 
 
-
 if not os.path.exists(rundir):
     os.mkdir(rundir)
     os.mkdir(log_dir)
@@ -155,6 +154,7 @@ sh = ToughShell(install_log)
 
 os_sel = sh.read('select your os type : %s [1]'%install_os_info) or '1'
 os_type = install_os_dict.get(os_sel)
+release = sh.read('select release type : (stable,dev) [stable]') or 'stable'
 
 sh.info(">> Installation Information\r\n")
 sh.info(">> rundir: %s\r\n"%rundir)
@@ -323,7 +323,7 @@ def install_radius():
     }
     fetch_ok = False
     mirror_idx = sh.read("select ToughRADIUS mirror [ 1:github 2:oschina 3:coding 4:csdn ][1]:") or '1'
-    sh.run("git clone %s %s"%(mirrors[mirror_idx],installdir))
+    sh.run("git clone -b %s %s %s"%(release,mirrors[mirror_idx],installdir))
     _install()
 
 
@@ -365,16 +365,18 @@ def setup_config():
     config.set('radiusd','authport',(sh.read("radiusd authport [1812]:") or '1812'))
     config.set('radiusd','acctport',(sh.read("radiusd acctport [1813]:") or '1813'))
     config.set('radiusd','adminport',(sh.read("radiusd adminport [1815]:") or '1815'))
-    config.set('radiusd','dictfile','%s/etc/dicts/dictionary'%installdir)
     config.set('radiusd','cache_timeout',(sh.read("radiusd cache_timeout (second) [600]:") or '600'))
+    config.set('radiusd', 'logfile', (sh.read("log file [ /var/toughradius/log/radiusd.log ]:") or '/var/toughradius/log/radiusd.log') )
     
     sh.info("set admin option")
     config.add_section('admin')
     config.set('admin','port',(sh.read("admin http port [1816]:") or '1816'))
+    config.set('admin', 'logfile', (sh.read("log file [ /var/toughradius/log/admin.log ]:") or '/var/toughradius/log/admin.log') )
     
     sh.info("set customer option")
     config.add_section('customer')
     config.set('customer','port',(sh.read("customer http port [1817]:") or '1817'))
+    config.set('customer', 'logfile', (sh.read("log file [ /var/toughradius/log/customer.log ]:") or '/var/toughradius/log/customer.log') )
     
     with open("%s/radiusd.conf"%rundir,'wb') as configfile:
         config.write(configfile)
