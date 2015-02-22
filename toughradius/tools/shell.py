@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
-
+import sys
 import os
 import subprocess
 import time
@@ -14,25 +14,26 @@ class ToughShell(object):
     def __init__(self,logfile=None,debug=False):
         self.logfile = logfile
         self.is_debug = debug
+        self.is_win32 = sys.platform in ['win32']
     # error
     def inred(self,s):
-        return "%s[31;2m%s%s[0m"%(chr(27),s, chr(27))
+        return self.is_win32 and s or "%s[31;2m%s%s[0m"%(chr(27),s, chr(27))
     
     # success    
     def ingreen(self,s):
-        return "%s[32;2m%s%s[0m"%(chr(27),s, chr(27))
+        return self.is_win32 and s or "%s[32;2m%s%s[0m"%(chr(27),s, chr(27))
     
     # operate
     def inblue(self,s):
-        return "%s[34;2m%s%s[0m"%(chr(27),s, chr(27))
+        return self.is_win32 and s or "%s[34;2m%s%s[0m"%(chr(27),s, chr(27))
 
     # info
     def incblue(self,s):
-        return "%s[36;2m%s%s[0m"%(chr(27),s, chr(27))
+        return self.is_win32 and s or "%s[36;2m%s%s[0m"%(chr(27),s, chr(27))
 
     # warning Magenta
     def inwarn(self,s):
-        return "%s[35;2m%s%s[0m"%(chr(27),s, chr(27))
+        return self.is_win32 and s or "%s[35;2m%s%s[0m"%(chr(27),s, chr(27))
 
     def log(self,msg,_font=None,logfile=None):
         print _font(msg) 

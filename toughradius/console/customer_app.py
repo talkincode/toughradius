@@ -4,6 +4,7 @@ from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
 import sys,os
 from twisted.python import log
+from twisted.python.logfile import DailyLogFile
 from bottle import request
 from bottle import response
 from bottle import TEMPLATE_PATH,MakoTemplate
@@ -27,7 +28,6 @@ import time
 
 
 def init_application(config):
-    log.startLogging(sys.stdout)  
     log.msg("start init application...")
     TEMPLATE_PATH.append(os.path.join(os.path.split(__file__)[0],"customer/views/"))
     ''' install plugins'''
@@ -75,7 +75,8 @@ def init_application(config):
 ###############################################################################
 
 def run(config):
-    log.startLogging(sys.stdout)
+    logfile = config.get('customer','logfile')
+    log.startLogging(DailyLogFile.fromFullPath(logfile))
     # update aescipher,timezone
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))

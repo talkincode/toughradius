@@ -4,6 +4,7 @@ from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
 import sys,os
 from twisted.internet import reactor
+from twisted.python.logfile import DailyLogFile
 from bottle import TEMPLATE_PATH,MakoTemplate
 from bottle import mako_template as render
 from bottle import run as runserver
@@ -38,7 +39,6 @@ def error500(error):
     return render("error",msg=u"Server Internal error %s"%error.exception)
 
 def init_application(config):
-    log.startLogging(sys.stdout)  
     log.msg("start init application...")
     TEMPLATE_PATH.append(os.path.join(os.path.split(__file__)[0],"admin/views/"))
     for _app in [mainapp]+subapps:
@@ -111,7 +111,8 @@ def init_application(config):
 ###############################################################################
 
 def run(config):
-    log.startLogging(sys.stdout)
+    logfile = config.get('admin','logfile')
+    log.startLogging(DailyLogFile.fromFullPath(logfile))
     # update aescipher,timezone
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))

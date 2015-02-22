@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
-
+import ConfigParser
 from toughradius.tools.shell import shell as sh
 from toughradius.tools.secret import gen_secret
 
@@ -30,6 +30,7 @@ def setup_config():
     config.set('radiusd','acctport',(sh.read("radiusd acctport [1813]:") or '1813'))
     config.set('radiusd','adminport',(sh.read("radiusd adminport [1815]:") or '1815'))
     config.set('radiusd','cache_timeout',(sh.read("radiusd cache_timeout (second) [600]:") or '600'))
+    config.set('radiusd', 'logfile', (sh.read("log file [ logs/radiusd.log ]:") or 'logs/radiusd.log') )
     
     sh.info("set mysql backup ftpserver option")
     config.add_section('backup')
@@ -41,10 +42,12 @@ def setup_config():
     sh.info("set admin option")
     config.add_section('admin')
     config.set('admin','port',(sh.read("admin http port [1816]:") or '1816'))
+    config.set('admin', 'logfile', (sh.read("log file [ logs/admin.log ]:") or 'logs/admin.log') )
     
     sh.info("set customer option")
     config.add_section('customer')
     config.set('customer','port',(sh.read("customer http port [1817]:") or '1817'))
+    config.set('customer', 'logfile', (sh.read("log file [ logs/customer.log ]:") or 'logs/customer.log') )
     
     with open(config_path,'wb') as configfile:
         config.write(configfile)
@@ -111,12 +114,15 @@ acctport = 1813
 adminport = 1815
 authport = 1812
 cache_timeout = 600
+logfile = logs/radiusd.log
 
 [admin]
 port = 1816
+logfile = logs/admin.log
 
 [customer]
 port = 1817
+logfile = logs/customer.log
 
 [backup]
 ftpserver = 127.0.0.1

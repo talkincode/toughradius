@@ -1,1 +1,0 @@
-toughrad.exe toughctl -admin -c radiusd.conf || pause

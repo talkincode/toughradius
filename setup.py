@@ -28,7 +28,8 @@ package_data={
         'console/admin/views/*',
         'console/customer/views/*',
         'console/static/**/*',
-        'console/static/*.*'
+        'console/static/*',
+        'radiusd/dicts/*'
     ]
 }
 
