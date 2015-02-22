@@ -6,17 +6,17 @@ ps aux | grep customer | awk '{print $2}' | xargs  kill
 
 ps aux | grep radiusd | awk '{print $2}' | xargs  kill
 
-python toughctl -initdb 2 -c ../etc/radiusd.conf 
+python toughctl -initdb 2 -c ~/radiusd.conf 
 
-python toughctl -radiusd -c ../etc/radiusd.conf & 
-
-sleep 4
-
-python toughctl -admin -c ../etc/radiusd.conf & 
+python toughctl -radiusd -c ~/radiusd.conf & 
 
 sleep 4
 
-python toughctl -customer -c ../etc/radiusd.conf & 
+python toughctl -admin -c ~/radiusd.conf & 
+
+sleep 4
+
+python toughctl -customer -c ~/radiusd.conf & 
 
 sleep 4
 
