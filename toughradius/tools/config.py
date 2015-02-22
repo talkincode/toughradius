@@ -175,7 +175,7 @@ autostart=true
 autorestart=true
 user=root
 redirect_stderr=true
-stdout_logfile=/var/toughradius/log/rad_console.log
+stdout_logfile=/var/toughradius/log/admin.log
 
 [program:rad_customer]
 command=toughctl -customer  -c /var/toughradius/radiusd.conf
@@ -186,7 +186,7 @@ autostart=true
 autorestart=true
 user=root
 redirect_stderr=true
-stdout_logfile=/var/toughradius/log/rad_customer.log
+stdout_logfile=/var/toughradius/log/customer.log
 '''
 
 def echo_centos7_service():

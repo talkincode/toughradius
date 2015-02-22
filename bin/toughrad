@@ -121,7 +121,7 @@ restart()
 upgrade()
 {
     echo 'starting upgrade...' 
-    cd ${appdir} && git pull origin master
+    cd ${appdir} && git pull
     supervisorctl restart all
     supervisorctl status
     echo 'upgrade done'
@@ -160,13 +160,13 @@ tracerad()
 traceadmin()
 {
     echo 'type ctrl-c exit'
-    tail -f ${rundir}/log/rad_console.log
+    tail -f ${rundir}/log/admin.log
 }
 
 tracecustomer()
 {
     echo 'type ctrl-c exit'
-    tail -f ${rundir}/log/rad_customer.log
+    tail -f ${rundir}/log/customer.log
 }
 
 case "$1" in
