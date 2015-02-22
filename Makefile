@@ -9,9 +9,6 @@ test:
 
 coverage:
 	venv/bin/python setup.py test --cov
-	
-package:
-	
 
 clean:
 	@rm -rf .Python MANIFEST build dist venv* *.egg-info *.egg

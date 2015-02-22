@@ -19,7 +19,8 @@ install_requires = [
     'six>=1.8.0',
     'tablib>=0.10.0',
     'zope.interface>=4.1.1',
-    'pycrypto==2.6.1'
+    'pycrypto==2.6.1',
+    'sh==1.11'
 ]
 install_requires_empty = []
 
@@ -27,8 +28,11 @@ package_data={
     'toughradius': [
         'console/admin/views/*',
         'console/customer/views/*',
-        'console/static/**/*',
-        'console/static/*',
+        'console/static/css/*',
+        'console/static/fonts/*',
+        'console/static/img/*',
+        'console/static/js/*',
+        'console/static/favicon.ico',
         'radiusd/dicts/*'
     ]
 }
@@ -58,5 +62,7 @@ setup(name='toughradius',
       zip_safe=True,
       include_package_data=True,
       install_requires=install_requires,
-      scripts=['bin/toughrad','bin/toughctl']
+      scripts=['bin/toughrad','bin/toughctl'],
+      tests_require='nose>=0.10.0b1',
+      test_suite='nose.collector',
 )

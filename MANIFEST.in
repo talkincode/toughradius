@@ -1,5 +1,13 @@
-recursive-include toughradius/console *
-recursive-include toughradius/radiusd *
+recursive-include toughradius/console/admin/views *
+recursive-include toughradius/console/customer/views *
+recursive-include toughradius/console/static/css *
+recursive-include toughradius/console/static/img *
+recursive-include toughradius/console/static/fonts *
+recursive-include toughradius/console/static/js *
+recursive-include toughradius/radiusd/dicts *
+include bin/installer
+include bin/docker-install.sh
+include toughradius/console/static/favicon.ico
 include LICENSE
 include README.md
 include Dockerfile
