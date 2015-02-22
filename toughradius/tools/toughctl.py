@@ -92,16 +92,17 @@ def run():
         print 'Please specify a configuration file'
         return
         
+    windows_dir = os.getenv("WINDIR") and os.path.join(os.getenv("WINDIR"),'radiusd.conf') or None
     cfgs = [
         args.conf,
         '/etc/radiusd.conf',
         '/var/toughradius/radiusd.conf',
         './radiusd.conf',
-        os.path.join(os.getenv("WINDIR"),'radiusd.conf')
+        windows_dir
     ]
     config = ConfigParser.ConfigParser()
     for c in cfgs:
-        if os.path.exists(c):
+        if c and os.path.exists(c):
             config.read(c)
             break
 
