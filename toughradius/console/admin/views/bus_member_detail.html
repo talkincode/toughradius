@@ -51,7 +51,7 @@ function do_delete(account_number)
         <div class="panel-body">
         <div class="pull-right bottom10 ">
             % if permit.match('/bus/account/open'):
-            <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开上网账号</a>
+            <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-info">新开认证账号</a>
             % endif
              % if permit.match('/bus/member/update'):
             <a href="/bus/member/update?member_id=${member.member_id}" class="btn btn-sm btn-info">修改基本资料</a>

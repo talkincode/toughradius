@@ -114,15 +114,15 @@ acctport = 1813
 adminport = 1815
 authport = 1812
 cache_timeout = 600
-logfile = logs/radiusd.log
+logfile = /var/toughradius/log/radiusd.log
 
 [admin]
 port = 1816
-logfile = logs/admin.log
+logfile = /var/toughradius/log/admin.log
 
 [customer]
 port = 1817
-logfile = logs/customer.log
+logfile = /var/toughradius/log/customer.log
 
 [backup]
 ftpserver = 127.0.0.1
@@ -156,7 +156,7 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 serverurl=http://127.0.0.1:9001 ; use an http:// url to specify an inet socket
 
 [program:radiusd]
-command=toughctl -radiusd -c /var/toughradius/radiusd.conf
+command=toughctl -radiusd 
 process_name=%(program_name)s
 numprocs=1
 directory=/var/toughradius
@@ -167,7 +167,7 @@ redirect_stderr=true
 stdout_logfile=/var/toughradius/log/radiusd.log
 
 [program:rad_console]
-command=toughctl -admin  -c /var/toughradius/radiusd.conf
+command=toughctl -admin 
 process_name=%(program_name)s
 numprocs=1
 directory=/var/toughradius
@@ -178,7 +178,7 @@ redirect_stderr=true
 stdout_logfile=/var/toughradius/log/admin.log
 
 [program:rad_customer]
-command=toughctl -customer  -c /var/toughradius/radiusd.conf
+command=toughctl -customer 
 process_name=%(program_name)s
 numprocs=1
 directory=/var/toughradius

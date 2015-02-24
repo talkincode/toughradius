@@ -13,7 +13,7 @@ var flow_options = {
     credits : {enabled:false},
     chart: {type: 'areaspline',renderTo: 'flow-chart'},
     title: {text: '流量统计'},
-    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
+    subtitle: {text: ''},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
     yAxis: {title: {text: '使用流量'},
         labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            

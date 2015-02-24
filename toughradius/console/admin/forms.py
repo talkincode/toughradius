@@ -225,7 +225,7 @@ def user_open_form(nodes=[],products=[]):
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
-        pyforms.Textbox("account_number", description=u"用户用户账号",  required="required", **input_style),
+        pyforms.Textbox("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"认证密码", required="required", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"资费",  required="required", **input_style),
