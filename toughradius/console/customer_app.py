@@ -74,7 +74,7 @@ def init_application(config):
 # run server                                                                 
 ###############################################################################
 
-def run(config):
+def run(config,is_service):
     logfile = config.get('customer','logfile')
     log.startLogging(DailyLogFile.fromFullPath(logfile))
     # update aescipher,timezone
@@ -82,7 +82,7 @@ def run(config):
     base.scookie.setup(config.get('DEFAULT','secret'))
     utils.update_tz(config.get('DEFAULT','tz'))
 
-    try:
+    if not is_service:
         init_application(config)
         runserver(
             mainapp, host='0.0.0.0', 
@@ -91,5 +91,10 @@ def run(config):
             reloader=False,
             server="twisted"
         )
-    except:
-        log.err()
+    else:
+        from twisted.web import server, wsgi
+        from twisted.python.threadpool import ThreadPool
+        from twisted.internet import reactor
+        from twisted.application import service, internet
+        factory = server.Site(wsgi.WSGIResource(reactor, reactor.getThreadPool(), mainapp))
+        return internet.TCPServer(config.getint('customer','port'), factory)

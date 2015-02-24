@@ -109,17 +109,28 @@ def init_application(config):
 ###############################################################################
 # run server                                                                 
 ###############################################################################
+from bottle import ServerAdapter
+class TwistedService(ServerAdapter):
+    def run(self, handler):
+        from twisted.web import server, wsgi
+        from twisted.python.threadpool import ThreadPool
+        from twisted.internet import reactor
+        thread_pool = ThreadPool()
+        thread_pool.start()
+        reactor.addSystemEventTrigger('after', 'shutdown', thread_pool.stop)
+        factory = server.Site(wsgi.WSGIResource(reactor, thread_pool, handler))
+        reactor.listenTCP(self.port, factory, interface=self.host)
 
-def run(config):
+
+def run(config,is_service=False):
     logfile = config.get('admin','logfile')
     log.startLogging(DailyLogFile.fromFullPath(logfile))
     # update aescipher,timezone
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))
     utils.update_tz(config.get('DEFAULT','tz'))
-
-    try:
-        init_application(config)
+    init_application(config)
+    if not is_service:
         runserver(
             mainapp, host='0.0.0.0', 
             port=config.getint('admin','port') ,
@@ -127,5 +138,11 @@ def run(config):
             reloader=False,
             server="twisted"
         )
-    except:
-        log.err()
+    else:
+        from twisted.web import server, wsgi
+        from twisted.python.threadpool import ThreadPool
+        from twisted.internet import reactor
+        from twisted.application import service, internet
+        factory = server.Site(wsgi.WSGIResource(reactor, reactor.getThreadPool(), mainapp))
+        return internet.TCPServer(config.getint('admin','port'), factory)
+

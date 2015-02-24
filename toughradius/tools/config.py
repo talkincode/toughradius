@@ -1,8 +1,34 @@
 #!/usr/bin/env python
 #coding:utf-8
+import os
 import ConfigParser
 from toughradius.tools.shell import shell as sh
 from toughradius.tools.secret import gen_secret
+
+def find_config(conf_file=None):
+    windows_dir = os.getenv("WINDIR") and os.path.join(os.getenv("WINDIR"),'radiusd.conf') or None
+    cfgs = [
+        conf_file,
+        '/etc/radiusd.conf',
+        '/var/toughradius/radiusd.conf',
+        './radiusd.conf',
+        '~/radiusd.conf',
+        windows_dir
+    ]
+    config = ConfigParser.ConfigParser()
+    flag = False
+    for c in cfgs:
+        if c and os.path.exists(c):
+            config.read(c)
+            flag = True
+            break
+   
+    if not flag:
+        raise Exception('no config file')
+                
+    return config
+    
+    
 
 def setup_config():
     sh.info("set config...")
@@ -205,3 +231,26 @@ PrivateTmp=true
 [Install]  
 WantedBy=multi-user.target
 '''
+
+def echo_app_tac(app):
+    if app == 'radiusd':
+        return '''from twisted.application import service, internet
+from toughradius.tools import config
+from toughradius.radiusd import server
+application = service.Application("ToughRADIUS Radiusd Application")
+service = server.run(config.find_config(),True)
+service.setServiceParent(application)'''
+    elif app == 'admin':
+        return '''from twisted.application import service, internet
+from toughradius.tools import config
+from toughradius.console import admin_app
+application = service.Application("ToughRADIUS Admin Application")
+service = admin_app.run(config.find_config(),True)
+service.setServiceParent(application)'''
+    elif app == 'customer':
+        return '''from twisted.application import service, internet
+from toughradius.tools import config
+from toughradius.console import customer_app
+application = service.Application("ToughRADIUS Customer Application")
+service = customer_app.run(config.find_config(),True)
+service.setServiceParent(application)'''

@@ -19,11 +19,11 @@ from toughradius.radiusd.pyrad import packet
 from toughradius.radiusd.store import store
 from toughradius.radiusd import middleware
 from toughradius.radiusd import settings
+from toughradius.radiusd import utils
 import datetime
 import logging
 import pprint
 import socket
-import utils
 import time
 import json
 import six
@@ -257,7 +257,7 @@ class AdminServerProtocol(WebSocketServerProtocol):
 # Run  Server                                                              ####
 ###############################################################################     
                  
-def run(config):
+def run(config,is_service=False):
     logfile = config.get('radiusd','logfile')
     log.startLogging(DailyLogFile.fromFullPath(logfile))
     secret = config.get('DEFAULT','secret')
@@ -301,8 +301,7 @@ def run(config):
         runstat=_runstat,coa_clients=coa_pool,debug=is_debug
     )
     
-    reactor.listenUDP(authport, auth_protocol)
-    reactor.listenUDP(acctport, acct_protocol)
+
     _task = task.LoopingCall(auth_protocol.process_delay)
     _task.start(2.7)
 
@@ -314,7 +313,18 @@ def run(config):
     factory.protocol.coa_clients = coa_pool
     factory.protocol.auth_server = auth_protocol
     factory.protocol.acct_server = acct_protocol
-    reactor.listenTCP(adminport, factory)
 
-    reactor.run()
+    
 
+    if not is_service:  
+        reactor.listenUDP(authport, auth_protocol)
+        reactor.listenUDP(acctport, acct_protocol)
+        reactor.listenTCP(adminport, factory)
+        reactor.run()
+    else:
+        from twisted.application import service, internet
+        top_service = service.MultiService()
+        internet.UDPServer(authport, auth_protocol).setServiceParent(top_service)
+        internet.UDPServer(acctport, acct_protocol).setServiceParent(top_service)
+        internet.TCPServer(adminport, factory).setServiceParent(top_service)
+        return top_service
