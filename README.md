@@ -1,4 +1,4 @@
-# ToughRADIUS简介
+# ToughRADIUS简介  [![Build Status](https://travis-ci.org/talkincode/ToughRADIUS.svg?branch=master)](https://travis-ci.org/talkincode/ToughRADIUS)
 
 ToughRADIUS是一个开源的Radius服务软件，基于BSD许可协议发布。
 
