@@ -287,11 +287,12 @@ def online_stat_query(db):
 @app.route('/online/statdata',apply=auth_opr,method=['GET','POST'])
 def online_stat_data(db):    
     node_id = request.params.get('node_id')
-    day_code = request.params.get('day_code',datetime.datetime.now().strftime("%Y-%m-%d"))     
+    day_code = request.params.get('day_code')  
+    if not day_code:
+        day_code = utils.get_currdate()
     begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
     end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
     begin_time,end_time = time.mktime(begin.timetuple()),time.mktime(end.timetuple())
-    
     _query = db.query(models.SlcRadOnlineStat)
     
     if node_id:
@@ -320,19 +321,20 @@ def online_stat_query(db):
 @app.route('/flow/statdata',apply=auth_opr,method=['GET','POST'])
 def flow_stat_data(db):    
     node_id = request.params.get('node_id')
-    day_code = request.params.get('day_code',datetime.datetime.now().strftime("%Y-%m-%d"))     
+    day_code = request.params.get('day_code')    
+    if not day_code:
+        day_code = utils.get_currdate()
     begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
     end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
     begin_time,end_time = time.mktime(begin.timetuple()),time.mktime(end.timetuple())
-    
     _query = db.query(models.SlcRadFlowStat)
     
     if node_id:
         _query = _query.filter(models.SlcRadFlowStat.node_id == node_id)
     
     _query = _query.filter(
-        models.SlcRadOnlineStat.stat_time >= begin_time,
-        models.SlcRadOnlineStat.stat_time <= end_time,
+        models.SlcRadFlowStat.stat_time >= begin_time,
+        models.SlcRadFlowStat.stat_time <= end_time,
     )
     
     in_data = {"name":u"上行流量","data":[]}

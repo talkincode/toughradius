@@ -94,9 +94,10 @@ function update_flow()
 
 var chart;
 $(document).ready(function (){
-    wsock.start("${sys_param_value('radiusd_address')}","${sys_param_value('radiusd_admin_port')}");
+    Highcharts.setOptions({global: {useUTC: false}}); wsock.start("${sys_param_value('radiusd_address')}","${sys_param_value('radiusd_admin_port')}");
     update_online();
     update_flow();
+    
 });
 
 

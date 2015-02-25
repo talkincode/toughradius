@@ -13,7 +13,7 @@ var online_options = {
     credits : {enabled:false},
     chart: {type: 'areaspline',renderTo: 'online-chart'},
     title: {text: '在线用户统计'},
-    subtitle: {text: ''},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
     yAxis: {
         title: {text: '在线数'},
@@ -30,6 +30,7 @@ var online_options = {
 };
 
 $(document).ready(function (){
+    Highcharts.setOptions({global: {useUTC: false}});
     $("#day_code").datepicker();   
 });
 

@@ -69,7 +69,7 @@ def stop_server(app):
         time.sleep(0.5)
         
 def restart_server(config,app):
-    apps = app == 'all' and ['radiusd','admin','customer'] or [app]
+    apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
@@ -179,7 +179,7 @@ def run():
         return start_server(config,args.start)
     
     if args.restart:
-        if not args.start in ('all','radiusd','admin','customer'):
+        if not args.restart in ('all','radiusd','admin','customer'):
             print 'usage %s --restart [all|radiusd|admin|customer]'%sys.argv[0]
             return
         return restart_server(config,args.restart)
