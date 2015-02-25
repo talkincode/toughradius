@@ -417,7 +417,7 @@ class Store():
         def _unlock_one():
             ticket = None
             with Connect(self.dbpool) as conn:
-                cur = conn.cursor(cursors.DictCursor)
+                cur = self.dbpool.cursor(conn)
                 sql = 'select * from slc_rad_online where  nas_addr = %s and acct_session_id = %s'
                 cur.execute(sql,(nas_addr,acct_session_id)) 
                 online = cur.fetchone()
@@ -431,7 +431,7 @@ class Store():
         def _unlock_many():
             tickets = []
             with Connect(self.dbpool) as conn:
-                cur = conn.cursor(cursors.DictCursor)
+                cur = self.dbpool.cursor(conn)
                 cur.execute('select * from slc_rad_online where nas_addr = %s',(nas_addr,)) 
                 for online in cur:
                     tickets.append(_ticket(online))
