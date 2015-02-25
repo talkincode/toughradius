@@ -237,7 +237,7 @@ def install_service_centos():
 def install_depend_centos():
     sh.info('>> start install centos depend')
     sh.run("yum update -y",raise_on_fail=True)
-    sh.run("yum install -y wget git gcc tcpdump crontabs",raise_on_fail=True)
+    sh.run("yum install -y wget gcc tcpdump crontabs",raise_on_fail=True)
     sh.run("yum install -y mariadb-devel mysql-devel",raise_on_fail=True)
     sh.run("yum install -y python-devel python-setuptools MySQL-python",raise_on_fail=True)
     sh.run("easy_install pip")
@@ -280,7 +280,7 @@ def install_radius():
 
 def setup_config():
     sh.info("start config ...")
-    sh.run('toughctl --config')
+    sh.run('toughctl --echo_radiusd_cnf > /var/toughradius/radiusd.conf')
     sh.info('config done!')
     
 def init_db():
