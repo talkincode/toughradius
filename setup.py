@@ -62,7 +62,7 @@ setup(name='toughradius',
       zip_safe=True,
       include_package_data=True,
       install_requires=install_requires,
-      scripts=['bin/toughrad','bin/toughctl'],
+      scripts=['bin/toughctl'],
       tests_require='nose>=0.10.0b1',
       test_suite='nose.collector',
 )
