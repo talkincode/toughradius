@@ -56,7 +56,7 @@ def run_customer(config,daemon=False):
 def start_server(config,app):
     apps = app == 'all' and ['radiusd','admin','customer'] or [app]
     for _app in apps:
-        shell.debug('start %s'%_app)
+        shell.info('start %s'%_app)
         _run_daemon(config,_app)
         time.sleep(0.5)
     
@@ -64,11 +64,20 @@ def start_server(config,app):
 def stop_server(app):
     apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
-        shell.debug('stop %s'%_app)
+        shell.info('stop %s'%_app)
         _kill_daemon(_app)
         time.sleep(0.5)
         
-
+def restart_server(config,app):
+    apps = app == 'all' and ['radiusd','admin','customer'] or [app]
+    for _app in apps:
+        shell.info('stop %s'%_app)
+        _kill_daemon(_app)
+        time.sleep(0.5)
+        shell.info('start %s'%_app)
+        _run_daemon(config,_app)
+        time.sleep(0.5)
+    
 
 def run_secret_update(config,cfgfile):
     from toughradius.tools import secret 
@@ -107,6 +116,10 @@ def run_echo_supervisord_cnf():
     from toughradius.tools.config import echo_supervisord_cnf
     print echo_supervisord_cnf()
     
+def run_echo_centos6_service():
+    from toughradius.tools.config import echo_centos6_service
+    print echo_centos6_service()
+    
 def run_echo_centos7_service():
     from toughradius.tools.config import echo_centos7_service
     print echo_centos7_service()
@@ -118,12 +131,14 @@ def run():
     parser.add_argument('-customer','--customer', action='store_true',default=False,dest='customer',help='run customer')
     parser.add_argument('-d','--daemon', action='store_true',default=False,dest='daemon',help='daemon mode')
     parser.add_argument('-start','--start', type=str,default=None,dest='start',help='start server all|radiusd|admin|customer')
+    parser.add_argument('-restart','--restart', type=str,default=None,dest='restart',help='restart server all|radiusd|admin|customer')
     parser.add_argument('-stop','--stop', type=str,default=None,dest='stop',help='stop server all|radiusd|admin|customer')
     parser.add_argument('-initdb','--initdb', type=str,default='0',dest='initdb',help='run initdb 1,2,3')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_my_cnf','--echo_my_cnf', action='store_true',default=False,dest='echo_my_cnf',help='echo my_cnf')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
     parser.add_argument('-echo_supervisord_cnf','--echo_supervisord_cnf', action='store_true',default=False,dest='echo_supervisord_cnf',help='echo supervisord_cnf')
+    parser.add_argument('-echo_centos6_service','--echo_centos6_service', action='store_true',default=False,dest='echo_centos6_service',help='echo centos6_service')
     parser.add_argument('-echo_centos7_service','--echo_centos7_service', action='store_true',default=False,dest='echo_centos7_service',help='echo centos7_service')
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
     parser.add_argument('-backup','--backup', action='store_true',default=False,dest='backup',help='backup database')
@@ -145,6 +160,9 @@ def run():
     
     if args.echo_centos7_service:
         return run_echo_centos7_service()
+        
+    if args.echo_centos6_service:
+        return run_echo_centos6_service()
     
     if args.stop:
         if not args.stop in ('all','radiusd','admin','customer'):
@@ -159,6 +177,12 @@ def run():
             print 'usage %s --start [all|radiusd|admin|customer]'%sys.argv[0]
             return
         return start_server(config,args.start)
+    
+    if args.restart:
+        if not args.start in ('all','radiusd','admin','customer'):
+            print 'usage %s --restart [all|radiusd|admin|customer]'%sys.argv[0]
+            return
+        return restart_server(config,args.restart)
 
     if args.radiusd:run_radiusd(config,args.daemon)
     elif args.admin:run_admin(config,args.daemon)

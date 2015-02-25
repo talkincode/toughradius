@@ -215,6 +215,60 @@ redirect_stderr=true
 stdout_logfile=/var/toughradius/log/customer.log
 '''
 
+def echo_centos6_service():
+    return '''#!/bin/sh
+# /etc/rc.d/init.d/toughradius
+# chkconfig: 345 91 05
+# description: ToughRADIUS Server
+# processname: toughradius
+# Source init functions
+. /etc/rc.d/init.d/functions
+
+start()
+{
+    echo -n $"Starting ToughRADIUS: "
+    toughctl --start all
+    echo ‘start ToughRADIUS done’ 
+}
+
+stop()
+{
+    echo -n $"Shutting down ToughRADIUS: "
+    toughctl --stop all
+    echo 'shutdown ToughRADIUS done'
+}
+
+status_app()
+{
+    ps aux | grep toughctl
+}
+
+case "$1" in
+
+start)
+    start
+;;
+
+stop)
+    stop
+;;
+
+status)
+    status_app
+;;
+
+restart)
+    stop
+    start
+;;
+
+*)
+    echo "Usage: $0 {start|stop|restart|status}"
+;;
+
+esac
+'''
+
 def echo_centos7_service():
     return '''[Unit]  
 Description=toughrad  
@@ -223,9 +277,9 @@ After=network.target remote-fs.target nss-lookup.target
 [Service]  
 Type=forking  
 PIDFile=/var/toughradius/toughrad.pid
-ExecStart=toughrad start 
-ExecReload=toughrad restart 
-ExecStop=toughrad stop 
+ExecStart=toughctl --start all 
+ExecReload=toughctl --restart all 
+ExecStop=toughctl --stop all 
 PrivateTmp=true  
 
 [Install]  

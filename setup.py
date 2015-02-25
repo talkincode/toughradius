@@ -6,6 +6,7 @@ import toughradius
 version = toughradius.__version__
 
 install_requires = [
+    'argparse',
     'DBUtils>=1.1',
     'MySQL-python>=1.2.5',
     'Mako>=0.9.0',
