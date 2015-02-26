@@ -81,9 +81,8 @@ def run(config,is_service):
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))
     utils.update_tz(config.get('DEFAULT','tz'))
-
+    init_application(config)
     if not is_service:
-        init_application(config)
         runserver(
             mainapp, host='0.0.0.0', 
             port=config.get("customer","port") ,
