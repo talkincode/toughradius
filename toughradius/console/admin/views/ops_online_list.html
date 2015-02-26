@@ -6,8 +6,9 @@
 
 var updater = {
     socket: null,
-    start: function () {
-            var url = "ws://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
+    start: function () { 
+        var _prefix = "${use_ssl and 'wss' or 'ws'}";
+        var url = _prefix+"://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
         updater.socket = new WebSocket(url);
         updater.socket.onmessage = function (event) {
             updater.showMessage(JSON.parse(event.data));
@@ -28,22 +29,27 @@ var updater = {
         var message = {
             process : "admin_unlock_online",
             nas_addr : nas_addr,
-            acct_session_id : session_id
+            acct_session_id : session_id,
+            signature : ev.sign
         };
         data = JSON.stringify(message);
-        updater.socket.send(data);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+        }, "json");
     },
     disconnect_online: function(nas_addr,session_id){
         var message = {
             process : "admin_coa_request",
             nas_addr : nas_addr,
             acct_session_id : session_id,
-            message_type : 'disconnect'
+            message_type : 'disconnect',
+            signature : ev.sign
         };
         data = JSON.stringify(message);
-        updater.socket.send(data);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+        }, "json");
     }
-
 };
 
 $(document).ready(function (){

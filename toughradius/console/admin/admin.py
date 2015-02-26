@@ -41,6 +41,21 @@ def member_id(db):
         models.SlcMember.member_name == name
     ).first()
     return dict(mid=member.member_id)
+    
+@app.route('/mksign',apply=auth_opr)
+def index(db):    
+    sign_args = request.params.get('sign_args')
+    return dict(code=0,sign=utils.mk_sign(sign_args.strip().split(',')))
+    
+@app.post('/encrypt',apply=auth_opr)
+def encrypt_data(db):    
+    msg_data = request.params.get('data')
+    return dict(code=0,data=utils.encrypt(msg_data))
+    
+@app.post('/decrypt',apply=auth_opr)
+def decrypt_data(db):    
+    msg_data = request.params.get('data')
+    return dict(code=0,data=utils.decrypt(msg_data))
 
 ###############################################################################
 # Basic handle         

@@ -8,7 +8,8 @@
 var wsock = {
     socket: null,
     start: function (addr,port) {
-        var url = "ws://"+addr+":"+port;
+        var _prefix = "${use_ssl and 'wss' or 'ws'}";
+        var url = _prefix+"://"+addr+":"+port;
         wsock.socket = new WebSocket(url);
         wsock.socket.onmessage = function (event) {
             message = JSON.parse(event.data);
@@ -20,7 +21,9 @@ var wsock = {
 
         wsock.socket.onopen =function(event){
             data = JSON.stringify({process:"admin_stat_query"});
-            wsock.socket.send(data);
+            $.post("/encrypt", {data:data} , function (ev) {
+                wsock.socket.send(ev.data);
+            }, "json");
         };
     }
 };
@@ -94,10 +97,10 @@ function update_flow()
 
 var chart;
 $(document).ready(function (){
-    Highcharts.setOptions({global: {useUTC: false}}); wsock.start("${sys_param_value('radiusd_address')}","${sys_param_value('radiusd_admin_port')}");
+    Highcharts.setOptions({global: {useUTC: false}});
+    wsock.start("${sys_param_value('radiusd_address')}","${sys_param_value('radiusd_admin_port')}");
     update_online();
     update_flow();
-    
 });
 
 

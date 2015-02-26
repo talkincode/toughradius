@@ -7,7 +7,8 @@
         timer: null,
 
         start: function () {
-            var url = "ws://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
+            var _prefix = "${use_ssl and 'wss' or 'ws'}";
+            var url = _prefix+"://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
             updater.socket = new WebSocket(url);
             updater.socket.onmessage = function (event) {
                 updater.showMessage(JSON.parse(event.data));
@@ -37,8 +38,10 @@
             username: $("#userName").val()
         }
         data = JSON.stringify(message);
-        updater.socket.send(data);
-        updater.timer = setTimeout("doGetLastTrace()", 300);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+            updater.timer = setTimeout("doGetLastTrace()", 300);
+        }, "json");
     }
     
     function doGetUserTrace() {
@@ -46,12 +49,15 @@
         $("#traceAction").removeAttr("disabled");
         $("#stopTraceAction").attr("disabled", "disabled");    
         $("#inbox").empty();
+
         var message = {
             process:"admin_trace_user",
             username: $("#userName").val()
         }
         data = JSON.stringify(message);
-        updater.socket.send(data);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+        }, "json");
     }
 
 

@@ -38,7 +38,7 @@ def error404(error):
 def error500(error):
     return render("error",msg=u"Server Internal error %s"%error.exception)
 
-def init_application(config):
+def init_application(config,use_ssl=False):
     log.msg("start init application...")
     TEMPLATE_PATH.append(os.path.join(os.path.split(__file__)[0],"admin/views/"))
     for _app in [mainapp]+subapps:
@@ -54,10 +54,12 @@ def init_application(config):
     _get_product_name = functools.partial(get_product_name,session)
     
     bottle.debug(_sys_param_value('radiusd_address')=='1')
+    websock.use_ssl = use_ssl
     
     log.msg("init template context...")
     MakoTemplate.defaults.update(**dict(
         sys_version = toughradius.__version__,
+        use_ssl = use_ssl,
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
@@ -104,7 +106,7 @@ def init_application(config):
     for _app in subapps:
         _app.install(sqla_pg)
         mainapp.mount(_app.config['__prefix__'],_app)
-    
+   
 
 ###############################################################################
 # run server                                                                 
@@ -129,7 +131,9 @@ def run(config,is_service=False):
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))
     utils.update_tz(config.get('DEFAULT','tz'))
-    init_application(config)
+    use_ssl,privatekey,certificate = utils.check_ssl(config)
+    
+    init_application(config,use_ssl)
     if not is_service:
         runserver(
             mainapp, host='0.0.0.0', 
@@ -143,6 +147,13 @@ def run(config,is_service=False):
         from twisted.python.threadpool import ThreadPool
         from twisted.internet import reactor
         from twisted.application import service, internet
-        factory = server.Site(wsgi.WSGIResource(reactor, reactor.getThreadPool(), mainapp))
-        return internet.TCPServer(config.getint('admin','port'), factory)
+        website = server.Site(wsgi.WSGIResource(reactor, reactor.getThreadPool(), mainapp))
+        if use_ssl:
+            log.msg('Admin SSL Enable!')
+            from twisted.internet import ssl
+            sslContext = ssl.DefaultOpenSSLContextFactory(privatekey, certificate)
+            return internet.SSLServer(config.getint('admin','port'),website,contextFactory = sslContext)
+        else: 
+            log.msg('Admin SSL Disable!')       
+            return internet.TCPServer(config.getint('admin','port'),website)
 

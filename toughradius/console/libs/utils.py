@@ -4,6 +4,7 @@ import decimal
 import datetime
 from Crypto.Cipher import AES
 from Crypto import Random
+import hashlib
 import binascii
 import hashlib
 import base64
@@ -34,6 +35,7 @@ class AESCipher:
 
     def setup(self, key): 
         self.bs = 32
+        self.ori_key = key
         self.key = hashlib.sha256(key.encode()).digest()
 
     def encrypt(self, raw):
@@ -59,12 +61,28 @@ aescipher = AESCipher()
 encrypt = aescipher.encrypt
 decrypt = aescipher.decrypt 
 
+def mk_sign(args=[]):
+    args.sort()
+    _argstr =  aescipher.ori_key + ''.join(args)
+    return hashlib.md5(_argstr).hexdigest()
+
 def update_tz(tz_val,default_val="CST-8"):
     try:
         os.environ["TZ"] = tz_val or default_val
         time.tzset()
     except:
         pass
+        
+def check_ssl(config):
+    use_ssl = False
+    privatekey = None
+    certificate = None
+    if config.has_option('DEFAULT','ssl') and config.getboolean('DEFAULT','ssl'):
+        privatekey = config.get('DEFAULT','privatekey')
+        certificate = config.get('DEFAULT','certificate')
+        if os.path.exists(privatekey) and os.path.exists(certificate):
+            use_ssl = True
+    return use_ssl,privatekey,certificate
     
 def get_uuid():
     return uuid.uuid1().hex.upper()

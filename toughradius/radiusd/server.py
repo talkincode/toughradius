@@ -245,10 +245,17 @@ class AdminServerProtocol(WebSocketServerProtocol):
         log.msg("WebSocket connection open.")
 
     def onMessage(self, payload, isBinary):
-        req_msg = json.loads(payload)
-        log.msg("websocket admin request: %s"%str(req_msg))
-        plugin = req_msg.get("process")
-        self.midware.process(plugin,req=req_msg,admin=self)
+        req_msg = None
+        try:
+            _msg = utils.decrypt(payload)
+            req_msg = json.loads(_msg)
+        except:
+            log.err('decrypt message error : %s'%payload)
+        
+        if req_msg:
+            log.msg("websocket admin request: %s"%str(req_msg))
+            plugin = req_msg.get("process")
+            self.midware.process(plugin,req=req_msg,admin=self)
 
     def onClose(self, wasClean, code, reason):
         log.msg("WebSocket connection closed: {0}".format(reason))
@@ -304,15 +311,31 @@ def run(config,is_service=False):
 
     _task = task.LoopingCall(auth_protocol.process_delay)
     _task.start(2.7)
+    
+    ############################################################################
+    use_ssl = False
+    privatekey = None
+    certificate = None
+    if config.has_option('DEFAULT','ssl') and config.getboolean('DEFAULT','ssl'):
+        privatekey = config.get('DEFAULT','privatekey')
+        certificate = config.get('DEFAULT','certificate')
+        if os.path.exists(privatekey) and os.path.exists(certificate):
+            use_ssl = True
+    
+    ws_url = "ws://0.0.0.0:%s"%adminport
+    if use_ssl:
+        ws_url = "wss://0.0.0.0:%s"%adminport
 
-    factory = WebSocketServerFactory("ws://0.0.0.0:%s"%adminport, debug = False)
+    factory = WebSocketServerFactory(ws_url, debug = False)
     factory.protocol = AdminServerProtocol
+    factory.setProtocolOptions(allowHixie76=True)
     factory.protocol.user_trace = _trace
     factory.protocol.midware = _middleware
     factory.protocol.runstat = _runstat
     factory.protocol.coa_clients = coa_pool
     factory.protocol.auth_server = auth_protocol
     factory.protocol.acct_server = acct_protocol
+    ############################################################################
 
     
 
@@ -326,5 +349,12 @@ def run(config,is_service=False):
         top_service = service.MultiService()
         internet.UDPServer(authport, auth_protocol).setServiceParent(top_service)
         internet.UDPServer(acctport, acct_protocol).setServiceParent(top_service)
-        internet.TCPServer(adminport, factory).setServiceParent(top_service)
+        if use_ssl:
+            log.msg('WS SSL Enable!')
+            from twisted.internet import ssl
+            sslContext = ssl.DefaultOpenSSLContextFactory(privatekey, certificate)
+            internet.SSLServer(adminport,factory,contextFactory = sslContext).setServiceParent(top_service)
+        else:
+            log.msg('WS SSL Disable!')       
+            internet.TCPServer(adminport, factory).setServiceParent(top_service)
         return top_service

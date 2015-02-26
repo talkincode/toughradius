@@ -37,6 +37,7 @@ page_size = 20
 __cache_timeout__ = 600
 
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
+   
 
 class SecureCookie(object):
     

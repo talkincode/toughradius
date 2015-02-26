@@ -56,6 +56,17 @@ def update_tz(tz_val,default_val="CST-8"):
         time.tzset()
     except:
         pass
+        
+def check_ssl(config):
+    use_ssl = False
+    privatekey = None
+    certificate = None
+    if config.has_option('DEFAULT','ssl') and config.getboolean('DEFAULT','ssl'):
+        privatekey = config.get('DEFAULT','privatekey')
+        certificate = config.get('DEFAULT','certificate')
+        if os.path.exists(privatekey) and os.path.exists(certificate):
+            use_ssl = True
+    return use_ssl,privatekey,certificate
 
 class AESCipher:
 
@@ -64,6 +75,7 @@ class AESCipher:
 
     def setup(self, key): 
         self.bs = 32
+        self.ori_key = key
         self.key = hashlib.sha256(key.encode()).digest()
 
     def encrypt(self, raw):
@@ -77,7 +89,7 @@ class AESCipher:
         iv = enc[:AES.block_size]
         cipher = AES.new(self.key, AES.MODE_CBC, iv)
         return self._unpad(cipher.decrypt(enc[AES.block_size:])).decode('utf-8')
-
+        
     def _pad(self, s):
         return s + (self.bs - len(s) % self.bs) * chr(self.bs - len(s) % self.bs)
 
@@ -88,6 +100,12 @@ class AESCipher:
 aescipher = AESCipher()
 encrypt = aescipher.encrypt
 decrypt = aescipher.decrypt 
+
+
+def mk_sign(args):
+    args.sort()
+    _argstr = aescipher.ori_key + ''.join(args)
+    return hashlib.md5(_argstr).hexdigest()
 
 class Storage(dict):
     def __getattr__(self, key): 

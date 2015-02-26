@@ -21,7 +21,8 @@ install_requires = [
     'tablib>=0.10.0',
     'zope.interface>=4.1.1',
     'pycrypto==2.6.1',
-    'sh==1.11'
+    'sh==1.11',
+    'service_identity'
 ]
 install_requires_empty = []
 

@@ -27,7 +27,7 @@ import functools
 import time
 
 
-def init_application(config):
+def init_application(config,use_ssl=False):
     log.msg("start init application...")
     TEMPLATE_PATH.append(os.path.join(os.path.split(__file__)[0],"customer/views/"))
     ''' install plugins'''
@@ -38,7 +38,9 @@ def init_application(config):
     _get_member_by_name = functools.partial(get_member_by_name,session)
     _get_account_by_number = functools.partial(get_account_by_number,session)
     _get_online_status = functools.partial(get_online_status,session)
+    websock.use_ssl = use_ssl
     MakoTemplate.defaults.update(**dict(
+        use_ssl = use_ssl,
         get_cookie = get_cookie,
         fen2yuan = utils.fen2yuan,
         fmt_second = utils.fmt_second,
@@ -74,14 +76,16 @@ def init_application(config):
 # run server                                                                 
 ###############################################################################
 
-def run(config,is_service):
+def run(config,is_service=False):
     logfile = config.get('customer','logfile')
     log.startLogging(DailyLogFile.fromFullPath(logfile))
     # update aescipher,timezone
     utils.aescipher.setup(config.get('DEFAULT','secret'))
     base.scookie.setup(config.get('DEFAULT','secret'))
     utils.update_tz(config.get('DEFAULT','tz'))
-    init_application(config)
+    use_ssl,privatekey,certificate = utils.check_ssl(config)
+    
+    init_application(config,use_ssl)
     if not is_service:
         runserver(
             mainapp, host='0.0.0.0', 
@@ -95,5 +99,14 @@ def run(config,is_service):
         from twisted.python.threadpool import ThreadPool
         from twisted.internet import reactor
         from twisted.application import service, internet
-        factory = server.Site(wsgi.WSGIResource(reactor, reactor.getThreadPool(), mainapp))
-        return internet.TCPServer(config.getint('customer','port'), factory)
+        
+        website = server.Site(wsgi.WSGIResource(reactor, reactor.getThreadPool(), mainapp))
+        if use_ssl:
+            log.msg('Customer SSL Enable!')
+            from twisted.internet import ssl
+            sslContext = ssl.DefaultOpenSSLContextFactory(privatekey, certificate)
+            return internet.SSLServer(config.getint('customer','port'),website,contextFactory = sslContext)
+        else:
+            log.msg('Customer SSL Disable!')       
+            return internet.TCPServer(config.getint('customer','port'),website)
+            
