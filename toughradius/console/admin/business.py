@@ -534,7 +534,7 @@ def member_import(db):
                 account_number = attr_array[1],
                 password = attr_array[2],
                 expire_date = attr_array[3],
-                balance = attr_array[4]),
+                balance = attr_array[4],
                 time_length = utils.hour2sec(attr_array[5]),
                 flow_length = utils.mb2kb(attr_array[6]))):
             return render("bus_import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
