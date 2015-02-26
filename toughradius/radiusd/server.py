@@ -311,17 +311,8 @@ def run(config,is_service=False):
 
     _task = task.LoopingCall(auth_protocol.process_delay)
     _task.start(2.7)
-    
-    ############################################################################
-    use_ssl = False
-    privatekey = None
-    certificate = None
-    if config.has_option('DEFAULT','ssl') and config.getboolean('DEFAULT','ssl'):
-        privatekey = config.get('DEFAULT','privatekey')
-        certificate = config.get('DEFAULT','certificate')
-        if os.path.exists(privatekey) and os.path.exists(certificate):
-            use_ssl = True
-    
+
+    use_ssl,privatekey,certificate = utils.check_ssl(config)
     ws_url = "ws://0.0.0.0:%s"%adminport
     if use_ssl:
         ws_url = "wss://0.0.0.0:%s"%adminport
@@ -335,9 +326,6 @@ def run(config,is_service=False):
     factory.protocol.coa_clients = coa_pool
     factory.protocol.auth_server = auth_protocol
     factory.protocol.acct_server = acct_protocol
-    ############################################################################
-
-    
 
     if not is_service:  
         reactor.listenUDP(authport, auth_protocol)
