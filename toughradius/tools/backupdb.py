@@ -20,7 +20,7 @@ def backup(config):
     now = datetime.now()
     backfile = '%s/%s-backup-%s.gz'%(bakdir,dbname,now.strftime( "%Y%m%d"))
     
-    sh.gzip(sh.mysqldump(u='root',B=dbname,S="/var/toughradius/mysql/mysql.sock"),'-cf',_out=backfile)
+    sh.gzip(sh.mysqldump(u='root',B=dbname,'-cf',_out=backfile)
 
     if ftphost and '127.0.0.1' not in ftphost:
         ftp=FTP() 

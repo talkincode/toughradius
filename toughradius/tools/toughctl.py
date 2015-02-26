@@ -111,18 +111,7 @@ def run_echo_my_cnf():
 def run_echo_radiusd_cnf():
     from toughradius.tools.config import echo_radiusd_cnf
     print echo_radiusd_cnf()
-    
-def run_echo_supervisord_cnf():
-    from toughradius.tools.config import echo_supervisord_cnf
-    print echo_supervisord_cnf()
-    
-def run_echo_centos6_service():
-    from toughradius.tools.config import echo_centos6_service
-    print echo_centos6_service()
-    
-def run_echo_centos7_service():
-    from toughradius.tools.config import echo_centos7_service
-    print echo_centos7_service()
+
     
 def run():
     parser = argparse.ArgumentParser()
@@ -137,9 +126,6 @@ def run():
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_my_cnf','--echo_my_cnf', action='store_true',default=False,dest='echo_my_cnf',help='echo my_cnf')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
-    parser.add_argument('-echo_supervisord_cnf','--echo_supervisord_cnf', action='store_true',default=False,dest='echo_supervisord_cnf',help='echo supervisord_cnf')
-    parser.add_argument('-echo_centos6_service','--echo_centos6_service', action='store_true',default=False,dest='echo_centos6_service',help='echo centos6_service')
-    parser.add_argument('-echo_centos7_service','--echo_centos7_service', action='store_true',default=False,dest='echo_centos7_service',help='echo centos7_service')
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
     parser.add_argument('-backup','--backup', action='store_true',default=False,dest='backup',help='backup database')
     parser.add_argument('-dbdict','--dbdict', action='store_true',default=False,dest='dbdict',help='dbdict gen')
@@ -155,15 +141,6 @@ def run():
     if args.echo_radiusd_cnf:
         return run_echo_radiusd_cnf()
         
-    if args.echo_supervisord_cnf:
-        return run_echo_supervisord_cnf()
-    
-    if args.echo_centos7_service:
-        return run_echo_centos7_service()
-        
-    if args.echo_centos6_service:
-        return run_echo_centos6_service()
-    
     if args.stop:
         if not args.stop in ('all','radiusd','admin','customer'):
             print 'usage %s --stop [all|radiusd|admin|customer]'%sys.argv[0]
