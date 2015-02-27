@@ -24,7 +24,7 @@ def get_db_connstr(config,tmpdb=None):
             conf_str("charset"))
 
 def get_engine(dbconf=None,echo=False,tmpdb=None):
-    engine = create_engine(get_db_connstr(dbconf,tmpdb=tmpdb),echo=echo)
+    engine = create_engine(get_db_connstr(dbconf,tmpdb=tmpdb),echo=echo,pool_recycle=300)
     metadata = DeclarativeBase.metadata
     metadata.bind = engine
     return engine,metadata
