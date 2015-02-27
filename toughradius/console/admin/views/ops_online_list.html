@@ -29,8 +29,7 @@ var updater = {
         var message = {
             process : "admin_unlock_online",
             nas_addr : nas_addr,
-            acct_session_id : session_id,
-            signature : ev.sign
+            acct_session_id : session_id
         };
         data = JSON.stringify(message);
         $.post("/encrypt", {data:data} , function (ev) {
@@ -42,8 +41,7 @@ var updater = {
             process : "admin_coa_request",
             nas_addr : nas_addr,
             acct_session_id : session_id,
-            message_type : 'disconnect',
-            signature : ev.sign
+            message_type : 'disconnect'
         };
         data = JSON.stringify(message);
         $.post("/encrypt", {data:data} , function (ev) {

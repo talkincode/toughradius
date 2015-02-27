@@ -28,6 +28,12 @@ def process(req=None,resp=None,user=None,**kwargs):
 
     elif acct_policy  == BOTimes:
         session_timeout = user.get("time_length",0)
+        
+    elif acct_policy  == PPTimes:
+        user_balance = store.get_user_balance(user['account_number'])
+        fee_price = decimal.Decimal(product['fee_price']) 
+        _sstime = user_balance/fee_price*decimal.Decimal(3600)
+        session_timeout = int(_sstime.to_integral_value())
 
     if "Framed-Pool" in resp:
         if store.get_param("expire_addrpool") in resp['Framed-Pool']:
