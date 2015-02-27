@@ -132,7 +132,7 @@ def get_data(db,member_name):
     ).filter(
         models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
         models.SlcMemberOrder.member_id==member.member_id
-    )
+    ).order_by(models.SlcMemberOrder.create_time.desc())
     return member,accounts,orders
         
 @app.get('/',apply=auth_cus)

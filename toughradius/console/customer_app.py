@@ -21,7 +21,8 @@ from toughradius.console.base import (
     get_param_value,
     get_member_by_name,
     get_account_by_number,
-    get_online_status
+    get_online_status,
+    Connect
 )
 import functools
 import time
@@ -33,11 +34,33 @@ def init_application(config,use_ssl=False):
     ''' install plugins'''
     engine,metadata = models.get_engine(config)
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
-    session = sqla_pg.new_session()
-    _sys_param_value = functools.partial(get_param_value,session)
-    _get_member_by_name = functools.partial(get_member_by_name,session)
-    _get_account_by_number = functools.partial(get_account_by_number,session)
-    _get_online_status = functools.partial(get_online_status,session)
+    
+    def __sys_param_value(mkdb,pname):
+        with Connect(mkdb) as db:
+            return get_param_value(db,pname)
+            
+    def __get_product_name(mkdb,pid):
+        with Connect(mkdb) as db:
+            return get_product_name(db,pid)
+            
+    def __get_member_by_name(mkdb,mname):
+        with Connect(mkdb) as db:
+            return get_member_by_name(db,mname)
+    
+    def __get_account_by_number(mkdb,account):
+        with Connect(mkdb) as db:
+            return get_account_by_number(db,account)
+            
+    def __get_online_status(mkdb,account):
+        with Connect(mkdb) as db:
+            return get_online_status(db,account)
+            
+    _sys_param_value = functools.partial(__sys_param_value,sqla_pg.new_session)
+    _get_product_name = functools.partial(__get_product_name,sqla_pg.new_session)
+    _get_member_by_name = functools.partial(__get_member_by_name,sqla_pg.new_session)
+    _get_account_by_number = functools.partial(__get_account_by_number,sqla_pg.new_session)
+    _get_online_status = functools.partial(__get_online_status,sqla_pg.new_session)
+    
     websock.use_ssl = use_ssl
     MakoTemplate.defaults.update(**dict(
         use_ssl = use_ssl,

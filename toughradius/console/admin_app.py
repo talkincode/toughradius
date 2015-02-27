@@ -49,9 +49,17 @@ def init_application(config,use_ssl=False):
     log.msg("init plugins..")
     engine,metadata = models.get_engine(config)
     sqla_pg = sqla_plugin.Plugin(engine,metadata,keyword='db',create=False,commit=False,use_kwargs=False)
-    session = sqla_pg.new_session()
-    _sys_param_value = functools.partial(get_param_value,session)
-    _get_product_name = functools.partial(get_product_name,session)
+    
+    def __sys_param_value(mkdb,pname):
+        with Connect(mkdb) as db:
+            return get_param_value(db,pname)
+            
+    def __get_product_name(mkdb,pid):
+        with Connect(mkdb) as db:
+            return get_product_name(db,pid)
+            
+    _sys_param_value = functools.partial(__sys_param_value,sqla_pg.new_session)
+    _get_product_name = functools.partial(__get_product_name,sqla_pg.new_session)
     
     bottle.debug(_sys_param_value('radiusd_address')=='1')
     websock.use_ssl = use_ssl
@@ -89,8 +97,9 @@ def init_application(config,use_ssl=False):
     reactor.callLater(4, tasks.start_expire_notify_job, sqla_pg.new_session)
    
     log.msg("init operator rules...")
-    for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
-        permit.bind_super(_super[0])
+    with Connect(sqla_pg.new_session) as session:
+        for _super in session.query(models.SlcOperator.operator_name).filter_by(operator_type=0):
+            permit.bind_super(_super[0])
         
     log.msg("init sendmail..")
     mail.setup(

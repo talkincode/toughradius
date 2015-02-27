@@ -38,6 +38,15 @@ __cache_timeout__ = 600
 
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
    
+class Connect:
+    def __init__(self, mkdb):
+        self.conn = mkdb()
+
+    def __enter__(self):
+        return self.conn   
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.conn.close()
 
 class SecureCookie(object):
     

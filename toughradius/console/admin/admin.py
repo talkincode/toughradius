@@ -79,6 +79,7 @@ def route_static(path):
 def clear_cache():
     def cbk(resp):
         print 'cbk',resp
+    bottle.TEMPLATES.clear()
     for _cache in cache_managers.values():
         _cache.clear()
     websock.update_cache("all",callback=cbk)
@@ -173,7 +174,6 @@ def param_update(db):
     db.add(ops_log)
     db.commit()
     
-
     websock.reconnect(
         request.forms.get('radiusd_address'),
         request.forms.get('radiusd_admin_port'),
