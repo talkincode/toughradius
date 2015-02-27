@@ -84,11 +84,12 @@ def run(config,is_service=False):
     base.scookie.setup(config.get('DEFAULT','secret'))
     utils.update_tz(config.get('DEFAULT','tz'))
     use_ssl,privatekey,certificate = utils.check_ssl(config)
-    
+    customer_host = config.has_option('customer','host') and config.get('customer','host') or  '0.0.0.0'
+    log.msg('server listen %s'%customer_host)
     init_application(config,use_ssl)
     if not is_service:
         runserver(
-            mainapp, host='0.0.0.0', 
+            mainapp, host=customer_host, 
             port=config.get("customer","port") ,
             debug=config.getboolean('DEFAULT','debug')  ,
             reloader=False,
@@ -105,8 +106,13 @@ def run(config,is_service=False):
             log.msg('Customer SSL Enable!')
             from twisted.internet import ssl
             sslContext = ssl.DefaultOpenSSLContextFactory(privatekey, certificate)
-            return internet.SSLServer(config.getint('customer','port'),website,contextFactory = sslContext)
+            return internet.SSLServer(
+                config.getint('customer','port'),
+                website,
+                contextFactory = sslContext,
+                interface = customer_host
+            )
         else:
             log.msg('Customer SSL Disable!')       
-            return internet.TCPServer(config.getint('customer','port'),website)
+            return internet.TCPServer(config.getint('customer','port'),website,interface = customer_host)
             

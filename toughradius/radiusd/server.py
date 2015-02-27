@@ -311,11 +311,14 @@ def run(config,is_service=False):
 
     _task = task.LoopingCall(auth_protocol.process_delay)
     _task.start(2.7)
+    
+    radiusd_host = config.has_option('radiusd','host') and config.get('radiusd','host') or  '0.0.0.0'
+    log.msg('server listen %s'%radiusd_host)
 
     use_ssl,privatekey,certificate = utils.check_ssl(config)
-    ws_url = "ws://0.0.0.0:%s"%adminport
+    ws_url = "ws://%s:%s"%(radiusd_host,adminport)
     if use_ssl:
-        ws_url = "wss://0.0.0.0:%s"%adminport
+        ws_url = "wss://%s:%s"%(radiusd_host,adminport)
 
     factory = WebSocketServerFactory(ws_url, debug = False)
     factory.protocol = AdminServerProtocol
@@ -328,21 +331,30 @@ def run(config,is_service=False):
     factory.protocol.acct_server = acct_protocol
 
     if not is_service:  
-        reactor.listenUDP(authport, auth_protocol)
-        reactor.listenUDP(acctport, acct_protocol)
-        reactor.listenTCP(adminport, factory)
+        reactor.listenUDP(authport, auth_protocol,interface=radiusd_host)
+        reactor.listenUDP(acctport, acct_protocol,interface=radiusd_host)
+        reactor.listenTCP(adminport, factory,interface=radiusd_host)
         reactor.run()
     else:
         from twisted.application import service, internet
         top_service = service.MultiService()
-        internet.UDPServer(authport, auth_protocol).setServiceParent(top_service)
-        internet.UDPServer(acctport, acct_protocol).setServiceParent(top_service)
+        internet.UDPServer(authport, auth_protocol,interface=radiusd_host).setServiceParent(top_service)
+        internet.UDPServer(acctport, acct_protocol,interface=radiusd_host).setServiceParent(top_service)
         if use_ssl:
             log.msg('WS SSL Enable!')
             from twisted.internet import ssl
             sslContext = ssl.DefaultOpenSSLContextFactory(privatekey, certificate)
-            internet.SSLServer(adminport,factory,contextFactory = sslContext).setServiceParent(top_service)
+            internet.SSLServer(
+                adminport,
+                factory,
+                contextFactory = sslContext,
+                interface=radiusd_host
+            ).setServiceParent(top_service)
         else:
             log.msg('WS SSL Disable!')       
-            internet.TCPServer(adminport, factory).setServiceParent(top_service)
+            internet.TCPServer(
+                adminport,
+                factory,
+                interface=radiusd_host
+            ).setServiceParent(top_service)
         return top_service
