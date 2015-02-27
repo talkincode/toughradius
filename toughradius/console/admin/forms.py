@@ -282,8 +282,8 @@ account_next_form = pyforms.Form(
         pyforms.Hidden("product_id", description=u"资费"),
         pyforms.Hidden("old_expire", description=u""),
         pyforms.Hidden("account_number", description=u"用户账号"),
-        pyforms.Textbox("months",rules.is_number2, description=u"月数(包月有效)", required="required", **input_style),
-        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
+        pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)",value=0, required="required", **input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",value=0,  required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户续费",
@@ -292,7 +292,7 @@ account_next_form = pyforms.Form(
 
 account_charge_form = pyforms.Form(
         pyforms.Hidden("account_number", description=u"用户账号",  required="required", **input_style),
-        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
+        pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额", value=0, required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户充值",
         action="/bus/account/charge"

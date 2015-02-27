@@ -154,7 +154,7 @@ def member_detail(db):
     ).filter(
         models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
         models.SlcMemberOrder.member_id==member_id
-    )
+    ).order_by(models.SlcMemberOrder.create_time.desc())
     return  render("bus_member_detail",member=member,accounts=accounts,orders=orders)
 
 permit.add_route("/bus/member/detail",u"用户详情查看",u"营业管理",order=0.02)
@@ -779,8 +779,15 @@ def account_next(db):
 
     order_fee = 0
     product = db.query(models.SlcRadProduct).get(user.product_id)
-    order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
-    order_fee = int(order_fee.to_integral_value())
+    
+    # 预付费包月
+    if product.product_policy == PPMonth:
+        order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
+        order_fee = int(order_fee.to_integral_value())
+    # 买断包月,买断流量,买断时长
+    elif product.product_policy in (BOMonth,BOTimes,BOFlows):
+        order_fee = int(product.fee_price)
+
 
     order = models.SlcMemberOrder()
     order.order_id = utils.gen_order_id()
@@ -798,6 +805,10 @@ def account_next(db):
 
     account.status = 1
     account.expire_date = form.d.expire_date
+    if product.product_policy == BOTimes:
+        account.time_length += product.fee_times
+    elif product.product_policy == BOFlows:
+        account.flow_length += product.fee_flows
 
     db.commit()
     websock.update_cache("account",account_number=account_number)
@@ -877,7 +888,7 @@ def account_cancel(db):
 
 
 @app.post('/account/cancel',apply=auth_opr)
-def account_next(db):
+def account_cancel(db):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db,account_number)

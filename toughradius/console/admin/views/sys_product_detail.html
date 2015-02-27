@@ -53,16 +53,16 @@
                         <td>${product.input_max_limit/1024} kbps</td>
                         <td>最大下行速率</td>
                         <td>${product.output_max_limit/1024} kbps</td>
-                        <td></td>
-                        <td></td>                     
+                        <td>授权时长</td>
+                        <td>${sec2hour(product.fee_times)} 小时</td>                     
                     </tr>   
                     <tr>
                         <td>创建时间</td>
                         <td>${product.create_time}</td>  
                         <td>更新时间</td>
                         <td>${product.update_time}</td>          
-                        <td></td>
-                        <td></td>                                      
+                        <td>授权流量</td>
+                        <td>${kb2mb(product.fee_flows)} MB</td>                                      
                     </tr>                                                                                          
             </tbody>
         </table>
