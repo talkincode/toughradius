@@ -394,8 +394,8 @@ class Store():
     def unlock_online(self,nas_addr,acct_session_id,stop_source):
         bsql = ''' insert into slc_rad_ticket (
         account_number,acct_session_id,acct_start_time,nas_addr,framed_ipaddr,start_source,
-        acct_session_time,acct_stop_time,stop_source,fee_receivables) values(
-         %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        acct_session_time,acct_stop_time,stop_source) values(
+         %s, %s, %s, %s, %s, %s, %s, %s, %s)
         ''' 
         def _ticket(online):
             ticket = []
