@@ -22,7 +22,8 @@ install_requires = [
     'zope.interface>=4.1.1',
     'pycrypto==2.6.1',
     'sh==1.11',
-    'service_identity'
+    'pyOpenSSL==0.14',
+    'service_identity',
 ]
 install_requires_empty = []
 
