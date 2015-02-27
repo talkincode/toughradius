@@ -93,8 +93,8 @@ def bb2mb(ik):
     return str(_mb.quantize(decimal.Decimal('1.00')))
     
 def bbgb2mb(bb,gb):
-    bl = decimal.Decimal(bb)/decimal.Decimal(1024*1024)
-    gl = decimal.Decimal(gb)*decimal.Decimal(4*1024*1024*1024)
+    bl = decimal.Decimal(bb or 0)/decimal.Decimal(1024*1024)
+    gl = decimal.Decimal(gb or 0)*decimal.Decimal(4*1024*1024*1024)
     tl = bl + gl
     return str(tl.quantize(decimal.Decimal('1.00')))
     
