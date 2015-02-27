@@ -417,9 +417,9 @@ def opr_add(db):
 def opr_add_post(db): 
     form=forms.opr_add_form()
     if not form.validates(source=request.forms):
-        return render("sys_opr_form", form=form)
+        return render("sys_opr_form", form=form,rules=[])
     if db.query(models.SlcOperator.id).filter_by(operator_name=form.d.operator_name).count()>0:
-        return render("sys_opr_form", form=form,msg=u"操作员已经存在")   
+        return render("sys_opr_form", form=form,rules=[],msg=u"操作员已经存在")   
         
     opr = models.SlcOperator()
     opr.operator_name = form.d.operator_name
@@ -466,7 +466,9 @@ def opr_update(db):
 def opr_add_update(db): 
     form=forms.opr_update_form()
     if not form.validates(source=request.forms):
-        return render("sys_opr_form", form=form)
+        rules = db.query(models.SlcOperatorRule.rule_path).filter_by(operator_name=opr.operator_name)
+        rules = [r[0] for r in rules]
+        return render("sys_opr_form", form=form,rules=rules)
     opr = db.query(models.SlcOperator).get(form.d.id)
     
     if form.d.operator_pass:
