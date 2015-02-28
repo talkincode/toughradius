@@ -72,8 +72,8 @@ def product_add_post(db):
     product.concur_number = form.d.concur_number
     product.fee_period = form.d.fee_period
     product.fee_price = utils.yuan2fen(form.d.fee_price)
-    product.input_max_limit = form.d.input_max_limit
-    product.output_max_limit = form.d.output_max_limit
+    product.input_max_limit = int(form.d.input_max_limit) * 8 * 1024
+    product.output_max_limit = int(form.d.output_max_limit) * 8 * 1024
     _datetime = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
     product.create_time = _datetime
     product.update_time = _datetime
@@ -117,8 +117,8 @@ def product_update(db):
     product.concur_number = form.d.concur_number
     product.fee_period = form.d.fee_period
     product.fee_price = utils.yuan2fen(form.d.fee_price)
-    product.input_max_limit = form.d.input_max_limit
-    product.output_max_limit = form.d.output_max_limit
+    product.input_max_limit = int(form.d.input_max_limit) * 8 * 1024
+    product.output_max_limit = int(form.d.output_max_limit) * 8 * 1024
     product.update_time = utils.get_currtime()
 
     ops_log = models.SlcRadOperateLog()

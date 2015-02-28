@@ -58,7 +58,7 @@ def start_server(config,app):
     for _app in apps:
         shell.info('start %s'%_app)
         _run_daemon(config,_app)
-        time.sleep(0.5)
+        time.sleep(0.1)
     
     
 def stop_server(app):
@@ -66,17 +66,17 @@ def stop_server(app):
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
-        time.sleep(0.5)
+        time.sleep(0.1)
         
 def restart_server(config,app):
     apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
-        time.sleep(0.5)
+        time.sleep(0.1)
         shell.info('start %s'%_app)
         _run_daemon(config,_app)
-        time.sleep(0.5)
+        time.sleep(0.1)
     
 
 def run_secret_update(config,cfgfile):
