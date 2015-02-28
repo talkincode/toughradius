@@ -129,6 +129,7 @@ def run():
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
     parser.add_argument('-backup','--backup', action='store_true',default=False,dest='backup',help='backup database')
     parser.add_argument('-dbdict','--dbdict', action='store_true',default=False,dest='dbdict',help='dbdict gen')
+    parser.add_argument('-debug','--debug', action='store_true',default=False,dest='debug',help='debug option')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
     args =  parser.parse_args(sys.argv[1:])  
     
@@ -148,6 +149,9 @@ def run():
         return stop_server(args.stop)
     
     config = iconfig.find_config(args.conf)
+    
+    if args.debug:
+        config.set('DEFAULT','debug','true')
     
     if args.start:
         if not args.start in ('all','radiusd','admin','customer'):
