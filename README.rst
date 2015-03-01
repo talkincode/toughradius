@@ -57,16 +57,14 @@ Linux环境安装
     [INFO] - set config...
     [INPUT] - set your config file path,[ /etc/radiusd.conf ]
     [INFO] - set default option
-    [INPUT] - set debug [0/1] [0]:
+    [INPUT] - set debug [false]:
     [INPUT] - time zone [ CST-8 ]:
     [INFO] - set database option
     [INPUT] - database type [mysql]:
-    [INPUT] - database host [127.0.0.1]:
-    [INPUT] - database port [3306]:
-    [INPUT] - database dbname [toughradius]:
-    [INPUT] - database user [root]:
-    [INPUT] - database passwd []:
-    [INPUT] - db pool maxusage [30]:
+    [INPUT] - database dburl [sqlite:////tmp/toughradius.sqlite3]:
+    [INPUT] - database echo [false]:
+    [INPUT] - database pool_size [30]:
+    [INPUT] - database pool_recycle(second) [300]:
     [INFO] - set radiusd option
     [INPUT] - radiusd authport [1812]:
     [INPUT] - radiusd acctport [1813]:
@@ -90,14 +88,13 @@ Linux环境安装
 初始化数据库
 ----------------------------------------
 
+注意此操作会重建所有数据库表，请注意备份重要数据。
+
 ::
-    
-    #还未创建数据库，使用参数 initdb 1 或 initdb 2
-    $ toughctl --initdb 1
-     
-    #已创建数据库，使用参数 initdb 3
-    $ toughctl --initdb 3
-    
+
+    $ toughctl --initdb 
+
+
 运行服务
 ----------------------------------------
 
@@ -112,13 +109,18 @@ Linux环境安装
     #radius用户自助服务
     $ toughctl --customer
     
+    #通过一个进程运行所有服务
+    $ toughctl --standalone
+    
 
 以守护服务模式运行
 ----------------------------------------
 
+当启动standalone模式时，只会启动一个进程
+
 ::
 
-    # 参数选择 [all|radiusd|admin|customer]
+    # 参数选择 [all|radiusd|admin|customer|standalone]
     
     $ toughctl --start all 
      
