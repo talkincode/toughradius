@@ -50,8 +50,8 @@
                 <td>${product.concur_number}</td>
                 <td>${product.bind_mac and u'是' or u'否'}</td>
                 <td>${product.bind_vlan and u'是' or u'否'}</td>
-                <td>${product.input_max_limit/1024} kbps</td>
-                <td>${product.output_max_limit/1024} kbps</td>
+                <td>${bps2mbps(product.input_max_limit)} Mbps</td>
+                <td>${bps2mbps(product.output_max_limit)} Mbps</td>
                 <td>${product.product_status and u'停用' or u'正常'}</td>
                 <td>
                     % if permit.match('/product/update'):

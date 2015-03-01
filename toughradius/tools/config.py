@@ -288,23 +288,51 @@ WantedBy=multi-user.target
 
 def echo_app_tac(app):
     if app == 'radiusd':
-        return '''from twisted.application import service, internet
+        return '''from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
+from twisted.application import service, internet
 from toughradius.tools import config
+from toughradius.tools.dbengine import DBEngine
 from toughradius.radiusd import server
 application = service.Application("ToughRADIUS Radiusd Application")
-service = server.run(config.find_config(),True)
+config = config.find_config()
+service = server.run(config,DBEngine(config).get_engine(),True)
 service.setServiceParent(application)'''
     elif app == 'admin':
-        return '''from twisted.application import service, internet
+        return '''from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
+from twisted.application import service, internet
 from toughradius.tools import config
+from toughradius.tools.dbengine import DBEngine
 from toughradius.console import admin_app
 application = service.Application("ToughRADIUS Admin Application")
-service = admin_app.run(config.find_config(),True)
+config = config.find_config()
+service = admin_app.run(config,DBEngine(config).get_engine(),True)
 service.setServiceParent(application)'''
     elif app == 'customer':
-        return '''from twisted.application import service, internet
+        return '''from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
+from twisted.application import service, internet
 from toughradius.tools import config
+from toughradius.tools.dbengine import DBEngine
 from toughradius.console import customer_app
 application = service.Application("ToughRADIUS Customer Application")
-service = customer_app.run(config.find_config(),True)
+config = config.find_config()
+service = customer_app.run(config,DBEngine(config).get_engine(),True)
+service.setServiceParent(application)'''
+    elif app == 'standalone':
+        return '''from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
+from twisted.application import service, internet
+from toughradius.tools import config
+from toughradius.tools.dbengine import get_engine
+from toughradius.console import admin_app
+from toughradius.console import customer_app
+from toughradius.radiusd import server
+application = service.Application("ToughRADIUS Standalone Application")
+config = config.find_config()
+db_engine = get_engine(config)
+service = server.run(config,db_engine,True)
+admin_app.run(config,db_engine,True).setServiceParent(service)
+customer_app.run(config,db_engine,True).setServiceParent(service)
 service.setServiceParent(application)'''

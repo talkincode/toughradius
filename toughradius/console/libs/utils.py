@@ -87,6 +87,16 @@ def check_ssl(config):
 def get_uuid():
     return uuid.uuid1().hex.upper()
     
+def bps2mbps(bps):
+    _bps = decimal.Decimal(bps or 0)
+    _mbps = _bps / decimal.Decimal(1024*1024)
+    return str(_mbps.quantize(decimal.Decimal('1.00')))
+    
+def mbps2bps(mbps):
+    _mbps = decimal.Decimal(mbps or 0)
+    _kbps = _mbps * decimal.Decimal(1024*1024)
+    return int(_kbps.to_integral_value())
+    
 def bb2mb(ik):
     _kb = decimal.Decimal(ik or 0)
     _mb = _kb / decimal.Decimal(1024*1024)

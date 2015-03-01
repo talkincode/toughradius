@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 import datetime
 
@@ -50,7 +49,8 @@ rate_funcs = {
     '14988' : ros_rate
 }
 
-def process(req=None,resp=None,user=None,**kwargs):
+def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
+    store = radiusd.store
     product = store.get_product(user['product_id']) 
     if not product:return resp
     input_limit = product['input_max_limit']

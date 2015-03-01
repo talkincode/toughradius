@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #coding:utf-8
-
+import sqlalchemy
+import warnings
+warnings.simplefilter('ignore', sqlalchemy.exc.SAWarning)
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
@@ -11,23 +13,12 @@ import functools
 
 DeclarativeBase = declarative_base()
 
-def get_db_connstr(config,tmpdb=None):
-    conf_str = functools.partial(config.get,"database")
-    conf_int = functools.partial(config.getint,"database")
-    if conf_str("dbtype") == 'mysql':
-        return 'mysql://%s:%s@%s:%s/%s?charset=%s'%(
-            conf_str("user"),
-            conf_str("passwd"),
-            conf_str("host"),
-            conf_int("port"),
-            tmpdb or conf_str("db"),
-            conf_str("charset"))
 
-def get_engine(dbconf=None,echo=False,tmpdb=None):
-    engine = create_engine(get_db_connstr(dbconf,tmpdb=tmpdb),echo=echo,pool_recycle=300)
+def get_metadata(db_engine):
+    global DeclarativeBase
     metadata = DeclarativeBase.metadata
-    metadata.bind = engine
-    return engine,metadata
+    metadata.bind = db_engine
+    return metadata
 
 class SlcNode(DeclarativeBase):
     """区域表"""
@@ -37,8 +28,8 @@ class SlcNode(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"区域编号")
-    node_name = Column(u'node_name', VARCHAR(length=32), nullable=False,doc=u"区域名")
-    node_desc = Column(u'node_desc', VARCHAR(length=64), nullable=False,doc=u"区域描述")
+    node_name = Column(u'node_name', Unicode(length=32), nullable=False,doc=u"区域名")
+    node_desc = Column(u'node_desc', Unicode(length=64), nullable=False,doc=u"区域描述")
 
     #relation definitions
 
@@ -51,10 +42,10 @@ class SlcOperator(DeclarativeBase):
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"操作员id")
     operator_type = Column('operator_type', INTEGER(), nullable=False,doc=u"操作员类型")
-    operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
-    operator_pass = Column(u'operator_pass', VARCHAR(length=128), nullable=False,doc=u"操作员密码")
+    operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员名称")
+    operator_pass = Column(u'operator_pass', Unicode(length=128), nullable=False,doc=u"操作员密码")
     operator_status = Column(u'operator_status', INTEGER(), nullable=False,doc=u"操作员状态,0/1")
-    operator_desc = Column(u'operator_desc', VARCHAR(255), nullable=False,doc=u"操作员描述")
+    operator_desc = Column(u'operator_desc', Unicode(255), nullable=False,doc=u"操作员描述")
 
 class SlcOperatorRule(DeclarativeBase):
     """操作员权限表"""
@@ -62,10 +53,10 @@ class SlcOperatorRule(DeclarativeBase):
 
     __table_args__ = {}
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"权限id")
-    operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
-    rule_path = Column(u'rule_path', VARCHAR(128), nullable=False,doc=u"权限URL")
-    rule_name = Column(u'rule_name', VARCHAR(128), nullable=False,doc=u"权限名称")
-    rule_category = Column(u'rule_category', VARCHAR(128), nullable=False,doc=u"权限分类")
+    operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员名称")
+    rule_path = Column(u'rule_path', Unicode(128), nullable=False,doc=u"权限URL")
+    rule_name = Column(u'rule_name', Unicode(128), nullable=False,doc=u"权限名称")
+    rule_category = Column(u'rule_category', Unicode(128), nullable=False,doc=u"权限分类")
 
 
 class SlcParam(DeclarativeBase):
@@ -75,9 +66,9 @@ class SlcParam(DeclarativeBase):
     __table_args__ = {}
 
     #column definitions
-    param_name = Column(u'param_name', VARCHAR(length=64), primary_key=True, nullable=False,doc=u"参数名")
-    param_value = Column(u'param_value', VARCHAR(length=255), nullable=False,doc=u"参数值")
-    param_desc = Column(u'param_desc', VARCHAR(length=255),doc=u"参数描述")
+    param_name = Column(u'param_name', Unicode(length=64), primary_key=True, nullable=False,doc=u"参数名")
+    param_value = Column(u'param_value', Unicode(length=255), nullable=False,doc=u"参数值")
+    param_desc = Column(u'param_desc', Unicode(length=255),doc=u"参数描述")
 
     #relation definitions
 
@@ -89,10 +80,10 @@ class SlcRadBas(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"设备id")
-    vendor_id = Column(u'vendor_id', VARCHAR(length=32), nullable=False,doc=u"厂商标识")
-    ip_addr = Column(u'ip_addr', VARCHAR(length=15), nullable=False,doc=u"IP地址")
-    bas_name = Column(u'bas_name', VARCHAR(length=64), nullable=False,doc=u"bas名称")
-    bas_secret = Column(u'bas_secret', VARCHAR(length=64), nullable=False,doc=u"共享密钥")
+    vendor_id = Column(u'vendor_id', Unicode(length=32), nullable=False,doc=u"厂商标识")
+    ip_addr = Column(u'ip_addr', Unicode(length=15), nullable=False,doc=u"IP地址")
+    bas_name = Column(u'bas_name', Unicode(length=64), nullable=False,doc=u"bas名称")
+    bas_secret = Column(u'bas_secret', Unicode(length=64), nullable=False,doc=u"共享密钥")
     coa_port = Column(u'coa_port', INTEGER(), nullable=False,doc=u"CoA端口")
     time_type = Column(u'time_type', SMALLINT(), nullable=False,doc=u"时区类型")
 
@@ -108,9 +99,9 @@ class SlcRadRoster(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"黑白名单id")
-    mac_addr = Column('mac_addr', VARCHAR(length=17), nullable=False,doc=u"mac地址")
-    begin_time = Column('begin_time', VARCHAR(length=19), nullable=False,doc=u"生效开始时间")
-    end_time = Column('end_time', VARCHAR(length=19), nullable=False,doc=u"生效结束时间")
+    mac_addr = Column('mac_addr', Unicode(length=17), nullable=False,doc=u"mac地址")
+    begin_time = Column('begin_time', Unicode(length=19), nullable=False,doc=u"生效开始时间")
+    end_time = Column('end_time', Unicode(length=19), nullable=False,doc=u"生效结束时间")
     roster_type = Column('roster_type', SMALLINT(), nullable=False,doc=u"黑白名单类型")
 
 
@@ -124,20 +115,20 @@ class SlcMember(DeclarativeBase):
         Sequence('member_id_seq', start=100001, increment=1),
         primary_key=True,nullable=False,doc=u"用户id")
     node_id = Column('node_id', INTEGER(), nullable=False,doc=u"区域id")
-    member_name = Column('member_name', VARCHAR(length=64), nullable=False,doc=u"用户登录名")
-    password = Column('password', VARCHAR(length=128), nullable=False,doc=u"用户登录密码")
-    realname = Column('realname', VARCHAR(length=64), nullable=False,doc=u"")
-    idcard = Column('idcard', VARCHAR(length=32),doc=u"用户证件号码")
+    member_name = Column('member_name', Unicode(length=64), nullable=False,doc=u"用户登录名")
+    password = Column('password', Unicode(length=128), nullable=False,doc=u"用户登录密码")
+    realname = Column('realname', Unicode(length=64), nullable=False,doc=u"")
+    idcard = Column('idcard', Unicode(length=32),doc=u"用户证件号码")
     sex = Column('sex', SMALLINT(), nullable=True,doc=u"用户性别0/1")
     age = Column('age', INTEGER(), nullable=True,doc=u"用户年龄")
-    email = Column('email', VARCHAR(length=255), nullable=True,doc=u"用户邮箱")
+    email = Column('email', Unicode(length=255), nullable=True,doc=u"用户邮箱")
     email_active = Column('email_active', SMALLINT(), default=0,doc=u"用户邮箱激活状态")
-    active_code =  Column('active_code', VARCHAR(length=32), nullable=False,doc=u"邮箱激活码")
-    mobile = Column('mobile', VARCHAR(length=16), nullable=True,doc=u"用户手机")
+    active_code =  Column('active_code', Unicode(length=32), nullable=False,doc=u"邮箱激活码")
+    mobile = Column('mobile', Unicode(length=16), nullable=True,doc=u"用户手机")
     mobile_active = Column('mobile_active', SMALLINT(), default=0,doc=u"用户手机绑定状态")
-    address = Column('address', VARCHAR(length=255), nullable=True,doc=u"用户地址")
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
-    update_time = Column('update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")
+    address = Column('address', Unicode(length=255), nullable=True,doc=u"用户地址")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
+    update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
 
 class SlcMemberOrder(DeclarativeBase):
@@ -149,17 +140,17 @@ class SlcMemberOrder(DeclarativeBase):
 
     __table_args__ = {}
 
-    order_id = Column('order_id', VARCHAR(length=32),primary_key=True,nullable=False,doc=u"订单id")
+    order_id = Column('order_id', Unicode(length=32),primary_key=True,nullable=False,doc=u"订单id")
     member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
-    account_number = Column('account_number', VARCHAR(length=32),nullable=False,doc=u"上网账号")
+    account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
     order_fee = Column('order_fee', INTEGER(), nullable=False,doc=u"订单费用")
     actual_fee = Column('actual_fee', INTEGER(), nullable=False,doc=u"实缴费用")
     pay_status = Column('pay_status', INTEGER(), nullable=False,doc=u"支付状态")
     accept_id = Column('accept_id', INTEGER(),nullable=False,doc=u"受理id")
-    order_source = Column('order_source', VARCHAR(length=64), nullable=False,doc=u"订单来源")
-    order_desc = Column('order_desc', VARCHAR(length=255),doc=u"订单描述")
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"交易时间")
+    order_source = Column('order_source', Unicode(length=64), nullable=False,doc=u"订单来源")
+    order_desc = Column('order_desc', Unicode(length=255),doc=u"订单描述")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"交易时间")
 
 
 class SlcRechargerCard(DeclarativeBase):
@@ -175,8 +166,8 @@ class SlcRechargerCard(DeclarativeBase):
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"充值卡id")
     batch_no = Column('batch_no', INTEGER(), nullable=False,doc=u"批次号")
-    card_number = Column('card_number', VARCHAR(length=16),nullable=False,unique=True,doc=u"充值卡号")
-    card_passwd = Column('card_passwd', VARCHAR(length=128),nullable=False,doc=u"充值卡密码")
+    card_number = Column('card_number', Unicode(length=16),nullable=False,unique=True,doc=u"充值卡号")
+    card_passwd = Column('card_passwd', Unicode(length=128),nullable=False,doc=u"充值卡密码")
     card_type = Column('card_type', INTEGER(),nullable=False,doc=u"充值卡类型")
     card_status = Column('card_status', INTEGER(), nullable=False,doc=u"状态")
     product_id = Column('product_id', INTEGER(),nullable=True,doc=u"资费id")
@@ -184,8 +175,8 @@ class SlcRechargerCard(DeclarativeBase):
     months = Column('months', INTEGER(),nullable=True,doc=u"授权月数")
     times = Column('times', INTEGER(),nullable=True,doc=u"授权时长(秒)")
     flows = Column('flows', INTEGER(),nullable=True,doc=u"授权流量(kb)")
-    expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
+    expire_date = Column('expire_date', Unicode(length=10), nullable=False,doc=u"过期时间- ####-##-##")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
 
 class SlcRechargeLog(DeclarativeBase):
     """
@@ -196,11 +187,11 @@ class SlcRechargeLog(DeclarativeBase):
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
-    card_number = Column('card_number', VARCHAR(length=16),nullable=False,doc=u"充值卡号")
+    card_number = Column('card_number', Unicode(length=16),nullable=False,doc=u"充值卡号")
     member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
-    account_number = Column('account_number', VARCHAR(length=32),nullable=False,doc=u"上网账号")
+    account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
     recharge_status = Column('recharge_status', INTEGER(), nullable=False,doc=u"充值结果")
-    recharge_time = Column('recharge_time', VARCHAR(length=19), nullable=False,doc=u"充值时间")
+    recharge_time = Column('recharge_time', Unicode(length=19), nullable=False,doc=u"充值时间")
 
 
 class SlcRadAccount(DeclarativeBase):
@@ -215,27 +206,27 @@ class SlcRadAccount(DeclarativeBase):
 
     __table_args__ = {}
 
-    account_number = Column('account_number', VARCHAR(length=32),primary_key=True,nullable=False,doc=u"上网账号")
+    account_number = Column('account_number', Unicode(length=32),primary_key=True,nullable=False,doc=u"上网账号")
     member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
     group_id = Column('group_id', INTEGER(),doc=u"用户组id")
-    password = Column('password', VARCHAR(length=128), nullable=False,doc=u"上网密码")
+    password = Column('password', Unicode(length=128), nullable=False,doc=u"上网密码")
     status = Column('status', INTEGER(), nullable=False,doc=u"用户状态")
-    install_address = Column('install_address', VARCHAR(length=128), nullable=False,doc=u"装机地址")
+    install_address = Column('install_address', Unicode(length=128), nullable=False,doc=u"装机地址")
     balance = Column('balance', INTEGER(), nullable=False,doc=u"用户余额-分")
     time_length = Column('time_length', INTEGER(), nullable=False,default=0,doc=u"用户时长-秒")
     flow_length = Column('flow_length', INTEGER(), nullable=False,default=0,doc=u"用户流量-kb")
-    expire_date = Column('expire_date', VARCHAR(length=10), nullable=False,doc=u"过期时间- ####-##-##")
+    expire_date = Column('expire_date', Unicode(length=10), nullable=False,doc=u"过期时间- ####-##-##")
     user_concur_number = Column('user_concur_number', INTEGER(), nullable=False,doc=u"用户并发数")
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False,doc=u"是否绑定mac")
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False,doc=u"是否绑定vlan")
-    mac_addr = Column('mac_addr', VARCHAR(length=17),doc=u"mac地址")
+    mac_addr = Column('mac_addr', Unicode(length=17),doc=u"mac地址")
     vlan_id = Column('vlan_id', INTEGER(),doc=u"内层vlan")
     vlan_id2 = Column('vlan_id2', INTEGER(),doc=u"外层vlan")
-    ip_address = Column('ip_address', VARCHAR(length=15),doc=u"静态IP地址")
-    last_pause = Column('last_pause', VARCHAR(length=19),doc=u"最后停机时间")
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
-    update_time = Column('update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")
+    ip_address = Column('ip_address', Unicode(length=15),doc=u"静态IP地址")
+    last_pause = Column('last_pause', Unicode(length=19),doc=u"最后停机时间")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
+    update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
 class SlcRadAccountAttr(DeclarativeBase):
     """上网账号扩展策略属性表"""
@@ -243,10 +234,10 @@ class SlcRadAccountAttr(DeclarativeBase):
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"属性id")
-    account_number = Column('account_number', VARCHAR(length=32),nullable=False,doc=u"上网账号")
-    attr_name = Column(u'attr_name', VARCHAR(length=255), nullable=False,doc=u"属性名")
-    attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False,doc=u"属性值")
-    attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")
+    account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
+    attr_name = Column(u'attr_name', Unicode(length=255), nullable=False,doc=u"属性名")
+    attr_value = Column(u'attr_value', Unicode(length=255), nullable=False,doc=u"属性值")
+    attr_desc = Column(u'attr_desc', Unicode(length=255),doc=u"属性描述")
 
 class SlcRadProduct(DeclarativeBase):
     '''
@@ -259,21 +250,21 @@ class SlcRadProduct(DeclarativeBase):
     __table_args__ = {}
 
     id = Column('id', INTEGER(),primary_key=True,autoincrement=1,nullable=False,doc=u"资费id")
-    product_name = Column('product_name', VARCHAR(length=64), nullable=False,doc=u"资费名称")
+    product_name = Column('product_name', Unicode(length=64), nullable=False,doc=u"资费名称")
     product_policy = Column('product_policy', INTEGER(), nullable=False,doc=u"资费策略")
     product_status = Column('product_status', SMALLINT(), nullable=False,doc=u"资费状态")
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False,doc=u"是否绑定mac")
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False,doc=u"是否绑定vlan")
     concur_number = Column('concur_number', INTEGER(), nullable=False,doc=u"并发数")
-    fee_period = Column('fee_period', VARCHAR(length=11),doc=u"开放认证时段")
+    fee_period = Column('fee_period', Unicode(length=11),doc=u"开放认证时段")
     fee_months = Column('fee_months', INTEGER(),doc=u"买断授权月数")
     fee_times = Column('fee_times', INTEGER(),doc=u"买断时长(秒)")
     fee_flows = Column('fee_flows', INTEGER(),doc=u"买断流量(kb)")
     fee_price = Column('fee_price', INTEGER(),nullable=False,doc=u"资费价格")
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False,doc=u"上行速率")
     output_max_limit = Column('output_max_limit', INTEGER(), nullable=False,doc=u"下行速率")
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"创建时间")
-    update_time = Column('update_time', VARCHAR(length=19), nullable=False,doc=u"更新时间")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
+    update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
 class SlcRadProductAttr(DeclarativeBase):
     '''资费扩展属性表 <radiusd default table>'''
@@ -283,9 +274,9 @@ class SlcRadProductAttr(DeclarativeBase):
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"属性id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
-    attr_name = Column(u'attr_name', VARCHAR(length=255), nullable=False,doc=u"属性名")
-    attr_value = Column(u'attr_value', VARCHAR(length=255), nullable=False,doc=u"属性值")
-    attr_desc = Column(u'attr_desc', VARCHAR(length=255),doc=u"属性描述")
+    attr_name = Column(u'attr_name', Unicode(length=255), nullable=False,doc=u"属性名")
+    attr_value = Column(u'attr_value', Unicode(length=255), nullable=False,doc=u"属性值")
+    attr_desc = Column(u'attr_desc', Unicode(length=255),doc=u"属性描述")
 
 class SlcRadBilling(DeclarativeBase):
     """计费信息表 is_deduct 0 未扣费 1 已扣费 <radiusd default table>"""
@@ -295,10 +286,10 @@ class SlcRadBilling(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"计费id")
-    account_number = Column(u'account_number', VARCHAR(length=253), nullable=False,doc=u"上网账号")
-    nas_addr = Column(u'nas_addr', VARCHAR(length=15), nullable=False,doc=u"bas地址")
-    acct_session_id = Column(u'acct_session_id', VARCHAR(length=253), nullable=False,doc=u"会话id")
-    acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False,doc=u"计费开始时间")
+    account_number = Column(u'account_number', Unicode(length=253), nullable=False,doc=u"上网账号")
+    nas_addr = Column(u'nas_addr', Unicode(length=15), nullable=False,doc=u"bas地址")
+    acct_session_id = Column(u'acct_session_id', Unicode(length=253), nullable=False,doc=u"会话id")
+    acct_start_time = Column(u'acct_start_time', Unicode(length=19), nullable=False,doc=u"计费开始时间")
     acct_session_time = Column(u'acct_session_time', INTEGER(), nullable=False,doc=u"会话时长")
     input_total = Column(u'input_total', INTEGER(),doc=u"会话的上行流量（kb）")
     output_total = Column(u'output_total', INTEGER(),doc=u"会话的下行流量（kb）")
@@ -307,8 +298,10 @@ class SlcRadBilling(DeclarativeBase):
     acct_fee = Column(u'acct_fee', INTEGER(), nullable=False,doc=u"应扣费用")
     actual_fee = Column('actual_fee', INTEGER(), nullable=False,doc=u"实扣费用")
     balance = Column('balance', INTEGER(), nullable=False,doc=u"当前余额")
+    time_length = Column('time_length', INTEGER(), nullable=False,default=0,doc=u"当前用户时长-秒")
+    flow_length = Column('flow_length', INTEGER(), nullable=False,default=0,doc=u"当前用户流量-kb")
     is_deduct = Column(u'is_deduct', INTEGER(), nullable=False,doc=u"是否扣费")
-    create_time = Column('create_time', VARCHAR(length=19), nullable=False,doc=u"计费时间")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"计费时间")
 
 
 class SlcRadTicket(DeclarativeBase):
@@ -319,26 +312,26 @@ class SlcRadTicket(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
-    account_number = Column(u'account_number', VARCHAR(length=253), nullable=False,doc=u"上网账号")
+    account_number = Column(u'account_number', Unicode(length=253), nullable=False,doc=u"上网账号")
     acct_input_gigawords = Column(u'acct_input_gigawords', INTEGER(),doc=u"会话的上行的字（4字节）的吉倍数")
     acct_output_gigawords = Column(u'acct_output_gigawords', INTEGER(),doc=u"会话的下行的字（4字节）的吉倍数")
     acct_input_octets = Column(u'acct_input_octets', INTEGER(),doc=u"会话的上行流量（字节数）")
     acct_output_octets = Column(u'acct_output_octets', INTEGER(),doc=u"会话的下行流量（字节数）")
     acct_input_packets = Column(u'acct_input_packets', INTEGER(),doc=u"会话的上行包数量")
     acct_output_packets = Column(u'acct_output_packets', INTEGER(),doc=u"会话的下行包数量")
-    acct_session_id = Column(u'acct_session_id', VARCHAR(length=253), nullable=False,doc=u"会话id")
+    acct_session_id = Column(u'acct_session_id', Unicode(length=253), nullable=False,doc=u"会话id")
     acct_session_time = Column(u'acct_session_time', INTEGER(), nullable=False,doc=u"会话时长")
-    acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False,doc=u"会话开始时间")
-    acct_stop_time = Column(u'acct_stop_time', VARCHAR(length=19), nullable=False,doc=u"会话结束时间")
+    acct_start_time = Column(u'acct_start_time', Unicode(length=19), nullable=False,doc=u"会话开始时间")
+    acct_stop_time = Column(u'acct_stop_time', Unicode(length=19), nullable=False,doc=u"会话结束时间")
     acct_terminate_cause = Column(u'acct_terminate_cause',INTEGER(),doc=u"会话中止原因")
-    mac_addr = Column(u'mac_addr', VARCHAR(length=128),doc=u"mac地址")
-    calling_station_id =  Column(u'calling_station_id', VARCHAR(length=128),doc=u"用户接入物理信息")
-    framed_netmask = Column(u'frame_id_netmask', VARCHAR(length=15),doc=u"地址掩码")
-    framed_ipaddr = Column(u'framed_ipaddr', VARCHAR(length=15),doc=u"IP地址")
-    nas_class = Column(u'nas_class', VARCHAR(length=253),doc=u"bas class")
-    nas_addr = Column(u'nas_addr', VARCHAR(length=15), nullable=False,doc=u"bas地址")
-    nas_port = Column(u'nas_port', VARCHAR(length=32),doc=u"接入端口")
-    nas_port_id = Column(u'nas_port_id', VARCHAR(length=255),doc=u"接入端口物理信息")
+    mac_addr = Column(u'mac_addr', Unicode(length=128),doc=u"mac地址")
+    calling_station_id =  Column(u'calling_station_id', Unicode(length=128),doc=u"用户接入物理信息")
+    framed_netmask = Column(u'frame_id_netmask', Unicode(length=15),doc=u"地址掩码")
+    framed_ipaddr = Column(u'framed_ipaddr', Unicode(length=15),doc=u"IP地址")
+    nas_class = Column(u'nas_class', Unicode(length=253),doc=u"bas class")
+    nas_addr = Column(u'nas_addr', Unicode(length=15), nullable=False,doc=u"bas地址")
+    nas_port = Column(u'nas_port', Unicode(length=32),doc=u"接入端口")
+    nas_port_id = Column(u'nas_port_id', Unicode(length=255),doc=u"接入端口物理信息")
     nas_port_type = Column(u'nas_port_type', INTEGER(),doc=u"接入端口类型")
     service_type = Column(u'service_type', INTEGER(),doc=u"接入服务类型")
     session_timeout = Column(u'session_timeout', INTEGER(),doc=u"会话超时时间")
@@ -357,13 +350,13 @@ class SlcRadOnline(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"在线id")
-    account_number = Column(u'account_number', VARCHAR(length=32), nullable=False,doc=u"上网账号")
-    nas_addr = Column(u'nas_addr', VARCHAR(length=32), nullable=False,doc=u"bas地址")
-    acct_session_id = Column(u'acct_session_id', VARCHAR(length=64), nullable=False,doc=u"会话id")
-    acct_start_time = Column(u'acct_start_time', VARCHAR(length=19), nullable=False,doc=u"会话开始时间")
-    framed_ipaddr = Column(u'framed_ipaddr', VARCHAR(length=32), nullable=False,doc=u"IP地址")
-    mac_addr = Column(u'mac_addr', VARCHAR(length=32), nullable=False,doc=u"mac地址")
-    nas_port_id = Column(u'nas_port_id', VARCHAR(length=255), nullable=False,doc=u"接入端口物理信息")
+    account_number = Column(u'account_number', Unicode(length=32), nullable=False,doc=u"上网账号")
+    nas_addr = Column(u'nas_addr', Unicode(length=32), nullable=False,doc=u"bas地址")
+    acct_session_id = Column(u'acct_session_id', Unicode(length=64), nullable=False,doc=u"会话id")
+    acct_start_time = Column(u'acct_start_time', Unicode(length=19), nullable=False,doc=u"会话开始时间")
+    framed_ipaddr = Column(u'framed_ipaddr', Unicode(length=32), nullable=False,doc=u"IP地址")
+    mac_addr = Column(u'mac_addr', Unicode(length=32), nullable=False,doc=u"mac地址")
+    nas_port_id = Column(u'nas_port_id', Unicode(length=255), nullable=False,doc=u"接入端口物理信息")
     billing_times = Column(u'billing_times', INTEGER(), nullable=False,doc=u"已记账时间")
     input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
     output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
@@ -407,12 +400,12 @@ class SlcRadAcceptLog(DeclarativeBase):
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
-    accept_type = Column(u'accept_type', VARCHAR(length=16), nullable=False,doc=u"受理类型")
-    accept_desc = Column(u'accept_desc', VARCHAR(length=512),doc=u"受理描述")
-    account_number = Column(u'account_number', VARCHAR(length=32), nullable=False,doc=u"上网账号")
-    operator_name = Column(u'operator_name', VARCHAR(32),doc=u"操作员名")
-    accept_source = Column(u'accept_source', VARCHAR(length=128),doc=u"受理渠道来源")
-    accept_time = Column(u'accept_time', VARCHAR(length=19), nullable=False,doc=u"受理时间")
+    accept_type = Column(u'accept_type', Unicode(length=16), nullable=False,doc=u"受理类型")
+    accept_desc = Column(u'accept_desc', Unicode(length=512),doc=u"受理描述")
+    account_number = Column(u'account_number', Unicode(length=32), nullable=False,doc=u"上网账号")
+    operator_name = Column(u'operator_name', Unicode(32),doc=u"操作员名")
+    accept_source = Column(u'accept_source', Unicode(length=128),doc=u"受理渠道来源")
+    accept_time = Column(u'accept_time', Unicode(length=19), nullable=False,doc=u"受理时间")
 
 class SlcRadOperateLog(DeclarativeBase):
     """操作日志表"""
@@ -422,10 +415,10 @@ class SlcRadOperateLog(DeclarativeBase):
 
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
-    operator_name = Column(u'operator_name', VARCHAR(32), nullable=False,doc=u"操作员名称")
-    operate_ip = Column(u'operate_ip', VARCHAR(length=128),doc=u"操作员ip")
-    operate_time = Column(u'operate_time', VARCHAR(length=19), nullable=False,doc=u"操作时间")
-    operate_desc = Column(u'operate_desc', VARCHAR(length=1024),doc=u"操作描述")
+    operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员名称")
+    operate_ip = Column(u'operate_ip', Unicode(length=128),doc=u"操作员ip")
+    operate_time = Column(u'operate_time', Unicode(length=19), nullable=False,doc=u"操作时间")
+    operate_desc = Column(u'operate_desc', Unicode(length=1024),doc=u"操作描述")
 
 def init_db(db):
     node = SlcNode()
@@ -440,15 +433,15 @@ def init_db(db):
         ('customer_system_url',u"自助服务系统地址",u"http://forum.toughradius.net"),
         ('customer_must_active',u"激活邮箱才能自助开户充值(0:否|1:是)",u"0"),
         ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),
-        ('radiusd_admin_port',u'Radius服务管理端口','1815'),
-        ('is_debug',u'DEBUG模式','0'),
+        ('radiusd_admin_port',u'Radius服务管理端口',u'1815'),
+        ('is_debug',u'DEBUG模式',u'0'),
         ('weixin_qrcode',u'微信公众号二维码图片(宽度230px)',u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'),
         ('service_phone',u'客户服务电话',u'000000'),
         ('service_qq',u'客户服务QQ号码',u'000000'),
         ('rcard_order_url',u'充值卡订购网站地址',u'http://www.tmall.com'),
         ('portal_secret',u'portal登陆密钥', u'abcdefg123456'),
-        ('expire_notify_days','到期提醒提前天数','7'),
-        ('expire_notify_tpl','到期提醒邮件模板','账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
+        ('expire_notify_days','到期提醒提前天数',u'7'),
+        ('expire_notify_tpl','到期提醒邮件模板',u'账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
         ('expire_notify_url',u'到期通知url',u'http://your_notify_url?account={account}&expire={expire}&email={email}&mobile={mobile}'),
         ('expire_addrpool',u'到期提醒下发地址池',u'expire'),
         ('smtp_server',u'SMTP服务器地址',u'smtp.mailgun.org'),
@@ -468,7 +461,7 @@ def init_db(db):
 
     opr = SlcOperator()
     opr.id = 1
-    opr.operator_name = 'admin'
+    opr.operator_name = u'admin'
     opr.operator_type = 0
     opr.operator_pass = md5('root').hexdigest()
     opr.operator_desc = 'admin'
@@ -476,61 +469,16 @@ def init_db(db):
     db.add(opr)
 
     db.commit()
+    db.close()
 
-def build_db(config=None):
-    tmpdbs = {'mysql':'mysql'}
-    dbtype = config.get("database","dbtype")
-    engine,_ = get_engine(config,tmpdb=tmpdbs.get(dbtype))
-    conn = engine.connect()
-    try:
-        drop_sql = "drop database %s"%config.get("database","db")
-        print drop_sql
-        conn.execute(drop_sql)
-    except:
-        print "drop database error"
-
-    create_sql = "create database %s DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci"%config.get("database","db")
-    print create_sql
-    conn.execute(create_sql)
-    print 'commit'
-    conn.execute("commit")
-    conn.close()
-
-    engine,metadata = get_engine(config)
-    metadata.create_all(engine,checkfirst=True)
-
-
-def install(config=None):
-    print 'starting create and init database...'
-    action = raw_input("drop and create database ?[n]")
-    if action == 'y':
-        build_db(config=config)
-        engine,_ = get_engine(config)
-        db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
-        action = raw_input("init database ?[n]")
-        if action == 'y':
-            init_db(db)
-
-
-def install2(config=None):
-    print 'starting create and init database...'
-    build_db(config=config)
-    engine,_ = get_engine(config)
-    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
+def update(db_engine):
+    print 'starting update database...'
+    metadata = get_metadata(db_engine)
+    metadata.drop_all(db_engine)
+    metadata.create_all(db_engine)
+    print 'update database done'
+    db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
     init_db(db)
 
-def update(config=None):
-    print 'starting update database...'
-    engine,metadata = get_engine(config)
-    action = raw_input("rebuild database ?[n]")
-    if action == 'y':
-        metadata.drop_all(engine)
-    metadata.create_all(engine,checkfirst=True)
-    print 'starting update database done'
-    db = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=True))()
-    action = raw_input("init database ?[n]")
-    if action == 'y':
-        init_db(db)
-
 if __name__ == '__main__':
-    install()
+    update()

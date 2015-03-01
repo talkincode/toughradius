@@ -10,7 +10,7 @@ products = [
         fee_flows = 0,fee_price = "30.00",
         fee_period = '',concur_number = 1,
         bind_mac = 0,bind_vlan = 0,
-        input_max_limit = 1048576,output_max_limit = 1048576,
+        input_max_limit = 1,output_max_limit = 1,
         product_status = 0
     ),
     dict(
@@ -19,7 +19,7 @@ products = [
         fee_flows = 0,fee_price = "2.00",
         fee_period = '',concur_number = 1,
         bind_mac = 0,bind_vlan = 0,
-        input_max_limit = 1048576,output_max_limit = 1048576,
+        input_max_limit = 1,output_max_limit = 1,
         product_status = 0
     ),
     dict(
@@ -28,7 +28,7 @@ products = [
         fee_flows = 0,fee_price = "500.00",
         fee_period = '',concur_number = 1,
         bind_mac = 0,bind_vlan = 0,
-        input_max_limit = 1048576,output_max_limit = 1048576,
+        input_max_limit = 1,output_max_limit = 1,
         product_status = 0
     ),
     dict(
@@ -37,7 +37,7 @@ products = [
         fee_flows = 0,fee_price = "100.00",
         fee_period = '',concur_number = 1,
         bind_mac = 0,bind_vlan = 0,
-        input_max_limit = 1048576,output_max_limit = 1048576,
+        input_max_limit = 1,output_max_limit = 1,
         product_status = 0
     ),
     dict(
@@ -46,7 +46,7 @@ products = [
         fee_flows = 0,fee_price = '0.05',
         fee_period = '',concur_number = 1,
         bind_mac = 0,bind_vlan = 0,
-        input_max_limit = 1048576,output_max_limit = 1048576,
+        input_max_limit = 1,output_max_limit = 1,
         product_status = 0
     ),
     dict(
@@ -55,7 +55,7 @@ products = [
         fee_flows = 100,fee_price = '5.00',
         fee_period = '',concur_number = 1,
         bind_mac = 0,bind_vlan = 0,
-        input_max_limit = 1048576,output_max_limit = 1048576,
+        input_max_limit = 1,output_max_limit = 1,
         product_status = 0
     ) 
 ]

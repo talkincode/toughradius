@@ -2,14 +2,14 @@
 #coding=utf-8
 from toughradius.radiusd.plugins import error_auth
 from toughradius.radiusd.settings import *
-from toughradius.radiusd.store import store
 from toughradius.radiusd import utils
 
-def process(req=None,resp=None,user=None,**kwargs):
+def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""
+    store = radiusd.store
     acct_policy = user['product_policy'] or PPMonth
     if acct_policy in ( PPMonth,BOMonth):
-        if utils.is_expire(user.get('expire_date')):
+        if utils.is_expire(user['expire_date']):
             resp['Framed-Pool'] = store.get_param("expire_addrpool")
             
     elif acct_policy in (PPTimes,PPFlow):

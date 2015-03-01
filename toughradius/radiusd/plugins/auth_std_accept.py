@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 import datetime
 import decimal
@@ -15,19 +14,20 @@ def get_type_val(typ,src):
     else:
         return src
 
-def process(req=None,resp=None,user=None,**kwargs):
+def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
+    store = radiusd.store
     product = store.get_product(user['product_id'])
     session_timeout = int(store.get_param("max_session_timeout"))
     acct_policy = user['product_policy'] or BOMonth
     if acct_policy in (PPMonth,BOMonth):
-        expire_date = user.get('expire_date')
+        expire_date = user['expire_date']
         _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
         _datetime = datetime.datetime.now()
         if _datetime > _expire_datetime:
             session_timeout += (_expire_datetime - _datetime).seconds 
 
     elif acct_policy  == BOTimes:
-        session_timeout = user.get("time_length",0)
+        session_timeout = user["time_length"]
         
     elif acct_policy  == PPTimes:
         user_balance = store.get_user_balance(user['account_number'])

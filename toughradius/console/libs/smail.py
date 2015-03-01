@@ -33,7 +33,8 @@ class Mail(object):
             serv = smtplib.SMTP()
             # serv.set_debuglevel(True)
             serv.connect(self.server)
-            serv.login(self.user,self.pwd)
+            if self.pwd and self.pwd not in ('no','none','anonymous'):
+                serv.login(self.user,self.pwd)
             serv.sendmail(self.fromaddr, [mailto], mail.as_string())
             serv.quit()
             print "Successfully sent email to %s"%mailto

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
+from __future__ import unicode_literals
 import sys,os
 from bottle import Bottle
 from bottle import request
@@ -26,6 +27,15 @@ app = Bottle()
 ##############################################################################
 # test handle
 ##############################################################################
+@app.route('/test',apply=auth_opr)
+def index(db):    
+    form = forms.param_form()
+    fparam = {}
+    for p in db.query(models.SlcParam):
+        fparam[p.param_name] = p.param_value
+    form.fill(fparam)
+    return render("base_form",form=form)
+
 @app.get('/test/pid',apply=auth_opr)
 def product_id(db):
     name = request.params.get("name")   

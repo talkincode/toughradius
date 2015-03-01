@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(False)
 import sys,os,signal
 import tempfile
 import time
 import argparse,ConfigParser
 from toughradius.tools import config as iconfig
 from toughradius.tools.shell import shell
-
+from toughradius.tools.dbengine import get_engine
 
 def get_service_tac(app):
     return '%s/%s_service.tac'%(tempfile.gettempdir(),app)
@@ -14,13 +16,17 @@ def get_service_tac(app):
 def get_service_pid(app):
     return '%s/%s_service.pid'%(tempfile.gettempdir(),app)
     
+def get_service_log(config,app):
+    if app == 'standalone':
+        return config.get('radiusd','logfile')
+    return config.get(app,'logfile')
+    
 def _run_daemon(config,app):
     tac = get_service_tac(app)
     pidfile = get_service_pid(app)
-    if not os.path.exists(tac):
-        with open(tac,'wb') as tfs:
-            tfs.write(iconfig.echo_app_tac(app))
-    shell.run('twistd -y %s -l %s --pidfile=%s'%(tac,config.get(app,'logfile'),pidfile),
+    with open(tac,'wb') as tfs:
+        tfs.write(iconfig.echo_app_tac(app))
+    shell.run('twistd -y %s -l %s --pidfile=%s'%(tac,get_service_log(config,app),pidfile),
                 raise_on_fail=True)
 
 def _kill_daemon(app):
@@ -32,7 +38,7 @@ def _kill_daemon(app):
 def run_radiusd(config,daemon=False):
     if not daemon:
         from toughradius.radiusd import server 
-        server.run(config)
+        server.run(config,db_engine=get_engine(config))
     else:
         _run_daemon(config,'radiusd')
 
@@ -40,7 +46,7 @@ def run_radiusd(config,daemon=False):
 def run_admin(config,daemon=False):
     if not daemon:
         from toughradius.console import admin_app
-        admin_app.run(config)
+        admin_app.run(config,db_engine=get_engine(config))
     else:
         _run_daemon(config,'admin')
     
@@ -48,9 +54,27 @@ def run_admin(config,daemon=False):
 def run_customer(config,daemon=False):
     if not daemon:
         from toughradius.console import customer_app
-        customer_app.run(config)
+        customer_app.run(config,db_engine=get_engine(config))
     else:
         _run_daemon(config,'customer')
+        
+def run_standalone(config,daemon=False):
+    from twisted.internet import reactor
+    from toughradius.console import admin_app
+    from toughradius.console import customer_app
+    from toughradius.radiusd import server
+    logfile = config.get('radiusd','logfile')
+    config.set('DEFAULT','standalone','true')
+    config.set('admin','logfile',logfile)
+    config.set('customer','logfile',logfile)
+    if not daemon:
+        db_engine = get_engine(config)
+        server.run(config,db_engine,False)
+        admin_app.run(config,db_engine,False)
+        customer_app.run(config,db_engine,False)
+        reactor.run()
+    else:
+        _run_daemon(config,'standalone')
     
 
 def start_server(config,app):
@@ -83,14 +107,9 @@ def run_secret_update(config,cfgfile):
     from toughradius.tools import secret 
     secret.update(config,cfgfile)
     
-def run_initdb(config,level='0'):
+def run_initdb(config):
     from toughradius.console import models
-    if level == '1':
-        models.install(config)
-    elif level == '2':
-        models.install2(config)
-    elif level == '3':
-        models.update(config)
+    models.update(get_engine(config))
         
 def run_config():
     from toughradius.tools.config import setup_config
@@ -118,11 +137,12 @@ def run():
     parser.add_argument('-radiusd','--radiusd', action='store_true',default=False,dest='radiusd',help='run radiusd')
     parser.add_argument('-admin','--admin', action='store_true',default=False,dest='admin',help='run admin')
     parser.add_argument('-customer','--customer', action='store_true',default=False,dest='customer',help='run customer')
+    parser.add_argument('-standalone','--standalone', action='store_true',default=False,dest='standalone',help='run standalone')
     parser.add_argument('-d','--daemon', action='store_true',default=False,dest='daemon',help='daemon mode')
     parser.add_argument('-start','--start', type=str,default=None,dest='start',help='start server all|radiusd|admin|customer')
     parser.add_argument('-restart','--restart', type=str,default=None,dest='restart',help='restart server all|radiusd|admin|customer')
     parser.add_argument('-stop','--stop', type=str,default=None,dest='stop',help='stop server all|radiusd|admin|customer')
-    parser.add_argument('-initdb','--initdb', type=str,default='0',dest='initdb',help='run initdb 1,2,3')
+    parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_my_cnf','--echo_my_cnf', action='store_true',default=False,dest='echo_my_cnf',help='echo my_cnf')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
@@ -143,8 +163,8 @@ def run():
         return run_echo_radiusd_cnf()
         
     if args.stop:
-        if not args.stop in ('all','radiusd','admin','customer'):
-            print 'usage %s --stop [all|radiusd|admin|customer]'%sys.argv[0]
+        if not args.stop in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --stop [all|radiusd|admin|customer|standalone]'%sys.argv[0]
             return
         return stop_server(args.stop)
     
@@ -152,24 +172,25 @@ def run():
     
     if args.debug:
         config.set('DEFAULT','debug','true')
-    
+        
     if args.start:
-        if not args.start in ('all','radiusd','admin','customer'):
-            print 'usage %s --start [all|radiusd|admin|customer]'%sys.argv[0]
+        if not args.start in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --start [all|radiusd|admin|customer|standalone]'%sys.argv[0]
             return
         return start_server(config,args.start)
     
     if args.restart:
-        if not args.restart in ('all','radiusd','admin','customer'):
-            print 'usage %s --restart [all|radiusd|admin|customer]'%sys.argv[0]
+        if not args.restart in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --restart [all|radiusd|admin|customer|standalone]'%sys.argv[0]
             return
         return restart_server(config,args.restart)
 
     if args.radiusd:run_radiusd(config,args.daemon)
     elif args.admin:run_admin(config,args.daemon)
     elif args.customer:run_customer(config,args.daemon)
+    elif args.standalone:run_standalone(config,args.daemon)
     elif args.secret:run_secret_update(config,args.conf)
-    elif args.initdb:run_initdb(config,args.initdb)
+    elif args.initdb:run_initdb(config)
     elif args.dbdict:run_dbdict(config)
     elif args.backup:run_backup(config)
     else: print 'do nothing'

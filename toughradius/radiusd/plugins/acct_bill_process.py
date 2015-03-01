@@ -2,7 +2,6 @@
 #coding=utf-8
 from twisted.python import log
 from toughradius.radiusd.pyrad import packet
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 from toughradius.radiusd import utils
 import logging
@@ -26,13 +25,19 @@ def send_dm(coa_clients,online):
     except:
         log.err('send dm error')
 
-def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
+def process(req=None,user=None,radiusd=None,**kwargs):
     if req.get_acct_status_type() not in (STATUS_TYPE_UPDATE,STATUS_TYPE_STOP):
         return   
+    
+    runstat=radiusd.runstat
+    coa_clients=radiusd.coa_clients
+    store = radiusd.store
         
     online = store.get_online(req.get_nas_addr(),req.get_acct_sessionid())  
     if not online:
         return
+    
+    online = dict(online)
 
     product = store.get_product(user['product_id'])
     if not product or product['product_policy'] not in (PPTimes,BOTimes,PPFlow,BOFlows):
@@ -71,6 +76,8 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             acct_fee = usedfee,
             actual_fee = actual_fee,
             balance = balance,
+            time_length = 0,
+            flow_length = 0,
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ))
@@ -102,6 +109,8 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             acct_fee = 0,
             actual_fee = 0,
             balance = 0,
+            time_length = user_time_length,
+            flow_length = 0,
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ),time_length=user_time_length)
@@ -138,6 +147,8 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             acct_fee = usedfee,
             actual_fee = actual_fee,
             balance = balance,
+            time_length = 0,
+            flow_length = 0,
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ))
@@ -152,9 +163,9 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
         output_total = req.get_output_total()
         billing_output_total = online['output_total']
         acct_flows = output_total - billing_output_total
-        use_flow_length = flow_length - acct_flows
-        if use_flow_length < 0 :
-            use_flow_length = 0
+        user_flow_length = flow_length - acct_flows
+        if user_flow_length < 0 :
+            user_flow_length = 0
             send_dm(coa_clients,online)
             
         store.update_billing(utils.Storage(
@@ -170,11 +181,13 @@ def process(req=None,user=None,runstat=None,coa_clients=None,**kwargs):
             acct_fee = 0,
             actual_fee = 0,
             balance = 0,
+            time_length = 0,
+            flow_length = user_flow_length,
             is_deduct = 1,
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
-        ),flow_length=use_flow_length)
+        ),flow_length=user_flow_length)
         
-        if use_flow_length == 0 :
+        if user_flow_length == 0 :
             send_dm(coa_clients,online)
     
     process_funcs = {

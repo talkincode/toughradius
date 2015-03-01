@@ -77,17 +77,6 @@ vcache = ValidateCache()
 ###############################################################################
 # Basic handle         
 ###############################################################################   
-@app.error(403) 
-def error403(error):
-    return render("error",msg=u"Unauthorized access %s"%error.exception)
-    
-@app.error(404)
-def error404(error):
-    return render("error",msg=u"Not found %s"%error.exception)
-
-@app.error(500)
-def error500(error):
-    return render("error",msg=u"Server Internal error %s"%error.exception)
 
 @app.route('/static/:path#.+#')
 def route_static(path):

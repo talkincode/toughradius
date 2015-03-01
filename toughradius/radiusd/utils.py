@@ -50,24 +50,6 @@ def is_expire(dstr):
     now = datetime.datetime.now()
     return expire_date < now
 
-def update_tz(tz_val,default_val="CST-8"):
-    try:
-        os.environ["TZ"] = tz_val or default_val
-        time.tzset()
-    except:
-        pass
-        
-def check_ssl(config):
-    use_ssl = False
-    privatekey = None
-    certificate = None
-    if config.has_option('DEFAULT','ssl') and config.getboolean('DEFAULT','ssl'):
-        privatekey = config.get('DEFAULT','privatekey')
-        certificate = config.get('DEFAULT','certificate')
-        if os.path.exists(privatekey) and os.path.exists(certificate):
-            use_ssl = True
-    return use_ssl,privatekey,certificate
-
 class AESCipher:
 
     def __init__(self,key=None):

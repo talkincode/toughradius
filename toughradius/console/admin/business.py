@@ -1072,16 +1072,19 @@ def billing_query(db):
         data = Dataset()
         data.append((
             u'区域',u'上网账号',u'BAS地址',u'会话编号',u'记账开始时间',u'会话时长',
-            u'已扣时长',u"已扣流量",u'应扣费用',u'实扣费用',u'当前余额',u'是否扣费',u'扣费时间'
+            u'已扣时长',u"已扣流量",u'应扣费用',u'实扣费用',u'剩余余额',
+            u'剩余时长',u'剩余流量',u'是否扣费',u'扣费时间'
         ))
         _f2y = utils.fen2yuan
         _fms = utils.fmt_second
         _k2m = utils.kb2mb
+        _s2h = utils.sec2hour
         for i,_,_node_name in _query:
             data.append((
                 _node_name, i.account_number, i.nas_addr,i.acct_session_id,
                 i.acct_start_time,_fms(i.acct_session_time),_fms(i.acct_times),_k2m(i.acct_flows),
                 _f2y(i.acct_fee),_f2y(i.actual_fee),_f2y(i.balance),
+                _s2h(i.time_length),_k2m(i.flow_length),
                 (i.is_deduct==0 and u'否' or u'是'),i.create_time
             ))
         name = u"RADIUS-BILLING-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
