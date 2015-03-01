@@ -341,10 +341,16 @@ class RadiusServer(object):
         self.admin_factory.setProtocolOptions(allowHixie76=True)
         self.admin_factory.protocol.radiusd = self
         
+    def _check_online_over(self):
+        reactor.callInThread(self.store.check_online_over)
+
     def init_task(self):
         _task = task.LoopingCall(self.auth_protocol.process_delay)
         _task.start(2.7)
+        _online_task = task.LoopingCall(self._check_online_over)
+        _online_task.start(3600*4)
         self.tasks['process_delay'] = _task
+        self.tasks['check_online_over'] = _online_task
         
     def run_normal(self):
         if self.debug:

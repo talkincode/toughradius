@@ -9,7 +9,6 @@ from bottle import redirect
 from bottle import MakoTemplate
 from bottle import static_file
 from bottle import abort
-from bottle import mako_template as render
 from beaker.cache import cache_managers
 from toughradius.console.libs.paginator import Paginator
 from toughradius.console.libs import utils
@@ -21,8 +20,10 @@ from hashlib import md5
 import bottle
 import datetime
 import json
+import functools
 
 app = Bottle()
+render = functools.partial(Render.render_app,app)
 
 ##############################################################################
 # test handle

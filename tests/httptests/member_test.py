@@ -33,7 +33,6 @@ def test_post_member_100():
         
     
 
-        
 def test_post_member():
     req = session.login()    
     r0 = req.get(session.sub_path(u"/test/pid?name=预付费包月30元"))

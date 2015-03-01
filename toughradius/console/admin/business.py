@@ -7,7 +7,6 @@ from bottle import redirect
 from bottle import run as runserver
 from bottle import static_file
 from bottle import abort
-from bottle import mako_template as render
 from hashlib import md5
 from tablib import Dataset
 from toughradius.console.base import *
@@ -26,6 +25,8 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
+render = functools.partial(Render.render_app,app)
+
 
 ###############################################################################
 # ajax query

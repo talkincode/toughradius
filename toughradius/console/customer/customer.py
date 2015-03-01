@@ -10,7 +10,6 @@ from bottle import redirect
 from bottle import run as runserver
 from bottle import static_file
 from bottle import abort
-from bottle import mako_template as render
 from hashlib import md5
 from tablib import Dataset
 from toughradius.console.libs import sqla_plugin 
@@ -18,7 +17,8 @@ from urlparse import urljoin
 from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
-    get_account_by_number,get_online_status
+    get_account_by_number,get_online_status,
+    Render
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
 from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
@@ -37,6 +37,7 @@ import datetime
 import functools
 
 app = Bottle()
+render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # login , recharge error times limit    
@@ -73,7 +74,7 @@ class ValidateCache(object):
             return self.validates[key][0] >= 5 
 
 vcache = ValidateCache() 
-              
+
 ###############################################################################
 # Basic handle         
 ###############################################################################   

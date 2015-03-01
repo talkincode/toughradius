@@ -249,6 +249,24 @@ class Store():
             sql = _sql('insert into slc_rad_online (%s) values(%s)'%(keys,vals))
             conn.execute(sql)
             
+    
+    def check_online_over(self):
+        onlines = []
+        with self.db_engine.begin() as conn:
+            sql = _sql('select acct_start_time,nas_addr,acct_session_id from slc_rad_online')
+            onlines = conn.execute(sql)
+        
+        for online in onlines:
+            start_time = datetime.datetime.strptime(online['acct_start_time'],"%Y-%m-%d %H:%M:%S")
+            _datetime = datetime.datetime.now() 
+            if (_datetime - start_time).seconds > 3600 * 3:
+                self.unlock_online(
+                    online['nas_addr'],
+                    online['acct_session_id'],
+                    settings.STATUS_TYPE_CHECK_ONLINE
+                )
+            
+              
             
     def update_online(self,online):
         with self.db_engine.begin() as conn:

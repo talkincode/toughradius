@@ -6,6 +6,7 @@ from bottle import response
 from bottle import redirect
 from bottle import HTTPError
 from bottle import static_file
+from bottle import mako_template
 from toughradius.console.libs.paginator import Paginator
 from toughradius.console.libs import utils
 from toughradius.console import models
@@ -63,6 +64,24 @@ scookie = SecureCookie()
 get_cookie = scookie.get_cookie
 set_cookie = scookie.set_cookie
 
+class Render(object):
+    
+    RENDERS = {}
+    
+    def __init__(self,context={},lookup=None):
+        self.context = context
+        self.lookup = lookup
+
+    def render(self,*args,**kwargs):
+        kwargs['template_lookup'] = self.lookup
+        kwargs.update(**self.context)
+        return mako_template(*args,**kwargs)
+    
+    @staticmethod 
+    def render_app(app,*args,**kwargs):
+        render_obj = Render.RENDERS[app.config['render_key']]
+        return render_obj.render(*args,**kwargs)
+        
 ########################################################################
 # permission manage
 ########################################################################

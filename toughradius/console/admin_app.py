@@ -4,8 +4,6 @@ import sys,os
 from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
-from bottle import TEMPLATE_PATH,MakoTemplate
-from bottle import mako_template as render
 from bottle import run as runserver
 from toughradius.console.admin.admin import app as mainapp
 from toughradius.console.admin.ops import app as ops_app
@@ -27,14 +25,6 @@ import time
 
 reactor.suggestThreadPoolSize(30)
 
-def error403(error):
-    return render("error",msg=u"Unauthorized access %s"%error.exception)
-    
-def error404(error):
-    return render("error",msg=u"Not found %s"%error.exception)
-
-def error500(error):
-    return render("error",msg=u"Server Internal error %s"%error.exception)
 
 ###############################################################################
 # run server                                                                 
@@ -117,23 +107,20 @@ class AdminServer(object):
     def _get_product_name(self,pid):
         with Connect(self.sqla_pg.new_session) as db:
             return get_product_name(db,pid)
+            
+    def error403(self,error):
+        return self.render.render("error",msg=u"Unauthorized access %s"%error.exception)
+    
+    def error404(self,error):
+        return self.render.render("error",msg=u"Not found %s"%error.exception)
+
+    def error500(self,error):
+        return self.render.render("error",msg=u"Server Internal error %s"%error.exception)
         
     def init_application(self):
        log.msg("start init application...")
-       TEMPLATE_PATH.append(self.viewpath)
-       for _app in [self.app]+self.subapps:
-           _app.error_handler[403] = error403
-           _app.error_handler[404] = error404
-           _app.error_handler[500] = error500
-
-       log.msg("mount app and install plugins...")
-       self.app.install(self.sqla_pg)
-       for _app in self.subapps:
-           _app.install(self.sqla_pg)
-           self.app.mount(_app.config['__prefix__'],_app)
-    
-       log.msg("init template context...")
-       MakoTemplate.defaults.update(**dict(
+       _lookup = [self.viewpath]
+       _context = dict(
            sys_version = toughradius.__version__,
            use_ssl = self.use_ssl,
            get_cookie = get_cookie,
@@ -152,7 +139,19 @@ class AdminServer(object):
            get_product_name = self._get_product_name,
            permit = permit,
            all_menus = permit.build_menus(order_cats=[u"系统管理",u"营业管理",u"运维管理"])
-       ))
+       )
+       
+       self.render = Render(_context,_lookup)
+       log.msg("mount app and install plugins...")
+       for _app in [self.app]+self.subapps:
+           _app.config['render_key'] = 'admin'
+           Render.RENDERS['admin'] = self.render
+           _app.error_handler[403] = self.error403
+           _app.error_handler[404] = self.error404
+           _app.error_handler[500] = self.error500
+           _app.install(self.sqla_pg)
+           if _app is not self.app:
+               self.app.mount(_app.config['__prefix__'],_app)
 
        log.msg("init operator rules...")
        with Connect(self.sqla_pg.new_session) as session:

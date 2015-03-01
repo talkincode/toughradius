@@ -7,8 +7,6 @@ from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
 from bottle import request
 from bottle import response
-from bottle import TEMPLATE_PATH,MakoTemplate
-from bottle import mako_template as render
 from toughradius.console.customer.customer import app as mainapp
 from toughradius.console.libs import sqla_plugin,utils
 from toughradius.console.libs.smail import mail
@@ -23,22 +21,16 @@ from toughradius.console.base import (
     get_member_by_name,
     get_account_by_number,
     get_online_status,
-    Connect
+    Connect,
+    Render
 )
 import functools
 import time
 import bottle
 
-def error403(error):
-    return render("error",msg=u"Unauthorized access %s"%error.exception)
-    
-def error404(error):
-    return render("error",msg=u"Not found %s"%error.exception)
+reactor.suggestThreadPoolSize(30)
 
-def error500(error):
-    return render("error",msg=u"Server Internal error %s"%error.exception)
-    
-    
+
 ###############################################################################
 # run server                                                                 
 ###############################################################################
@@ -130,23 +122,20 @@ class CustomerServer(object):
     def _get_online_status(self,account):
         with Connect(self.sqla_pg.new_session) as db:
             return get_online_status(db,account)
+            
+    def error403(self,error):
+        return self.render.render("error",msg=u"Unauthorized access %s"%error.exception)
+    
+    def error404(self,error):
+        return self.render.render("error",msg=u"Not found %s"%error.exception)
+
+    def error500(self,error):
+        return self.render.render("error",msg=u"Server Internal error %s"%error.exception)
         
     def init_application(self):
         log.msg("start init application...")
-        TEMPLATE_PATH.append(self.viewpath)
-        for _app in [self.app]+self.subapps:
-           _app.error_handler[403] = error403
-           _app.error_handler[404] = error404
-           _app.error_handler[500] = error500
-
-        log.msg("mount app and install plugins...")
-        self.app.install(self.sqla_pg)
-        for _app in self.subapps:
-           _app.install(self.sqla_pg)
-           self.app.mount(_app.config['__prefix__'],_app)
-
-        log.msg("init template context...")
-        MakoTemplate.defaults.update(**dict(
+        _lookup = [self.viewpath]
+        _context = dict(
             use_ssl = self.use_ssl,
             get_cookie = get_cookie,
             fen2yuan = utils.fen2yuan,
@@ -161,7 +150,18 @@ class CustomerServer(object):
             get_member = self._get_member_by_name,
             get_account = self._get_account_by_number,
             is_online = self._get_online_status
-        ))
+        )
+        self.render = Render(_context,_lookup)
+        log.msg("mount app and install plugins...")
+        for _app in [self.app]+self.subapps:
+            _app.config['render_key'] = 'customer'
+            Render.RENDERS['customer'] = self.render
+            _app.error_handler[403] = self.error403
+            _app.error_handler[404] = self.error404
+            _app.error_handler[500] = self.error500
+            _app.install(self.sqla_pg)
+            if _app is not self.app:
+                self.app.mount(_app.config['__prefix__'],_app)
         
     def init_mail(self):
         log.msg("init sendmail..")
