@@ -408,6 +408,7 @@ class RadiusServer(object):
 
 
 def run(config,db_engine=None,is_serrvice=False):
+    print 'running radiusd server...'
     radiusd = RadiusServer(config,db_engine,daemon=is_serrvice)
     if is_serrvice:
         return radiusd.get_service()

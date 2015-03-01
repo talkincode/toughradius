@@ -13,7 +13,7 @@ from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import base
 from toughradius.console import models
-from toughradius.tools.dbengine import DBEngine
+from toughradius.tools.dbengine import get_engine
 from toughradius.console.base import (
     get_cookie,
     set_cookie,
@@ -219,9 +219,9 @@ class CustomerServer(object):
         else: 
             log.msg('Admin SSL Disable!')       
             return internet.TCPServer(self.port,self.web_factory,interface = self.host)    
-        
-
+ 
 def run(config,db_engine=None,is_service=False):
+    print 'running customer server...'
     admin = CustomerServer(config,db_engine,daemon=is_service,app=mainapp)
     if is_service:
         return admin.get_service()

@@ -7,7 +7,7 @@
 
 function productCalc(){
     param = {
-        'month': $("#months").val() || 0,
+        'months': $("#months").val() || 0,
         'product_id':$("#product_id").val()
     }
     $.post("/bus/opencalc", param, function (ev) {

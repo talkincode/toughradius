@@ -49,7 +49,7 @@ class AdminServer(object):
         self.init_protocol()
     
     def init_config(self):
-        self.logfile = self.config.get('radiusd','logfile')
+        self.logfile = self.config.get('admin','logfile')
         self.standalone = self.config.has_option('DEFAULT','standalone') and \
             self.config.getboolean('DEFAULT','standalone') or False
         self.secret = self.config.get('DEFAULT','secret')
@@ -223,6 +223,7 @@ class AdminServer(object):
         
 
 def run(config,db_engine=None,is_service=False):
+    print 'running admin server...'
     subapps = [ops_app,bus_app,card_app,product_app]
     admin = AdminServer(config,db_engine,daemon=is_service,app=mainapp,subapps=subapps)
     if is_service:
