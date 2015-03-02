@@ -50,6 +50,12 @@ Linux环境安装
 
 请确保你的mysql服务器已经安装运行，根据提示配置正确的数据库连接信息。
 
+对于mysql，dburl格式为
+
+::
+
+    mysql://user:passwd@host:port/dbname?charset=utf8
+
 ::
 
     $ toughctl --config
@@ -83,6 +89,17 @@ Linux环境安装
     [INPUT] - customer http port [1817]:
     [INPUT] - log file [ logs/customer.log ]:/var/log/customer.log
     [SUCC] - config save to /etc/radiusd.conf
+
+
+
+如果使用sqlite数据库，则只需简单配置如下即可,使用sqlite无需安装任何数据库软件。
+
+::
+
+    [database]
+    dbtype = sqlite
+    dburl = sqlite:////tmp/toughradius.sqlite3
+
 
 
 初始化数据库
