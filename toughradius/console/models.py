@@ -444,10 +444,12 @@ def init_db(db):
         ('expire_notify_tpl','到期提醒邮件模板',u'账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
         ('expire_notify_url',u'到期通知url',u'http://your_notify_url?account={account}&expire={expire}&email={email}&mobile={mobile}'),
         ('expire_addrpool',u'到期提醒下发地址池',u'expire'),
+        ('expire_session_timeout',u'到期用户下发最大会话时长(秒)',u'120'),
         ('smtp_server',u'SMTP服务器地址',u'smtp.mailgun.org'),
         ('smtp_user',u'SMTP用户名',u'service@toughradius.org'),
         ('smtp_pwd',u'SMTP密码',u'service2015'),
         ('smtp_sender',u'SMTP发送人名称',u'运营中心'),
+        ('acct_interim_intelval',u'Radius记账间隔(秒)',u'120'),
         ('max_session_timeout',u'Radius最大会话时长(秒)',u'86400'),
         ('reject_delay',u'拒绝延迟时间(秒)(0-9)','0')
     ]

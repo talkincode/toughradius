@@ -16,6 +16,13 @@ def ros_rate(resp,_in,_out):
     _orate = _out/1024/8
     resp['Mikrotik-Rate-Limit'] = '%sk/%sk'%(_irate,_orate)
     return resp
+    
+def aikuai_rate(resp,_in,_out):
+    _irate = _in/1024/8
+    _orate = _out/1024/8
+    resp['RP-Upstream-Speed-Limit'] = _irate
+    resp['RP-Downstream-Speed-Limit'] = _orate
+    return resp
 
 def cisco_rate(resp,_in,_out):
     return resp
@@ -46,7 +53,8 @@ rate_funcs = {
     '2352' : radback_rate,
     '3902' : zte_rate,
     '25506' : h3c_rate,
-    '14988' : ros_rate
+    '14988' : ros_rate,
+    '10055' : aikuai_rate
 }
 
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):

@@ -16,9 +16,24 @@ def get_type_val(typ,src):
 
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     store = radiusd.store
-    product = store.get_product(user['product_id'])
+    
+    expire_pool = store.get_param("expire_addrpool")
+    if "Framed-Pool" in resp:
+        if expire_pool in resp['Framed-Pool']:
+            expire_session_timeout = int(store.get_param("expire_session_timeout"))
+            if expire_session_timeout > 0:
+                session_timeout = expire_session_timeout
+            else:
+                return error_auth(resp,'User has expired')
+
+    acct_interim_intelval = int(store.get_param("acct_interim_intelval"))
+    if acct_interim_intelval > 0:
+        resp['Acct-Interim-Interval'] = acct_interim_intelval
+    
     session_timeout = int(store.get_param("max_session_timeout"))
+    
     acct_policy = user['product_policy'] or BOMonth
+    product = store.get_product(user['product_id'])
     
     if acct_policy in (PPMonth,BOMonth):
         expire_date = user['expire_date']
@@ -40,16 +55,7 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
         if _session_timeout < session_timeout:
             session_timeout = _session_timeout
 
-    if "Framed-Pool" in resp:
-        if store.get_param("expire_addrpool") in resp['Framed-Pool']:
-            session_timeout = 60
-    
     resp['Session-Timeout'] = session_timeout
-
-    input_limit = str(product['input_max_limit'])
-    output_limit = str(product['output_max_limit'])
-    _class = input_limit.zfill(8) + input_limit.zfill(8) + output_limit.zfill(8) + output_limit.zfill(8)
-    resp['Class'] = _class
 
     if user['ip_address']:
         resp['Framed-IP-Address'] = user['ip_address']

@@ -7,7 +7,7 @@ version = toughradius.__version__
 
 install_requires = [
     'argparse',
-    'MySQL-python>=1.2.5',
+    'PyMySQL>=0.6.0',
     'Mako>=0.9.0',
     'Beaker>=1.6.4',
     'MarkupSafe>=0.18',

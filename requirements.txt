@@ -1,4 +1,4 @@
-MySQL-python==1.2.5
+PyMySQL>=0.6.0
 Mako==0.9.0
 Beaker==1.6.4
 MarkupSafe==0.18
@@ -11,5 +11,7 @@ six==1.8.0
 tablib==0.10.0
 zope.interface==4.1.1
 pycrypto==2.6.1
+pyOpenSSL==0.14
+service_identity
 sh==1.11
 nose

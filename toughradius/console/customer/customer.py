@@ -356,7 +356,7 @@ def member_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改用户信息:%s'%(get_cookie("username"),member.member_name)
+    ops_log.operate_desc = u'(%s)修改用户信息:%s'%(get_cookie("username"),member.member_name)
     db.add(ops_log)
 
     db.commit()

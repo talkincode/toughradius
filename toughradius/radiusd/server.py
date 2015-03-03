@@ -349,6 +349,8 @@ class RadiusServer(object):
         _task.start(2.7)
         _online_task = task.LoopingCall(self._check_online_over)
         _online_task.start(3600*4)
+        _msg_stat_task = task.LoopingCall(self.runstat.run_stat)
+        _msg_stat_task.start(60)
         self.tasks['process_delay'] = _task
         self.tasks['check_online_over'] = _online_task
         
