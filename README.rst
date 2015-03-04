@@ -31,7 +31,7 @@ Linux环境安装
     
     $ easy_install pip
     
-.. topic:: 关于数据库的选择
+.. topic:: 关于数据库的选择::
 
     toughradius默认采用嵌入式数据库sqlite，sqlite通常已经系统内置，不需要另行安装。
 
@@ -85,12 +85,11 @@ Linux环境安装
     [INPUT] - set debug [false]:
     [INPUT] - time zone [ CST-8 ]:
     
-数据库选项（默认sqlite）::
+数据库选项（默认sqlite）, 对于sqlite，以下pool_size与pool_recycle可以略过::
 
     [INFO] - set database option
     [INPUT] - database type [sqlite]:
     [INPUT] - database dburl [sqlite:////tmp/toughradius.sqlite3]:
-    # 对于sqlite，以下三项可略过
     [INPUT] - database echo [false]:
     [INPUT] - database pool_size [30]:
     [INPUT] - database pool_recycle(second) [300]:
