@@ -16,33 +16,18 @@ ToughRADIUS文档: http://docs.toughradius.net/build/html/
 
 
 
-Linux环境安装
+Linux环境快速安装
 ====================================
 
 
 安装系统依赖(centos6/7)
 --------------------------------------
 
-安装系统python依赖 python-devel python-setuptools ,安装python-setuptools后，easy_install命令将可用
-
 ::
 
     $ yum update -y  && yum install -y  python-devel python-setuptools 
     
     $ easy_install pip
-    
-.. topic:: 关于数据库的选择::
-
-    toughradius默认采用嵌入式数据库sqlite，sqlite通常已经系统内置，不需要另行安装。
-
-    如果你需要使用mysql数据库，则需要安装额外的mysql客户端驱动::
-    
-        # centos 6
-        $ yum install -y  mysql-devel MySQL-python
-        
-        # centos7
-        $ yum install -y  mariadb-devel MySQL-python
-    
     
     
     
@@ -56,68 +41,39 @@ Linux环境安装
     $ pip install toughradius
     
 
-系统配置初始化
+系统配置
 ----------------------------------------
 
-如果你使用mysql数据库，请请确保你的mysql服务器已经安装运行，根据提示配置正确的数据库连接信息。
-
-对于mysql，dburl格式为
-
 ::
 
-    mysql://user:passwd@host:port/dbname?charset=utf8
-
-通过toughctl --config进行配置文件的初始化，按照交互提示一步一步进行
-
-::
-
-    $ toughctl --config
+    $ toughctl --echo_radiusd_cnf > /etc/radiusd.conf
     
-    [INFO] - set config...
-    
-设置目标配置文件的位置::
-    
-    [INPUT] - set your config file path,[ /etc/radiusd.conf ]
+配置文件内容::
 
-设置基本配置选项::
+    [DEFAULT]
+    debug = 0
+    tz = CST-8
+    secret = %s
 
-    [INFO] - set default option
-    [INPUT] - set debug [false]:
-    [INPUT] - time zone [ CST-8 ]:
-    
-数据库选项（默认sqlite）, 对于sqlite，以下pool_size与pool_recycle可以略过::
+    [database]
+    dbtype = sqlite
+    dburl = sqlite:////tmp/toughradius.sqlite3
+    echo = false
 
-    [INFO] - set database option
-    [INPUT] - database type [sqlite]:
-    [INPUT] - database dburl [sqlite:////tmp/toughradius.sqlite3]:
-    [INPUT] - database echo [false]:
-    [INPUT] - database pool_size [30]:
-    [INPUT] - database pool_recycle(second) [300]:
-    
-radius认证计费选项::
-    
-    [INFO] - set radiusd option
-    [INPUT] - radiusd authport [1812]:
-    [INPUT] - radiusd acctport [1813]:
-    [INPUT] - radiusd adminport [1815]:
-    [INPUT] - radiusd cache_timeout (second) [600]:
-    [INPUT] - log file [ logs/radiusd.log ]:/var/log/radiusd.log
+    [radiusd]
+    acctport = 1813
+    adminport = 1815
+    authport = 1812
+    cache_timeout = 600
+    logfile = /var/log/radiusd.log
 
-管理控制台选项::
+    [admin]
+    port = 1816
+    logfile = /var/log/admin.log
 
-    [INFO] - set admin option
-    [INPUT] - admin http port [1816]:
-    [INPUT] - log file [ logs/admin.log ]:/var/log/admin.log
-    
-自助服务系统选项::
-    
-    [INFO] - set customer option
-    [INPUT] - customer http port [1817]:
-    [INPUT] - log file [ logs/customer.log ]:/var/log/customer.log
-
-配置完成，配置文件被自动保存到目标文件::
-
-    [SUCC] - config save to /etc/radiusd.conf
+    [customer]
+    port = 1817
+    logfile = /var/log/customer.log
 
 
 初始化数据库
@@ -135,16 +91,6 @@ radius认证计费选项::
 
 ::
 
-    #radius认证计费服务
-    $ toughctl --radiusd
-     
-    #radius管理控制台服务
-    $ toughctl --admin
-     
-    #radius用户自助服务
-    $ toughctl --customer
-    
-    #通过一个进程运行所有服务
     $ toughctl --standalone
     
 
@@ -155,19 +101,17 @@ radius认证计费选项::
 
 ::
 
-    # 参数选择 [all|radiusd|admin|customer|standalone]
-    
     # 启动
     
-    $ toughctl --start all 
+    $ toughctl --start standalone 
     
     # 停止
     
-    $ toughctl --stop all 
+    $ toughctl --stop standalone 
      
-    #设置开机启动
+    # 设置开机启动
     
-    $ echo "toughctl --start all" >> /etc/rc.local
+    $ echo "toughctl --start standalone" >> /etc/rc.local
     
     
 web管理控制台的使用
