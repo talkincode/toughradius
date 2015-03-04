@@ -78,6 +78,11 @@ secret = %s
 [database]
 dbtype = sqlite
 dburl = sqlite:////tmp/toughradius.sqlite3
+echo = false
+# dbtype = mysql
+# dburl = mysql://root:root@127.0.0.1/toughradius?charset=utf8
+# pool_size = 60
+# pool_recycle = 300
 
 [radiusd]
 acctport = 1813
