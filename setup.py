@@ -7,7 +7,6 @@ version = toughradius.__version__
 
 install_requires = [
     'argparse',
-    'MySQL-python>=1.2.5',
     'Mako>=0.9.0',
     'Beaker>=1.6.4',
     'MarkupSafe>=0.18',
@@ -20,9 +19,6 @@ install_requires = [
     'tablib>=0.10.0',
     'zope.interface>=4.1.1',
     'pycrypto==2.6.1',
-    'sh==1.11',
-    'pyOpenSSL==0.14',
-    'service_identity',
 ]
 install_requires_empty = []
 

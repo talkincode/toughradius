@@ -16,7 +16,7 @@ ToughRADIUS文档: http://docs.toughradius.net/build/html/
 
 
 
-Linux环境安装
+Linux环境快速安装
 ====================================
 
 
@@ -25,16 +25,12 @@ Linux环境安装
 
 ::
 
-    $ yum update -y
-     
-    # centos 6
-    $ yum install -y  mysql-devel python-devel python-setuptools MySQL-python
-     
-    #centos7
-    $ yum install -y  mariadb-devel python-devel python-setuptools MySQL-python
-     
+    $ yum update -y  && yum install -y  python-devel python-setuptools 
     
-   
+    $ easy_install pip
+    
+    
+    
 安装toughradius
 ----------------------------------------
 
@@ -45,44 +41,39 @@ Linux环境安装
     $ pip install toughradius
     
 
-创建配置文件
+系统配置
 ----------------------------------------
-
-请确保你的mysql服务器已经安装运行，根据提示配置正确的数据库连接信息。
 
 ::
 
-    $ toughctl --config
+    $ toughctl --echo_radiusd_cnf > /etc/radiusd.conf
     
-    [INFO] - set config...
-    [INPUT] - set your config file path,[ /etc/radiusd.conf ]
-    [INFO] - set default option
-    [INPUT] - set debug [false]:
-    [INPUT] - time zone [ CST-8 ]:
-    [INFO] - set database option
-    [INPUT] - database type [mysql]:
-    [INPUT] - database dburl [sqlite:////tmp/toughradius.sqlite3]:
-    [INPUT] - database echo [false]:
-    [INPUT] - database pool_size [30]:
-    [INPUT] - database pool_recycle(second) [300]:
-    [INFO] - set radiusd option
-    [INPUT] - radiusd authport [1812]:
-    [INPUT] - radiusd acctport [1813]:
-    [INPUT] - radiusd adminport [1815]:
-    [INPUT] - radiusd cache_timeout (second) [600]:
-    [INPUT] - log file [ logs/radiusd.log ]:/var/log/radiusd.log
-    [INFO] - set mysql backup ftpserver option
-    [INPUT] - backup ftphost [127.0.0.1]:
-    [INPUT] - backup ftpport [21]:
-    [INPUT] - backup ftpuser [ftpuser]:
-    [INPUT] - backup ftppwd [ftppwd]:
-    [INFO] - set admin option
-    [INPUT] - admin http port [1816]:
-    [INPUT] - log file [ logs/admin.log ]:/var/log/admin.log
-    [INFO] - set customer option
-    [INPUT] - customer http port [1817]:
-    [INPUT] - log file [ logs/customer.log ]:/var/log/customer.log
-    [SUCC] - config save to /etc/radiusd.conf
+配置文件内容::
+
+    [DEFAULT]
+    debug = 0
+    tz = CST-8
+    secret = %s
+
+    [database]
+    dbtype = sqlite
+    dburl = sqlite:////tmp/toughradius.sqlite3
+    echo = false
+
+    [radiusd]
+    acctport = 1813
+    adminport = 1815
+    authport = 1812
+    cache_timeout = 600
+    logfile = /var/log/radiusd.log
+
+    [admin]
+    port = 1816
+    logfile = /var/log/admin.log
+
+    [customer]
+    port = 1817
+    logfile = /var/log/customer.log
 
 
 初始化数据库
@@ -100,33 +91,27 @@ Linux环境安装
 
 ::
 
-    #radius认证计费服务
-    $ toughctl --radiusd
-     
-    #radius管理控制台服务
-    $ toughctl --admin
-     
-    #radius用户自助服务
-    $ toughctl --customer
-    
-    #通过一个进程运行所有服务
     $ toughctl --standalone
     
 
-以守护服务模式运行
+以守护进程模式运行
 ----------------------------------------
 
 当启动standalone模式时，只会启动一个进程
 
 ::
 
-    # 参数选择 [all|radiusd|admin|customer|standalone]
+    # 启动
     
-    $ toughctl --start all 
+    $ toughctl --start standalone 
+    
+    # 停止
+    
+    $ toughctl --stop standalone 
      
-    #设置开机启动
+    # 设置开机启动
     
-    $ echo "toughctl --start all" >> /etc/rc.local
+    $ echo "toughctl --start standalone" >> /etc/rc.local
     
     
 web管理控制台的使用
