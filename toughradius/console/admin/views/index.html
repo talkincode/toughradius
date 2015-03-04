@@ -17,20 +17,17 @@ var wsock = {
             console.log(message);
             for (p in message){
                 $("#"+p).html(message[p])
-                var auth_stat = {name:'认证消息',data:message.auth_stat}
-                var acct_stat = {name:'计费消息',data:message.acct_stat}
-                if(wsock.chart==null){
-                    msgstat_options.series = [auth_stat,acct_stat];
-                    wsock.chart = new Highcharts.Chart(msgstat_options);
-                }
-                else{
-                    wsock.chart.series[0].update(auth_stat) 
-                    wsock.chart.series[1].update(acct_stat) 
-                }
             }
+            var auth_stat = {name:'认证消息',data:message.auth_stat};
+            var acct_stat = {name:'计费消息',data:message.acct_stat};
+            wsock.chart.series[0].update(auth_stat) ;
+            wsock.chart.series[1].update(acct_stat) ;
         };
         
         wsock.socket.updateStat =function(){
+            if(wsock.chart==null){
+                wsock.chart = new Highcharts.Chart(msgstat_options);
+            }
             data = JSON.stringify({process:"admin_stat_query"});
             $.post("/encrypt", {data:data} , function (ev) {
                 wsock.socket.send(ev.data);
