@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
+from toughradius.radiusd.plugins import error_auth
 from twisted.python import log
 from toughradius.radiusd.settings import *
 import datetime
