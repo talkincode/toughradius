@@ -114,18 +114,6 @@ def run_initdb(config):
 def run_config():
     from toughradius.tools.config import setup_config
     setup_config()
-        
-def run_dbdict(config):
-    from toughradius.tools import dbdictgen 
-    dbdictgen.main()   
-    
-def run_backup(config):
-    from toughradius.tools import backupdb 
-    backupdb.backup(config)
-    
-def run_echo_my_cnf():
-    from toughradius.tools.config import echo_my_cnf
-    print echo_my_cnf()
     
 def run_echo_radiusd_cnf():
     from toughradius.tools.config import echo_radiusd_cnf
@@ -144,20 +132,14 @@ def run():
     parser.add_argument('-stop','--stop', type=str,default=None,dest='stop',help='stop server all|radiusd|admin|customer')
     parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
-    parser.add_argument('-echo_my_cnf','--echo_my_cnf', action='store_true',default=False,dest='echo_my_cnf',help='echo my_cnf')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
-    parser.add_argument('-backup','--backup', action='store_true',default=False,dest='backup',help='backup database')
-    parser.add_argument('-dbdict','--dbdict', action='store_true',default=False,dest='dbdict',help='dbdict gen')
     parser.add_argument('-debug','--debug', action='store_true',default=False,dest='debug',help='debug option')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
     args =  parser.parse_args(sys.argv[1:])  
     
     if args.config:
         return run_config()
-    
-    if args.echo_my_cnf:
-        return run_echo_my_cnf()
         
     if args.echo_radiusd_cnf:
         return run_echo_radiusd_cnf()
@@ -191,8 +173,6 @@ def run():
     elif args.standalone:run_standalone(config,args.daemon)
     elif args.secret:run_secret_update(config,args.conf)
     elif args.initdb:run_initdb(config)
-    elif args.dbdict:run_dbdict(config)
-    elif args.backup:run_backup(config)
     else: print 'do nothing'
     
         

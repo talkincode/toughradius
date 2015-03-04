@@ -10,7 +10,4 @@ six==1.8.0
 tablib==0.10.0
 zope.interface==4.1.1
 pycrypto==2.6.1
-pyOpenSSL==0.14
-service_identity
-sh==1.11
 nose

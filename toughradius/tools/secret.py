@@ -4,6 +4,7 @@ import sys,os
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius.console import models
 from toughradius.radiusd import utils
+from toughradius.tools.dbengine import get_engine
 import shutil
 import time
 import random
@@ -23,7 +24,7 @@ def update(config):
     old_AESCipher = utils.AESCipher(old_secret)
     new_AESCipher = utils.AESCipher(config.get('DEFAULT','secret'))
 
-    engine,_ = models.get_engine(config)
+    engine = get_engine(config)
     conn = engine.connect()
     
     # update 
@@ -45,5 +46,4 @@ def update(config):
         config.write(configfile)
     
     print 'update secret success user %s,vcard %s'%(total1,total2)
-    
     
