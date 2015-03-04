@@ -119,7 +119,7 @@ function update_online()
     $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             online_options.series = ev.data;
-            var chart = new Highcharts.Chart(online_options);
+            new Highcharts.Chart(online_options);
         }
     }, "json");
 }
@@ -129,7 +129,7 @@ function update_flow()
     $.post("/ops/flow/statdata", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             flow_options.series = ev.data;
-            var chart = new Highcharts.Chart(flow_options);
+            new Highcharts.Chart(flow_options);
         }
     }, "json");
 }
