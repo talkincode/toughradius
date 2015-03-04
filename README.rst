@@ -23,18 +23,29 @@ Linux环境安装
 安装系统依赖(centos6/7)
 --------------------------------------
 
+安装系统python依赖 python-devel python-setuptools ,安装python-setuptools后，easy_install命令将可用
+
 ::
 
-    $ yum update -y
-     
-    # centos 6
-    $ yum install -y  mysql-devel python-devel python-setuptools MySQL-python
-     
-    #centos7
-    $ yum install -y  mariadb-devel python-devel python-setuptools MySQL-python
-     
+    $ yum update -y  && yum install -y  python-devel python-setuptools 
     
-   
+    $ easy_install pip
+    
+.. topic:: 关于数据库的选择
+
+    toughradius默认采用嵌入式数据库sqlite，sqlite通常已经系统内置，不需要另行安装。
+
+    如果你需要使用mysql数据库，则需要安装额外的mysql客户端驱动::
+    
+        # centos 6
+        $ yum install -y  mysql-devel MySQL-python
+        
+        # centos7
+        $ yum install -y  mariadb-devel MySQL-python
+    
+    
+    
+    
 安装toughradius
 ----------------------------------------
 
@@ -45,10 +56,10 @@ Linux环境安装
     $ pip install toughradius
     
 
-创建配置文件
+系统配置初始化
 ----------------------------------------
 
-请确保你的mysql服务器已经安装运行，根据提示配置正确的数据库连接信息。
+如果你使用mysql数据库，请请确保你的mysql服务器已经安装运行，根据提示配置正确的数据库连接信息。
 
 对于mysql，dburl格式为
 
@@ -56,50 +67,58 @@ Linux环境安装
 
     mysql://user:passwd@host:port/dbname?charset=utf8
 
+通过toughctl --config进行配置文件的初始化，按照交互提示一步一步进行
+
 ::
 
     $ toughctl --config
     
     [INFO] - set config...
+    
+设置目标配置文件的位置::
+    
     [INPUT] - set your config file path,[ /etc/radiusd.conf ]
+
+设置基本配置选项::
+
     [INFO] - set default option
     [INPUT] - set debug [false]:
     [INPUT] - time zone [ CST-8 ]:
+    
+数据库选项（默认sqlite）::
+
     [INFO] - set database option
-    [INPUT] - database type [mysql]:
+    [INPUT] - database type [sqlite]:
     [INPUT] - database dburl [sqlite:////tmp/toughradius.sqlite3]:
+    # 对于sqlite，以下三项可略过
     [INPUT] - database echo [false]:
     [INPUT] - database pool_size [30]:
     [INPUT] - database pool_recycle(second) [300]:
+    
+radius认证计费选项::
+    
     [INFO] - set radiusd option
     [INPUT] - radiusd authport [1812]:
     [INPUT] - radiusd acctport [1813]:
     [INPUT] - radiusd adminport [1815]:
     [INPUT] - radiusd cache_timeout (second) [600]:
     [INPUT] - log file [ logs/radiusd.log ]:/var/log/radiusd.log
-    [INFO] - set mysql backup ftpserver option
-    [INPUT] - backup ftphost [127.0.0.1]:
-    [INPUT] - backup ftpport [21]:
-    [INPUT] - backup ftpuser [ftpuser]:
-    [INPUT] - backup ftppwd [ftppwd]:
+
+管理控制台选项::
+
     [INFO] - set admin option
     [INPUT] - admin http port [1816]:
     [INPUT] - log file [ logs/admin.log ]:/var/log/admin.log
+    
+自助服务系统选项::
+    
     [INFO] - set customer option
     [INPUT] - customer http port [1817]:
     [INPUT] - log file [ logs/customer.log ]:/var/log/customer.log
+
+配置完成，配置文件被自动保存到目标文件::
+
     [SUCC] - config save to /etc/radiusd.conf
-
-
-
-如果使用sqlite数据库，则只需简单配置如下即可,使用sqlite无需安装任何数据库软件。
-
-::
-
-    [database]
-    dbtype = sqlite
-    dburl = sqlite:////tmp/toughradius.sqlite3
-
 
 
 初始化数据库
@@ -130,7 +149,7 @@ Linux环境安装
     $ toughctl --standalone
     
 
-以守护服务模式运行
+以守护进程模式运行
 ----------------------------------------
 
 当启动standalone模式时，只会启动一个进程
@@ -139,7 +158,13 @@ Linux环境安装
 
     # 参数选择 [all|radiusd|admin|customer|standalone]
     
+    # 启动
+    
     $ toughctl --start all 
+    
+    # 停止
+    
+    $ toughctl --stop all 
      
     #设置开机启动
     
