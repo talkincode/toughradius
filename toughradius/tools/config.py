@@ -41,7 +41,7 @@ def setup_config():
     
     sh.info("set database option")
     config.add_section('database')
-    config.set('database','dbtype', (sh.read("database type [mysql]:") or 'mysql' ))
+    config.set('database','dbtype', (sh.read("database type [sqlite]:") or 'sqlte' ))
     config.set('database','dburl',( sh.read("database url [sqlite:////tmp/toughradius.sqlite3]:") or 'sqlite:////tmp/toughradius.sqlite3' ))
     config.set('database','echo',(sh.read("database echo sql [false]:") or 'false' ))
     config.set('database','pool_size',(sh.read("database pool_size [30]:") or '30' ))
