@@ -59,6 +59,7 @@ $INCLUDE dictionary.juniper
 $INCLUDE dictionary.mikrotik
 $INCLUDE dictionary.zte
 $INCLUDE dictionary.roaringpenguin
+$INCLUDE dictionary.microsoft
 #
 #	Following are the proper new names. Use these.
 #
