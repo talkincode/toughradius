@@ -18,6 +18,19 @@ def generate_nt_response_mschap(challenge,password):
     password_hash=nt_password_hash(password)
     return challenge_response(challenge,password_hash)
 
+def generate_lm_response_mschap(challenge,password):
+    """
+   NtChallengeResponse(
+   IN  8-octet               Challenge,
+   IN  0-to-256-unicode-char Password,
+   OUT 24-octet              Response )
+   {
+      NtPasswordHash( Password, giving PasswordHash )
+      ChallengeResponse( Challenge, PasswordHash, giving Response )
+   }    
+    """
+    password_hash=lm_password_hash(password)
+    return challenge_response(challenge,password_hash)
 
 def generate_nt_response_mschap2(authenticator_challenge,peer_challenge,username,password):
     """

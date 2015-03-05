@@ -371,7 +371,35 @@ class AuthPacket2(AuthPacket):
         
         
     def verifyMsChapV1(self,userpwd):
-        return False
+        ms_chap_response = self['MS-CHAP-Response'][0]
+        authenticator_challenge = self['MS-CHAP-Challenge'][0]
+        if len(ms_chap_response)!=50:
+            raise Exception("Invalid MSCHAPV1-Response attribute length")
+        
+        flag = ms_chap_response[1]
+        lm_password = None
+        nt_password = None
+        if flag == 0:
+            lm_password = ms_chap_response[2:26]
+        else:
+            nt_password = ms_chap_response[26:50]
+        
+        resp = None
+        auth_ok = False
+        if nt_password:
+            resp = mschap.generate_nt_response_mschap(authenticator_challenge,userpwd)
+            auth_ok = (resp == nt_password)
+        elif lm_password:
+            resp = mschap.generate_lm_response_mschap(authenticator_challenge,userpwd)
+            auth_ok = (resp == lm_password)
+        if not auth_ok:return False
+        
+        nt_hash = mschap.nt_password_hash(userpwd)
+        lm_hash = mschap.lm_password_hash(userpwd)
+        _key = (nt_hash + lm_hash).ljust(32,'0')
+        mppekey = mppe.radius_encrypt_keys(_key,self.secret,self.authenticator,mppe.create_salt())
+        self.ext_attrs['MS-CHAP-MPPE-Keys'] = mppekey    
+        return True
         
         
     def verifyMsChapV2(self,userpwd):
