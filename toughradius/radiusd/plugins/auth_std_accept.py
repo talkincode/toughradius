@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
+from toughradius.radiusd.plugins import error_auth
 from twisted.python import log
 from toughradius.radiusd.settings import *
 import datetime
@@ -68,8 +69,8 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
         except:
             import traceback
             traceback.print_exc()
-
-    
+    for attr in req.ext_attrs:
+        resp[attr] = req.ext_attrs[attr]
     # for attr in store.get_user_attrs(user['account_number']):
     #     try:resp[attr.attr_name] = attr.attr_value
     #     except:pass

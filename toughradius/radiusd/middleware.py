@@ -32,7 +32,7 @@ class Middleware():
         if name not in self._plugin_modules:
             raise Exception('Plugin %s not find. ' % (name))
         try:
-            log.msg('Plugin %s match.'%name,level=logging.DEBUG)
+            # log.msg('Plugin %s match.'%name,level=logging.DEBUG)
             return self._plugin_modules[name].process(**kwargs)
         except Exception as err:
             log.err(err,'Plugin %s failed to process.' % name,level=logging.INFO)

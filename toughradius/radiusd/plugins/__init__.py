@@ -24,6 +24,7 @@ __all__ = [
 ]
 
 def error_auth(resp,errmsg):
+    resp.clear()
     resp.code = 3 #packet.AccessReject
     resp['Reply-Message'] = errmsg
     return resp    

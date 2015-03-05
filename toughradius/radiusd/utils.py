@@ -10,6 +10,8 @@ from toughradius.radiusd.pyrad.packet import AccessAccept
 from toughradius.radiusd.pyrad.packet import AccountingRequest
 from toughradius.radiusd.pyrad.packet import AccountingResponse
 from toughradius.radiusd.pyrad.packet import CoARequest
+from toughradius.radiusd.mschap import mschap,mppe
+from toughradius.radiusd.mschap import utils as msutils
 from toughradius.radiusd import settings
 from twisted.python import log
 from Crypto.Cipher import AES
@@ -235,8 +237,12 @@ def format_packet_str(pkt):
     _str += "\ncode:%s" % pkt.code
     _str += "\nAttributes: "     
     for attr in attr_keys:
+        _type = pkt.dict[attr].type
         try:
-            _str += "\n\t%s: %s" % (attr, pkt[attr][0])   
+            if _type == 'octets':
+                _str += "\n\t%s: %s" % (attr, binascii.hexlify(pkt[attr][0]))   
+            else:
+                _str += "\n\t%s: %s" % (attr, pkt[attr][0])   
         except:
             try:_str += "\n\t%s: no display" % (attr)
             except:pass
@@ -269,6 +275,7 @@ class AuthPacket2(AuthPacket):
         self.vlanid2 = 0
         self.client_macaddr = None
         self.created = datetime.datetime.now()
+        self.ext_attrs = {}
 
     def format_str(self):
         return format_packet_str(self)
@@ -335,15 +342,12 @@ class AuthPacket2(AuthPacket):
 
     def get_passwd(self):
         try:return self.PwDecrypt(self.get(2)[0])
-        except:
-            import traceback
-            traceback.print_exc()
-            return None        
+        except:return None        
 
     def get_chappwd(self):
         try:return tools.DecodeOctets(self.get(3)[0])
-        except:return None    
-
+        except:return None  
+        
     def verifyChapEcrypt(self,userpwd):
         if isinstance(userpwd, six.text_type):
             userpwd = userpwd.strip().encode('utf-8')   
@@ -363,13 +367,107 @@ class AuthPacket2(AuthPacket):
             challenge = self['CHAP-Challenge'][0] 
 
         _pwd =  md5_constructor("%s%s%s"%(chapid,userpwd,challenge)).digest()
-        return password == _pwd    
+        return password == _pwd
+        
+        
+    def verifyMsChapV1(self,userpwd):
+        ms_chap_response = self['MS-CHAP-Response'][0]
+        authenticator_challenge = self['MS-CHAP-Challenge'][0]
+        if len(ms_chap_response)!=50:
+            raise Exception("Invalid MSCHAPV1-Response attribute length")
+        
+        flag = ms_chap_response[1]
+        lm_password = None
+        nt_password = None
+        if flag == 0:
+            lm_password = ms_chap_response[2:26]
+        else:
+            nt_password = ms_chap_response[26:50]
+        
+        resp = None
+        auth_ok = False
+        if nt_password:
+            resp = mschap.generate_nt_response_mschap(authenticator_challenge,userpwd)
+            auth_ok = (resp == nt_password)
+        elif lm_password:
+            resp = mschap.generate_lm_response_mschap(authenticator_challenge,userpwd)
+            auth_ok = (resp == lm_password)
+        if not auth_ok:return False
+        
+        nt_hash = mschap.nt_password_hash(userpwd)
+        lm_hash = mschap.lm_password_hash(userpwd)
+        _key = (nt_hash + lm_hash).ljust(32,'0')
+        mppekey = mppe.radius_encrypt_keys(_key,self.secret,self.authenticator,mppe.create_salt())
+        self.ext_attrs['MS-CHAP-MPPE-Keys'] = mppekey    
+        return True
+        
+        
+    def verifyMsChapV2(self,userpwd):
+        ms_chap_response = self['MS-CHAP2-Response'][0]
+        authenticator_challenge = self['MS-CHAP-Challenge'][0]
+        if len(ms_chap_response)!=50:
+            raise Exception("Invalid MSCHAPV2-Response attribute length")
+        # if isinstance(userpwd, six.text_type):
+        #     userpwd = userpwd.strip().encode('utf-8')
+        
+        nt_response = ms_chap_response[26:50]
+        peer_challenge = ms_chap_response[2:18]
+        _user_name = self.get(1)[0]
+        nt_resp = mschap.generate_nt_response_mschap2(
+            authenticator_challenge,
+            peer_challenge,
+            _user_name,
+            userpwd,
+        )
+        if nt_resp == nt_response:
+            auth_resp = mschap.generate_authenticator_response(
+                userpwd,
+                nt_response,
+                peer_challenge,
+                authenticator_challenge,
+                _user_name
+            )
+            self.ext_attrs['MS-CHAP2-Success'] = auth_resp
+            self.ext_attrs['MS-MPPE-Encryption-Policy'] = '\x00\x00\x00\x01'
+            self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
+            nt_pwd_hash = mschap.nt_password_hash(userpwd)
+            mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
+            self.ext_attrs['MS-MPPE-Send-Key'] = mppeSendKey
+            self.ext_attrs['MS-MPPE-Recv-Key'] = mppeRecvKey
+            return True
+        else:
+            return False
+        
+        
+    def get_pwd_type(self):
+        if 'MS-CHAP-Challenge' in self:
+            if 'MS-CHAP-Response' in self:
+                return 'mschapv1'
+            elif 'MS-CHAP2-Response' in self:
+                return 'mschapv2'
+        elif 'CHAP-Password' in self:
+            return 'chap'
+        else:
+            return 'pap'
+            
 
     def is_valid_pwd(self,userpwd):
-        if not self.get_chappwd():
-            return userpwd == self.get_passwd()
-        else:
-            return self.verifyChapEcrypt(userpwd)
+        pwd_type = self.get_pwd_type()
+        try:
+            if pwd_type == 'pap':
+                return userpwd == self.get_passwd()
+            elif pwd_type == 'chap':
+                return self.verifyChapEcrypt(userpwd)
+            elif pwd_type == 'mschapv1':
+                return self.verifyMsChapV1(userpwd)
+            elif pwd_type == 'mschapv2':
+                return self.verifyMsChapV2(userpwd)
+            else:
+                return False
+        except Exception as err:
+            import traceback
+            traceback.print_exc()
+            return False
 
 class AcctPacket2(AcctPacket):
     def __init__(self, code=AccountingRequest, id=None, secret=six.b(''),
