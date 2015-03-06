@@ -309,11 +309,12 @@ class AuthPacket2(AuthPacket):
     def set_session_timeout(self,timeout):
         if timeout:self.AddAttribute(27,tools.EncodeInteger(timeout))
    
-         
-
     def get_nas_addr(self):
-        try:return tools.DecodeAddress(self.get(4)[0])
-        except:return None
+        _nas_addr = None
+        try:
+            _nas_addr = tools.DecodeAddress(self.get(4)[0])
+        except:pass
+        return _nas_addr or self.source[0]
         
     def get_mac_addr(self):
         if self.client_macaddr:return self.client_macaddr
