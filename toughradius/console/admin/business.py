@@ -92,6 +92,7 @@ def member_query(db):
     product_id = request.params.get('product_id')
     address = request.params.get('address')
     expire_days = request.params.get('expire_days')
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
             models.SlcMember,
             models.SlcRadAccount,
@@ -108,6 +109,8 @@ def member_query(db):
         _query = _query.filter(models.SlcMember.mobile==mobile)
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_([i.id for i in opr_nodes]))
     if realname:
         _query = _query.filter(models.SlcMember.realname.like('%'+realname+'%'))
     if user_name:
@@ -130,7 +133,7 @@ def member_query(db):
     if request.path == '/member':
         return render("bus_member_list", 
             page_data = get_page_data(_query),
-            node_list=db.query(models.SlcNode),
+            node_list=opr_nodes,
             products=db.query(models.SlcRadProduct),
             **request.params)
     elif request.path == "/member/export":
@@ -273,7 +276,7 @@ def member_update(db):
     member_id = request.params.get("member_id")
     account_number = request.params.get("account_number")
     member = db.query(models.SlcMember).get(member_id)
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    nodes = [ (n.id,n.node_name) for n in get_opr_nodes(db)]
     form = forms.member_update_form(nodes)
     form.fill(member)
     form.account_number.set_value(account_number)
@@ -281,7 +284,7 @@ def member_update(db):
 
 @app.post('/member/update',apply=auth_opr)
 def member_update(db):
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    nodes = [ (n.id,n.node_name) for n in get_opr_nodes(db)]
     form=forms.member_update_form(nodes)
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -313,7 +316,7 @@ permit.add_route("/bus/member/update",u"修改用户资料",u"营业管理",orde
 
 @app.get('/member/open',apply=auth_opr)
 def member_open(db):
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    nodes = [ (n.id,n.node_desc) for n in get_opr_nodes(db)]
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     )]
@@ -322,7 +325,7 @@ def member_open(db):
 
 @app.post('/member/open',apply=auth_opr)
 def member_open(db):
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    nodes = [ (n.id,n.node_desc) for n in get_opr_nodes(db)]
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     )]
@@ -577,14 +580,14 @@ permit.add_route("/bus/account/update",u"修改用户上网账号",u"营业管�
 
 @app.get('/member/import',apply=auth_opr)
 def member_import(db):
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    nodes = [ (n.id,n.node_desc) for n in get_opr_nodes(db)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.user_import_form(nodes,products)
     return render("bus_import_form",form=form)
 
 @app.post('/member/import',apply=auth_opr)
 def member_import(db):
-    nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
+    nodes = [ (n.id,n.node_desc) for n in get_opr_nodes(db)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
     iform = forms.user_import_form(nodes,products)
     node_id =   request.params.get('node_id')
@@ -1028,6 +1031,7 @@ def acceptlog_query(db):
     operator_name = request.params.get('operator_name')
     query_begin_time = request.params.get('query_begin_time')
     query_end_time = request.params.get('query_end_time')
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
         models.SlcRadAcceptLog.id,
         models.SlcRadAcceptLog.accept_type,
@@ -1047,6 +1051,8 @@ def acceptlog_query(db):
         _query = _query.filter(models.SlcRadAcceptLog.operator_name == operator_name)
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_([i.id for i in opr_nodes]))
     if account_number:
         _query = _query.filter(models.SlcRadAcceptLog.account_number.like('%'+account_number+'%'))
     if accept_type:
@@ -1061,7 +1067,7 @@ def acceptlog_query(db):
         return render(
             "bus_acceptlog_list",
             page_data = get_page_data(_query),
-            node_list=db.query(models.SlcNode),
+            node_list=opr_nodes,
             type_map = type_map,
             get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar(),
             **request.params
@@ -1123,6 +1129,7 @@ def billing_query(db):
     account_number = request.params.get('account_number')
     query_begin_time = request.params.get('query_begin_time')
     query_end_time = request.params.get('query_end_time')
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
         models.SlcRadBilling,
         models.SlcMember.node_id,
@@ -1134,6 +1141,8 @@ def billing_query(db):
     )
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_(i.id for i in opr_nodes))
     if account_number:
         _query = _query.filter(models.SlcRadBilling.account_number.like('%'+account_number+'%'))
     if query_begin_time:
@@ -1143,7 +1152,7 @@ def billing_query(db):
     _query = _query.order_by(models.SlcRadBilling.create_time.desc())
     if request.path == '/billing':
         return render("bus_billing_list",
-            node_list=db.query(models.SlcNode),
+            node_list=opr_nodes,
             page_data=get_page_data(_query),**request.params)
     elif request.path == '/billing/export':
         data = Dataset()
@@ -1183,6 +1192,7 @@ def order_query(db):
     account_number = request.params.get('account_number')
     query_begin_time = request.params.get('query_begin_time')
     query_end_time = request.params.get('query_end_time')
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
         models.SlcMemberOrder,
         models.SlcMember.node_id,
@@ -1196,6 +1206,8 @@ def order_query(db):
     )
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_([i.id for i in opr_nodes]))
     if account_number:
         _query = _query.filter(models.SlcMemberOrder.account_number.like('%'+account_number+'%'))
     if product_id:
@@ -1210,7 +1222,7 @@ def order_query(db):
 
     if request.path == '/orders':
         return render("bus_order_list",
-            node_list=db.query(models.SlcNode),
+            node_list=opr_nodes,
             products =  db.query(models.SlcRadProduct).filter_by(product_status = 0),
             page_data=get_page_data(_query),**request.params)
     elif request.path == '/orders/export':

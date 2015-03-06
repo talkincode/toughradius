@@ -187,6 +187,15 @@ def auth_cus(func):
 ########################################################################
 # cache function
 ########################################################################
+def get_opr_nodes(db):
+    opr_type = get_cookie('opr_type')
+    if opr_type == 0:
+        return db.query(models.SlcNode)
+    opr_name = get_cookie('username')
+    return db.query(models.SlcNode).filter(
+        models.SlcNode.node_name == models.SlcOperatorNodes.node_name,
+        models.SlcOperatorNodes.operator_name == opr_name
+    )
 
 @cache.cache('get_node_name',expire=3600)   
 def get_node_name(db,node_id):
