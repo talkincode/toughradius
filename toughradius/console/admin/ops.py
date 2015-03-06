@@ -28,7 +28,6 @@ render = functools.partial(Render.render_app,app)
 ###############################################################################
                    
 @app.route('/user',apply=auth_opr,method=['GET','POST'])
-@app.post('/user/export',apply=auth_opr)
 def user_query(db):   
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
@@ -55,25 +54,10 @@ def user_query(db):
         return render("ops_user_list", page_data = get_page_data(_query),
                        node_list=db.query(models.SlcNode), 
                        product_list=db.query(models.SlcRadProduct),**request.params)
-    elif request.path == "/user/export":
-        result = _query.all()
-        data = Dataset()
-        data.append((
-            u'用户账号',u'密码',u'姓名', u'资费', u'过期时间', u'余额(元)',
-            u'时长(小时)',u'流量(MB)',u'并发数',u'ip地址',u'状态',u'创建时间'
-        ))
-        for i,_realname,_product_name in result:
-            data.append((
-                i.account_number,utils.decrypt(i.password),_realname, _product_name, 
-                i.expire_date,utils.fen2yuan(i.balance),
-                utils.sec2hour(i.time_length),utils.kb2mb(i.flow_length),i.user_concur_number,i.ip_address,
-                forms.user_state[i.status],i.create_time
-            ))
-        name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        return export_file(name,data)
+    
         
 permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"运维管理",is_menu=True,order=0)
-permit.add_route("%s/user/export"%__prefix__,u"账号查询导出",u"运维管理",order=0.01)
+
 
 
 @app.get('/user/trace',apply=auth_opr)

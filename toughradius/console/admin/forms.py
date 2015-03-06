@@ -223,7 +223,7 @@ def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
-        pyforms.Checkbox("is_samename",description=u"启用独立的自主服务用户名", checked="",**input_style),
+        pyforms.Checkbox("is_samename",description=u"启用独立的自助服务用户名", checked="",**input_style),
         pyforms.Textbox("member_name", rules.len_of(0,64), description=u"自助服务用户名", required="required",**input_style),
         pyforms.Textbox("member_password", rules.len_of(0,128), description=u"自助服务用户密码", required="required",**input_style),
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
@@ -250,7 +250,7 @@ def account_open_form(products=[]):
         pyforms.Textbox("account_number", description=u"用户账号",  required="required", **input_style),
         pyforms.Textbox("password", description=u"认证密码", required="required", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
-        pyforms.Textbox("address", description=u"用户地址",**input_style),
+        pyforms.Textbox("address", description=u"用户装机地址",**input_style),
         pyforms.Dropdown("product_id",args=products, description=u"资费",  required="required", **input_style),
         pyforms.Textbox("months",rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额",  required="required", **input_style),
@@ -317,6 +317,7 @@ account_cancel_form = pyforms.Form(
 
 def member_update_form(nodes=[]):
     return pyforms.Form(
+        pyforms.Hidden("account_number", description=u"用户账号"),
         pyforms.Hidden("member_id", description=u"mid",  required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
         pyforms.Textbox("member_name", description=u"自助服务用户名", readonly="readonly",**input_style),
@@ -335,7 +336,7 @@ def account_update_form():
     return pyforms.Form(
         pyforms.Textbox("account_number", description=u"用户账号",  readonly="readonly", **input_style),
         pyforms.Textbox("ip_address", description=u"用户IP地址",**input_style),
-        pyforms.Textbox("install_address", description=u"用户安装地址",**input_style),
+        pyforms.Hidden("install_address", description=u"用户安装地址",**input_style),
         pyforms.Textbox("new_password", description=u"认证密码(留空不修改)", **input_style),
         pyforms.Textbox("user_concur_number",rules.is_number, description=u"用户并发数",  required="required", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",**input_style),
