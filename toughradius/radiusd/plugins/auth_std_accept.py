@@ -17,7 +17,7 @@ def get_type_val(typ,src):
 
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     store = radiusd.store
-    
+    session_timeout = int(store.get_param("max_session_timeout"))
     expire_pool = store.get_param("expire_addrpool")
     if "Framed-Pool" in resp:
         if expire_pool in resp['Framed-Pool']:
@@ -30,8 +30,6 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     acct_interim_intelval = int(store.get_param("acct_interim_intelval"))
     if acct_interim_intelval > 0:
         resp['Acct-Interim-Interval'] = acct_interim_intelval
-    
-    session_timeout = int(store.get_param("max_session_timeout"))
     
     acct_policy = user['product_policy'] or BOMonth
     product = store.get_product(user['product_id'])
