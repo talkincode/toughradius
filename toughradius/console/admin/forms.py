@@ -223,8 +223,9 @@ def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
-        pyforms.Textbox("member_name", rules.len_of(4,64), description=u"自助服务用户名", required="required",**input_style),
-        pyforms.Textbox("member_password", rules.len_of(6,128), description=u"自助服务密码", required="required",**input_style),
+        pyforms.Checkbox("is_samename",description=u"启用独立的自主服务用户名", checked="",**input_style),
+        pyforms.Textbox("member_name", rules.len_of(0,64), description=u"自助服务用户名", required="required",**input_style),
+        pyforms.Textbox("member_password", rules.len_of(0,128), description=u"自助服务用户密码", required="required",**input_style),
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
         pyforms.Textbox("mobile", rules.len_of(0,32),description=u"用户手机号码", **input_style),
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
@@ -272,8 +273,12 @@ def user_import_form(nodes=[],products=[]):
 
 user_import_vform = dataform.Form(
         dataform.Item("realname", rules.not_null,description=u"用户姓名" ),
+        dataform.Item("idcard", rules.len_of(0,32), description=u"证件号码"),
+        dataform.Item("mobile", rules.len_of(0,32),description=u"用户手机号码"),
+        dataform.Item("address", description=u"用户地址"),
         dataform.Item("account_number",rules.not_null, description=u"用户账号"),
         dataform.Item("password",rules.not_null,description=u"用户密码"),
+        dataform.Item("begin_date", rules.is_date,description=u"开通日期"),
         dataform.Item("expire_date", rules.is_date,description=u"过期日期"),
         dataform.Item("balance",rules.is_rmb,description=u"用户余额"),
         dataform.Item("time_length",description=u"用户时长"),

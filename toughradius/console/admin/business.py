@@ -271,8 +271,9 @@ def member_open(db):
     member = models.SlcMember()
     member.node_id = form.d.node_id
     member.realname = form.d.realname
-    member.member_name = form.d.member_name
-    member.password = md5(form.d.member_password.encode()).hexdigest()
+    member.member_name = form.d.member_name or form.d.account_number
+    mpwd = form.d.member_password or form.d.password
+    member.password = md5(mpwd.encode()).hexdigest()
     member.idcard = form.d.idcard
     member.sex = '1'
     member.age = '0'
@@ -532,12 +533,16 @@ def member_import(db):
         vform = forms.user_import_vform()
         if not vform.validates(dict(
                 realname = attr_array[0],
-                account_number = attr_array[1],
-                password = attr_array[2],
-                expire_date = attr_array[3],
-                balance = attr_array[4],
-                time_length = utils.hour2sec(attr_array[5]),
-                flow_length = utils.mb2kb(attr_array[6]))):
+                idcard = attr_array[1],
+                mobile = attr_array[2],
+                address = attr_array[3],
+                account_number = attr_array[4],
+                password = attr_array[5],
+                begin_date = attr_array[6],
+                expire_date = attr_array[7],
+                balance = attr_array[8],
+                time_length = utils.hour2sec(attr_array[9]),
+                flow_length = utils.mb2kb(attr_array[10]))):
             return render("bus_import_form",form=iform,msg=u"line %s error: %s"%(_num,vform.errors))
 
         impusers.append(vform)
@@ -547,15 +552,15 @@ def member_import(db):
             member = models.SlcMember()
             member.node_id = node_id
             member.realname = form.d.realname
-            member.idcard = '123456'
+            member.idcard = form.d.idcard
             member.member_name = form.d.account_number
             member.password = md5(form.d.password.encode()).hexdigest()
             member.sex = '1'
             member.age = '0'
             member.email = ''
-            member.mobile = ''
-            member.address = 'no address'
-            member.create_time = utils.get_currtime()
+            member.mobile = form.d.mobile
+            member.address = form.d.address
+            member.create_time = form.d.begin_date + '00:00:00'
             member.update_time = utils.get_currtime()
             member.email_active = 0
             member.mobile_active = 0
@@ -567,8 +572,7 @@ def member_import(db):
             accept_log = models.SlcRadAcceptLog()
             accept_log.accept_type = 'open'
             accept_log.accept_source = 'console'
-            _desc = u"用户导入账号：(%s)%s - 上网账号:%s"% \
-                    (member.member_name,member.realname,form.d.account_number)
+            _desc = u"用户导入账号：%s"% form.d.account_number
             accept_log.accept_desc = _desc
             accept_log.account_number = form.d.account_number
             accept_log.accept_time = member.create_time
@@ -628,7 +632,7 @@ def member_import(db):
             account.vlan_id = 0
             account.vlan_id2 = 0
             account.create_time = member.create_time
-            account.update_time = member.create_time
+            account.update_time = member.update_time
             db.add(account)
 
         except Exception as e:
