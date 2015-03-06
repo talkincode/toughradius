@@ -46,6 +46,16 @@ class SlcOperator(DeclarativeBase):
     operator_pass = Column(u'operator_pass', Unicode(length=128), nullable=False,doc=u"操作员密码")
     operator_status = Column(u'operator_status', INTEGER(), nullable=False,doc=u"操作员状态,0/1")
     operator_desc = Column(u'operator_desc', Unicode(255), nullable=False,doc=u"操作员描述")
+    
+class SlcOperatorNodes(DeclarativeBase):
+    """操作员表关联区域"""
+    __tablename__ = 'slc_operator_nodes'
+
+    __table_args__ = {}
+
+    #column definitions
+    operator_name = Column(u'operator_name', Unicode(32),primary_key=True,nullable=False,doc=u"操作员名称")
+    node_name = Column(u'node_name', Unicode(32), primary_key=True,nullable=False,doc=u"区域名称")
 
 class SlcOperatorRule(DeclarativeBase):
     """操作员权限表"""

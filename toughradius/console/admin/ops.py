@@ -54,11 +54,8 @@ def user_query(db):
         return render("ops_user_list", page_data = get_page_data(_query),
                        node_list=db.query(models.SlcNode), 
                        product_list=db.query(models.SlcRadProduct),**request.params)
-    
-        
+                       
 permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"运维管理",is_menu=True,order=0)
-
-
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   

@@ -88,7 +88,7 @@ class Render(object):
 
 class Permit():
     routes = {}
-    def add_route(self,path,name,category,is_menu=False,order=time.time()):
+    def add_route(self,path,name,category,is_menu=False,order=time.time(),is_open=True):
         if not path:return
         self.routes[path] = dict(
             path=path,
@@ -96,7 +96,8 @@ class Permit():
             category=category,
             is_menu=is_menu,
             oprs=[],
-            order=order
+            order=order,
+            is_open=is_open
         )
     
     def get_route(self,path):
@@ -122,6 +123,10 @@ class Permit():
                 route = self.routes.get(path)    
                 if route and opr in route['oprs']:
                     route['oprs'].remove(opr)
+                    
+    def check_open(self,path):
+        route = self.routes[path]
+        return 'is_open' in route and route['is_open']
                 
     def check_opr_category(self,opr,category):
         for path in self.routes:
