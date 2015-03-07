@@ -31,6 +31,18 @@ CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
 
 CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
 
+ACCEPT_TYPES = {
+    'open':u'开户',
+    'pause':u'停机',
+    'resume':u'复机',
+    'cancel':u'销户',
+    'next':u'续费',
+    'charge':u'充值',
+    'change':u'变更'
+}
+
+MAX_EXPIRE_DATE = '3000-12-30'
+
 TMPDIR = tempfile.gettempdir()
 
 page_size = 20

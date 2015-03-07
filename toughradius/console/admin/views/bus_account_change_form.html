@@ -4,38 +4,43 @@
 <link rel="stylesheet" href="/static/js/datepicker.css"> 
 <script>
 
-function productCalc(){
-    param = {
-        'months': $("#months").val() || 0,
-        'product_id':$("#product_id").val(),
-        'old_expire':$("#old_expire").val()
-    }
-    $.post("/bus/opencalc", param, function (ev) {
+function update_ui(){
+    var product_id = $("#product_id").val();
+    $.get("/bus/product/policy/get?product_id="+product_id, {}, function (ev) {
         console.log(ev);
         if(ev.code==0){
             console.log(ev.data);
-            $("#fee_value").val(ev.data.fee_value);
-            $("#expire_date").val(ev.data.expire_date);
         }
-        if(ev.data.policy == 0){
-            $("#months").parent().parent().show();
-        }else{
-            $("#months").val(0);
-            $("#months").parent().parent().hide();
+        if(ev.data.policy == 0 || ev.data.policy == 2){
+            $("#expire_date").parent().parent().show();
+            $("#balance").parent().parent().hide();
+            $("#time_length").parent().parent().hide();
+            $("#flow_length").parent().parent().hide();
+        }else if(ev.data.policy == 1||ev.data.policy == 4){
+            $("#expire_date").parent().parent().hide();
+            $("#balance").parent().parent().show();
+            $("#time_length").parent().parent().hide();
+            $("#flow_length").parent().parent().hide();
+        }else if(ev.data.policy == 3){
+            $("#expire_date").parent().parent().hide();
+            $("#balance").parent().parent().hide();
+            $("#time_length").parent().parent().show();
+            $("#flow_length").parent().parent().hide();
+        }else if(ev.data.policy == 5){
+            $("#expire_date").parent().parent().hide();
+            $("#balance").parent().parent().hide();
+            $("#time_length").parent().parent().hide();
+            $("#flow_length").parent().parent().show();
         }
     }, "json");
 }
 
-//页面初始化
-$(document).ready(function (){
+$(function () {
+    update_ui();
     $("#expire_date").datepicker();
-    productCalc();
     $('#product_id').change(function() {
-        productCalc();
+        update_ui();
     });
-    $('#months').blur(function() {
-        productCalc();
-    });    
 });
 </script>
 
@@ -68,11 +73,11 @@ $(document).ready(function (){
                         <td>余额</td>
                         <td>${fen2yuan(user.balance)}</td>
                         <td>剩余时长</td>
-                        <td>${sec2hour(user.time_length)}小时</td>
+                        <td>${user.time_length}</td>
                     </tr>      
                     <tr>
-                        <td>剩余流量</td>
-                        <td>${kb2mb(user.flow_length)}MB</td>
+                        <td>MAC地址</td>
+                        <td>${user.mac_addr}</td>
                         <td>并发数</td>
                         <td>${user.user_concur_number}</td>
                         <td>绑定MAC</td>
@@ -81,10 +86,10 @@ $(document).ready(function (){
                     <tr>
                         <td>绑定VLAN</td>
                         <td>${{0:u"否", 1:u"是"}[user.bind_vlan]}</td>
-                        <td>VLANID1/VLANID2</td>
-                        <td>${user.vlan_id}/${user.vlan_id2}</td>
-                        <td>MAC地址</td>
-                        <td>${user.mac_addr}</td>                        
+                        <td>VLANID1</td>
+                        <td>${user.vlan_id}</td>
+                        <td>VLANID2</td>
+                        <td>${user.vlan_id2}</td>                        
                     </tr>   
                     <tr>
                         <td>IP地址</td>
@@ -100,7 +105,7 @@ $(document).ready(function (){
           <hr/>            
             <form class="form-horizontal form-well" role="form" action="${form.action}" method="post">
             ${form.render_css()}
-            </form>
+        </form>
     </div>
 </div>
 </%def>

@@ -56,18 +56,6 @@ function do_delete(account_number)
             <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-default">新开子账号</a>
             % endif
             
-            % if permit.match('/bus/member/update'):
-            <a href="/bus/member/update?member_id=${member.member_id}&account_number=${user.account_number}" class="btn btn-sm btn-default">修改基本资料</a>
-            % endif
-
-            % if permit.match('/ops/user/release'):
-            <a class="btn btn-sm btn-default" href="/bus/account/update?account_number=${user.account_number}">修改策略</a>
-            % endif
-
-            % if permit.match('/ops/user/release'):
-            <a class="btn btn-sm btn-default" href="javascript:release('${user.account_number}');">释放绑定</a>
-            % endif
-
             % if user.status == 2:
            
                 % if permit.match('/bus/account/resume'):
@@ -75,6 +63,22 @@ function do_delete(account_number)
                 % endif
                
             % elif user.status == 1:
+            
+                % if permit.match('/bus/member/update'):
+                <a href="/bus/member/update?member_id=${member.member_id}&account_number=${user.account_number}" class="btn btn-sm btn-default">修改基本资料</a>
+                % endif
+
+                % if permit.match('/ops/user/release'):
+                <a class="btn btn-sm btn-default" href="/bus/account/update?account_number=${user.account_number}">修改策略</a>
+                % endif
+
+                % if permit.match('/ops/user/release'):
+                <a class="btn btn-sm btn-default" href="javascript:release('${user.account_number}');">释放绑定</a>
+                % endif
+            
+                % if permit.match('/bus/account/change'):
+                <a class="btn btn-sm btn-default" href="/bus/account/change?account_number=${user.account_number}">资费变更</a>
+                % endif
                
                 % if permit.match('/bus/account/pause'):
                 <a class="btn btn-sm btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
@@ -163,7 +167,9 @@ function do_delete(account_number)
                         <td>资费名称</td>
                         <td>${user.product_name}</td>
                         <td>用户状态</td>
-                        <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>                 
+                        <td>
+                            ${{1:u"正常",2:u"停机",3:u"<font color=red>销户</font>",4:u"到期",6:u"未激活"}[user.status]}
+                        </td>                 
                     </tr>
                     <tr>
                         <td>过期时间</td>
@@ -231,7 +237,7 @@ function do_delete(account_number)
         <table class="table ">
             <thead>
                 <tr>
-                    <th colspan="7"> 账号订购记录</th>
+                    <th colspan="7"> 账号交易记录</th>
                 </tr>
                 <tr class="active">
                     <th>订单号</th>

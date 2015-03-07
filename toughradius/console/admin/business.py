@@ -41,6 +41,17 @@ def product_get(db):
         code=0,
         data=[{'code': it.id,'name': it.product_name} for it in items]
     )
+    
+@app.get('/product/policy/get',apply=auth_opr)
+def product_policy_get(db):
+    product_id = request.params.get("product_id")
+    product_policy = db.query(
+        models.SlcRadProduct.product_policy
+    ).filter_by(id = product_id).scalar()
+    return dict(
+        code=0,
+        data={'id': product_id,'policy': product_policy}
+    )
 
 
 @app.post('/opencalc',apply=auth_opr)
@@ -221,7 +232,7 @@ def member_detail(db):
             models.SlcRadAcceptLog.account_number == account_number
     )
     get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar()
-    type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}
+    type_map = ACCEPT_TYPES
     return  render("bus_member_detail",
         member=member,
         user=user,
@@ -955,6 +966,88 @@ def account_charge(db):
 permit.add_route("/bus/account/charge",u"用户账号充值",u"营业管理",order=2.04)
 
 ###############################################################################
+# account product change
+###############################################################################
+
+@app.get('/account/change',apply=auth_opr)
+def account_change(db):
+    account_number = request.params.get("account_number")
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    user = query_account(db,account_number)
+    form = forms.account_change_form(products=products)
+    form.account_number.set_value(account_number)
+    return render("bus_account_change_form",user=user,form=form)
+    
+@app.post('/account/change',apply=auth_opr)
+def account_change(db):
+    account_number = request.params.get("account_number")
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)]
+    form = forms.account_change_form(products=products)
+    account = db.query(models.SlcRadAccount).get(account_number)
+    user = query_account(db,account_number)
+    if account.status not in (1,4):
+        return render("bus_account_change_form", user=user,form=form,msg=u"无效用户状态")
+    if not form.validates(source=request.forms):
+        return render("bus_account_change_form", user=user,form=form)
+        
+    product = db.query(models.SlcRadProduct).get(form.d.product_id)
+
+    accept_log = models.SlcRadAcceptLog()
+    accept_log.accept_type = 'change'
+    accept_log.accept_source = 'console'
+    accept_log.account_number = form.d.account_number
+    accept_log.accept_time = utils.get_currtime()
+    accept_log.operator_name = get_cookie("username")
+    accept_log.accept_desc = u"用户资费变更为:%s"%(product.product_name)
+    db.add(accept_log)
+    db.flush()
+    db.refresh(accept_log)
+    
+    account.product_id = product.id
+    #(PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
+    if product.product_policy in (PPMonth,BOMonth):
+        account.expire_date = form.d.expire_date
+        account.balance = 0
+        account.time_length = 0
+        account.flow_length = 0
+    elif product.product_policy in (PPTimes,PPFlow):
+        account.expire_date = MAX_EXPIRE_DATE
+        account.balance = utils.yuan2fen(form.d.balance)
+        account.time_length = 0
+        account.flow_length = 0
+    elif product.product_policy == BOTimes:
+        account.expire_date = MAX_EXPIRE_DATE
+        account.balance = 0
+        account.time_length = utils.hour2sec(form.d.time_length)
+        account.flow_length = 0
+    elif product.product_policy == BOFlows:
+        account.expire_date = MAX_EXPIRE_DATE
+        account.balance = 0
+        account.time_length = 0
+        account.flow_length = utils.mb2kb(form.d.flow_length)
+
+    order = models.SlcMemberOrder()
+    order.order_id = utils.gen_order_id()
+    order.member_id = account.member_id
+    order.product_id = account.product_id
+    order.account_number = account.account_number
+    order.order_fee = 0
+    order.actual_fee = utils.yuan2fen(form.d.add_value) - utils.yuan2fen(form.d.back_value)
+    order.pay_status = 1
+    order.accept_id = accept_log.id
+    order.order_source = 'console'
+    order.create_time = utils.get_currtime()
+    order.order_desc =  u"用户资费变更，费用:%s元"%utils.fen2yuan(order.actual_fee)
+    db.add(order)
+    
+
+    db.commit()
+    websock.update_cache("account",account_number=account_number)
+    redirect(member_detail_url_formatter(account_number))
+    
+permit.add_route("/bus/account/change",u"用户资费变更",u"营业管理",order=2.05)
+
+###############################################################################
 # account cancel
 ###############################################################################
 
@@ -984,7 +1077,7 @@ def account_cancel(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
-    accept_log.accept_desc = u"用户销户：上网账号:%s，退费%s(元)"%(account_number,form.d.fee_value)
+    accept_log.accept_desc = u"用户销户退费%s(元)"%(account_number,form.d.fee_value)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -1000,7 +1093,7 @@ def account_cancel(db):
     order.order_source = 'console'
     order.accept_id = accept_log.id
     order.create_time = utils.get_currtime()
-    order.order_desc = u'用户销户'
+    order.order_desc = accept_log.accept_desc
     db.add(order)
 
     account.status = 3
@@ -1062,7 +1155,7 @@ def acceptlog_query(db):
     if query_end_time:
         _query = _query.filter(models.SlcRadAcceptLog.accept_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcRadAcceptLog.accept_time.desc())
-    type_map = {'open':u'开户','pause':u'停机','resume':u'复机','cancel':u'销户','next':u'续费','charge':u'充值'}
+    type_map = ACCEPT_TYPES
     if request.path == '/acceptlog':
         return render(
             "bus_acceptlog_list",
@@ -1243,5 +1336,5 @@ def order_query(db):
         name = u"RADIUS-ORDERS-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         return export_file(name,data)
 
-permit.add_route("/bus/orders",u"用户订购查询",u"营业管理",is_menu=True,order=5)
-permit.add_route("/bus/orders/export",u"用户订购导出",u"营业管理",order=5.01)
+permit.add_route("/bus/orders",u"用户交易查询",u"营业管理",is_menu=True,order=5)
+permit.add_route("/bus/orders/export",u"用户交易导出",u"营业管理",order=5.01)
