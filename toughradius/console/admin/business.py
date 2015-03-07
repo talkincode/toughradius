@@ -938,7 +938,11 @@ def account_charge(db):
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
     _new_fee = account.balance + utils.yuan2fen(form.d.fee_value)
-    accept_log.accept_desc = u"用户充值：上网账号:%s，充值前%s(分),充值后%s(分)"%(account_number,account.balance,_new_fee)
+    accept_log.accept_desc = u"用户充值：充值前%s元,充值后%s元"%(
+        account_number,
+        utils.fen2yuan(account.balance),
+        utils.fen2yuan(_new_fee)
+    )
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -954,7 +958,7 @@ def account_charge(db):
     order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
-    order.order_desc = u"用户充值"
+    order.order_desc = accept_log.accept_desc
     db.add(order)
 
     account.balance += order.actual_fee

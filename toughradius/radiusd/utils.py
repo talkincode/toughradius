@@ -298,6 +298,17 @@ class AuthPacket2(AuthPacket):
             reply.set_reply_msg(tools.EncodeString(msg))
         reply.source_user = self.get_user_name()
         return reply
+        
+    def ChapEcrypt(self,password):
+        if not self.authenticator:
+            self.authenticator = self.CreateAuthenticator()
+        if not self.id:
+            self.id = self.CreateID()
+        if isinstance(password, six.text_type):
+            password = password.strip().encode('utf-8')
+
+        result = six.b(chr(self.id))
+        return md5_constructor("%s%s%s"%(chr(self.id),password,self.authenticator)).digest()
 
 
     def set_reply_msg(self,msg):
