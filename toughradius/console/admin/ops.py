@@ -28,12 +28,12 @@ render = functools.partial(Render.render_app,app)
 ###############################################################################
                    
 @app.route('/user',apply=auth_opr,method=['GET','POST'])
-@app.post('/user/export',apply=auth_opr)
 def user_query(db):   
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
     user_name = request.params.get('user_name')
     status = request.params.get('status')
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
             models.SlcRadAccount,
             models.SlcMember.realname,
@@ -44,6 +44,8 @@ def user_query(db):
         )
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_([i.id for i in opr_nodes]))
     if product_id:
         _query = _query.filter(models.SlcRadAccount.product_id==product_id)
     if user_name:
@@ -53,28 +55,10 @@ def user_query(db):
 
     if request.path == '/user':
         return render("ops_user_list", page_data = get_page_data(_query),
-                       node_list=db.query(models.SlcNode), 
+                       node_list=opr_nodes, 
                        product_list=db.query(models.SlcRadProduct),**request.params)
-    elif request.path == "/user/export":
-        result = _query.all()
-        data = Dataset()
-        data.append((
-            u'用户账号',u'密码',u'姓名', u'资费', u'过期时间', u'余额(元)',
-            u'时长(小时)',u'流量(MB)',u'并发数',u'ip地址',u'状态',u'创建时间'
-        ))
-        for i,_realname,_product_name in result:
-            data.append((
-                i.account_number,utils.decrypt(i.password),_realname, _product_name, 
-                i.expire_date,utils.fen2yuan(i.balance),
-                utils.sec2hour(i.time_length),utils.kb2mb(i.flow_length),i.user_concur_number,i.ip_address,
-                forms.user_state[i.status],i.create_time
-            ))
-        name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
-        return export_file(name,data)
-        
+                       
 permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"运维管理",is_menu=True,order=0)
-permit.add_route("%s/user/export"%__prefix__,u"账号查询导出",u"运维管理",order=0.01)
-
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
@@ -149,6 +133,7 @@ def online_query(db):
     framed_ipaddr = request.params.get('framed_ipaddr')  
     mac_addr = request.params.get('mac_addr')  
     nas_addr = request.params.get('nas_addr')  
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
         models.SlcRadOnline.id,
         models.SlcRadOnline.account_number,
@@ -170,6 +155,9 @@ def online_query(db):
     )
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_([i.id for i in opr_nodes]))
+            
     if account_number:
         _query = _query.filter(models.SlcRadOnline.account_number.like('%'+account_number+'%'))
     if framed_ipaddr:
@@ -181,7 +169,7 @@ def online_query(db):
 
     _query = _query.order_by(models.SlcRadOnline.acct_start_time.desc())
     return render("ops_online_list", page_data = get_page_data(_query),
-                   node_list=db.query(models.SlcNode), 
+                   node_list=opr_nodes, 
                    bas_list=db.query(models.SlcRadBas),**request.params)
 
 permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"运维管理",is_menu=True,order=2)
@@ -198,6 +186,7 @@ def ticket_query(db):
     mac_addr = request.params.get('mac_addr')  
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(
         models.SlcRadTicket.id,
         models.SlcRadTicket.account_number,
@@ -220,6 +209,8 @@ def ticket_query(db):
     )
     if node_id:
         _query = _query.filter(models.SlcMember.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcMember.node_id.in_([i.id for i in opr_nodes]))
     if account_number:
         _query = _query.filter(models.SlcRadTicket.account_number.like('%'+account_number+'%'))
     if framed_ipaddr:
@@ -233,7 +224,7 @@ def ticket_query(db):
 
     _query = _query.order_by(models.SlcRadTicket.acct_start_time.desc())
     return render("ops_ticket_list", page_data = get_page_data(_query),
-               node_list=db.query(models.SlcNode),**request.params)
+               node_list=opr_nodes,**request.params)
 
 permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"运维管理",is_menu=True,order=3)
 
@@ -247,6 +238,7 @@ def opslog_query(db):
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
     keyword = request.params.get('keyword')
+    opr_nodes = get_opr_nodes(db)
     _query = db.query(models.SlcRadOperateLog).filter(
         models.SlcRadOperateLog.operator_name == models.SlcOperator.operator_name,
     ) 
@@ -260,7 +252,7 @@ def opslog_query(db):
         _query = _query.filter(models.SlcRadOperateLog.operate_time <= query_end_time+' 23:59:59')
     _query = _query.order_by(models.SlcRadOperateLog.operate_time.desc())
     return render("ops_log_list", 
-        node_list=db.query(models.SlcNode),
+        node_list=opr_nodes,
         page_data = get_page_data(_query),**request.params)
 
 
@@ -280,7 +272,7 @@ def default_start_end():
 def online_stat_query(db): 
     return render(
         "ops_online_stat",
-        node_list=db.query(models.SlcNode),
+        node_list=get_opr_nodes(db),
         node_id=None,
         day_code=utils.get_currdate()
     )
@@ -289,6 +281,7 @@ def online_stat_query(db):
 def online_stat_data(db):    
     node_id = request.params.get('node_id')
     day_code = request.params.get('day_code')  
+    opr_nodes = get_opr_nodes(db)
     if not day_code:
         day_code = utils.get_currdate()
     begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
@@ -298,6 +291,8 @@ def online_stat_data(db):
     
     if node_id:
         _query = _query.filter(models.SlcRadOnlineStat.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcRadOnlineStat.node_id.in_([i.id for i in opr_nodes]))
     
     _query = _query.filter(
         models.SlcRadOnlineStat.stat_time >= begin_time,
@@ -313,7 +308,7 @@ permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"运维管�
 def online_stat_query(db): 
     return render(
         "ops_flow_stat",
-        node_list=db.query(models.SlcNode),
+        node_list=get_opr_nodes(db),
         node_id=None,
         day_code=utils.get_currdate()
     )
@@ -323,6 +318,7 @@ def online_stat_query(db):
 def flow_stat_data(db):    
     node_id = request.params.get('node_id')
     day_code = request.params.get('day_code')    
+    opr_nodes = get_opr_nodes(db)
     if not day_code:
         day_code = utils.get_currdate()
     begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
@@ -332,6 +328,8 @@ def flow_stat_data(db):
     
     if node_id:
         _query = _query.filter(models.SlcRadFlowStat.node_id == node_id)
+    else:
+        _query = _query.filter(models.SlcRadFlowStat.node_id.in_([i.id for i in opr_nodes]))
     
     _query = _query.filter(
         models.SlcRadFlowStat.stat_time >= begin_time,

@@ -166,9 +166,9 @@ def param(db):
     for p in db.query(models.SlcParam):
         fparam[p.param_name] = p.param_value
     form.fill(fparam)
-    return render("base_form",form=form)
+    return render("sys_param",form=form)
 
-@app.post('/param',apply=auth_opr)
+@app.post('/param/update',apply=auth_opr)
 def param_update(db): 
     params = db.query(models.SlcParam)
     for param in params:
@@ -199,6 +199,7 @@ def param_update(db):
     redirect("/param")
     
 permit.add_route("/param",u"系统参数管理",u"系统管理",is_menu=True,order=0)
+permit.add_route("/param/update",u"系统参数修改",u"系统管理",is_menu=False,order=0,is_open=False)
 
 ###############################################################################
 # password update     
@@ -264,7 +265,7 @@ def node_add_post(db):
     db.commit()
     redirect("/node")
     
-permit.add_route("/node/add",u"新增区域",u"系统管理",order=1.01)
+permit.add_route("/node/add",u"新增区域",u"系统管理",order=1.01,is_open=False)
 
 @app.get('/node/update',apply=auth_opr)
 def node_update(db):  
@@ -292,7 +293,7 @@ def node_add_update(db):
     db.commit()
     redirect("/node")    
     
-permit.add_route("/node/update",u"修改区域",u"系统管理",order=1.02)
+permit.add_route("/node/update",u"修改区域",u"系统管理",order=1.02,is_open=False)
 
 @app.get('/node/delete',apply=auth_opr)
 def node_delete(db):     
@@ -311,7 +312,7 @@ def node_delete(db):
     db.commit() 
     redirect("/node")  
     
-permit.add_route("/node/delete",u"删除区域",u"系统管理",order=1.03)
+permit.add_route("/node/delete",u"删除区域",u"系统管理",order=1.03,is_open=False)
 
 ###############################################################################
 # bas manage    
@@ -355,7 +356,7 @@ def bas_add_post(db):
     db.commit()
     redirect("/bas")
     
-permit.add_route("/bas/add",u"新增BAS",u"系统管理",order=2.01)
+permit.add_route("/bas/add",u"新增BAS",u"系统管理",order=2.01,is_open=False)
 
 @app.get('/bas/update',apply=auth_opr)
 def bas_update(db):  
@@ -387,7 +388,7 @@ def bas_add_update(db):
     websock.update_cache("bas",ip_addr=bas.ip_addr)
     redirect("/bas")    
     
-permit.add_route("/bas/update",u"修改BAS",u"系统管理",order=2.02)
+permit.add_route("/bas/update",u"修改BAS",u"系统管理",order=2.02,is_open=False)
 
 @app.get('/bas/delete',apply=auth_opr)
 def bas_delete(db):     
@@ -404,7 +405,7 @@ def bas_delete(db):
     db.commit() 
     redirect("/bas")    
 
-permit.add_route("/bas/delete",u"删除BAS",u"系统管理",order=2.03)
+permit.add_route("/bas/delete",u"删除BAS",u"系统管理",order=2.03,is_open=False)
 
 
 ###############################################################################
@@ -418,15 +419,18 @@ def opr(db):
         oprstatus = forms.opr_status_dict,
         opr_list = db.query(models.SlcOperator))
         
-permit.add_route("/opr",u"操作员管理",u"系统管理",is_menu=True,order=3)
+permit.add_route("/opr",u"操作员管理",u"系统管理",is_menu=True,order=3,is_open=False)
     
 @app.get('/opr/add',apply=auth_opr)
 def opr_add(db):  
-    return render("sys_opr_form",form=forms.opr_add_form(),rules=[])
+    nodes = [ (n.node_name,n.node_desc) for n in db.query(models.SlcNode)]
+    form=forms.opr_add_form(nodes)
+    return render("sys_opr_form",form=form,rules=[])
 
 @app.post('/opr/add',apply=auth_opr)
 def opr_add_post(db): 
-    form=forms.opr_add_form()
+    nodes = [ (n.node_name,n.node_desc) for n in db.query(models.SlcNode)]
+    form=forms.opr_add_form(nodes)
     if not form.validates(source=request.forms):
         return render("sys_opr_form", form=form,rules=[])
     if db.query(models.SlcOperator.id).filter_by(operator_name=form.d.operator_name).count()>0:
@@ -440,6 +444,12 @@ def opr_add_post(db):
     opr.operator_status = form.d.operator_status
     db.add(opr)
     
+    for node in request.params.getall("operator_nodes"):
+        onode = models.SlcOperatorNodes()
+        onode.operator_name = form.d.operator_name
+        onode.node_name = node
+        db.add(onode)
+        
     for path in request.params.getall("rule_item"):
         item = permit.get_route(path)
         if not item:continue
@@ -460,22 +470,26 @@ def opr_add_post(db):
     db.commit()
     redirect("/opr")
     
-permit.add_route("/opr/add",u"新增操作员",u"系统管理",order=3.01)
+permit.add_route("/opr/add",u"新增操作员",u"系统管理",order=3.01,is_open=False)
 
 @app.get('/opr/update',apply=auth_opr)
 def opr_update(db):  
     opr_id = request.params.get("opr_id")
     opr = db.query(models.SlcOperator).get(opr_id)
-    form=forms.opr_update_form()
+    nodes = [ (n.node_name,n.node_desc) for n in db.query(models.SlcNode)]
+    form=forms.opr_update_form(nodes)
     form.fill(opr)
     form.operator_pass.set_value('')
+    onodes = db.query(models.SlcOperatorNodes).filter_by(operator_name=form.d.operator_name)
+    form.operator_nodes.set_value([ond.node_name for ond in onodes])
     rules = db.query(models.SlcOperatorRule.rule_path).filter_by(operator_name=opr.operator_name)
     rules = [r[0] for r in rules]
     return render("sys_opr_form",form=form,rules=rules)
 
 @app.post('/opr/update',apply=auth_opr)
 def opr_add_update(db): 
-    form=forms.opr_update_form()
+    nodes = [ (n.node_name,n.node_desc) for n in db.query(models.SlcNode)]
+    form=forms.opr_update_form(nodes)
     if not form.validates(source=request.forms):
         rules = db.query(models.SlcOperatorRule.rule_path).filter_by(operator_name=opr.operator_name)
         rules = [r[0] for r in rules]
@@ -486,6 +500,13 @@ def opr_add_update(db):
         opr.operator_pass = md5(form.d.operator_pass).hexdigest()
     opr.operator_desc = form.d.operator_desc
     opr.operator_status = form.d.operator_status
+    
+    db.query(models.SlcOperatorNodes).filter_by(operator_name=opr.operator_name).delete()
+    for node in request.params.getall("operator_nodes"):
+        onode = models.SlcOperatorNodes()
+        onode.operator_name = form.d.operator_name
+        onode.node_name = node
+        db.add(onode)
     
     # update rules
     db.query(models.SlcOperatorRule).filter_by(operator_name=opr.operator_name).delete()
@@ -514,11 +535,14 @@ def opr_add_update(db):
     db.commit()
     redirect("/opr")    
     
-permit.add_route("/opr/update",u"修改操作员",u"系统管理",order=3.02)
+permit.add_route("/opr/update",u"修改操作员",u"系统管理",order=3.02,is_open=False)
 
 @app.get('/opr/delete',apply=auth_opr)
 def opr_delete(db):     
     opr_id = request.params.get("opr_id")
+    opr = db.query(models.SlcOperator).get(opr_id)
+    db.query(models.SlcOperatorNodes).filter_by(operator_name=opr.operator_name).delete()
+    db.query(models.SlcOperatorRule).filter_by(operator_name=opr.operator_name).delete()
     db.query(models.SlcOperator).filter_by(id=opr_id).delete()
 
     ops_log = models.SlcRadOperateLog()
@@ -531,7 +555,7 @@ def opr_delete(db):
     db.commit() 
     redirect("/opr")    
 
-permit.add_route("/opr/delete",u"删除操作员",u"系统管理",order=3.03)
+permit.add_route("/opr/delete",u"删除操作员",u"系统管理",order=3.03,is_open=False)
 
 
 

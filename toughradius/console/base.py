@@ -31,6 +31,18 @@ CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
 
 CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
 
+ACCEPT_TYPES = {
+    'open':u'开户',
+    'pause':u'停机',
+    'resume':u'复机',
+    'cancel':u'销户',
+    'next':u'续费',
+    'charge':u'充值',
+    'change':u'变更'
+}
+
+MAX_EXPIRE_DATE = '3000-12-30'
+
 TMPDIR = tempfile.gettempdir()
 
 page_size = 20
@@ -88,7 +100,7 @@ class Render(object):
 
 class Permit():
     routes = {}
-    def add_route(self,path,name,category,is_menu=False,order=time.time()):
+    def add_route(self,path,name,category,is_menu=False,order=time.time(),is_open=True):
         if not path:return
         self.routes[path] = dict(
             path=path,
@@ -96,7 +108,8 @@ class Permit():
             category=category,
             is_menu=is_menu,
             oprs=[],
-            order=order
+            order=order,
+            is_open=is_open
         )
     
     def get_route(self,path):
@@ -122,6 +135,10 @@ class Permit():
                 route = self.routes.get(path)    
                 if route and opr in route['oprs']:
                     route['oprs'].remove(opr)
+                    
+    def check_open(self,path):
+        route = self.routes[path]
+        return 'is_open' in route and route['is_open']
                 
     def check_opr_category(self,opr,category):
         for path in self.routes:
@@ -182,6 +199,15 @@ def auth_cus(func):
 ########################################################################
 # cache function
 ########################################################################
+def get_opr_nodes(db):
+    opr_type = get_cookie('opr_type')
+    if opr_type == 0:
+        return db.query(models.SlcNode)
+    opr_name = get_cookie('username')
+    return db.query(models.SlcNode).filter(
+        models.SlcNode.node_name == models.SlcOperatorNodes.node_name,
+        models.SlcOperatorNodes.operator_name == opr_name
+    )
 
 @cache.cache('get_node_name',expire=3600)   
 def get_node_name(db,node_id):

@@ -25,7 +25,7 @@
                     <select id="node_id" name="node_id" class="form-control">
                         <option></option>
                         % for node in node_list:
-                          <option value="${node.id}" ${node.id==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}" ${node.id==node_id and "selected" or ""}>${node.node_desc}</option>
                         % endfor
                     </select>
                 </div>

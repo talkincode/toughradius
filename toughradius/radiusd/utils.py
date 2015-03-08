@@ -298,6 +298,17 @@ class AuthPacket2(AuthPacket):
             reply.set_reply_msg(tools.EncodeString(msg))
         reply.source_user = self.get_user_name()
         return reply
+        
+    def ChapEcrypt(self,password):
+        if not self.authenticator:
+            self.authenticator = self.CreateAuthenticator()
+        if not self.id:
+            self.id = self.CreateID()
+        if isinstance(password, six.text_type):
+            password = password.strip().encode('utf-8')
+
+        result = six.b(chr(self.id))
+        return md5_constructor("%s%s%s"%(chr(self.id),password,self.authenticator)).digest()
 
 
     def set_reply_msg(self,msg):
@@ -309,11 +320,12 @@ class AuthPacket2(AuthPacket):
     def set_session_timeout(self,timeout):
         if timeout:self.AddAttribute(27,tools.EncodeInteger(timeout))
    
-         
-
     def get_nas_addr(self):
-        try:return tools.DecodeAddress(self.get(4)[0])
-        except:return None
+        _nas_addr = None
+        try:
+            _nas_addr = tools.DecodeAddress(self.get(4)[0])
+        except:pass
+        return _nas_addr or self.source[0]
         
     def get_mac_addr(self):
         if self.client_macaddr:return self.client_macaddr

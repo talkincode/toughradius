@@ -42,6 +42,7 @@ $(document).ready(function (){
                 <ul class="list-group">
                     <div class="container-fluid">
                   % for item in sorted(menu['items'],key=lambda r:r['order']):
+                  % if permit.check_open(item['path']):
                   <div class='row col-md-3'>
                       <li class="list-group-item ">
                           <!-- <font color="gray">${loop.index}&nbsp;</font> -->
@@ -54,6 +55,7 @@ $(document).ready(function (){
                          </label>
                       </li>
                     </div>
+                  % endif
                   % endfor
                   </div>
                 </ul>
