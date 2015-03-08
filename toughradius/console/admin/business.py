@@ -230,7 +230,7 @@ def member_detail(db):
             models.SlcMember.member_id == models.SlcRadAccount.member_id,
             models.SlcNode.id == models.SlcMember.node_id,
             models.SlcRadAcceptLog.account_number == account_number
-    )
+    ).order_by(models.SlcRadAcceptLog.accept_time.desc())
     get_orderid = lambda aid:db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar()
     type_map = ACCEPT_TYPES
     return  render("bus_member_detail",
