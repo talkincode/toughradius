@@ -527,8 +527,11 @@ class AcctPacket2(AcctPacket):
         except:return None
 
     def get_nas_addr(self):
-        try:return tools.DecodeAddress(self.get(4)[0])
-        except:return None
+        _nas_addr = None
+        try:
+            _nas_addr = tools.DecodeAddress(self.get(4)[0])
+        except:pass
+        return _nas_addr or self.source[0]
 
     def get_nas_port(self):
         try:return tools.DecodeInteger(self.get(5)[0]) or 0

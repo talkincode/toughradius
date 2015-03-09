@@ -42,6 +42,8 @@ class DBEngine(object):
                 import sqlite3.dbapi2 as sqlite
                 con = sqlite.connect(self.conf_str("dburl").replace('sqlite:///',''))
                 con.text_factory=str
+                con.execute("PRAGMA synchronous=OFF;")
+                con.isolation_level = 'IMMEDIATE'
                 return con
             return create_engine(
                 "sqlite+pysqlite:///",
