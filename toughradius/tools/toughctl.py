@@ -131,7 +131,7 @@ def run_execute_sqlf(config,sqlfile):
 def run_radius_tester(config):
     from toughradius.tools.radtest import Tester
     Tester(config).start()
-
+        
     
 def run():
     parser = argparse.ArgumentParser()
@@ -173,7 +173,7 @@ def run():
         
     if args.radtest:
         run_radius_tester(config) 
-        
+
     if args.sqls:
         return run_execute_sqls(config,args.sqls)
     
