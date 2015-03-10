@@ -149,6 +149,7 @@ def run():
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
     parser.add_argument('-sqls','--sqls', type=str,default=None,dest='sqls',help='execute sql string')
     parser.add_argument('-sqlf','--sqlf', type=str,default=None,dest='sqlf',help='execute sql script file')
+    parser.add_argument('-gensql','--gensql', action='store_true',default=False,dest='gensql',help='export sql script file')
     parser.add_argument('-debug','--debug', action='store_true',default=False,dest='debug',help='debug option')
     parser.add_argument('-radtest','--radtest', action='store_true',default=False,dest='radtest',help='start radius tester')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
@@ -173,6 +174,19 @@ def run():
         
     if args.radtest:
         run_radius_tester(config) 
+        
+    if args.gensql:
+        from sqlalchemy import create_engine
+        def _e(sql, *multiparams, **params): print (sql)
+        engine =  create_engine(
+                config.get('database',"dburl"),
+                strategy = 'mock',
+                executor = _e
+            )
+        from toughradius.console import models
+        metadata = models.get_metadata(engine)
+        metadata.create_all(engine)
+        return
 
     if args.sqls:
         return run_execute_sqls(config,args.sqls)
