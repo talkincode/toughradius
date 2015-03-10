@@ -939,7 +939,6 @@ def account_charge(db):
     accept_log.operator_name = get_cookie("username")
     _new_fee = account.balance + utils.yuan2fen(form.d.fee_value)
     accept_log.accept_desc = u"用户充值：充值前%s元,充值后%s元"%(
-        account_number,
         utils.fen2yuan(account.balance),
         utils.fen2yuan(_new_fee)
     )

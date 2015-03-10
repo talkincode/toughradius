@@ -227,7 +227,7 @@ def user_open_form(nodes=[],products=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
-        pyforms.Checkbox("is_samename",description=u"启用独立的自助服务用户名", checked="",**input_style),
+        pyforms.Checkbox("is_samename",description=u"启用独立的自助服务用户名", checked=""),
         pyforms.Textbox("member_name", rules.len_of(0,64), description=u"自助服务用户名", **input_style),
         pyforms.Textbox("member_password", rules.len_of(0,128), description=u"自助服务用户密码", **input_style),
         pyforms.Textbox("idcard", rules.len_of(0,32), description=u"证件号码", **input_style),
