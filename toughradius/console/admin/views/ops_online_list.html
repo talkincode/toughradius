@@ -111,7 +111,7 @@ $(document).ready(function (){
                      <select id="nas_addr" name="nas_addr" class="form-control">
                         <option></option>
                         % for bas in bas_list:
-                          <option value="${bas.ip_addr}" ${bas.ip_addr== bas_ipaddr and "selected" or ""}>${bas.bas_name}</option>
+                          <option value="${bas.ip_addr}" ${bas.ip_addr== nas_addr and "selected" or ""}>${bas.bas_name}</option>
                         % endfor
                     </select>
                 </div>
