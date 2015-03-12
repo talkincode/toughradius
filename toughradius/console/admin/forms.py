@@ -167,8 +167,8 @@ def product_update_form():
         pyforms.Textbox("concur_number", rules.is_number,description=u"并发数控制(0表示不限制)",required="required", **input_style),
         pyforms.Dropdown("bind_mac",  args=boolean.items(), description=u"是否绑定MAC",required="required",**input_style),
         pyforms.Dropdown("bind_vlan",  args=boolean.items(),description=u"是否绑定VLAN",required="required",**input_style),
-        pyforms.Textbox("input_max_limit",  rules.is_number,description=u"最大上行速率(Mbps)",required="required", **input_style),
-        pyforms.Textbox("output_max_limit",  rules.is_number,description=u"最大下行速率(Mbps)",required="required",**input_style),
+        pyforms.Textbox("input_max_limit",  rules.is_number3,description=u"最大上行速率(Mbps)",required="required", **input_style),
+        pyforms.Textbox("output_max_limit",  rules.is_number3,description=u"最大下行速率(Mbps)",required="required",**input_style),
         pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
         title=u"修改资费",
         action="/product/update"
