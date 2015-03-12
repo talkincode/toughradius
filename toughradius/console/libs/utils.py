@@ -90,7 +90,7 @@ def get_uuid():
 def bps2mbps(bps):
     _bps = decimal.Decimal(bps or 0)
     _mbps = _bps / decimal.Decimal(1024*1024)
-    return str(_mbps.quantize(decimal.Decimal('1.00')))
+    return str(_mbps.quantize(decimal.Decimal('1.000')))
     
 def mbps2bps(mbps):
     _mbps = decimal.Decimal(mbps or 0)
