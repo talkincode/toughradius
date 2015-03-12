@@ -67,7 +67,27 @@ def encrypt_data(db):
 def decrypt_data(db):    
     msg_data = request.params.get('data')
     return dict(code=0,data=utils.decrypt(msg_data))
-
+    
+@app.get('/logquery/:name',apply=auth_opr)
+def logquery(db,name):   
+    def _query(logfile):
+        if os.path.exists(logfile):
+            with open(logfile) as f:
+                f.seek(0,2)
+                if f.tell() > 32*1024:
+                    f.seek(f.tell()-32*1024)
+                else:
+                    f.seek(0)
+                return f.read().replace('\n','<br>')
+    if '%s.logfile'%name in app.config:
+        logfile = app.config['%s.logfile'%name]
+        return render("sys_logquery",msg=_query(logfile),title="%s logging"%name)
+    else:
+        return render("sys_logquery",msg="logfile not exists",title="%s logging"%name)
+        
+permit.add_route("/logquery/radiusd",u"radius系统日志查看",u"系统管理",is_menu=False,order=0.001,is_open=False)
+permit.add_route("/logquery/admin",u"管理系统日志查看",u"系统管理",is_menu=False,order=0.001,is_open=False)
+permit.add_route("/logquery/customer",u"自助系统日志查看",u"系统管理",is_menu=False,order=0.001,is_open=False)
 ###############################################################################
 # Basic handle         
 ###############################################################################

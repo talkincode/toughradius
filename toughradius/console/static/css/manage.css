@@ -26,40 +26,13 @@ margin-top: 10px;
 
 
 .navbar {
+    background-color: #33383a;
     border:none;
     margin-bottom: 0px;
     border-radius: 0px;
-    background: url(/static/img/top_bg.jpg) repeat;
+/*    background: url(/static/img/top_bg.jpg) repeat;*/
 }
 
-.navbar2 {
-    height: 25px;
-    background: url(/static/img/top_nav.jpg) repeat;
-}
-
-.navbar2 .top-menu{
-    margin-right: 10px;
-    margin-top: 4px;
-}
-
-.navbar2 .top-menu a{
-    color: #b3b3b3;
-}
-
-.navbar2 .top-menu a:hover,
-.navbar2 .top-menu a:focus {
-    text-decoration: none;
-    color: #e5e5e5;
-}
-
-.navbar2 ul{
-    display: block;
-}
-
-.navbar2 ul li {
-    display:inline-block;
-    margin-left: 10px;
-}
 
 
 .navbar-inverse .navbar-brand {

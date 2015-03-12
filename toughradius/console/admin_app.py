@@ -146,6 +146,9 @@ class AdminServer(object):
        for _app in [self.app]+self.subapps:
            _app.config['render_key'] = 'admin'
            Render.RENDERS['admin'] = self.render
+           for _class in ['DEFAULT','database','radiusd','admin','customer']:
+               for _key,_val in self.config.items(_class):
+                   _app.config['%s.%s'%(_class,_key)] = _val
            _app.error_handler[403] = self.error403
            _app.error_handler[404] = self.error404
            _app.error_handler[500] = self.error500

@@ -32,64 +32,73 @@ function clean_cache()
 ${self.head()}
 </head>
         <body>
-            <div class="navbar  navbar-inverse" role="navigation">
-                <div class="container">
-                    <div class="navbar-header">
-                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
-                    <span class="sr-only">Toggle navigation</span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    <span class="icon-bar"></span>
-                    </button>
-                    <a class="navbar-brand" href="/">${sys_param_value('system_name') or ''}</a>
-                </div>
+        <div class="navbar  navbar-inverse navbar-static-top" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="/">${sys_param_value('system_name') or ''}</a>
             </div>
-        </div>
-            <div class="navbar2">
-            <span class="notify_text col-md-6"> 欢迎登陆:${get_cookie("username")}</span>
-            <ul class="top-menu pull-right">
+            <div class="navbar-collapse collapse">
+              <ul class="nav navbar-nav navbar-right">
                 <li><a href="/">管理首页</a></li>
                 <li><a href="/passwd">修改密码</a></li>
+                 % if permit.match('/logquery/radiusd'):
+                <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">系统日志 <span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/logquery/radiusd">Radius认证计费系统日志</a></li>
+                    <li><a href="/logquery/admin">Radius管理系统日志</a></li>
+                    <li><a href="/logquery/customer">Radius自助服务系统日志</a></li>
+                  </ul>
+                </li>
+                % endif
                 <li><a href="javascript:clean_cache();">刷新缓存</a></li>
                 <li><a href="/logout">退出</a></li>
-            </ul>
+              </ul>
+            </div><!--/.nav-collapse -->
+          </div>
         </div>
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-2 " id="sidebar">
-                        % for menu in all_menus:
-                        % if permit.check_opr_category(get_cookie('username'),menu['category']):
-                         <div class="accordion" id="accordion${loop.index}">
-                             <div class="accordion-group">
-                                 <div class="accordion-heading left-header">
-                                 <span class="glyphicon glyphicon-play-circle"></span>
-                                 <a class="accordion-toggle" data-toggle="collapse" 
-                                     data-parent="#accordion${loop.index}"
-                                      href="#collapse${loop.index}">${menu['category']}</a>
-                                 </div>
-                                 <div id="collapse${loop.index}" class="accordion-body collapse in">
-                                     <div class="accordion-inner ">
-                                        % for item in sorted(menu['items'],key=lambda r:r['order']):
-                                            % if item['is_menu'] and permit.match(item['path']):
-                                            <li><a href="${item['path']}">${item['name']}</a></li>
-                                            % endif
-                                        % endfor
-                                        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-2 " id="sidebar">
+                    % for menu in all_menus:
+                    % if permit.check_opr_category(get_cookie('username'),menu['category']):
+                     <div class="accordion" id="accordion${loop.index}">
+                         <div class="accordion-group">
+                             <div class="accordion-heading left-header">
+                             <span class="glyphicon glyphicon-play-circle"></span>
+                             <a class="accordion-toggle" data-toggle="collapse" 
+                                 data-parent="#accordion${loop.index}"
+                                  href="#collapse${loop.index}">${menu['category']}</a>
+                             </div>
+                             <div id="collapse${loop.index}" class="accordion-body collapse in">
+                                 <div class="accordion-inner ">
+                                    % for item in sorted(menu['items'],key=lambda r:r['order']):
+                                        % if item['is_menu'] and permit.match(item['path']):
+                                        <li><a href="${item['path']}">${item['name']}</a></li>
+                                        % endif
+                                    % endfor
                                     </div>
                                 </div>
                             </div>
-                        % endif
-                        % endfor                                            
-                </div>
-                <div class="col-md-9 main-box">
-                    ${self.body()}
-                </div>
+                        </div>
+                    % endif
+                    % endfor                                            
+            </div>
+            <div class="col-md-9 main-box">
+                ${self.body()}
             </div>
         </div>
-            <div id="footer">
-                <div class="container">
-                <p class="text-muted">© 2014 toughradius.net</p>
-            </div>
+    </div>
+        <div id="footer">
+            <div class="container">
+            <p class="text-muted">© 2014 toughradius.net</p>
         </div>
+    </div>
     </body>
 </html>
