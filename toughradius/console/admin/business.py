@@ -381,7 +381,7 @@ def member_open(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = member.create_time
     accept_log.operator_name = get_cookie("username")
-    accept_log.accept_desc = u"用户新开户：(%s)%s - 上网账号:%s"%(member.member_name,member.realname,form.d.account_number)
+    accept_log.accept_desc = u"用户新开户：(%s)%s"%(member.member_name,member.realname)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -1080,7 +1080,7 @@ def account_cancel(db):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
-    accept_log.accept_desc = u"用户销户退费%s(元)"%(account_number,form.d.fee_value)
+    accept_log.accept_desc = u"用户销户退费%s(元)"%(form.d.fee_value)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
