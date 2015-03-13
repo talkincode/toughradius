@@ -131,6 +131,18 @@ def run_execute_sqlf(config,sqlfile):
 def run_radius_tester(config):
     from toughradius.tools.radtest import Tester
     Tester(config).start()
+    
+def run_gensql(config):
+    from sqlalchemy import create_engine
+    def _e(sql, *multiparams, **params): print (sql)
+    engine =  create_engine(
+            config.get('database',"dburl"),
+            strategy = 'mock',
+            executor = _e
+        )
+    from toughradius.console import models
+    metadata = models.get_metadata(engine)
+    metadata.create_all(engine)
         
     
 def run():
@@ -176,17 +188,7 @@ def run():
         run_radius_tester(config) 
         
     if args.gensql:
-        from sqlalchemy import create_engine
-        def _e(sql, *multiparams, **params): print (sql)
-        engine =  create_engine(
-                config.get('database',"dburl"),
-                strategy = 'mock',
-                executor = _e
-            )
-        from toughradius.console import models
-        metadata = models.get_metadata(engine)
-        metadata.create_all(engine)
-        return
+        return run_gensql(config)
 
     if args.sqls:
         return run_execute_sqls(config,args.sqls)

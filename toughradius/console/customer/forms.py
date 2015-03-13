@@ -86,7 +86,7 @@ recharge_form =  pyforms.Form(
     
 def member_update_form():
     return pyforms.Form(
-        pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名", required="required",**input_style),
+        pyforms.Textbox("realname", description=u"用户姓名",readonly="readonly",**input_style),
         pyforms.Textbox("member_name", description=u"用户登陆名", readonly="readonly",**input_style),
         pyforms.Password("new_password", rules.len_of(0,128),value="", description=u"用户登陆密码(留空不修改)", **input_style),
         pyforms.Textbox("email", rules.len_of(0,128), description=u"电子邮箱", **input_style),

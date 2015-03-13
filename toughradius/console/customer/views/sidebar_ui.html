@@ -21,6 +21,9 @@
   <a href="/open" class="list-group-item">用户自助开户</a>    
   <a href="/billing" class="list-group-item">计费清单查询</a>
   <a href="/ticket" class="list-group-item">上网记录查询</a>
+  % if sys_param_value('rcard_order_url') :
+  <a href="${sys_param_value('rcard_order_url')}" target="_blank" class="list-group-item">充值卡购买</a>   
+  % endif
 </div>
 </div>
 % endif
