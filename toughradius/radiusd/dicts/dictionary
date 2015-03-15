@@ -42,7 +42,6 @@
 #$INCLUDE dictionary.bay
 $INCLUDE dictionary.cisco
 #$INCLUDE dictionary.livingston
-#$INCLUDE dictionary.microsoft
 #$INCLUDE dictionary.quintum
 $INCLUDE dictionary.redback
 #$INCLUDE dictionary.shasta
@@ -60,6 +59,7 @@ $INCLUDE dictionary.mikrotik
 $INCLUDE dictionary.zte
 $INCLUDE dictionary.roaringpenguin
 $INCLUDE dictionary.microsoft
+$INCLUDE dictionary.wispr
 #
 #	Following are the proper new names. Use these.
 #
