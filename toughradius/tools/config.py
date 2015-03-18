@@ -24,9 +24,9 @@ def find_config(conf_file=None):
             break
    
     if not flag:
-        raise Exception('no config file')
-                
-    return config
+        return None
+    else:            
+        return config
     
     
 
@@ -80,8 +80,8 @@ dbtype = sqlite
 dburl = sqlite:////tmp/toughradius.sqlite3
 echo = false
 # dbtype = mysql
-# dburl = mysql://root:root@127.0.0.1/toughradius?charset=utf8
-# pool_size = 60
+# dburl = mysql://root:root@127.0.0.1/toughradius0?charset=utf8
+# pool_size = 120
 # pool_recycle = 300
 
 [radiusd]
@@ -99,7 +99,6 @@ logfile = /var/log/admin.log
 port = 1817
 logfile = /var/log/customer.log
 '''%gen_secret(32)
-
 
 
 def echo_app_tac(app):

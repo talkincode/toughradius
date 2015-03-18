@@ -238,7 +238,7 @@ def passwd_update(db):
         return render("base_form", form=form)
     if form.d.operator_pass != form.d.operator_pass_chk:
         return render("base_form", form=form,msg=u"确认密码不一致")
-    opr = db.query(models.SlcOperator).first()
+    opr = db.query(models.SlcOperator).filter_by(operator_name=form.d.operator_name).first()
     opr.operator_pass = md5(form.d.operator_pass).hexdigest()
 
     ops_log = models.SlcRadOperateLog()
