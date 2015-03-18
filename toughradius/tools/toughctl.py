@@ -118,7 +118,7 @@ def run_config():
 def run_echo_radiusd_cnf():
     from toughradius.tools.config import echo_radiusd_cnf
     print echo_radiusd_cnf()
-    
+
 def run_execute_sqls(config,sqlstr):
     from toughradius.tools.sqlexec import execute_sqls
     execute_sqls(config,sqlstr)
@@ -143,8 +143,23 @@ def run_gensql(config):
     from toughradius.console import models
     metadata = models.get_metadata(engine)
     metadata.create_all(engine)
-        
     
+def run_live_system_init():
+    shell.run("/etc/init.d/mysql restart")
+    # create database
+    shell.run("echo \"create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\" | mysql")
+    # setup mysql user and passwd
+    shell.run("echo \"GRANT ALL ON toughradius.* TO radiusd@'127.0.0.1' IDENTIFIED BY 'root' WITH GRANT OPTION;FLUSH PRIVILEGES;\" | mysql")
+    shell.run("mkdir -p /var/toughradius")
+    shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/radiusd.conf -O /etc/radiusd.conf")
+    shell.run("toughctl --initdb")
+    shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/privkey.pem -O /var/toughradius/privkey.pem")
+    shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/cacert.pem -O /var/toughradius/cacert.pem")
+    if not os.path.exists("/etc/init.d/radiusd"):
+        shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/radiusd -O /etc/init.d/radiusd")
+        shell.run("chmod +x /etc/init.d/radiusd")
+    shell.run("/etc/init.d/radiusd start")
+
 def run():
     parser = argparse.ArgumentParser()
     parser.add_argument('-radiusd','--radiusd', action='store_true',default=False,dest='radiusd',help='run radiusd')
@@ -180,6 +195,9 @@ def run():
         return stop_server(args.stop)
     
     config = iconfig.find_config(args.conf)
+    
+    if not config:
+        return run_live_system_init()
     
     if args.debug:
         config.set('DEFAULT','debug','true')
