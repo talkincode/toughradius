@@ -155,7 +155,7 @@ def run_live_system_init():
     shell.run("echo \"create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\" | mysql")
     # setup mysql user and passwd
     shell.run("echo \"GRANT ALL ON toughradius.* TO radiusd@'127.0.0.1' IDENTIFIED BY 'root' WITH GRANT OPTION;FLUSH PRIVILEGES;\" | mysql")
-    shell.run("mkdir -p /var/toughradius")
+    shell.run("mkdir -p /var/toughradius/log")
     
     with open("/etc/radiusd.conf",'wb') as ef:
         ef.write(livecd.echo_radiusd_cnf())
@@ -172,6 +172,7 @@ def run_live_system_init():
         with open("/etc/init.d/radiusd",'wb') as rf:
             rf.write(livecd.echo_radiusd_script())
         shell.run("chmod +x /etc/init.d/radiusd")
+        shell.run("update-rc.d radiusd defaults")
         
     shell.run("/etc/init.d/radiusd start")
 
