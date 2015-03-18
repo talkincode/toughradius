@@ -118,6 +118,10 @@ def run_config():
 def run_echo_radiusd_cnf():
     from toughradius.tools.config import echo_radiusd_cnf
     print echo_radiusd_cnf()
+    
+def run_echo_radiusd_script():
+    from toughradius.tools import livecd
+    print livecd.echo_radiusd_script()
 
 def run_execute_sqls(config,sqlstr):
     from toughradius.tools.sqlexec import execute_sqls
@@ -145,19 +149,30 @@ def run_gensql(config):
     metadata.create_all(engine)
     
 def run_live_system_init():
+    from toughradius.tools import livecd
     shell.run("/etc/init.d/mysql restart")
     # create database
     shell.run("echo \"create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\" | mysql")
     # setup mysql user and passwd
     shell.run("echo \"GRANT ALL ON toughradius.* TO radiusd@'127.0.0.1' IDENTIFIED BY 'root' WITH GRANT OPTION;FLUSH PRIVILEGES;\" | mysql")
     shell.run("mkdir -p /var/toughradius")
-    shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/radiusd.conf -O /etc/radiusd.conf")
+    
+    with open("/etc/radiusd.conf",'wb') as ef:
+        ef.write(livecd.echo_radiusd_cnf())
+        
+    with open("/var/toughradius/privkey.pem",'wb') as ef:
+        ef.write(livecd.echo_privkey_pem())
+        
+    with open("/var/toughradius/cacert.pem",'wb') as ef:
+        ef.write(livecd.echo_cacert_pem())
+        
     shell.run("toughctl --initdb")
-    shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/privkey.pem -O /var/toughradius/privkey.pem")
-    shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/cacert.pem -O /var/toughradius/cacert.pem")
+    
     if not os.path.exists("/etc/init.d/radiusd"):
-        shell.run("wget https://raw.githubusercontent.com/talkincode/toughradius-livecd/master/radiusd -O /etc/init.d/radiusd")
+        with open("/etc/init.d/radiusd",'wb') as rf:
+            rf.write(livecd.echo_radiusd_script())
         shell.run("chmod +x /etc/init.d/radiusd")
+        
     shell.run("/etc/init.d/radiusd start")
 
 def run():
@@ -173,6 +188,7 @@ def run():
     parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
+    parser.add_argument('-echo_radiusd_script','--echo_radiusd_script', action='store_true',default=False,dest='echo_radiusd_script',help='echo radiusd script')
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
     parser.add_argument('-sqls','--sqls', type=str,default=None,dest='sqls',help='execute sql string')
     parser.add_argument('-sqlf','--sqlf', type=str,default=None,dest='sqlf',help='execute sql script file')
@@ -187,6 +203,9 @@ def run():
         
     if args.echo_radiusd_cnf:
         return run_echo_radiusd_cnf()
+        
+    if args.echo_radiusd_script:
+        return run_echo_radiusd_script()
         
     if args.stop:
         if not args.stop in ('all','radiusd','admin','customer','standalone'):
