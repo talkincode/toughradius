@@ -178,7 +178,7 @@ def run_live_system_init():
         shell.run("chmod +x /etc/init.d/radiusd")
         shell.run("update-rc.d radiusd defaults")
         
-    shell.run("/etc/init.d/radiusd start")
+    shell.run("/etc/init.d/radiusd start",raise_on_fail=True)
 
 def run():
     parser = argparse.ArgumentParser()

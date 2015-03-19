@@ -71,14 +71,19 @@ def echo_radiusd_script():
     return '''#!/bin/sh
 
 ### BEGIN INIT INFO
-# Provides:               toughradius
-# Required-Start:    $local_fs $remote_fs $network $syslog
-# Required-Stop:         $local_fs $remote_fs $network $syslog
+# Provides:              radiusd
+# Required-Start:        $all
+# Required-Stop:         
 # Default-Start:         2 3 4 5
 # Default-Stop:   0 1 6
-# Short-Description: starts the toughradius daemon
+# Short-Description: starts the radiusd daemon
 # Description:     starts toughradius using start-stop-daemon
 ### END INIT INFO
+
+set -e
+set -u
+
+. /lib/lsb/init-functions
 
 usage () 
 {
