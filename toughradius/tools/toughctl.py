@@ -122,6 +122,10 @@ def run_echo_radiusd_cnf():
 def run_echo_radiusd_script():
     from toughradius.tools import livecd
     print livecd.echo_radiusd_script()
+    
+def run_echo_mysql_cnf():
+    from toughradius.tools import livecd
+    print livecd.echo_mysql_cnf()
 
 def run_execute_sqls(config,sqlstr):
     from toughradius.tools.sqlexec import execute_sqls
@@ -130,7 +134,6 @@ def run_execute_sqls(config,sqlstr):
 def run_execute_sqlf(config,sqlfile):
     from toughradius.tools.sqlexec import execute_sqlf
     execute_sqlf(config,sqlfile)
-    
 
 def run_radius_tester(config):
     from toughradius.tools.radtest import Tester
@@ -190,6 +193,7 @@ def run():
     parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
+    parser.add_argument('-echo_mysql_cnf','--echo_mysql_cnf', action='store_true',default=False,dest='echo_mysql_cnf',help='echo mysql cnf')    
     parser.add_argument('-echo_radiusd_script','--echo_radiusd_script', action='store_true',default=False,dest='echo_radiusd_script',help='echo radiusd script')
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
     parser.add_argument('-sqls','--sqls', type=str,default=None,dest='sqls',help='execute sql string')
@@ -208,6 +212,9 @@ def run():
         
     if args.echo_radiusd_script:
         return run_echo_radiusd_script()
+    
+    if args.echo_mysql_cnf:
+        return run_echo_mysql_cnf()
         
     if args.stop:
         if not args.stop in ('all','radiusd','admin','customer','standalone'):

@@ -147,3 +147,73 @@ case "$1" in
 esac
 exit 0
 '''
+
+def echo_mysql_cnf():
+    return '''[client]
+port		= 3306
+socket		= /var/run/mysqld/mysqld.sock
+
+[mysqld_safe]
+socket		= /var/run/mysqld/mysqld.sock
+nice		= 0
+
+[mysqld]
+user		= mysql
+pid-file	= /var/run/mysqld/mysqld.pid
+socket		= /var/run/mysqld/mysqld.sock
+port		= 3306
+basedir		= /usr
+datadir		= /var/lib/mysql
+tmpdir		= /tmp
+lc-messages-dir	= /usr/share/mysql
+skip-external-locking
+
+bind-address		= 127.0.0.1
+
+key_buffer		= 16M
+max_allowed_packet	= 16M
+thread_stack		= 192K
+thread_cache_size       = 8
+
+myisam-recover         = BACKUP
+max_connections        = 1000
+table_cache            = 512
+#thread_concurrency     = 8
+#
+# * Query Cache Configuration
+#
+query_cache_limit	= 4M
+query_cache_size        = 64M
+
+server-id		= 1
+log_bin			= /var/log/mysql/mysql-bin.log
+expire_logs_days	= 10
+max_binlog_size         = 100M
+
+#
+# * InnoDB
+#
+innodb_buffer_pool_size = 256M
+innodb_data_file_path = ibdata1:16M:autoextend
+innodb_additional_mem_pool_size = 16M
+innodb_thread_concurrency = 8
+innodb_flush_log_at_trx_commit = 1
+innodb_log_buffer_size = 8M
+innodb_log_file_size = 128M
+log-error=/var/log/mysqld.log
+
+
+[mysqldump]
+quick
+quote-names
+max_allowed_packet	= 64M
+
+[mysql]
+#no-auto-rehash	# faster start of mysql but no tab completition
+
+[isamchk]
+key_buffer		= 16M
+
+
+!includedir /etc/mysql/conf.d/
+'''
