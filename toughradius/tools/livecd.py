@@ -80,6 +80,8 @@ def echo_radiusd_script():
 # Description:     starts toughradius using start-stop-daemon
 ### END INIT INFO
 
+export PATH=$PATH:/usr/local/bin
+
 set -e
 set -u
 
