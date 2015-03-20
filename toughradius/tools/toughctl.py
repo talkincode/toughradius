@@ -153,8 +153,6 @@ def run_gensql(config):
     
 def run_live_system_init():
     from toughradius.tools import livecd
-    shell.run("pip install -U https://github.com/talkincode/ToughRADIUS/archive/stable.zip")
-    shell.run("/etc/init.d/mysql restart")
     # create database
     shell.run("echo \"create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\" | mysql")
     # setup mysql user and passwd
