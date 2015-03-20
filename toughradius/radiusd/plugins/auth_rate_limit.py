@@ -12,8 +12,8 @@ def std_rate(resp,_in,_out):
     return resp
 
 def ros_rate(resp,_in,_out):
-    _irate = _in/1024/8
-    _orate = _out/1024/8
+    _irate = _in/1024
+    _orate = _out/1024
     resp['Mikrotik-Rate-Limit'] = '%sk/%sk'%(_irate,_orate)
     return resp
     
