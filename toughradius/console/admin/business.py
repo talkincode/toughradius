@@ -613,8 +613,8 @@ def member_import(db):
         line = line.strip()
         if not line or "用户姓名" in line:continue
         attr_array = line.split(",")
-        if len(attr_array) < 7:
-            return render("bus_import_form",form=iform,msg=u"line %s error: length must 7 "%_num)
+        if len(attr_array) < 11:
+            return render("bus_import_form",form=iform,msg=u"line %s error: length must 11 "%_num)
 
         vform = forms.user_import_vform()
         if not vform.validates(dict(

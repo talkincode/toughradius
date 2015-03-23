@@ -143,6 +143,13 @@ def get_currtime():
 
 def get_currdate():
     return datetime.datetime.now().strftime("%Y-%m-%d") 
+    
+def gen_backep_id():
+    global _base_id
+    if _base_id >= 9999:_base_id=0
+    _base_id += 1
+    _num = str(_base_id).zfill(4)
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S_") + _num
 
 def gen_order_id():
     global _base_id

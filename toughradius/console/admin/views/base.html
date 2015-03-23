@@ -57,6 +57,9 @@ ${self.head()}
                   </ul>
                 </li>
                 % endif
+                % if permit.match('/backup'):
+                <li><a href="/backup">备份管理</a></li>
+                 % endif
                 <li><a href="javascript:clean_cache();">刷新缓存</a></li>
                 <li><a target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=scLEwcHew8Xxxd7E1tnD0NXYxMKf39TF" style="text-decoration:none;">反馈建议</a></li>
                 <li><a href="/logout">退出</a></li>
