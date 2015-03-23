@@ -731,7 +731,7 @@ def account_open(db):
     clog.recharge_time = _datetime
     db.add(clog)
     
-    card.card_status = 2
+    card.card_status = CardUsed
     
     db.commit()
     redirect('/')
@@ -839,6 +839,8 @@ def account_recharge(db):
     account.time_length += card.times
     account.flow_length += card.flows
     account.status = 1
+    
+    card.card_status = CardUsed
     
     db.commit()
     redirect("/") 
