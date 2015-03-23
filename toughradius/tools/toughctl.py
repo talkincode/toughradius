@@ -151,6 +151,14 @@ def run_gensql(config):
     metadata = models.get_metadata(engine)
     metadata.create_all(engine)
     
+def run_dumpdb(config,dumpfs):
+    from toughradius.tools import backup
+    backup.dumpdb(config,dumpfs)
+    
+def run_restoredb(config,restorefs):
+    from toughradius.tools import backup
+    backup.restoredb(config,restorefs)
+    
 def run_live_system_init():
     from toughradius.tools import livecd
     # create database
@@ -189,6 +197,8 @@ def run():
     parser.add_argument('-restart','--restart', type=str,default=None,dest='restart',help='restart server all|radiusd|admin|customer')
     parser.add_argument('-stop','--stop', type=str,default=None,dest='stop',help='stop server all|radiusd|admin|customer')
     parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
+    parser.add_argument('-dumpdb','--dumpdb', type=str,default=None,dest='dumpdb',help='run dumpdb')
+    parser.add_argument('-restoredb','--restoredb', type=str,default=None,dest='restoredb',help='run restoredb')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
     parser.add_argument('-echo_mysql_cnf','--echo_mysql_cnf', action='store_true',default=False,dest='echo_mysql_cnf',help='echo mysql cnf')    
@@ -233,6 +243,12 @@ def run():
         
     if args.gensql:
         return run_gensql(config)
+        
+    if args.dumpdb:
+        return run_dumpdb(config,args.dumpdb)
+        
+    if args.restoredb:
+        return run_restoredb(config,args.restoredb)
 
     if args.sqls:
         return run_execute_sqls(config,args.sqls)
