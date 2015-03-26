@@ -136,7 +136,11 @@ function update_flow()
 
 $(document).ready(function (){
     Highcharts.setOptions({global: {useUTC: false}});
-    wsock.start("${sys_param_value('radiusd_address')}","${sys_param_value('radiusd_admin_port')}");
+    ws_addr = "${sys_param_value('radiusd_address')}";
+    if("127.0.0.1" == ws_addr){
+        ws_addr = location.hostname;
+    }
+    wsock.start(ws_addr,"${sys_param_value('radiusd_admin_port')}");
     update_online();
     update_flow();
 });

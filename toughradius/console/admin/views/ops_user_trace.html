@@ -8,7 +8,11 @@
 
         start: function () {
             var _prefix = "${use_ssl and 'wss' or 'ws'}";
-            var url = _prefix+"://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
+            ws_addr = "${sys_param_value('radiusd_address')}";
+            if("127.0.0.1" == ws_addr){
+                ws_addr = location.hostname;
+            }
+            var url = _prefix+"://"+ws_addr+":${sys_param_value('radiusd_admin_port')}";
             updater.socket = new WebSocket(url);
             updater.socket.onmessage = function (event) {
                 updater.showMessage(JSON.parse(event.data));

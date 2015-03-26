@@ -85,7 +85,6 @@ export PATH=$PATH:/usr/local/bin
 set -e
 set -u
 
-. /lib/lsb/init-functions
 
 usage () 
 {
