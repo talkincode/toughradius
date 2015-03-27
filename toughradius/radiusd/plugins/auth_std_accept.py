@@ -59,14 +59,24 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     if user['ip_address']:
         resp['Framed-IP-Address'] = user['ip_address']
 
+    _attrs = {}
     for attr in store.get_product_attrs(user['product_id']):
         try:
             _type = resp.dict[attr['attr_name']].type
-            print _type
-            resp[str(attr['attr_name'])] = get_type_val(_type,attr['attr_value'])
+            attr_name = str(attr['attr_name'])
+            attr_value = get_type_val(_type,attr['attr_value'])
+            if attr_name in _attrs:
+                _attrs[attr_name].append(attr_value)
+            else:
+                _attrs[attr_name] = [attr_value]
         except:
             import traceback
             traceback.print_exc()
+    
+    print _attrs
+    for _a in _attrs:        
+        resp.AddAttribute(_a,_attrs[_a])
+    
     for attr in req.ext_attrs:
         resp[attr] = req.ext_attrs[attr]
     # for attr in store.get_user_attrs(user['account_number']):
