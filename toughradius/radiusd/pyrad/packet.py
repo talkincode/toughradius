@@ -190,8 +190,13 @@ class Packet(dict):
         dict.__delitem__(self, self._EncodeKey(key))
 
     def __setitem__(self, key, item):
+        if isinstance(item, list):
+            items = item
+        else:
+            items = [item]
+
         if isinstance(key, six.string_types):
-            (key, item) = self._EncodeKeyValues(key, [item])
+            (key, item) = self._EncodeKeyValues(key, items)
             dict.__setitem__(self, key, item)
         else:
             assert isinstance(item, list)
