@@ -1,4 +1,4 @@
-ToughRADIUS简介
+ToughRADIUS  Windows Ver.
 ====================================
 
 ToughRADIUS是一个开源的Radius服务软件，基于BSD许可协议发布。
