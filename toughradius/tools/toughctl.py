@@ -211,7 +211,7 @@ def run():
     parser.add_argument('-radtest','--radtest', action='store_true',default=False,dest='radtest',help='start radius tester')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
     args =  parser.parse_args(sys.argv[1:])  
-    
+
     if args.config:
         return run_config()
         

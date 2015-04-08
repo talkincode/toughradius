@@ -72,7 +72,7 @@ def setup_config():
 def echo_radiusd_cnf():
     return '''[DEFAULT]
 debug = 0
-tz = CST-8
+tz = CST+7
 secret = %s
 
 [database]
