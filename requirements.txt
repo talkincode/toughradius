@@ -6,10 +6,10 @@ SQLAlchemy==0.9.8
 Twisted==14.0.2
 autobahn==0.9.3-3
 bottle==0.12.7
-bottle_utils.i18n
 six==1.8.0
 tablib==0.10.0
 zope.interface==4.1.2
 pycrypto==2.6.1
 nose
 pywin32
+i18n
