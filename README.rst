@@ -1,7 +1,8 @@
 ToughRADIUS  Windows Ver.
 ====================================
 
-python toughctl -radiusd -c ../radiusd.conf
+python toughctl -radiusd -c ../radiusd.conf << test Radius
+python toughctl -admin -c ../radiusd.conf   << Test Admin
 
 =====================================
 
