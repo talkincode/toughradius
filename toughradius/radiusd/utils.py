@@ -240,9 +240,9 @@ def format_packet_str(pkt):
         _type = pkt.dict[attr].type
         try:
             if _type == 'octets':
-                _str += "\n\t%s: %s" % (attr, binascii.hexlify(pkt[attr][0]))   
+                _str += "\n\t%s: %s " % (attr, ",".join([ binascii.hexlify(_a) for _a in pkt[attr] ]))   
             else:
-                _str += "\n\t%s: %s" % (attr, pkt[attr][0])   
+                _str += "\n\t%s: %s " % (attr, ",".join(pkt[attr]))   
         except:
             try:_str += "\n\t%s: no display" % (attr)
             except:pass

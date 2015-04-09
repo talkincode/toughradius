@@ -134,7 +134,7 @@ def member_query(db):
         _query = _query.filter(models.SlcMember.address.like('%'+address+'%'))
     if expire_days:
         _days = int(expire_days)
-        td = datetime.timedelta(days=30)
+        td = datetime.timedelta(days=_days)
         _now = datetime.datetime.now() 
         edate = (_now + td).strftime("%Y-%m-%d") 
         _query = _query.filter(models.SlcRadAccount.expire_date <= edate)

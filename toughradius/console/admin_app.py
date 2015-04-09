@@ -186,6 +186,7 @@ class AdminServer(object):
         reactor.callLater(2, tasks.start_online_stat_job, self.sqla_pg.new_session)
         reactor.callLater(3, tasks.start_flow_stat_job, self.sqla_pg.new_session)
         reactor.callLater(4, tasks.start_expire_notify_job, self.sqla_pg.new_session)
+        reactor.callLater(5, tasks.start_clear_ticket_job,self.sqla_pg.new_session)
     
     def run_normal(self):
         if self.debug:

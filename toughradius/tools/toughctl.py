@@ -10,6 +10,16 @@ from toughradius.tools import config as iconfig
 from toughradius.tools.shell import shell
 from toughradius.tools.dbengine import get_engine
 
+
+def check_env(config):
+    try:
+        backup_path = config.get('database','backup_path') 
+        if not os.path.exists(backup_path):
+            os.makedirs(backup_path)
+    except:
+        import traceback
+        traceback.print_exc()
+
 def get_service_tac(app):
     return '%s/%s_service.tac'%(tempfile.gettempdir(),app)
 
@@ -166,6 +176,7 @@ def run_live_system_init():
     # setup mysql user and passwd
     shell.run("echo \"GRANT ALL ON toughradius.* TO radiusd@'127.0.0.1' IDENTIFIED BY 'root' WITH GRANT OPTION;FLUSH PRIVILEGES;\" | mysql")
     shell.run("mkdir -p /var/toughradius/log")
+    shell.run("mkdir -p /var/toughradius/data")
     
     with open("/etc/radiusd.conf",'wb') as ef:
         ef.write(livecd.echo_radiusd_cnf())
@@ -234,6 +245,8 @@ def run():
     
     if not config:
         return run_live_system_init()
+        
+    check_env(config)
     
     if args.debug:
         config.set('DEFAULT','debug','true')
