@@ -27,6 +27,7 @@ import time
 import json
 import six
 import os
+import ikuai
 
 __verson__ = '0.7'
         
@@ -45,6 +46,7 @@ class CoAClient(protocol.DatagramProtocol):
         self.secret = six.b(str(self.bas['bas_secret']))
         self.addr = self.bas['ip_addr']
         self.port = self.bas['coa_port']
+        self.vendor_id = int(self.bas['vendor_id'])
         self.debug=debug
         reactor.listenUDP(0, self)
         
@@ -64,7 +66,13 @@ class CoAClient(protocol.DatagramProtocol):
     def sendCoA(self,pkt):
         log.msg("send radius Coa Request: %s"%(pkt),level=logging.INFO)
         try:
-            self.transport.write(pkt.RequestPacket(),(self.addr, self.port))
+            print self.vendor_id
+            if self.vendor_id == ikuai.VENDOR_ID:
+                pkg = ikuai.create_dm_pkg(self.secret,pkt["User-Name"][0])
+                log.msg("send ikuai radius Coa Request: %s"%(repr(pkg)),level=logging.INFO)
+                self.transport.write(pkg,(self.addr, self.port))
+            else:
+                self.transport.write(pkt.RequestPacket(),(self.addr, self.port))
         except packet.PacketError as err:
             log.err(err,'::send radius Coa Request error %s: %s'%((host, port),str(err)))
 
