@@ -308,6 +308,7 @@ def member_update(db):
     member.idcard = form.d.idcard
     member.mobile = form.d.mobile
     member.address = form.d.address
+    member.member_desc = form.d.member_desc
 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
@@ -371,6 +372,7 @@ def member_open(db):
     member.email_active = 0
     member.mobile_active = 0
     member.active_code = utils.get_uuid()
+    member.member_desc = form.d.member_desc
     db.add(member)
     db.flush()
     db.refresh(member)
@@ -436,6 +438,7 @@ def member_open(db):
     account.vlan_id2 = 0
     account.create_time = member.create_time
     account.update_time = member.create_time
+    account.account_desc = member.member_desc
     db.add(account)
 
     db.commit()
@@ -538,6 +541,7 @@ def account_open(db):
     account.vlan_id2 = 0
     account.create_time = _datetime
     account.update_time = _datetime
+    account.account_desc = form.d.account_desc
     db.add(account)
 
     db.commit()
@@ -569,6 +573,7 @@ def account_update(db):
     account.user_concur_number = form.d.user_concur_number
     account.bind_mac = form.d.bind_mac
     account.bind_vlan = form.d.bind_vlan
+    account.account_desc = form.d.account_desc
     if form.d.new_password:
         account.password =  utils.encrypt(form.d.new_password)
 
@@ -1276,7 +1281,7 @@ permit.add_route("/bus/billing",u"用户计费查询",u"营业管理",is_menu=Tr
 permit.add_route("/bus/billing/export",u"用户计费导出",u"营业管理",order=4.01)
 
 ###############################################################################
-# billing log query
+# order query
 ###############################################################################
 
 @app.route('/orders',apply=auth_opr,method=['GET','POST'])

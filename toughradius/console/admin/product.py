@@ -106,6 +106,8 @@ def product_update(db):
     form.fill(product)
     form.product_policy_name.set_value(
         forms.product_policy[product.product_policy])
+    form.fee_times.set_value(utils.sec2hour(product.fee_times))
+    form.fee_flows.set_value(utils.kb2mb(product.fee_flows))
     form.input_max_limit.set_value(utils.bps2mbps(product.input_max_limit))
     form.output_max_limit.set_value(utils.bps2mbps(product.output_max_limit))
     form.fee_price.set_value(utils.fen2yuan(product.fee_price))
@@ -121,8 +123,8 @@ def product_update(db):
     product.product_name = form.d.product_name
     product.product_status = form.d.product_status
     product.fee_months = int(form.d.get("fee_months", 0))
-    product.fee_times = int(form.d.get("fee_times", 0))
-    product.fee_flows = int(form.d.get("fee_flows", 0))
+    product.fee_times = utils.hour2sec(form.d.get("fee_times", 0))
+    product.fee_flows = utils.mb2kb(form.d.get("fee_flows", 0))
     product.bind_mac = form.d.bind_mac
     product.bind_vlan = form.d.bind_vlan
     product.concur_number = form.d.concur_number
