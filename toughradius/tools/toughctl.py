@@ -2,23 +2,23 @@
 # -*- coding: utf-8 -*-
 from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(False)
-import sys,os,signal
-import tempfile
-import time
 import argparse,ConfigParser
 from toughradius.tools import config as iconfig
 from toughradius.tools.shell import shell
 from toughradius.tools.dbengine import get_engine
-
+import sys,os,signal
+import tempfile
+import time
 
 def check_env(config):
+    """check runtime env"""
     try:
         backup_path = config.get('database','backup_path') 
         if not os.path.exists(backup_path):
             os.makedirs(backup_path)
-    except:
-        import traceback
-        traceback.print_exc()
+    except Exception as err:
+        shell.error("check_env error %s"%repr(err))
+        
 
 def get_service_tac(app):
     return '%s/%s_service.tac'%(tempfile.gettempdir(),app)
@@ -170,6 +170,8 @@ def run_restoredb(config,restorefs):
     backup.restoredb(config,restorefs)
     
 def run_live_system_init():
+    if not sys.platform.startswith('linux'):
+        return
     from toughradius.tools import livecd
     # create database
     shell.run("echo \"create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\" | mysql")
@@ -219,7 +221,7 @@ def run():
     parser.add_argument('-sqlf','--sqlf', type=str,default=None,dest='sqlf',help='execute sql script file')
     parser.add_argument('-gensql','--gensql', action='store_true',default=False,dest='gensql',help='export sql script file')
     parser.add_argument('-debug','--debug', action='store_true',default=False,dest='debug',help='debug option')
-    parser.add_argument('-radtest','--radtest', action='store_true',default=False,dest='radtest',help='start radius tester')
+    parser.add_argument('-x','--xdebug', action='store_true',default=False,dest='xdebug',help='xdebug option')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
     args =  parser.parse_args(sys.argv[1:])  
     
@@ -248,11 +250,9 @@ def run():
         
     check_env(config)
     
-    if args.debug:
+    if args.debug or args.xdebug:
         config.set('DEFAULT','debug','true')
         
-    if args.radtest:
-        run_radius_tester(config) 
         
     if args.gensql:
         return run_gensql(config)

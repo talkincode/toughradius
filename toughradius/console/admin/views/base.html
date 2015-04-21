@@ -31,6 +31,20 @@ function clean_cache()
 </script>
 ${self.head()}
 </head>
+<%
+def inpath(req,menu):
+    _path = req.fullpath
+    if _path.endswith("/"):
+        _path = _path[:-1]
+    return _path in [ it['path'] for it in menu['items'] ]
+
+def aclass(req,path):
+    _path = req.fullpath
+    if _path.endswith("/"):
+        _path = _path[:-1]
+    return _path==path and 'sl-active' or ''
+%>
+
         <body>
         <div class="navbar  navbar-inverse navbar-static-top" role="navigation">
           <div class="container">
@@ -70,29 +84,35 @@ ${self.head()}
         <div class="container">
             <div class="row">
                 <div class="col-md-2 " id="sidebar">
+                  <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="false">
                     % for menu in all_menus:
                     % if permit.check_opr_category(get_cookie('username'),menu['category']):
-                     <div class="accordion" id="accordion${loop.index}">
-                         <div class="accordion-group">
-                             <div class="accordion-heading left-header">
-                             <span class="glyphicon glyphicon-play-circle"></span>
-                             <a class="accordion-toggle" data-toggle="collapse" 
-                                 data-parent="#accordion${loop.index}"
-                                  href="#collapse${loop.index}">${menu['category']}</a>
-                             </div>
-                             <div id="collapse${loop.index}" class="accordion-body collapse in">
-                                 <div class="accordion-inner ">
-                                    % for item in sorted(menu['items'],key=lambda r:r['order']):
-                                        % if item['is_menu'] and permit.match(item['path']):
-                                        <li><a href="${item['path']}">${item['name']}</a></li>
-                                        % endif
-                                    % endfor
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading" role="tab" id="accordion${loop.index}">
+                          <h4 class="panel-title">
+                            <a data-toggle="collapse" data-parent="#accordion" href="#collapse${loop.index}" aria-expanded="true" aria-controls="collapse${loop.index}">
+                                <span class="glyphicon glyphicon-cog" aria-hidden="true"></span> 
+                              ${menu['category']}
+                            </a>
+                          </h4>
                         </div>
+                        <div id="collapse${loop.index}" 
+                        class="panel-collapse collapse${inpath(request,menu) and '.in' or ''}" 
+                        role="tabpanel" aria-labelledby="heading${loop.index}">
+                            <div class="panel-body sidelinks">
+                                  % for item in sorted(menu['items'],key=lambda r:r['order']):
+                                      % if item['is_menu'] and permit.match(item['path']):
+                                      <li class="${aclass(request,item['path'])}">
+                                        <a href="${item['path']}">${item['name']}</a>
+                                      </li>
+                                      % endif
+                                  % endfor
+                             </div>
+                        </div>
+                      </div>
                     % endif
-                    % endfor                                            
+                    % endfor   
+                    </div>                                         
             </div>
             <div class="col-md-9 main-box">
                 ${self.body()}
@@ -101,7 +121,7 @@ ${self.head()}
     </div>
         <div id="footer">
             <div class="container">
-            <p class="text-muted">© 2014 toughradius.net</p>
+            <p class="text-muted">© 技术支持：湖南硬派科技</p>
         </div>
     </div>
     </body>
