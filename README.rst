@@ -1,5 +1,10 @@
-ToughRADIUS简介
+ToughRADIUS  Windows Ver.
 ====================================
+
+python toughctl -radiusd -c ../radiusd.conf << test Radius
+python toughctl -admin -c ../radiusd.conf   << Test Admin
+
+=====================================
 
 ToughRADIUS是一个开源的Radius服务软件，基于BSD许可协议发布。
 
