@@ -91,7 +91,7 @@ permit.add_route("/logquery/customer",u"自助系统日志查看",u"系统管理
 
 @app.route('/backup',apply=auth_opr)
 def backup(db): 
-    backup_path = app.config.get('database.backup_path','/tmp/data')   
+    backup_path = app.config.get('database.backup_path','/var/toughradius/data')   
     flist = os.listdir(backup_path)
     flist.sort(reverse=True)
     return render("sys_backup_db",backups=flist[:30],backup_path=backup_path)
@@ -100,7 +100,7 @@ def backup(db):
 def backup_dump(db):   
     from toughradius.tools.backup import dumpdb
     from toughradius.tools.config import find_config
-    backup_path = app.config.get('database.backup_path','/tmp/data')  
+    backup_path = app.config.get('database.backup_path','/var/toughradius/data')  
     backup_file = "toughradius_db_%s.json.gz"%utils.gen_backep_id()
     try:
         dumpdb(find_config(),os.path.join(backup_path,backup_file))
@@ -113,7 +113,7 @@ def backup_dump(db):
 def backup_restore(db):   
     from toughradius.tools.backup import dumpdb,restoredb
     from toughradius.tools.config import find_config
-    backup_path = app.config.get('database.backup_path','/tmp/data')  
+    backup_path = app.config.get('database.backup_path','/var/toughradius/data')  
     backup_file = "toughradius_db_%s.before_restore.json.gz"%utils.gen_backep_id()
     rebakfs = request.params.get("bakfs")
     try:
@@ -125,7 +125,7 @@ def backup_restore(db):
         
 @app.post('/backup/delete',apply=auth_opr)
 def backup_delete(db):   
-    backup_path = app.config.get('database.backup_path','/tmp/data')  
+    backup_path = app.config.get('database.backup_path','/var/toughradius/data')  
     bakfs = request.params.get("bakfs")
     try:
         os.remove(os.path.join(backup_path,bakfs))
@@ -136,7 +136,7 @@ def backup_delete(db):
 
 @app.route('/backup/download/:path#.+#',apply=auth_opr)
 def backup_download(path): 
-    backup_path = app.config.get('database.backup_path','/tmp/data')  
+    backup_path = app.config.get('database.backup_path','/var/toughradius/data')  
     return static_file(path, root=backup_path,download=True,mimetype="application/x-gzip")
 
 

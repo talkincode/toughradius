@@ -137,6 +137,7 @@ class SlcMember(DeclarativeBase):
     mobile = Column('mobile', Unicode(length=16), nullable=True,doc=u"用户手机")
     mobile_active = Column('mobile_active', SMALLINT(), default=0,doc=u"用户手机绑定状态")
     address = Column('address', Unicode(length=255), nullable=True,doc=u"用户地址")
+    member_desc = Column(u'member_desc', Unicode(255),doc=u"用户描述")
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
     update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
@@ -235,6 +236,7 @@ class SlcRadAccount(DeclarativeBase):
     vlan_id2 = Column('vlan_id2', INTEGER(),doc=u"外层vlan")
     ip_address = Column('ip_address', Unicode(length=15),doc=u"静态IP地址")
     last_pause = Column('last_pause', Unicode(length=19),doc=u"最后停机时间")
+    account_desc = Column(u'account_desc', Unicode(255),doc=u"用户描述")
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
     update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 

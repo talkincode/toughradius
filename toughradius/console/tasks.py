@@ -127,6 +127,27 @@ def __expire_notify(mk_db):
         log.err(err,'expire notify erro')
     finally:
         db.close()
+        
+def __clear_ticket_job(mk_db):
+    def execute(mk_db):
+        log.msg("start clear ticket task..")
+        db = mk_db()
+        try:
+            td = datetime.timedelta(days=90)
+            _now = datetime.datetime.now() 
+            edate = (_now - td).strftime("%Y-%m-%d 23:59:59")
+            db.query(models.SlcRadTicket).filter(
+                models.SlcRadTicket.acct_stop_time < edate
+            ).delete()
+            db.commit()
+            log.msg("clear ticket task done")
+        except  Exception as err:
+            db.rollback()
+            log.err(err,'clear_ticket_job err')
+        finally:
+            db.close()
+
+    reactor.callInThread(execute,mk_db)
 
 def start_online_stat_job(mk_db):
     print ('start online_stat_job...')
@@ -141,4 +162,10 @@ def start_flow_stat_job(mk_db):
 def start_expire_notify_job(mk_db):
     print ('start flow_stat_job...')
     _task = task.LoopingCall(__expire_notify,mk_db)
+    _task.start(3600*12)
+
+
+def start_clear_ticket_job(mk_db):
+    print ('start clear_ticket_job...')
+    _task = task.LoopingCall(__clear_ticket_job,mk_db)
     _task.start(3600*12)

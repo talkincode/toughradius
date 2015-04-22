@@ -60,6 +60,7 @@ $INCLUDE dictionary.zte
 $INCLUDE dictionary.roaringpenguin
 $INCLUDE dictionary.microsoft
 $INCLUDE dictionary.wispr
+$INCLUDE dictionary.mpd
 #
 #	Following are the proper new names. Use these.
 #
