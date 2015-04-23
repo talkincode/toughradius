@@ -17,7 +17,7 @@ def check_env(config):
         if not os.path.exists(backup_path):
             os.makedirs(backup_path)
     except Exception as err:
-        shell.error("check_env error %s"%repr(err))
+        shell.err("check_env error %s"%repr(err))
         
 
 def get_service_tac(app):
