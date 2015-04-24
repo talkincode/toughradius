@@ -17,13 +17,19 @@ from toughradius.console import models
 from toughradius.console.base import *
 from toughradius.console.admin import forms
 from hashlib import md5
-import bottle
 import datetime
 import json
 import functools
+from i18n.translator import Translator
+
 
 app = Bottle()
 render = functools.partial(Render.render_app,app)
+
+supported_languages = ['TH','EN']
+# activate italian translations
+tr = Translator('../toughradius/console/admin', supported_languages, 'TH')
+print tr._('Hello world!..')
 
 ##############################################################################
 # test handle
@@ -182,8 +188,8 @@ def admin_login_get(db):
 def admin_login_post(db):
     uname = request.forms.get("username")
     upass = request.forms.get("password")
-    if not uname:return dict(code=1,msg=u"请填写用户名")
-    if not upass:return dict(code=1,msg=u"请填写密码")
+    if not uname:return dict(code=1,msg=tr._(u"请填写用户名"))
+    if not upass:return dict(code=1,msg=tr._(u"请填写密码"))
     enpasswd = md5(upass.encode()).hexdigest()
     opr = db.query(models.SlcOperator).filter_by(
         operator_name=uname,
