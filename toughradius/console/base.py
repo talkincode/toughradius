@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 # coding:utf-8
+from hashlib import md5
+import functools
+import urllib
+import json
+import time
+import tempfile
+
 from twisted.python import log
 from bottle import request
 from bottle import response
@@ -7,67 +14,29 @@ from bottle import redirect
 from bottle import HTTPError
 from bottle import static_file
 from bottle import mako_template
-from toughradius.console.libs.paginator import Paginator
-from toughradius.console.libs import utils
-from toughradius.console import models
 from beaker.cache import CacheManager
-from hashlib import md5
-import logging
-import functools
-import urllib
-import json
-import time
-import tempfile
+from toughradius.console.libs.paginator import Paginator
+from toughradius.console import models
+
 
 ## เพิ่มแปลภาษา
-from i18n.translator import Translator
+# import os
+# from i18n.translator import Translator
+#
+# supported_languages = ['TH', 'EN']
+# # activate italian translations
+# tr = Translator('../toughradius/console/customer', supported_languages, 'TH')
 
-supported_languages = ['TH', 'EN']
-# activate italian translations
-tr = Translator('../toughradius/console/customer', supported_languages, 'TH')
+from toughradius.tools import i18n
+from io import open
 
-from bottle import (
-    PluginError,
-    DictMixin,
-    request,
-    template,
-    TEMPLATE_PATH
-)
-
-
-def i18n_defaults(template, request):
-    template.defaults['_'] = lambda msgid, options=None: request.app._(msgid) % options if options else request.app._(
-        msgid)
-    template.defaults['lang'] = lambda: request.app.lang
-
-
-def i18n_template(*args, **kwargs):
-    tpl = args[0] if args else None
-    if tpl:
-        tpl = os.path.join("{lang!s}/".format(lang=request.app.lang), tpl)
-    eles = list(args)
-    eles[0] = tpl
-    args = tuple(eles)
-    return template(*args, **kwargs)
-
-
-def i18n_view(tmpl, **defaults):
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            file = os.path.join("{lang!s}/".format(lang=request.app.lang), tmpl)
-            result = func(*args, **kwargs)
-            if isinstance(result, (dict, DictMixin)):
-                tplvars = defaults.copy()
-                tplvars.update(result)
-                return template(file, **tplvars)
-            elif result is None:
-                return template(file, defaults)
-            return result
-
-        return wrapper
-
-    return decorator
+# use the Translator class directly:
+tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
+# or use the load_translator() function:
+tr = i18n.load_translator('../toughradius/console/foo.yml')
+tr.language = 'th'
+tr.fallback = 'de'
+_ = tr.t
 
 ########################################################################
 # const define

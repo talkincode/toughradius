@@ -36,9 +36,9 @@ ${self.head()}
     </div>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
-        <li><a href="/">首页</a></li>
+        <li><a href="/">${_(u'首页')}</a></li>
         % if not get_cookie('customer'):
-        <li><a href="/login">${(u'登陆')} ${(u'greet')}</a></li>
+        <li><a href="/login">${_(u'登陆')}</a></li>
         % else:
         <li><a href="/logout">退出</a></li>
         % endif

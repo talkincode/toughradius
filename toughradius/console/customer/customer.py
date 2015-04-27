@@ -52,10 +52,8 @@ _ = tr.t
 
 
 
-
-
 app = Bottle()
-render = functools.partial(Render.render_app,app)
+render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # login , recharge error times limit    
@@ -164,7 +162,7 @@ def customer_index(db):
 def member_login_get(db):
     form = forms.member_login_form()
     form.next.set_value(request.params.get('next','/'))
-    return render("login",form=form)
+    return render("login",form=form, _=tr.t )
 
 @app.post('/login')
 def member_login_post(db):

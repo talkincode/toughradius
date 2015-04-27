@@ -1,8 +1,12 @@
 __author__ = '00755'
 #!/usr/bin/env python
 #coding:utf-8
-import py,sys
-from i18n.translator import Translator
+import sys
+
+import py
+
+from toughradius.tools.i18n.translator import Translator
+
 
 # set the root of the project to the directory containing this file
 ROOT = py.path.local(__file__).dirpath()
