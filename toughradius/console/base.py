@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#coding:utf-8
+# coding:utf-8
 from twisted.python import log
 from bottle import request
 from bottle import response
@@ -19,26 +19,76 @@ import json
 import time
 import tempfile
 
+## เพิ่มแปลภาษา
+from i18n.translator import Translator
+
+supported_languages = ['TH', 'EN']
+# activate italian translations
+tr = Translator('../toughradius/console/customer', supported_languages, 'TH')
+
+from bottle import (
+    PluginError,
+    DictMixin,
+    request,
+    template,
+    TEMPLATE_PATH
+)
+
+
+def i18n_defaults(template, request):
+    template.defaults['_'] = lambda msgid, options=None: request.app._(msgid) % options if options else request.app._(
+        msgid)
+    template.defaults['lang'] = lambda: request.app.lang
+
+
+def i18n_template(*args, **kwargs):
+    tpl = args[0] if args else None
+    if tpl:
+        tpl = os.path.join("{lang!s}/".format(lang=request.app.lang), tpl)
+    eles = list(args)
+    eles[0] = tpl
+    args = tuple(eles)
+    return template(*args, **kwargs)
+
+
+def i18n_view(tmpl, **defaults):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            file = os.path.join("{lang!s}/".format(lang=request.app.lang), tmpl)
+            result = func(*args, **kwargs)
+            if isinstance(result, (dict, DictMixin)):
+                tplvars = defaults.copy()
+                tplvars.update(result)
+                return template(file, **tplvars)
+            elif result is None:
+                return template(file, defaults)
+            return result
+
+        return wrapper
+
+    return decorator
+
 ########################################################################
 # const define
 ########################################################################
 
-FEES = (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows) = (0,1,2,3,4,5)
+FEES = (PPMonth, PPTimes, BOMonth, BOTimes, PPFlow, BOFlows) = (0, 1, 2, 3, 4, 5)
 
-ACCOUNT_STATUS = (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire) = (0,1,2,3,4)
+ACCOUNT_STATUS = (UsrPreAuth, UsrNormal, UsrPause, UsrCancel, UsrExpire) = (0, 1, 2, 3, 4)
 
-CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
+CARD_STATUS = (CardInActive, CardActive, CardUsed, CardRecover) = (0, 1, 2, 3)
 
-CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
+CARD_TYPE = (ProductCard, BalanceCard) = (0, 1)
 
 ACCEPT_TYPES = {
-    'open':u'开户',
-    'pause':u'停机',
-    'resume':u'复机',
-    'cancel':u'销户',
-    'next':u'续费',
-    'charge':u'充值',
-    'change':u'变更'
+    'open': u'开户',
+    'pause': u'停机',
+    'resume': u'复机',
+    'cancel': u'销户',
+    'next': u'续费',
+    'charge': u'充值',
+    'change': u'变更'
 }
 
 MAX_EXPIRE_DATE = '3000-12-30'
@@ -49,59 +99,63 @@ page_size = 20
 
 __cache_timeout__ = 600
 
-cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
-   
+cache = CacheManager(cache_regions={'short_term': {'type': 'memory', 'expire': __cache_timeout__}})
+
+
 class Connect:
     def __init__(self, mkdb):
         self.conn = mkdb()
 
     def __enter__(self):
-        return self.conn   
+        return self.conn
 
     def __exit__(self, exc_type, exc_value, exc_tb):
         self.conn.close()
 
+
 class SecureCookie(object):
-    
-    def setup(self,secret):
+    def setup(self, secret):
         self.secret = secret
-    
-    def get_cookie(self,name):
-        return request.get_cookie(md5(name).hexdigest(),secret=self.secret)
-        
-    def set_cookie(self,name,value,**options):
-        response.set_cookie(md5(name).hexdigest(),value,secret=self.secret,**options)
-        
+
+    def get_cookie(self, name):
+        return request.get_cookie(md5(name).hexdigest(), secret=self.secret)
+
+    def set_cookie(self, name, value, **options):
+        response.set_cookie(md5(name).hexdigest(), value, secret=self.secret, **options)
+
+
 scookie = SecureCookie()
 get_cookie = scookie.get_cookie
 set_cookie = scookie.set_cookie
 
+
 class Render(object):
-    
     RENDERS = {}
-    
-    def __init__(self,context={},lookup=None):
+
+    def __init__(self, context={}, lookup=None):
         self.context = context
         self.lookup = lookup
 
-    def render(self,*args,**kwargs):
+    def render(self, *args, **kwargs):
         kwargs['template_lookup'] = self.lookup
         kwargs.update(**self.context)
-        return mako_template(*args,**kwargs)
-    
-    @staticmethod 
-    def render_app(app,*args,**kwargs):
+        return mako_template(*args, **kwargs)
+
+    @staticmethod
+    def render_app(app, *args, **kwargs):
         render_obj = Render.RENDERS[app.config['render_key']]
-        return render_obj.render(*args,**kwargs)
-        
+        return render_obj.render(*args, **kwargs)
+
+
 ########################################################################
 # permission manage
 ########################################################################
 
 class Permit():
     routes = {}
-    def add_route(self,path,name,category,is_menu=False,order=time.time(),is_open=True):
-        if not path:return
+
+    def add_route(self, path, name, category, is_menu=False, order=time.time(), is_open=True):
+        if not path: return
         self.routes[path] = dict(
             path=path,
             name=name,
@@ -111,70 +165,72 @@ class Permit():
             order=order,
             is_open=is_open
         )
-    
-    def get_route(self,path):
-        return self.routes.get(path)    
-        
-    def bind_super(self,opr):
+
+    def get_route(self, path):
+        return self.routes.get(path)
+
+    def bind_super(self, opr):
         for path in self.routes:
-            route = self.routes.get(path)    
-            route['oprs'].append(opr)         
-    
-    def bind_opr(self,opr,path):
+            route = self.routes.get(path)
+            route['oprs'].append(opr)
+
+    def bind_opr(self, opr, path):
         if not path or path not in self.routes:
             return
-        oprs = self.routes[path]['oprs'] 
+        oprs = self.routes[path]['oprs']
         if opr not in oprs:
-            oprs.append(opr) 
-            
-    def unbind_opr(self,opr,path=None):
+            oprs.append(opr)
+
+    def unbind_opr(self, opr, path=None):
         if path:
             self.routes[path]['oprs'].remove(opr)
         else:
             for path in self.routes:
-                route = self.routes.get(path)    
+                route = self.routes.get(path)
                 if route and opr in route['oprs']:
                     route['oprs'].remove(opr)
-                    
-    def check_open(self,path):
+
+    def check_open(self, path):
         route = self.routes[path]
         return 'is_open' in route and route['is_open']
-                
-    def check_opr_category(self,opr,category):
+
+    def check_opr_category(self, opr, category):
         for path in self.routes:
             route = self.routes[path]
             if opr in route['oprs'] and route['category'] == category:
                 return True
-        return False 
-        
-    def build_menus(self,order_cats=[]):
-        menus = [ {'category':_cat,'items':[]} for _cat in order_cats]
+        return False
+
+    def build_menus(self, order_cats=[]):
+        menus = [{'category': _cat, 'items': []} for _cat in order_cats]
         for path in self.routes:
             route = self.routes[path]
             for menu in menus:
                 if route['category'] == menu['category']:
                     menu['items'].append(route)
         return menus
-        
-    def match(self,path):
+
+    def match(self, path):
         if not path:
             return False
         return get_cookie("username") in self.routes[path]['oprs']
-     
-permit = Permit()       
+
+
+permit = Permit()
 
 ########################################################################
 # web plugin funtion
 ########################################################################
 
-def export_file(name,data):
-    with open(u'%s/%s' % (TMPDIR,name), 'wb') as f:
+def export_file(name, data):
+    with open(u'%s/%s' % (TMPDIR, name), 'wb') as f:
         f.write(data.xls)
-    return static_file(name, root=TMPDIR,download=True)
+    return static_file(name, root=TMPDIR, download=True)
+
 
 def auth_opr(func):
     @functools.wraps(func)
-    def warp(*args,**kargs):
+    def warp(*args, **kargs):
         if not get_cookie("username"):
             log.msg("admin login timeout")
             return redirect('/login')
@@ -183,18 +239,22 @@ def auth_opr(func):
             rule = permit.get_route(request.fullpath)
             if rule and opr not in rule['oprs']:
                 raise HTTPError(403, u'访问被拒绝')
-            return func(*args,**kargs)
+            return func(*args, **kargs)
+
     return warp
-    
+
+
 def auth_cus(func):
     @functools.wraps(func)
-    def warp(*args,**kargs):
+    def warp(*args, **kargs):
         if not get_cookie("customer"):
             log.msg("user login timeout")
             return redirect('/login')
         else:
-            return func(*args,**kargs)
-    return warp    
+            return func(*args, **kargs)
+
+    return warp
+
 
 ########################################################################
 # cache function
@@ -209,59 +269,70 @@ def get_opr_nodes(db):
         models.SlcOperatorNodes.operator_name == opr_name
     )
 
-@cache.cache('get_node_name',expire=3600)   
-def get_node_name(db,node_id):
-    return  db.query(models.SlcNode.node_name).filter_by(id=node_id).scalar()
-    
-@cache.cache('get_product_name',expire=3600)   
-def get_product_name(db,product_id):
-    if not product_id:return
-    return  db.query(models.SlcRadProduct.product_name).filter_by(id=product_id).scalar()
 
-@cache.cache('get_account_node_id',expire=3600)   
-def account_node_id(db,account_number):
-    return  db.query(models.SlcMember.node_id).filter(
+@cache.cache('get_node_name', expire=3600)
+def get_node_name(db, node_id):
+    return db.query(models.SlcNode.node_name).filter_by(id=node_id).scalar()
+
+
+@cache.cache('get_product_name', expire=3600)
+def get_product_name(db, product_id):
+    if not product_id: return
+    return db.query(models.SlcRadProduct.product_name).filter_by(id=product_id).scalar()
+
+
+@cache.cache('get_account_node_id', expire=3600)
+def account_node_id(db, account_number):
+    return db.query(models.SlcMember.node_id).filter(
         models.SlcMember.member_id == models.SlcRadAccount.member_id,
         models.SlcRadAccount.account_number == account_number).scalar()
 
-@cache.cache('get_member_node_id',expire=3600)   
-def member_node_id(db,member_id):
-    return  db.query(models.SlcMember.node_id).filter_by(member_id = member_id).scalar()
-    
-@cache.cache('get_member_by_name',expire=3600)   
-def get_member_by_name(db,member_name):
-    return  db.query(models.SlcMember).filter_by(member_name = member_name).first()
-    
-@cache.cache('get_account_by_number',expire=300)   
-def get_account_by_number(db,account_number):
-    return  db.query(models.SlcRadAccount).filter_by(account_number = account_number).first()
-    
+
+@cache.cache('get_member_node_id', expire=3600)
+def member_node_id(db, member_id):
+    return db.query(models.SlcMember.node_id).filter_by(member_id=member_id).scalar()
+
+
+@cache.cache('get_member_by_name', expire=3600)
+def get_member_by_name(db, member_name):
+    return db.query(models.SlcMember).filter_by(member_name=member_name).first()
+
+
+@cache.cache('get_account_by_number', expire=300)
+def get_account_by_number(db, account_number):
+    return db.query(models.SlcRadAccount).filter_by(account_number=account_number).first()
+
+
 # @cache.cache('get_online_status',expire=30)   
-def get_online_status(db,account_number):
-    return  db.query(models.SlcRadOnline.id).filter_by(account_number = account_number).count() > 0
-    
-@cache.cache('get_param_value',expire=600)   
-def get_param_value(db,pname):
-    return  db.query(models.SlcParam.param_value).filter_by(param_name = pname).scalar()
+def get_online_status(db, account_number):
+    return db.query(models.SlcRadOnline.id).filter_by(account_number=account_number).count() > 0
+
+
+@cache.cache('get_param_value', expire=600)
+def get_param_value(db, pname):
+    return db.query(models.SlcParam.param_value).filter_by(param_name=pname).scalar()
+
 
 def get_page_data(query):
     def _page_url(page, form_id=None):
-        if form_id:return "javascript:goto_page('%s',%s);" %(form_id.strip(),page)
+        if form_id: return "javascript:goto_page('%s',%s);" % (form_id.strip(), page)
         request.query['page'] = page
-        return request.path + '?' + urllib.urlencode(request.query)        
-    page = int(request.params.get("page",1))
+        return request.path + '?' + urllib.urlencode(request.query)
+
+    page = int(request.params.get("page", 1))
     offset = (page - 1) * page_size
     page_data = Paginator(_page_url, page, query.count(), page_size)
     page_data.result = query.limit(page_size).offset(offset)
     return page_data
 
+
 def serial_json(mdl):
-    if not mdl:return
-    if not hasattr(mdl,'__table__'):return
+    if not mdl: return
+    if not hasattr(mdl, '__table__'): return
     data = {}
     for c in mdl.__table__.columns:
         data[c.name] = getattr(mdl, c.name)
-    return json.dumps(data,ensure_ascii=False)
+    return json.dumps(data, ensure_ascii=False)
 
 
 
