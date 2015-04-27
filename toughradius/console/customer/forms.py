@@ -3,14 +3,25 @@ from toughradius.console.libs import pyforms
 from toughradius.console.libs.pyforms import dataform
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
-from toughradius.console.base import (tr)
+#from toughradius.console.base import (tr)
+from toughradius.tools import i18n
+from io import open
+
+# use the Translator class directly:
+tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
+# or use the load_translator() function:
+tr = i18n.load_translator('../toughradius/console/foo.yml')
+tr.language = 'th'
+tr.fallback = 'de'
+_ = tr.t
+
 boolean = {0:u"否", 1:u"是"}
 
 sexopt = {1:u"男",0:u"女"}
 
 member_login_form = pyforms.Form(
-    pyforms.Textbox("username", rules.len_of(1, 32), description=tr._(u"用户名"), size=32,required="required",**input_style),
-    pyforms.Password("password", rules.len_of(1,32), description=tr._(u"登录密码"), size=32, required="required",**input_style),
+    pyforms.Textbox("username", rules.len_of(1, 32), description=_(u"用户名"), size=32,required="required",**input_style),
+    pyforms.Password("password", rules.len_of(1,32), description=(u"登录密码"), size=32, required="required",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>登陆</b>", **button_style),
     pyforms.Hidden("next",value="/"),
     action="/login",
