@@ -4,7 +4,7 @@ MarkupSafe==0.18
 PyYAML==3.10
 SQLAlchemy==0.9.8
 Twisted==14.0.2
-autobahn==0.9.3-3
+autobahn==0.10.3
 bottle==0.12.7
 six==1.8.0
 tablib==0.10.0
