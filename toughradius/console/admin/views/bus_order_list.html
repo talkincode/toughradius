@@ -31,7 +31,7 @@
                     <select id="node_id" name="node_id" class="form-control" >
                     <option value=""></option>
                         % for node in node_list:
-                          <option value="${node.id}"  ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}"  ${str(node.id)==node_id and "selected" or ""}>${node.node_desc}</option>
                         % endfor
                     </select>
                 </div>  
@@ -99,14 +99,8 @@
             % for order,_,_realname,_product_name,_ in page_data.result:
             <tr>
                 <td>${order.order_id}</td>
-                <td>
-                % if permit.match('/bus/member/detail'):
-                <a href="/bus/member/detail?member_id=${order.member_id}">${_realname}</a>
-                % else:
-                ${_realname}
-                % endif
-                </td>
-                <td>${order.account_number}</td>
+                <td>${_realname}</td>
+                <td><a href="/bus/member/detail?account_number=${order.account_number}">${order.account_number}</a></td>
                 <td>${_product_name}</td>
                 <td>${fen2yuan(order.order_fee)}</td>
                 <td>${fen2yuan(order.actual_fee)}</td>

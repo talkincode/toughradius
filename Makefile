@@ -20,7 +20,7 @@ wheel:
 	python setup.py bdist_wheel
 	
 upload:
-	python setup.py bdist bdist_rpm bdist_wheel upload -s -i jamiesun
+	python setup.py bdist bdist_rpm bdist_wheel upload
 
 clean:
 	@rm -rf .Python MANIFEST build dist venv* *.egg-info *.egg

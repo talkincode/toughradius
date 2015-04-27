@@ -1,118 +1,279 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys,os
+from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(False)
+import sys,os,signal
+import tempfile
+import time
 import argparse,ConfigParser
+from toughradius.tools import config as iconfig
+from toughradius.tools.shell import shell
+from toughradius.tools.dbengine import get_engine
 
-def run_radiusd(config):
-    from toughradius.radiusd import server 
-    server.run(config)
+def get_service_tac(app):
+    return '%s/%s_service.tac'%(tempfile.gettempdir(),app)
+
+def get_service_pid(app):
+    return '%s/%s_service.pid'%(tempfile.gettempdir(),app)
     
-def run_admin(config):
+def get_service_log(config,app):
+    if app == 'standalone':
+        return config.get('radiusd','logfile')
+    return config.get(app,'logfile')
+    
+def _run_daemon(config,app):
+    tac = get_service_tac(app)
+    pidfile = get_service_pid(app)
+    with open(tac,'wb') as tfs:
+        tfs.write(iconfig.echo_app_tac(app))
+    shell.run('twistd -y %s -l %s --pidfile=%s'%(tac,get_service_log(config,app),pidfile),
+                raise_on_fail=True)
+
+def _kill_daemon(app):
+    ''' kill daemons'''
+    pidfile = get_service_pid(app)
+    if os.path.exists(pidfile):
+        os.kill(int(open(pidfile).read()),signal.SIGTERM)
+
+def run_radiusd(config,daemon=False):
+    if not daemon:
+        from toughradius.radiusd import server 
+        server.run(config,db_engine=get_engine(config))
+    else:
+        _run_daemon(config,'radiusd')
+
+
+def run_admin(config,daemon=False):
+    if not daemon:
+        from toughradius.console import admin_app
+        admin_app.run(config,db_engine=get_engine(config))
+    else:
+        _run_daemon(config,'admin')
+    
+
+def run_customer(config,daemon=False):
+    if not daemon:
+        from toughradius.console import customer_app
+        customer_app.run(config,db_engine=get_engine(config))
+    else:
+        _run_daemon(config,'customer')
+        
+def run_standalone(config,daemon=False):
+    from twisted.internet import reactor
     from toughradius.console import admin_app
-    admin_app.run(config)
-    
-def run_customer(config):
     from toughradius.console import customer_app
-    customer_app.run(config)
+    from toughradius.radiusd import server
+    logfile = config.get('radiusd','logfile')
+    config.set('DEFAULT','standalone','true')
+    config.set('admin','logfile',logfile)
+    config.set('customer','logfile',logfile)
+    if not daemon:
+        db_engine = get_engine(config)
+        server.run(config,db_engine,False)
+        admin_app.run(config,db_engine,False)
+        customer_app.run(config,db_engine,False)
+        reactor.run()
+    else:
+        _run_daemon(config,'standalone')
+    
+
+def start_server(config,app):
+    apps = app == 'all' and ['radiusd','admin','customer'] or [app]
+    for _app in apps:
+        shell.info('start %s'%_app)
+        _run_daemon(config,_app)
+        time.sleep(0.1)
+    
+    
+def stop_server(app):
+    apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
+    for _app in apps:
+        shell.info('stop %s'%_app)
+        _kill_daemon(_app)
+        time.sleep(0.1)
+        
+def restart_server(config,app):
+    apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
+    for _app in apps:
+        shell.info('stop %s'%_app)
+        _kill_daemon(_app)
+        time.sleep(0.1)
+        shell.info('start %s'%_app)
+        _run_daemon(config,_app)
+        time.sleep(0.1)
+    
 
 def run_secret_update(config,cfgfile):
     from toughradius.tools import secret 
     secret.update(config,cfgfile)
     
-def run_initdb(config,level='0'):
+def run_initdb(config):
     from toughradius.console import models
-    if level == '1':
-        models.install(config)
-    elif level == '2':
-        models.install2(config)
-    elif level == '3':
-        models.update(config)
+    models.update(get_engine(config))
         
 def run_config():
     from toughradius.tools.config import setup_config
     setup_config()
-        
-def run_dbdict(config):
-    from toughradius.tools import dbdictgen 
-    dbdictgen.main()   
-    
-def run_backup(config):
-    from toughradius.tools import backupdb 
-    backupdb.backup(config)
-    
-def run_echo_my_cnf():
-    from toughradius.tools.config import echo_my_cnf
-    print echo_my_cnf()
     
 def run_echo_radiusd_cnf():
     from toughradius.tools.config import echo_radiusd_cnf
     print echo_radiusd_cnf()
     
-def run_echo_supervisord_cnf():
-    from toughradius.tools.config import echo_supervisord_cnf
-    print echo_supervisord_cnf()
+def run_echo_radiusd_script():
+    from toughradius.tools import livecd
+    print livecd.echo_radiusd_script()
     
-def run_echo_centos7_service():
-    from toughradius.tools.config import echo_centos7_service
-    print echo_centos7_service()
+def run_echo_mysql_cnf():
+    from toughradius.tools import livecd
+    print livecd.echo_mysql_cnf()
+
+def run_execute_sqls(config,sqlstr):
+    from toughradius.tools.sqlexec import execute_sqls
+    execute_sqls(config,sqlstr)
     
+def run_execute_sqlf(config,sqlfile):
+    from toughradius.tools.sqlexec import execute_sqlf
+    execute_sqlf(config,sqlfile)
+
+def run_radius_tester(config):
+    from toughradius.tools.radtest import Tester
+    Tester(config).start()
+    
+def run_gensql(config):
+    from sqlalchemy import create_engine
+    def _e(sql, *multiparams, **params): print (sql)
+    engine =  create_engine(
+            config.get('database',"dburl"),
+            strategy = 'mock',
+            executor = _e
+        )
+    from toughradius.console import models
+    metadata = models.get_metadata(engine)
+    metadata.create_all(engine)
+    
+def run_dumpdb(config,dumpfs):
+    from toughradius.tools import backup
+    backup.dumpdb(config,dumpfs)
+    
+def run_restoredb(config,restorefs):
+    from toughradius.tools import backup
+    backup.restoredb(config,restorefs)
+    
+def run_live_system_init():
+    from toughradius.tools import livecd
+    # create database
+    shell.run("echo \"create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;\" | mysql")
+    # setup mysql user and passwd
+    shell.run("echo \"GRANT ALL ON toughradius.* TO radiusd@'127.0.0.1' IDENTIFIED BY 'root' WITH GRANT OPTION;FLUSH PRIVILEGES;\" | mysql")
+    shell.run("mkdir -p /var/toughradius/log")
+    
+    with open("/etc/radiusd.conf",'wb') as ef:
+        ef.write(livecd.echo_radiusd_cnf())
+        
+    with open("/var/toughradius/privkey.pem",'wb') as ef:
+        ef.write(livecd.echo_privkey_pem())
+        
+    with open("/var/toughradius/cacert.pem",'wb') as ef:
+        ef.write(livecd.echo_cacert_pem())
+        
+    shell.run("toughctl --initdb")
+    
+    if not os.path.exists("/etc/init.d/radiusd"):
+        with open("/etc/init.d/radiusd",'wb') as rf:
+            rf.write(livecd.echo_radiusd_script())
+        shell.run("chmod +x /etc/init.d/radiusd")
+        shell.run("update-rc.d radiusd defaults")
+        
+    shell.run("/etc/init.d/radiusd start",raise_on_fail=True)
+
 def run():
     parser = argparse.ArgumentParser()
     parser.add_argument('-radiusd','--radiusd', action='store_true',default=False,dest='radiusd',help='run radiusd')
     parser.add_argument('-admin','--admin', action='store_true',default=False,dest='admin',help='run admin')
     parser.add_argument('-customer','--customer', action='store_true',default=False,dest='customer',help='run customer')
-    parser.add_argument('-initdb','--initdb', type=str,default='0',dest='initdb',help='run initdb 1,2,3')
+    parser.add_argument('-standalone','--standalone', action='store_true',default=False,dest='standalone',help='run standalone')
+    parser.add_argument('-d','--daemon', action='store_true',default=False,dest='daemon',help='daemon mode')
+    parser.add_argument('-start','--start', type=str,default=None,dest='start',help='start server all|radiusd|admin|customer')
+    parser.add_argument('-restart','--restart', type=str,default=None,dest='restart',help='restart server all|radiusd|admin|customer')
+    parser.add_argument('-stop','--stop', type=str,default=None,dest='stop',help='stop server all|radiusd|admin|customer')
+    parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
+    parser.add_argument('-dumpdb','--dumpdb', type=str,default=None,dest='dumpdb',help='run dumpdb')
+    parser.add_argument('-restoredb','--restoredb', type=str,default=None,dest='restoredb',help='run restoredb')
     parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
-    parser.add_argument('-echo_my_cnf','--echo_my_cnf', action='store_true',default=False,dest='echo_my_cnf',help='echo my_cnf')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
-    parser.add_argument('-echo_supervisord_cnf','--echo_supervisord_cnf', action='store_true',default=False,dest='echo_supervisord_cnf',help='echo supervisord_cnf')
-    parser.add_argument('-echo_centos7_service','--echo_centos7_service', action='store_true',default=False,dest='echo_centos7_service',help='echo centos7_service')
+    parser.add_argument('-echo_mysql_cnf','--echo_mysql_cnf', action='store_true',default=False,dest='echo_mysql_cnf',help='echo mysql cnf')    
+    parser.add_argument('-echo_radiusd_script','--echo_radiusd_script', action='store_true',default=False,dest='echo_radiusd_script',help='echo radiusd script')
     parser.add_argument('-secret','--secret', action='store_true',default=False,dest='secret',help='secret update')
-    parser.add_argument('-backup','--backup', action='store_true',default=False,dest='backup',help='backup database')
-    parser.add_argument('-dbdict','--dbdict', action='store_true',default=False,dest='dbdict',help='dbdict gen')
+    parser.add_argument('-sqls','--sqls', type=str,default=None,dest='sqls',help='execute sql string')
+    parser.add_argument('-sqlf','--sqlf', type=str,default=None,dest='sqlf',help='execute sql script file')
+    parser.add_argument('-gensql','--gensql', action='store_true',default=False,dest='gensql',help='export sql script file')
+    parser.add_argument('-debug','--debug', action='store_true',default=False,dest='debug',help='debug option')
+    parser.add_argument('-radtest','--radtest', action='store_true',default=False,dest='radtest',help='start radius tester')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
     args =  parser.parse_args(sys.argv[1:])  
-    
+
     if args.config:
         return run_config()
-    
-    if args.echo_my_cnf:
-        return run_echo_my_cnf()
         
     if args.echo_radiusd_cnf:
         return run_echo_radiusd_cnf()
         
-    if args.echo_supervisord_cnf:
-        return run_echo_supervisord_cnf()
+    if args.echo_radiusd_script:
+        return run_echo_radiusd_script()
     
-    if args.echo_centos7_service:
-        return run_echo_centos7_service()
-    
-    if not args.conf:
-        print 'Please specify a configuration file'
-        return
+    if args.echo_mysql_cnf:
+        return run_echo_mysql_cnf()
         
-    windows_dir = os.getenv("WINDIR") and os.path.join(os.getenv("WINDIR"),'radiusd.conf') or None
-    cfgs = [
-        args.conf,
-        '/etc/radiusd.conf',
-        '/var/toughradius/radiusd.conf',
-        './radiusd.conf',
-        windows_dir
-    ]
-    config = ConfigParser.ConfigParser()
-    for c in cfgs:
-        if c and os.path.exists(c):
-            config.read(c)
-            break
+    if args.stop:
+        if not args.stop in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --stop [all|radiusd|admin|customer|standalone]'%sys.argv[0]
+            return
+        return stop_server(args.stop)
+    
+    config = iconfig.find_config(args.conf)
+    
+    if not config:
+        return run_live_system_init()
+    
+    if args.debug:
+        config.set('DEFAULT','debug','true')
+        
+    if args.radtest:
+        run_radius_tester(config) 
+        
+    if args.gensql:
+        return run_gensql(config)
+        
+    if args.dumpdb:
+        return run_dumpdb(config,args.dumpdb)
+        
+    if args.restoredb:
+        return run_restoredb(config,args.restoredb)
 
-    if args.radiusd:run_radiusd(config)
-    elif args.admin:run_admin(config)
-    elif args.customer:run_customer(config)
+    if args.sqls:
+        return run_execute_sqls(config,args.sqls)
+    
+    if args.sqlf:
+        return run_execute_sqlf(config,args.sqlf)
+        
+    if args.start:
+        if not args.start in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --start [all|radiusd|admin|customer|standalone]'%sys.argv[0]
+            return
+        return start_server(config,args.start)
+    
+    if args.restart:
+        if not args.restart in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --restart [all|radiusd|admin|customer|standalone]'%sys.argv[0]
+            return
+        return restart_server(config,args.restart)
+
+    if args.radiusd:run_radiusd(config,args.daemon)
+    elif args.admin:run_admin(config,args.daemon)
+    elif args.customer:run_customer(config,args.daemon)
+    elif args.standalone:run_standalone(config,args.daemon)
     elif args.secret:run_secret_update(config,args.conf)
-    elif args.initdb:run_initdb(config,args.initdb)
-    elif args.dbdict:run_dbdict(config)
-    elif args.backup:run_backup(config)
+    elif args.initdb:run_initdb(config)
     else: print 'do nothing'
     
         

@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 #coding=utf-8
-from toughradius.radiusd.store import store
 import json
 
 def process(req=None,admin=None,**kwargs):
@@ -13,12 +12,12 @@ def process(req=None,admin=None,**kwargs):
         reply = {'msg_id':msg_id,'code':1,'data':u"nas_addr and acct_session_id Does not allow nulls"}
         return admin.sendMessage(json.dumps(reply),False)
 
-    coa_client = admin.coa_clients.get(nas_addr)
+    coa_client = admin.radiusd.coa_clients.get(nas_addr)
     if not coa_client:
         reply = {'msg_id':msg_id,'code':1,'data':u"CoA Client instance not exists for %s"%nas_addr}
         return admin.sendMessage(json.dumps(reply),False)
 
-    online = store.get_online(nas_addr,acct_session_id)
+    online = admin.radiusd.store.get_online(nas_addr,acct_session_id)
     if not online:
         reply = {'msg_id':msg_id,'code':1,'data':u"online not exists"}
         return admin.sendMessage(json.dumps(reply),False)

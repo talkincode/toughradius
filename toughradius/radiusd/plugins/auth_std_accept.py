@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
+from toughradius.radiusd.plugins import error_auth
 from twisted.python import log
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 import datetime
 import decimal
@@ -15,30 +15,46 @@ def get_type_val(typ,src):
     else:
         return src
 
-def process(req=None,resp=None,user=None,**kwargs):
-    product = store.get_product(user['product_id'])
+def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
+    store = radiusd.store
     session_timeout = int(store.get_param("max_session_timeout"))
+    expire_pool = store.get_param("expire_addrpool")
+    if "Framed-Pool" in resp:
+        if expire_pool in resp['Framed-Pool']:
+            expire_session_timeout = int(store.get_param("expire_session_timeout"))
+            if expire_session_timeout > 0:
+                session_timeout = expire_session_timeout
+            else:
+                return error_auth(resp,'User has expired')
+
+    acct_interim_intelval = int(store.get_param("acct_interim_intelval"))
+    if acct_interim_intelval > 0:
+        resp['Acct-Interim-Interval'] = acct_interim_intelval
+    
     acct_policy = user['product_policy'] or BOMonth
+    product = store.get_product(user['product_id'])
+    
     if acct_policy in (PPMonth,BOMonth):
-        expire_date = user.get('expire_date')
-        _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
+        expire_date = user['expire_date']
         _datetime = datetime.datetime.now()
-        if _datetime > _expire_datetime:
-            session_timeout += (_expire_datetime - _datetime).seconds 
+        if _datetime.strftime("%Y-%m-%d") == expire_date:
+            _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
+            session_timeout = (_expire_datetime - _datetime).seconds 
 
     elif acct_policy  == BOTimes:
-        session_timeout = user.get("time_length",0)
+        _session_timeout = user["time_length"]
+        if _session_timeout < session_timeout:
+            session_timeout = _session_timeout
+        
+    elif acct_policy  == PPTimes:
+        user_balance = store.get_user_balance(user['account_number'])
+        fee_price = decimal.Decimal(product['fee_price']) 
+        _sstime = user_balance/fee_price*decimal.Decimal(3600)
+        _session_timeout = int(_sstime.to_integral_value())
+        if _session_timeout < session_timeout:
+            session_timeout = _session_timeout
 
-    if "Framed-Pool" in resp:
-        if store.get_param("expire_addrpool") in resp['Framed-Pool']:
-            session_timeout = 120
-    
     resp['Session-Timeout'] = session_timeout
-
-    input_limit = str(product['input_max_limit'])
-    output_limit = str(product['output_max_limit'])
-    _class = input_limit.zfill(8) + input_limit.zfill(8) + output_limit.zfill(8) + output_limit.zfill(8)
-    resp['Class'] = _class
 
     if user['ip_address']:
         resp['Framed-IP-Address'] = user['ip_address']
@@ -51,8 +67,8 @@ def process(req=None,resp=None,user=None,**kwargs):
         except:
             import traceback
             traceback.print_exc()
-
-    
+    for attr in req.ext_attrs:
+        resp[attr] = req.ext_attrs[attr]
     # for attr in store.get_user_attrs(user['account_number']):
     #     try:resp[attr.attr_name] = attr.attr_value
     #     except:pass

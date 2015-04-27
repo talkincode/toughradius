@@ -92,5 +92,6 @@ _parses = {
 }
 
 def process(req=None,resp=None,user=None,**kwargs):
-    _parses[req.vendor_id](req)
+    if req.vendor_id in _parses:
+        _parses[req.vendor_id](req)
 

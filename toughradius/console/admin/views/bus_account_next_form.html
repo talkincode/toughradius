@@ -5,10 +5,12 @@
 <script>
 
 function productCalc(){
-    var months = $("#months").val() || 0 ;
-    var product_id = $("#product_id").val();
-    var old_expire = $("#old_expire").val();
-    $.post("/bus/opencalc?months="+months+"&product_id="+product_id+"&old_expire="+old_expire, {}, function (ev) {
+    param = {
+        'months': $("#months").val() || 0,
+        'product_id':$("#product_id").val(),
+        'old_expire':$("#old_expire").val()
+    }
+    $.post("/bus/opencalc", param, function (ev) {
         console.log(ev);
         if(ev.code==0){
             console.log(ev.data);

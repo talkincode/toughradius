@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 #coding=utf-8
-from autobahn.twisted import choosereactor
-choosereactor.install_optimal_reactor(True)
 import sys,os
 import ConfigParser
 from twisted.python.logfile import DailyLogFile
@@ -16,14 +14,15 @@ from toughradius.radiusd.settings import *
 from toughradius.radiusd.pyrad import dictionary
 from toughradius.radiusd.pyrad import host
 from toughradius.radiusd.pyrad import packet
-from toughradius.radiusd.store import store
+from toughradius.radiusd.store import Store
 from toughradius.radiusd import middleware
 from toughradius.radiusd import settings
+from toughradius.radiusd import utils
+from toughradius.tools.dbengine import get_engine
 import datetime
 import logging
 import pprint
 import socket
-import utils
 import time
 import json
 import six
@@ -90,15 +89,16 @@ class CoAClient(protocol.DatagramProtocol):
 ###############################################################################
 
 class RADIUS(host.Host, protocol.DatagramProtocol):
-    def __init__(self, dict=None,trace=None,midware=None,runstat=None,coa_clients=None,debug=False):
-        _dict = dictionary.Dictionary(dict)
+    def __init__(self, radiusd):
+        _dict = dictionary.Dictionary(radiusd.dictfile)
         host.Host.__init__(self,dict=_dict)
-        self.debug = debug
-        self.user_trace = trace
-        self.midware = midware
-        self.runstat = runstat
-        self.coa_clients = coa_clients
-        self.auth_delay = utils.AuthDelay(int(store.get_param("reject_delay") or 0))
+        self.debug = radiusd.debug
+        self.user_trace = radiusd.trace
+        self.midware = radiusd.midware
+        self.runstat = radiusd.runstat
+        self.coa_clients = radiusd.coa_clients
+        self.store = radiusd.store
+        self.auth_delay = utils.AuthDelay(int(self.store.get_param("reject_delay") or 0))
 
     def processPacket(self, pkt):
         pass
@@ -107,7 +107,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         raise NotImplementedError('Attempted to use a pure base class')
 
     def datagramReceived(self, datagram, (host, port)):
-        bas = store.get_bas(host)
+        bas = self.store.get_bas(host)
         if not bas:
             return log.msg('Dropping packet from unknown host ' + host,level=logging.DEBUG)
         secret,vendor_id = bas['bas_secret'],bas['vendor_id']
@@ -167,11 +167,11 @@ class RADIUSAccess(RADIUS):
         
         reply = req.CreateReply()
         reply.source = req.source
-        user = store.get_user(req.get_user_name())
+        user = self.store.get_user(req.get_user_name())
         if user:self.user_trace.push(user['account_number'],req)
         # middleware execute
         for plugin in auth_plugins:
-            self.midware.process(plugin,req=req,resp=reply,user=user)
+            self.midware.process(plugin,req=req,resp=reply,user=user,radiusd=self)
             if reply.code == packet.AccessReject:
                 self.auth_delay.add_roster(req.get_mac_addr())
                 if user:self.user_trace.push(user['account_number'],reply)
@@ -209,9 +209,9 @@ class RADIUSAccounting(RADIUS):
             raise PacketError('non-AccountingRequest packet on authentication socket')
 
         for plugin in acct_before_plugins:
-            self.midware.process(plugin,req=req)
-                 
-        user = store.get_user(req.get_user_name())
+            self.midware.process(plugin,req=req,radiusd=self)
+
+        user = self.store.get_user(req.get_user_name())
         if user:self.user_trace.push(user['account_number'],req)        
           
         reply = req.CreateReply()
@@ -220,9 +220,7 @@ class RADIUSAccounting(RADIUS):
         req.deferred.callback(reply)
         # middleware execute
         for plugin in acct_plugins:
-            self.midware.process(plugin,req=req,user=user,
-            runstat=self.runstat,coa_clients=self.coa_clients
-        )
+            self.midware.process(plugin,req=req,user=user,radiusd=self)
         
  
  ###############################################################################
@@ -231,12 +229,7 @@ class RADIUSAccounting(RADIUS):
  
 class AdminServerProtocol(WebSocketServerProtocol):
 
-    user_trace = None
-    midware = None
-    runstat = None
-    coa_clients = {}
-    auth_server = None
-    acct_server = None
+    radiusd = None
 
     def onConnect(self, request):
         log.msg("Client connecting: {0}".format(request.peer))
@@ -245,76 +238,181 @@ class AdminServerProtocol(WebSocketServerProtocol):
         log.msg("WebSocket connection open.")
 
     def onMessage(self, payload, isBinary):
-        req_msg = json.loads(payload)
-        log.msg("websocket admin request: %s"%str(req_msg))
-        plugin = req_msg.get("process")
-        self.midware.process(plugin,req=req_msg,admin=self)
+        req_msg = None
+        try:
+            _msg = utils.decrypt(payload)
+            req_msg = json.loads(_msg)
+        except:
+            log.err('decrypt message error : %s'%payload)
+        
+        if req_msg:
+            log.msg("websocket admin request: %s"%str(req_msg))
+            plugin = req_msg.get("process")
+            self.radiusd.midware.process(plugin,req=req_msg,admin=self)
 
     def onClose(self, wasClean, code, reason):
         log.msg("WebSocket connection closed: {0}".format(reason))
 
 ###############################################################################
-# Run  Server                                                              ####
-###############################################################################     
-                 
-def run(config):
-    logfile = config.get('radiusd','logfile')
-    log.startLogging(DailyLogFile.fromFullPath(logfile))
-    secret = config.get('DEFAULT','secret')
-    tz = config.get('DEFAULT','tz')
-    is_debug = config.getboolean('DEFAULT','debug')
-    authport = config.getint('radiusd','authport')
-    acctport = config.getint('radiusd','acctport')
-    adminport = config.getint('radiusd','adminport')
+# Radius  Server                                                              ####
+###############################################################################    
+
+class RadiusServer(object):
     
-    #parse dictfile
-    dictfile = None
-    if config.has_option('radiusd','dictfile'):
-        dictfile = config.get('radiusd','dictfile')
-    if not dictfile or not os.path.exists(dictfile):
-        dictfile = os.path.join(os.path.split(__file__)[0],'dicts/dictionary')
+    def __init__(self,config,db_engine=None,daemon=False):
+        self.config = config
+        self.db_engine = db_engine
+        self.daemon = daemon
+        self.tasks = {}
+        self.init_config()
+        self.init_timezone()
+        self.init_db_engine()
+        self.init_protocol()
+        self.init_task()
         
-    #init dbstore
-    store.setup(config)
-    # update aescipher,timezone
-    utils.aescipher.setup(secret)
-    utils.update_tz(tz)
-    # rundata
-    _trace = utils.UserTrace()
-    _runstat = utils.RunStat()
-    _middleware = middleware.Middleware()
-    # init coa clients
-    coa_pool = {}
-    for bas in store.list_bas():
-        coa_pool[bas['ip_addr']] = CoAClient(bas,
-            dictionary.Dictionary(dictfile),
-            debug=is_debug
-        )
+    def _check_ssl_config(self):
+        self.use_ssl = False
+        self.privatekey = None
+        self.certificate = None
+        if self.config.has_option('DEFAULT','ssl') and self.config.getboolean('DEFAULT','ssl'):
+            self.privatekey = self.config.get('DEFAULT','privatekey')
+            self.certificate = self.config.get('DEFAULT','certificate')
+            if os.path.exists(self.privatekey) and os.path.exists(self.certificate):
+                self.use_ssl = True
+        
+    def init_config(self):
+        self.logfile = self.config.get('radiusd','logfile')
+        self.standalone = self.config.has_option('DEFAULT','standalone') and \
+            self.config.getboolean('DEFAULT','standalone') or False
+        self.secret = self.config.get('DEFAULT','secret')
+        self.timezone = self.config.has_option('DEFAULT','tz') and self.config.get('DEFAULT','tz') or "CST-8"
+        self.debug = self.config.getboolean('DEFAULT','debug')
+        self.authport = self.config.getint('radiusd','authport')
+        self.acctport = self.config.getint('radiusd','acctport')
+        self.adminport = self.config.getint('radiusd','adminport')
+        self.radiusd_host = self.config.has_option('radiusd','host') \
+            and self.config.get('radiusd','host') or  '0.0.0.0'
+        #parse dictfile
+        self.dictfile = os.path.join(os.path.split(__file__)[0],'dicts/dictionary')
+        if self.config.has_option('radiusd','dictfile'):
+            if os.path.exists(self.config.get('radiusd','dictfile')):
+                self.dictfile = self.config.get('radiusd','dictfile')
 
-    auth_protocol = RADIUSAccess(
-        dict=dictfile,trace=_trace,midware=_middleware,
-        runstat=_runstat,coa_clients=coa_pool,debug=is_debug
-    )
+        # update aescipher
+        utils.aescipher.setup(self.secret)
+        self.encrypt = utils.aescipher.encrypt
+        self.decrypt = utils.aescipher.decrypt
+        #parse ssl
+        self._check_ssl_config()
+        
+    def init_timezone(self):
+        try:
+            os.environ["TZ"] = self.timezone
+            time.tzset()
+        except:pass
     
-    acct_protocol = RADIUSAccounting(
-        dict=dictfile,trace=_trace,midware=_middleware,
-        runstat=_runstat,coa_clients=coa_pool,debug=is_debug
-    )
-    
-    reactor.listenUDP(authport, auth_protocol)
-    reactor.listenUDP(acctport, acct_protocol)
-    _task = task.LoopingCall(auth_protocol.process_delay)
-    _task.start(2.7)
+    def init_db_engine(self):
+        if not self.db_engine:
+            self.db_engine = get_engine(self.config)
+        self.store = Store(self.config,self.db_engine)
+        
+    def init_protocol(self):
+        # rundata
+        self.trace = utils.UserTrace()
+        self.runstat = utils.RunStat()
+        self.midware = middleware.Middleware()
+        # init coa clients
+        self.coa_clients = {}
+        for bas in self.store.list_bas():
+            self.coa_clients[bas['ip_addr']] = CoAClient(
+                bas,
+                dictionary.Dictionary(self.dictfile),
+                debug=self.debug
+            )
+        self.auth_protocol = RADIUSAccess(self)
+        self.acct_protocol = RADIUSAccounting(self)
+        
+        ws_url = "ws://%s:%s"%(self.radiusd_host,self.adminport)
+        if self.use_ssl:
+            ws_url = "wss://%s:%s"%(self.radiusd_host,self.adminport)
 
-    factory = WebSocketServerFactory("ws://0.0.0.0:%s"%adminport, debug = False)
-    factory.protocol = AdminServerProtocol
-    factory.protocol.user_trace = _trace
-    factory.protocol.midware = _middleware
-    factory.protocol.runstat = _runstat
-    factory.protocol.coa_clients = coa_pool
-    factory.protocol.auth_server = auth_protocol
-    factory.protocol.acct_server = acct_protocol
-    reactor.listenTCP(adminport, factory)
+        self.admin_factory = WebSocketServerFactory(ws_url, debug = False)
+        self.admin_factory.protocol = AdminServerProtocol
+        self.admin_factory.setProtocolOptions(allowHixie76=True)
+        self.admin_factory.protocol.radiusd = self
+        
+    def _check_online_over(self):
+        reactor.callInThread(self.store.check_online_over)
 
-    reactor.run()
+    def init_task(self):
+        _task = task.LoopingCall(self.auth_protocol.process_delay)
+        _task.start(2.7)
+        _online_task = task.LoopingCall(self._check_online_over)
+        _online_task.start(3600*4)
+        _msg_stat_task = task.LoopingCall(self.runstat.run_stat)
+        _msg_stat_task.start(60)
+        self.tasks['process_delay'] = _task
+        self.tasks['check_online_over'] = _online_task
+        
+    def run_normal(self):
+        if self.debug:
+            log.startLogging(sys.stdout)
+        else:
+            log.startLogging(DailyLogFile.fromFullPath(self.logfile))
+        log.msg('server listen %s'%self.radiusd_host)  
+        reactor.listenUDP(self.authport, self.auth_protocol,interface=self.radiusd_host)
+        reactor.listenUDP(self.acctport, self.acct_protocol,interface=self.radiusd_host)
+        if self.use_ssl:
+            log.msg('WS SSL Enable!')
+            from twisted.internet import ssl
+            sslContext = ssl.DefaultOpenSSLContextFactory(self.privatekey, self.certificate)
+            reactor.listenSSL(
+                self.adminport,
+                self.admin_factory,
+                contextFactory = sslContext,
+                interface=self.radiusd_host
+            )
+        else:
+            reactor.listenTCP(self.adminport, self.admin_factory,interface=self.radiusd_host)
+        if not self.standalone:
+            reactor.run()
+        
+    def get_service(self):    
+        from twisted.application import service, internet
+        top_service = service.MultiService()
+        
+        internet.UDPServer(
+            self.authport,self.auth_protocol,interface=self.radiusd_host
+        ).setServiceParent(top_service)
+        
+        internet.UDPServer(
+            self.acctport, self.acct_protocol,interface=self.radiusd_host
+        ).setServiceParent(top_service)
+        
+        if self.use_ssl:
+            log.msg('WS SSL Enable!')
+            from twisted.internet import ssl
+            sslContext = ssl.DefaultOpenSSLContextFactory(self.privatekey, self.certificate)
+            internet.SSLServer(
+                self.adminport,
+                self.admin_factory,
+                contextFactory = sslContext,
+                interface=self.radiusd_host
+            ).setServiceParent(top_service)
+        else:
+            log.msg('WS SSL Disable!')       
+            internet.TCPServer(
+                self.adminport,
+                self.admin_factory,
+                interface=self.radiusd_host
+            ).setServiceParent(top_service)
+        return top_service
 
+
+def run(config,db_engine=None,is_serrvice=False):
+    print 'running radiusd server...'
+    radiusd = RadiusServer(config,db_engine,daemon=is_serrvice)
+    if is_serrvice:
+        return radiusd.get_service()
+    else:
+        radiusd.run_normal()

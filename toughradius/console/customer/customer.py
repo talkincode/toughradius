@@ -10,7 +10,6 @@ from bottle import redirect
 from bottle import run as runserver
 from bottle import static_file
 from bottle import abort
-from bottle import mako_template as render
 from hashlib import md5
 from tablib import Dataset
 from toughradius.console.libs import sqla_plugin 
@@ -18,7 +17,8 @@ from urlparse import urljoin
 from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
-    get_account_by_number,get_online_status
+    get_account_by_number,get_online_status,
+    Render
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
 from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
@@ -37,6 +37,7 @@ import datetime
 import functools
 
 app = Bottle()
+render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # login , recharge error times limit    
@@ -73,21 +74,10 @@ class ValidateCache(object):
             return self.validates[key][0] >= 5 
 
 vcache = ValidateCache() 
-              
+
 ###############################################################################
 # Basic handle         
 ###############################################################################   
-@app.error(403) 
-def error403(error):
-    return render("error",msg=u"Unauthorized access %s"%error.exception)
-    
-@app.error(404)
-def error404(error):
-    return render("error",msg=u"Not found %s"%error.exception)
-
-@app.error(500)
-def error500(error):
-    return render("error",msg=u"Server Internal error %s"%error.exception)
 
 @app.route('/static/:path#.+#')
 def route_static(path):
@@ -132,7 +122,7 @@ def get_data(db,member_name):
     ).filter(
         models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
         models.SlcMemberOrder.member_id==member.member_id
-    )
+    ).order_by(models.SlcMemberOrder.create_time.desc())
     return member,accounts,orders
         
 @app.get('/',apply=auth_cus)
@@ -366,7 +356,7 @@ def member_update(db):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)修改用户信息:%s'%(get_cookie("username"),member.member_name)
+    ops_log.operate_desc = u'(%s)修改用户信息:%s'%(get_cookie("username"),member.member_name)
     db.add(ops_log)
 
     db.commit()
@@ -741,7 +731,7 @@ def account_open(db):
     clog.recharge_time = _datetime
     db.add(clog)
     
-    card.card_status = 2
+    card.card_status = CardUsed
     
     db.commit()
     redirect('/')
@@ -849,6 +839,8 @@ def account_recharge(db):
     account.time_length += card.times
     account.flow_length += card.flows
     account.status = 1
+    
+    card.card_status = CardUsed
     
     db.commit()
     redirect("/") 

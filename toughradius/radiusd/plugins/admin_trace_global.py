@@ -6,7 +6,7 @@ import json
 
 def process(req=None,admin=None,**kwargs):
     msg_id = req.get("msg_id")
-    pkt = admin.user_trace.get_global_msg()
+    pkt = admin.radiusd.trace.get_global_msg()
     if pkt is None: 
         return
     mtype = int(req.get('type'))

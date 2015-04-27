@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
+
 import json
 from bottle import MakoTemplate
 from twisted.internet import reactor  
@@ -19,7 +20,7 @@ class WebSockProtocol(WebSocketClientProtocol):
         def send_message():
             if self.messages:
                 self.sendMessage(self.messages.pop(),False) 
-            self.factory.reactor.callLater(1, send_message) 
+            self.factory.reactor.callLater(0.1, send_message) 
         send_message()
 
     def onMessage(self, msg, binary):  
@@ -45,11 +46,26 @@ class WSClientFactory(WebSocketClientFactory, ReconnectingClientFactory):
       self.retry(connector)
 
 class WebSock():    
+    
+    use_ssl = False
 
-    def connect(self,radaddr,adminport):    
-        self.factory = WSClientFactory("ws://%s:%s"%(radaddr,adminport), debug = False)  
-        reactor.connectTCP(radaddr, int(adminport), self.factory)
-        
+    def connect(self,radaddr,adminport): 
+        def _connect_std():
+            self.factory = WSClientFactory("ws://%s:%s"%(radaddr,adminport), debug = False)  
+            reactor.connectTCP(radaddr, int(adminport), self.factory)
+            
+        if self.use_ssl:
+            try:
+                from twisted.internet import ssl
+                contextFactory = ssl.ClientContextFactory()
+                self.factory = WSClientFactory("wss://%s:%s"%(radaddr,adminport), debug = False)  
+                reactor.connectSSL(radaddr, int(adminport), self.factory,contextFactory)
+            except:
+                _connect_std()
+        else:
+            _connect_std()
+            
+
     def reconnect(self,radaddr,adminport):    
         self.connect(radaddr,adminport)
 
@@ -62,7 +78,8 @@ class WebSock():
         }
         callback = 'callback' in kwargs and kwargs.pop('callback') or None
         message.update(**kwargs)
-        self.factory.protocol.messages.append(json.dumps(message).encode("utf-8")) 
+        secure_msg = utils.encrypt(json.dumps(message).encode("utf-8"))
+        self.factory.protocol.messages.append(secure_msg) 
         if callback:self.factory.protocol.callbacks[msg_id] = callback
 
     def invoke_admin(self,ops,**kwargs):
@@ -73,11 +90,9 @@ class WebSock():
         }
         callback = 'callback' in kwargs and kwargs.pop('callback') or None
         message.update(**kwargs)
-        self.factory.protocol.messages.append(json.dumps(message).encode("utf-8")) 
+        secure_msg = utils.encrypt(json.dumps(message).encode("utf-8"))
+        self.factory.protocol.messages.append(secure_msg) 
         if callback:self.factory.protocol.callbacks[msg_id] = callback
 
 websock = WebSock()
-
-
-
 

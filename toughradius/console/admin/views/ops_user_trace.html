@@ -7,7 +7,12 @@
         timer: null,
 
         start: function () {
-            var url = "ws://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
+            var _prefix = "${use_ssl and 'wss' or 'ws'}";
+            ws_addr = "${sys_param_value('radiusd_address')}";
+            if("127.0.0.1" == ws_addr){
+                ws_addr = location.hostname;
+            }
+            var url = _prefix+"://"+ws_addr+":${sys_param_value('radiusd_admin_port')}";
             updater.socket = new WebSocket(url);
             updater.socket.onmessage = function (event) {
                 updater.showMessage(JSON.parse(event.data));
@@ -37,8 +42,10 @@
             username: $("#userName").val()
         }
         data = JSON.stringify(message);
-        updater.socket.send(data);
-        updater.timer = setTimeout("doGetLastTrace()", 300);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+            updater.timer = setTimeout("doGetLastTrace()", 300);
+        }, "json");
     }
     
     function doGetUserTrace() {
@@ -46,12 +53,15 @@
         $("#traceAction").removeAttr("disabled");
         $("#stopTraceAction").attr("disabled", "disabled");    
         $("#inbox").empty();
+
         var message = {
             process:"admin_trace_user",
             username: $("#userName").val()
         }
         data = JSON.stringify(message);
-        updater.socket.send(data);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+        }, "json");
     }
 
 
@@ -107,7 +117,7 @@
                 <button type="button" id="queryUserAction" class="btn btn-info">用户最近消息</button>
             </form>
             <hr>
-            <div id="inbox" style="height:332px;overflow:auto">
+            <div id="inbox" style="height:410px;overflow:auto">
 
             </div>
         </div>

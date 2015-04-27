@@ -21,6 +21,10 @@ def test_user_trace():
     assert trace2.get_global_msg() == pkt
     assert trace2.get_user_msg('') == []
     assert trace2.get_user_msg('test') == [pkt]
+    
+    
+def test_radiusd_server():
+    from toughradius.radiusd.server import RadiusServer
 
 
 if __name__ == '__main__':

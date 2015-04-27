@@ -4,6 +4,7 @@ import decimal
 import datetime
 from Crypto.Cipher import AES
 from Crypto import Random
+import hashlib
 import binascii
 import hashlib
 import base64
@@ -34,6 +35,7 @@ class AESCipher:
 
     def setup(self, key): 
         self.bs = 32
+        self.ori_key = key
         self.key = hashlib.sha256(key.encode()).digest()
 
     def encrypt(self, raw):
@@ -59,15 +61,41 @@ aescipher = AESCipher()
 encrypt = aescipher.encrypt
 decrypt = aescipher.decrypt 
 
+def mk_sign(args=[]):
+    args.sort()
+    _argstr =  aescipher.ori_key + ''.join(args)
+    return hashlib.md5(_argstr).hexdigest()
+
 def update_tz(tz_val,default_val="CST-8"):
     try:
         os.environ["TZ"] = tz_val or default_val
         time.tzset()
     except:
         pass
+        
+def check_ssl(config):
+    use_ssl = False
+    privatekey = None
+    certificate = None
+    if config.has_option('DEFAULT','ssl') and config.getboolean('DEFAULT','ssl'):
+        privatekey = config.get('DEFAULT','privatekey')
+        certificate = config.get('DEFAULT','certificate')
+        if os.path.exists(privatekey) and os.path.exists(certificate):
+            use_ssl = True
+    return use_ssl,privatekey,certificate
     
 def get_uuid():
     return uuid.uuid1().hex.upper()
+    
+def bps2mbps(bps):
+    _bps = decimal.Decimal(bps or 0)
+    _mbps = _bps / decimal.Decimal(1024*1024)
+    return str(_mbps.quantize(decimal.Decimal('1.000')))
+    
+def mbps2bps(mbps):
+    _mbps = decimal.Decimal(mbps or 0)
+    _kbps = _mbps * decimal.Decimal(1024*1024)
+    return int(_kbps.to_integral_value())
     
 def bb2mb(ik):
     _kb = decimal.Decimal(ik or 0)
@@ -75,8 +103,8 @@ def bb2mb(ik):
     return str(_mb.quantize(decimal.Decimal('1.00')))
     
 def bbgb2mb(bb,gb):
-    bl = decimal.Decimal(bb)/decimal.Decimal(1024*1024)
-    gl = decimal.Decimal(gb)*decimal.Decimal(4*1024*1024*1024)
+    bl = decimal.Decimal(bb or 0)/decimal.Decimal(1024*1024)
+    gl = decimal.Decimal(gb or 0)*decimal.Decimal(4*1024*1024*1024)
     tl = bl + gl
     return str(tl.quantize(decimal.Decimal('1.00')))
     
@@ -115,6 +143,13 @@ def get_currtime():
 
 def get_currdate():
     return datetime.datetime.now().strftime("%Y-%m-%d") 
+    
+def gen_backep_id():
+    global _base_id
+    if _base_id >= 9999:_base_id=0
+    _base_id += 1
+    _num = str(_base_id).zfill(4)
+    return datetime.datetime.now().strftime("%Y%m%d_%H%M%S_") + _num
 
 def gen_order_id():
     global _base_id

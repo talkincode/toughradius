@@ -7,7 +7,7 @@
 
 function productCalc(){
     param = {
-        'month': $("#months").val() || 0,
+        'months': $("#months").val() || 0,
         'product_id':$("#product_id").val()
     }
     $.post("/bus/opencalc", param, function (ev) {
@@ -26,6 +26,18 @@ function productCalc(){
     }, "json");
 }
 
+function check_samename()
+{
+    if($("#is_samename_").is(':checked')){
+        $("#member_name").parent().parent().show();
+        $("#member_password").parent().parent().show();
+    }
+    else{
+        $("#member_name").parent().parent().hide();
+        $("#member_password").parent().parent().hide();
+    }
+}
+
 
 //页面初始化
 $(document).ready(function (){
@@ -36,6 +48,10 @@ $(document).ready(function (){
     $('#months').blur(function() {
         productCalc();
     });    
+    check_samename();
+    $("#is_samename_").click(function(){
+        check_samename();
+    });
 });
 </script>
 

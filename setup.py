@@ -6,8 +6,7 @@ import toughradius
 version = toughradius.__version__
 
 install_requires = [
-    'DBUtils>=1.1',
-    'MySQL-python>=1.2.5',
+    'argparse',
     'Mako>=0.9.0',
     'Beaker>=1.6.4',
     'MarkupSafe>=0.18',
@@ -20,7 +19,6 @@ install_requires = [
     'tablib>=0.10.0',
     'zope.interface>=4.1.1',
     'pycrypto==2.6.1',
-    'sh==1.11'
 ]
 install_requires_empty = []
 
@@ -45,14 +43,13 @@ setup(name='toughradius',
       url='https://github.com/talkincode/ToughRADIUS',
       license='BSD',
       description='RADIUS Server',
-      long_description=open('README.md').read(),
+      long_description=open('README.rst').read(),
       classifiers=[
        'Development Status :: 6 - Mature',
        'Intended Audience :: Developers',
        'License :: OSI Approved :: BSD License',
        'Programming Language :: Python :: 2.6',
        'Programming Language :: Python :: 2.7',
-       "Programming Language :: Python :: Implementation :: PyPy"
        'Topic :: Software Development :: Libraries :: Python Modules',
        'Topic :: System :: Systems Administration :: Authentication/Directory',
        ],
@@ -62,7 +59,7 @@ setup(name='toughradius',
       zip_safe=True,
       include_package_data=True,
       install_requires=install_requires,
-      scripts=['bin/toughrad','bin/toughctl'],
+      scripts=['bin/toughctl'],
       tests_require='nose>=0.10.0b1',
       test_suite='nose.collector',
 )

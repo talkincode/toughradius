@@ -39,3 +39,4 @@ testusers.txt
 testdata.py
 modules/
 windows/
+fabfile.py

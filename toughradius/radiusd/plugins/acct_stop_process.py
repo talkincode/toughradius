@@ -2,15 +2,18 @@
 #coding=utf-8
 from twisted.python import log
 from toughradius.radiusd.pyrad import packet
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 from toughradius.radiusd import utils
 import logging
 import datetime
 
-def process(req=None,user=None,runstat=None,**kwargs):
+def process(req=None,user=None,radiusd=None,**kwargs):
     if not req.get_acct_status_type() == STATUS_TYPE_STOP:
         return  
+    
+    runstat=radiusd.runstat
+    store = radiusd.store
+    
     runstat.acct_stop += 1   
     ticket = req.get_ticket()
     if not ticket.nas_addr:

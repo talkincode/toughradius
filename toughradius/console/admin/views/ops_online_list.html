@@ -6,8 +6,13 @@
 
 var updater = {
     socket: null,
-    start: function () {
-            var url = "ws://${sys_param_value('radiusd_address')}:${sys_param_value('radiusd_admin_port')}";
+    start: function () { 
+        var _prefix = "${use_ssl and 'wss' or 'ws'}";
+        ws_addr = "${sys_param_value('radiusd_address')}";
+        if("127.0.0.1" == ws_addr){
+            ws_addr = location.hostname;
+        }
+        var url = _prefix+"://"+ws_addr+":${sys_param_value('radiusd_admin_port')}";
         updater.socket = new WebSocket(url);
         updater.socket.onmessage = function (event) {
             updater.showMessage(JSON.parse(event.data));
@@ -31,7 +36,9 @@ var updater = {
             acct_session_id : session_id
         };
         data = JSON.stringify(message);
-        updater.socket.send(data);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+        }, "json");
     },
     disconnect_online: function(nas_addr,session_id){
         var message = {
@@ -41,9 +48,10 @@ var updater = {
             message_type : 'disconnect'
         };
         data = JSON.stringify(message);
-        updater.socket.send(data);
+        $.post("/encrypt", {data:data} , function (ev) {
+            updater.socket.send(ev.data);
+        }, "json");
     }
-
 };
 
 $(document).ready(function (){
@@ -53,6 +61,7 @@ $(document).ready(function (){
         if(nas_addr.length == 0)
         {
             alert("请选择bas");
+            return false;
         }
         if(confirm("是否解锁该bas下所有用户?"))
         {
@@ -77,7 +86,7 @@ $(document).ready(function (){
                     <select id="node_id" name="node_id" class="form-control" onchange="whenNodeChange()">
                         <option></option>
                         % for node in node_list:
-                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_desc}</option>
                         % endfor
                     </select>
                 </div>
@@ -107,7 +116,7 @@ $(document).ready(function (){
                      <select id="nas_addr" name="nas_addr" class="form-control">
                         <option></option>
                         % for bas in bas_list:
-                          <option value="${bas.ip_addr}" ${bas.ip_addr== bas_ipaddr and "selected" or ""}>${bas.bas_name}</option>
+                          <option value="${bas.ip_addr}" ${bas.ip_addr== nas_addr and "selected" or ""}>${bas.bas_name}</option>
                         % endfor
                     </select>
                 </div>

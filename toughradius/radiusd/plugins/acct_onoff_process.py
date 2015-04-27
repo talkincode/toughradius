@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 import logging
 
 
-def process(req=None,user=None,runstat=None,**kwargs):
+def process(req=None,user=None,radiusd=None,**kwargs):
     if  req.get_acct_status_type() not in (STATUS_TYPE_ACCT_ON,STATUS_TYPE_ACCT_OFF):
         return
+    
+    runstat=radiusd.runstat
+    store = radiusd.store
 
     if req.get_acct_status_type() == STATUS_TYPE_ACCT_ON:
         store.unlock_online(req.get_nas_addr(),None,STATUS_TYPE_ACCT_ON)

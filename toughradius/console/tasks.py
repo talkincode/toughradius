@@ -116,7 +116,7 @@ def __expire_notify(mk_db):
             url = url.replace('{email}',email)
             url = url.replace('{mobile}',mobile)
             url = url.encode('utf-8')
-            url = quote(url,":?=/")
+            url = quote(url,":?=/&")
             commands.append( (_getpage,[url],{}) )
 
         threads.callMultipleInThread(commands)

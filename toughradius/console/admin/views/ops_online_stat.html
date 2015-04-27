@@ -30,6 +30,7 @@ var online_options = {
 };
 
 $(document).ready(function (){
+    Highcharts.setOptions({global: {useUTC: false}});
     $("#day_code").datepicker();   
 });
 
@@ -58,7 +59,7 @@ function doQuery()
                     <select id="node_id" name="node_id" class="form-control" >
                         <option value=""></option>
                         % for node in node_list:
-                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_desc}</option>
                         % endfor
                     </select>
                 </div>            

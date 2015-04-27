@@ -12,6 +12,7 @@ is_alphanum = lambda x: pyforms.regexp("^[A-Za-z0-9]{%s}$" % x, u"必须是长�
 is_alphanum2 = lambda x, y: pyforms.regexp("^[A-Za-z0-9]{%s,%s}$" % (x, y), u"必须是长度为%s到%s的数字字母组合" % (x, y))
 is_number = pyforms.regexp("^[0-9]*$", u"必须是数字")
 is_number2 = pyforms.regexp("^[1-9]\d*$",u'必须是大于0的正整数')
+is_number3 = pyforms.regexp('^(([1-9]\d*)|0)(\.\d{1,3})?$', u"支持包含(最大3位)小数点 xx.xxxxx")
 is_numberOboveZore = pyforms.regexp("^\\d+$",u"必须为大于等于0的整数")
 is_cn = pyforms.regexp("^[\u4e00-\u9fa5],{0,}$", u"必须是汉字")
 is_url = pyforms.regexp('[a-zA-z]+://[^\s]*', u"url格式 xxxx://xxx")

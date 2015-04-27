@@ -6,7 +6,6 @@ from bottle import request
 from bottle import response
 from bottle import redirect
 from bottle import static_file
-from bottle import mako_template as render
 from tablib import Dataset
 from toughradius.console import models
 from toughradius.console.admin import forms
@@ -22,6 +21,7 @@ __prefix__ = "/product"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
+render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # product manage       
@@ -72,8 +72,8 @@ def product_add_post(db):
     product.concur_number = form.d.concur_number
     product.fee_period = form.d.fee_period
     product.fee_price = utils.yuan2fen(form.d.fee_price)
-    product.input_max_limit = form.d.input_max_limit
-    product.output_max_limit = form.d.output_max_limit
+    product.input_max_limit = utils.mbps2bps(form.d.input_max_limit)
+    product.output_max_limit = utils.mbps2bps(form.d.output_max_limit)
     _datetime = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
     product.create_time = _datetime
     product.update_time = _datetime
@@ -117,8 +117,8 @@ def product_update(db):
     product.concur_number = form.d.concur_number
     product.fee_period = form.d.fee_period
     product.fee_price = utils.yuan2fen(form.d.fee_price)
-    product.input_max_limit = form.d.input_max_limit
-    product.output_max_limit = form.d.output_max_limit
+    product.input_max_limit = utils.mbps2bps(form.d.input_max_limit) 
+    product.output_max_limit = utils.mbps2bps(form.d.output_max_limit) 
     product.update_time = utils.get_currtime()
 
     ops_log = models.SlcRadOperateLog()

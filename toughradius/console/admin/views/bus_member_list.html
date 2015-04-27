@@ -29,29 +29,64 @@ function do_delete(member_id)
     <div class="panel-body">
         <form id="query_form" class="form-horizontal form-well" role="form" action="/bus/member" method="post">
             <div class="form-group">
-                <label for="node_id" class="col-md-2 control-label">区域</label>
+                <label for="node_id" class="col-md-1 control-label">区域</label>
                 <div class="col-md-3">
                     <select id="node_id" name="node_id" class="form-control" >
                     <option value=""></option>
                         % for node in node_list:
-                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_name}</option>
+                          <option value="${node.id}" ${str(node.id)==node_id and "selected" or ""}>${node.node_desc}</option>
                         % endfor
                     </select>
                 </div>            
-                <label for="realname" class="col-md-2 control-label">用户姓名</label>
+                <label for="realname" class="col-md-1 control-label">姓名</label>
                 <div class="col-md-3">
                     <input type="text" id="realname" name="realname" class="form-control" placeholder="模糊查询" value="${realname and unicode(realname,'utf-8') or ''}">
                 </div>
-            </div>
-            <div class="form-group">
-                <label for="idcard" class="col-md-2 control-label">证件号</label>
+                <label for="idcard" class="col-md-1 control-label">证件</label>
                 <div class="col-md-3">
                     <input type="text" id="idcard" name="idcard" class="form-control" placeholder="身份证件号" value="${idcard or ''}">
-                </div>   
-                <label for="mobile" class="col-md-2 control-label">手机号</label>
+                </div>
+            </div>
+            <div class="form-group">
+ 
+                <label for="mobile" class="col-md-1 control-label">手机</label>
                 <div class="col-md-3">
                     <input type="text" id="mobile" name="mobile" class="form-control" placeholder="手机号" value="${mobile or ''}">
                 </div>                                            
+                <label for="user_name" class="col-md-1 control-label">账号</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="user_name" name="user_name" class="form-control" placeholder="模糊查询" value=${user_name or ""}>
+                </div>
+                <label for="state" class="col-md-1 control-label">状态</label>
+
+                <div class="col-md-3">
+                    <select id="status" name="status" class="form-control">
+                        <option></option>
+                        % for k,v in {1:u"正常", 2:u"停机" , 3:u"销户", 4:u"到期", 6:u"未激活"}.items():
+                        <option value="${k}"  ${str(k)==status and "selected" or ""} >${v}</option>
+                        % endfor
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="product_id" class="col-md-1 control-label">资费</label>
+                <div class="col-md-3">
+                    <select id="product_id" name="product_id" class="form-control" >
+                    <option value=""></option>
+                        % for product in products:
+                          <option value="${product.id}"  ${str(product.id)==product_id and "selected" or ""}>${product.product_name}</option>
+                        % endfor
+                    </select>
+                </div>  
+                <label for="address" class="col-md-1 control-label">地址</label>
+                <div class="col-md-3">
+                    <input type="text" id="address" name="address" class="form-control" placeholder="模糊查询" value=${address or ""}>
+                </div>
+                <label for="expire_days" class="col-md-2 control-label">账号到期剩余天数</label>
+                <div class="col-md-2">
+                    <input type="text" id="expire_days" name="expire_days" class="form-control" value=${expire_days or ""}>
+                </div>
             </div>
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
@@ -66,27 +101,28 @@ function do_delete(member_id)
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>用户姓名</th>
                 <th>区域</th>
-                <th>联系电话</th>
-                <th>地址</th>
+                <th>用户账号</th>
+                <th>用户姓名</th>
+                <th>资费</th>
                 <th>创建时间</th>
+                <th>到期时间</th>
                 <th></th>
             </tr>
             </thead>
             <tbody>
-            % for member,node_name in page_data.result:
+            % for member,account,product_name,node_desc in page_data.result:
             <tr>
-                <td><a href="/bus/member/detail?member_id=${member.member_id}">${member.realname}</a></td>
-                <td>${node_name}</td>
-                <td>${member.mobile}</td>
-                <td>${member.address}</td>
-                <td>${member.create_time}</td>
+                <td>${node_desc}</td>
                 <td>
-                    % if permit.match('/bus/member/delete'):
-                    <a class="opt-btn btn-default" href="javascript:do_delete('${member.member_id}');">删除用户</a>
-                    % endif
-                    <a class="opt-btn btn-default" href="/bus/member/detail?member_id=${member.member_id}">用户受理</a>
+                    <a href="/bus/member/detail?account_number=${account.account_number}">${account.account_number}</a>
+                </td>
+                <td>${member.realname}</td>
+                <td>${product_name}</td>
+                <td>${member.create_time}</td>
+                <td>${account.expire_date}</td>
+                <td>
+                    <a class="opt-btn btn-default" href="/bus/member/detail?account_number=${account.account_number}">用户受理</a>
                 </td>
             </tr>
             % endfor

@@ -6,7 +6,6 @@ from bottle import request
 from bottle import response
 from bottle import redirect
 from bottle import static_file
-from bottle import mako_template as render
 from tablib import Dataset
 from toughradius.console.websock import websock
 from toughradius.console import models
@@ -21,6 +20,7 @@ __prefix__ = "/card"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
+render = functools.partial(Render.render_app,app)
 
 
 @app.get('/calc',apply=auth_opr)

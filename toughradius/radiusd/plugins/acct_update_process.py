@@ -2,19 +2,21 @@
 #coding=utf-8
 from twisted.python import log
 from toughradius.radiusd.pyrad import packet
-from toughradius.radiusd.store import store
 from toughradius.radiusd.settings import *
 from toughradius.radiusd import utils
 import logging
 import datetime
 
-def process(req=None,user=None,runstat=None,**kwargs):
+def process(req=None,user=None,radiusd=None,**kwargs):
     if not req.get_acct_status_type() == STATUS_TYPE_UPDATE:
         return   
 
     if not user:
         return log.err("[Acct] Received an accounting update request but user[%s] not exists"%req.get_user_name())      
 
+    runstat=radiusd.runstat
+    store = radiusd.store
+    
     runstat.acct_update += 1  
     online = store.get_online(req.get_nas_addr(),req.get_acct_sessionid())  
 

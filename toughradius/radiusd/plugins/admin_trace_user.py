@@ -13,7 +13,7 @@ def process(req=None,admin=None,**kwargs):
         reply = json.dumps({'msg_id':msg_id,'data':'username is empty','time':now_time,'host':''})
         return admin.sendMessage(reply,False) 
     
-    pkts = admin.user_trace.get_user_msg(req['username'])
+    pkts = admin.radiusd.trace.get_user_msg(req['username'])
     reply = json.dumps({'msg_id':msg_id,'data':'no messages','time':now_time,'host':''})
     if not pkts:
         return admin.sendMessage(reply,False) 

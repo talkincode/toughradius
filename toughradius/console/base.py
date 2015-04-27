@@ -6,6 +6,7 @@ from bottle import response
 from bottle import redirect
 from bottle import HTTPError
 from bottle import static_file
+from bottle import mako_template
 from toughradius.console.libs.paginator import Paginator
 from toughradius.console.libs import utils
 from toughradius.console import models
@@ -30,6 +31,18 @@ CARD_STATUS = (CardInActive,CardActive,CardUsed,CardRecover) = (0,1,2,3)
 
 CARD_TYPE = (ProductCard,BalanceCard) = (0,1)
 
+ACCEPT_TYPES = {
+    'open':u'开户',
+    'pause':u'停机',
+    'resume':u'复机',
+    'cancel':u'销户',
+    'next':u'续费',
+    'charge':u'充值',
+    'change':u'变更'
+}
+
+MAX_EXPIRE_DATE = '3000-12-30'
+
 TMPDIR = tempfile.gettempdir()
 
 page_size = 20
@@ -37,6 +50,16 @@ page_size = 20
 __cache_timeout__ = 600
 
 cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
+   
+class Connect:
+    def __init__(self, mkdb):
+        self.conn = mkdb()
+
+    def __enter__(self):
+        return self.conn   
+
+    def __exit__(self, exc_type, exc_value, exc_tb):
+        self.conn.close()
 
 class SecureCookie(object):
     
@@ -53,13 +76,31 @@ scookie = SecureCookie()
 get_cookie = scookie.get_cookie
 set_cookie = scookie.set_cookie
 
+class Render(object):
+    
+    RENDERS = {}
+    
+    def __init__(self,context={},lookup=None):
+        self.context = context
+        self.lookup = lookup
+
+    def render(self,*args,**kwargs):
+        kwargs['template_lookup'] = self.lookup
+        kwargs.update(**self.context)
+        return mako_template(*args,**kwargs)
+    
+    @staticmethod 
+    def render_app(app,*args,**kwargs):
+        render_obj = Render.RENDERS[app.config['render_key']]
+        return render_obj.render(*args,**kwargs)
+        
 ########################################################################
 # permission manage
 ########################################################################
 
 class Permit():
     routes = {}
-    def add_route(self,path,name,category,is_menu=False,order=time.time()):
+    def add_route(self,path,name,category,is_menu=False,order=time.time(),is_open=True):
         if not path:return
         self.routes[path] = dict(
             path=path,
@@ -67,7 +108,8 @@ class Permit():
             category=category,
             is_menu=is_menu,
             oprs=[],
-            order=order
+            order=order,
+            is_open=is_open
         )
     
     def get_route(self,path):
@@ -93,6 +135,10 @@ class Permit():
                 route = self.routes.get(path)    
                 if route and opr in route['oprs']:
                     route['oprs'].remove(opr)
+                    
+    def check_open(self,path):
+        route = self.routes[path]
+        return 'is_open' in route and route['is_open']
                 
     def check_opr_category(self,opr,category):
         for path in self.routes:
@@ -153,6 +199,15 @@ def auth_cus(func):
 ########################################################################
 # cache function
 ########################################################################
+def get_opr_nodes(db):
+    opr_type = get_cookie('opr_type')
+    if opr_type == 0:
+        return db.query(models.SlcNode)
+    opr_name = get_cookie('username')
+    return db.query(models.SlcNode).filter(
+        models.SlcNode.node_name == models.SlcOperatorNodes.node_name,
+        models.SlcOperatorNodes.operator_name == opr_name
+    )
 
 @cache.cache('get_node_name',expire=3600)   
 def get_node_name(db,node_id):
