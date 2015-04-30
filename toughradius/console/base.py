@@ -86,6 +86,11 @@ class Render(object):
 
     def render(self,*args,**kwargs):
         kwargs['template_lookup'] = self.lookup
+        kwargs['template_settings'] = dict(
+            input_encoding='utf-8',
+            output_encoding='utf-8', 
+            encoding_errors='replace'
+        )
         kwargs.update(**self.context)
         return mako_template(*args,**kwargs)
     
