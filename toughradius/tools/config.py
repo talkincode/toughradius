@@ -83,6 +83,9 @@ echo = false
 # dburl = mysql://root:root@127.0.0.1/toughradius0?charset=utf8
 # pool_size = 120
 # pool_recycle = 300
+#dbtype = sqlite
+#dburl = sqlite:///../toughradius.sqlite3
+#echo = true
 
 [radiusd]
 acctport = 1813
