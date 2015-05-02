@@ -10,7 +10,6 @@ logs
 #data
 *.lok
 *.tmp
-.idea
 .ideahippo_shared_libs.xml
 SurelinkRadius.iml
 config.properties
