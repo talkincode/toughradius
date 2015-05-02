@@ -80,7 +80,7 @@ def load_translator(path):
 
 
 if __name__ == "__main__":
-    tr = load_translator('foo.yml')
+    tr = load_translator('lang.yml')
     tr.language = 'en'
     tr.fallback = 'de'
     _ = tr.t
