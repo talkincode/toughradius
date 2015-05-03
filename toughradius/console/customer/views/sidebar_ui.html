@@ -14,7 +14,7 @@
 <%def name="user_box()">
 % if  get_cookie('customer'):
 <div class="sidebar-box">
-<h4 class="list-group-item"><span class="glyphicon glyphicon-cog"></span> 我的服务</h4>
+<h4 class="list-group-item"><span class="glyphicon glyphicon-cog"></span> ${_(u'我的服务')}</h4>
 <hr>
 <div class="list-group">
   <a href="/" class="list-group-item">用户账号信息</a>  
@@ -32,7 +32,7 @@
 <%def name="qrcode_box()">
  % if sys_param_value('weixin_qrcode') :
 <div class="sidebar-box">
-  <h4 class="list-group-item"><span class="glyphicon glyphicon-qrcode"></span> 微信公众号</h4>
+  <h4 class="list-group-item"><span class="glyphicon glyphicon-qrcode"></span> ${_(u'微信公众号')}</h4>
   <hr>
   <div class="img-center"><img src="${sys_param_value('weixin_qrcode')}"></div>
 </div>
