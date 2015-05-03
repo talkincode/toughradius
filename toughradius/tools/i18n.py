@@ -76,30 +76,30 @@ def load_translator(path):
     """Returns a `Translator` instance with give yaml file `path` loaded.
     to translate use `.translate()` or `.t()` method.
     """
-    return Translator(path, language='de', fallback='en')
+    return Translator(path, language='en', fallback='')
 
 
-if __name__ == "__main__":
-    tr = load_translator('lang.yml')
-    tr.language = 'en'
-    tr.fallback = 'de'
-    _ = tr.t
-    print(_('greet'))
-    print(_('mynameis').format(name='Siegfried'))
-
-    tr.language = 'de'
-    print(_('greet'))
-    print(_('mynameis').format(name='Siegfried'))
-
-    tr.language = 'es'
-    print(_('greet'))
-    print(_('mynameis').format(name='Siegfried'))
-
-    tr.language = 'gr'
-    print(_('greet'))
-    print(_('mynameis').format(name='Siegfried'))
-
-    tr.language = 'jp'
-    tr.fallback = 'it'
-    print(_('greet'))
-    print(_('mynameis').format(name='Siegfried'))
+# if __name__ == "__main__":
+#     tr = load_translator('lang.yml')
+#     tr.language = 'en'
+#     tr.fallback = 'de'
+#     _ = tr.t
+#     print(_('greet'))
+#     print(_('mynameis').format(name='Siegfried'))
+#
+#     tr.language = 'de'
+#     print(_('greet'))
+#     print(_('mynameis').format(name='Siegfried'))
+#
+#     tr.language = 'es'
+#     print(_('greet'))
+#     print(_('mynameis').format(name='Siegfried'))
+#
+#     tr.language = 'gr'
+#     print(_('greet'))
+#     print(_('mynameis').format(name='Siegfried'))
+#
+#     tr.language = 'jp'
+#     tr.fallback = 'it'
+#     print(_('greet'))
+#     print(_('mynameis').format(name='Siegfried'))
