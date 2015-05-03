@@ -18,25 +18,17 @@ from beaker.cache import CacheManager
 from toughradius.console.libs.paginator import Paginator
 from toughradius.console import models
 
-
-## เพิ่มแปลภาษา
-# import os
-# from i18n.translator import Translator
-#
-# supported_languages = ['TH', 'EN']
-# # activate italian translations
-# tr = Translator('../toughradius/console/customer', supported_languages, 'TH')
-
 from toughradius.tools import i18n
 from io import open
 
 # use the Translator class directly:
-tr = i18n.Translator('../toughradius/console/lang.yml', language='th', fallback='en')
+#tr = i18n.Translator('../toughradius/console/lang.yml', language='th', fallback='en')
+#tr = i18n.Translator('../toughradius/console/lang.yml')
 # or use the load_translator() function:
 tr = i18n.load_translator('../toughradius/console/lang.yml')
-tr.language = 'th'
-tr.fallback = 'de'
-#_ = tr.t
+#tr.language = 'th'
+# tr.fallback = ''
+# _ = tr.t
 
 ########################################################################
 # const define
@@ -87,10 +79,15 @@ class SecureCookie(object):
         self.secret = secret
 
     def get_cookie(self, name):
-        return request.get_cookie(md5(name).hexdigest(), secret=self.secret)
+        return request.get_cookie(name)
 
     def set_cookie(self, name, value, **options):
-        response.set_cookie(md5(name).hexdigest(), value, secret=self.secret, **options)
+        response.set_cookie(name, value, **options)
+    # def get_cookie(self, name):
+    #     return request.get_cookie(md5(name).hexdigest(), secret=self.secret)
+    #
+    # def set_cookie(self, name, value, **options):
+    #     response.set_cookie(md5(name).hexdigest(), value, secret=self.secret, **options)
 
 
 scookie = SecureCookie()
