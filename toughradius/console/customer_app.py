@@ -22,8 +22,8 @@ from toughradius.console.base import (
     get_account_by_number,
     get_online_status,
     Connect,
-    Render
-)
+    Render,
+    get_product_name)
 import functools
 import time
 import bottle
