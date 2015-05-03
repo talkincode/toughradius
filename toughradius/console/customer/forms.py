@@ -3,16 +3,16 @@ from toughradius.console.libs import pyforms
 from toughradius.console.libs.pyforms import dataform
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
-#from toughradius.console.base import (tr)
-from toughradius.tools import i18n
-from io import open
+from toughradius.console.base import (tr)
+#from toughradius.tools import i18n
+#from io import open
 
 # use the Translator class directly:
-tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
+#tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
 # or use the load_translator() function:
-tr = i18n.load_translator('../toughradius/console/foo.yml')
-tr.language = 'th'
-tr.fallback = 'de'
+#tr = i18n.load_translator('../toughradius/console/foo.yml')
+#tr.language = 'th'
+#tr.fallback = 'de'
 _ = tr.t
 
 boolean = {0:u"否", 1:u"是"}

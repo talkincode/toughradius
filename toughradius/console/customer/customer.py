@@ -18,7 +18,8 @@ from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
     get_account_by_number,get_online_status,
-    Render
+    Render,
+    tr
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
 from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
@@ -43,17 +44,17 @@ from toughradius.tools import i18n
 from io import open
 
 # use the Translator class directly:
-tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
+# tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
 # or use the load_translator() function:
-tr = i18n.load_translator('../toughradius/console/foo.yml')
-tr.language = 'th'
-tr.fallback = 'de'
-_ = tr.t
+# tr = i18n.load_translator('../toughradius/console/foo.yml')
+# tr.language = 'th'
+# tr.fallback = 'de'
+# _ = tr.t
 
 
 
 app = Bottle()
-render = functools.partial(Render.render_app, app)
+render = functools.partial(Render.render_app, app, _=tr.t)
 
 ###############################################################################
 # login , recharge error times limit    
