@@ -77,17 +77,10 @@ class Connect:
 class SecureCookie(object):
     def setup(self, secret):
         self.secret = secret
-
     def get_cookie(self, name):
-        return request.get_cookie(name)
-
+        return request.get_cookie(md5(name).hexdigest(), secret=self.secret)
     def set_cookie(self, name, value, **options):
-        response.set_cookie(name, value, **options)
-    # def get_cookie(self, name):
-    #     return request.get_cookie(md5(name).hexdigest(), secret=self.secret)
-    #
-    # def set_cookie(self, name, value, **options):
-    #     response.set_cookie(md5(name).hexdigest(), value, secret=self.secret, **options)
+        response.set_cookie(md5(name).hexdigest(), value, secret=self.secret, **options)
 
 
 scookie = SecureCookie()
