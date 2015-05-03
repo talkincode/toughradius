@@ -5,12 +5,6 @@ from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
 from toughradius.console.base import (tr)
 
-# use the Translator class directly:
-#tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
-# or use the load_translator() function:
-#tr = i18n.load_translator('../toughradius/console/foo.yml')
-#tr.language = 'th'
-#tr.fallback = 'de'
 _ = tr.t
 
 boolean = {0:u"否", 1:u"是"}

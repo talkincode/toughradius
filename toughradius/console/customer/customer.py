@@ -37,22 +37,6 @@ import decimal
 import datetime
 import functools
 
-
-################################
-# Import ***
-from toughradius.tools import i18n
-from io import open
-
-# use the Translator class directly:
-# tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
-# or use the load_translator() function:
-# tr = i18n.load_translator('../toughradius/console/foo.yml')
-# tr.language = 'th'
-# tr.fallback = 'de'
-#_ = tr.t
-
-
-
 app = Bottle()
 render = functools.partial(Render.render_app, app, _=tr.t)
 
@@ -154,7 +138,27 @@ def customer_index(db):
         status_colors=status_colors,
         online_colors = online_colors
     )    
-
+###############################################################################
+# Select Language
+###############################################################################
+@app.get('/th')
+def lang_th_get():
+    form = forms.member_join_form()
+    return render("join",form=form)
+    #tr.language = 'th'
+    #redirect('/')
+@app.post('/th')
+def lang_th_post():
+    form = forms.member_join_form()
+    return render('msg',msg=u"新用户注册成功,请注意查收您的注册邮箱，及时激活账户")
+@app.get('/en')
+def lang_en():
+    tr.language = 'en'
+    redirect('/')
+@app.get('/cn')
+def lang_cn():
+    tr.language = ''
+    redirect('/')
 ###############################################################################
 # user login        
 ###############################################################################
@@ -163,7 +167,7 @@ def customer_index(db):
 def member_login_get(db):
     form = forms.member_login_form()
     form.next.set_value(request.params.get('next','/'))
-    return render("login",form=form, _=tr.t )
+    return render("login",form=form)
 
 @app.post('/login')
 def member_login_post(db):

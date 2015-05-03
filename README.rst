@@ -16,3 +16,24 @@ User / pass：admin/root
 
 
 Web Access Users :http://serverip:1817
+
+###############################################################################
+# Select Language
+###############################################################################
+@app.get('/th')
+def lang_th_get():
+    tr.language = 'th'
+    redirect('/')
+
+@app.post('/th')
+def lang_th_post():
+    redirect('/')
+
+@app.get('/en')
+def lang_en():
+    tr.language = 'en'
+    redirect('/')
+@app.get('/cn')
+def lang_cn():
+    tr.language = ''
+    redirect('/')
