@@ -40,8 +40,16 @@ ${self.head()}
         % if not get_cookie('customer'):
         <li><a href="/login">${_(u'登陆')}</a></li>
         % else:
-        <li><a href="/logout">退出</a></li>
+        <li><a href="/logout">${_(u'退出')}</a></li>
         % endif
+          <li class="dropdown">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">${_(u'Language')} <span class="caret"></span></a>
+                  <ul class="dropdown-menu" role="menu">
+                    <li><a href="/logquery/radiusd">EN</a></li>
+                    <li><a href="/logquery/admin">TH</a></li>
+                    <li><a href="/logquery/customer">CH</a></li>
+                  </ul>
+                </li>
       </ul>
     </div><!--/.nav-collapse -->
   </div>
