@@ -10,8 +10,8 @@ class Translator(object):
     and provates a `translator()` (`t()`).
     """
     def __init__(self, path_yamlfile=None,
-                 language='th',
-                 fallback='en'):
+                 language='',
+                 fallback=''):
         """Returns a Translator instance.
 
         """
@@ -76,7 +76,7 @@ def load_translator(path):
     """Returns a `Translator` instance with give yaml file `path` loaded.
     to translate use `.translate()` or `.t()` method.
     """
-    return Translator(path, language='en', fallback='')
+    return Translator(path, language='', fallback='')
 
 
 # if __name__ == "__main__":
