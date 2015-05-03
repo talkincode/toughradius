@@ -49,7 +49,7 @@ from io import open
 # tr = i18n.load_translator('../toughradius/console/foo.yml')
 # tr.language = 'th'
 # tr.fallback = 'de'
-# _ = tr.t
+#_ = tr.t
 
 
 

@@ -4,8 +4,6 @@ from toughradius.console.libs.pyforms import dataform
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
 from toughradius.console.base import (tr)
-#from toughradius.tools import i18n
-#from io import open
 
 # use the Translator class directly:
 #tr = i18n.Translator('../toughradius/console/foo.yml', language='th', fallback='en')
@@ -21,11 +19,11 @@ sexopt = {1:u"男",0:u"女"}
 
 member_login_form = pyforms.Form(
     pyforms.Textbox("username", rules.len_of(1, 32), description=_(u"用户名"), size=32,required="required",**input_style),
-    pyforms.Password("password", rules.len_of(1,32), description=(u"登录密码"), size=32, required="required",**input_style),
-    pyforms.Button("submit", type="submit", html=u"<b>登陆</b>", **button_style),
+    pyforms.Password("password", rules.len_of(1,32), description=_(u"登录密码"), size=32, required="required",**input_style),
+    pyforms.Button("submit", type="submit", html=_(u"<b>登陆</b>"), **button_style),
     pyforms.Hidden("next",value="/"),
     action="/login",
-    title=u"用户登陆"
+    title=_(u"用户登陆")
 )
 
 def member_join_form(nodes=[]): 
