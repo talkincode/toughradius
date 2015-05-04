@@ -18,8 +18,7 @@ from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
     get_account_by_number,get_online_status,
-    Render,
-    tr
+    Render
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
 from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
@@ -29,7 +28,7 @@ from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import models
-from toughradius.console.customer import forms
+from toughradius.console.customer import (forms, tr) ####ทดสอบ
 from sqlalchemy.sql import exists
 import time
 import bottle
@@ -37,7 +36,10 @@ import decimal
 import datetime
 import functools
 
+from language_middleware import LanguageMiddleware
 app = Bottle()
+#render = LanguageMiddleware(app, default_language = 'en', valid_languages = ('en', 'es', 'fr'))
+#render = tr.language = ''
 render = functools.partial(Render.render_app, app, _=tr.t)
 
 ###############################################################################
@@ -143,14 +145,8 @@ def customer_index(db):
 ###############################################################################
 @app.get('/th')
 def lang_th_get():
-    form = forms.member_join_form()
-    return render("join",form=form)
-    #tr.language = 'th'
-    #redirect('/')
-@app.post('/th')
-def lang_th_post():
-    form = forms.member_join_form()
-    return render('msg',msg=u"新用户注册成功,请注意查收您的注册邮箱，及时激活账户")
+    tr.language = 'th'
+    redirect('/')
 @app.get('/en')
 def lang_en():
     tr.language = 'en'

@@ -4,7 +4,9 @@ import copy
 import re
 import itertools
 import net
-
+from toughradius.console.customer import tr
+#tr.language = ''
+#_=tr.t
 """basic from web.py: makes web apps (http://webpy.org)"""
 
 __version__ = "0.37"
@@ -117,7 +119,7 @@ class Form(object):
         out += "</table>"
         return out
         
-    def render_css(self): 
+    def render_css(self):
         out = [] 
         out.append(self.rendernote(self.note)) 
         for i in self.inputs:
@@ -428,7 +430,7 @@ class regexp(Validator):
     
     def valid(self, value):
         return bool(self.rexp.match(value))
-
+tr.language = ''
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
