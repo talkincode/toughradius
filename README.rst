@@ -21,6 +21,31 @@ Web Access Users :http://serverip:1817
 ###############################################################################
 # Select Language
 ###############################################################################
+::
+
+    # 启动
+
+    $ toughctl --start standalone
+
+    # 停止
+
+    $ toughctl --stop standalone
+
+    # 设置开机启动
+
+    $ echo "toughctl --start standalone" >> /etc/rc.local::
+
+    # 启动
+
+    $ toughctl --start standalone
+
+    # 停止
+
+    $ toughctl --stop standalone
+
+    # 设置开机启动
+
+    $ echo "toughctl --start standalone" >> /etc/rc.local
 @app.get('/th')
 def lang_th_get():
     tr.language = 'th'
