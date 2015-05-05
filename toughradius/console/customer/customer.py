@@ -18,7 +18,7 @@ from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
     get_account_by_number,get_online_status,
-    Render
+    Render, tr, _
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
 from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
@@ -28,7 +28,7 @@ from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import models
-from toughradius.console.customer import (forms, tr) ####ทดสอบ
+from toughradius.console.customer import forms
 from sqlalchemy.sql import exists
 import time
 import bottle
@@ -36,10 +36,7 @@ import decimal
 import datetime
 import functools
 
-from language_middleware import LanguageMiddleware
 app = Bottle()
-#render = LanguageMiddleware(app, default_language = 'en', valid_languages = ('en', 'es', 'fr'))
-#render = tr.language = ''
 render = functools.partial(Render.render_app, app, _=tr.t)
 
 ###############################################################################
@@ -144,7 +141,7 @@ def customer_index(db):
 # Select Language
 ###############################################################################
 @app.get('/th')
-def lang_th_get():
+def lang_th():
     tr.language = 'th'
     redirect('/')
 @app.get('/en')

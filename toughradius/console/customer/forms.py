@@ -3,24 +3,26 @@ from toughradius.console.libs import pyforms
 from toughradius.console.libs.pyforms import dataform
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
-from toughradius.console.libs.pyforms import tr
+from toughradius.console.base import tr,_
 
-_ = tr.t
 
 boolean = {0:u"否", 1:u"是"}
 
 sexopt = {1:u"男",0:u"女"}
 
-member_login_form = pyforms.Form(
-    pyforms.Textbox("username", rules.len_of(1, 32), description=_(u"用户名"), size=32,required="required",**input_style),
-    pyforms.Password("password", rules.len_of(1,32), description=_(u"登录密码"), size=32, required="required",**input_style),
-    pyforms.Button("submit", type="submit", html=_(u"<b>登陆</b>"), **button_style),
-    pyforms.Hidden("next",value="/"),
-    action="/login",
-    title=_(u"用户登陆")
-)
+def member_login_form():
+    return pyforms.Form(
+        pyforms.Textbox("username", rules.len_of(1, 32), description=_(u"用户名"), size=32, required="required",
+                        **input_style),
+        pyforms.Password("password", rules.len_of(1, 32), description=_(u"登录密码"), size=32, required="required",
+                         **input_style),
+        pyforms.Button("submit", type="submit", html=_(u"<b>登陆</b>"), **button_style),
+        pyforms.Hidden("next", value="/"),
+        action="/login",
+        title=_(u"用户登陆")
+    )
 
-def member_join_form(nodes=[]): 
+def member_join_form(nodes=[]):
     return pyforms.Form(
         pyforms.Dropdown("node_id", description=u"区域", args=nodes,required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2,32), description=u"用户姓名(必填)", required="required",**input_style),
@@ -34,7 +36,7 @@ def member_join_form(nodes=[]):
         pyforms.Textbox("address", description=u"用户地址",hr=True, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>注册</b>", **button_style),
         action="/join",
-        title=u"用户注册"
+        title=_(u"用户注册")
     )
     
 password_update_form =  pyforms.Form(
@@ -50,7 +52,7 @@ password_update_form =  pyforms.Form(
 password_mail_form =  pyforms.Form(
         pyforms.Textbox("member_name", rules.len_of(1, 64),description=u"请输入登录名", required="required",**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
-        title=u"重置密码请求",
+        title=_(u"重置密码请求"),
         action="/password/mail"
     )
     
