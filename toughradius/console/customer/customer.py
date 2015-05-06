@@ -18,12 +18,14 @@ from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
     auth_cus,get_member_by_name,get_page_data,
     get_account_by_number,get_online_status,
-    Render, tr, _
+    Render
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
 from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
 from toughradius.console.base import (ProductCard,BalanceCard)
-from toughradius.console.base import (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire) 
+from toughradius.console.base import (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire)
+## Add lang
+from toughradius.console.libs import i18n
 from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
@@ -36,8 +38,14 @@ import decimal
 import datetime
 import functools
 
+#tr = i18n.load_translator('../toughradius/console/customer/lang.yml')
+#tr.language = ''
+#tr.fallback = ''
+tr = i18n.load_translator('../toughradius/console/customer/lang.yml').language('th')
+_ = tr
 app = Bottle()
-render = functools.partial(Render.render_app, app, _=tr.t)
+render = _
+render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # login , recharge error times limit    

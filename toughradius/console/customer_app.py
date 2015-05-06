@@ -28,6 +28,8 @@ import functools
 import time
 import bottle
 
+
+
 reactor.suggestThreadPoolSize(30)
 
 
@@ -58,6 +60,10 @@ class CustomerServer(object):
             self.config.getboolean('DEFAULT','standalone') or False
         self.secret = self.config.get('DEFAULT','secret')
         self.timezone = self.config.has_option('DEFAULT','tz') and self.config.get('DEFAULT','tz') or "CST-8"
+        ## Add Get Language
+        self.lang = self.config.has_option('customer', 'lang') and self.config.get('DEFAULT', 'lang') or ''
+        self.langfile = self.config.get('customer', 'langfile')
+        ##
         self.debug = self.config.getboolean('DEFAULT','debug')
         self.port = self.config.getint('customer','port')
         self.host = self.config.has_option('customer','host') \
@@ -86,6 +92,12 @@ class CustomerServer(object):
             os.environ["TZ"] = self.timezone
             time.tzset()
         except:pass
+        ## Add lang part
+    def init_lang(self):
+        tr = i18n.load_translator(self.langfile)
+        tr.language(self.lang)
+        _ = tr.t
+
     
     def init_db_engine(self):
         if not self.db_engine:
@@ -219,7 +231,7 @@ class CustomerServer(object):
         else: 
             log.msg('Admin SSL Disable!')       
             return internet.TCPServer(self.port,self.web_factory,interface = self.host)    
- 
+
 def run(config,db_engine=None,is_service=False):
     print 'running customer server...'
     admin = CustomerServer(config,db_engine,daemon=is_service,app=mainapp)
@@ -227,4 +239,3 @@ def run(config,db_engine=None,is_service=False):
         return admin.get_service()
     else:
         admin.run_normal()
-            

@@ -3,7 +3,6 @@ from toughradius.console.libs import pyforms
 from toughradius.console.libs.pyforms import dataform
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
-from toughradius.console.base import tr,_
 
 
 boolean = {0:u"否", 1:u"是"}
