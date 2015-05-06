@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="shortcut icon" href="/static/favicon.ico"/>
+<title>${handler.get_portal_name()}-用户认证</title>
+<link href="/static/css/bootstrap.min.css" rel="stylesheet" media="all"> 
+<link rel="stylesheet" href="/static/css/font-awesome.min.css">  
+<link href="/static/portal/1/portal.css" rel="stylesheet" media="all">   
+<script src="/static/js/jquery-1.11.0.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="index_nav">
+            <h2>${handler.get_portal_name()}</h2>
+        </div>
+        <div>
+            <img src="/static/portal/1/index_ad_big.png">
+        </div>
+        <div class="index_uinfo">
+            <div class="row">
+              <div class="username col-xs-6">
+                <span class="add-on"><i class="icon-user"></i></span> 
+                <span class="txt">${handler.current_user.username}</span>
+              </div>
+              <div class="times col-xs-6">
+                 <span class="add-on"><i class="icon-time"></i></span> 
+                 <span class="txt">${utils.fmt_second(handler.current_user.times)}</span>
+              </div>     
+            </div>
+            <div class='row'>
+              <div class="balance col-xs-6">
+                 <span class="add-on"><i class="icon-leaf"></i></span>
+                 <span class="txt">${utils.fen2yuan(handler.current_user.balance)}</span>
+              </div>
+              <div class="ipaddr col-xs-6">
+                <span class="add-on"><i class="icon-globe"></i></span>
+                 <span class="txt">${handler.current_user.ipaddr}</span>
+              </div>
+            </div>
+            <div class="btns">
+              <button type="button" class="btn btn-md btn-info recharge-btn">充 值</button>
+              <a href="/logout" class="btn btn-md btn-info disconnect-btn">断 开</a>
+            </div>
+        </div>
+        <div>
+            <img src="/static/portal/1/index_ad2.png">
+        </div>
+        <div class="portal_footer">
+            
+        </div>        
+    </div>
+</div>
+</body>
+</html>

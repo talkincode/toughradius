@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="shortcut icon" href="/static/favicon.ico"/>
+<title>${handler.get_portal_name()}-用户认证</title>
+<link href="/static/css/bootstrap.min.css" rel="stylesheet" media="all">
+<link href="/static/css/plogin.css" rel="stylesheet" media="all">     
+<script src="/static/js/jquery-1.11.0.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+<!-- Just for debugging purposes. Don't actually copy this line! -->
+<!--[if lt IE 9]>
+<script src="/static/js/ie8-responsive-file-warning.js"></script><![endif]-->
+<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+<!--[if lt IE 9]>
+<script src="/static/js/html5shiv.min.js"></script>
+<script src="/static/js/respond.min.js"></script>
+<![endif]-->
+
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-sm-6 col-md-4 col-md-offset-4">
+            <h1 class="text-center login-title"></h1>
+            <div class="account-wall">
+                <img class="profile-img" src="/static/img/plogin.png"
+                    alt="">
+                <form class="form-signin" action="/login" method="post">
+                ${handler.xsrf_form_html()}
+                <input type="text" name="username" class="form-control" placeholder="用户名" required autofocus>
+                <input type="password" name="password" class="form-control" placeholder="密码" required>
+                <button class="btn btn-lg btn-primary btn-block" type="submit">
+                    登陆</button>
+                <!-- <label class="checkbox pull-left">
+                    <input type="checkbox" value="remember-me">
+                    记住我 -->
+                <!-- </label>
+                <a href="#" class="pull-right need-help">帮助? </a> --><span class="clearfix"></span>
+                </form>
+            </div>
+            % if msg:
+            <p><font color="red">${msg}</font></p>
+            % endif
+            <!-- <a href="#" class="text-center new-account">注册新用户</a> -->
+        </div>
+    </div>
+</div>
+</body>
+</html>

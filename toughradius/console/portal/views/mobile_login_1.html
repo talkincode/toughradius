@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="shortcut icon" href="/static/favicon.ico"/>
+<title>${handler.get_portal_name()}-用户认证</title>
+<link href="/static/css/bootstrap.min.css" rel="stylesheet" media="all">   
+<link rel="stylesheet" href="/static/css/font-awesome.min.css">
+<link href="/static/portal/1/portal.css" rel="stylesheet" media="all">   
+<script src="/static/js/jquery-1.11.0.min.js"></script>
+<script src="/static/js/bootstrap.min.js"></script>
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="portal_nav">
+            <h2>${handler.get_portal_name()}</h2>
+        </div>
+        <div >
+          <img src="/static/portal/1/ad_big.png">
+        </div>
+        <div class="portal_login">
+          <form action="/login" method="post">
+            ${handler.xsrf_form_html()}
+            <div class="input-prepend com-xs-10 ubox">
+              <span class="add-on"><i class="icon-user-md"></i></span>
+              <input class="username" type="text" name="username">
+            </div>
+            <div class="input-prepend com-xs-10 pbox">
+              <span class="add-on"><i class="icon-key"></i></span>
+              <input class="password" type="password" name="password">
+            </div>
+             <button type="submit" class="btn btn-md btn-default authbtn">认&nbsp;&nbsp;&nbsp;&nbsp;证</button>
+          </form>
+            % if msg:
+            <p><font color="yello">${msg}</font></p>
+            % endif
+
+          <div class="help-info"> 
+            <span class="add-on"><i class="icon-volume-up"></i></span>
+            关注常德电视微信公众号即可免费上网
+          </div>
+        </div>
+        <div>
+          <img src="/static/portal/1/ad_2.png">
+        </div>
+        <div class="portal_footer">
+            
+        </div>            
+    </div>
+</div>
+</body>
+</html>

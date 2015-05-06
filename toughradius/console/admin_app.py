@@ -11,8 +11,11 @@ from toughradius.console.admin.ops import app as ops_app
 from toughradius.console.admin.business import app as bus_app
 from toughradius.console.admin.card import app as card_app
 from toughradius.console.admin.product import app as product_app
+from toughradius.console.admin.cmanager import app as cmanager_app
+from toughradius.console.admin.wlan import app as wlan_app
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin, utils
+from toughradius.console.libs import mpsapi
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import tasks
@@ -69,6 +72,7 @@ class AdminServer(object):
         self.decrypt = utils.aescipher.decrypt
         # parse ssl
         self._check_ssl_config()
+        mpsapi.mpsapi.setup(self.config)
 
     def _check_ssl_config(self):
         self.use_ssl = False
@@ -142,8 +146,9 @@ class AdminServer(object):
             sys_param_value=self._sys_param_value,
             get_product_name=self._get_product_name,
             permit=permit,
-            all_menus=permit.build_menus(
-                order_cats=[u"系统管理", u"营业管理", u"运维管理"])
+            all_menus = permit.build_menus(
+               order_cats=[u"系统管理",u"营业管理",u"运维管理",u"Wlan管理",u"微信接入",u"统计报表"]
+           )
         )
 
         self.render = Render(_context, _lookup)
@@ -240,7 +245,7 @@ class AdminServer(object):
 
 def run(config, db_engine=None, is_service=False):
     print 'running admin server...'
-    subapps = [ops_app, bus_app, card_app, product_app]
+    subapps = [ops_app, bus_app, card_app, product_app,cmanager_app,wlan_app]
     admin = AdminServer(
         config, db_engine, daemon=is_service, app=mainapp, subapps=subapps)
     if is_service:

@@ -97,7 +97,7 @@ def aclass(req,path):
                           </h4>
                         </div>
                         <div id="collapse${loop.index}" 
-                        class="panel-collapse collapse${inpath(request,menu) and '.in' or ''}" 
+                        class="panel-collapse collapse ${inpath(request,menu) and 'in' or ''}" 
                         role="tabpanel" aria-labelledby="heading${loop.index}">
                             <div class="panel-body sidelinks">
                                   % for item in sorted(menu['items'],key=lambda r:r['order']):
