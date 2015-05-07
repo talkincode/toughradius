@@ -78,12 +78,17 @@ def load_translator(path):
     """
     return Translator(path, language='', fallback='')
 
+tr = load_translator('')
+tr.language = 'en'
+tr.fallback = ''
+_ = tr.t
 
 # if __name__ == "__main__":
 #     tr = load_translator('lang.yml')
 #     tr.language = 'en'
 #     tr.fallback = 'de'
 #     _ = tr.t
+
 #     print(_('greet'))
 #     print(_('mynameis').format(name='Siegfried'))
 #
