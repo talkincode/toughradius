@@ -92,13 +92,7 @@ class CustomerServer(object):
             os.environ["TZ"] = self.timezone
             time.tzset()
         except:pass
-        ## Add lang part
-    def init_lang(self):
-        tr = i18n.load_translator(self.langfile)
-        tr.language(self.lang)
-        _ = tr.t
 
-    
     def init_db_engine(self):
         if not self.db_engine:
             self.db_engine = get_engine(self.config)
