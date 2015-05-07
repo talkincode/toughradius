@@ -2,9 +2,10 @@
 from toughradius.console.libs import pyforms
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
-from toughradius.console.libs.i18n import lang
-_ = lang.t
+from toughradius.console.i18n import lang
 
+
+_ = lang.t
 boolean = {0:u"否", 1:u"是"}
 
 sexopt = {1:u"男",0:u"女"}

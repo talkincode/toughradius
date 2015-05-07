@@ -78,30 +78,12 @@ def load_translator(path):
     """
     return Translator(path, language='', fallback='')
 
-lang =Translator('../toughradius/console/customer/lang.yml', language='th', fallback='en')
+lang =load_translator('../toughradius/console/customer/lang.yml')
+lang.language = ''
+#lang =Translator('', language='th', fallback='en')
 
 # if __name__ == "__main__":
 #     tr = load_translator('lang.yml')
 #     tr.language = 'en'
 #     tr.fallback = 'de'
 #     _ = tr.t
-
-#     print(_('greet'))
-#     print(_('mynameis').format(name='Siegfried'))
-#
-#     tr.language = 'de'
-#     print(_('greet'))
-#     print(_('mynameis').format(name='Siegfried'))
-#
-#     tr.language = 'es'
-#     print(_('greet'))
-#     print(_('mynameis').format(name='Siegfried'))
-#
-#     tr.language = 'gr'
-#     print(_('greet'))
-#     print(_('mynameis').format(name='Siegfried'))
-#
-#     tr.language = 'jp'
-#     tr.fallback = 'it'
-#     print(_('greet'))
-#     print(_('mynameis').format(name='Siegfried'))

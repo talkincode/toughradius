@@ -25,21 +25,16 @@ from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOF
 from toughradius.console.base import  (CardInActive, CardUsed,CardRecover)
 from toughradius.console.base import (ProductCard,BalanceCard)
 from toughradius.console.base import (UsrNormal, UsrExpire)
-from toughradius.console.libs.i18n import lang
+from toughradius.console.i18n import lang
 from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.customer import forms
-from sqlalchemy.sql import exists
-import time
-import decimal
-import datetime
-import functools
+
 
 app = Bottle()
-render = _ =lang.t
-render = functools.partial(Render.render_app, app)
+render = functools.partial(Render.render_app, app, _=lang.t)
 
 ###############################################################################
 # login , recharge error times limit    
@@ -144,15 +139,15 @@ def customer_index(db):
 ###############################################################################
 @app.get('/th')
 def lang_th():
-    anguage = 'th'
+    lang.language = 'th'
     redirect('/')
 @app.get('/en')
 def lang_en():
-    language = 'en'
+    lang.language = 'en'
     redirect('/')
 @app.get('/cn')
 def lang_cn():
-    language = ''
+    lang.language = ''
     redirect('/')
 ###############################################################################
 # user login        

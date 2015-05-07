@@ -1,4 +1,4 @@
-from toughradius.console.libs.i18n import lang
+from toughradius.console.i18n import lang
 
 _ =lang.t
 print(_(u'greet'))

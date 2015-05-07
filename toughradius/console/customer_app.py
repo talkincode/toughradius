@@ -1,12 +1,16 @@
 #!/usr/bin/env python
 #coding:utf-8
-import sys,os
+import sys
+import os
+import time
+
 from twisted.python import log
 from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
 from bottle import request
-from bottle import response
+import bottle
+
 from toughradius.console.customer.customer import app as mainapp
 from toughradius.console.libs import sqla_plugin,utils
 from toughradius.console.libs.smail import mail
@@ -16,7 +20,6 @@ from toughradius.console import models
 from toughradius.tools.dbengine import get_engine
 from toughradius.console.base import (
     get_cookie,
-    set_cookie,
     get_param_value,
     get_member_by_name,
     get_account_by_number,
@@ -24,10 +27,6 @@ from toughradius.console.base import (
     Connect,
     Render,
     get_product_name)
-import functools
-import time
-import bottle
-
 
 
 reactor.suggestThreadPoolSize(30)
@@ -53,7 +52,7 @@ class CustomerServer(object):
         self.init_websock()
         self.init_mail()
         self.init_protocol()
-    
+
     def init_config(self):
         self.logfile = self.config.get('customer','logfile')
         self.standalone = self.config.has_option('DEFAULT','standalone') and \
@@ -207,7 +206,7 @@ class CustomerServer(object):
             reactor.run()
         
     def get_service(self):
-        from twisted.application import service, internet
+        from twisted.application import internet
         if self.use_ssl:
             log.msg('Admin SSL Enable!')
             from twisted.internet import ssl
