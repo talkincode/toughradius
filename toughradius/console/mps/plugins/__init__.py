@@ -9,6 +9,6 @@ __all__ = [
     'customer_query',
     'bills_query',
     'product_order',
-    'issues_query'
+    'issues_query',
     'cmanager_active',
 ]

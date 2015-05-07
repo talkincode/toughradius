@@ -1,0 +1,27 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script>
+
+
+</script>
+
+</%def>
+<%def name="body()">
+<div class="panel panel-default">
+    <div class="panel-body">
+
+        % if issues_id:
+        <p> 您的故障申报成功，
+            故障工单号：<br/><b>${issues_id}</b><br/>
+            <b>回复 7 </b>或者点击菜单-><font color="blue"><b> 工单查询</b></font> <br/>
+             中可查询您提交的工单 处理进度。 <br/>
+        % else:
+        <form id="issues_add_form" role="form" action="/issues/add" method="post">
+                ${handler.xsrf_form_html()}
+                ${form.render_css()}
+        </form>
+        <div id="errorMsg" class="alert-danger top10"></div>
+        %endif
+    </div>
+    </div>
+</%def>

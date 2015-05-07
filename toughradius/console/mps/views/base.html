@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+        <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0,user-scalable=no">
+        <meta name="description" content="">
+        <meta name="author" content="">
+        <link rel="shortcut icon" href="/static/media/image/favicon.ico"/>
+        <title>${page_title or system_name}</title>
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/css/mps.css" rel="stylesheet">
+        <script src="/static/js/jquery-1.11.0.min.js"></script>
+        <script src="/static/js/bootstrap.min.js"></script>
+        <script src="/static/js/json2.js"></script>
+        <!-- Just for debugging purposes. Don't actually copy this line! -->
+        <!--[if lt IE 9]>
+        <script src="/static/js/ie8-responsive-file-warning.js"></script><![endif]-->
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="/static/js/html5shiv.min.js"></script>
+        <script src="/static/js/respond.min.js"></script>
+        <![endif]-->
+        ${self.head()}
+    </head>
+    <body>
+
+        <div class="main-box">
+            ${self.body()}
+        </div>
+
+    </body>
+</html>

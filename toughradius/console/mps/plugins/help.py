@@ -40,6 +40,7 @@ def respond(data, msg=None,db=None,**kwargs):
 2、账单查询 \n
 3、在线订购 \n
 4、工单查询 \n
+5、工单申请 \n
 更多需求可直接发送内容给我们。
 '''
     return result_str

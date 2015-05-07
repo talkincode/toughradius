@@ -19,6 +19,7 @@ from toughradius.console.libs.smail import mail
 from toughradius.console.mps import mps_handler
 from toughradius.console.mps import middleware
 from toughradius.console.mps import mpsapi
+from toughradius.console import mps
 from toughradius.console import models
 
 ###############################################################################
@@ -28,6 +29,7 @@ class Application(cyclone.web.Application):
     def __init__(self,**kwargs):
         _handlers = [
             (r"/", mps_handler.IndexHandler),
+            (r'/issues/add',mps.issues_handler.AddIssuesHandler)
         ]
         
         server = kwargs.pop("server")

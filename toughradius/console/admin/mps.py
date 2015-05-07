@@ -31,7 +31,7 @@ render = functools.partial(Render.render_app,app)
 def menus(db):   
     menus_data = db.query(models.SlcParam).filter_by(param_name='mps_menus').first()
     if menus_data:
-        menus_obj = json.loads(menus_data.value) 
+        menus_obj = json.loads(menus_data.param_value) 
     else:
         menus_obj = {}
         menus_obj['button'] = []
