@@ -1,7 +1,10 @@
 recursive-include toughradius/console/admin/views *
 recursive-include toughradius/console/customer/views *
+recursive-include toughradius/console/mps/views *
+recursive-include toughradius/console/portal/views *
 recursive-include toughradius/console/static/css *
 recursive-include toughradius/console/static/img *
+recursive-include toughradius/console/static/img/mps *
 recursive-include toughradius/console/static/fonts *
 recursive-include toughradius/console/static/js *
 recursive-include toughradius/radiusd/dicts *
