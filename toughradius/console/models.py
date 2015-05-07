@@ -77,7 +77,7 @@ class SlcParam(DeclarativeBase):
 
     #column definitions
     param_name = Column(u'param_name', Unicode(length=64), primary_key=True, nullable=False,doc=u"参数名")
-    param_value = Column(u'param_value', Unicode(length=255), nullable=False,doc=u"参数值")
+    param_value = Column(u'param_value', Unicode(length=1024), nullable=False,doc=u"参数值")
     param_desc = Column(u'param_desc', Unicode(length=255),doc=u"参数描述")
 
     #relation definitions

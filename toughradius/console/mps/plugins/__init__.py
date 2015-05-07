@@ -10,4 +10,5 @@ __all__ = [
     'bills_query',
     'product_order',
     'issues_query'
+    'cmanager_active',
 ]

@@ -31,11 +31,11 @@
                 <div class="col-md-3">
                     <select id="status" name="status" class="form-control" >
                         <option value="" ></option>
-                        <option value=0  ${status==0 and "selected" or ""}>未处理</option>
-                        <option value=1  ${status==1 and "selected" or ""}>处理中</option>
-                        <option value=2  ${status==2 and "selected" or ""}>挂起中</option>
-                        <option value=3  ${status==3 and "selected" or ""}>已取消</option>
-                        <option value=4  ${status==4 and "selected" or ""}>已完成</option>
+                        <option value=0  ${status=='0' and "selected" or ""}>未处理</option>
+                        <option value=1  ${status=='1' and "selected" or ""}>处理中</option>
+                        <option value=2  ${status=='2' and "selected" or ""}>挂起中</option>
+                        <option value=3  ${status=='3' and "selected" or ""}>已取消</option>
+                        <option value=4  ${status=='4' and "selected" or ""}>已完成</option>
                     </select>
                 </div>
                 <div class="col-md-4">

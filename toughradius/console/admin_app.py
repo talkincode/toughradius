@@ -13,6 +13,8 @@ from toughradius.console.admin.card import app as card_app
 from toughradius.console.admin.product import app as product_app
 from toughradius.console.admin.cmanager import app as cmanager_app
 from toughradius.console.admin.wlan import app as wlan_app
+from toughradius.console.admin.issues import app as issues_app
+from toughradius.console.admin.mps import app as mps_app
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin, utils
 from toughradius.console.libs import mpsapi
@@ -245,7 +247,11 @@ class AdminServer(object):
 
 def run(config, db_engine=None, is_service=False):
     print 'running admin server...'
-    subapps = [ops_app, bus_app, card_app, product_app,cmanager_app,wlan_app]
+    subapps = [
+        ops_app, bus_app, card_app, 
+        product_app,cmanager_app,wlan_app,
+        issues_app,mps_app
+    ]
     admin = AdminServer(
         config, db_engine, daemon=is_service, app=mainapp, subapps=subapps)
     if is_service:

@@ -1,0 +1,110 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+
+<script>
+
+$(function () {
+    var menu_obj = JSON.parse("${menudata}");
+    for (key in menu_obj) {
+        var _val = menu_obj[key];
+        if (_val == 'null') {
+            _val = '';
+        }
+        $("#" + key).val(_val);
+    }
+});
+
+
+function syncMenu() {
+    var menudata = {};
+    $.each($(".form-control"), function (key, val) {
+        menudata[val.id] = val.value;
+    });
+    $.post("/mps/menus/update", {menudata: JSON.stringify(menudata)}, function (data){
+        alert(data.msg);
+    }, "json");
+}
+</script>
+
+</%def>
+
+<%def name="body()">
+
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 菜单管理</div>
+        <div class="panel-body">
+            <div class="row-fluid">
+                 <div class="">
+                    <div class="box-content">
+                        <ul class="nav nav-tabs">
+                            <li><a href="#menu1" data-toggle="tab">精彩推荐</a></li>
+                            <li><a href="#menu2" data-toggle="tab">产品订购</a></li>
+                            <li><a href="#menu3" data-toggle="tab">微营业厅</a></li>
+                            <li><a href="#help" data-toggle="tab">帮助</a></li>
+                        </ul>
+                        <!-- Tab panes -->
+                        <div class="tab-content">
+                        % for menu in ['menu1','menu2','menu3']:
+                            <div class="tab-pane ${menu == 'menu1' and 'active'}" id="${menu}">
+                                <div class="tab-pane-box">
+                                    <div class="row">
+                                        <div class="col-md-2 text-muted">菜单类型</div>
+                                        <div class="col-md-3 text-muted">菜单名</div>
+                                        <div class="col-md-3 text-muted">事件值</div>
+                                        <div class="col-md-4 text-muted">超级链接</div>
+                                    </div>
+                                </div>
+                                <form class="form-horizontal" role="form">
+                                    % for m1 in range(1,6):
+                                        <div class="row">
+                                            <div class="col-md-2 control-group">
+                                                <select id="${menu}_sub${m1}_type" class="form-control">
+                                                <option value="click">事件按钮</option>
+                                                <option value="view">链接按钮</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 control-group">
+                                                <input id="${menu}_sub${m1}_name" type="text" class="form-control"
+                                                placeholder="菜单名">
+                                            </div>
+                                            <div class="col-md-3 control-group">
+                                                <input id="${menu}_sub${m1}_key" type="text" class="form-control"
+                                                placeholder="菜单事件值">
+                                            </div>
+                                            <div class="col-md-4 control-group">
+                                                <input id="${menu}_sub${m1}_url" type="text" class="form-control"
+                                                placeholder="菜单超级链接">
+                                            </div>
+                                        </div>
+                                    % endfor
+                                    <hr>
+                                        <div class="control-group">
+                                        <button type="button" onclick="syncMenu();" class="btn btn-primary">同步菜单</button>
+
+                                        </div>
+                                </form>
+                            </div>
+                        % endfor
+                        <!-- 帮助 -->
+                            <div class="tab-pane" id="help">
+                                <div class="tab-pane-box">
+                                <p>
+                                目前自定义菜单最多包括3个一级菜单，每个一级菜单最多包含5个二级菜单。一级菜单最多4个汉字，二级菜单最多7个汉字，多出来的部分将会以“...”代替。请注意，创建自定义菜单后，由于微信客户端缓存，需要24小时微信客户端才会展现出来。建议测试时可以尝试取消关注公众账号后再次关注，则可以看到创建后的效果。
+                                </p>
+                                <h3>菜单类型</h3>
+                                <p>事件按钮：用户点击后发送事件值到后台，后台处理后发送内容返回给用户。</p>
+                                <p>链接按钮：用户点击后直接跳转到指定网页地址。</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--/span-->
+        </div>
+        <!--/row-->
+        <!-- content ends -->
+    </div>
+</div>
+
+</%def>

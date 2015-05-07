@@ -19,6 +19,7 @@ install_requires = [
     'tablib>=0.10.0',
     'zope.interface>=4.1.1',
     'pycrypto==2.6.1',
+    'cyclone==1.1',
 ]
 install_requires_empty = []
 
@@ -26,6 +27,8 @@ package_data={
     'toughradius': [
         'console/admin/views/*',
         'console/customer/views/*',
+        'console/portal/views/*',
+        'console/mps/views/*',
         'console/static/css/*',
         'console/static/fonts/*',
         'console/static/img/*',
