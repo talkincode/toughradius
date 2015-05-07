@@ -1,31 +1,25 @@
 #!/usr/bin/env python
 #coding:utf-8
-import sys,os
+import os
+from hashlib import md5
+
 from twisted.internet import reactor
 from bottle import Bottle
 from bottle import request
-from bottle import response
-from bottle import HTTPResponse
 from bottle import redirect
-from bottle import run as runserver
 from bottle import static_file
 from bottle import abort
-from hashlib import md5
-from tablib import Dataset
-from toughradius.console.libs import sqla_plugin 
-from urlparse import urljoin
+
 from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
-    auth_cus,get_member_by_name,get_page_data,
-    get_account_by_number,get_online_status,
+    auth_cus, get_page_data,
+    get_online_status,
     Render
 )
 from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
-from toughradius.console.base import  (CardInActive,CardActive,CardUsed,CardRecover)
+from toughradius.console.base import  (CardInActive, CardUsed,CardRecover)
 from toughradius.console.base import (ProductCard,BalanceCard)
-from toughradius.console.base import (UsrPreAuth,UsrNormal,UsrPause,UsrCancel,UsrExpire)
-## Add lang
-from toughradius.console.libs import i18n
+from toughradius.console.base import (UsrNormal, UsrExpire)
 from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
@@ -33,19 +27,12 @@ from toughradius.console import models
 from toughradius.console.customer import forms
 from sqlalchemy.sql import exists
 import time
-import bottle
 import decimal
 import datetime
 import functools
 
-#tr = i18n.load_translator('../toughradius/console/customer/lang.yml')
-#tr.language = ''
-#tr.fallback = ''
-tr = i18n.load_translator('../toughradius/console/customer/lang.yml').language('th')
-_ = tr
 app = Bottle()
-render = _
-render = functools.partial(Render.render_app, app)
+render = functools.partial(Render.render_app, app, _=tr.t)
 
 ###############################################################################
 # login , recharge error times limit    
@@ -150,15 +137,15 @@ def customer_index(db):
 ###############################################################################
 @app.get('/th')
 def lang_th():
-    tr.language = 'th'
+    anguage = 'th'
     redirect('/')
 @app.get('/en')
 def lang_en():
-    tr.language = 'en'
+    language = 'en'
     redirect('/')
 @app.get('/cn')
 def lang_cn():
-    tr.language = ''
+    language = ''
     redirect('/')
 ###############################################################################
 # user login        

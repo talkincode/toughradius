@@ -60,10 +60,6 @@ class CustomerServer(object):
             self.config.getboolean('DEFAULT','standalone') or False
         self.secret = self.config.get('DEFAULT','secret')
         self.timezone = self.config.has_option('DEFAULT','tz') and self.config.get('DEFAULT','tz') or "CST-8"
-        ## Add Get Language
-        self.lang = self.config.has_option('customer', 'lang') and self.config.get('DEFAULT', 'lang') or ''
-        self.langfile = self.config.get('customer', 'langfile')
-        ##
         self.debug = self.config.getboolean('DEFAULT','debug')
         self.port = self.config.getint('customer','port')
         self.host = self.config.has_option('customer','host') \
