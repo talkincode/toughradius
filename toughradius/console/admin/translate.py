@@ -5,7 +5,7 @@ import sys
 
 import py
 
-from toughradius.tools.i18n.translator import Translator
+from toughradius.console.libs.i18n.translator import Translator
 
 
 # set the root of the project to the directory containing this file

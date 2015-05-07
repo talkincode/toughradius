@@ -78,10 +78,7 @@ def load_translator(path):
     """
     return Translator(path, language='', fallback='')
 
-tr = load_translator('')
-tr.language = 'en'
-tr.fallback = ''
-_ = tr.t
+lang =Translator('../toughradius/console/customer/lang.yml', language='th', fallback='en')
 
 # if __name__ == "__main__":
 #     tr = load_translator('lang.yml')

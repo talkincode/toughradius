@@ -2,6 +2,10 @@
 #coding:utf-8
 import os
 from hashlib import md5
+import time
+import decimal
+import datetime
+import functools
 
 from twisted.internet import reactor
 from bottle import Bottle
@@ -9,6 +13,7 @@ from bottle import request
 from bottle import redirect
 from bottle import static_file
 from bottle import abort
+from sqlalchemy.sql import exists
 
 from toughradius.console.base import (
     set_cookie,get_cookie,cache,get_param_value,
@@ -20,6 +25,7 @@ from toughradius.console.base import (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOF
 from toughradius.console.base import  (CardInActive, CardUsed,CardRecover)
 from toughradius.console.base import (ProductCard,BalanceCard)
 from toughradius.console.base import (UsrNormal, UsrExpire)
+from toughradius.console.libs.i18n import lang
 from toughradius.console.libs import utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
@@ -32,7 +38,8 @@ import datetime
 import functools
 
 app = Bottle()
-render = functools.partial(Render.render_app, app, _=tr.t)
+render = _ =lang.t
+render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # login , recharge error times limit    

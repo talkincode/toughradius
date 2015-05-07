@@ -1,13 +1,5 @@
-from toughradius.tools import i18n
+from toughradius.console.libs.i18n import lang
 
-# use the Translator class directly:
-tr = i18n.Translator('foo.yml', language='th', fallback='en')
-
-# or use the load_translator() function:
-tr = i18n.load_translator('foo.yml')
-tr.language = 'jj'
-tr.fallback = 'de'
-_ = tr.t
-
+_ =lang.t
 print(_(u'greet'))
 print(_(u'mynameis').format(name='Siegfried'))
