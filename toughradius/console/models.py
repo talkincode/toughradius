@@ -131,6 +131,7 @@ class SlcMember(DeclarativeBase):
     idcard = Column('idcard', Unicode(length=32),doc=u"用户证件号码")
     sex = Column('sex', SMALLINT(), nullable=True,doc=u"用户性别0/1")
     age = Column('age', INTEGER(), nullable=True,doc=u"用户年龄")
+    weixin_id = Column('email', Unicode(length=32), nullable=True,doc=u"微信id")
     email = Column('email', Unicode(length=255), nullable=True,doc=u"用户邮箱")
     email_active = Column('email_active', SMALLINT(), default=0,doc=u"用户邮箱激活状态")
     active_code =  Column('active_code', Unicode(length=32), nullable=False,doc=u"邮箱激活码")

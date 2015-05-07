@@ -1,0 +1,44 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 故障处理 
+    <div class="bar pull-right"><a href="javascript:history.go(-1);">返回</a></div>
+    </div>
+        <div class="panel-body">
+            <table class="table table-hover">
+                <tbody>
+                    <tr>
+                        <th>故障ID</th>
+                        <td>${issues['issuesId']}</td>
+                        <th>申报人微信昵称</th>
+                        <td>${handler.get_username(issues['userId'])}</td>
+                    </tr>
+                    <tr>
+                        <th>申报时间</th>
+                        <td>${issues['dateTime']}</td>
+                        <th>处理状态</th>
+                        <td>${{0:u'未处理',1:u'处理中',2:u'已处理'}[int(issues['status'])]}</td>
+                    </tr>
+                    <tr>
+                        <th>工单类型</th>
+                        <td  >
+                           ${{0:u"建议",1:u'投诉',2:u'故障',3:u'预约电视安装',4:u'预约宽带安装'}[int(issues['issuesType'])]}
+                        </td>
+                        <th></th>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <th>故障内容</th>
+                        <td colspan="3" >
+                            ${issues.has_key('content') and issues['content'] or ""}</td>
+                    </tr>
+                </tbody>
+            </table>
+        <form class="form-horizontal" role="form" action="/issues/process" method="post">
+            ${form.render_css()}
+        </form>
+    </div>
+</div>
+</%def>
