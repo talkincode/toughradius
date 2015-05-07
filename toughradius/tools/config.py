@@ -64,7 +64,7 @@ def setup_config():
     config.add_section('customer')
     config.set('customer','port',(sh.read("customer http port [1817]:") or '1817'))
     config.set('customer', 'logfile', (sh.read("log file [ /var/log/customer.log ]:") or '/var/log/customer.log') )
-    
+
     with open(config_path,'wb') as configfile:
         config.write(configfile)
         sh.succ("config save to %s"%config_path)
