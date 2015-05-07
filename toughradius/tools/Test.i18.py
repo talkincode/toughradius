@@ -1,4 +1,4 @@
-from toughradius.console.libs import i18n
+from toughradius.tools import i18n
 
 # use the Translator class directly:
 tr = i18n.Translator('foo.yml', language='th', fallback='en')
