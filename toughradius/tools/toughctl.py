@@ -5,7 +5,7 @@ choosereactor.install_optimal_reactor(False)
 import sys,os,signal
 import tempfile
 import time
-import argparse,ConfigParser
+import argparse, ConfigParser
 from toughradius.tools import config as iconfig
 from toughradius.tools.shell import shell
 from toughradius.tools.dbengine import get_engine
@@ -54,7 +54,7 @@ def run_admin(config,daemon=False):
 def run_customer(config,daemon=False):
     if not daemon:
         from toughradius.console import customer_app
-        customer_app.run(config,db_engine=get_engine(config))
+        customer_app.run(config, db_engine=get_engine(config))
     else:
         _run_daemon(config,'customer')
         
@@ -275,11 +275,3 @@ def run():
     elif args.secret:run_secret_update(config,args.conf)
     elif args.initdb:run_initdb(config)
     else: print 'do nothing'
-    
-        
-
-    
-    
-    
-
-
