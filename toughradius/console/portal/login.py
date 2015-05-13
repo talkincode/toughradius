@@ -52,7 +52,7 @@ class LoginHandler(BaseHandler):
             
             if not rc_resp.check_resp_auth(rc_req.auth):
                 self.render("login.html",msg=u"认证请求失败")
-                print (u"Challenge响应验证错误，消息被丢弃")
+                print (u"Challenge resp error,msg droped")
                 return
 
             if rc_resp.errCode > 0:
@@ -79,7 +79,7 @@ class LoginHandler(BaseHandler):
             ra_resp = yield cli.sendto(ra_req,ac_addr)
             if not ra_resp.check_resp_auth(ra_req.auth):
                 self.render("login.html",msg=u"认证请求失败")
-                print (u"认证响应验证错误，消息被丢弃")
+                print (u"Challenge resp error,msg droped")
                 return
 
             if ra_resp.errCode > 0:
