@@ -101,7 +101,6 @@ class LoginHandler(BaseHandler):
             
         except Exception as err:
             self.render(self.get_login_template(),msg=u"认证请求失败,%s"%str(err))
-            print (u"认证失败 %s"%str(err))
             import traceback
             traceback.print_exc()
         finally:
