@@ -32,7 +32,6 @@ package_data={
         'console/static/css/*',
         'console/static/fonts/*',
         'console/static/img/*',
-        'console/static/img/mps/*',
         'console/static/js/*',
         'console/static/favicon.ico',
         'radiusd/dicts/*'
