@@ -250,7 +250,7 @@ def run(config, db_engine=None, is_service=False):
     subapps = [
         ops_app, bus_app, card_app, 
         product_app,cmanager_app,wlan_app,
-        issues_app,mps_app
+        issues_app
     ]
     admin = AdminServer(
         config, db_engine, daemon=is_service, app=mainapp, subapps=subapps)
