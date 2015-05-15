@@ -1,7 +1,7 @@
 ToughRADIUS简介
 ====================================
 
-ToughRADIUS是一个开源的Radius服务软件，基于BSD许可协议发布。
+ToughRADIUS是一个开源的Radius服务软件，基于GPL许可协议发布。
 
 ToughRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
