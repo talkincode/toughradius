@@ -11,7 +11,6 @@ from tablib import Dataset
 from sqlalchemy import func
 from toughradius.console import models
 from toughradius.console.libs import utils
-from toughradius.console.libs.mpsapi import mpsapi
 from toughradius.console.base import *
 import bottle
 import datetime

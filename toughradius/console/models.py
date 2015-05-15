@@ -131,7 +131,6 @@ class SlcMember(DeclarativeBase):
     idcard = Column('idcard', Unicode(length=32),doc=u"用户证件号码")
     sex = Column('sex', SMALLINT(), nullable=True,doc=u"用户性别0/1")
     age = Column('age', INTEGER(), nullable=True,doc=u"用户年龄")
-    weixin_id = Column('weixin_id', Unicode(length=32), nullable=True,doc=u"微信id")
     email = Column('email', Unicode(length=255), nullable=True,doc=u"用户邮箱")
     email_active = Column('email_active', SMALLINT(), default=0,doc=u"用户邮箱激活状态")
     active_code =  Column('active_code', Unicode(length=32), nullable=False,doc=u"邮箱激活码")
@@ -444,16 +443,10 @@ class SlcCustomerManager(DeclarativeBase):
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"客户经理id")
     manager_code = Column(u'manager_code', Unicode(length=64),nullable=False,unique=True,doc=u"客户经理工号")
     manager_name = Column(u'manager_name', Unicode(length=128),nullable=False,doc=u"客户经理姓名")
-    manager_openid = Column(u'manager_openid', Unicode(length=255),nullable=True,doc=u"客户经理微信id")
     manager_mobile = Column(u'manager_mobile', Unicode(length=64),nullable=False,doc=u"客户经理手机")
     manager_email = Column(u'manager_email', Unicode(length=64),nullable=True,doc=u"客户经理邮箱")
-    manager_img = Column(u'manager_img', Unicode(length=128),nullable=True,doc=u"客户经理图片")
-    manager_qrcode = Column(u'manager_qrcode', VARCHAR(length=255), nullable=True)
-    manager_wlan_qrcode = Column(u'manager_wlan_qrcode', VARCHAR(length=255), nullable=True)
-    active_code = Column(u'active_code', VARCHAR(length=32), nullable=True)
-    active_status = Column(u'active_status', INTEGER(), nullable=False)
-    create_time = Column(u'create_time', VARCHAR(length=19))
-    active_time = Column(u'active_time', VARCHAR(length=19))    
+    operator_name = Column(u'operator_name', Unicode(32), nullable=True,doc=u"关联操作员")
+    create_time = Column(u'create_time', VARCHAR(length=19))   
 
 ###############################################################################
 # 工单模块数据模型                                                            ####
@@ -505,22 +498,6 @@ class SlcIssuesFlow(DeclarativeBase):
     accept_status =  Column('accept_status', INTEGER(),nullable=False,doc=u"工单处理状态")
 
 ###############################################################################
-# 无线模块数据模型                                                            ####
-###############################################################################
-
-class SlcWlanParam(DeclarativeBase):
-    """27. Wlan参数表 """
-    __tablename__ = 'slc_wlan_param'
-
-    __table_args__ = {}
-
-    #column definitions
-    param_name = Column(u'param_name', Unicode(length=64), primary_key=True, nullable=False,doc=u"参数名")
-    param_value = Column(u'param_value', Unicode(length=255), nullable=False,doc=u"参数值")
-    param_desc = Column(u'param_desc', Unicode(length=255),doc=u"参数描述")
-
-
-###############################################################################
 # 统计数据模型                                                               ####
 ###############################################################################
 
@@ -560,11 +537,6 @@ class SlcFeeStat(DeclarativeBase):
     stat_day = Column(u'stat_day', Unicode(length=10),primary_key=True,nullable=False,doc=u"统计日期")
     income_fee = Column(u'income_fee', INTEGER(),nullable=False,doc=u"收入")
     refund_fee  = Column(u'refund_fee', INTEGER(),nullable=False,doc=u"退费")
-
-###############################################################################
-# 微信公众平台数据模型                                                         ####
-###############################################################################
-
 
 
 

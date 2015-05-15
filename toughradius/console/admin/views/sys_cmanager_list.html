@@ -26,8 +26,7 @@
                 <th>工号</th>
                 <th>姓名</th>
                 <th>手机</th>
-                <th>微信激活码</th>
-                <th>状态</th>
+                <th>关联操作员</th>
             </tr>
             </thead>
             <tbody>
@@ -38,8 +37,7 @@
                 <a href="/cmanager/detail?manager_id=${cmanager.id}">${cmanager.manager_name}</a>
                 </td>
                 <td>${cmanager.manager_mobile}</td>
-                <td>${cmanager.active_code}</td>
-                <td>${{0:u"未激活",1:u"激活"}[cmanager.active_status]}</td>
+                <td>${cmanager.operator_name}</td>
                 <th>
                 % if permit.match('/cmanager/update'):
                 <a type="button" class=" opt-btn btn-default" href="/cmanager/update?manager_id=${cmanager.id}">修改</a>

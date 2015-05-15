@@ -17,6 +17,7 @@ from toughradius.console import models
 from toughradius.console.base import *
 from toughradius.console.admin import forms
 from hashlib import md5
+from twisted.python import log
 import bottle
 import datetime
 import json
@@ -106,6 +107,7 @@ def backup_dump(db):
         dumpdb(find_config(),os.path.join(backup_path,backup_file))
         return dict(code=0,msg="backup done!")
     except Exception as err:
+        log.err()
         return dict(code=1,msg="backup fail! %s"%(err))
     
 

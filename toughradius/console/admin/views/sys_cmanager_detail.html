@@ -1,21 +1,6 @@
 <%inherit file="base.html"/>
 <%def name="head()">
-<script>
-
-function create_qrcode(manager_code,is_wlan)
-{
-    params = {manager_code:manager_code,is_wlan:is_wlan};
-    $.post("/cmanager/qrcode/new", params, function (data) {
-        if(data.code==0){
-            window.location.reload();
-        }
-        else{
-            alert(data.msg);
-        }
-    }, "json");
-}
-
-</script>               
+           
 
 </%def>
 <%def name="body()">
@@ -39,42 +24,11 @@ function create_qrcode(manager_code,is_wlan)
                         <td>${cmanager.manager_email}</td>
                     </tr>
                     <tr>
-                        <th>微信激活码</th>
-                        <td>${cmanager.active_code}</td>
-                        <th>状态</th>
-                        <td>${{0:u"未激活",1:u"激活"}[cmanager.active_status]}</td>
-                    </tr>
-                    <tr>
-                        <th>注册时间</th>
+                        <th>关联操作员</th>
+                        <td>${cmanager.operator_name}</td>
+                        <th>创建时间</th>
                         <td>${cmanager.create_time}</td>
-                        <th>激活时间</th>
-                        <td>${cmanager.active_time or ''}</td>
                     </tr>                    
-                    <tr>
-                        <th>专用客服二维码</th>
-                        <td colspan="3">
-                            % if cmanager.manager_qrcode:
-                                <a href="${cmanager.manager_qrcode}">专用客服二维码链接</a>
-                            % else:
-                                % if permit.match('/cmanager/qrcode/new'):
-                                <a href="javascript:create_qrcode('${cmanager.manager_code}','false');">生成二维码</a>
-                                % endif
-                            % endif
-                        </td>
-
-                    </tr>
-                    <tr>
-                        <th>wlan业务二维码</th>
-                        <td colspan="3">
-                            % if cmanager.manager_wlan_qrcode:
-                                <a href="${cmanager.manager_wlan_qrcode}">wlan业务二维码链接</a>
-                            % else:
-                                % if permit.match('/cmanager/qrcode/new'):
-                                <a href="javascript:create_qrcode('${cmanager.manager_code}','true');">生成二维码</a>
-                                % endif
-                            % endif
-                        </td>
-                    </tr>
                 </tbody>
 
             </table>

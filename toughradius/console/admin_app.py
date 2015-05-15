@@ -2,6 +2,7 @@
 # coding:utf-8
 import sys
 import os
+from twisted.python import log
 from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
@@ -12,12 +13,9 @@ from toughradius.console.admin.business import app as bus_app
 from toughradius.console.admin.card import app as card_app
 from toughradius.console.admin.product import app as product_app
 from toughradius.console.admin.cmanager import app as cmanager_app
-from toughradius.console.admin.wlan import app as wlan_app
 from toughradius.console.admin.issues import app as issues_app
-from toughradius.console.admin.mps import app as mps_app
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin, utils
-from toughradius.console.libs import mpsapi
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import tasks
@@ -74,7 +72,6 @@ class AdminServer(object):
         self.decrypt = utils.aescipher.decrypt
         # parse ssl
         self._check_ssl_config()
-        mpsapi.mpsapi.setup(self.config)
 
     def _check_ssl_config(self):
         self.use_ssl = False
@@ -244,13 +241,12 @@ class AdminServer(object):
             log.msg('Admin SSL Disable!')
             return internet.TCPServer(self.port, self.web_factory, interface=self.admin_host)
 
-
 def run(config, db_engine=None, is_service=False):
     print 'running admin server...'
     subapps = [
         ops_app, bus_app, card_app, 
-        product_app,cmanager_app,wlan_app,
-        issues_app,mps_app
+        product_app,cmanager_app,
+        issues_app
     ]
     admin = AdminServer(
         config, db_engine, daemon=is_service, app=mainapp, subapps=subapps)
