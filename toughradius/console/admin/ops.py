@@ -58,13 +58,13 @@ def user_query(db):
                        node_list=opr_nodes, 
                        product_list=db.query(models.SlcRadProduct),**request.params)
                        
-permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"运维管理",is_menu=True,order=0)
+permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"维护管理",is_menu=True,order=0)
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
     return render("ops_user_trace", bas_list=db.query(models.SlcRadBas))
 
-permit.add_route("%s/user/trace"%__prefix__,u"用户消息跟踪",u"运维管理",is_menu=True,order=1)
+permit.add_route("%s/user/trace"%__prefix__,u"用户消息跟踪",u"维护管理",is_menu=True,order=1)
                    
 @app.get('/user/detail',apply=auth_opr)
 def user_detail(db):   
@@ -99,7 +99,7 @@ def user_detail(db):
     user_attrs = db.query(models.SlcRadAccountAttr).filter_by(account_number=account_number)
     return render("ops_user_detail",user=user,user_attrs=user_attrs)
     
-permit.add_route("%s/user/detail"%__prefix__,u"账号详情",u"运维管理",order=1.01)
+permit.add_route("%s/user/detail"%__prefix__,u"账号详情",u"维护管理",order=1.01)
 
 @app.post('/user/release',apply=auth_opr)
 def user_release(db):   
@@ -120,7 +120,7 @@ def user_release(db):
     websock.update_cache("account",account_number=account_number)
     return dict(code=0,msg=u"解绑成功")
     
-permit.add_route("%s/user/release"%__prefix__,u"用户释放绑定",u"运维管理",order=1.02)    
+permit.add_route("%s/user/release"%__prefix__,u"用户释放绑定",u"维护管理",order=1.02)    
 
 ###############################################################################
 # online manage      
@@ -172,7 +172,7 @@ def online_query(db):
                    node_list=opr_nodes, 
                    bas_list=db.query(models.SlcRadBas),**request.params)
 
-permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"运维管理",is_menu=True,order=2)
+permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"维护管理",is_menu=True,order=2)
 
 ###############################################################################
 # ticket manage        
@@ -226,7 +226,7 @@ def ticket_query(db):
     return render("ops_ticket_list", page_data = get_page_data(_query),
                node_list=opr_nodes,**request.params)
 
-permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"运维管理",is_menu=True,order=3)
+permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"维护管理",is_menu=True,order=3)
 
 ###############################################################################
 # ops log manage        
@@ -256,7 +256,7 @@ def opslog_query(db):
         page_data = get_page_data(_query),**request.params)
 
 
-permit.add_route("%s/opslog"%__prefix__,u"操作日志查询",u"运维管理",is_menu=True,order=4)
+permit.add_route("%s/opslog"%__prefix__,u"操作日志查询",u"维护管理",is_menu=True,order=4)
 
 ###############################################################################
 # ops log manage        
@@ -301,7 +301,7 @@ def online_stat_data(db):
     _data = [ (q.stat_time*1000,q.total) for q in _query ]
     return dict(code=0,data=[{'data':_data}])
         
-permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"运维管理",is_menu=True,order=5)
+permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"维护管理",is_menu=True,order=5)
 
 
 @app.get('/flow/stat',apply=auth_opr)
@@ -346,4 +346,4 @@ def flow_stat_data(db):
 
     return dict(code=0,data=[in_data,out_data])
         
-permit.add_route("%s/flow/stat"%__prefix__,u"用户流量统计",u"运维管理",is_menu=True,order=5)        
+permit.add_route("%s/flow/stat"%__prefix__,u"用户流量统计",u"维护管理",is_menu=True,order=5)        

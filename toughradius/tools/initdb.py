@@ -20,8 +20,8 @@ def init_db(db):
     db.add(node)
 
     params = [
-        ('system_name',u'管理系统名称',u'ToughCloud管理控制台'),
-        ('customer_system_name',u'自助服务系统名称',u'ToughCloud自助服务中心'),
+        ('system_name',u'管理系统名称',u'ToughRADIUS管理控制台'),
+        ('customer_system_name',u'自助服务系统名称',u'ToughRADIUS自助服务中心'),
         ('customer_system_url',u"自助服务系统地址",u"http://forum.toughradius.net"),
         ('customer_must_active',u"激活邮箱才能自助开户充值(0:否|1:是)",u"0"),
         ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),

@@ -146,7 +146,9 @@ class AdminServer(object):
             get_product_name=self._get_product_name,
             permit=permit,
             all_menus = permit.build_menus(
-               order_cats=[u"系统管理",u"营业管理",u"运维管理",u"Wlan管理",u"微信接入",u"统计报表"]
+               order_cats=[u"系统管理",u"营业管理",u"维护管理",
+               # u"Wlan管理",u"微信接入",u"统计报表"
+               ]
            )
         )
 
