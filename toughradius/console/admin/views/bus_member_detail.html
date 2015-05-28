@@ -8,7 +8,7 @@ function do_pause(account_number)
         return;
     }
     params = {account_number:account_number};
-    $.post("/bus/account/pause", params, function (data) {
+    $.post("/account/pause", params, function (data) {
         alert(data.msg)
         window.location.reload();
     },"json");
@@ -20,7 +20,7 @@ function do_resume(account_number)
         return;
     }
     params = {account_number:account_number};
-    $.post("/bus/account/resume", params, function (data) {
+    $.post("/account/resume", params, function (data) {
         alert(data.msg)
         window.location.reload();
     },"json");
@@ -54,8 +54,8 @@ function do_delete(account_number)
         <div class="pull-right">
            <div class="btn-group" role="group" aria-label="...">
                
-            % if permit.match('/bus/account/open'):
-            <a href="/bus/account/open?member_id=${member.member_id}" class="btn btn-sm btn-default">新开子账号</a>
+            % if permit.match('/account/open'):
+            <a href="/account/open?member_id=${member.member_id}" class="btn btn-sm btn-default">新开子账号</a>
             % endif
             
             % if user.status == 2:
@@ -66,53 +66,53 @@ function do_delete(account_number)
                
             % elif user.status == 1:
             
-                % if permit.match('/bus/member/update'):
-                <a href="/bus/member/update?member_id=${member.member_id}&account_number=${user.account_number}" class="btn btn-sm btn-default">修改基本资料</a>
+                % if permit.match('/member/update'):
+                <a href="/member/update?member_id=${member.member_id}&account_number=${user.account_number}" class="btn btn-sm btn-default">修改基本资料</a>
                 % endif
 
                 % if permit.match('/ops/user/release'):
-                <a class="btn btn-sm btn-default" href="/bus/account/update?account_number=${user.account_number}">修改策略</a>
+                <a class="btn btn-sm btn-default" href="/account/update?account_number=${user.account_number}">修改策略</a>
                 % endif
 
                 % if permit.match('/ops/user/release'):
                 <a class="btn btn-sm btn-default" href="javascript:release('${user.account_number}');">释放绑定</a>
                 % endif
             
-                % if permit.match('/bus/account/change'):
-                <a class="btn btn-sm btn-default" href="/bus/account/change?account_number=${user.account_number}">资费变更</a>
+                % if permit.match('/account/change'):
+                <a class="btn btn-sm btn-default" href="/account/change?account_number=${user.account_number}">资费变更</a>
                 % endif
                
-                % if permit.match('/bus/account/pause'):
+                % if permit.match('/account/pause'):
                 <a class="btn btn-sm btn-default" href="javascript:do_pause('${user.account_number}');">停机</a>
                 % endif
                
                 % if user.product_policy in (0,2,3,5):
                
-                    % if permit.match('/bus/account/next'):
-                    <a class="btn btn-sm btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
+                    % if permit.match('/account/next'):
+                    <a class="btn btn-sm btn-default" href="/account/next?account_number=${user.account_number}">续费</a>
                     % endif
                    
                 % elif user.product_policy in (1,4): 
                    
-                    % if permit.match('/bus/account/charge'):
-                    <a class="btn btn-sm btn-default" href="/bus/account/charge?account_number=${user.account_number}">充值</a>
+                    % if permit.match('/account/charge'):
+                    <a class="btn btn-sm btn-default" href="/account/charge?account_number=${user.account_number}">充值</a>
                     % endif
                    
                 % endif
                    
-                % if permit.match('/bus/account/cancel'):   
-                <a class="btn btn-sm btn-default" href="/bus/account/cancel?account_number=${user.account_number}">销户</a>
+                % if permit.match('/account/cancel'):
+                <a class="btn btn-sm btn-default" href="/account/cancel?account_number=${user.account_number}">销户</a>
                 % endif
                
             % elif user.status == 4:
            
-                % if permit.match('/bus/account/next'):
-                <a class="btn btn-sm btn-default" href="/bus/account/next?account_number=${user.account_number}">续费</a>
+                % if permit.match('/account/next'):
+                <a class="btn btn-sm btn-default" href="/account/next?account_number=${user.account_number}">续费</a>
                 % endif
                
             % endif
             
-            % if permit.match('/bus/account/delete'):
+            % if permit.match('/account/delete'):
             <a class="btn btn-sm btn-default" href="javascript:do_delete('${user.account_number}');">删除</a>
             % endif
             </div>

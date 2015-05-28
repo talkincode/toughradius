@@ -41,6 +41,11 @@ ACCEPT_TYPES = {
     'change':u'变更'
 }
 
+ADMIN_MENUS = (MenuSys,MenuBus,MenuOpt,MenuWlan,MenuMpp,MenuStat) = (
+    u"系统管理", u"营业管理", u"维护管理", u"Wlan管理", u"微信接入", u"统计报表")
+
+
+
 MAX_EXPIRE_DATE = '3000-12-30'
 
 TMPDIR = tempfile.gettempdir()

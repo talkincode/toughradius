@@ -7,13 +7,7 @@ from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
 from bottle import run as runserver
-from toughradius.console.admin.admin import app as mainapp
-from toughradius.console.admin.ops import app as ops_app
-from toughradius.console.admin.business import app as bus_app
-from toughradius.console.admin.card import app as card_app
-from toughradius.console.admin.product import app as product_app
-from toughradius.console.admin.cmanager import app as cmanager_app
-from toughradius.console.admin.issues import app as issues_app
+
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin, utils
 from toughradius.console.libs.smail import mail
@@ -26,6 +20,8 @@ import toughradius
 import bottle
 import functools
 import time
+
+from toughradius.console.admin.admin import app as mainapp
 
 reactor.suggestThreadPoolSize(30)
 
@@ -146,15 +142,14 @@ class AdminServer(object):
             get_product_name=self._get_product_name,
             permit=permit,
             all_menus = permit.build_menus(
-               order_cats=[u"系统管理",u"营业管理",u"维护管理",
-               # u"Wlan管理",u"微信接入",u"统计报表"
-               ]
+               order_cats=[MenuSys,MenuBus,MenuOpt]
            )
         )
 
         self.render = Render(_context, _lookup)
         log.msg("mount app and install plugins...")
         for _app in [self.app] + self.subapps:
+            log.msg("init app %s"%repr(_app))
             _app.config['render_key'] = 'admin'
             Render.RENDERS['admin'] = self.render
             for _class in ['DEFAULT', 'database', 'radiusd', 'admin', 'customer']:
@@ -243,13 +238,34 @@ class AdminServer(object):
             log.msg('Admin SSL Disable!')
             return internet.TCPServer(self.port, self.web_factory, interface=self.admin_host)
 
+def import_sub_app():
+    from toughradius.console.admin.ops import app as ops_app
+    from toughradius.console.admin.business import app as bus_app
+    from toughradius.console.admin.card import app as card_app
+    from toughradius.console.admin.product import app as product_app
+    from toughradius.console.admin.cmanager import app as cmanager_app
+    from toughradius.console.admin.issues import app as issues_app
+    from toughradius.console.admin.backup import app as backup_app
+    from toughradius.console.admin.node import app as node_app
+    from toughradius.console.admin.opr import app as opr_app
+    from toughradius.console.admin.bas import app as bas_app
+    from toughradius.console.admin.roster import app as roster_app
+    from toughradius.console.admin.order import app as order_app
+    from toughradius.console.admin.billing import app as billing_app
+    from toughradius.console.admin.member import app as member_app
+    from toughradius.console.admin.account import app as account_app
+    return [
+        ops_app,bus_app,card_app,
+        product_app,cmanager_app,
+        issues_app,backup_app,node_app,
+        opr_app,bas_app,roster_app,
+        order_app,billing_app,member_app,
+        account_app
+    ]
+
 def run(config, db_engine=None, is_service=False):
     print 'running admin server...'
-    subapps = [
-        ops_app, bus_app, card_app, 
-        product_app,cmanager_app,
-        issues_app
-    ]
+    subapps = import_sub_app()
     admin = AdminServer(
         config, db_engine, daemon=is_service, app=mainapp, subapps=subapps)
     if is_service:

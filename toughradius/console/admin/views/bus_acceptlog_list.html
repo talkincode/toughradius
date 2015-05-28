@@ -9,11 +9,11 @@
         $("#query_end_time").datepicker();
     });
     function do_submit(){
-        $("#query_form").attr("action", "/bus/acceptlog");
+        $("#query_form").attr("action", "/acceptlog");
         $("#query_form").submit();
     }
     function do_export(){
-        $("#query_form").attr("action", "/bus/acceptlog/export");
+        $("#query_form").attr("action", "/acceptlog/export");
         $("#query_form").submit();
     }
    </script>
@@ -23,7 +23,7 @@
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户受理查询</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal form-well" role="form" method="post" action="/bus/acceptlog">
+        <form id="query_form" class="form-horizontal form-well" role="form" method="post" action="/acceptlog">
             <div class="form-group">
 
                 <label for="node_id" class="col-md-2 control-label">区域</label>
@@ -72,7 +72,7 @@
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
                     <button type="button" onclick="do_submit();" class="btn btn-primary">查询</button>
-                    % if permit.match('/bus/acceptlog/export'):
+                    % if permit.match('/acceptlog/export'):
                     <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出数据</a>
                     % endif
                 </div>
@@ -93,7 +93,7 @@
             <tbody>
             % for alog in page_data.result:
             <tr>
-                <td><a href="/bus/member/detail?account_number=${alog.account_number}">${alog.account_number}</a></td>
+                <td><a href="/member/detail?account_number=${alog.account_number}">${alog.account_number}</a></td>
                 <td>${type_map[alog.accept_type]}</td>
                 <td>${alog.operator_name}</td>
                 <td>${alog.accept_time}</td>
