@@ -221,7 +221,7 @@ def member_delete(db):
 # member update
 ###############################################################################
 
-@app.get('/member/update', apply=auth_opr)
+@app.get('/update', apply=auth_opr)
 def member_update_get(db):
     member_id = request.params.get("member_id")
     account_number = request.params.get("account_number")
@@ -233,7 +233,7 @@ def member_update_get(db):
     return render("base_form", form=form)
 
 
-@app.post('/member/update', apply=auth_opr)
+@app.post('/update', apply=auth_opr)
 def member_update_post(db):
     nodes = [(n.id, n.node_name) for n in get_opr_nodes(db)]
     form = forms.member_update_form(nodes)
@@ -265,7 +265,7 @@ def member_update_post(db):
 # member open
 ###############################################################################
 
-@app.get('/member/open', apply=auth_opr)
+@app.get('/open', apply=auth_opr)
 def member_open_get(db):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
@@ -275,7 +275,7 @@ def member_open_get(db):
     return render("bus_open_form", form=form)
 
 
-@app.post('/member/open', apply=auth_opr)
+@app.post('/open', apply=auth_opr)
 def member_open_post(db):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
@@ -526,7 +526,7 @@ def member_import_post(db):
             return render("bus_import_form", form=iform, msg=u"error : %s" % str(e))
 
     db.commit()
-    redirect("/bus/member")
+    redirect("/member")
 
 
 permit.add_route("/member/open", u"用户快速开户", MenuBus, is_menu=True, order=1)

@@ -97,7 +97,7 @@
                      % if permit.match('/ops/user/release'):
                      <a class="opt-btn btn-default" href="javascript:release('${user.account_number}');">释放绑定</a>
                      % endif
-                     % if permit.match('/bus/account/update'):
+                     % if permit.match('/account/update'):
                      <a class="opt-btn btn-default" href="/account/update?account_number=${user.account_number}">修改策略</a>
                      % endif
                  </td>

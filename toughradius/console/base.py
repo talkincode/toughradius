@@ -258,7 +258,7 @@ def get_page_data(query):
     def _page_url(page, form_id=None):
         if form_id:return "javascript:goto_page('%s',%s);" %(form_id.strip(),page)
         request.query['page'] = page
-        return request.path + '?' + urllib.urlencode(request.query)        
+        return request.fullpath + '?' + urllib.urlencode(request.query)
     page = int(request.params.get("page",1))
     offset = (page - 1) * page_size
     page_data = Paginator(_page_url, page, query.count(), page_size)

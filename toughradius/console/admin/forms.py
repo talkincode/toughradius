@@ -244,7 +244,7 @@ def user_open_form(nodes=[],products=[]):
         pyforms.Textarea("member_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户开户",
-        action="/bus/member/open"
+        action="/member/open"
     )
 
 def account_open_form(products=[]):
@@ -264,7 +264,7 @@ def account_open_form(products=[]):
         pyforms.Textarea("account_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户新开账号",
-        action="/bus/account/open"
+        action="/account/open"
     )
 
 def user_import_form(nodes=[],products=[]):
@@ -274,7 +274,7 @@ def user_import_form(nodes=[],products=[]):
         pyforms.File("import_file", description=u"用户数据文件",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>立即导入</b>", **button_style),
         title=u"用户数据导入",
-        action="/bus/member/import"
+        action="/member/import"
 )
 
 user_import_vform = dataform.Form(
@@ -301,7 +301,7 @@ account_next_form = pyforms.Form(
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户续费",
-        action="/bus/account/next"
+        action="/account/next"
 )
 
 account_charge_form = pyforms.Form(
@@ -309,7 +309,7 @@ account_charge_form = pyforms.Form(
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额", value=0, required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户充值",
-        action="/bus/account/charge"
+        action="/account/charge"
 )
 
 account_cancel_form = pyforms.Form(
@@ -317,7 +317,7 @@ account_cancel_form = pyforms.Form(
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"退费金额",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户销户",
-        action="/bus/account/cancel"
+        action="/account/cancel"
 )
 
 
@@ -333,7 +333,7 @@ def account_change_form(products=[]):
         pyforms.Textbox("flow_length",description=u"用户流量(MB)",value="0",**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户资费变更",
-        action="/bus/account/change"
+        action="/account/change"
 )
 
 def member_update_form(nodes=[]):
@@ -350,7 +350,7 @@ def member_update_form(nodes=[]):
         pyforms.Textarea("member_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户基本信息修改",
-        action="/bus/member/update"
+        action="/member/update"
     )
 
 
@@ -366,7 +366,7 @@ def account_update_form():
         pyforms.Textarea("account_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户变更资料",
-        action="/bus/account/update"
+        action="/account/update"
     )
 
 card_types = {0:u'资费卡',1:u'余额卡'}

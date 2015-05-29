@@ -25,12 +25,12 @@ Linux环境快速安装
 
 ::
 
-    $ yum update -y  && yum install -y  python-devel python-setuptools 
-    
+    $ yum update -y  && yum install -y  python-devel python-setuptools
+
     $ easy_install pip
-    
-    
-    
+
+
+
 安装toughradius
 ----------------------------------------
 
@@ -39,7 +39,7 @@ Linux环境快速安装
 ::
 
     $ pip install toughradius
-    
+
 
 系统配置
 ----------------------------------------
@@ -47,7 +47,7 @@ Linux环境快速安装
 ::
 
     $ toughctl --echo_radiusd_cnf > /etc/radiusd.conf
-    
+
 配置文件内容::
 
     [DEFAULT]
@@ -83,7 +83,7 @@ Linux环境快速安装
 
 ::
 
-    $ toughctl --initdb 
+    $ toughctl --initdb
 
 
 运行服务
@@ -92,7 +92,7 @@ Linux环境快速安装
 ::
 
     $ toughctl --standalone
-    
+
 
 以守护进程模式运行
 ----------------------------------------
@@ -102,25 +102,25 @@ Linux环境快速安装
 ::
 
     # 启动
-    
-    $ toughctl --start standalone 
-    
+
+    $ toughctl --start standalone
+
     # 停止
-    
-    $ toughctl --stop standalone 
-     
+
+    $ toughctl --stop standalone
+
     # 设置开机启动
-    
+
     $ echo "toughctl --start standalone" >> /etc/rc.local
-    
-    
+
+
 web管理控制台的使用
 ================================
 
 当安装部署完成后可使用浏览器进入管理控制台进行操作。
 
-默认地址与端口：http://serverip:1816 
- 
+默认地址与端口：http://serverip:1816
+
 默认管理员与密码：admin/root
 
 
