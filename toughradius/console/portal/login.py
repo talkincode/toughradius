@@ -29,13 +29,14 @@ class LoginHandler(BaseHandler):
             self.set_secure_cookie("portal_logintime", utils.get_currtime(), expires_days=1)
         username = self.get_argument("username",None)
         password = self.get_argument("password",None)
+        wlanuserip = self.get_argument("wlanuserip", None)
         if not username or not password:
             self.render(self.get_login_template(),msg=u"请输入用户名和密码")
             return
             
         secret = self.settings.share_secret
         ac_addr = self.settings.ac_addr
-        userIp = self.request.remote_ip
+        userIp = wlanuserip or self.request.remote_ip
         
         try:
             cli = PortalClient(secret=secret)
