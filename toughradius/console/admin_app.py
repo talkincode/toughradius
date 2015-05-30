@@ -80,6 +80,9 @@ class AdminServer(object):
                 self.use_ssl = True
 
     def init_timezone(self):
+        """
+        时区设置，linux系统下有效
+        """
         try:
             os.environ["TZ"] = self.timezone
             time.tzset()
@@ -87,6 +90,9 @@ class AdminServer(object):
             pass
 
     def init_db_engine(self):
+        """
+        初始化数据库引擎
+        """
         if not self.db_engine:
             self.db_engine = get_engine(self.config)
         metadata = models.get_metadata(self.db_engine)
@@ -100,6 +106,9 @@ class AdminServer(object):
         )
 
     def init_protocol(self):
+        """
+        初始化web框架协议
+        """
         self.web_factory = server.Site(
             wsgi.WSGIResource(reactor, reactor.getThreadPool(), self.app))
 
@@ -112,13 +121,13 @@ class AdminServer(object):
             return get_product_name(db, pid)
 
     def error403(self, error):
-        return self.render.render("error", msg=u"Unauthorized access %s" % error.exception)
+        return self.render.render("error", msg=u"未授权的访问 %s" % error.exception)
 
     def error404(self, error):
-        return self.render.render("error", msg=u"Not found %s" % error.exception)
+        return self.render.render("error", msg=u"页面未找到 %s" % error.exception)
 
     def error500(self, error):
-        return self.render.render("error", msg=u"Server Internal error %s" % error.exception)
+        return self.render.render("error", msg=u"服务器内部错误 %s" % error.exception)
 
     def init_application(self):
         log.msg("start init application...")
