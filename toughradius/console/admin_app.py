@@ -142,7 +142,7 @@ class AdminServer(object):
             get_product_name=self._get_product_name,
             permit=permit,
             all_menus = permit.build_menus(
-               order_cats=[MenuSys,MenuBus,MenuOpt]
+               order_cats=[MenuSys,MenuBus,MenuOpt,MenuStat]
            )
         )
 
@@ -239,29 +239,10 @@ class AdminServer(object):
             return internet.TCPServer(self.port, self.web_factory, interface=self.admin_host)
 
 def import_sub_app():
-    from toughradius.console.admin.ops import app as ops_app
-    from toughradius.console.admin.business import app as bus_app
-    from toughradius.console.admin.card import app as card_app
-    from toughradius.console.admin.product import app as product_app
-    from toughradius.console.admin.cmanager import app as cmanager_app
-    from toughradius.console.admin.issues import app as issues_app
-    from toughradius.console.admin.backup import app as backup_app
-    from toughradius.console.admin.node import app as node_app
-    from toughradius.console.admin.opr import app as opr_app
-    from toughradius.console.admin.bas import app as bas_app
-    from toughradius.console.admin.roster import app as roster_app
-    from toughradius.console.admin.order import app as order_app
-    from toughradius.console.admin.billing import app as billing_app
-    from toughradius.console.admin.member import app as member_app
-    from toughradius.console.admin.account import app as account_app
-    return [
-        ops_app,bus_app,card_app,
-        product_app,cmanager_app,
-        issues_app,backup_app,node_app,
-        opr_app,bas_app,roster_app,
-        order_app,billing_app,member_app,
-        account_app
-    ]
+    from toughradius.console import admin
+    for name in admin.__all__:
+        __import__('toughradius.console.admin', globals(), locals(), [name])
+    return [ getattr(admin, name).app  for name in admin.__all__ ]
 
 def run(config, db_engine=None, is_service=False):
     print 'running admin server...'

@@ -41,8 +41,8 @@ ACCEPT_TYPES = {
     'change':u'变更'
 }
 
-ADMIN_MENUS = (MenuSys,MenuBus,MenuOpt,MenuWlan,MenuMpp,MenuStat) = (
-    u"系统管理", u"营业管理", u"维护管理", u"Wlan管理", u"微信接入", u"统计报表")
+ADMIN_MENUS = (MenuSys,MenuBus,MenuOpt,MenuStat,MenuWlan,MenuMpp) = (
+    u"系统管理", u"营业管理", u"维护管理",u"统计分析", u"Wlan管理", u"微信接入")
 
 
 
