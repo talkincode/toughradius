@@ -22,4 +22,5 @@ __all__  = [
     'member',
     'account',
     'online',
+    'support'
 ]
