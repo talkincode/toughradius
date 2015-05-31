@@ -10,7 +10,7 @@ body {
 
 }
 .main-box{
-    padding-top: 20px;
+    padding-top: 15px;
     min-height: 100vh;
     background-color: #E5E5E5;
 }
@@ -85,10 +85,12 @@ body {
 }
 
 #sidebar  .panel {
-    background-color: rgb(51, 56, 58);
+    background-color: rgb(44, 48, 50);
     margin-bottom: 0px;
     border: none;
     border-radius: 0px;
+    -webkit-box-shadow: none;
+    box-shadow: none;
 }
 
 #sidebar .panel-default {
@@ -117,7 +119,7 @@ body {
 }
 
 #sidebar .glyphicon{
-    color: #c0c0c0;
+    color: #868686;
 }
 
 #sidebar .logo-box{
