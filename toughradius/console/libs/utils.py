@@ -173,6 +173,28 @@ def fmt_second(time_total):
     s = times % 3600 % 60
     return "%s:%s:%s" % (_ck(h), _ck(m), _ck(s))
 
+
+
+def fmt_online_time(ctime):
+    if not ctime:
+        return ''
+
+    cdate = datetime.datetime.strptime(ctime, '%Y-%m-%d %H:%M:%S')
+    nowdate = datetime.datetime.now()
+    dt = nowdate - cdate
+    times = dt.total_seconds()
+    d = times / (3600 * 24)
+    h = times % (3600 * 24) / 3600
+    m = times % (3600 * 24) % 3600 / 60
+
+    if int(d) > 0:
+        return u"%s天%s小时%s分钟" % (int(d), int(h), int(m))
+    elif int(d) > 0 and int(h) > 0:
+        return u"%s小时%s分钟" % (int(h), int(m))
+    else:
+        return u"%s分钟" % (int(m))
+
+
 def add_months(dt,months):
     month = dt.month - 1 + months
     year = dt.year + month / 12

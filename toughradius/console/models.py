@@ -240,6 +240,34 @@ class SlcRadAccount(DeclarativeBase):
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
     update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
+
+class SlcRadAccountHistory(DeclarativeBase):
+    """
+    上网账号历史纪录
+    """
+
+    __tablename__ = 'slc_rad_account_history'
+
+    __table_args__ = {}
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False, doc=u"id")
+    accept_id = Column('accept_id', INTEGER(), nullable=False, doc=u"受理id")
+    account_number = Column('account_number', Unicode(length=32), nullable=False, doc=u"上网账号")
+    member_id = Column('member_id', INTEGER(), nullable=False, doc=u"用户id")
+    product_id = Column('product_id', INTEGER(), nullable=False, doc=u"资费id")
+    group_id = Column('group_id', INTEGER(), doc=u"用户组id")
+    password = Column('password', Unicode(length=128), nullable=False, doc=u"上网密码")
+    install_address = Column('install_address', Unicode(length=128), nullable=False, doc=u"装机地址")
+    expire_date = Column('expire_date', Unicode(length=10), nullable=False, doc=u"过期时间- ####-##-##")
+    user_concur_number = Column('user_concur_number', INTEGER(), nullable=False, doc=u"用户并发数")
+    bind_mac = Column('bind_mac', SMALLINT(), nullable=False, doc=u"是否绑定mac")
+    bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False, doc=u"是否绑定vlan")
+    account_desc = Column(u'account_desc', Unicode(255), doc=u"用户描述")
+    create_time = Column('create_time', Unicode(length=19), nullable=False, doc=u"创建时间")
+    operate_time = Column('operate_time', Unicode(length=19), nullable=False, doc=u"操作时间")
+    new_expire_date = Column('new_expire_date', Unicode(length=10), doc=u"变更后过期时间- ####-##-##")
+    new_product_id = Column('new_product_id', INTEGER(), doc=u"变更后资费id")
+
 class SlcRadAccountAttr(DeclarativeBase):
     """上网账号扩展策略属性表"""
     __tablename__ = 'slc_rad_account_attr'

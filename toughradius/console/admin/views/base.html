@@ -76,7 +76,7 @@ def aclass(req,path):
                  % endif
                 <li><a href="javascript:clean_cache();">刷新缓存</a></li>
                 <li><a href="/support" style="text-decoration:none;">技术支持</a></li>
-                <li><a href="/logout">退出</a></li>
+                <li><a href="/logout">(${get_cookie("username")}) 退出</a></li>
               </ul>
             </div><!--/.nav-collapse -->
           </div>

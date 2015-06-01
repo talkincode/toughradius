@@ -121,13 +121,22 @@ class AdminServer(object):
             return get_product_name(db, pid)
 
     def error403(self, error):
-        return self.render.render("error", msg=u"未授权的访问 %s" % error.exception)
+        if self.debug:
+            return self.render.render("error", msg=u"未授权的访问 %s" % error.exception)
+        else:
+            return self.render.render("error", msg=u"未授权的访问")
 
     def error404(self, error):
-        return self.render.render("error", msg=u"页面未找到 %s" % error.exception)
+        if self.debug:
+            return self.render.render("error", msg=u"页面未找到 %s" % error.exception)
+        else:
+            return self.render.render("error", msg=u"页面未找到")
 
     def error500(self, error):
-        return self.render.render("error", msg=u"服务器内部错误 %s" % error.exception)
+        if self.debug:
+            return self.render.render("error", msg=u"服务器内部错误 %s" % error.exception)
+        else:
+            return self.render.render("error", msg=u"服务器内部错误")
 
     def init_application(self):
         log.msg("start init application...")
@@ -138,6 +147,8 @@ class AdminServer(object):
             get_cookie=get_cookie,
             fen2yuan=utils.fen2yuan,
             fmt_second=utils.fmt_second,
+            fmt_online_time=utils.fmt_online_time,
+            decrypt=utils.decrypt,
             currdate=utils.get_currdate,
             bps2mbps=utils.bps2mbps,
             mbps2bps=utils.mbps2bps,

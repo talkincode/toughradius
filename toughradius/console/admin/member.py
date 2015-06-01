@@ -114,6 +114,7 @@ def member_detail(db):
         models.SlcMember.realname,
         models.SlcRadAccount.member_id,
         models.SlcRadAccount.account_number,
+        models.SlcRadAccount.password,
         models.SlcRadAccount.expire_date,
         models.SlcRadAccount.balance,
         models.SlcRadAccount.time_length,
@@ -137,7 +138,9 @@ def member_detail(db):
         models.SlcMember.member_id == models.SlcRadAccount.member_id,
         models.SlcRadAccount.account_number == account_number
     ).first()
+
     member = db.query(models.SlcMember).get(user.member_id)
+
     orders = db.query(
         models.SlcMemberOrder.order_id,
         models.SlcMemberOrder.order_id,
@@ -153,6 +156,26 @@ def member_detail(db):
         models.SlcRadProduct.id == models.SlcMemberOrder.product_id,
         models.SlcMemberOrder.account_number == account_number
     ).order_by(models.SlcMemberOrder.create_time.desc())
+
+    historys = db.query(
+                models.SlcRadAccountHistory.id,
+                models.SlcRadAccountHistory.accept_id,
+                models.SlcRadAccountHistory.account_number,
+                models.SlcRadAccountHistory.product_id,
+                models.SlcRadAccountHistory.new_product_id,
+                models.SlcRadAccountHistory.expire_date,
+                models.SlcRadAccountHistory.user_concur_number,
+                models.SlcRadAccountHistory.bind_mac,
+                models.SlcRadAccountHistory.bind_vlan,
+                models.SlcRadAccountHistory.create_time,
+                models.SlcRadAccountHistory.operate_time,
+                models.SlcRadAcceptLog.accept_type,
+                models.SlcRadAcceptLog.operator_name,
+                models.SlcRadAccountHistory.new_expire_date,
+    ).filter(
+                models.SlcRadAccountHistory.accept_id == models.SlcRadAcceptLog.id,
+                models.SlcRadAccountHistory.member_id == user.member_id
+    ).order_by(models.SlcRadAccountHistory.operate_time.desc())
 
     accepts = db.query(
         models.SlcRadAcceptLog.id,
@@ -170,14 +193,18 @@ def member_detail(db):
         models.SlcNode.id == models.SlcMember.node_id,
         models.SlcRadAcceptLog.account_number == account_number
     ).order_by(models.SlcRadAcceptLog.accept_time.desc())
+
     get_orderid = lambda aid: db.query(models.SlcMemberOrder.order_id).filter_by(accept_id=aid).scalar()
+
     type_map = ACCEPT_TYPES
+
     return render("bus_member_detail",
                   member=member,
                   user=user,
                   orders=orders,
                   accepts=accepts,
                   type_map=type_map,
+                  historys=historys,
                   get_orderid=get_orderid
                   )
 

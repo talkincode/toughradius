@@ -318,6 +318,22 @@ def account_next(db):
     db.flush()
     db.refresh(accept_log)
 
+    history = models.SlcRadAccountHistory()
+    history.accept_id = accept_log.id
+    history.account_number = account.account_number
+    history.member_id = account.member_id
+    history.product_id = account.product_id
+    history.group_id = account.group_id
+    history.password = account.password
+    history.install_address = account.install_address
+    history.expire_date = account.expire_date
+    history.user_concur_number = account.user_concur_number
+    history.bind_mac = account.bind_mac
+    history.bind_vlan = account.bind_vlan
+    history.account_desc = account.account_desc
+    history.create_time = account.create_time
+    history.operate_time = accept_log.accept_time
+
     order_fee = 0
     product = db.query(models.SlcRadProduct).get(user.product_id)
 
@@ -340,8 +356,7 @@ def account_next(db):
     order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
-    order.order_desc = u"用户续费"
-    db.add(order)
+
 
     account.status = 1
     account.expire_date = form.d.expire_date
@@ -349,6 +364,13 @@ def account_next(db):
         account.time_length += product.fee_times
     elif product.product_policy == BOFlows:
         account.flow_length += product.fee_flows
+
+    history.new_expire_date = account.expire_date
+    history.new_product_id = account.product_id
+    db.add(history)
+
+    order.order_desc = u"用户续费,续费前到期:%s,续费后到期:%s" % (history.expire_date, history.new_expire_date)
+    db.add(order)
 
     db.commit()
     websock.update_cache("account", account_number=account_number)
@@ -397,6 +419,23 @@ def account_charge(db):
     db.flush()
     db.refresh(accept_log)
 
+    history = models.SlcRadAccountHistory()
+    history.accept_id = accept_log.id
+    history.account_number = account.account_number
+    history.member_id = account.member_id
+    history.product_id = account.product_id
+    history.group_id = account.group_id
+    history.password = account.password
+    history.install_address = account.install_address
+    history.expire_date = account.expire_date
+    history.user_concur_number = account.user_concur_number
+    history.bind_mac = account.bind_mac
+    history.bind_vlan = account.bind_vlan
+    history.account_desc = account.account_desc
+    history.create_time = account.create_time
+    history.operate_time = accept_log.accept_time
+    db.add(history)
+
     order = models.SlcMemberOrder()
     order.order_id = utils.gen_order_id()
     order.member_id = user.member_id
@@ -430,6 +469,7 @@ def account_change(db):
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     user = query_account(db, account_number)
     form = forms.account_change_form(products=products)
+    form.expire_date.set_value(user.expire_date)
     form.account_number.set_value(account_number)
     return render("bus_account_change_form", user=user, form=form)
 
@@ -458,6 +498,22 @@ def account_change(db):
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
+
+    history = models.SlcRadAccountHistory()
+    history.accept_id = accept_log.id
+    history.account_number = account.account_number
+    history.member_id = account.member_id
+    history.product_id = account.product_id
+    history.group_id = account.group_id
+    history.password = account.password
+    history.install_address = account.install_address
+    history.expire_date = account.expire_date
+    history.user_concur_number = account.user_concur_number
+    history.bind_mac = account.bind_mac
+    history.bind_vlan = account.bind_vlan
+    history.account_desc = account.account_desc
+    history.create_time = account.create_time
+    history.operate_time = accept_log.accept_time
 
     account.product_id = product.id
     # (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
@@ -493,7 +549,12 @@ def account_change(db):
     order.accept_id = accept_log.id
     order.order_source = 'console'
     order.create_time = utils.get_currtime()
-    order.order_desc = u"用户资费变更，费用:%s元" % utils.fen2yuan(order.actual_fee)
+
+    history.new_expire_date = account.expire_date
+    history.new_product_id = account.product_id
+    db.add(history)
+
+    order.order_desc = u"用户变更资费,变更前到期:%s,变更后到期:%s" % (history.expire_date, history.new_expire_date)
     db.add(order)
 
     db.commit()
@@ -537,6 +598,23 @@ def account_cancel(db):
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
+
+    history = models.SlcRadAccountHistory()
+    history.accept_id = accept_log.id
+    history.account_number = account.account_number
+    history.member_id = account.member_id
+    history.product_id = account.product_id
+    history.group_id = account.group_id
+    history.password = account.password
+    history.install_address = account.install_address
+    history.expire_date = account.expire_date
+    history.user_concur_number = account.user_concur_number
+    history.bind_mac = account.bind_mac
+    history.bind_vlan = account.bind_vlan
+    history.account_desc = account.account_desc
+    history.create_time = account.create_time
+    history.operate_time = accept_log.accept_time
+    db.add(history)
 
     order = models.SlcMemberOrder()
     order.order_id = utils.gen_order_id()
