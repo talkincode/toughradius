@@ -192,11 +192,17 @@ def param(db):
 @app.post('/param/update',apply=auth_opr)
 def param_update(db): 
     params = db.query(models.SlcParam)
-    for param in params:
-        if param.param_name in request.forms:
-            _value = request.forms.get(param.param_name)
-            if _value: 
-                param.param_value = _value  
+    for param_name in request.forms:
+        if 'submit' in param_name:
+            continue
+        param = db.query(models.SlcParam).filter_by(param_name=param_name).first()
+        if not param:
+            param = models.SlcParam()
+            param.param_name = param_name
+            param.param_value = request.forms.get(param_name)
+            db.add(param)
+        else:
+            param.param_value = request.forms.get(param_name)
                 
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
