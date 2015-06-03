@@ -16,7 +16,7 @@ TOUGHRADIUS网站：http://www.toughradius.net
 TOUGHRADIUS 商业授权
 ================================
 
-TOUGHRADIUS同时提供一份`商业授权 <Commerical-license.txt>`_
+TOUGHRADIUS同时提供一份`商业授权 <https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst>`_
 
 购买商业授权后, 您可以:
 
