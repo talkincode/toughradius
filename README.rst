@@ -1,19 +1,32 @@
-ToughRADIUS简介
+TOUGHRADIUS 简介
 ====================================
 
-ToughRADIUS是一个开源的Radius服务软件，基于GPL许可协议发布。
+TOUGHRADIUS是一个开源的Radius服务软件，基于AGPL许可协议发布。
 
-ToughRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
+TOUGHRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
-ToughRADIUS支持使用Oracle, MySQL, PostgreSQL, MSSQL等主流数据库存储用户数据，并支持数据缓存，极大的提高了性能。
-ToughRADIUS支持Windows，Linux，BSD跨平台部署，部署使用简单。
+TOUGHRADIUS支持使用Oracle, MySQL, PostgreSQL, MSSQL等主流数据库存储用户数据，并支持数据缓存，极大的提高了性能。
 
-ToughRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助服务三个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。用户自助服务系统提供了一个面向终端用户的网上服务渠道。
+TOUGHRADIUS支持Windows，Linux，BSD跨平台部署，部署使用简单。
 
-ToughRADIUS网站：http://www.toughradius.net
+TOUGHRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助服务三个子系统，核心服务引擎提供高性能的认证计费服务，Web管理控制台提供了界面友好，功能完善的管理功能。用户自助服务系统提供了一个面向终端用户的网上服务渠道。
 
-ToughRADIUS文档: http://docs.toughradius.net/build/html/
+TOUGHRADIUS网站：http://www.toughradius.net
 
+TOUGHRADIUS 商业授权
+================================
+
+TOUGHRADIUS同时提供一份`商业授权 <Commerical-license.txt>`_
+
+购买商业授权后, 您可以:
+
+1. 修改 TOUGHRADIUS 的代码并无需公开自己的修改
+
+2. 获得为期一年的技术支持 (可续)
+
+3. 将 TOUGHRADIUS 集成到自己的商业产品中
+
+购买商业授权，请访问硬派科技官方网站 http://www.toughstruct.com , 联系销售人员。
 
 
 Linux环境快速安装
@@ -109,10 +122,6 @@ Linux环境快速安装
 
     $ toughctl --stop standalone
 
-    # 设置开机启动
-
-    $ echo "toughctl --start standalone" >> /etc/rc.local
-
 
 web管理控制台的使用
 ================================
@@ -130,3 +139,6 @@ web管理控制台的使用
 自助服务系统运行于一个独立的进程。
 
 默认地址与端口:http://serverip:1817
+
+
+
