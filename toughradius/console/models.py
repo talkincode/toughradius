@@ -484,7 +484,7 @@ class SlcIssues(DeclarativeBase):
     """
     24. 
     用户工单表  issues_type 0:新装/1:故障/2:投诉/3:其他
-    处理状态 0-未处理 1-处理中 2-挂起 3－取消 4-处理完成
+    处理状态 1-处理中 2-挂起 3－取消 4-处理完成
     """
     __tablename__ = 'slc_issues'
 
@@ -496,7 +496,7 @@ class SlcIssues(DeclarativeBase):
     date_time =  Column(u'date_time', Unicode(length=19), nullable=False,doc=u"操作时间")
     issues_type = Column('issues_type', INTEGER(),nullable=False,doc=u"工单类型")
     content = Column(u'content', Unicode(length=512), nullable=False,doc=u"工单内容")
-    assign_manager = Column(u'assign_manager', Unicode(length=32), nullable=True,doc=u"当前客户经理")
+    assign_operator = Column(u'assign_operator', Unicode(length=32), nullable=False,doc=u"指派操作员")
     status =  Column('status', INTEGER(),nullable=False,doc=u"工单状态")
 
 class SlcIssuesAppend(DeclarativeBase):
@@ -520,7 +520,7 @@ class SlcIssuesFlow(DeclarativeBase):
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"工单流id")    
     issues_id = Column('issues_id', INTEGER(),nullable=False,doc=u"工单id")
-    manager_code = Column(u'manager_code', Unicode(32), nullable=False,doc=u"客户经理工号")
+    operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员")
     accept_time = Column(u'accept_time', Unicode(length=19), nullable=False,doc=u"操作时间")
     accept_reuslt = Column(u'accept_reuslt', Unicode(length=512), nullable=False,doc=u"处理结果")
     accept_status =  Column('accept_status', INTEGER(),nullable=False,doc=u"工单处理状态")

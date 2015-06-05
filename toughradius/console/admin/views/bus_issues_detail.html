@@ -1,0 +1,72 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+
+</%def>
+<%def name="body()">
+    <div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户工单详情
+    <div class="bar pull-right"><a href="javascript:history.go(-1);">返回</a></div>
+    </div>
+        <div class="panel-body">
+     
+        <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="6"> 工单信息</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>用户账号</td>
+                        <td>${issues.account_number}</td>
+                        <td>工单类型</td>
+                        <td>${{0:u'新装',1:u'故障',2:u'投诉',3:u'其他'}[issues.issues_type]}</td>
+                        <td>工单状态</td>
+                        <td>${{0:u"未处理",1: u'处理中', 2: u'挂起', 3: u'取消',4:u'处理完成'}[issues.status]}</td>
+                        <td>当前操作员</td>
+                        <td>${issues.assign_operator}</td>
+                    </tr>
+                    <tr>
+                        <td>工单内容</td>
+                        <td colspan="7">${issues.content}</td>
+                    </tr>
+            </tbody>
+
+        </table>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th colspan="6"> 工单处理信息</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for iflow in issues_flows:
+            <tr>
+                <td>操作员</td>
+                <td>${iflow.operator_name}</td>
+                <td>accept_time</td>
+                <td>${iflow.accept_status}</td>
+                <td>处理状态</td>
+                <td>${{1: u'处理中', 2: u'挂起', 3: u'取消',4:u'处理完成'}[iflow.accept_status]}</td>
+            </tr>
+            <tr>
+                <td>工单处理描述</td>
+                <td colspan="7">${iflow.accept_reuslt}</td>
+            </tr>
+            % endfor
+            </tbody>
+
+        </table>
+
+        % if msg:
+        <div class="alert alert-warning">${msg}</div>
+        % endif
+        <form class="form-horizontal form-well" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
+
+    </div>
+</div>
+</div>
+</%def>

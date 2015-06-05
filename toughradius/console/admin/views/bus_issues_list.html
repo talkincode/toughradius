@@ -40,6 +40,9 @@
                 </div>
                 <div class="col-md-4">
                  <button type="submit" class="btn btn-primary">查询</button>
+                    % if permit.match('/issues/add'):
+                    <a href="/issues/add" class="btn btn-default">创建工单</a>
+                    % endif
                 </div>
             </div>
         </form>
@@ -63,14 +66,18 @@
             <tbody>
             % for issues in  page_data.result :
                 <tr>
-                    <td><a href="/issues/detail?issues_id=${issues.issues_id}">
-                        ${issues.issues_id}</a></td>
+                    <td>${issues.id}</td>
                     <td>${issues.account_number}</td>
                     <td>${{0:u"新装",1:u'故障',2:u'投诉',3:u"其他"}[issues.issues_type]}</td>
                     <td>${{0:u"未处理",1:u'处理中',2:u'挂起',3:u"取消",4:u"完成"}[issues.status]}</td>
-                    <td>${issues.has_key('content') and issues['content'][:12] or ""}...</td>
-                    <td><a href="/issues/process?issues_id=${issues.issues_id}" class="opt-btn btn-default">受理</a>
-                        <a href="/issues/delete?issues_id=${issues.issuse_id}" class="opt-btn btn-default">删除</a>
+                    <td>${issues.content[:32] or ""}...</td>
+                    <td>
+                        % if permit.match('/issues/detail'):
+                        <a href="/issues/detail?issues_id=${issues.id}" class="opt-btn btn-default">工单详情</a>
+                        % endif
+                        % if permit.match('/issues/delete'):
+                        <a href="/issues/delete?issues_id=${issues.id}" class="opt-btn btn-default">删除</a>
+                        % endif
                     </td>
                 </tr>
             % endfor
