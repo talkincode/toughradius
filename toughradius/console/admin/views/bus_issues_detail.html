@@ -8,13 +8,9 @@
     <div class="bar pull-right"><a href="javascript:history.go(-1);">返回</a></div>
     </div>
         <div class="panel-body">
-     
-        <table class="table table-hover">
-                <thead>
-                    <tr>
-                        <th colspan="6"> 工单信息</th>
-                    </tr>
-                </thead>
+
+        <h5>工单基本信息</h5>
+        <table class="table table-bordered">
                 <tbody>
                     <tr>
                         <td>用户账号</td>
@@ -27,37 +23,36 @@
                         <td>${issues.assign_operator}</td>
                     </tr>
                     <tr>
-                        <td>工单内容</td>
+                        <td width="15%">工单内容</td>
                         <td colspan="7">${issues.content}</td>
                     </tr>
             </tbody>
 
         </table>
 
-        <table class="table table-hover">
-            <thead>
-            <tr>
-                <th colspan="6"> 工单处理信息</th>
-            </tr>
-            </thead>
+        <h5>工单处理信息</h5>
+
+        % for iflow in issues_flows:
+        <table class="table table-bordered" style="border-radius: 5px">
+
             <tbody>
-            % for iflow in issues_flows:
+
             <tr>
                 <td>操作员</td>
                 <td>${iflow.operator_name}</td>
-                <td>accept_time</td>
-                <td>${iflow.accept_status}</td>
+                <td>处理时间</td>
+                <td>${iflow.accept_time}</td>
                 <td>处理状态</td>
                 <td>${{1: u'处理中', 2: u'挂起', 3: u'取消',4:u'处理完成'}[iflow.accept_status]}</td>
             </tr>
             <tr>
-                <td>工单处理描述</td>
-                <td colspan="7">${iflow.accept_reuslt}</td>
+                <td width="15%">工单处理描述</td>
+                <td colspan="7">${iflow.accept_result}</td>
             </tr>
-            % endfor
-            </tbody>
 
+            </tbody>
         </table>
+        % endfor
 
         % if msg:
         <div class="alert alert-warning">${msg}</div>

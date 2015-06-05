@@ -508,7 +508,7 @@ class SlcIssuesAppend(DeclarativeBase):
     #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"工单id")    
     issues_id = Column('issues_id', INTEGER(),nullable=False,doc=u"工单id")
-    append_content  = Column(u'append_content',Unicode(length=512),nullable=False,doc=u"工单补充内容")
+    append_content  = Column(u'append_content',Unicode(length=1024),nullable=False,doc=u"工单补充内容")
     append_time =  Column(u'append_time', Unicode(length=19), nullable=False,doc=u"操作时间")
 
 
@@ -522,7 +522,7 @@ class SlcIssuesFlow(DeclarativeBase):
     issues_id = Column('issues_id', INTEGER(),nullable=False,doc=u"工单id")
     operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员")
     accept_time = Column(u'accept_time', Unicode(length=19), nullable=False,doc=u"操作时间")
-    accept_reuslt = Column(u'accept_reuslt', Unicode(length=512), nullable=False,doc=u"处理结果")
+    accept_result = Column(u'accept_result', Unicode(length=1024), nullable=False,doc=u"处理结果")
     accept_status =  Column('accept_status', INTEGER(),nullable=False,doc=u"工单处理状态")
 
 ###############################################################################

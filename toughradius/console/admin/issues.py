@@ -54,6 +54,7 @@ def issues_detail(db):
     issues_flows = db.query(models.SlcIssuesFlow).filter_by(issues_id=issues_id)
 
     form = issues_forms.issues_process_form()
+    form.issues_id.set_value(issues_id)
 
     return render("bus_issues_detail",issues=issues,issues_flows=issues_flows, form=form)
 
@@ -81,13 +82,45 @@ def issues_add_post(db):
     issues.status = 0
     issues.date_time = utils.get_currtime()
 
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)创建新工单' % (get_cookie("username") )
+    db.add(ops_log)
+
     db.add(issues)
     db.commit()
     redirect("/issues/list")
 
 @app.post('/process',apply=auth_opr)
-def issues_process_post(db):   
-    pass
+def issues_process_post(db):
+    form = issues_forms.issues_process_form()
+    if not form.validates(source=request.forms):
+        return render("base_form", form=form)
+
+    iflow = models.SlcIssuesFlow()
+    iflow.issues_id = form.d.issues_id
+    iflow.accept_time = utils.get_currtime()
+    iflow.accept_status = form.d.accept_status
+    iflow.accept_result = form.d.accept_result
+    iflow.operator_name = get_cookie("username")
+    db.add(iflow)
+
+    issues = db.query(models.SlcIssues).get(iflow.issues_id)
+    issues.status = iflow.accept_status
+
+    ops_log = models.SlcRadOperateLog()
+    ops_log.operator_name = get_cookie("username")
+    ops_log.operate_ip = get_cookie("login_ip")
+    ops_log.operate_time = utils.get_currtime()
+    ops_log.operate_desc = u'操作员(%s)处理工单%s' % (get_cookie("username"),iflow.issues_id)
+    db.add(ops_log)
+
+    db.commit()
+
+    redirect("/issues/detail?issues_id=%s"%iflow.issues_id)
+
 
 @app.get('/delete', apply=auth_opr)
 def issues_delete_post(db):
