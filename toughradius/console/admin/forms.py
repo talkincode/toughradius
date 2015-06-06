@@ -6,11 +6,14 @@ from toughradius.console.libs.pyforms.rules import button_style,input_style
 
 boolean = {0:u"否", 1:u"是"}
 
+booleans = {'0': u"否", '1': u"是"}
+bool_bypass = {'0': u"免密码认证", '1': u"强制密码认证"}
+
 param_form = pyforms.Form(
     pyforms.Textbox("system_name", description=u"管理系统名称", **input_style),
     pyforms.Textbox("customer_system_name", description=u"自助服务系统名称", **input_style),
     pyforms.Textbox("customer_system_url", description=u"自助服务系统网站地址", **input_style),
-    pyforms.Textbox("customer_must_active", description=u"激活邮箱才能自助开户充值(0:否|1:是)",hr=True, **input_style),
+    pyforms.Dropdown("customer_must_active",args=booleans.items(), description=u"激活邮箱才能自助开户充值",hr=True, **input_style),
     pyforms.Textbox("weixin_qrcode", description=u"微信公众号二维码图片(宽度230px)", **input_style),
     pyforms.Textbox("service_phone", description=u"客户服务电话", **input_style),
     pyforms.Textbox("service_qq", description=u"客户服务QQ号码", **input_style),
@@ -24,9 +27,9 @@ param_form = pyforms.Form(
     pyforms.Textbox("smtp_user", description=u"SMTP用户名", **input_style),
     pyforms.Textbox("smtp_pwd", description=u"SMTP密码",hr=True, **input_style),
     # pyforms.Textbox("smtp_sender", description=u"smtp发送人名称", **input_style),
-    pyforms.Textbox("is_debug", description=u"DEBUG模式(0|1)",**input_style),
-    pyforms.Textbox("radiusd_bypass", description=u"Radius认证模式(0:免认证|1:认证)", **input_style),
-    pyforms.Textbox("allow_show_pwd", description=u"允许查询用户密码(0:不允许|1:允许)", **input_style),
+    pyforms.Dropdown("is_debug",args=booleans.items(), description=u"开启DEBUG",**input_style),
+    pyforms.Dropdown("radiusd_bypass",args=bool_bypass.items(), description=u"Radius认证模式", **input_style),
+    pyforms.Dropdown("allow_show_pwd", args=booleans.items(),description=u"是否允许查询用户密码", **input_style),
     pyforms.Textbox("radiusd_address", description=u"Radius服务IP地址",**input_style),
     pyforms.Textbox("radiusd_admin_port",rules.is_number, description=u"Radius服务管理端口",**input_style),
     pyforms.Textbox("acct_interim_intelval",rules.is_number, description=u"Radius记账间隔(秒)",**input_style),
