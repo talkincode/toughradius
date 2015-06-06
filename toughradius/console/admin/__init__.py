@@ -18,6 +18,7 @@ __all__  = [
     'bas',
     'roster',
     'order',
+    'acceptlog',
     'billing',
     'member',
     'account',

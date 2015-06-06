@@ -28,6 +28,7 @@ app = Bottle()
 app.config['__prefix__'] = __prefix__
 render = functools.partial(Render.render_app, app)
 
+member_detail_url_formatter = "/member/detail?account_number={0}".format
 
 ###############################################################################
 # member query
@@ -56,6 +57,9 @@ def member_query(db):
         models.SlcMember.member_id == models.SlcRadAccount.member_id,
         models.SlcNode.id == models.SlcMember.node_id
     )
+
+    _now = datetime.datetime.now()
+
     if idcard:
         _query = _query.filter(models.SlcMember.idcard == idcard)
     if mobile:
@@ -68,8 +72,19 @@ def member_query(db):
         _query = _query.filter(models.SlcMember.realname.like('%' + realname + '%'))
     if user_name:
         _query = _query.filter(models.SlcRadAccount.account_number.like('%' + user_name + '%'))
+
+    #用户状态判断
     if status:
-        _query = _query.filter(models.SlcRadAccount.status == status)
+        if status == '4':
+            _query = _query.filter(models.SlcRadAccount.expire_date <= _now.strftime("%Y-%m-%d"))
+        elif status == '1':
+            _query = _query.filter(
+                models.SlcRadAccount.status == status,
+                models.SlcRadAccount.expire_date >= _now.strftime("%Y-%m-%d")
+            )
+        else:
+            _query = _query.filter(models.SlcRadAccount.status == status)
+
     if product_id:
         _query = _query.filter(models.SlcRadAccount.product_id == product_id)
     if address:
@@ -77,7 +92,6 @@ def member_query(db):
     if expire_days:
         _days = int(expire_days)
         td = datetime.timedelta(days=_days)
-        _now = datetime.datetime.now()
         edate = (_now + td).strftime("%Y-%m-%d")
         _query = _query.filter(models.SlcRadAccount.expire_date <= edate)
         _query = _query.filter(models.SlcRadAccount.expire_date >= _now.strftime("%Y-%m-%d"))
@@ -209,9 +223,6 @@ def member_detail(db):
                   )
 
 
-
-
-member_detail_url_formatter = "/member/detail?account_number={0}".format
 
 ###############################################################################
 # member delete

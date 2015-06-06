@@ -25,7 +25,7 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 app = Bottle()
 app.config['__prefix__'] = __prefix__
 render = functools.partial(Render.render_app, app)
-
+member_detail_url_formatter = "/member/detail?account_number={0}".format
 
 ###############################################################################
 # account open
