@@ -51,14 +51,16 @@ permit.add_route("/opr", u"操作员管理", u"系统管理", is_menu=True, orde
 @app.get('/add', apply=auth_opr)
 def opr_add(db):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
-    form = forms.opr_add_form(nodes)
+    products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)  ]
+    form = forms.opr_add_form(nodes, products)
     return render("sys_opr_form", form=form, rules=[])
 
 
 @app.post('/add', apply=auth_opr)
 def opr_add_post(db):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
-    form = forms.opr_add_form(nodes)
+    products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
+    form = forms.opr_add_form(nodes,products)
     if not form.validates(source=request.forms):
         return render("sys_opr_form", form=form, rules=[])
     if db.query(models.SlcOperator.id).filter_by(operator_name=form.d.operator_name).count() > 0:
@@ -77,6 +79,13 @@ def opr_add_post(db):
         onode.operator_name = form.d.operator_name
         onode.node_name = node
         db.add(onode)
+
+    for product_id in request.params.getall("operator_products"):
+        oproduct = models.SlcOperatorProducts()
+        oproduct.operator_name = form.d.operator_name
+        oproduct.product_id = product_id
+        db.add(oproduct)
+
 
     for path in request.params.getall("rule_item"):
         item = permit.get_route(path)
@@ -107,11 +116,17 @@ def opr_update(db):
     opr_id = request.params.get("opr_id")
     opr = db.query(models.SlcOperator).get(opr_id)
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
-    form = forms.opr_update_form(nodes)
+    products = [(str(p.id), p.product_name) for p in db.query(models.SlcRadProduct)]
+
+    form = forms.opr_update_form(nodes, products)
     form.fill(opr)
     form.operator_pass.set_value('')
+
     onodes = db.query(models.SlcOperatorNodes).filter_by(operator_name=form.d.operator_name)
+    oproducts = db.query(models.SlcOperatorProducts).filter_by(operator_name=form.d.operator_name)
+
     form.operator_nodes.set_value([ond.node_name for ond in onodes])
+    form.operator_products.set_value([str(p.product_id) for p in oproducts])
     rules = db.query(models.SlcOperatorRule.rule_path).filter_by(operator_name=opr.operator_name)
     rules = [r[0] for r in rules]
     return render("sys_opr_form", form=form, rules=rules)
@@ -138,6 +153,13 @@ def opr_add_update(db):
         onode.operator_name = form.d.operator_name
         onode.node_name = node
         db.add(onode)
+
+    db.query(models.SlcOperatorProducts).filter_by(operator_name=opr.operator_name).delete()
+    for product_id in request.params.getall("operator_products"):
+        oproduct = models.SlcOperatorProducts()
+        oproduct.operator_name = form.d.operator_name
+        oproduct.product_id = product_id
+        db.add(oproduct)
 
     # update rules
     db.query(models.SlcOperatorRule).filter_by(operator_name=opr.operator_name).delete()

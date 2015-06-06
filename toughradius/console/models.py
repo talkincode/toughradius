@@ -57,6 +57,16 @@ class SlcOperatorNodes(DeclarativeBase):
     operator_name = Column(u'operator_name', Unicode(32),primary_key=True,nullable=False,doc=u"操作员名称")
     node_name = Column(u'node_name', Unicode(32), primary_key=True,nullable=False,doc=u"区域名称")
 
+class SlcOperatorProducts(DeclarativeBase):
+    """操作员表关联区域"""
+    __tablename__ = 'slc_operator_products'
+
+    __table_args__ = {}
+
+    # column definitions
+    operator_name = Column(u'operator_name', Unicode(32), primary_key=True, nullable=False, doc=u"操作员名称")
+    product_id = Column(u'product_id', Unicode(32), primary_key=True, nullable=False, doc=u"资费ID")
+
 class SlcOperatorRule(DeclarativeBase):
     """操作员权限表"""
     __tablename__ = 'slc_operator_rule'
