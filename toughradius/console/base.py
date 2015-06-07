@@ -201,7 +201,7 @@ def auth_cus(func):
     def warp(*args,**kargs):
         if not get_cookie("customer"):
             log.msg("user login timeout")
-            return redirect('/login')
+            return redirect('/auth/login')
         else:
             return func(*args,**kargs)
     return warp    
@@ -272,6 +272,9 @@ def serial_json(mdl):
     for c in mdl.__table__.columns:
         data[c.name] = getattr(mdl, c.name)
     return json.dumps(data,ensure_ascii=False)
+
+
+
 
 
 

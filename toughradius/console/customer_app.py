@@ -156,6 +156,9 @@ class CustomerServer(object):
         for _app in [self.app]+self.subapps:
             _app.config['render_key'] = 'customer'
             Render.RENDERS['customer'] = self.render
+            for _class in ['DEFAULT', 'database', 'radiusd', 'admin', 'customer']:
+                for _key, _val in self.config.items(_class):
+                    _app.config['%s.%s' % (_class, _key)] = _val
             _app.error_handler[403] = self.error403
             _app.error_handler[404] = self.error404
             _app.error_handler[500] = self.error500
@@ -218,11 +221,18 @@ class CustomerServer(object):
             )
         else: 
             log.msg('Admin SSL Disable!')       
-            return internet.TCPServer(self.port,self.web_factory,interface = self.host)    
- 
+            return internet.TCPServer(self.port,self.web_factory,interface = self.host)
+
+def import_sub_app():
+    from toughradius.console import customer
+    for name in customer.__all__:
+        __import__('toughradius.console.customer', globals(), locals(), [name])
+    return [getattr(customer, name).app for name in customer.__all__]
+
 def run(config,db_engine=None,is_service=False):
     print 'running customer server...'
-    admin = CustomerServer(config,db_engine,daemon=is_service,app=mainapp)
+    subapps = import_sub_app()
+    admin = CustomerServer(config,db_engine,daemon=is_service,app=mainapp, subapps=subapps)
     if is_service:
         return admin.get_service()
     else:

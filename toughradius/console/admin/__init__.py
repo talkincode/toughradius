@@ -6,6 +6,8 @@
 """
 
 __all__  = [
+    'param',
+    'passwd',
     'ops',
     'business',
     'card',
@@ -23,7 +25,6 @@ __all__  = [
     'member',
     'account',
     'online',
-    'support',
     'online_stat',
     'flow_stat'
 ]
