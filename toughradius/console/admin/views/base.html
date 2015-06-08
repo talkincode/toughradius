@@ -13,6 +13,7 @@
 <script src="/static/js/jquery-1.11.0.min.js"></script>
 <script src="/static/js/bootstrap.min.js"></script>
 <script src="/static/js/json2.js"></script>
+<script src="/static/js/jquery.floatheading.min.js"></script>
 <!-- Just for debugging purposes. Don't actually copy this line! -->
 <!--[if lt IE 9]>
 <script src="/static/js/ie8-responsive-file-warning.js"></script><![endif]-->
@@ -28,6 +29,9 @@ function clean_cache()
         alert(data.msg)
     },"json");
 }
+$(function () {
+    $('#accordion').floatheading({ paddingTop : 50});
+});
 </script>
 ${self.head()}
 </head>
@@ -46,7 +50,7 @@ def aclass(req,path):
 %>
 
         <body>
-        <div class="navbar  navbar-inverse navbar-static-top" role="navigation">
+        <div class="navbar  navbar-inverse navbar-fixed-top" role="navigation">
           <div class="container">
             <div class="navbar-header">
               <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
@@ -75,8 +79,8 @@ def aclass(req,path):
                 <li><a href="/backup">备份管理</a></li>
                  % endif
                 <li><a href="javascript:clean_cache();">刷新缓存</a></li>
-                <li><a target="_blank" href="http://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=scLEwcHew8Xxxd7E1tnD0NXYxMKf39TF" style="text-decoration:none;">反馈建议</a></li>
-                <li><a href="/logout">退出</a></li>
+                <li><a target="_blank" href="http://support.toughstruct.com" style="text-decoration:none;">技术支持</a></li>
+                <li><a href="/logout">(${get_cookie("username")}) 退出</a></li>
               </ul>
             </div><!--/.nav-collapse -->
           </div>
@@ -84,7 +88,12 @@ def aclass(req,path):
         <div class="container">
             <div class="row">
                 <div class="col-md-2 " id="sidebar">
+
                   <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="false">
+                      <div class="logo-box">
+                          <a target="_blank" href="http://www.toughradius.net"><img
+                                  src="/static/img/toughradius-logo.png"></a>
+                      </div>
                     % for menu in all_menus:
                     % if permit.check_opr_category(get_cookie('username'),menu['category']):
                     <div class="panel panel-default">
@@ -114,15 +123,11 @@ def aclass(req,path):
                     % endfor   
                     </div>                                         
             </div>
-            <div class="col-md-9 main-box">
+            <div class="col-md-10 main-box">
                 ${self.body()}
             </div>
         </div>
     </div>
-        <div id="footer">
-            <div class="container">
-            <p class="text-muted">© 技术支持：湖南硬派科技</p>
-        </div>
     </div>
     </body>
 </html>

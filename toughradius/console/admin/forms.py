@@ -6,11 +6,14 @@ from toughradius.console.libs.pyforms.rules import button_style,input_style
 
 boolean = {0:u"否", 1:u"是"}
 
+booleans = {'0': u"否", '1': u"是"}
+bool_bypass = {'0': u"免密码认证", '1': u"强制密码认证"}
+
 param_form = pyforms.Form(
     pyforms.Textbox("system_name", description=u"管理系统名称", **input_style),
     pyforms.Textbox("customer_system_name", description=u"自助服务系统名称", **input_style),
     pyforms.Textbox("customer_system_url", description=u"自助服务系统网站地址", **input_style),
-    pyforms.Textbox("customer_must_active", description=u"激活邮箱才能自助开户充值(0:否|1:是)",hr=True, **input_style),
+    pyforms.Dropdown("customer_must_active",args=booleans.items(), description=u"激活邮箱才能自助开户充值",hr=True, **input_style),
     pyforms.Textbox("weixin_qrcode", description=u"微信公众号二维码图片(宽度230px)", **input_style),
     pyforms.Textbox("service_phone", description=u"客户服务电话", **input_style),
     pyforms.Textbox("service_qq", description=u"客户服务QQ号码", **input_style),
@@ -24,13 +27,15 @@ param_form = pyforms.Form(
     pyforms.Textbox("smtp_user", description=u"SMTP用户名", **input_style),
     pyforms.Textbox("smtp_pwd", description=u"SMTP密码",hr=True, **input_style),
     # pyforms.Textbox("smtp_sender", description=u"smtp发送人名称", **input_style),
-    pyforms.Textbox("is_debug", description=u"DEBUG模式(0|1)",**input_style),
+    pyforms.Dropdown("is_debug",args=booleans.items(), description=u"开启DEBUG",**input_style),
+    pyforms.Dropdown("radiusd_bypass",args=bool_bypass.items(), description=u"Radius认证模式", **input_style),
+    pyforms.Dropdown("allow_show_pwd", args=booleans.items(),description=u"是否允许查询用户密码", **input_style),
     pyforms.Textbox("radiusd_address", description=u"Radius服务IP地址",**input_style),
     pyforms.Textbox("radiusd_admin_port",rules.is_number, description=u"Radius服务管理端口",**input_style),
     pyforms.Textbox("acct_interim_intelval",rules.is_number, description=u"Radius记账间隔(秒)",**input_style),
     pyforms.Textbox("max_session_timeout",rules.is_number, description=u"Radius最大会话时长(秒)", **input_style),
     pyforms.Textbox("reject_delay",rules.is_number, description=u"拒绝延迟时间(秒)(0-9)",**input_style),
-    pyforms.Textbox("portal_secret", description=u"portal登陆密钥", **input_style),
+    # pyforms.Textbox("portal_secret", description=u"portal登陆密钥", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
     action="/param/update"
@@ -121,7 +126,7 @@ def opr_update_form(nodes=[]):
         pyforms.Hidden("id",  description=u"编号"),
         pyforms.Textbox("operator_name", description=u"操作员名称",readonly="readonly",**input_style),
         pyforms.Textbox("operator_desc", rules.len_of(0,255),description=u"操作员姓名",**input_style),
-        pyforms.Password("operator_pass", rules.len_of(0, 128), description=u"操作员密码(留空不修改)",**input_style),
+        pyforms.Password("operator_pass", rules.len_of(0, 128), description=u"操作员密码(留空不修改)", autocomplete="off",**input_style),
         pyforms.Dropdown("operator_status", description=u"操作员状态", args=opr_status_dict.items(), required="required",**input_style),
         pyforms.Dropdown("operator_nodes", description=u"关联区域(多选)",args=nodes, required="required",multiple="multiple",size=4,**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
@@ -244,7 +249,7 @@ def user_open_form(nodes=[],products=[]):
         pyforms.Textarea("member_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户开户",
-        action="/bus/member/open"
+        action="/member/open"
     )
 
 def account_open_form(products=[]):
@@ -264,7 +269,7 @@ def account_open_form(products=[]):
         pyforms.Textarea("account_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户新开账号",
-        action="/bus/account/open"
+        action="/account/open"
     )
 
 def user_import_form(nodes=[],products=[]):
@@ -274,7 +279,7 @@ def user_import_form(nodes=[],products=[]):
         pyforms.File("import_file", description=u"用户数据文件",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>立即导入</b>", **button_style),
         title=u"用户数据导入",
-        action="/bus/member/import"
+        action="/member/import"
 )
 
 user_import_vform = dataform.Form(
@@ -301,7 +306,7 @@ account_next_form = pyforms.Form(
         pyforms.Textbox("expire_date", rules.is_date,description=u"过期日期",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户续费",
-        action="/bus/account/next"
+        action="/account/next"
 )
 
 account_charge_form = pyforms.Form(
@@ -309,7 +314,7 @@ account_charge_form = pyforms.Form(
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"缴费金额", value=0, required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户充值",
-        action="/bus/account/charge"
+        action="/account/charge"
 )
 
 account_cancel_form = pyforms.Form(
@@ -317,7 +322,7 @@ account_cancel_form = pyforms.Form(
         pyforms.Textbox("fee_value",rules.is_rmb, description=u"退费金额",  required="required", **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户销户",
-        action="/bus/account/cancel"
+        action="/account/cancel"
 )
 
 
@@ -333,7 +338,7 @@ def account_change_form(products=[]):
         pyforms.Textbox("flow_length",description=u"用户流量(MB)",value="0",**input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户资费变更",
-        action="/bus/account/change"
+        action="/account/change"
 )
 
 def member_update_form(nodes=[]):
@@ -350,7 +355,7 @@ def member_update_form(nodes=[]):
         pyforms.Textarea("member_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户基本信息修改",
-        action="/bus/member/update"
+        action="/member/update"
     )
 
 
@@ -366,7 +371,7 @@ def account_update_form():
         pyforms.Textarea("account_desc", description=u"用户描述",rows=4, **input_style),
         pyforms.Button("submit",  type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户变更资料",
-        action="/bus/account/update"
+        action="/account/update"
     )
 
 card_types = {0:u'资费卡',1:u'余额卡'}

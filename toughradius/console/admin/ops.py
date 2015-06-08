@@ -58,13 +58,13 @@ def user_query(db):
                        node_list=opr_nodes, 
                        product_list=db.query(models.SlcRadProduct),**request.params)
                        
-permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"运维管理",is_menu=True,order=0)
+permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"维护管理",is_menu=True,order=0)
 
 @app.get('/user/trace',apply=auth_opr)
 def user_trace(db):   
     return render("ops_user_trace", bas_list=db.query(models.SlcRadBas))
 
-permit.add_route("%s/user/trace"%__prefix__,u"用户消息跟踪",u"运维管理",is_menu=True,order=1)
+permit.add_route("%s/user/trace"%__prefix__,u"用户消息跟踪",u"维护管理",is_menu=True,order=1)
                    
 @app.get('/user/detail',apply=auth_opr)
 def user_detail(db):   
@@ -99,7 +99,7 @@ def user_detail(db):
     user_attrs = db.query(models.SlcRadAccountAttr).filter_by(account_number=account_number)
     return render("ops_user_detail",user=user,user_attrs=user_attrs)
     
-permit.add_route("%s/user/detail"%__prefix__,u"账号详情",u"运维管理",order=1.01)
+permit.add_route("%s/user/detail"%__prefix__,u"账号详情",u"维护管理",order=1.01)
 
 @app.post('/user/release',apply=auth_opr)
 def user_release(db):   
@@ -120,7 +120,7 @@ def user_release(db):
     websock.update_cache("account",account_number=account_number)
     return dict(code=0,msg=u"解绑成功")
     
-permit.add_route("%s/user/release"%__prefix__,u"用户释放绑定",u"运维管理",order=1.02)    
+permit.add_route("%s/user/release"%__prefix__,u"用户释放绑定",u"维护管理",order=1.02)    
 
 ###############################################################################
 # online manage      
@@ -172,7 +172,7 @@ def online_query(db):
                    node_list=opr_nodes, 
                    bas_list=db.query(models.SlcRadBas),**request.params)
 
-permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"运维管理",is_menu=True,order=2)
+permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"维护管理",is_menu=True,order=2)
 
 ###############################################################################
 # ticket manage        
@@ -226,7 +226,7 @@ def ticket_query(db):
     return render("ops_ticket_list", page_data = get_page_data(_query),
                node_list=opr_nodes,**request.params)
 
-permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"运维管理",is_menu=True,order=3)
+permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"维护管理",is_menu=True,order=3)
 
 ###############################################################################
 # ops log manage        
@@ -256,94 +256,7 @@ def opslog_query(db):
         page_data = get_page_data(_query),**request.params)
 
 
-permit.add_route("%s/opslog"%__prefix__,u"操作日志查询",u"运维管理",is_menu=True,order=4)
-
-###############################################################################
-# ops log manage        
-###############################################################################
-
-def default_start_end():
-    day_code = datetime.datetime.now().strftime("%Y-%m-%d")
-    begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
-    end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
-    return time.mktime(begin.timetuple()),time.mktime(end.timetuple())
-
-@app.get('/online/stat',apply=auth_opr)
-def online_stat_query(db): 
-    return render(
-        "ops_online_stat",
-        node_list=get_opr_nodes(db),
-        node_id=None,
-        day_code=utils.get_currdate()
-    )
-
-@app.route('/online/statdata',apply=auth_opr,method=['GET','POST'])
-def online_stat_data(db):    
-    node_id = request.params.get('node_id')
-    day_code = request.params.get('day_code')  
-    opr_nodes = get_opr_nodes(db)
-    if not day_code:
-        day_code = utils.get_currdate()
-    begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
-    end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
-    begin_time,end_time = time.mktime(begin.timetuple()),time.mktime(end.timetuple())
-    _query = db.query(models.SlcRadOnlineStat)
-    
-    if node_id:
-        _query = _query.filter(models.SlcRadOnlineStat.node_id == node_id)
-    else:
-        _query = _query.filter(models.SlcRadOnlineStat.node_id.in_([i.id for i in opr_nodes]))
-    
-    _query = _query.filter(
-        models.SlcRadOnlineStat.stat_time >= begin_time,
-        models.SlcRadOnlineStat.stat_time <= end_time,
-    )
-    _data = [ (q.stat_time*1000,q.total) for q in _query ]
-    return dict(code=0,data=[{'data':_data}])
-        
-permit.add_route("%s/online/stat"%__prefix__,u"在线用户统计",u"运维管理",is_menu=True,order=5)
+permit.add_route("%s/opslog"%__prefix__,u"操作日志查询",u"维护管理",is_menu=True,order=4)
 
 
-@app.get('/flow/stat',apply=auth_opr)
-def online_stat_query(db): 
-    return render(
-        "ops_flow_stat",
-        node_list=get_opr_nodes(db),
-        node_id=None,
-        day_code=utils.get_currdate()
-    )
 
-
-@app.route('/flow/statdata',apply=auth_opr,method=['GET','POST'])
-def flow_stat_data(db):    
-    node_id = request.params.get('node_id')
-    day_code = request.params.get('day_code')    
-    opr_nodes = get_opr_nodes(db)
-    if not day_code:
-        day_code = utils.get_currdate()
-    begin = datetime.datetime.strptime("%s 00:00:00"%day_code,"%Y-%m-%d %H:%M:%S")
-    end = datetime.datetime.strptime("%s 23:59:59"%day_code,"%Y-%m-%d %H:%M:%S")
-    begin_time,end_time = time.mktime(begin.timetuple()),time.mktime(end.timetuple())
-    _query = db.query(models.SlcRadFlowStat)
-    
-    if node_id:
-        _query = _query.filter(models.SlcRadFlowStat.node_id == node_id)
-    else:
-        _query = _query.filter(models.SlcRadFlowStat.node_id.in_([i.id for i in opr_nodes]))
-    
-    _query = _query.filter(
-        models.SlcRadFlowStat.stat_time >= begin_time,
-        models.SlcRadFlowStat.stat_time <= end_time,
-    )
-    
-    in_data = {"name":u"上行流量","data":[]}
-    out_data = {"name":u"下行流量","data":[]}
-    
-    for q in _query:
-        _stat_time = q.stat_time * 1000
-        in_data['data'].append([_stat_time,float(utils.kb2mb(q.input_total))])
-        out_data['data'].append([_stat_time,float(utils.kb2mb(q.output_total))])
-
-    return dict(code=0,data=[in_data,out_data])
-        
-permit.add_route("%s/flow/stat"%__prefix__,u"用户流量统计",u"运维管理",is_menu=True,order=5)        

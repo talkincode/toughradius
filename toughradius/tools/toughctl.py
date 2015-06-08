@@ -69,44 +69,6 @@ def run_customer(config,daemon=False):
     else:
         _run_daemon(config,'customer')
         
-        
-def run_portal(config,daemon=False):
-    '''
-    运行portal web进程
-    '''
-    if not daemon:
-        from toughradius.console import portal_app
-        portal_app.run(config,db_engine=get_engine(config))
-    else:
-        _run_daemon(config,'portal')
-
-def run_mps(config,daemon=False):
-    '''
-    运行mps web进程
-    '''
-    if not daemon:
-        from toughradius.console import mps_app
-        mps_app.run(config,db_engine=get_engine(config))
-    else:
-        _run_daemon(config,'mps')
-        
-def run_portald(config,daemon=False):
-    '''
-    运行portal监听进程
-    '''
-    if not daemon:
-        from toughradius.wlan import server
-        server.run(config)
-    else:
-        _run_daemon(config,'portald')
-        
-def run_acsim(config):
-    '''
-    运行AC模拟进程
-    '''
-    from toughradius.wlan import simulator
-    simulator.run(config)
-        
 def run_standalone(config,daemon=False):
     '''
     所有应用在一个进程的运行模式
@@ -115,24 +77,15 @@ def run_standalone(config,daemon=False):
     from toughradius.console import admin_app
     from toughradius.console import customer_app
     from toughradius.radiusd import server
-    from toughradius.console import portal_app
-    from toughradius.console import mps_app
-    from toughradius.wlan import server as pserver
     logfile = config.get('radiusd','logfile')
     config.set('DEFAULT','standalone','true')
     config.set('admin','logfile',logfile)
     config.set('customer','logfile',logfile)
-    config.set('portal','logfile',logfile)
-    config.set('portald','logfile',logfile)
-    config.set('mps','logfile',logfile)
     if not daemon:
         db_engine = get_engine(config)
         server.run(config,db_engine,False)
         admin_app.run(config,db_engine,False)
         customer_app.run(config,db_engine,False)
-        portal_app.run(config,db_engine,False)
-        mps_app.run(config,db_engine,False)
-        pserver.run(config,False)
         reactor.run()
     else:
         _run_daemon(config,'standalone')
@@ -144,7 +97,7 @@ def start_server(config,app):
     '''
     启动守护进程
     '''
-    apps = app == 'all' and ['radiusd','admin','customer','portal','portald','mps'] or [app]
+    apps = app == 'all' and ['radiusd','admin','customer'] or [app]
     for _app in apps:
         shell.info('start %s'%_app)
         _run_daemon(config,_app)
@@ -154,7 +107,7 @@ def stop_server(app):
     '''
     停止守护进程
     '''
-    apps = (app == 'all' and ['radiusd','admin','customer','portal','portald','mps'] or [app])
+    apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
@@ -163,7 +116,7 @@ def restart_server(config,app):
     '''
     重启守护进程
     '''
-    apps = (app == 'all' and ['radiusd','admin','customer','portal','portald','mps'] or [app])
+    apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
@@ -201,10 +154,6 @@ def run_execute_sqls(config,sqlstr):
 def run_execute_sqlf(config,sqlfile):
     from toughradius.tools.sqlexec import execute_sqlf
     execute_sqlf(config,sqlfile)
-
-def run_radius_tester(config):
-    from toughradius.tools.radtest import Tester
-    Tester(config).start()
     
 def run_gensql(config):
     from sqlalchemy import create_engine
@@ -261,10 +210,6 @@ def run():
     parser.add_argument('-radiusd','--radiusd', action='store_true',default=False,dest='radiusd',help='run radiusd')
     parser.add_argument('-admin','--admin', action='store_true',default=False,dest='admin',help='run admin')
     parser.add_argument('-customer','--customer', action='store_true',default=False,dest='customer',help='run customer')
-    parser.add_argument('-portal','--portal', action='store_true',default=False,dest='portal',help='run portal')
-    parser.add_argument('-mps','--mps', action='store_true',default=False,dest='mps',help='run mps')
-    parser.add_argument('-portald','--portald', action='store_true',default=False,dest='portald',help='run portald')
-    parser.add_argument('-acsim','--acsim', action='store_true',default=False,dest='acsim',help='run acsim')
     parser.add_argument('-standalone','--standalone', action='store_true',default=False,dest='standalone',help='run standalone')
     parser.add_argument('-d','--daemon', action='store_true',default=False,dest='daemon',help='daemon mode')
     parser.add_argument('-start','--start', type=str,default=None,dest='start',help='start server all|radiusd|admin|customer')
@@ -296,8 +241,8 @@ def run():
         return run_echo_mysql_cnf()
         
     if args.stop:
-        if not args.stop in ('all','radiusd','admin','customer','portal','portald','mps','standalone'):
-            print 'usage %s --stop [all|radiusd|admin|customer|portal|portald|mps|standalone]'%sys.argv[0]
+        if not args.stop in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --stop [all|radiusd|admin|customer|standalone]'%sys.argv[0]
             return
         return stop_server(args.stop)
     
@@ -327,24 +272,20 @@ def run():
         return run_execute_sqlf(config,args.sqlf)
         
     if args.start:
-        if not args.start in ('all','radiusd','admin','customer','standalone','portal','portald','mps'):
-            print 'usage %s --start [all|radiusd|admin|customer|portal|portald|mps|standalone]'%sys.argv[0]
+        if not args.start in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --start [all|radiusd|admin|customer|standalone]'%sys.argv[0]
             return
         return start_server(config,args.start)
     
     if args.restart:
-        if not args.restart in ('all','radiusd','admin','customer','standalone','portal','portald','mps'):
-            print 'usage %s --restart [all|radiusd|admin|customer|portal|portald|mps|standalone]'%sys.argv[0]
+        if not args.restart in ('all','radiusd','admin','customer','standalone'):
+            print 'usage %s --restart [all|radiusd|admin|customer|standalone]'%sys.argv[0]
             return
         return restart_server(config,args.restart)
 
     if args.radiusd:run_radiusd(config,args.daemon)
     elif args.admin:run_admin(config,args.daemon)
-    elif args.customer:run_customer(config,args.daemon)
-    elif args.portal:run_portal(config,args.daemon)
-    elif args.mps:run_mps(config,args.daemon)
-    elif args.portald:run_portald(config,args.daemon)
-    elif args.acsim:run_acsim(config)    
+    elif args.customer:run_customer(config,args.daemon)  
     elif args.standalone:run_standalone(config,args.daemon)
     elif args.secret:run_secret_update(config,args.conf)
     elif args.initdb:run_initdb(config)

@@ -1,0 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import sys,os
+sys.path.insert(0,os.path.split(__file__)[0])
+from toughradius.tools.toughctl import run as runctl
+
+if __name__ == '__main__':
+    runctl()
+
+    
+        
+
+    
+    
+    
+
+

@@ -116,7 +116,7 @@ var flow_options = {
 
 function update_online()
 {
-    $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (ev) {
+    $.post("/online_stat/data", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             online_options.series = ev.data;
             new Highcharts.Chart(online_options);
@@ -126,7 +126,7 @@ function update_online()
 
 function update_flow()
 {
-    $.post("/ops/flow/statdata", {day_code:'${currdate()}'} , function (ev) {
+    $.post("/flow_stat/data", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             flow_options.series = ev.data;
             new Highcharts.Chart(flow_options);

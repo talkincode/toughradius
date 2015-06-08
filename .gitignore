@@ -40,3 +40,5 @@ testdata.py
 modules/
 windows/
 fabfile.py
+toughradius.egg-info
+dist

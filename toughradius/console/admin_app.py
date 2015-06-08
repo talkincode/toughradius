@@ -2,22 +2,14 @@
 # coding:utf-8
 import sys
 import os
+from twisted.python import log
 from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
 from bottle import run as runserver
-from toughradius.console.admin.admin import app as mainapp
-from toughradius.console.admin.ops import app as ops_app
-from toughradius.console.admin.business import app as bus_app
-from toughradius.console.admin.card import app as card_app
-from toughradius.console.admin.product import app as product_app
-from toughradius.console.admin.cmanager import app as cmanager_app
-from toughradius.console.admin.wlan import app as wlan_app
-from toughradius.console.admin.issues import app as issues_app
-from toughradius.console.admin.mps import app as mps_app
+
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin, utils
-from toughradius.console.libs import mpsapi
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import tasks
@@ -28,6 +20,8 @@ import toughradius
 import bottle
 import functools
 import time
+
+from toughradius.console.admin.admin import app as mainapp
 
 reactor.suggestThreadPoolSize(30)
 
@@ -74,7 +68,6 @@ class AdminServer(object):
         self.decrypt = utils.aescipher.decrypt
         # parse ssl
         self._check_ssl_config()
-        mpsapi.mpsapi.setup(self.config)
 
     def _check_ssl_config(self):
         self.use_ssl = False
@@ -87,6 +80,9 @@ class AdminServer(object):
                 self.use_ssl = True
 
     def init_timezone(self):
+        """
+        时区设置，linux系统下有效
+        """
         try:
             os.environ["TZ"] = self.timezone
             time.tzset()
@@ -94,6 +90,9 @@ class AdminServer(object):
             pass
 
     def init_db_engine(self):
+        """
+        初始化数据库引擎
+        """
         if not self.db_engine:
             self.db_engine = get_engine(self.config)
         metadata = models.get_metadata(self.db_engine)
@@ -107,6 +106,9 @@ class AdminServer(object):
         )
 
     def init_protocol(self):
+        """
+        初始化web框架协议
+        """
         self.web_factory = server.Site(
             wsgi.WSGIResource(reactor, reactor.getThreadPool(), self.app))
 
@@ -119,13 +121,22 @@ class AdminServer(object):
             return get_product_name(db, pid)
 
     def error403(self, error):
-        return self.render.render("error", msg=u"Unauthorized access %s" % error.exception)
+        if self.debug:
+            return self.render.render("error", msg=u"未授权的访问 %s" % error.exception)
+        else:
+            return self.render.render("error", msg=u"未授权的访问")
 
     def error404(self, error):
-        return self.render.render("error", msg=u"Not found %s" % error.exception)
+        if self.debug:
+            return self.render.render("error", msg=u"页面未找到 %s" % error.exception)
+        else:
+            return self.render.render("error", msg=u"页面未找到")
 
     def error500(self, error):
-        return self.render.render("error", msg=u"Server Internal error %s" % error.exception)
+        if self.debug:
+            return self.render.render("error", msg=u"服务器内部错误 %s" % error.exception)
+        else:
+            return self.render.render("error", msg=u"服务器内部错误")
 
     def init_application(self):
         log.msg("start init application...")
@@ -136,6 +147,8 @@ class AdminServer(object):
             get_cookie=get_cookie,
             fen2yuan=utils.fen2yuan,
             fmt_second=utils.fmt_second,
+            fmt_online_time=utils.fmt_online_time,
+            decrypt=utils.decrypt,
             currdate=utils.get_currdate,
             bps2mbps=utils.bps2mbps,
             mbps2bps=utils.mbps2bps,
@@ -149,13 +162,14 @@ class AdminServer(object):
             get_product_name=self._get_product_name,
             permit=permit,
             all_menus = permit.build_menus(
-               order_cats=[u"系统管理",u"营业管理",u"运维管理",u"Wlan管理",u"微信接入",u"统计报表"]
+               order_cats=[MenuSys,MenuBus,MenuOpt,MenuStat]
            )
         )
 
         self.render = Render(_context, _lookup)
         log.msg("mount app and install plugins...")
         for _app in [self.app] + self.subapps:
+            log.msg("init app %s"%repr(_app))
             _app.config['render_key'] = 'admin'
             Render.RENDERS['admin'] = self.render
             for _class in ['DEFAULT', 'database', 'radiusd', 'admin', 'customer']:
@@ -244,14 +258,15 @@ class AdminServer(object):
             log.msg('Admin SSL Disable!')
             return internet.TCPServer(self.port, self.web_factory, interface=self.admin_host)
 
+def import_sub_app():
+    from toughradius.console import admin
+    for name in admin.__all__:
+        __import__('toughradius.console.admin', globals(), locals(), [name])
+    return [ getattr(admin, name).app  for name in admin.__all__ ]
 
 def run(config, db_engine=None, is_service=False):
     print 'running admin server...'
-    subapps = [
-        ops_app, bus_app, card_app, 
-        product_app,cmanager_app,wlan_app,
-        issues_app
-    ]
+    subapps = import_sub_app()
     admin = AdminServer(
         config, db_engine, daemon=is_service, app=mainapp, subapps=subapps)
     if is_service:

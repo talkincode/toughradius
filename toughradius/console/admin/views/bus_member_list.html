@@ -3,20 +3,20 @@
 <%def name="head()">
 <script>
 function do_submit(){
-    $("#query_form").attr("action", "/bus/member");
+    $("#query_form").attr("action", "/member");
     $("#query_form").submit();
 }
 
 function do_export(){
-    $("#query_form").attr("action", "/bus/member/export");
+    $("#query_form").attr("action", "/member/export");
     $("#query_form").submit();
-    setTimeout(function(){$("#query_form").attr("action", "/bus/member");}, 0);
+    setTimeout(function(){$("#query_form").attr("action", "/member");}, 0);
 }
 
 function do_delete(member_id)
 {
     if(confirm("删除用户将删除用户所有相关数据，包括账号，日志，订单等，不可恢复，确认操作吗？")) {
-        window.location.href = "/bus/member/delete?member_id="+member_id;
+        window.location.href = "/member/delete?member_id="+member_id;
     }
     
 }
@@ -27,7 +27,7 @@ function do_delete(member_id)
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户列表</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal form-well" role="form" action="/bus/member" method="post">
+        <form id="query_form" class="form-horizontal form-well" role="form" action="/member" method="post">
             <div class="form-group">
                 <label for="node_id" class="col-md-1 control-label">区域</label>
                 <div class="col-md-3">
@@ -91,7 +91,7 @@ function do_delete(member_id)
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
                     <button type="button" onclick="do_submit();" class="btn btn-primary">查询</button>
-                    % if permit.match('/bus/member/export'):
+                    % if permit.match('/member/export'):
                     <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出用户信息</a>
                     % endif
                 </div>
@@ -115,14 +115,14 @@ function do_delete(member_id)
             <tr>
                 <td>${node_desc}</td>
                 <td>
-                    <a href="/bus/member/detail?account_number=${account.account_number}">${account.account_number}</a>
+                    <a href="/member/detail?account_number=${account.account_number}">${account.account_number}</a>
                 </td>
                 <td>${member.realname}</td>
                 <td>${product_name}</td>
                 <td>${member.create_time}</td>
                 <td>${account.expire_date}</td>
                 <td>
-                    <a class="opt-btn btn-default" href="/bus/member/detail?account_number=${account.account_number}">用户受理</a>
+                    <a class="opt-btn btn-default" href="/member/detail?account_number=${account.account_number}">用户受理</a>
                 </td>
             </tr>
             % endfor

@@ -801,7 +801,24 @@ def account_recharge(db):
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log) 
-    
+
+    history = models.SlcRadAccountHistory()
+    history.accept_id = accept_log.id
+    history.account_number = account.account_number
+    history.member_id = account.member_id
+    history.product_id = account.product_id
+    history.group_id = account.group_id
+    history.password = account.password
+    history.install_address = account.install_address
+    history.expire_date = account.expire_date
+    history.user_concur_number = account.user_concur_number
+    history.bind_mac = account.bind_mac
+    history.bind_vlan = account.bind_vlan
+    history.account_desc = account.account_desc
+    history.create_time = account.create_time
+    history.operate_time = accept_log.accept_time
+    db.add(history)
+
     _datetime = utils.get_currtime()
     order_fee = 0
     balance = 0
@@ -841,6 +858,9 @@ def account_recharge(db):
     account.status = 1
     
     card.card_status = CardUsed
-    
+
+    history.new_expire_date =  account.expire_date
+    history.new_product_id = account.product_id
+
     db.commit()
     redirect("/") 

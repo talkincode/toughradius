@@ -240,7 +240,13 @@ class Store():
         with self.db_engine.begin() as conn:
             sql = _sql('select * from slc_rad_online where nas_addr = :nas_addr')
             cur = conn.execute(sql,nas_addr=nas_addr) 
-            return cur.fetchall()        
+            return cur.fetchall()
+
+    def get_nas_onlines_byuser(self, account_number):
+        with self.db_engine.begin() as conn:
+            sql = _sql('select * from slc_rad_online where  account_number = :account')
+            cur = conn.execute(sql, account=account_number)
+        return cur.fetchall()
 
     def add_online(self,online):
         with self.db_engine.begin() as conn:

@@ -27,7 +27,6 @@ render = functools.partial(Render.render_app, app)
 # product manage
 ###############################################################################
 
-
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 def product(db):
     _query = db.query(models.SlcRadProduct)
@@ -51,14 +50,9 @@ def product_detail(db):
                   product_policys=forms.product_policy,
                   product=product, product_attrs=product_attrs)
 
-permit.add_route(__prefix__, u"资费信息管理", u"系统管理", is_menu=True, order=4)
-permit.add_route("%s/detail" % __prefix__, u"资费详情查看", u"系统管理", order=4.01)
-
-
 @app.get('/add', apply=auth_opr)
 def product_add(db):
     return render("sys_product_form", form=forms.product_add_form())
-
 
 @app.post('/add', apply=auth_opr)
 def product_add_post(db):
@@ -94,9 +88,6 @@ def product_add_post(db):
 
     db.commit()
     redirect(__prefix__)
-
-permit.add_route("%s/add" % __prefix__, u"新增资费", u"系统管理", order=4.02)
-
 
 @app.get('/update', apply=auth_opr)
 def product_update(db):
@@ -146,9 +137,6 @@ def product_update(db):
     websock.update_cache("product", product_id=product.id)
     redirect(__prefix__)
 
-permit.add_route("%s/update" % __prefix__, u"修改资费", u"系统管理", order=4.03)
-
-
 @app.get('/delete', apply=auth_opr)
 def product_delete(db):
     product_id = request.params.get("product_id")
@@ -171,9 +159,6 @@ def product_delete(db):
     websock.update_cache("product", product_id=product_id)
     redirect(__prefix__)
 
-permit.add_route("%s/delete" % __prefix__, u"删除资费", u"系统管理", order=4.04)
-
-
 @app.get('/attr/add', apply=auth_opr)
 def product_attr_add(db):
     product_id = request.params.get("product_id")
@@ -182,7 +167,6 @@ def product_attr_add(db):
     form = forms.product_attr_add_form()
     form.product_id.set_value(product_id)
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
-
 
 @app.post('/attr/add', apply=auth_opr)
 def product_attr_add(db):
@@ -208,9 +192,6 @@ def product_attr_add(db):
 
     redirect("%s/detail?product_id=%s" % (__prefix__, form.d.product_id))
 
-permit.add_route("%s/attr/add" % __prefix__, u"新增资费扩展属性", u"系统管理", order=4.05)
-
-
 @app.get('/attr/update', apply=auth_opr)
 def product_attr_update(db):
     attr_id = request.params.get("attr_id")
@@ -218,7 +199,6 @@ def product_attr_update(db):
     form = forms.product_attr_update_form()
     form.fill(attr)
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
-
 
 @app.post('/attr/update', apply=auth_opr)
 def product_attr_update(db):
@@ -242,10 +222,6 @@ def product_attr_update(db):
     websock.update_cache("product", product_id=form.d.product_id)
     redirect("%s/detail?product_id=%s" % (__prefix__, form.d.product_id))
 
-permit.add_route("%s/attr/update" %
-                 __prefix__, u"修改资费扩展属性", u"系统管理", order=4.06)
-
-
 @app.get('/attr/delete', apply=auth_opr)
 def product_attr_update(db):
     attr_id = request.params.get("attr_id")
@@ -265,5 +241,12 @@ def product_attr_update(db):
     websock.update_cache("product", product_id=product_id)
     redirect("%s/detail?product_id=%s" % (__prefix__, product_id))
 
-permit.add_route("%s/attr/delete" %
-                 __prefix__, u"删除资费扩展属性", u"系统管理", order=4.07)
+
+permit.add_route(__prefix__, u"资费信息管理", u"系统管理", is_menu=True, order=4)
+permit.add_route("%s/add" % __prefix__, u"新增资费", u"系统管理", order=4.02)
+permit.add_route("%s/update" % __prefix__, u"修改资费", u"系统管理", order=4.03)
+permit.add_route("%s/delete" % __prefix__, u"删除资费", u"系统管理", order=4.04)
+permit.add_route("%s/detail" % __prefix__, u"资费详情查看", u"系统管理", order=4.01)
+permit.add_route("%s/attr/add" % __prefix__, u"新增资费扩展属性", u"系统管理", order=4.05)
+permit.add_route("%s/attr/update" %__prefix__, u"修改资费扩展属性", u"系统管理", order=4.06)
+permit.add_route("%s/attr/delete" %__prefix__, u"删除资费扩展属性", u"系统管理", order=4.07)
