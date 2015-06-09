@@ -26,7 +26,6 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 member_detail_url_formatter = "/member/detail?account_number={0}".format
 
@@ -36,7 +35,7 @@ member_detail_url_formatter = "/member/detail?account_number={0}".format
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 @app.post('/export', apply=auth_opr)
-def member_query(db):
+def member_query(db, render):
     node_id = request.params.get('node_id')
     realname = request.params.get('realname')
     idcard = request.params.get('idcard')
@@ -122,7 +121,7 @@ def member_query(db):
 
 
 @app.get('/detail', apply=auth_opr)
-def member_detail(db):
+def member_detail(db, render):
     account_number = request.params.get('account_number')
     user = db.query(
         models.SlcMember.realname,
@@ -228,7 +227,7 @@ def member_detail(db):
 # member delete
 ###############################################################################
 @app.get('/delete', apply=auth_opr)
-def member_delete(db):
+def member_delete(db, render):
     member_id = request.params.get("member_id")
     if not member_id:
         raise abort(404, 'member_id is empty')
@@ -260,7 +259,7 @@ def member_delete(db):
 ###############################################################################
 
 @app.get('/update', apply=auth_opr)
-def member_update_get(db):
+def member_update_get(db, render):
     member_id = request.params.get("member_id")
     account_number = request.params.get("account_number")
     member = db.query(models.SlcMember).get(member_id)
@@ -272,7 +271,7 @@ def member_update_get(db):
 
 
 @app.post('/update', apply=auth_opr)
-def member_update_post(db):
+def member_update_post(db, render):
     nodes = [(n.id, n.node_name) for n in get_opr_nodes(db)]
     form = forms.member_update_form(nodes)
     if not form.validates(source=request.forms):
@@ -304,7 +303,7 @@ def member_update_post(db):
 ###############################################################################
 
 @app.get('/open', apply=auth_opr)
-def member_open_get(db):
+def member_open_get(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
@@ -314,7 +313,7 @@ def member_open_get(db):
 
 
 @app.post('/open', apply=auth_opr)
-def member_open_post(db):
+def member_open_post(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
@@ -428,7 +427,7 @@ def member_open_post(db):
 ###############################################################################
 
 @app.get('/import', apply=auth_opr)
-def member_import_get(db):
+def member_import_get(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.user_import_form(nodes, products)
@@ -436,7 +435,7 @@ def member_import_get(db):
 
 
 @app.post('/import', apply=auth_opr)
-def member_import_post(db):
+def member_import_post(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     iform = forms.user_import_form(nodes, products)

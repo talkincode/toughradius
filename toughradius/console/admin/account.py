@@ -24,7 +24,6 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 member_detail_url_formatter = "/member/detail?account_number={0}".format
 
 ###############################################################################
@@ -32,7 +31,7 @@ member_detail_url_formatter = "/member/detail?account_number={0}".format
 ###############################################################################
 
 @app.get('/open', apply=auth_opr)
-def account_open(db):
+def account_open(db, render):
     member_id = request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
@@ -46,7 +45,7 @@ def account_open(db):
 
 
 @app.post('/open', apply=auth_opr)
-def account_open(db):
+def account_open(db, render):
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
     )]
@@ -137,7 +136,7 @@ def account_open(db):
 ###############################################################################
 
 @app.get('/update', apply=auth_opr)
-def account_update_get(db):
+def account_update_get(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     form = forms.account_update_form()
@@ -146,7 +145,7 @@ def account_update_get(db):
 
 
 @app.post('/update', apply=auth_opr)
-def account_update_post(db):
+def account_update_post(db, render):
     form = forms.account_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -181,7 +180,7 @@ def account_update_post(db):
 ###############################################################################
 
 @app.post('/pause', apply=auth_opr)
-def account_pause(db):
+def account_pause(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
 
@@ -220,7 +219,7 @@ def account_pause(db):
 ###############################################################################
 
 @app.post('/resume', apply=auth_opr)
-def account_resume(db):
+def account_resume(db,render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     if account.status != 2:
@@ -285,7 +284,7 @@ def query_account(db, account_number):
 ###############################################################################
 
 @app.get('/next', apply=auth_opr)
-def account_next(db):
+def account_next(db, render):
     account_number = request.params.get("account_number")
     user = query_account(db, account_number)
     form = forms.account_next_form()
@@ -296,7 +295,7 @@ def account_next(db):
 
 
 @app.post('/next', apply=auth_opr)
-def account_next(db):
+def account_next(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
@@ -384,7 +383,7 @@ def account_next(db):
 ###############################################################################
 
 @app.get('/charge', apply=auth_opr)
-def account_charge(db):
+def account_charge(db, render):
     account_number = request.params.get("account_number")
     user = query_account(db, account_number)
     form = forms.account_charge_form()
@@ -393,7 +392,7 @@ def account_charge(db):
 
 
 @app.post('/charge', apply=auth_opr)
-def account_charge(db):
+def account_charge(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
@@ -464,7 +463,7 @@ def account_charge(db):
 ###############################################################################
 
 @app.get('/change', apply=auth_opr)
-def account_change(db):
+def account_change(db, render):
     account_number = request.params.get("account_number")
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     user = query_account(db, account_number)
@@ -475,7 +474,7 @@ def account_change(db):
 
 
 @app.post('/change', apply=auth_opr)
-def account_change(db):
+def account_change(db, render):
     account_number = request.params.get("account_number")
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.account_change_form(products=products)
@@ -569,7 +568,7 @@ def account_change(db):
 ###############################################################################
 
 @app.get('/cancel', apply=auth_opr)
-def account_cancel(db):
+def account_cancel(db, render):
     account_number = request.params.get("account_number")
     user = query_account(db, account_number)
     form = forms.account_cancel_form()
@@ -578,7 +577,7 @@ def account_cancel(db):
 
 
 @app.post('/cancel', apply=auth_opr)
-def account_cancel(db):
+def account_cancel(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
@@ -648,7 +647,7 @@ def account_cancel(db):
 # member update
 ###############################################################################
 @app.get('/delete', apply=auth_opr)
-def account_delete(db):
+def account_delete(db, render):
     account_number = request.params.get("account_number")
     if not account_number:
         raise abort(404, 'account_number is empty')

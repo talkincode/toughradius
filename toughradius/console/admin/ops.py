@@ -21,14 +21,13 @@ __prefix__ = "/ops"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # user manage        
 ###############################################################################
                    
 @app.route('/user',apply=auth_opr,method=['GET','POST'])
-def user_query(db):   
+def user_query(db, render):
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
     user_name = request.params.get('user_name')
@@ -61,13 +60,13 @@ def user_query(db):
 permit.add_route("%s/user"%__prefix__,u"用户账号查询",u"维护管理",is_menu=True,order=0)
 
 @app.get('/user/trace',apply=auth_opr)
-def user_trace(db):   
+def user_trace(db, render):
     return render("ops_user_trace", bas_list=db.query(models.SlcRadBas))
 
 permit.add_route("%s/user/trace"%__prefix__,u"用户消息跟踪",u"维护管理",is_menu=True,order=1)
                    
 @app.get('/user/detail',apply=auth_opr)
-def user_detail(db):   
+def user_detail(db, render):
     account_number = request.params.get('account_number')  
     user  = db.query(
         models.SlcMember.realname,
@@ -102,7 +101,7 @@ def user_detail(db):
 permit.add_route("%s/user/detail"%__prefix__,u"账号详情",u"维护管理",order=1.01)
 
 @app.post('/user/release',apply=auth_opr)
-def user_release(db):   
+def user_release(db, render):
     account_number = request.params.get('account_number')  
     user = db.query(models.SlcRadAccount).filter_by(account_number=account_number).first()
     user.mac_addr = ''
@@ -127,7 +126,7 @@ permit.add_route("%s/user/release"%__prefix__,u"用户释放绑定",u"维护管�
 ###############################################################################
     
 @app.route('/online',apply=auth_opr,method=['GET','POST'])
-def online_query(db): 
+def online_query(db, render):
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')  
     framed_ipaddr = request.params.get('framed_ipaddr')  
@@ -179,7 +178,7 @@ permit.add_route("%s/online"%__prefix__,u"在线用户查询",u"维护管理",is
 ###############################################################################
 
 @app.route('/ticket',apply=auth_opr,method=['GET','POST'])
-def ticket_query(db): 
+def ticket_query(db, render):
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')  
     framed_ipaddr = request.params.get('framed_ipaddr')  
@@ -233,7 +232,7 @@ permit.add_route("%s/ticket"%__prefix__,u"上网日志查询",u"维护管理",is
 ###############################################################################
 
 @app.route('/opslog',apply=auth_opr,method=['GET','POST'])
-def opslog_query(db): 
+def opslog_query(db, render):
     operator_name = request.params.get('operator_name')
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  

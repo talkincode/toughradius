@@ -31,7 +31,6 @@ __prefix__ = "/open"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # account open
@@ -51,7 +50,7 @@ def check_card(card):
     return dict(code=0)
 
 @app.get('/querycp', apply=auth_cus)
-def query_card_products(db):
+def query_card_products(db, render):
     ''' query product by card'''
     recharge_card = request.params.get('recharge_card')
     card = db.query(models.SlcRechargerCard).filter_by(card_number=recharge_card).first()
@@ -72,7 +71,7 @@ def query_card_products(db):
 
 
 @app.get('/', apply=auth_cus)
-def account_open(db):
+def account_open(db, render):
     member = db.query(models.SlcMember).get(get_cookie("customer_id"))
     if member.email_active == 0 and get_param_value(db, "customer_must_active") == "1":
         return render("error", msg=u"激活您的电子邮箱才能使用此功能")
@@ -95,7 +94,7 @@ def account_open(db):
 
 
 @app.post('/', apply=auth_cus)
-def account_open(db):
+def account_open(db, render):
     form = forms.account_open_form()
     if not form.validates(source=request.forms):
         return render("card_open_form", form=form)

@@ -31,7 +31,6 @@ __prefix__ = "/ticket"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -39,7 +38,7 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.route('/', apply=auth_cus, method=['GET', 'POST'])
-def ticket_query(db):
+def ticket_query(db, render):
     account_number = request.params.get('account_number')
     query_begin_time = request.params.get('query_begin_time')
     query_end_time = request.params.get('query_end_time')

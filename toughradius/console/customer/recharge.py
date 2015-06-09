@@ -31,7 +31,6 @@ __prefix__ = "/recharge"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -39,7 +38,7 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.get('/')
-def account_recharge(db):
+def account_recharge(db, render):
     member = db.query(models.SlcMember).get(get_cookie("customer_id"))
     if member.email_active == 0 and get_param_value(db, "customer_must_active") == "1":
         return render("error", msg=u"激活您的电子邮箱才能使用此功能")
@@ -52,7 +51,7 @@ def account_recharge(db):
 
 
 @app.post('/')
-def account_recharge(db):
+def account_recharge(db, render):
     form = forms.recharge_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)

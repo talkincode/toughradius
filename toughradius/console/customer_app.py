@@ -8,7 +8,7 @@ from twisted.python.logfile import DailyLogFile
 from bottle import request
 from bottle import response
 from toughradius.console.customer.customer import app as mainapp
-from toughradius.console.libs import sqla_plugin,utils
+from toughradius.console.libs import sqla_plugin,mako_plugin,utils
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import base
@@ -151,11 +151,9 @@ class CustomerServer(object):
             get_account = self._get_account_by_number,
             is_online = self._get_online_status
         )
-        self.render = Render(_context,_lookup)
+        self.render_plugin = mako_plugin.Plugin('customer', _lookup, _context)
         log.msg("mount app and install plugins...")
         for _app in [self.app]+self.subapps:
-            _app.config['render_key'] = 'customer'
-            Render.RENDERS['customer'] = self.render
             for _class in ['DEFAULT', 'database', 'radiusd', 'admin', 'customer']:
                 for _key, _val in self.config.items(_class):
                     _app.config['%s.%s' % (_class, _key)] = _val
@@ -163,6 +161,7 @@ class CustomerServer(object):
             _app.error_handler[404] = self.error404
             _app.error_handler[500] = self.error500
             _app.install(self.sqla_pg)
+            _app.install(self.render_plugin)
             if _app is not self.app:
                 self.app.mount(_app.config['__prefix__'],_app)
         

@@ -21,7 +21,6 @@ __prefix__ = "/online"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -29,7 +28,7 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.route('/query', apply=auth_opr, method=['GET', 'POST'])
-def online_query(db):
+def online_query(db, render):
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')
     framed_ipaddr = request.params.get('framed_ipaddr')

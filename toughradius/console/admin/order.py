@@ -26,7 +26,6 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # order query
@@ -34,7 +33,7 @@ render = functools.partial(Render.render_app, app)
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 @app.post('/export', apply=auth_opr)
-def order_query(db):
+def order_query(db, render):
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
     pay_status = request.params.get('pay_status')

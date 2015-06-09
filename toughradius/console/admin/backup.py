@@ -27,11 +27,10 @@ __prefix__ = "/backup"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 @app.route('/', apply=auth_opr)
-def backup(db):
+def backup(db, render):
     backup_path = app.config.get('database.backup_path', '/var/toughradius/data')
     try:
         if not os.path.exists(backup_path):
@@ -44,7 +43,7 @@ def backup(db):
 
 
 @app.route('/dump', apply=auth_opr)
-def backup_dump(db):
+def backup_dump(db, render):
     from toughradius.tools.backup import dumpdb
     from toughradius.tools.config import find_config
 
@@ -59,7 +58,7 @@ def backup_dump(db):
 
 
 @app.post('/restore', apply=auth_opr)
-def backup_restore(db):
+def backup_restore(db, render):
     from toughradius.tools.backup import dumpdb, restoredb
     from toughradius.tools.config import find_config
 
@@ -75,7 +74,7 @@ def backup_restore(db):
 
 
 @app.post('/delete', apply=auth_opr)
-def backup_delete(db):
+def backup_delete(db, render):
     backup_path = app.config.get('database.backup_path', '/var/toughradius/data')
     bakfs = request.params.get("bakfs")
     try:

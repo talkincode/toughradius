@@ -29,7 +29,7 @@ render = functools.partial(Render.render_app,app)
 # test handle
 ##############################################################################
 @app.route('/test',apply=auth_opr)
-def index(db):    
+def index(db, render):
     form = forms.param_form()
     fparam = {}
     for p in db.query(models.SlcParam):
@@ -38,7 +38,7 @@ def index(db):
     return render("base_form",form=form)
 
 @app.get('/test/pid',apply=auth_opr)
-def product_id(db):
+def product_id(db, render):
     name = request.params.get("name")   
     product = db.query(models.SlcRadProduct).filter(
         models.SlcRadProduct.product_name == name
@@ -46,7 +46,7 @@ def product_id(db):
     return dict(pid=product.id)
     
 @app.get('/test/mid',apply=auth_opr)
-def member_id(db):
+def member_id(db, render):
     name = request.params.get("name")   
     member = db.query(models.SlcMember).filter(
         models.SlcMember.member_name == name
@@ -54,17 +54,17 @@ def member_id(db):
     return dict(mid=member.member_id)
     
 @app.route('/mksign',apply=auth_opr)
-def index(db):    
+def index(db, render):
     sign_args = request.params.get('sign_args')
     return dict(code=0,sign=utils.mk_sign(sign_args.strip().split(',')))
     
 @app.post('/encrypt',apply=auth_opr)
-def encrypt_data(db):    
+def encrypt_data(db, render):
     msg_data = request.params.get('data')
     return dict(code=0,data=utils.encrypt(msg_data))
     
 @app.post('/decrypt',apply=auth_opr)
-def decrypt_data(db):    
+def decrypt_data(db, render):
     msg_data = request.params.get('data')
     return dict(code=0,data=utils.decrypt(msg_data))
     
@@ -94,7 +94,7 @@ permit.add_route("/logquery/customer",u"自助系统日志查看",u"系统管理
 ###############################################################################
 
 @app.route('/',apply=auth_opr)
-def index(db):    
+def index(db, render):
     online_count = db.query(models.SlcRadOnline.id).count()
     user_total = db.query(models.SlcRadAccount.account_number).filter_by(status=1).count()
     return render("index",**locals())
@@ -122,11 +122,11 @@ def clear_cache():
 ###############################################################################
 
 @app.get('/login')
-def admin_login_get(db):
+def admin_login_get(db, render):
     return render("login")
 
 @app.post('/login')
-def admin_login_post(db):
+def admin_login_post(db, render):
     uname = request.forms.get("username")
     upass = request.forms.get("password")
     if not uname:return dict(code=1,msg=u"请填写用户名")
@@ -159,7 +159,7 @@ def admin_login_post(db):
     return dict(code=0,msg="ok")
 
 @app.get("/logout")
-def admin_logout(db):
+def admin_logout(db, render):
     ops_log = models.SlcRadOperateLog()
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")

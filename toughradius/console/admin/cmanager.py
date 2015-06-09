@@ -20,14 +20,13 @@ __prefix__ = "/cmanager"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # customer manager manage        
 ###############################################################################
 
 @app.get('/list',apply=auth_opr)
-def cmanager_list(db):   
+def cmanager_list(db, render):
     manager_code = request.params.get('manager_code')
     _query = db.query(models.SlcCustomerManager)
     if manager_code:
@@ -50,12 +49,12 @@ def get_oprs(db,copr_name=None):
     return oprs
 
 @app.get('/add',apply=auth_opr)
-def cmanager_add(db):
+def cmanager_add(db, render):
     form = cmanager_forms.cmanage_add_form(oprs=get_oprs(db))
     return render("base_form",form=form)
 
 @app.post('/add',apply=auth_opr)
-def cmanager_add_post(db): 
+def cmanager_add_post(db, render):
     form=cmanager_forms.cmanage_add_form(oprs=get_oprs(db))
     if not form.validates(source=request.forms):
         return render("base_form", form=form)    
@@ -80,7 +79,7 @@ def cmanager_add_post(db):
 permit.add_route("%s/add"%__prefix__,u"客户经理创建",u"系统管理",is_menu=False,order=3.11)
 
 @app.get('/update',apply=auth_opr)
-def cmanager_update(db):   
+def cmanager_update(db, render):
     manager_id = request.params.get("manager_id")
     cmanager = db.query(models.SlcCustomerManager).get(manager_id)
     form = cmanager_forms.cmanage_update_form(
@@ -89,7 +88,7 @@ def cmanager_update(db):
     return render("base_form",form=form)
 
 @app.post('/update',apply=auth_opr)
-def cmanager_update_post(db): 
+def cmanager_update_post(db, render):
     form=cmanager_forms.cmanage_update_form(oprs=get_oprs(db))
     if not form.validates(source=request.forms):
         form=cmanager_forms.cmanage_update_form(
@@ -110,7 +109,7 @@ permit.add_route("%s/update"%__prefix__,u"客户经理修改",u"系统管理",is
 
 
 @app.get('/delete',apply=auth_opr)
-def cmanager_delete(db):   
+def cmanager_delete(db, render):
     manager_id = request.params.get("manager_id")
     db.query(models.SlcCustomerManager).filter_by(id=manager_id).delete()
     db.commit()
@@ -120,7 +119,7 @@ permit.add_route("%s/delete"%__prefix__,u"客户经理删除",u"系统管理",is
 
 
 @app.get('/detail',apply=auth_opr)
-def cmanager_detail(db):   
+def cmanager_detail(db, render):
     manager_id = request.params.get("manager_id")
     cmanager = db.query(models.SlcCustomerManager).get(manager_id)
     return render("sys_cmanager_detail",cmanager=cmanager)

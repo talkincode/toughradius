@@ -20,11 +20,10 @@ __prefix__ = "/card"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app,app)
 
 
 @app.get('/calc',apply=auth_opr)
-def card_calc(db):
+def card_calc(db, render):
     product_id = request.params.get('product_id')
     product = db.query(models.SlcRadProduct).get(product_id)
     #预付费包月
@@ -46,7 +45,7 @@ def card_calc(db):
     
 @app.route('/list',apply=auth_opr,method=['GET','POST'])
 @app.post('/export',apply=auth_opr)
-def card_list(db):   
+def card_list(db, render):
     product_id = request.params.get('product_id')
     card_type = request.params.get('card_type') 
     card_status = request.params.get('card_status')
@@ -103,7 +102,7 @@ permit.add_route("%s/list"%__prefix__,u"充值卡管理",u"系统管理",is_menu
 permit.add_route("%s/export"%__prefix__,u"充值卡导出",u"系统管理",order=7.01)
 
 @app.get('/create',apply=auth_opr)
-def card_create(db):
+def card_create(db, render):
     products = [ (n.id,n.product_name) for n in db.query(models.SlcRadProduct).filter(
         models.SlcRadProduct.product_status == 0,
         models.SlcRadProduct.product_policy.in_([0,2,3,5])
@@ -114,7 +113,7 @@ def card_create(db):
     return render("card_form",form=form)
     
 @app.post('/create',apply=auth_opr)
-def card_create(db):
+def card_create(db, render):
     def gencardpwd(clen=8):
         r = list('1234567890abcdefghijklmnopqrstuvwxyz')
         rg = utils.random_generator
@@ -180,7 +179,7 @@ def card_create(db):
 permit.add_route("%s/create"%__prefix__,u"充值卡生成",u"系统管理",order=7.02)
 
 @app.get('/active',apply=auth_opr)
-def card_active(db):
+def card_active(db, render):
     card_id = request.params.get("card_id")
     if not card_id:
         return dict(code=0,msg=u"非法的访问")
@@ -202,7 +201,7 @@ permit.add_route("%s/active"%__prefix__,u"充值卡激活",u"系统管理",order
 
 
 @app.get('/recycle',apply=auth_opr)
-def card_recycle(db):
+def card_recycle(db, render):
     card_id = request.params.get("card_id")
     if not card_id:
         return dict(code=0,msg=u"非法的访问")

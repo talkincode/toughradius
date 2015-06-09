@@ -20,14 +20,13 @@ __prefix__ = "/issues"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # issues manage        
 ###############################################################################
 
 @app.route('/list',apply=auth_opr,method=['GET','POST'])
-def issues_list(db):
+def issues_list(db, render):
     oprs = [('','')]+[(o.operator_name, o.operator_name) for o in db.query(models.SlcOperator)]
     operator_name = request.params.get('operator_name')
     account_number = request.params.get('account_number')
@@ -50,7 +49,7 @@ def issues_list(db):
 
 
 @app.get('/detail',apply=auth_opr)
-def issues_detail(db):   
+def issues_detail(db, render):
     issues_id = request.params.get("issues_id")
     issues = db.query(models.SlcIssues).get(issues_id)    
     issues_flows = db.query(models.SlcIssuesFlow).filter_by(issues_id=issues_id)
@@ -64,13 +63,13 @@ def issues_detail(db):
 
 
 @app.get('/add', apply=auth_opr)
-def issues_add(db):
+def issues_add(db, render):
     oprs = [(o.operator_name, o.operator_name) for o in db.query(models.SlcOperator)]
     return render("base_form", form=issues_forms.issues_add_form(oprs))
 
 
 @app.post('/add', apply=auth_opr)
-def issues_add_post(db):
+def issues_add_post(db, render):
     oprs = [(o.operator_name, o.operator_name) for o in db.query(models.SlcOperator)]
     form = issues_forms.issues_add_form(oprs)
     if not form.validates(source=request.forms):
@@ -98,7 +97,7 @@ def issues_add_post(db):
     redirect("/issues/list")
 
 @app.post('/process',apply=auth_opr)
-def issues_process_post(db):
+def issues_process_post(db, render):
     form = issues_forms.issues_process_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -127,7 +126,7 @@ def issues_process_post(db):
 
 
 @app.post('/assign', apply=auth_opr)
-def issues_assign_post(db):
+def issues_assign_post(db, render):
     issues_id = request.params.get("issues_id")
     assign_operator = request.params.get("assign_operator")
 
@@ -150,7 +149,7 @@ def issues_assign_post(db):
 
 
 @app.get('/delete', apply=auth_opr)
-def issues_delete_post(db):
+def issues_delete_post(db, render):
     issues_id = request.params.get("issues_id")
     db.query(models.SlcIssues).filter_by(id=issues_id).delete()
     db.query(models.SlcIssuesFlow).filter_by(issues_id=issues_id)

@@ -21,7 +21,6 @@ __prefix__ = "/online_stat"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # ops log manage
@@ -35,7 +34,7 @@ def default_start_end():
 
 
 @app.get('/', apply=auth_opr)
-def online_stat_query(db):
+def online_stat_query(db, render):
     return render(
         "stat_online",
         node_list=get_opr_nodes(db),
@@ -45,7 +44,7 @@ def online_stat_query(db):
 
 
 @app.route('/data', apply=auth_opr, method=['GET', 'POST'])
-def online_stat_data(db):
+def online_stat_data(db, render):
     node_id = request.params.get('node_id')
     day_code = request.params.get('day_code')
     opr_nodes = get_opr_nodes(db)

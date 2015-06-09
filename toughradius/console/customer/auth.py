@@ -18,21 +18,20 @@ __prefix__ = "/auth"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # user login
 ###############################################################################
 
 @app.get('/login')
-def member_login_get(db):
+def member_login_get(db, render):
     form = forms.member_login_form()
     form.next.set_value(request.params.get('next', '/'))
     return render("login", form=form)
 
 
 @app.post('/login')
-def member_login_post(db):
+def member_login_post(db, render):
     next = request.params.get("next", "/")
     form = forms.member_login_form()
     if not form.validates(source=request.params):
@@ -63,7 +62,7 @@ def member_login_post(db):
 
 
 @app.get("/logout")
-def member_logout():
+def member_logout(db, render):
     set_cookie('customer_id', None)
     set_cookie('customer', None)
     set_cookie('customer_login_time', None)

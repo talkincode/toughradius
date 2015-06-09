@@ -28,7 +28,7 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
-def product(db):
+def product(db, render):
     _query = db.query(models.SlcRadProduct)
     return render(
         "sys_product_list",
@@ -39,7 +39,7 @@ def product(db):
 
 
 @app.get('/detail', apply=auth_opr)
-def product_detail(db):
+def product_detail(db, render):
     product_id = request.params.get("product_id")
     product = db.query(models.SlcRadProduct).get(product_id)
     if not product:
@@ -51,11 +51,11 @@ def product_detail(db):
                   product=product, product_attrs=product_attrs)
 
 @app.get('/add', apply=auth_opr)
-def product_add(db):
+def product_add(db, render):
     return render("sys_product_form", form=forms.product_add_form())
 
 @app.post('/add', apply=auth_opr)
-def product_add_post(db):
+def product_add_post(db, render):
     form = forms.product_add_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
@@ -90,7 +90,7 @@ def product_add_post(db):
     redirect(__prefix__)
 
 @app.get('/update', apply=auth_opr)
-def product_update(db):
+def product_update(db, render):
     product_id = request.params.get("product_id")
     form = forms.product_update_form()
     product = db.query(models.SlcRadProduct).get(product_id)
@@ -106,7 +106,7 @@ def product_update(db):
 
 
 @app.post('/update', apply=auth_opr)
-def product_update(db):
+def product_update(db, render):
     form = forms.product_update_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
@@ -138,7 +138,7 @@ def product_update(db):
     redirect(__prefix__)
 
 @app.get('/delete', apply=auth_opr)
-def product_delete(db):
+def product_delete(db, render):
     product_id = request.params.get("product_id")
     if db.query(models.SlcRadAccount).filter_by(product_id=product_id).count() > 0:
         return render("error", msg=u"该套餐有用户使用，不允许删除")
@@ -160,7 +160,7 @@ def product_delete(db):
     redirect(__prefix__)
 
 @app.get('/attr/add', apply=auth_opr)
-def product_attr_add(db):
+def product_attr_add(db, render):
     product_id = request.params.get("product_id")
     if db.query(models.SlcRadProduct).filter_by(id=product_id).count() <= 0:
         return render("error", msg=u"资费不存在")
@@ -169,7 +169,7 @@ def product_attr_add(db):
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
 
 @app.post('/attr/add', apply=auth_opr)
-def product_attr_add(db):
+def product_attr_add(db, render):
     form = forms.product_attr_add_form()
     if not form.validates(source=request.forms):
         return render("sys_pattr_form", form=form, pattrs=radius_attrs)
@@ -193,7 +193,7 @@ def product_attr_add(db):
     redirect("%s/detail?product_id=%s" % (__prefix__, form.d.product_id))
 
 @app.get('/attr/update', apply=auth_opr)
-def product_attr_update(db):
+def product_attr_update(db, render):
     attr_id = request.params.get("attr_id")
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
     form = forms.product_attr_update_form()
@@ -201,7 +201,7 @@ def product_attr_update(db):
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
 
 @app.post('/attr/update', apply=auth_opr)
-def product_attr_update(db):
+def product_attr_update(db, render):
     form = forms.product_attr_update_form()
     if not form.validates(source=request.forms):
         return render("pattr_form", form=form, pattrs=radius_attrs)
@@ -223,7 +223,7 @@ def product_attr_update(db):
     redirect("%s/detail?product_id=%s" % (__prefix__, form.d.product_id))
 
 @app.get('/attr/delete', apply=auth_opr)
-def product_attr_update(db):
+def product_attr_update(db, render):
     attr_id = request.params.get("attr_id")
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
     product_id = attr.product_id

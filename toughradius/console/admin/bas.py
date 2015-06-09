@@ -27,26 +27,25 @@ __prefix__ = "/bas"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # bas manage
 ###############################################################################
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
-def bas(db):
+def bas(db, render):
     return render("sys_bas_list",
                   bastype=forms.bastype,
                   bas_list=db.query(models.SlcRadBas))
 
 
 @app.get('/add', apply=auth_opr)
-def bas_add(db):
+def bas_add(db, render):
     return render("base_form", form=forms.bas_add_form())
 
 
 @app.post('/add', apply=auth_opr)
-def bas_add_post(db):
+def bas_add_post(db, render):
     form = forms.bas_add_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -73,7 +72,7 @@ def bas_add_post(db):
 
 
 @app.get('/update', apply=auth_opr)
-def bas_update(db):
+def bas_update(db, render):
     bas_id = request.params.get("bas_id")
     form = forms.bas_update_form()
     form.fill(db.query(models.SlcRadBas).get(bas_id))
@@ -81,7 +80,7 @@ def bas_update(db):
 
 
 @app.post('/update', apply=auth_opr)
-def bas_add_update(db):
+def bas_add_update(db, render):
     form = forms.bas_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -104,7 +103,7 @@ def bas_add_update(db):
     redirect("/bas")
 
 @app.get('/delete', apply=auth_opr)
-def bas_delete(db):
+def bas_delete(db, render):
     bas_id = request.params.get("bas_id")
     db.query(models.SlcRadBas).filter_by(id=bas_id).delete()
 

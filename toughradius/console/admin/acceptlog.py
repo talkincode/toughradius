@@ -23,7 +23,6 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # accept log manage
@@ -31,7 +30,7 @@ render = functools.partial(Render.render_app, app)
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 @app.post('/export', apply=auth_opr)
-def acceptlog_query(db):
+def acceptlog_query(db,render):
     node_id = request.params.get('node_id')
     accept_type = request.params.get('accept_type')
     account_number = request.params.get('account_number')

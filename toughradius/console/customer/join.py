@@ -31,4 +31,3 @@ __prefix__ = "/join"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)

@@ -28,7 +28,6 @@ import datetime
 import functools
 
 app = Bottle()
-render = functools.partial(Render.render_app,app)
 
 ###############################################################################
 # Basic handle         
@@ -81,7 +80,7 @@ def get_data(db,member_name):
     return member,accounts,orders
         
 @app.get('/',apply=auth_cus)
-def customer_index(db):
+def customer_index(db, render):
     member,accounts,orders = get_data(db,get_cookie('customer'))
     status_colors = {0:'',1:'',2:'class="warning"',3:'class="danger"',4:'class="warning"'}
     online_colors = lambda a : get_online_status(db,a) and 'class="success"' or ''
@@ -117,13 +116,13 @@ def active_user(db,code):
 ###############################################################################
 
 @app.get('/join')
-def member_join_get(db):
+def member_join_get(db, render):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     form = forms.member_join_form(nodes)
     return render("join",form=form)
     
 @app.post('/join')
-def member_join_post(db):
+def member_join_post(db, render):
     nodes = [ (n.id,n.node_name) for n in db.query(models.SlcNode)]
     form = forms.member_join_form(nodes)
     if not form.validates(source=request.params):
@@ -168,12 +167,12 @@ def member_join_post(db):
 # user password reset
 ###############################################################################
 @app.get('/password/mail')
-def password_reset_mail(db):
+def password_reset_mail(db, render):
     form = forms.password_mail_form()
     return render("base_form",form=form)
 
 @app.post('/password/mail')
-def password_reset_mail(db):
+def password_reset_mail(db, render):
     form = forms.password_mail_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -204,13 +203,13 @@ def password_reset_mail(db):
         return render('error',msg=u"激活邮件发送失败,请稍后再试")  
 
 @app.get("/password/reset/<code>")
-def password_reset(db,code):
+def password_reset(db,code, render):
     form = forms.password_reset_form() 
     form.active_code.set_value(code)
     return render("base_form",form=form)
 
 @app.post("/password/reset")
-def password_reset(db):
+def password_reset(db, render):
     form = forms.password_reset_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -235,7 +234,7 @@ def password_reset(db):
 ###############################################################################
 
 @app.get('/user/update',apply=auth_cus)
-def member_update(db):
+def member_update(db, render):
     member = db.query(models.SlcMember).get(get_cookie("customer_id"))
     form = forms.member_update_form()
     form.fill(member)
@@ -243,7 +242,7 @@ def member_update(db):
     return render("base_form",form=form)
 
 @app.post('/user/update',apply=auth_cus)
-def member_update(db):
+def member_update(db, render):
     form=forms.member_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -283,7 +282,7 @@ def member_update(db):
         return redirect("/")
    
 @app.post('/email/reactive',apply=auth_cus)
-def email_reactive(db):
+def email_reactive(db, render):
     last_send = get_cookie("last_send_active") 
     if last_send:
         sec = int(time.time()) - int(float(last_send))
@@ -310,7 +309,7 @@ def email_reactive(db):
 ###############################################################################
    
 @app.get('/account/detail',apply=auth_cus)
-def account_detail(db):
+def account_detail(db, render):
     account_number = request.params.get('account_number')  
     user  = db.query(
         models.SlcMember.realname,
@@ -342,7 +341,7 @@ def account_detail(db):
     return render("account_detail",user=user)
      
 @app.get('/product/list',apply=auth_cus)
-def product_list(db):
+def product_list(db, render):
     return render("product_list",products=db.query(models.SlcRadProduct).filter_by(
         product_status = 0
     ))
@@ -352,7 +351,7 @@ def product_list(db):
 ###############################################################################
     
 @app.route('/billing',apply=auth_cus,method=['GET','POST'])
-def billing_query(db): 
+def billing_query(db, render):
     account_number = request.params.get('account_number')  
     query_begin_time = request.params.get('query_begin_time')  
     query_end_time = request.params.get('query_end_time')  
@@ -387,14 +386,14 @@ def billing_query(db):
 ###############################################################################    
     
 @app.get('/password/update',apply=auth_cus)    
-def password_update_get(db):
+def password_update_get(db, render):
     form = forms.password_update_form()
     account_number = request.params.get('account_number')      
     form.account_number.set_value(account_number)
     return render("base_form",form=form)
     
 @app.post('/password/update',apply=auth_cus)    
-def password_update_post(db):
+def password_update_post(db, render):
     form = forms.password_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -422,7 +421,7 @@ def password_update_post(db):
 ###############################################################################
     
 @app.route('/portal/auth')
-def portal_auth(db):
+def portal_auth(db, render):
     user = request.params.get("user")
     token = request.params.get("token")
     if not user:return abort(403,'user is empty')

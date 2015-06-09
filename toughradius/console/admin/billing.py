@@ -26,7 +26,6 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -35,7 +34,7 @@ render = functools.partial(Render.render_app, app)
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 @app.post('/export', apply=auth_opr)
-def billing_query(db):
+def billing_query(db, render):
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')
     query_begin_time = request.params.get('query_begin_time')

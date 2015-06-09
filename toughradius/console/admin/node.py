@@ -27,16 +27,13 @@ __prefix__ = "/node"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
-
-
 
 ###############################################################################
 # node manage
 ###############################################################################
 
 @app.get('/', apply=auth_opr)
-def node(db):
+def node(db, render):
     return render("sys_node_list", page_data=get_page_data(db.query(models.SlcNode)))
 
 
@@ -44,12 +41,12 @@ permit.add_route("/node", u"区域信息管理", u"系统管理", is_menu=True, 
 
 
 @app.get('/add', apply=auth_opr)
-def node_add(db):
+def node_add(db, render):
     return render("base_form", form=forms.node_add_form())
 
 
 @app.post('/add', apply=auth_opr)
-def node_add_post(db):
+def node_add_post(db, render):
     form = forms.node_add_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -73,7 +70,7 @@ permit.add_route("/node/add", u"新增区域", u"系统管理", order=1.01, is_o
 
 
 @app.get('/update', apply=auth_opr)
-def node_update(db):
+def node_update(db, render):
     node_id = request.params.get("node_id")
     form = forms.node_update_form()
     form.fill(db.query(models.SlcNode).get(node_id))
@@ -81,7 +78,7 @@ def node_update(db):
 
 
 @app.post('/update', apply=auth_opr)
-def node_add_update(db):
+def node_add_update(db, render):
     form = forms.node_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
@@ -104,7 +101,7 @@ permit.add_route("/node/update", u"修改区域", u"系统管理", order=1.02, i
 
 
 @app.get('/delete', apply=auth_opr)
-def node_delete(db):
+def node_delete(db, render):
     node_id = request.params.get("node_id")
     if db.query(models.SlcMember.member_id).filter_by(node_id=node_id).count() > 0:
         return render("error", msg=u"该节点下有用户，不允许删除")

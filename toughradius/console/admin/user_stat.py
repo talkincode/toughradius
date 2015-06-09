@@ -21,5 +21,4 @@ __prefix__ = "/user_stat"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 

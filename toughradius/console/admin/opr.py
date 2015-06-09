@@ -30,7 +30,6 @@ __prefix__ = "/opr"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -38,7 +37,7 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
-def opr(db):
+def opr(db, render):
     return render("sys_opr_list",
                   oprtype=forms.opr_type,
                   oprstatus=forms.opr_status_dict,
@@ -49,7 +48,7 @@ permit.add_route("/opr", u"操作员管理", u"系统管理", is_menu=True, orde
 
 
 @app.get('/add', apply=auth_opr)
-def opr_add(db):
+def opr_add(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)  ]
     form = forms.opr_add_form(nodes, products)
@@ -57,7 +56,7 @@ def opr_add(db):
 
 
 @app.post('/add', apply=auth_opr)
-def opr_add_post(db):
+def opr_add_post(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     form = forms.opr_add_form(nodes,products)
@@ -112,7 +111,7 @@ permit.add_route("/opr/add", u"新增操作员", u"系统管理", order=3.01, is
 
 
 @app.get('/update', apply=auth_opr)
-def opr_update(db):
+def opr_update(db, render):
     opr_id = request.params.get("opr_id")
     opr = db.query(models.SlcOperator).get(opr_id)
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
@@ -133,7 +132,7 @@ def opr_update(db):
 
 
 @app.post('/update', apply=auth_opr)
-def opr_add_update(db):
+def opr_add_update(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
     form = forms.opr_update_form(nodes)
     if not form.validates(source=request.forms):
@@ -193,7 +192,7 @@ permit.add_route("/opr/update", u"修改操作员", u"系统管理", order=3.02,
 
 
 @app.get('/delete', apply=auth_opr)
-def opr_delete(db):
+def opr_delete(db, render):
     opr_id = request.params.get("opr_id")
     opr = db.query(models.SlcOperator).get(opr_id)
     db.query(models.SlcOperatorNodes).filter_by(operator_name=opr.operator_name).delete()

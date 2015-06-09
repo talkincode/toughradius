@@ -26,7 +26,6 @@ __prefix__ = "/param"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -34,7 +33,7 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.get('/', apply=auth_opr)
-def param(db):
+def param(db, render):
     form = forms.param_form()
     fparam = {}
     for p in db.query(models.SlcParam):
@@ -44,7 +43,7 @@ def param(db):
 
 
 @app.post('/update', apply=auth_opr)
-def param_update(db):
+def param_update(db, render):
     params = db.query(models.SlcParam)
     for param_name in request.forms:
         if 'submit' in param_name:

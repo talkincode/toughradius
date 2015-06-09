@@ -21,8 +21,6 @@ __prefix__ = "/flow_stat"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
-
 
 def default_start_end():
     day_code = datetime.datetime.now().strftime("%Y-%m-%d")
@@ -32,7 +30,7 @@ def default_start_end():
 
 
 @app.get('/', apply=auth_opr)
-def flow_stat_query(db):
+def flow_stat_query(db, render):
     return render(
         "stat_flow",
         node_list=get_opr_nodes(db),
@@ -42,7 +40,7 @@ def flow_stat_query(db):
 
 
 @app.route('/data', apply=auth_opr, method=['GET', 'POST'])
-def flow_stat_data(db):
+def flow_stat_data(db, render):
     node_id = request.params.get('node_id')
     day_code = request.params.get('day_code')
     opr_nodes = get_opr_nodes(db)

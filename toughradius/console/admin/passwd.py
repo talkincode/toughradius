@@ -27,7 +27,6 @@ __prefix__ = "/passwd"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 
 ###############################################################################
@@ -35,14 +34,14 @@ render = functools.partial(Render.render_app, app)
 ###############################################################################
 
 @app.get('/', apply=auth_opr)
-def passwd(db):
+def passwd(db, render):
     form = forms.passwd_update_form()
     form.fill(operator_name=get_cookie("username"))
     return render("base_form", form=form)
 
 
 @app.post('/', apply=auth_opr)
-def passwd_update(db):
+def passwd_update(db, render):
     form = forms.passwd_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)

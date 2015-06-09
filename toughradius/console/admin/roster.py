@@ -27,26 +27,25 @@ __prefix__ = "/roster"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # roster manage
 ###############################################################################
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
-def roster(db):
+def roster(db, render):
     _query = db.query(models.SlcRadRoster)
     return render("sys_roster_list",
                   page_data=get_page_data(_query))
 
 
 @app.get('/add', apply=auth_opr)
-def roster_add(db):
+def roster_add(db, render):
     return render("sys_roster_form", form=forms.roster_add_form())
 
 
 @app.post('/add', apply=auth_opr)
-def roster_add_post(db):
+def roster_add_post(db, render):
     form = forms.roster_add_form()
     if not form.validates(source=request.forms):
         return render("sys_roster_form", form=form)
@@ -71,7 +70,7 @@ def roster_add_post(db):
     redirect("/roster")
 
 @app.get('/update', apply=auth_opr)
-def roster_update(db):
+def roster_update(db, render):
     roster_id = request.params.get("roster_id")
     form = forms.roster_update_form()
     form.fill(db.query(models.SlcRadRoster).get(roster_id))
@@ -79,7 +78,7 @@ def roster_update(db):
 
 
 @app.post('/update', apply=auth_opr)
-def roster_add_update(db):
+def roster_add_update(db, render):
     form = forms.roster_update_form()
     if not form.validates(source=request.forms):
         return render("sys_roster_form", form=form)
@@ -100,7 +99,7 @@ def roster_add_update(db):
     redirect("/roster")
 
 @app.get('/delete', apply=auth_opr)
-def roster_delete(db):
+def roster_delete(db, render):
     roster_id = request.params.get("roster_id")
     mac_addr = db.query(models.SlcRadRoster).get(roster_id).mac_addr
     db.query(models.SlcRadRoster).filter_by(id=roster_id).delete()
