@@ -81,28 +81,6 @@ scookie = SecureCookie()
 get_cookie = scookie.get_cookie
 set_cookie = scookie.set_cookie
 
-class Render(object):
-    
-    RENDERS = {}
-    
-    def __init__(self,context={},lookup=None):
-        self.context = context
-        self.lookup = lookup
-
-    def render(self,*args,**kwargs):
-        kwargs['template_lookup'] = self.lookup
-        kwargs['template_settings'] = dict(
-            input_encoding='utf-8',
-            output_encoding='utf-8', 
-            encoding_errors='replace'
-        )
-        kwargs.update(**self.context)
-        return mako_template(*args,**kwargs)
-    
-    @staticmethod 
-    def render_app(app,*args,**kwargs):
-        render_obj = Render.RENDERS[app.config['render_key']]
-        return render_obj.render(*args,**kwargs)
         
 ########################################################################
 # permission manage
