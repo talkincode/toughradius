@@ -23,13 +23,12 @@ import json
 import functools
 
 app = Bottle()
-render = functools.partial(Render.render_app,app)
 
 ##############################################################################
 # test handle
 ##############################################################################
 @app.route('/test',apply=auth_opr)
-def index(db, render):
+def test(db, render):
     form = forms.param_form()
     fparam = {}
     for p in db.query(models.SlcParam):
@@ -54,7 +53,7 @@ def member_id(db, render):
     return dict(mid=member.member_id)
     
 @app.route('/mksign',apply=auth_opr)
-def index(db, render):
+def mksign(db, render):
     sign_args = request.params.get('sign_args')
     return dict(code=0,sign=utils.mk_sign(sign_args.strip().split(',')))
     
@@ -100,7 +99,7 @@ def index(db, render):
     return render("index",**locals())
 
 @app.route('/static/:path#.+#')
-def route_static(path):
+def route_static(path,render):
     static_path = os.path.join(os.path.split(os.path.split(__file__)[0])[0],'static')
     return static_file(path, root=static_path)
     
@@ -176,3 +175,11 @@ def admin_logout(db, render):
     request.cookies.clear()
     redirect('/login')
 
+
+@app.route('/dashboard', apply=auth_opr)
+def index(db, render):
+    online_count = db.query(models.SlcRadOnline.id).count()
+    user_total = db.query(models.SlcRadAccount.account_number).filter_by(status=1).count()
+    return render("index", **locals())
+
+permit.add_route("/dashboard", u"系统控制面板", u"系统管理", order=0, is_menu=True,is_open=True)

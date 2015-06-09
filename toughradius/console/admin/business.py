@@ -31,28 +31,6 @@ app.config['__prefix__'] = __prefix__
 # ajax query
 ###############################################################################
 
-@app.get('/product/json',apply=auth_opr)
-def product_get(db):
-    node_id = request.params.get('node_id')
-    if not node_id:return dict(code=1,data=[])
-    items = db.query(models.SlcRadProduct).filter_by(node_id=node_id)
-    return dict(
-        code=0,
-        data=[{'code': it.id,'name': it.product_name} for it in items]
-    )
-    
-@app.get('/product/policy/get',apply=auth_opr)
-def product_policy_get(db):
-    product_id = request.params.get("product_id")
-    product_policy = db.query(
-        models.SlcRadProduct.product_policy
-    ).filter_by(id = product_id).scalar()
-    return dict(
-        code=0,
-        data={'id': product_id,'policy': product_policy}
-    )
-
-
 @app.post('/opencalc',apply=auth_opr)
 def opencalc(db):
     months = request.params.get('months',0)

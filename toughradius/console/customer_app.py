@@ -22,7 +22,6 @@ from toughradius.console.base import (
     get_account_by_number,
     get_online_status,
     Connect,
-    Render
 )
 import functools
 import time

@@ -79,5 +79,5 @@ def param_update(db, render):
     redirect("/param")
 
 
-permit.add_route("/param", u"系统参数管理", MenuSys, is_menu=True, order=0)
-permit.add_route("/param/update", u"系统参数修改", MenuSys, is_menu=False, order=0, is_open=False)
+permit.add_route("/param", u"系统参数管理", MenuSys, is_menu=True, order=0.0001)
+permit.add_route("/param/update", u"系统参数修改", MenuSys, is_menu=False, order=0.0002, is_open=False)

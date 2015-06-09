@@ -6,7 +6,7 @@
 
 function update_ui(){
     var product_id = $("#product_id").val();
-    $.get("/bus/product/policy/get?product_id="+product_id, {}, function (ev) {
+    $.get("/product/policy/get?product_id="+product_id, {}, function (ev) {
         console.log(ev);
         if(ev.code==0){
             console.log(ev.data);

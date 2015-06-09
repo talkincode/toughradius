@@ -122,21 +122,21 @@ class AdminServer(object):
 
     def error403(self, error):
         if self.debug:
-            return self.render.render("error", msg=u"未授权的访问 %s" % error.exception)
+            return self.render_plugin.render("error", msg=u"未授权的访问 %s" % error.exception)
         else:
-            return self.render.render("error", msg=u"未授权的访问")
+            return self.render_plugin.render("error", msg=u"未授权的访问")
 
     def error404(self, error):
         if self.debug:
-            return self.render.render("error", msg=u"页面未找到 %s" % error.exception)
+            return self.render_plugin.render("error", msg=u"页面未找到 %s" % error.exception)
         else:
-            return self.render.render("error", msg=u"页面未找到")
+            return self.render_plugin.render("error", msg=u"页面未找到")
 
     def error500(self, error):
         if self.debug:
-            return self.render.render("error", msg=u"服务器内部错误 %s" % error.exception)
+            return self.render_plugin.render("error", msg=u"服务器内部错误 %s" % error.exception)
         else:
-            return self.render.render("error", msg=u"服务器内部错误")
+            return self.render_plugin.render("error", msg=u"服务器内部错误")
 
     def init_application(self):
         log.msg("start init application...")
