@@ -13,7 +13,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 import bottle
-from toughradius.console.admin import forms
+from toughradius.console.admin import account_forms
 import decimal
 import datetime
 
@@ -37,7 +37,7 @@ def account_open(db, render):
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
     )]
-    form = forms.account_open_form(products)
+    form = account_forms.account_open_form(products)
     form.member_id.set_value(member_id)
     form.realname.set_value(member.realname)
     form.node_id.set_value(member.node_id)
@@ -49,7 +49,7 @@ def account_open(db, render):
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
     )]
-    form = forms.account_open_form(products)
+    form = account_forms.account_open_form(products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
 
@@ -139,14 +139,14 @@ def account_open(db, render):
 def account_update_get(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
-    form = forms.account_update_form()
+    form = account_forms.account_update_form()
     form.fill(account)
     return render("base_form", form=form)
 
 
 @app.post('/update', apply=auth_opr)
 def account_update_post(db, render):
-    form = forms.account_update_form()
+    form = account_forms.account_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
 
@@ -287,7 +287,7 @@ def query_account(db, account_number):
 def account_next(db, render):
     account_number = request.params.get("account_number")
     user = query_account(db, account_number)
-    form = forms.account_next_form()
+    form = account_forms.account_next_form()
     form.account_number.set_value(account_number)
     form.old_expire.set_value(user.expire_date)
     form.product_id.set_value(user.product_id)
@@ -299,7 +299,7 @@ def account_next(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
-    form = forms.account_next_form()
+    form = account_forms.account_next_form()
     form.product_id.set_value(user.product_id)
     if account.status not in (1, 4):
         return render("bus_account_next_form", user=user, form=form, msg=u"无效用户状态")
@@ -386,7 +386,7 @@ def account_next(db, render):
 def account_charge(db, render):
     account_number = request.params.get("account_number")
     user = query_account(db, account_number)
-    form = forms.account_charge_form()
+    form = account_forms.account_charge_form()
     form.account_number.set_value(account_number)
     return render("bus_account_form", user=user, form=form)
 
@@ -396,7 +396,7 @@ def account_charge(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
-    form = forms.account_charge_form()
+    form = account_forms.account_charge_form()
     if account.status != 1:
         return render("bus_account_form", user=user, form=form, msg=u"无效用户状态")
 
@@ -467,7 +467,7 @@ def account_change(db, render):
     account_number = request.params.get("account_number")
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
     user = query_account(db, account_number)
-    form = forms.account_change_form(products=products)
+    form = account_forms.account_change_form(products=products)
     form.expire_date.set_value(user.expire_date)
     form.account_number.set_value(account_number)
     return render("bus_account_change_form", user=user, form=form)
@@ -477,7 +477,7 @@ def account_change(db, render):
 def account_change(db, render):
     account_number = request.params.get("account_number")
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.account_change_form(products=products)
+    form = account_forms.account_change_form(products=products)
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
     if account.status not in (1, 4):
@@ -571,7 +571,7 @@ def account_change(db, render):
 def account_cancel(db, render):
     account_number = request.params.get("account_number")
     user = query_account(db, account_number)
-    form = forms.account_cancel_form()
+    form = account_forms.account_cancel_form()
     form.account_number.set_value(account_number)
     return render("bus_account_form", user=user, form=form)
 
@@ -581,7 +581,7 @@ def account_cancel(db, render):
     account_number = request.params.get("account_number")
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)
-    form = forms.account_cancel_form()
+    form = account_forms.account_cancel_form()
     if account.status != 1:
         return render("bus_account_form", user=user, form=form, msg=u"无效用户状态")
     if not form.validates(source=request.forms):

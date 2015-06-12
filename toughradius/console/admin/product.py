@@ -8,7 +8,7 @@ from bottle import redirect
 from bottle import static_file
 from tablib import Dataset
 from toughradius.console import models
-from toughradius.console.admin import forms
+from toughradius.console.admin import product_forms
 from toughradius.console.websock import websock
 from toughradius.console.libs import utils
 from toughradius.console.libs.radius_attrs import radius_attrs
@@ -54,7 +54,7 @@ def product(db, render):
     _query = db.query(models.SlcRadProduct)
     return render(
         "sys_product_list",
-        product_policys=forms.product_policy,
+        product_policys=product_forms.product_policy,
         node_list=db.query(models.SlcNode),
         page_data=get_page_data(_query)
     )
@@ -69,16 +69,16 @@ def product_detail(db, render):
     product_attrs = db.query(models.SlcRadProductAttr).filter_by(
         product_id=product_id)
     return render("sys_product_detail",
-                  product_policys=forms.product_policy,
+                  product_policys=product_forms.product_policy,
                   product=product, product_attrs=product_attrs)
 
 @app.get('/add', apply=auth_opr)
 def product_add(db, render):
-    return render("sys_product_form", form=forms.product_add_form())
+    return render("sys_product_form", form=product_forms.product_add_form())
 
 @app.post('/add', apply=auth_opr)
 def product_add_post(db, render):
-    form = forms.product_add_form()
+    form = product_forms.product_add_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
     product = models.SlcRadProduct()
@@ -114,11 +114,11 @@ def product_add_post(db, render):
 @app.get('/update', apply=auth_opr)
 def product_update(db, render):
     product_id = request.params.get("product_id")
-    form = forms.product_update_form()
+    form = product_forms.product_update_form()
     product = db.query(models.SlcRadProduct).get(product_id)
     form.fill(product)
     form.product_policy_name.set_value(
-        forms.product_policy[product.product_policy])
+        product_forms.product_policy[product.product_policy])
     form.fee_times.set_value(utils.sec2hour(product.fee_times))
     form.fee_flows.set_value(utils.kb2mb(product.fee_flows))
     form.input_max_limit.set_value(utils.bps2mbps(product.input_max_limit))
@@ -129,7 +129,7 @@ def product_update(db, render):
 
 @app.post('/update', apply=auth_opr)
 def product_update(db, render):
-    form = forms.product_update_form()
+    form = product_forms.product_update_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
     product = db.query(models.SlcRadProduct).get(form.d.id)
@@ -186,13 +186,13 @@ def product_attr_add(db, render):
     product_id = request.params.get("product_id")
     if db.query(models.SlcRadProduct).filter_by(id=product_id).count() <= 0:
         return render("error", msg=u"资费不存在")
-    form = forms.product_attr_add_form()
+    form = product_forms.product_attr_add_form()
     form.product_id.set_value(product_id)
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
 
 @app.post('/attr/add', apply=auth_opr)
 def product_attr_add(db, render):
-    form = forms.product_attr_add_form()
+    form = product_forms.product_attr_add_form()
     if not form.validates(source=request.forms):
         return render("sys_pattr_form", form=form, pattrs=radius_attrs)
     attr = models.SlcRadProductAttr()
@@ -218,13 +218,13 @@ def product_attr_add(db, render):
 def product_attr_update(db, render):
     attr_id = request.params.get("attr_id")
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
-    form = forms.product_attr_update_form()
+    form = product_forms.product_attr_update_form()
     form.fill(attr)
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
 
 @app.post('/attr/update', apply=auth_opr)
 def product_attr_update(db, render):
-    form = forms.product_attr_update_form()
+    form = product_forms.product_attr_update_form()
     if not form.validates(source=request.forms):
         return render("pattr_form", form=form, pattrs=radius_attrs)
     attr = db.query(models.SlcRadProductAttr).get(form.d.id)

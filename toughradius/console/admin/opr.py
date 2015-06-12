@@ -18,7 +18,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.base import *
-from toughradius.console.admin import forms
+from toughradius.console.admin import opr_forms
 from hashlib import md5
 from twisted.python import log
 import bottle
@@ -39,8 +39,8 @@ app.config['__prefix__'] = __prefix__
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 def opr(db, render):
     return render("sys_opr_list",
-                  oprtype=forms.opr_type,
-                  oprstatus=forms.opr_status_dict,
+                  oprtype=opr_forms.opr_type,
+                  oprstatus=opr_forms.opr_status_dict,
                   opr_list=db.query(models.SlcOperator))
 
 
@@ -51,7 +51,7 @@ permit.add_route("/opr", u"操作员管理", u"系统管理", is_menu=True, orde
 def opr_add(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
     products = [(p.id,p.product_name) for p in db.query(models.SlcRadProduct)  ]
-    form = forms.opr_add_form(nodes, products)
+    form = opr_forms.opr_add_form(nodes, products)
     return render("sys_opr_form", form=form, rules=[])
 
 
@@ -59,7 +59,7 @@ def opr_add(db, render):
 def opr_add_post(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.opr_add_form(nodes,products)
+    form = opr_forms.opr_add_form(nodes,products)
     if not form.validates(source=request.forms):
         return render("sys_opr_form", form=form, rules=[])
     if db.query(models.SlcOperator.id).filter_by(operator_name=form.d.operator_name).count() > 0:
@@ -117,7 +117,7 @@ def opr_update(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
     products = [(str(p.id), p.product_name) for p in db.query(models.SlcRadProduct)]
 
-    form = forms.opr_update_form(nodes, products)
+    form = opr_forms.opr_update_form(nodes, products)
     form.fill(opr)
     form.operator_pass.set_value('')
 
@@ -134,7 +134,7 @@ def opr_update(db, render):
 @app.post('/update', apply=auth_opr)
 def opr_add_update(db, render):
     nodes = [(n.node_name, n.node_desc) for n in db.query(models.SlcNode)]
-    form = forms.opr_update_form(nodes)
+    form = opr_forms.opr_update_form(nodes)
     if not form.validates(source=request.forms):
         rules = db.query(models.SlcOperatorRule.rule_path).filter_by(operator_name=opr.operator_name)
         rules = [r[0] for r in rules]

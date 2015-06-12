@@ -15,7 +15,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.base import *
-from toughradius.console.admin import forms
+from toughradius.console.admin import roster_forms
 from hashlib import md5
 from twisted.python import log
 import bottle
@@ -41,12 +41,12 @@ def roster(db, render):
 
 @app.get('/add', apply=auth_opr)
 def roster_add(db, render):
-    return render("sys_roster_form", form=forms.roster_add_form())
+    return render("sys_roster_form", form=roster_forms.roster_add_form())
 
 
 @app.post('/add', apply=auth_opr)
 def roster_add_post(db, render):
-    form = forms.roster_add_form()
+    form = roster_forms.roster_add_form()
     if not form.validates(source=request.forms):
         return render("sys_roster_form", form=form)
     if db.query(models.SlcRadRoster.id).filter_by(mac_addr=form.d.mac_addr).count() > 0:
@@ -72,14 +72,14 @@ def roster_add_post(db, render):
 @app.get('/update', apply=auth_opr)
 def roster_update(db, render):
     roster_id = request.params.get("roster_id")
-    form = forms.roster_update_form()
+    form = roster_forms.roster_update_form()
     form.fill(db.query(models.SlcRadRoster).get(roster_id))
     return render("sys_roster_form", form=form)
 
 
 @app.post('/update', apply=auth_opr)
 def roster_add_update(db, render):
-    form = forms.roster_update_form()
+    form = roster_forms.roster_update_form()
     if not form.validates(source=request.forms):
         return render("sys_roster_form", form=form)
     roster = db.query(models.SlcRadRoster).get(form.d.id)

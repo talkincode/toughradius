@@ -15,7 +15,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.base import *
-from toughradius.console.admin import forms
+from toughradius.console.admin import bas_forms
 from hashlib import md5
 from twisted.python import log
 import bottle
@@ -35,18 +35,18 @@ app.config['__prefix__'] = __prefix__
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 def bas(db, render):
     return render("sys_bas_list",
-                  bastype=forms.bastype,
+                  bastype=bas_forms.bastype,
                   bas_list=db.query(models.SlcRadBas))
 
 
 @app.get('/add', apply=auth_opr)
 def bas_add(db, render):
-    return render("base_form", form=forms.bas_add_form())
+    return render("base_form", form=bas_forms.bas_add_form())
 
 
 @app.post('/add', apply=auth_opr)
 def bas_add_post(db, render):
-    form = forms.bas_add_form()
+    form = bas_forms.bas_add_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
     if db.query(models.SlcRadBas.id).filter_by(ip_addr=form.d.ip_addr).count() > 0:
@@ -74,14 +74,14 @@ def bas_add_post(db, render):
 @app.get('/update', apply=auth_opr)
 def bas_update(db, render):
     bas_id = request.params.get("bas_id")
-    form = forms.bas_update_form()
+    form = bas_forms.bas_update_form()
     form.fill(db.query(models.SlcRadBas).get(bas_id))
     return render("base_form", form=form)
 
 
 @app.post('/update', apply=auth_opr)
 def bas_add_update(db, render):
-    form = forms.bas_update_form()
+    form = bas_forms.bas_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
     bas = db.query(models.SlcRadBas).get(form.d.id)

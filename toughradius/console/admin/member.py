@@ -15,7 +15,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 import bottle
-from toughradius.console.admin import forms
+from toughradius.console.admin import member_forms
 import decimal
 import datetime
 
@@ -264,7 +264,7 @@ def member_update_get(db, render):
     account_number = request.params.get("account_number")
     member = db.query(models.SlcMember).get(member_id)
     nodes = [(n.id, n.node_name) for n in get_opr_nodes(db)]
-    form = forms.member_update_form(nodes)
+    form = member_forms.member_update_form(nodes)
     form.fill(member)
     form.account_number.set_value(account_number)
     return render("base_form", form=form)
@@ -273,7 +273,7 @@ def member_update_get(db, render):
 @app.post('/update', apply=auth_opr)
 def member_update_post(db, render):
     nodes = [(n.id, n.node_name) for n in get_opr_nodes(db)]
-    form = forms.member_update_form(nodes)
+    form = member_forms.member_update_form(nodes)
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
 
@@ -308,7 +308,7 @@ def member_open_get(db, render):
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
     )]
-    form = forms.user_open_form(nodes, products)
+    form = member_forms.user_open_form(nodes, products)
     return render("bus_open_form", form=form)
 
 
@@ -318,7 +318,7 @@ def member_open_post(db, render):
     products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
         product_status=0
     )]
-    form = forms.user_open_form(nodes, products)
+    form = member_forms.user_open_form(nodes, products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
 
@@ -430,7 +430,7 @@ def member_open_post(db, render):
 def member_import_get(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
-    form = forms.user_import_form(nodes, products)
+    form = member_forms.user_import_form(nodes, products)
     return render("bus_import_form", form=form)
 
 
@@ -438,7 +438,7 @@ def member_import_get(db, render):
 def member_import_post(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
     products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
-    iform = forms.user_import_form(nodes, products)
+    iform = member_forms.user_import_form(nodes, products)
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
     upload = request.files.get('import_file')
@@ -454,7 +454,7 @@ def member_import_post(db, render):
         if len(attr_array) < 11:
             return render("bus_import_form", form=iform, msg=u"line %s error: length must 11 " % _num)
 
-        vform = forms.user_import_vform()
+        vform = member_forms.user_import_vform()
         if not vform.validates(dict(
             realname=attr_array[0],
             idcard=attr_array[1],

@@ -68,7 +68,7 @@ def decrypt_data(db, render):
     return dict(code=0,data=utils.decrypt(msg_data))
     
 @app.get('/logquery/:name',apply=auth_opr)
-def logquery(db,name):   
+def logquery(db,name,render):
     def _query(logfile):
         if os.path.exists(logfile):
             with open(logfile) as f:
@@ -107,7 +107,7 @@ def route_static(path,render):
 # update all cache      
 ###############################################################################    
 @app.get('/cache/clean')
-def clear_cache():
+def clear_cache(db,render):
     def cbk(resp):
         print 'cbk',resp
     bottle.TEMPLATES.clear()

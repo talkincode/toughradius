@@ -10,7 +10,7 @@ from tablib import Dataset
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.libs import utils
-from toughradius.console.admin import forms
+from toughradius.console.admin import card_forms
 from toughradius.console.base import *
 import bottle
 import datetime
@@ -75,8 +75,8 @@ def card_list(db, render):
         print "total:",_query.count()
         return render("card_list", 
             page_data = get_page_data(_query),
-            card_types = forms.card_types,
-            card_states = forms.card_states,
+            card_types = card_forms.card_types,
+            card_states = card_forms.card_states,
             products = products,
             colors = {0:'',1:'class="success"',2:'class="warning"',3:'class="danger"'},
             **request.params
@@ -90,8 +90,8 @@ def card_list(db, render):
         print "total:",_query.count()
         for i in _query:
             data.append((
-                i.batch_no, i.card_number, utils.decrypt(i.card_passwd),forms.card_types[i.card_type],
-                forms.card_states[i.card_status],get_product_name(db,i.product_id),utils.fen2yuan(i.fee_value),
+                i.batch_no, i.card_number, utils.decrypt(i.card_passwd),card_forms.card_types[i.card_type],
+                card_forms.card_states[i.card_status],get_product_name(db,i.product_id),utils.fen2yuan(i.fee_value),
                 i.months,utils.sec2hour(i.times),utils.kb2mb(i.flows),i.expire_date,i.create_time
             ))
         name = u"RADIUS-CARD-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
@@ -108,7 +108,7 @@ def card_create(db, render):
         models.SlcRadProduct.product_policy.in_([0,2,3,5])
     )]
     batch_no = datetime.datetime.now().strftime("%Y%m%d")
-    form = forms.recharge_card_form(products)
+    form = card_forms.recharge_card_form(products)
     form.batch_no.set_value(batch_no)
     return render("card_form",form=form)
     
@@ -123,7 +123,7 @@ def card_create(db, render):
         models.SlcRadProduct.product_status == 0,
         models.SlcRadProduct.product_policy.in_([0,2,3,5])
     )]
-    form = forms.recharge_card_form(products)
+    form = card_forms.recharge_card_form(products)
     if not form.validates(source=request.forms):
         return render("card_form",form=form)
     card_type = int(form.d.card_type)
@@ -168,7 +168,7 @@ def card_create(db, render):
     ops_log.operator_name = get_cookie("username")
     ops_log.operate_ip = get_cookie("login_ip")
     ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)生成批次[%s]的[%s]'%(get_cookie("username"),batch_no,forms.card_types[card_type])
+    ops_log.operate_desc = u'操作员(%s)生成批次[%s]的[%s]'%(get_cookie("username"),batch_no,card_forms.card_types[card_type])
     db.add(ops_log)
     db.commit()
     path = "%s/list?card_type=%s&query_begin_time=%s"%(__prefix__,card_type,utils.get_currdate())
