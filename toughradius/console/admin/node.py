@@ -15,7 +15,7 @@ from toughradius.console.libs import utils
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.base import *
-from toughradius.console.admin import forms
+from toughradius.console.admin import node_forms
 from hashlib import md5
 from twisted.python import log
 import bottle
@@ -42,12 +42,12 @@ permit.add_route("/node", u"区域信息管理", u"系统管理", is_menu=True, 
 
 @app.get('/add', apply=auth_opr)
 def node_add(db, render):
-    return render("base_form", form=forms.node_add_form())
+    return render("base_form", form=node_forms.node_add_form())
 
 
 @app.post('/add', apply=auth_opr)
 def node_add_post(db, render):
-    form = forms.node_add_form()
+    form = node_forms.node_add_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
     node = models.SlcNode()
@@ -72,14 +72,14 @@ permit.add_route("/node/add", u"新增区域", u"系统管理", order=1.01, is_o
 @app.get('/update', apply=auth_opr)
 def node_update(db, render):
     node_id = request.params.get("node_id")
-    form = forms.node_update_form()
+    form = node_forms.node_update_form()
     form.fill(db.query(models.SlcNode).get(node_id))
     return render("base_form", form=form)
 
 
 @app.post('/update', apply=auth_opr)
 def node_add_update(db, render):
-    form = forms.node_update_form()
+    form = node_forms.node_update_form()
     if not form.validates(source=request.forms):
         return render("base_form", form=form)
     node = db.query(models.SlcNode).get(form.d.id)

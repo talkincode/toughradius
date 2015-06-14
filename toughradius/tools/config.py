@@ -96,38 +96,6 @@ application = service.Application("ToughRADIUS Customer Application")
 config = config.find_config()
 service = customer_app.run(config,DBEngine(config).get_engine(),True)
 service.setServiceParent(application)'''
-    elif app == 'portal':
-        return '''from autobahn.twisted import choosereactor
-choosereactor.install_optimal_reactor(True)
-from twisted.application import service, internet
-from toughradius.tools import config
-from toughradius.tools.dbengine import DBEngine
-from toughradius.console import portal_app
-application = service.Application("ToughRADIUS Portal Application")
-config = config.find_config()
-service = portal_app.run(config,DBEngine(config).get_engine(),True)
-service.setServiceParent(application)'''
-    elif app == 'portald':
-        return '''from autobahn.twisted import choosereactor
-choosereactor.install_optimal_reactor(True)
-from twisted.application import service, internet
-from toughradius.tools import config
-from toughradius.wlan import server
-application = service.Application("ToughRADIUS Portald Application")
-config = config.find_config()
-service = server.run(config,True)
-service.setServiceParent(application)'''
-    elif app == 'mps':
-        return '''from autobahn.twisted import choosereactor
-choosereactor.install_optimal_reactor(True)
-from twisted.application import service, internet
-from toughradius.tools import config
-from toughradius.tools.dbengine import DBEngine
-from toughradius.console import mps_app
-application = service.Application("ToughRADIUS Mps Application")
-config = config.find_config()
-service = mps_app.run(config,DBEngine(config).get_engine(),True)
-service.setServiceParent(application)'''
     elif app == 'standalone':
         return '''from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
@@ -136,7 +104,6 @@ from toughradius.tools import config
 from toughradius.tools.dbengine import get_engine
 from toughradius.console import admin_app
 from toughradius.console import customer_app
-from toughradius.console import portal_app
 from toughradius.radiusd import server
 from toughradius.wlan import server as pserver
 application = service.Application("ToughRADIUS Standalone Application")
@@ -145,6 +112,5 @@ db_engine = get_engine(config)
 service = server.run(config,db_engine,True)
 admin_app.run(config,db_engine,True).setServiceParent(service)
 customer_app.run(config,db_engine,True).setServiceParent(service)
-portal_app.run(config,db_engine,True).setServiceParent(service)
 pserver.run(config,True).setServiceParent(service)
 service.setServiceParent(application)'''
