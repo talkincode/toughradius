@@ -197,6 +197,17 @@ def get_opr_nodes(db):
         models.SlcOperatorNodes.operator_name == opr_name
     )
 
+def get_opr_products(db):
+    opr_type = get_cookie('opr_type')
+    if opr_type == 0:
+        return db.query(models.SlcRadProduct).filter(models.SlcRadProduct.product_status == 0)
+    else:
+        return db.query(models.SlcRadProduct).filter(
+            models.SlcRadProduct.id == models.SlcOperatorProducts.product_id,
+            models.SlcOperatorProducts.operator_name == get_cookie("username"),
+            models.SlcRadProduct.product_status == 0
+        )
+
 @cache.cache('get_node_name',expire=3600)   
 def get_node_name(db,node_id):
     return  db.query(models.SlcNode.node_name).filter_by(id=node_id).scalar()

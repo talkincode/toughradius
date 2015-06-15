@@ -51,7 +51,7 @@ def product_policy_get(db,render):
 
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
 def product(db, render):
-    _query = db.query(models.SlcRadProduct)
+    _query = get_opr_products(db)
     return render(
         "sys_product_list",
         product_policys=product_forms.product_policy,

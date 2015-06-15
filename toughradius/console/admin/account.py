@@ -34,9 +34,7 @@ member_detail_url_formatter = "/member/detail?account_number={0}".format
 def account_open(db, render):
     member_id = request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
-    products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
-        product_status=0
-    )]
+    products = get_opr_products(db)
     form = account_forms.account_open_form(products)
     form.member_id.set_value(member_id)
     form.realname.set_value(member.realname)
@@ -46,9 +44,7 @@ def account_open(db, render):
 
 @app.post('/open', apply=auth_opr)
 def account_open(db, render):
-    products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
-        product_status=0
-    )]
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     form = account_forms.account_open_form(products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
@@ -465,7 +461,7 @@ def account_charge(db, render):
 @app.get('/change', apply=auth_opr)
 def account_change(db, render):
     account_number = request.params.get("account_number")
-    products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     user = query_account(db, account_number)
     form = account_forms.account_change_form(products=products)
     form.expire_date.set_value(user.expire_date)
@@ -476,7 +472,7 @@ def account_change(db, render):
 @app.post('/change', apply=auth_opr)
 def account_change(db, render):
     account_number = request.params.get("account_number")
-    products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     form = account_forms.account_change_form(products=products)
     account = db.query(models.SlcRadAccount).get(account_number)
     user = query_account(db, account_number)

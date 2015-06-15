@@ -305,9 +305,7 @@ def member_update_post(db, render):
 @app.get('/open', apply=auth_opr)
 def member_open_get(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
-    products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
-        product_status=0
-    )]
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     form = member_forms.user_open_form(nodes, products)
     return render("bus_open_form", form=form)
 
@@ -315,9 +313,7 @@ def member_open_get(db, render):
 @app.post('/open', apply=auth_opr)
 def member_open_post(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
-    products = [(n.id, n.product_name) for n in db.query(models.SlcRadProduct).filter_by(
-        product_status=0
-    )]
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     form = member_forms.user_open_form(nodes, products)
     if not form.validates(source=request.forms):
         return render("bus_open_form", form=form)
@@ -437,7 +433,7 @@ def member_import_get(db, render):
 @app.post('/import', apply=auth_opr)
 def member_import_post(db, render):
     nodes = [(n.id, n.node_desc) for n in get_opr_nodes(db)]
-    products = [(p.id, p.product_name) for p in db.query(models.SlcRadProduct)]
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     iform = member_forms.user_import_form(nodes, products)
     node_id = request.params.get('node_id')
     product_id = request.params.get('product_id')
