@@ -34,7 +34,7 @@ member_detail_url_formatter = "/member/detail?account_number={0}".format
 def account_open(db, render):
     member_id = request.params.get('member_id')
     member = db.query(models.SlcMember).get(member_id)
-    products = get_opr_products(db)
+    products = [(n.id, n.product_name) for n in get_opr_products(db)]
     form = account_forms.account_open_form(products)
     form.member_id.set_value(member_id)
     form.realname.set_value(member.realname)
