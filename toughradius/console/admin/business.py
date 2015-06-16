@@ -32,7 +32,7 @@ app.config['__prefix__'] = __prefix__
 ###############################################################################
 
 @app.post('/opencalc',apply=auth_opr)
-def opencalc(db):
+def opencalc(db,render):
     months = request.params.get('months',0)
     product_id = request.params.get("product_id")
     old_expire = request.params.get("old_expire")
