@@ -79,7 +79,7 @@ $(document).ready(function (){
     <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线用户管理</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal form-well" role="form" action="/ops/online" method="post">
+        <form id="query_form" class="form-horizontal form-well" role="form" action="/online/query" method="post">
             <div class="form-group">
                 <label for="node_id" class="col-md-2 control-label">区域</label>
                 <div class="col-md-3">
@@ -143,7 +143,7 @@ $(document).ready(function (){
                 <th>上线时间</th>
                 <th>IP地址</th>
                 <th>MAC地址</th>
-                <th>已记账时间</th>
+                <th>在线时间</th>
                 <th>上传/下载</th>
                 <th></th>
             </tr>
@@ -158,7 +158,7 @@ $(document).ready(function (){
                 <td>${online.acct_start_time}</td>
                 <td>${online.framed_ipaddr}</td>
                 <td>${online.mac_addr}</td>
-                <td>${fmt_second(online.billing_times)}</td>
+                <td>${fmt_online_time(online.acct_start_time)}</td>
                 <td>${kb2mb(online.input_total)}M/${kb2mb(online.output_total)}M</td>
                 <td>
                 <a class="opt-btn btn-default" href="javascript:updater.unlock_online('${online.nas_addr}','${online.acct_session_id}');">解锁</a>

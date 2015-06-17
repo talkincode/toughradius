@@ -9,13 +9,13 @@
         $("#query_end_time").datepicker();
     });
     function do_submit(){
-        $("#query_form").attr("action", "/bus/orders");
+        $("#query_form").attr("action", "/orders");
         $("#query_form").submit();
     }
     function do_export(){
-        $("#query_form").attr("action", "/bus/orders/export");
+        $("#query_form").attr("action", "/orders/export");
         $("#query_form").submit();
-        setTimeout(function(){$("#query_form").attr("action", "/bus/orders");}, 0);
+        setTimeout(function(){$("#query_form").attr("action", "/orders");}, 0);
     }
    </script>
 </%def>
@@ -24,7 +24,7 @@
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户订购查询</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal form-well" role="form" action="/bus/orders" method="post">
+        <form id="query_form" class="form-horizontal form-well" role="form" action="/orders" method="post">
             <div class="form-group">
                 <label for="node_id" class="col-md-2 control-label">区域</label>
                 <div class="col-md-3">
@@ -74,7 +74,7 @@
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
                     <button type="button" onclick="do_submit();" class="btn btn-primary">查询</button>
-                    % if permit.match('/bus/orders/export'):
+                    % if permit.match('/orders/export'):
                     <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出数据</a>
                     % endif
                 </div>
@@ -85,14 +85,14 @@
             <thead>
             <tr>
                 <th>订单号</th>
-                <th>用户姓名</th>
-                <th>用户账号</th>
+                <th>姓名</th>
+                <th>账号</th>
                 <th>资费</th>
-                <th>订单费用</th>
-                <th>实缴费用</th>
-                <th>订单状态</th>
-                <th>订单时间</th>
-                <th>订单描述</th>
+                <th>应缴</th>
+                <th>实缴</th>
+                <th>状态</th>
+                <th>时间</th>
+                <th width="25%">描述</th>
             </tr>   
         </thead>
         <tbody>         
@@ -100,7 +100,7 @@
             <tr>
                 <td>${order.order_id}</td>
                 <td>${_realname}</td>
-                <td><a href="/bus/member/detail?account_number=${order.account_number}">${order.account_number}</a></td>
+                <td><a href="/member/detail?account_number=${order.account_number}">${order.account_number}</a></td>
                 <td>${_product_name}</td>
                 <td>${fen2yuan(order.order_fee)}</td>
                 <td>${fen2yuan(order.actual_fee)}</td>

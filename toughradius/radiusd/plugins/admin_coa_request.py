@@ -12,7 +12,7 @@ def process(req=None,admin=None,**kwargs):
         reply = {'msg_id':msg_id,'code':1,'data':u"nas_addr and acct_session_id Does not allow nulls"}
         return admin.sendMessage(json.dumps(reply),False)
 
-    coa_client = admin.radiusd.coa_clients.get(nas_addr)
+    coa_client = admin.radiusd.get_coa_client(nas_addr)
     if not coa_client:
         reply = {'msg_id':msg_id,'code':1,'data':u"CoA Client instance not exists for %s"%nas_addr}
         return admin.sendMessage(json.dumps(reply),False)

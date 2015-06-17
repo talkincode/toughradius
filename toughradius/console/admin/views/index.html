@@ -1,4 +1,5 @@
 <%inherit file="base.html"/>
+<%namespace name="dashboard_ui" file="dashboard_ui.html"/>
 <%def name="head()">
 <script src="/static/js/highcharts.js"></script>
 <script src="/static/js/charttheme.js"></script>
@@ -116,7 +117,7 @@ var flow_options = {
 
 function update_online()
 {
-    $.post("/ops/online/statdata", {day_code:'${currdate()}'} , function (ev) {
+    $.post("/online_stat/data", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             online_options.series = ev.data;
             new Highcharts.Chart(online_options);
@@ -126,7 +127,7 @@ function update_online()
 
 function update_flow()
 {
-    $.post("/ops/flow/statdata", {day_code:'${currdate()}'} , function (ev) {
+    $.post("/flow_stat/data", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
             flow_options.series = ev.data;
             new Highcharts.Chart(flow_options);
@@ -171,12 +172,17 @@ $(document).ready(function (){
                         <td>系统版本</td>
                         <td>${sys_version or 'unknow'}</td>
                     </tr>
+                    <!--<tr>-->
+                        <!--<td>软件授权码</td>-->
+                        <!--<td>000000</td>-->
+                        <!--<td></td>-->
+                        <!--<td></td>-->
+                    <!--</tr>-->
             </tbody>
 
         </table>
     </div>
 </div>
-
 
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 消息统计

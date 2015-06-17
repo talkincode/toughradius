@@ -24,9 +24,6 @@ def print_result(rs):
             sh.warn('print result error: %s'%str(err))
     sh.info('Result:\n\n%s\n'%('\n'.join(rstr)))        
     
-            
-        
-
 def execute_sqls(config,sqlstr):
     sh.info('exec sql >> %s'%sqlstr)
     results = []

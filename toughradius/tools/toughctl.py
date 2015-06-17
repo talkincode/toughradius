@@ -6,6 +6,7 @@ import argparse,ConfigParser
 from toughradius.tools import config as iconfig
 from toughradius.tools.shell import shell
 from toughradius.tools.dbengine import get_engine
+from toughradius.tools import initdb as init_db
 import sys,os,signal
 import tempfile
 import time
@@ -69,6 +70,9 @@ def run_customer(config,daemon=False):
         _run_daemon(config,'customer')
         
 def run_standalone(config,daemon=False):
+    '''
+    所有应用在一个进程的运行模式
+    '''
     from twisted.internet import reactor
     from toughradius.console import admin_app
     from toughradius.console import customer_app
@@ -86,31 +90,38 @@ def run_standalone(config,daemon=False):
     else:
         _run_daemon(config,'standalone')
     
+    
+
 
 def start_server(config,app):
+    '''
+    启动守护进程
+    '''
     apps = app == 'all' and ['radiusd','admin','customer'] or [app]
     for _app in apps:
         shell.info('start %s'%_app)
         _run_daemon(config,_app)
-        time.sleep(0.1)
     
     
 def stop_server(app):
+    '''
+    停止守护进程
+    '''
     apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
-        time.sleep(0.1)
         
 def restart_server(config,app):
+    '''
+    重启守护进程
+    '''
     apps = (app == 'all' and ['radiusd','admin','customer'] or [app])
     for _app in apps:
         shell.info('stop %s'%_app)
         _kill_daemon(_app)
-        time.sleep(0.1)
         shell.info('start %s'%_app)
         _run_daemon(config,_app)
-        time.sleep(0.1)
     
 
 def run_secret_update(config,cfgfile):
@@ -118,8 +129,7 @@ def run_secret_update(config,cfgfile):
     secret.update(config,cfgfile)
     
 def run_initdb(config):
-    from toughradius.console import models
-    models.update(get_engine(config))
+    init_db.update(get_engine(config))
         
 def run_config():
     from toughradius.tools.config import setup_config
@@ -144,10 +154,6 @@ def run_execute_sqls(config,sqlstr):
 def run_execute_sqlf(config,sqlfile):
     from toughradius.tools.sqlexec import execute_sqlf
     execute_sqlf(config,sqlfile)
-
-def run_radius_tester(config):
-    from toughradius.tools.radtest import Tester
-    Tester(config).start()
     
 def run_gensql(config):
     from sqlalchemy import create_engine
@@ -212,7 +218,6 @@ def run():
     parser.add_argument('-initdb','--initdb', action='store_true',default=False,dest='initdb',help='run initdb')
     parser.add_argument('-dumpdb','--dumpdb', type=str,default=None,dest='dumpdb',help='run dumpdb')
     parser.add_argument('-restoredb','--restoredb', type=str,default=None,dest='restoredb',help='run restoredb')
-    parser.add_argument('-config','--config', action='store_true',default=False,dest='config',help='setup config')
     parser.add_argument('-echo_radiusd_cnf','--echo_radiusd_cnf', action='store_true',default=False,dest='echo_radiusd_cnf',help='echo radiusd_cnf')
     parser.add_argument('-echo_mysql_cnf','--echo_mysql_cnf', action='store_true',default=False,dest='echo_mysql_cnf',help='echo mysql cnf')    
     parser.add_argument('-echo_radiusd_script','--echo_radiusd_script', action='store_true',default=False,dest='echo_radiusd_script',help='echo radiusd script')
@@ -224,9 +229,7 @@ def run():
     parser.add_argument('-x','--xdebug', action='store_true',default=False,dest='xdebug',help='xdebug option')
     parser.add_argument('-c','--conf', type=str,default="/etc/radiusd.conf",dest='conf',help='config file')
     args =  parser.parse_args(sys.argv[1:])  
-    
-    if args.config:
-        return run_config()
+
         
     if args.echo_radiusd_cnf:
         return run_echo_radiusd_cnf()
@@ -252,7 +255,6 @@ def run():
     
     if args.debug or args.xdebug:
         config.set('DEFAULT','debug','true')
-        
         
     if args.gensql:
         return run_gensql(config)
@@ -283,7 +285,7 @@ def run():
 
     if args.radiusd:run_radiusd(config,args.daemon)
     elif args.admin:run_admin(config,args.daemon)
-    elif args.customer:run_customer(config,args.daemon)
+    elif args.customer:run_customer(config,args.daemon)  
     elif args.standalone:run_standalone(config,args.daemon)
     elif args.secret:run_secret_update(config,args.conf)
     elif args.initdb:run_initdb(config)

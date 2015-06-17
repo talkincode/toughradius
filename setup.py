@@ -18,7 +18,7 @@ install_requires = [
     'six>=1.8.0',
     'tablib>=0.10.0',
     'zope.interface>=4.1.1',
-    'pycrypto==2.6.1',
+    'pycrypto==2.6.1'
 ]
 install_requires_empty = []
 
@@ -40,14 +40,14 @@ setup(name='toughradius',
       version=version,
       author='jamiesun',
       author_email='jamiesun.net@gmail.com',
-      url='https://github.com/talkincode/ToughRADIUS',
-      license='BSD',
+      url='https://github.com/toughstruct/ToughRADIUS',
+      license='GPL',
       description='RADIUS Server',
       long_description=open('README.rst').read(),
       classifiers=[
        'Development Status :: 6 - Mature',
        'Intended Audience :: Developers',
-       'License :: OSI Approved :: BSD License',
+       'License :: OSI Approved :: GPL License',
        'Programming Language :: Python :: 2.6',
        'Programming Language :: Python :: 2.7',
        'Topic :: Software Development :: Libraries :: Python Modules',
@@ -59,7 +59,7 @@ setup(name='toughradius',
       zip_safe=True,
       include_package_data=True,
       install_requires=install_requires,
-      scripts=['bin/toughctl'],
+      scripts=['toughctl'],
       tests_require='nose>=0.10.0b1',
       test_suite='nose.collector',
 )

@@ -9,13 +9,13 @@
         $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
     });
     function do_submit(){
-        $("#query_form").attr("action", "/bus/billing");
+        $("#query_form").attr("action", "/billing");
         $("#query_form").submit();
     }
     function do_export(){
-        $("#query_form").attr("action", "/bus/billing/export");
+        $("#query_form").attr("action", "/billing/export");
         $("#query_form").submit();
-        setTimeout(function(){$("#query_form").attr("action", "/bus/billing");}, 0);
+        setTimeout(function(){$("#query_form").attr("action", "/billing");}, 0);
     }
    </script>
 </%def>
@@ -24,7 +24,7 @@
 <div class="panel panel-default">
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户计费查询</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal form-well" role="form" action="/bus/billing" method="post">
+        <form id="query_form" class="form-horizontal form-well" role="form" action="/billing" method="post">
             <div class="form-group">
                 <label for="node_id" class="col-md-2 control-label">区域</label>
                 <div class="col-md-3">
@@ -54,7 +54,7 @@
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
                     <button type="submit" onclick="do_submit();" class="btn btn-primary">查询</button>
-                    % if permit.match('/bus/billing/export'):
+                    % if permit.match('/billing/export'):
                     <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出计费信息</a>
                     % endif
                 </div>
