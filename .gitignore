@@ -42,3 +42,5 @@ windows/
 fabfile.py
 toughradius.egg-info
 dist
+.DS_Store
+radiusd_cnf.conf
