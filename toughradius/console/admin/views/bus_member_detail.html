@@ -38,7 +38,7 @@ function release(account_number)
 function do_delete(account_number)
 {
     if(confirm("删除账号将删除账号所有相关数据，包括账号，日志，订单等，不可恢复，确认操作吗？")) {
-        window.location.href = "/bus/account/delete?account_number="+account_number;
+        window.location.href = "/account/delete?account_number="+account_number;
     }
     
 }
@@ -60,7 +60,7 @@ function do_delete(account_number)
             
             % if user.status == 2:
            
-                % if permit.match('/bus/account/resume'):
+                % if permit.match('/account/resume'):
                 <a class="btn btn-sm btn-default" href="javascript:do_resume('${user.account_number}');">复机</a>
                 % endif
                
