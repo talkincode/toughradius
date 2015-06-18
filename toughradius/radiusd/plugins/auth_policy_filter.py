@@ -28,7 +28,23 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
             return error_auth(resp,'user flow_length poor')
 
     if user['user_concur_number'] > 0 :
-        if store.count_online(user['account_number']) >= user['user_concur_number']:
-            return error_auth(resp,'user session to limit')    
+        if store.count_online(user['account_number']) == user['user_concur_number']:
+            try:
+                online = store.get_nas_onlines_byuser(user['account_number'])[0]
+                coa_client = radiusd.coa_clients.get(online['nas_addr'])
+                attrs = {
+                    'User-Name': online['account_number'],
+                    'Acct-Session-Id': online['acct_session_id'],
+                    'NAS-IP-Address': online['nas_addr'],
+                    'Framed-IP-Address': online['framed_ipaddr']
+                }
+                dmeq = coa_client.createDisconnectPacket(**attrs)
+                coa_client.sendCoA(dmeq)
+                return resp
+            except:
+                log.err('send dm error')
+                return error_auth(resp, 'user session to limit & send dm error')
+        elif store.count_online(user['account_number']) > user['user_concur_number']:
+            return error_auth(resp, 'user session to limit')
 
     return resp

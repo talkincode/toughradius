@@ -9,26 +9,32 @@
 <script>
 //页面初始化
 
-var online_options = {
+var flow_options = {
     credits : {enabled:false},
-    chart: {type: 'areaspline',renderTo: 'online-chart'},
-    title: {text: '在线用户统计'},
+    chart: {type: 'areaspline',renderTo: 'flow-chart'},
+    title: {text: '流量统计'},
     subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
     xAxis: {type: 'datetime',tickInterval : 3600*1000},
-    yAxis: {
-        title: {text: '在线数'},
-        labels: {formatter: function() {return this.value + '人';}}            
+    yAxis: {title: {text: '使用流量'},
+        labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
     },
-    tooltip: {shared: true},
-    legend: {enabled: false},    
+    tooltip: {shared: true, valueSuffix: 'MB'},
+    legend: {
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+                x: 150,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },  
     plotOptions: {areaspline: {
-        stacking: 'normal',
         marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
         fillOpacity: 0.4
-    }},            
+    }},          
     series: [{}]
 };
-
 $(document).ready(function (){
     Highcharts.setOptions({global: {useUTC: false}});
     $("#day_code").datepicker();   
@@ -36,10 +42,10 @@ $(document).ready(function (){
 
 function doQuery()
 {
-    $.post("/ops/online/statdata", {day_code:$("#day_code").val()} , function (ev) {
+    $.post("/flow_stat/data", {day_code:'${currdate()}'} , function (ev) {
         if (ev.code == 0) {
-            online_options.series = ev.data;
-            var chart = new Highcharts.Chart(online_options);
+            flow_options.series = ev.data;
+            var chart = new Highcharts.Chart(flow_options);
         }
     }, "json");
 }
@@ -50,9 +56,9 @@ function doQuery()
 
 <%def name="body()">
 <div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 在线用户统计</div>
+    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 用户流量统计</div>
     <div class="panel-body">
-        <form id="query_form" class="form-horizontal form-well" role="form" action="/ops/user" method="post">
+        <form id="query_form" class="form-horizontal form-well" role="form"  method="post">
             <div class="form-group">
                 <label for="node_id" class="col-md-2 control-label">区域</label>
                 <div class="col-md-3">
@@ -75,7 +81,7 @@ function doQuery()
             </div>
         </form>
 
-        <div class="container center"  id="online-chart" >
+        <div class="container center"  id="flow-chart" >
         </div>
     </div>
 </div>

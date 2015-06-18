@@ -41,6 +41,11 @@ ACCEPT_TYPES = {
     'change':u'变更'
 }
 
+ADMIN_MENUS = (MenuSys,MenuBus,MenuOpt,MenuStat,MenuWlan,MenuMpp) = (
+    u"系统管理", u"营业管理", u"维护管理",u"统计分析", u"Wlan管理", u"微信接入")
+
+
+
 MAX_EXPIRE_DATE = '3000-12-30'
 
 TMPDIR = tempfile.gettempdir()
@@ -76,23 +81,6 @@ scookie = SecureCookie()
 get_cookie = scookie.get_cookie
 set_cookie = scookie.set_cookie
 
-class Render(object):
-    
-    RENDERS = {}
-    
-    def __init__(self,context={},lookup=None):
-        self.context = context
-        self.lookup = lookup
-
-    def render(self,*args,**kwargs):
-        kwargs['template_lookup'] = self.lookup
-        kwargs.update(**self.context)
-        return mako_template(*args,**kwargs)
-    
-    @staticmethod 
-    def render_app(app,*args,**kwargs):
-        render_obj = Render.RENDERS[app.config['render_key']]
-        return render_obj.render(*args,**kwargs)
         
 ########################################################################
 # permission manage
@@ -191,7 +179,7 @@ def auth_cus(func):
     def warp(*args,**kargs):
         if not get_cookie("customer"):
             log.msg("user login timeout")
-            return redirect('/login')
+            return redirect('/auth/login')
         else:
             return func(*args,**kargs)
     return warp    
@@ -208,6 +196,17 @@ def get_opr_nodes(db):
         models.SlcNode.node_name == models.SlcOperatorNodes.node_name,
         models.SlcOperatorNodes.operator_name == opr_name
     )
+
+def get_opr_products(db):
+    opr_type = get_cookie('opr_type')
+    if opr_type == 0:
+        return db.query(models.SlcRadProduct).filter(models.SlcRadProduct.product_status == 0)
+    else:
+        return db.query(models.SlcRadProduct).filter(
+            models.SlcRadProduct.id == models.SlcOperatorProducts.product_id,
+            models.SlcOperatorProducts.operator_name == get_cookie("username"),
+            models.SlcRadProduct.product_status == 0
+        )
 
 @cache.cache('get_node_name',expire=3600)   
 def get_node_name(db,node_id):
@@ -248,7 +247,7 @@ def get_page_data(query):
     def _page_url(page, form_id=None):
         if form_id:return "javascript:goto_page('%s',%s);" %(form_id.strip(),page)
         request.query['page'] = page
-        return request.path + '?' + urllib.urlencode(request.query)        
+        return request.fullpath + '?' + urllib.urlencode(request.query)
     page = int(request.params.get("page",1))
     offset = (page - 1) * page_size
     page_data = Paginator(_page_url, page, query.count(), page_size)
@@ -262,6 +261,9 @@ def serial_json(mdl):
     for c in mdl.__table__.columns:
         data[c.name] = getattr(mdl, c.name)
     return json.dumps(data,ensure_ascii=False)
+
+
+
 
 
 

@@ -20,7 +20,7 @@ python toughctl -customer -c ~/radiusd.conf &
 
 sleep 4
 
-cd ../tests/httptests/ && python alls.py
+cd httptests/ && python alls.py
 
 cd ../../
 

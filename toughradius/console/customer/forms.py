@@ -13,7 +13,7 @@ member_login_form = pyforms.Form(
     pyforms.Password("password", rules.len_of(1,32), description=u"登录密码", size=32, required="required",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>登陆</b>", **button_style),
     pyforms.Hidden("next",value="/"),
-    action="/login",
+    action="/auth/login",
     title=u"用户登陆"
 )
 

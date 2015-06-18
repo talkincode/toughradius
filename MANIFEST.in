@@ -5,9 +5,7 @@ recursive-include toughradius/console/static/img *
 recursive-include toughradius/console/static/fonts *
 recursive-include toughradius/console/static/js *
 recursive-include toughradius/radiusd/dicts *
-include bin/toughctl
-include bin/livecd.config
-include bin/webtest
+include toughctl
 include toughradius/console/static/favicon.ico
 include LICENSE
 include README.rst

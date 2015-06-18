@@ -384,8 +384,22 @@ class RadiusServer(object):
             reactor.listenTCP(self.adminport, self.admin_factory,interface=self.radiusd_host)
         if not self.standalone:
             reactor.run()
-        
-    def get_service(self):    
+
+    def get_coa_client(self,nasaddr):
+        cli = self.coa_clients.get(nasaddr)
+        if not cli:
+            bas = self.store.get_bas(nasaddr)
+            if bas:
+                cli = CoAClient(
+                    bas,
+                    dictionary.Dictionary(self.dictfile),
+                    debug=self.debug
+                )
+                self.coa_clients[nasaddr] = cli
+        return cli
+
+
+    def get_service(self):
         from twisted.application import service, internet
         top_service = service.MultiService()
         

@@ -8,7 +8,7 @@ from bottle import redirect
 from bottle import static_file
 from tablib import Dataset
 from toughradius.console import models
-from toughradius.console.admin import forms
+from toughradius.console.admin import product_forms
 from toughradius.console.websock import websock
 from toughradius.console.libs import utils
 from toughradius.console.libs.radius_attrs import radius_attrs
@@ -21,26 +21,47 @@ __prefix__ = "/product"
 
 app = Bottle()
 app.config['__prefix__'] = __prefix__
-render = functools.partial(Render.render_app, app)
 
 ###############################################################################
 # product manage
 ###############################################################################
 
 
+@app.get('/json', apply=auth_opr)
+def product_get(db,render):
+    node_id = request.params.get('node_id')
+    if not node_id: return dict(code=1, data=[])
+    items = db.query(models.SlcRadProduct).filter_by(node_id=node_id)
+    return dict(
+        code=0,
+        data=[{'code': it.id, 'name': it.product_name} for it in items]
+    )
+
+
+@app.get('/policy/get', apply=auth_opr)
+def product_policy_get(db,render):
+    product_id = request.params.get("product_id")
+    product_policy = db.query(
+        models.SlcRadProduct.product_policy
+    ).filter_by(id=product_id).scalar()
+    return dict(
+        code=0,
+        data={'id': product_id, 'policy': product_policy}
+    )
+
 @app.route('/', apply=auth_opr, method=['GET', 'POST'])
-def product(db):
-    _query = db.query(models.SlcRadProduct)
+def product(db, render):
+    _query = get_opr_products(db)
     return render(
         "sys_product_list",
-        product_policys=forms.product_policy,
+        product_policys=product_forms.product_policy,
         node_list=db.query(models.SlcNode),
         page_data=get_page_data(_query)
     )
 
 
 @app.get('/detail', apply=auth_opr)
-def product_detail(db):
+def product_detail(db, render):
     product_id = request.params.get("product_id")
     product = db.query(models.SlcRadProduct).get(product_id)
     if not product:
@@ -48,21 +69,16 @@ def product_detail(db):
     product_attrs = db.query(models.SlcRadProductAttr).filter_by(
         product_id=product_id)
     return render("sys_product_detail",
-                  product_policys=forms.product_policy,
+                  product_policys=product_forms.product_policy,
                   product=product, product_attrs=product_attrs)
 
-permit.add_route(__prefix__, u"资费信息管理", u"系统管理", is_menu=True, order=4)
-permit.add_route("%s/detail" % __prefix__, u"资费详情查看", u"系统管理", order=4.01)
-
-
 @app.get('/add', apply=auth_opr)
-def product_add(db):
-    return render("sys_product_form", form=forms.product_add_form())
-
+def product_add(db, render):
+    return render("sys_product_form", form=product_forms.product_add_form())
 
 @app.post('/add', apply=auth_opr)
-def product_add_post(db):
-    form = forms.product_add_form()
+def product_add_post(db, render):
+    form = product_forms.product_add_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
     product = models.SlcRadProduct()
@@ -95,17 +111,14 @@ def product_add_post(db):
     db.commit()
     redirect(__prefix__)
 
-permit.add_route("%s/add" % __prefix__, u"新增资费", u"系统管理", order=4.02)
-
-
 @app.get('/update', apply=auth_opr)
-def product_update(db):
+def product_update(db, render):
     product_id = request.params.get("product_id")
-    form = forms.product_update_form()
+    form = product_forms.product_update_form()
     product = db.query(models.SlcRadProduct).get(product_id)
     form.fill(product)
     form.product_policy_name.set_value(
-        forms.product_policy[product.product_policy])
+        product_forms.product_policy[product.product_policy])
     form.fee_times.set_value(utils.sec2hour(product.fee_times))
     form.fee_flows.set_value(utils.kb2mb(product.fee_flows))
     form.input_max_limit.set_value(utils.bps2mbps(product.input_max_limit))
@@ -115,8 +128,8 @@ def product_update(db):
 
 
 @app.post('/update', apply=auth_opr)
-def product_update(db):
-    form = forms.product_update_form()
+def product_update(db, render):
+    form = product_forms.product_update_form()
     if not form.validates(source=request.forms):
         return render("sys_product_form", form=form)
     product = db.query(models.SlcRadProduct).get(form.d.id)
@@ -146,11 +159,8 @@ def product_update(db):
     websock.update_cache("product", product_id=product.id)
     redirect(__prefix__)
 
-permit.add_route("%s/update" % __prefix__, u"修改资费", u"系统管理", order=4.03)
-
-
 @app.get('/delete', apply=auth_opr)
-def product_delete(db):
+def product_delete(db, render):
     product_id = request.params.get("product_id")
     if db.query(models.SlcRadAccount).filter_by(product_id=product_id).count() > 0:
         return render("error", msg=u"该套餐有用户使用，不允许删除")
@@ -171,22 +181,18 @@ def product_delete(db):
     websock.update_cache("product", product_id=product_id)
     redirect(__prefix__)
 
-permit.add_route("%s/delete" % __prefix__, u"删除资费", u"系统管理", order=4.04)
-
-
 @app.get('/attr/add', apply=auth_opr)
-def product_attr_add(db):
+def product_attr_add(db, render):
     product_id = request.params.get("product_id")
     if db.query(models.SlcRadProduct).filter_by(id=product_id).count() <= 0:
         return render("error", msg=u"资费不存在")
-    form = forms.product_attr_add_form()
+    form = product_forms.product_attr_add_form()
     form.product_id.set_value(product_id)
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
 
-
 @app.post('/attr/add', apply=auth_opr)
-def product_attr_add(db):
-    form = forms.product_attr_add_form()
+def product_attr_add(db, render):
+    form = product_forms.product_attr_add_form()
     if not form.validates(source=request.forms):
         return render("sys_pattr_form", form=form, pattrs=radius_attrs)
     attr = models.SlcRadProductAttr()
@@ -208,21 +214,17 @@ def product_attr_add(db):
 
     redirect("%s/detail?product_id=%s" % (__prefix__, form.d.product_id))
 
-permit.add_route("%s/attr/add" % __prefix__, u"新增资费扩展属性", u"系统管理", order=4.05)
-
-
 @app.get('/attr/update', apply=auth_opr)
-def product_attr_update(db):
+def product_attr_update(db, render):
     attr_id = request.params.get("attr_id")
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
-    form = forms.product_attr_update_form()
+    form = product_forms.product_attr_update_form()
     form.fill(attr)
     return render("sys_pattr_form", form=form, pattrs=radius_attrs)
 
-
 @app.post('/attr/update', apply=auth_opr)
-def product_attr_update(db):
-    form = forms.product_attr_update_form()
+def product_attr_update(db, render):
+    form = product_forms.product_attr_update_form()
     if not form.validates(source=request.forms):
         return render("pattr_form", form=form, pattrs=radius_attrs)
     attr = db.query(models.SlcRadProductAttr).get(form.d.id)
@@ -242,12 +244,8 @@ def product_attr_update(db):
     websock.update_cache("product", product_id=form.d.product_id)
     redirect("%s/detail?product_id=%s" % (__prefix__, form.d.product_id))
 
-permit.add_route("%s/attr/update" %
-                 __prefix__, u"修改资费扩展属性", u"系统管理", order=4.06)
-
-
 @app.get('/attr/delete', apply=auth_opr)
-def product_attr_update(db):
+def product_attr_update(db, render):
     attr_id = request.params.get("attr_id")
     attr = db.query(models.SlcRadProductAttr).get(attr_id)
     product_id = attr.product_id
@@ -265,5 +263,12 @@ def product_attr_update(db):
     websock.update_cache("product", product_id=product_id)
     redirect("%s/detail?product_id=%s" % (__prefix__, product_id))
 
-permit.add_route("%s/attr/delete" %
-                 __prefix__, u"删除资费扩展属性", u"系统管理", order=4.07)
+
+permit.add_route(__prefix__, u"资费信息管理", u"系统管理", is_menu=True, order=4)
+permit.add_route("%s/add" % __prefix__, u"新增资费", u"系统管理", order=4.02)
+permit.add_route("%s/update" % __prefix__, u"修改资费", u"系统管理", order=4.03)
+permit.add_route("%s/delete" % __prefix__, u"删除资费", u"系统管理", order=4.04)
+permit.add_route("%s/detail" % __prefix__, u"资费详情查看", u"系统管理", order=4.01)
+permit.add_route("%s/attr/add" % __prefix__, u"新增资费扩展属性", u"系统管理", order=4.05)
+permit.add_route("%s/attr/update" %__prefix__, u"修改资费扩展属性", u"系统管理", order=4.06)
+permit.add_route("%s/attr/delete" %__prefix__, u"删除资费扩展属性", u"系统管理", order=4.07)
