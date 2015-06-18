@@ -23,6 +23,7 @@ def init_db(db):
         ('system_name',u'管理系统名称',u'ToughRADIUS管理控制台'),
         ('customer_system_name',u'自助服务系统名称',u'ToughRADIUS自助服务中心'),
         ('customer_system_url',u"自助服务系统地址",u"http://forum.toughradius.net"),
+        ('online_support', u"开启在线支持功能", u"1"),
         ('customer_must_active',u"激活邮箱才能自助开户充值(0:否|1:是)",u"0"),
         ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),
         ('radiusd_admin_port',u'Radius服务管理端口',u'1815'),

@@ -13,6 +13,7 @@ param_form = pyforms.Form(
     pyforms.Textbox("system_name", description=u"管理系统名称", **input_style),
     pyforms.Textbox("customer_system_name", description=u"自助服务系统名称", **input_style),
     pyforms.Textbox("customer_system_url", description=u"自助服务系统网站地址", **input_style),
+    pyforms.Dropdown("online_support", args=booleans.items(), description=u"开启在线支持功能",**input_style),
     pyforms.Dropdown("customer_must_active",args=booleans.items(), description=u"激活邮箱才能自助开户充值",hr=True, **input_style),
     pyforms.Textbox("weixin_qrcode", description=u"微信公众号二维码图片(宽度230px)", **input_style),
     pyforms.Textbox("service_phone", description=u"客户服务电话", **input_style),
