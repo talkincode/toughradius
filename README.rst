@@ -1,7 +1,7 @@
 TOUGHRADIUS 简介
 ====================================
 
-TOUGHRADIUS是一个开源的Radius服务软件，基于AGPL许可协议发布。
+TOUGHRADIUS是一个开源的Radius服务软件，自1.1版本起采用于AGPL许可协议发布，1.0.x版本仍然使用BSD协议。
 
 TOUGHRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
