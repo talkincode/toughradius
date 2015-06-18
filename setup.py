@@ -47,7 +47,6 @@ setup(name='toughradius',
       classifiers=[
        'Development Status :: 6 - Mature',
        'Intended Audience :: Developers',
-       'License :: OSI Approved :: GPL',
        'Programming Language :: Python :: 2.6',
        'Programming Language :: Python :: 2.7',
        'Topic :: Software Development :: Libraries :: Python Modules',
