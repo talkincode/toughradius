@@ -55,6 +55,7 @@ account_next_form = pyforms.Form(
                         **input_style),
         pyforms.Textbox("fee_value", rules.is_rmb, description=u"缴费金额", value=0, required="required", **input_style),
         pyforms.Textbox("expire_date", rules.is_date, description=u"过期日期", required="required", **input_style),
+        pyforms.Textarea("operate_desc", rules.len_of(0,512), description=u"操作描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户续费",
         action="/account/next"
@@ -64,6 +65,7 @@ account_next_form = pyforms.Form(
 account_charge_form = pyforms.Form(
     pyforms.Hidden("account_number", description=u"用户账号", required="required", **input_style),
     pyforms.Textbox("fee_value", rules.is_rmb, description=u"缴费金额", value=0, required="required", **input_style),
+    pyforms.Textarea("operate_desc", rules.len_of(0, 512),description=u"操作描述", rows=4, **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"用户充值",
     action="/account/charge"
@@ -72,6 +74,7 @@ account_charge_form = pyforms.Form(
 account_cancel_form = pyforms.Form(
     pyforms.Hidden("account_number", description=u"用户账号", required="required", **input_style),
     pyforms.Textbox("fee_value", rules.is_rmb, description=u"退费金额", required="required", **input_style),
+    pyforms.Textarea("operate_desc", rules.len_of(0, 512),description=u"操作描述", rows=4, **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"用户销户",
     action="/account/cancel"
@@ -88,6 +91,7 @@ def account_change_form(products=[]):
         pyforms.Textbox("balance", rules.is_rmb, description=u"用户变更后余额", value="0.00", **input_style),
         pyforms.Textbox("time_length", description=u"用户时长(小时)", value="0.00", **input_style),
         pyforms.Textbox("flow_length", description=u"用户流量(MB)", value="0", **input_style),
+        pyforms.Textarea("operate_desc", rules.len_of(0, 512),description=u"操作描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户资费变更",
         action="/account/change"

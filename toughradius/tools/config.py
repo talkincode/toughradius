@@ -19,6 +19,7 @@ def find_config(conf_file=None):
     for c in cfgs:
         if c and os.path.exists(c):
             config.read(c)
+            config.set('DEFAULT', 'cfgfile', c)
             sh.info("use config:%s"%c)  
             flag = True
             break

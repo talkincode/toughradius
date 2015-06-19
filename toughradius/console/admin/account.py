@@ -305,7 +305,7 @@ def account_next(db, render):
     accept_log = models.SlcRadAcceptLog()
     accept_log.accept_type = 'next'
     accept_log.accept_source = 'console'
-    accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元" % (account_number, form.d.fee_value)
+    accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元;%s" % (account_number, form.d.fee_value,form.d.operate_desc)
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
@@ -406,9 +406,10 @@ def account_charge(db, render):
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
     _new_fee = account.balance + utils.yuan2fen(form.d.fee_value)
-    accept_log.accept_desc = u"用户充值：充值前%s元,充值后%s元" % (
+    accept_log.accept_desc = u"用户充值：充值前%s元,充值后%s元;%s" % (
         utils.fen2yuan(account.balance),
-        utils.fen2yuan(_new_fee)
+        utils.fen2yuan(_new_fee),
+        form.d.operate_desc
     )
     db.add(accept_log)
     db.flush()
@@ -489,7 +490,7 @@ def account_change(db, render):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
-    accept_log.accept_desc = u"用户资费变更为:%s" % (product.product_name)
+    accept_log.accept_desc = u"用户资费变更为:%s;%s" % (product.product_name, form.d.operate_desc)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)
@@ -589,7 +590,7 @@ def account_cancel(db, render):
     accept_log.account_number = form.d.account_number
     accept_log.accept_time = utils.get_currtime()
     accept_log.operator_name = get_cookie("username")
-    accept_log.accept_desc = u"用户销户退费%s(元)" % (form.d.fee_value)
+    accept_log.accept_desc = u"用户销户退费%s(元);%s" % (form.d.fee_value, form.d.operate_desc)
     db.add(accept_log)
     db.flush()
     db.refresh(accept_log)

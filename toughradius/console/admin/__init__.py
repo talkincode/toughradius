@@ -25,6 +25,8 @@ __all__  = [
     'member',
     'account',
     'online',
+    'ticket',
     'online_stat',
-    'flow_stat'
+    'flow_stat',
+    'apiv1'
 ]

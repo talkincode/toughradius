@@ -123,13 +123,13 @@ class CustomerServer(object):
             return get_online_status(db,account)
             
     def error403(self,error):
-        return self.render.render("error",msg=u"Unauthorized access %s"%error.exception)
+        return self.render_plugin.render("error",msg=u"Unauthorized access %s"%error.exception)
     
     def error404(self,error):
-        return self.render.render("error",msg=u"Not found %s"%error.exception)
+        return self.render_plugin.render("error",msg=u"Not found %s"%error.exception)
 
     def error500(self,error):
-        return self.render.render("error",msg=u"Server Internal error %s"%error.exception)
+        return self.render_plugin.render("error",msg=u"Server Internal error %s"%error.exception)
         
     def init_application(self):
         log.msg("start init application...")
