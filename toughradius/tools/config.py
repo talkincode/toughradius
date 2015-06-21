@@ -97,6 +97,16 @@ application = service.Application("ToughRADIUS Customer Application")
 config = config.find_config()
 service = customer_app.run(config,DBEngine(config).get_engine(),True)
 service.setServiceParent(application)'''
+    elif app == 'control':
+        return '''from autobahn.twisted import choosereactor
+choosereactor.install_optimal_reactor(True)
+from twisted.application import service, internet
+from toughradius.tools import config
+from toughradius.console import control_app
+application = service.Application("ToughRADIUS Control Application")
+config = config.find_config()
+service = control_app.run(config,True)
+service.setServiceParent(application)'''
     elif app == 'standalone':
         return '''from autobahn.twisted import choosereactor
 choosereactor.install_optimal_reactor(True)
@@ -105,6 +115,7 @@ from toughradius.tools import config
 from toughradius.tools.dbengine import get_engine
 from toughradius.console import admin_app
 from toughradius.console import customer_app
+from toughradius.console import control_app
 from toughradius.radiusd import server
 from toughradius.wlan import server as pserver
 application = service.Application("ToughRADIUS Standalone Application")
@@ -113,5 +124,6 @@ db_engine = get_engine(config)
 service = server.run(config,db_engine,True)
 admin_app.run(config,db_engine,True).setServiceParent(service)
 customer_app.run(config,db_engine,True).setServiceParent(service)
+control_app.run(config,True).setServiceParent(service)
 pserver.run(config,True).setServiceParent(service)
 service.setServiceParent(application)'''
