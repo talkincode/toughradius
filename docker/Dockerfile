@@ -15,7 +15,7 @@ ADD privkey.pem /var/toughradius/privkey.pem
 ADD cacert.pem /var/toughradius/cacert.pem
 
 RUN yum update -y
-RUN yum install -y openssl libffi-devel git gcc crontabs python-devel python-setuptools
+RUN yum install -y libffi-devel openssl git gcc crontabs python-devel python-setuptools
 
 RUN easy_install pip
 RUN pip install supervisor
