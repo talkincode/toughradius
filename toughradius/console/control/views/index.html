@@ -67,10 +67,13 @@
 
     function restart_control() {
         busy(true);
-        $.get("/service/control/restart", {}, function (data) {
-            $("#inbox").html(data.value)
-            busy(false);
-            update_status("control")
+        $.ajax({
+            url: '/service/control/restart',
+            timeout: 3000,
+            complete: function (xhr, textStatus) {
+                busy(false);
+                update_status("control")
+            },
         });
     }
 
