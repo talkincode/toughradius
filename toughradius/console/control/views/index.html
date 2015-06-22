@@ -12,6 +12,9 @@
     }
 
     function upgrade() {
+        if (!confirm("在线升级前建议您完整备份数据库，确认现在升级吗？")) {
+           return false;
+        }
         busy(true);
         $.get("/service/upgrade", {}, function (data) {
             $("#inbox").html(data.value)
