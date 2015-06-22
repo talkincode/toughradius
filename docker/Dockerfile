@@ -11,8 +11,11 @@ RUN mkdir -p /var/toughradius
 RUN mkdir -p /var/toughradius/logs
 RUN mkdir -p /var/toughradius/data
 
+ADD privkey.pem /var/toughradius/privkey.pem
+ADD cacert.pem /var/toughradius/cacert.pem
+
 RUN yum update -y
-RUN yum install -y git gcc crontabs python-devel python-setuptools
+RUN yum install -y openssl libffi-devel git gcc crontabs python-devel python-setuptools
 
 RUN easy_install pip
 RUN pip install supervisor
@@ -28,11 +31,12 @@ RUN pip install six==1.8.0
 RUN pip install tablib==0.10.0
 RUN pip install zope.interface==4.1.1
 RUN pip install pycrypto==2.6.1
+RUN pip install pyOpenSSL>=0.14
+RUN pip install service_identity
 
 RUN git clone -b stable https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 RUN ln -s /opt/toughradius/toughctl /usr/bin/toughctl && chmod +x /usr/bin/toughctl
-RUN /opt/toughradius/toughctl initdb
-
+RUN /opt/toughradius/toughctl --initdb
 
 EXPOSE 1815 1816 1817 1819
 EXPOSE 1812/udp
