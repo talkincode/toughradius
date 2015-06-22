@@ -38,7 +38,7 @@
         });
     }
 
-    function upgrade() {
+    function initdb() {
         if (!confirm("警告：该操作将会清空数据库，并重建表结构，建议您完整备份数据库，您确认操作吗？")) {
             return false;
         }
@@ -93,6 +93,9 @@
         $("#inbox").hide();
         $("#upgrade").click(function(){
             upgrade();
+        });
+        $("#initdb").click(function () {
+            initdb();
         });
         $("#restart_radiusd").click(function () {
             restart_radiusd();
