@@ -1,7 +1,6 @@
 FROM centos:centos7
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
-VOLUME ["/var/toughradius"]
 
 ADD radiusd.conf /etc/radiusd.conf
 ADD supervisord.conf /etc/supervisord.conf
@@ -9,8 +8,6 @@ ADD toughrad /usr/bin/toughrad
 
 RUN chmod +x /usr/bin/toughrad
 
-RUN mkdir -p /var/toughradius
-RUN mkdir -p /var/toughradius/logs
 RUN mkdir -p /var/toughradius/data
 
 ADD privkey.pem /var/toughradius/privkey.pem
