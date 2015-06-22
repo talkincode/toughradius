@@ -4,10 +4,10 @@
     function busy(flag) {
         if (flag) {
             $("#loading").show();
-//            $("#inbox").hide();
+            $("#inbox").hide();
         } else {
             $("#loading").hide();
-//            $("#inbox").show();
+            $("#inbox").show();
         }
     }
 
@@ -30,6 +30,10 @@
         $.post("/service/upgrade", {release:release}, function (data) {
             $("#inbox").html(data.value)
             busy(false);
+            update_status("radiusd");
+            update_status("admin");
+            update_status("customer");
+            update_status("control");
         });
     }
 
@@ -71,7 +75,7 @@
 
     $(document).ready(function () {
         $("#loading").hide();
-//        $("#inbox").hide();
+        $("#inbox").hide();
         $("#upgrade").click(function(){
             upgrade();
         });
