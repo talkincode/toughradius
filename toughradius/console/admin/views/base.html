@@ -29,6 +29,13 @@ function clean_cache()
         alert(data.msg)
     },"json");
 }
+
+function go_control()
+{
+    var url = "//"+location.hostname + ":" + "${config.get('control','port')}";
+    window.open(url);
+}
+
 $(function () {
     $('#accordion').floatheading({ paddingTop : 50});
 });
@@ -67,7 +74,7 @@ def aclass(req,path):
                 <li><a href="/passwd">修改密码</a></li>
                 <li><a href="javascript:clean_cache();">刷新缓存</a></li>
                   % if permit.match("/control"):
-                  <li><a  target="_blank" href="/control">系统管理</a></li>
+                  <li><a target="_blank" href="javascript:go_control();">系统管理</a></li>
                   % endif
                 <li><a target="_blank" href="http://support.toughstruct.com" style="text-decoration:none;">技术支持</a></li>
                 <li><a href="/logout">(${get_cookie("username")}) 退出</a></li>

@@ -143,6 +143,7 @@ class AdminServer(object):
         _lookup = [self.viewpath]
         _context = dict(
             sys_version=toughradius.__version__,
+            config=self.config,
             use_ssl=self.use_ssl,
             get_cookie=get_cookie,
             fen2yuan=utils.fen2yuan,
