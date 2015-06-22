@@ -11,6 +11,7 @@ from toughradius.console.control.control import app as mainapp
 from toughradius.console.libs import mako_plugin,utils
 from toughradius.console import base
 from toughradius.console.base import *
+import toughradius
 import functools
 import time
 import bottle
@@ -88,6 +89,7 @@ class ControlServer(object):
         log.msg("start init application...")
         _lookup = [self.viewpath]
         _context = dict(
+            sys_version=toughradius.__version__,
             use_ssl = self.use_ssl,
             get_cookie = get_cookie,
             request = request,

@@ -4,19 +4,30 @@
     function busy(flag) {
         if (flag) {
             $("#loading").show();
-            $("#inbox").hide();
+//            $("#inbox").hide();
         } else {
             $("#loading").hide();
-            $("#inbox").show();
+//            $("#inbox").show();
         }
+    }
+
+
+    function update_status(serv)
+    {
+        busy(true);
+        $.get("/service/"+serv+"/status", {}, function (data) {
+            $("#"+serv+"_status").html(data.value)
+            busy(false);
+        });
     }
 
     function upgrade() {
         if (!confirm("在线升级前建议您完整备份数据库，确认现在升级吗？")) {
            return false;
         }
+        release = $("#release").val();
         busy(true);
-        $.get("/service/upgrade", {}, function (data) {
+        $.post("/service/upgrade", {release:release}, function (data) {
             $("#inbox").html(data.value)
             busy(false);
         });
@@ -27,6 +38,7 @@
         $.get("/service/radiusd/restart", {}, function (data) {
             $("#inbox").html(data.value)
             busy(false);
+            update_status("radiusd")
         });
     }
 
@@ -35,6 +47,7 @@
         $.get("/service/admin/restart", {}, function (data) {
             $("#inbox").html(data.value)
             busy(false);
+            update_status("admin")
         });
     }
 
@@ -43,6 +56,7 @@
         $.get("/service/customer/restart", {}, function (data) {
             $("#inbox").html(data.value)
             busy(false);
+            update_status("customer")
         });
     }
 
@@ -51,11 +65,13 @@
         $.get("/service/control/restart", {}, function (data) {
             $("#inbox").html(data.value)
             busy(false);
+            update_status("control")
         });
     }
+
     $(document).ready(function () {
         $("#loading").hide();
-        $("#inbox").hide();
+//        $("#inbox").hide();
         $("#upgrade").click(function(){
             upgrade();
         });
@@ -71,10 +87,22 @@
         $("#restart_control").click(function () {
             restart_control();
         });
+
+        $("#refresh_radiusd").click(function () {
+            update_status("radiusd")
+        });
+        $("#refresh_admin").click(function () {
+            update_status("admin")
+        });
+        $("#refresh_customer").click(function () {
+            update_status("customer")
+        });
+        $("#refresh_control").click(function () {
+            update_status("control")
+        });
+
+
     });
-
-
-
 
 </script>
 </%def>
@@ -85,16 +113,67 @@
     <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 服务管理
     </div>
     <div class="panel-body">
+
         <form class="form-inline" role="form">
-            <button type="button" id="upgrade" class="btn btn-default">在线升级</button>
-            <button type="button" id="restart_radiusd" class="btn btn-default">重启Radius引擎</button>
-            <button type="button" id="restart_admin" class="btn btn-default">重启营业管理进程</button>
-            <button type="button" id="restart_customer" class="btn btn-default">重启自助服务进程</button>
-            <button type="button" id="restart_control" class="btn btn-default">重启系统管理进程</button>
+            <span class="well well-sm">当前版本：${sys_version}</span>
+            <div class="form-group">
+                <select id="release" class="form-control">
+                    <option value="stable">最新稳定版</option>
+                    <option value="master">最新开发版</option>
+                    <option value="v1.1.2">v1.1.0</option>
+                    <option value="v1.0.7">v1.0.7</option>
+                </select>
+            </div>
+            <button type="button" id="upgrade" class="btn btn-success">升级/切换版本</button>
         </form>
+        <hr/>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th width="15%">服务名</th>
+                <th>服务状态</th>
+                <th width="20%"></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Radius认证计费引擎</td>
+                <td><span id="radiusd_status"></span></td>
+                <td>
+                    <button type="button" id="restart_radiusd" class="btn btn-sm btn-info">重启服务</button>
+                    <button type="button" id="refresh_radiusd" class="btn btn-sm btn-info">刷新状态</button>
+                </td>
+            </tr>
+            <tr>
+                <td>营业管理服务</td>
+                <td><span id="admin_status"></span></td>
+                <td>
+                    <button type="button" id="restart_admin" class="btn btn-sm btn-info">重启服务</button>
+                    <button type="button" id="refresh_admin" class="btn btn-sm btn-info">刷新状态</button>
+                </td>
+            </tr>
+            <tr>
+                <td>用户自助服务</td>
+                <td><span id="customer_status"></span></td>
+                <td>
+                    <button type="button" id="restart_customer" class="btn btn-sm btn-info">重启服务</button>
+                    <button type="button" id="refresh_customer" class="btn btn-sm btn-info">刷新状态</button>
+                </td>
+            </tr>
+            <tr>
+                <td>系统控制台</td>
+                <td><span id="control_status"></span></td>
+                <td>
+                    <button type="button" id="restart_control" class="btn btn-sm btn-info">重启服务</button>
+                    <button type="button" id="refresh_control" class="btn btn-sm btn-info">刷新状态</button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
         <hr>
-        <div id="loading" style="display: none;"><img src="/static/img/loading.gif"></div>
-        <div id="inbox" style="height:360px;overflow:auto">
+        <div id="loading" style="display: none;"><img style="max-height: 90px;width: auto;" src="/static/img/loading.gif"></div>
+        <div id="inbox" class="text-info" style="height:270px;overflow:auto">
 
         </div>
     </div>

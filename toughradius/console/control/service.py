@@ -77,9 +77,15 @@ def execute(cmd):
     except ToughError, err:
         return dict(value=warp_html(1, err.message))
 
-@app.get('/upgrade', apply=auth_ctl)
+@app.post('/upgrade', apply=auth_ctl)
 def do_upgrade(render):
-    return execute("/usr/bin/toughrad upgrade")
+    release = request.params.get("release")
+    cmd1 = "cd /opt/toughradius"
+    cmd2 = "git pull origin %s && git checkout %s " % (release, release)
+    cmd3 = "supervisorctl restart radiusd"
+    cmd4 = "supervisorctl restart admin"
+    cmd5 = "supervisorctl restart customer"
+    return execute("%s && %s && %s && %s && %s"%(cmd1,cmd2,cmd3,cmd4,cmd5))
 
 
 @app.get('/radiusd/restart', apply=auth_ctl)
@@ -100,3 +106,23 @@ def do_upgrade(render):
 @app.get('/control/restart', apply=auth_ctl)
 def do_upgrade(render):
     return execute("supervisorctl restart control &&  supervisorctl status control")
+
+
+@app.get('/radiusd/status', apply=auth_ctl)
+def do_upgrade(render):
+    return execute("supervisorctl status radiusd")
+
+
+@app.get('/admin/status', apply=auth_ctl)
+def do_upgrade(render):
+    return execute("supervisorctl status admin")
+
+
+@app.get('/customer/status', apply=auth_ctl)
+def do_upgrade(render):
+    return execute("supervisorctl status customer")
+
+
+@app.get('/control/status', apply=auth_ctl)
+def do_upgrade(render):
+    return execute("supervisorctl status control")
