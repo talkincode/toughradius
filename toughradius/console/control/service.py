@@ -88,6 +88,11 @@ def do_upgrade(render):
     return execute("%s && %s && %s && %s && %s"%(cmd1,cmd2,cmd3,cmd4,cmd5))
 
 
+@app.get('/initdb', apply=auth_ctl)
+def do_upgrade(render):
+    return execute("/opt/toughradius/toughctl --initdb")
+
+
 @app.get('/radiusd/restart', apply=auth_ctl)
 def do_upgrade(render):
     return execute("supervisorctl restart radiusd && supervisorctl status radiusd")

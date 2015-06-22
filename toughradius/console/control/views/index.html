@@ -38,6 +38,17 @@
         });
     }
 
+    function upgrade() {
+        if (!confirm("警告：该操作将会清空数据库，并重建表结构，建议您完整备份数据库，您确认操作吗？")) {
+            return false;
+        }
+        busy(true);
+        $.get("/service/initdb", {}, function (data) {
+            $("#inbox").html(data.value)
+            busy(false);
+        });
+    }
+
     function restart_radiusd() {
         busy(true);
         $.get("/service/radiusd/restart", {}, function (data) {
@@ -138,6 +149,7 @@
                 </select>
             </div>
             <button type="button" id="upgrade" class="btn btn-success">升级/切换版本</button>
+            <button type="button" id="initdb" class="btn btn-success">初始化数据库</button>
         </form>
         <hr/>
         <table class="table table-hover">
