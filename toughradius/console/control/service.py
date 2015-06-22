@@ -84,19 +84,19 @@ def do_upgrade(render):
 
 @app.get('/radiusd/restart', apply=auth_ctl)
 def do_upgrade(render):
-    return execute("supervisorctl restart radiusd")
+    return execute("supervisorctl restart radiusd && supervisorctl status radiusd")
 
 
 @app.get('/admin/restart', apply=auth_ctl)
 def do_upgrade(render):
-    return execute("supervisorctl restart admin")
+    return execute("supervisorctl restart admin && supervisorctl status admin")
 
 
 @app.get('/customer/restart', apply=auth_ctl)
 def do_upgrade(render):
-    return execute("supervisorctl restart customer")
+    return execute("supervisorctl restart customer && supervisorctl status customer")
 
 
 @app.get('/control/restart', apply=auth_ctl)
 def do_upgrade(render):
-    return execute("supervisorctl restart cuntrol")
+    return execute("supervisorctl restart control &&  supervisorctl status control")
