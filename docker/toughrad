@@ -1,6 +1,7 @@
 #!/bin/sh
 
 appdir=/opt/toughradius
+rundir=/var/toughradius
 
 usage ()
 {
@@ -20,6 +21,11 @@ EOF
 # support docker start
 start()
 {
+    if [ ! -d ${rundir} ]; then
+        mkdir -p ${rundir}
+        mkdir -p ${rundir}/data
+        mkdir -p ${rundir}/logs
+    fi
      # toughradius not running, start it
     if [ ! $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then
