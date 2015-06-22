@@ -68,7 +68,7 @@ def member_update_form(nodes=[]):
         pyforms.Hidden("account_number", description=u"用户账号"),
         pyforms.Hidden("member_id", description=u"mid", required="required", **input_style),
         pyforms.Textbox("realname", rules.len_of(2, 32), description=u"用户姓名", required="required", **input_style),
-        pyforms.Textbox("member_name", description=u"自助服务用户名", readonly="readonly", **input_style),
+        pyforms.Textbox("member_name", description=u"自助服务用户名", readonly="readonly", autocomplete="off", **input_style),
         pyforms.Password("new_password", rules.len_of(0, 128), value="", description=u"自助服务密码(留空不修改)", **input_style),
         pyforms.Textbox("email", rules.len_of(0, 128), description=u"电子邮箱", **input_style),
         pyforms.Textbox("idcard", rules.len_of(0, 32), description=u"证件号码", **input_style),
