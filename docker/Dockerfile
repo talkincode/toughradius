@@ -7,6 +7,8 @@ ADD radiusd.conf /etc/radiusd.conf
 ADD supervisord.conf /etc/supervisord.conf
 ADD toughrad /usr/bin/toughrad
 
+RUN chmod +x /usr/bin/toughrad
+
 RUN mkdir -p /var/toughradius
 RUN mkdir -p /var/toughradius/logs
 RUN mkdir -p /var/toughradius/data
