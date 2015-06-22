@@ -1,5 +1,7 @@
-FROM centos:7
+FROM centos:centos7
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
+
+VOLUME ["/var/toughradius"]
 
 ADD radiusd.conf /etc/radiusd.conf
 ADD supervisord.conf /etc/supervisord.conf
