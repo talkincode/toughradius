@@ -70,7 +70,7 @@
         $.ajax({
             url: '/service/control/restart',
             timeout: 3000,
-            complete: function (xhr, textStatus) {
+            error: function (xhr, textStatus) {
                 busy(false);
                 update_status("control")
             },
