@@ -38,9 +38,9 @@ package_data={
 
 setup(name='toughradius',
       version=version,
-      author='toughstruct',
-      author_email='support@toughstruct.com',
-      url='https://github.com/toughstruct/ToughRADIUS',
+      author='jamiesun',
+      author_email='jamiesun.net@gmail.com',
+      url='https://github.com/talkincode/ToughRADIUS',
       license='AGPL',
       description='RADIUS Server',
       long_description=open('README.rst').read(),

@@ -143,6 +143,7 @@ class AdminServer(object):
         _lookup = [self.viewpath]
         _context = dict(
             sys_version=toughradius.__version__,
+            config=self.config,
             use_ssl=self.use_ssl,
             get_cookie=get_cookie,
             fen2yuan=utils.fen2yuan,
@@ -170,7 +171,7 @@ class AdminServer(object):
         log.msg("mount app and install plugins...")
         for _app in [self.app] + self.subapps:
             log.msg("init app %s"%repr(_app))
-            for _class in ['DEFAULT', 'database', 'radiusd', 'admin', 'customer']:
+            for _class in ['DEFAULT', 'database', 'radiusd', 'admin', 'customer','control']:
                 for _key, _val in self.config.items(_class):
                     _app.config['%s.%s' % (_class, _key)] = _val
             _app.error_handler[403] = self.error403
