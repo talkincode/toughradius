@@ -129,7 +129,7 @@ class Form(object):
             out.append("        %s\n"%i.render())
             out.append('        </div>\n')
             if i.help:
-                out.append('    <a id="%s_help" href="javascript:void" title="%s">\n'%(i.id,i.help))
+                out.append('    <a id="%s_help" href="javascript:void(0);" data-container="body" data-toggle="popover" data-trigger="focus" data-placement="top" data-content="%s">\n'%(i.id,i.help))
                 out.append('    <span class="input-help glyphicon glyphicon-question-sign"></span></a>\n')
             out.append(self.rendernote(i.note))
             out.append(i.post) 

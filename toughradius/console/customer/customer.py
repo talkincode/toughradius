@@ -34,7 +34,7 @@ app = Bottle()
 ###############################################################################   
 
 @app.route('/static/:path#.+#')
-def route_static(path):
+def route_static(path,render):
     static_path = os.path.join(os.path.split(os.path.split(__file__)[0])[0],'static')
     return static_file(path, root=static_path)
 

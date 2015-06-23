@@ -15,6 +15,12 @@ body {
     background-color: #E5E5E5;
 }
 
+.main-bg{
+    padding-top: 15px;
+    min-height: 112vh;
+    background-color: #E5E5E5;
+}
+
 .center{
     text-align: center;
 }
@@ -325,8 +331,8 @@ form .footbotron {
 .form-well{
     min-height: 20px;
     padding: 19px;
-    background-color: rgba(247, 247, 247, 0.66);
-    border: 1px solid rgba(240, 240, 240, 0.42);
+    /*background-color: rgba(247, 247, 247, 0.66);*/
+    /*border: 1px solid rgba(240, 240, 240, 0.42);*/
     border-radius: 9px;
     margin-bottom:20px;
 }
@@ -342,7 +348,7 @@ form .footbotron {
 .input-help{
     margin-top: 5px;
     font-size: 18px;
-    color: #0b95cb;
+    color: #8c8c8c;
 }
 
 

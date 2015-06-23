@@ -182,7 +182,18 @@ def auth_cus(func):
             return redirect('/auth/login')
         else:
             return func(*args,**kargs)
-    return warp    
+    return warp
+
+def auth_ctl(func):
+    @functools.wraps(func)
+    def warp(*args, **kargs):
+        if not get_cookie("control_admin"):
+            log.msg("control_admin login timeout")
+            return redirect('/auth/login')
+        else:
+            return func(*args, **kargs)
+    return warp
+
 
 ########################################################################
 # cache function

@@ -29,6 +29,13 @@ function clean_cache()
         alert(data.msg)
     },"json");
 }
+
+function go_control()
+{
+    var url = "//"+location.hostname + ":" + "${config.get('control','port')}";
+    window.open(url);
+}
+
 $(function () {
     $('#accordion').floatheading({ paddingTop : 50});
 });
@@ -65,20 +72,10 @@ def aclass(req,path):
               <ul class="nav navbar-nav navbar-right">
                 <li><a href="/dashboard">控制面板</a></li>
                 <li><a href="/passwd">修改密码</a></li>
-                 % if permit.match('/logquery/radiusd'):
-                <li class="dropdown">
-                  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">系统日志 <span class="caret"></span></a>
-                  <ul class="dropdown-menu" role="menu">
-                    <li><a href="/logquery/radiusd">Radius认证计费系统日志</a></li>
-                    <li><a href="/logquery/admin">Radius管理系统日志</a></li>
-                    <li><a href="/logquery/customer">Radius自助服务系统日志</a></li>
-                  </ul>
-                </li>
-                % endif
-                % if permit.match('/backup'):
-                <li><a href="/backup">备份管理</a></li>
-                 % endif
                 <li><a href="javascript:clean_cache();">刷新缓存</a></li>
+                  % if permit.match("/control"):
+                  <li><a target="_blank" href="javascript:go_control();">系统管理</a></li>
+                  % endif
                 <li><a target="_blank" href="http://support.toughstruct.com" style="text-decoration:none;">技术支持</a></li>
                 <li><a href="/logout">(${get_cookie("username")}) 退出</a></li>
               </ul>
