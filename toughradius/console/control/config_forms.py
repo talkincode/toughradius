@@ -40,7 +40,7 @@ radiusd_form = pyforms.Form(
     pyforms.Textbox("acctport", description=u"记账端口", **input_style),
     pyforms.Textbox("adminport", description=u"管理端口", **input_style),
     pyforms.Textbox("cache_timeout", description=u"缓存时间（秒）", **input_style),
-    pyforms.Textbox("logfile", description=u"日志文件", **input_style),
+    pyforms.Textbox("logfile", description=u"日志文件", readonly="readonly",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"radiusd配置管理",
     action="/config/radiusd/update"
@@ -49,7 +49,7 @@ radiusd_form = pyforms.Form(
 admin_form = pyforms.Form(
     pyforms.Textbox("host", description=u"radius营业管理监听地址", **input_style),
     pyforms.Textbox("port", description=u"营业管理监听端口", **input_style),
-    pyforms.Textbox("logfile", description=u"日志文件", **input_style),
+    pyforms.Textbox("logfile", description=u"日志文件", readonly="readonly", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"radiusd营业管理配置管理",
     action="/config/admin/update"
@@ -58,16 +58,16 @@ admin_form = pyforms.Form(
 customer_form = pyforms.Form(
     pyforms.Textbox("host", description=u"radius自助服务监听地址", **input_style),
     pyforms.Textbox("port", description=u"自助服务监听端口", **input_style),
-    pyforms.Textbox("logfile", description=u"日志文件", **input_style),
+    pyforms.Textbox("logfile", description=u"日志文件", readonly="readonly", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"radiusd自助服务配置管理",
     action="/config/customer/update"
 )
 
 control_form = pyforms.Form(
-    pyforms.Textbox("host", description=u"radius系统控制监听地址", **input_style),
+    pyforms.Textbox("host", description=u"radius系统控制监听地址", readonly="readonly", **input_style),
     pyforms.Textbox("port", description=u"系统控制监听端口", **input_style),
-    pyforms.Textbox("logfile", description=u"日志文件", **input_style),
+    pyforms.Textbox("logfile", description=u"日志文件", readonly="readonly", **input_style),
     pyforms.Textbox("user", description=u"管理员名", **input_style),
     pyforms.Password("passwd", description=u"管理密码", autocomplete="off",help=u"留空则不修改", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
