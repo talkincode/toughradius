@@ -18,6 +18,11 @@ def get_type_val(typ,src):
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     store = radiusd.store
     session_timeout = int(store.get_param("max_session_timeout"))
+
+    if store.is_white_roster(req.get_mac_addr()):
+        resp['Session-Timeout'] = session_timeout
+        return resp
+
     expire_pool = store.get_param("expire_addrpool")
     if "Framed-Pool" in resp:
         if expire_pool in resp['Framed-Pool']:

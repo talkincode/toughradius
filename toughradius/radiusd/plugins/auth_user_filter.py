@@ -5,9 +5,12 @@ from toughradius.radiusd import utils
 
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     store = radiusd.store
+
+    if store.is_white_roster(req.get_mac_addr()):
+        return resp
+
     if not user:
         return error_auth(resp,'user %s not exists'%req.get_user_name())
-
 
     if store.get_param("radiusd_bypass") == '1':
         if not req.is_valid_pwd(utils.decrypt(user['password'])):
