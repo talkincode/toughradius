@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <title>${sys_param_value('system_name') or ''}</title>
     <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport'>
+    <link rel="shortcut icon" href="/static/favicon.ico"/>
     <!-- Bootstrap 3.3.2 -->
     <link href="/static/bootstrap/css/bootstrap.min.css" rel="stylesheet" type="text/css"/>
     <!-- Font Awesome Icons -->
@@ -83,5 +84,10 @@
 <script src='/static/plugins/fastclick/fastclick.min.js'></script>
 <!-- AdminLTE App -->
 <script src="/static/js/app.min.js" type="text/javascript"></script>
+% if sys_param_value('online_support') == '1':
+<!-- Start of KF5 supportbox script -->
+<script src="//assets.kf5.com/supportbox/main.js" id="kf5-provide-supportBox" kf5-domain="hts.kf5.com"></script>
+<!-- End of KF5 supportbox script -->
+% endif
 </body>
 </html>
