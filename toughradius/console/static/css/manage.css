@@ -1,13 +1,10 @@
 html,
 body {
-    background-color: rgb(51, 56, 58);
     font-size: 12px;
-    height: 100%;
-    padding-top: 25px;
 }
 
-body {
-
+.container{
+    width: auto;
 }
 .main-box{
     padding-top: 15px;
@@ -36,24 +33,6 @@ body {
 }
 
 
-.navbar {
-    background-color: #33383a;
-    border:none;
-    margin-bottom: 0px;
-    border-radius: 0px;
-    background: url(/static/img/navbg.png) repeat;
-}
-
-
-
-.navbar-inverse .navbar-brand {
-    color: #f2f2f2;
-}
-
-.container {
-    width: auto;
-    height: 100%;
-}
 .well{
     border-radius: 8px;
 }
@@ -67,145 +46,7 @@ body {
     margin: 20px 0;
 }
 
-/*左边内容样*/
-#sidebar{
-    padding: 0px;
-    height: 100%;
-    display: block;
-    background-color: rgb(61, 65, 66);
-}
 
-#sidebar .panel-default > .panel-heading {
-    color: #EFEFEF;
-    font-size: 14px;
-    font-weight: 600;
-    background-color: rgb(51, 56, 58);;
-}
-
-#sidebar #accordion .panel-title {
-    margin-top: 0;
-    margin-bottom: 0;
-    font-size: 14px;
-    color: inherit;
-}
-
-#sidebar  .panel {
-    background-color: rgb(44, 48, 50);
-    margin-bottom: 0px;
-    border: none;
-    border-radius: 0px;
-    -webkit-box-shadow: none;
-    box-shadow: none;
-}
-
-#sidebar .panel-default {
-    border-color: #555555;
-}
-
-#sidebar .panel-group .panel + .panel {
-    margin-top: 1px;
-}
-
-
-#sidebar .panel-default > .panel-footer + .panel-collapse .panel-body {
-    border-bottom-color: #555555;
-}
-
-#sidebar .panel-default > .panel-heading + .panel-collapse .panel-body {
-    border-top-color: #444444;
-}
-
-#sidebar .panel-group .panel-heading + .panel-collapse .panel-body {
-    border-top: 1px solid #444444;
-}
-
-#sidebar .panel-group .panel-footer + .panel-collapse .panel-body {
-    border-bottom: 1px solid #444444;
-}
-
-#sidebar .glyphicon{
-    color: #868686;
-}
-
-#sidebar .logo-box{
-    padding: 10px;
-}
-
-#sidebar .logo-box img{
-    max-width: 160px;
-    width: auto;
-}
-
-.left-header {
-    color: rgb(51, 56, 58);
-    font-size: 13px;
-    font-weight: 500;
-    padding: 5px 3px 5px 5px;
-    /*background-color: #191a19;*/
-}
-
-.left-header a {
-    color: #191a19;
-}
-
-.left-header a:hover {
-    text-decoration: none;
-}
-
-.accordion-body{
-    background-color: rgb(51, 56, 58);
-}
-
-#accordion .panel-title {
-  margin-top: 0;
-  margin-bottom: 0;
-  font-size: 14px;
-  color: inherit;
-
-}
-#accordion .panel-title a{
-      text-decoration: none;
-}
-
-#accordion .panel-body {
-  padding: 0px;
-}
-
-.sidelinks li {
-    color: #888;
-    list-style-type:disc;
-}
-
-.sidelinks li a {
-    padding: 7px 0 7px 16px;
-    color: #CBCBCB;
-    display: block;
-    font-size: 13px;
-    border-bottom: 1px solid #444444;
-}
-
-.sidelinks> li > a:hover,
-.sidelinks > li > a:focus {
-    text-decoration: none;
-    background-color: rgb(72, 77, 79);
-}
-
-.sl-active a,
-.sl-active a:visited {
-    text-decoration: none;
-    background-color: rgb(72, 77, 79);
-}
-
-
-.nav-top li a {
-    color: #000;
-    padding: 5px 8px;
-}
-
-.navbar-nav>li>a {
-  font-size: 1.15em;
-  font-weight: 800;
-}
 
 .current a,
 .current a:visited {
@@ -239,10 +80,10 @@ form .footbotron {
 }
 
 .panel-heading .bar a:link,
-.panel-heading .bar a:visited, 
+.panel-heading .bar a:visited,
 .panel-heading .bar a:active,
-.panel-footer a:link, 
-.panel-footer a:visited, 
+.panel-footer a:link,
+.panel-footer a:visited,
 .panel-footer a:active{
     font-size: 12px;
     line-height: 12px;
@@ -378,5 +219,7 @@ form .footbotron {
     margin: 20px 30px 10px 30px;
 }
 
-
+.sidebar-menu .treeview-menu > li > a {
+    font-size: 12px;
+}
 
