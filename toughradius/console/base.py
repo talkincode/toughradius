@@ -44,7 +44,12 @@ ACCEPT_TYPES = {
 ADMIN_MENUS = (MenuSys,MenuBus,MenuOpt,MenuStat,MenuWlan,MenuMpp) = (
     u"系统管理", u"营业管理", u"维护管理",u"统计分析", u"Wlan管理", u"微信接入")
 
-
+MENU_ICONS = {
+    u"系统管理" : "fa fa-cog",
+    u"营业管理" : "fa fa-users",
+    u"维护管理" : "fa fa-wrench",
+    u"统计分析" : "fa fa-bar-chart"
+}
 
 MAX_EXPIRE_DATE = '3000-12-30'
 
