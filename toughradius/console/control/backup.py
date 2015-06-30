@@ -22,6 +22,7 @@ import bottle
 import datetime
 import json
 import functools
+import tempfile
 
 __prefix__ = "/backup"
 
@@ -85,7 +86,17 @@ def backup_delete(render):
 
 
 @app.route('/download/:path#.+#', apply=auth_opr)
-def backup_download(path):
+def backup_download(path,render):
     backup_path = app.config.get('database.backup_path', '/var/toughradius/data')
     return static_file(path, root=backup_path, download=True, mimetype="application/x-gzip")
 
+
+@app.post('/upload', apply=auth_ctl)
+def backup_upload(render):
+    try:
+        upload = request.files.get('Filedata')
+        save_path = os.path.join(app.config['database.backup_path'], upload.filename)
+        upload.save(save_path)
+        return "upload success"
+    except Exception as err:
+        return "upload fail %s"%str(err)

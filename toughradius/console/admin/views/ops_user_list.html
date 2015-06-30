@@ -22,8 +22,9 @@
 </%def>
 
 <%def name="body()">
-<div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 账号列表</div>
+<section class="content">
+    <div class="box">
+    <div class="panel-heading"><i class="fa fa-user"></i> 账号列表</div>
     <div class="panel-body">
         <form id="query_form" class="form-horizontal form-well" role="form" action="/ops/user" method="post">
             <div class="form-group">
@@ -108,6 +109,6 @@
         ${page_data.render(form_id="query_form")}
     </div>
 </div>
-
+</section>
 
 </%def>
