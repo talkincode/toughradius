@@ -7,6 +7,10 @@ from toughradius.radiusd import utils
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""
     store = radiusd.store
+
+    if store.is_white_roster(req.get_mac_addr()):
+        return resp
+
     acct_policy = user['product_policy'] or PPMonth
     if acct_policy in ( PPMonth,BOMonth):
         if utils.is_expire(user['expire_date']):

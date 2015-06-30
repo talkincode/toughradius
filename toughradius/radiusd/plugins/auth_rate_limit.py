@@ -59,6 +59,10 @@ rate_funcs = {
 
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     store = radiusd.store
+
+    if store.is_white_roster(req.get_mac_addr()):
+        return resp
+
     product = store.get_product(user['product_id']) 
     if not product:return resp
     input_limit = product['input_max_limit']
