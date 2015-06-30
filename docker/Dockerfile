@@ -15,6 +15,7 @@ ADD cacert.pem /var/toughradius/cacert.pem
 
 RUN yum update -y
 RUN yum install -y libffi-devel openssl openssl-devel git gcc crontabs python-devel python-setuptools
+RUN yum install -y  mysql-devel MySQL-python
 RUN yum clean all
 
 RUN easy_install pip
