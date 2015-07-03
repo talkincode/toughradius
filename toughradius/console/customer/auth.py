@@ -54,10 +54,10 @@ def member_login_post(db, render):
 
     vcache.clear(form.d.username, '0')
 
-    set_cookie('customer_id', member.member_id)
-    set_cookie('customer', form.d.username)
-    set_cookie('customer_login_time', utils.get_currtime())
-    set_cookie('customer_login_ip', request.remote_addr)
+    set_cookie('customer_id', member.member_id, path="/")
+    set_cookie('customer', form.d.username,path="/")
+    set_cookie('customer_login_time', utils.get_currtime(), path="/")
+    set_cookie('customer_login_ip', request.remote_addr, path="/")
     redirect(next)
 
 
