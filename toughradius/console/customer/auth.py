@@ -63,9 +63,9 @@ def member_login_post(db, render):
 
 @app.get("/logout")
 def member_logout(db, render):
-    set_cookie('customer_id', None)
-    set_cookie('customer', None)
-    set_cookie('customer_login_time', None)
-    set_cookie('customer_login_ip', None)
+    set_cookie('customer_id', None,path="/")
+    set_cookie('customer', None, path="/")
+    set_cookie('customer_login_time', None, path="/")
+    set_cookie('customer_login_ip', None, path="/")
     request.cookies.clear()
     redirect('login')
