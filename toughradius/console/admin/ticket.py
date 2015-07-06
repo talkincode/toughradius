@@ -74,5 +74,4 @@ def ticket_query(db, render):
     return render("ops_ticket_list", page_data=get_page_data(_query),
                   node_list=opr_nodes, **request.params)
 
-
 permit.add_route("%s", u"上网日志查询", u"维护管理", is_menu=True, order=3)
