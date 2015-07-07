@@ -2,16 +2,16 @@ FROM centos:centos7
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 
-ADD radiusd.conf /etc/radiusd.conf
-ADD supervisord.conf /etc/supervisord.conf
-ADD toughrad /usr/bin/toughrad
+ADD ./radiusd.conf /etc/radiusd.conf
+ADD ./supervisord.conf /etc/supervisord.conf
+ADD ./toughrad /usr/bin/toughrad
 
 RUN chmod +x /usr/bin/toughrad
 
 RUN mkdir -p /var/toughradius/data
 
-ADD privkey.pem /var/toughradius/privkey.pem
-ADD cacert.pem /var/toughradius/cacert.pem
+ADD ./privkey.pem /var/toughradius/privkey.pem
+ADD ./cacert.pem /var/toughradius/cacert.pem
 
 RUN yum update -y
 RUN yum install -y libffi-devel openssl openssl-devel git gcc crontabs python-devel python-setuptools
