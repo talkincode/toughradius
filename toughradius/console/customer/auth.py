@@ -54,18 +54,18 @@ def member_login_post(db, render):
 
     vcache.clear(form.d.username, '0')
 
-    set_cookie('customer_id', member.member_id)
-    set_cookie('customer', form.d.username)
-    set_cookie('customer_login_time', utils.get_currtime())
-    set_cookie('customer_login_ip', request.remote_addr)
+    set_cookie('customer_id', member.member_id, path="/")
+    set_cookie('customer', form.d.username,path="/")
+    set_cookie('customer_login_time', utils.get_currtime(), path="/")
+    set_cookie('customer_login_ip', request.remote_addr, path="/")
     redirect(next)
 
 
 @app.get("/logout")
 def member_logout(db, render):
-    set_cookie('customer_id', None)
-    set_cookie('customer', None)
-    set_cookie('customer_login_time', None)
-    set_cookie('customer_login_ip', None)
+    set_cookie('customer_id', None,path="/")
+    set_cookie('customer', None, path="/")
+    set_cookie('customer_login_time', None, path="/")
+    set_cookie('customer_login_ip', None, path="/")
     request.cookies.clear()
     redirect('login')

@@ -22,6 +22,14 @@
         });
     }
 
+    function update_control() {
+        busy(true);
+        $.get("/service/control/status", {}, function (data) {
+            $("#control_status").html(data.value)
+            busy(false);
+        });
+    }
+
     function upgrade() {
         if (!confirm("在线升级前建议您完整备份数据库，确认现在升级吗？")) {
            return false;
@@ -86,6 +94,7 @@
                 update_status("control")
             },
         });
+        setTimeout("update_control()",7000);
     }
 
     $(document).ready(function () {
@@ -136,13 +145,13 @@
 
 
 <%def name="body()">
-<div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 服务管理
+<section class="content">
+    <div class="box">
+    <div class="panel-heading"><i class="fa fa-dashboard"></i> 控制面板
     </div>
     <div class="panel-body">
 
         <form class="form-inline" role="form">
-            <span class="well well-sm">当前版本：${sys_version}</span>
             <div class="form-group">
                 <select id="release" class="form-control">
                     <option value="stable">最新稳定版</option>
@@ -199,10 +208,11 @@
 
         <hr>
         <div id="loading" style="display: none;"><img style="max-height: 90px;width: auto;" src="/static/img/loading.gif"></div>
-        <div id="inbox" class="text-info" style="height:270px;overflow:auto">
+        <div id="inbox" class="text-info" style="height:120px;overflow:auto">
 
         </div>
     </div>
 </div>
+    </section>
 </%def>
 

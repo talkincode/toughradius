@@ -1,6 +1,23 @@
 <%inherit file="base.html"/>
 
 <%def name="head()">
+<link href="/static/uploadify/uploadify.css" rel="stylesheet">
+<script src="/static/uploadify/jquery.uploadify.min.js"></script>
+<script>
+    $(function () {
+        $('#file_upload').uploadify({
+            'buttonText': '上传数据文件',
+            'formData': {'_xsrf': ''},
+            'fileSizeLimit': '200MB',
+            'fileTypeExts': '*.gz',
+            'swf': '/static/uploadify/uploadify.swf',
+            'uploader': '/backup/upload',
+            'onUploadSuccess': function (file, data, response) {
+                window.location.reload();
+            }
+        });
+    });
+</script>
 <script>
 function dumpdb(){
     $.get("/backup/dump", {}, function (ev) {
@@ -38,8 +55,9 @@ function deletefs(bakfs){
 </%def>
 
 <%def name="body()">
-<div class="panel panel-default">
-    <div class="panel-heading"><span class="glyphicon glyphicon-th"></span> 数据库备份管理</div>
+<section class="content">
+    <div class="box">
+    <div class="panel-heading"><i class="fa fa-database"></i> 数据库备份管理</div>
     <div class="panel-body">
         <form id="query_form" class="form-horizontal form-well" role="form" action="/ops/opslog" method="post">
             <div class="form-group">
@@ -50,8 +68,13 @@ function deletefs(bakfs){
                 <div class="col-md-4">
                     <button type="button" onclick="dumpdb();" class="btn btn-primary">立即备份</button>
                 </div>
+
             </div>   
         </form>
+
+        <div class="well">
+            <button id="file_upload" type="button" class="btn btn-lg btn-primary">上传备份</button>
+        </div>
 
         <table class="table table-hover">
             <thead>
@@ -75,6 +98,6 @@ function deletefs(bakfs){
         </table>
     </div>
 </div>
-
+</section>
 
 </%def>

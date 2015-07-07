@@ -1,0 +1,86 @@
+<%def name="page_nav()">
+<a href="/" class="logo"><img src="/static/img/toughradius-logo.png"></a>
+<!-- Header Navbar: style can be found in header.less -->
+<nav class="navbar navbar-static-top" role="navigation">
+    <!-- Sidebar toggle button-->
+    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </a>
+
+    <div class="navbar-custom-menu">
+        <ul class="nav navbar-nav navbar-right">
+            <li><a href="/dashboard">控制面板</a></li>
+            <li><a target="_blank" href="http://support.toughstruct.com" style="text-decoration:none;">技术支持</a></li>
+            <li><a href="/auth/logout">退出</a></li>
+        </ul>
+    </div>
+</nav>
+</%def>
+
+
+<%def name="page_sidebar()">
+<%
+def inactive(req,menu):
+    _path = req.fullpath
+    if _path.endswith("/"):
+        _path = _path[:-1]
+    return menu in _path and 'active' or ''
+%>
+<!-- sidebar: style can be found in sidebar.less -->
+<section class="sidebar">
+    <!-- Sidebar user panel -->
+    <!--<div class="user-panel">-->
+        <!--<div class="pull-left image">-->
+            <!--&lt;!&ndash;<a target="_blank" href="http://www.toughradius.net"><img&ndash;&gt;-->
+                    <!--&lt;!&ndash;src="/static/img/toughradius-logo.png"></a>&ndash;&gt;-->
+        <!--</div>-->
+    <!--</div>-->
+
+    <!-- sidebar menu: : style can be found in sidebar.less -->
+    <ul class="sidebar-menu">
+        <li class="header">功能导航</li>
+
+        <li class="treeview ${inactive(request,'/dashboard')}">
+            <a href="/dashboard">
+                <i class="fa fa-dashboard"></i> <span>控制面板</span>
+            </a>
+        </li>
+        <li class="treeview ${inactive(request,'/config')}">
+            <a href="/config">
+                <i class="fa fa-cog"></i> <span>配置管理</span>
+            </a>
+        </li>
+
+        <li class="treeview ${inactive(request,'/backup')}">
+            <a href="/backup">
+                <i class="fa fa-database"></i> <span>备份管理</span>
+            </a>
+        </li>
+        <li class="treeview ${inactive(request,'/logquery')}">
+            <a href="#">
+                <i class="fa fa-hdd-o"></i> <span>日志管理</span> <i class="fa fa-angle-left pull-right"></i>
+            </a>
+            <ul class="treeview-menu">
+                <li class="${inactive(request,'/logquery/radiusd')}"><a href="/logquery/radiusd"><i class="fa fa-circle-o"></i>Radius系统日志</a></li>
+                <li class="${inactive(request,'/logquery/admin')}"><a href="/logquery/admin"><i class="fa fa-circle-o"></i>管理系统日志</a></li>
+                <li class="${inactive(request,'/logquery/customer')}"><a href="/logquery/customer"><i class="fa fa-circle-o"></i>自助系统日志</a></li>
+            </ul>
+        </li>
+
+    </ul>
+</section>
+<!-- /.sidebar -->
+</%def>
+
+
+<%def name="page_footer()">
+<footer class="main-footer">
+    <div class="pull-right hidden-xs">
+        <b>Version</b> ${sys_version or 'unknow'}
+    </div>
+    <strong>Copyright © 2015 <a href="http://toughradius.net">toughradius.net</a>.</strong> All rights reserved.
+</footer>
+</%def>

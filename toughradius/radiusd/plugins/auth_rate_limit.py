@@ -31,6 +31,11 @@ def radback_rate(resp,_in,_out):
     return resp
     
 def h3c_rate(resp,_in,_out):
+    resp = std_rate(resp, _in, _out)
+    resp['H3C-Input-Average-Rate'] = _in
+    resp['H3C-Input-Peak-Rate'] = _in
+    resp['H3C-Output-Average-Rate'] = _out
+    resp['H3C-Output-Peak-Rate'] = _out
     return resp
     
 def zte_rate(resp,_in,_out):
