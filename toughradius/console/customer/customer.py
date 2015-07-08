@@ -44,6 +44,8 @@ def route_static(path,render):
 @cache.cache('customer_index_get_data',expire=180)  
 def get_data(db,member_name):
     member = db.query(models.SlcMember).filter_by(member_name=member_name).first()
+    if not member:
+        return None,None,None
     accounts = db.query(
         models.SlcMember.realname,
         models.SlcRadAccount.member_id,

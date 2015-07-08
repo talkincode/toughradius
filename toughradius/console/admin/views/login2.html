@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+        <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>ToughRADIUS Login</title>
+        <link href="/static/css/login2.css" rel="stylesheet">
+        <script type="application/javascript" src="/static/js/jquery-1.11.0.min.js"></script>
+        <script>
+            function dokey(e){
+                var keynum;
+                var keychar;
+                keynum = window.event ? e.keyCode : e.which;
+                keychar = String.fromCharCode(keynum);
+                if(keynum == 13)
+                {
+                    doLogin();
+                }
+            }
+            function doLogin()
+            {
+                var username = $("#username").val();
+                var password = $("#password").val();
+                params = {username:username,password:password,_xsrf: ''};
+                $.post("/login", params, function (data) {
+                    if (data.code > 0) {
+                        alert(data.msg)
+                        return false;
+                    }
+                    else {
+                        window.location.href = "/";
+                    }
+                },"json");
+            }
+        </script>
+    </head>
+    <body>
+    <div class="loginarea" onkeypress="return dokey(event)">
+        <div class="login_title"></div>
+        <div class="logobox"></div>
+        <ul class="inputbox">
+
+            <li class="user">
+                <input name="username" type="text" id="username" autocomplete="off" />
+            </li>
+            <li class="pw">
+                <p>
+                <input name="password" type="password" id="password" autocomplete="off"/>
+                <span class="loginbtn">
+                <a id="login" href="javascript:doLogin();" title="提交"></a>
+                </span>
+                </p>
+            </li>
+
+        </ul>
+
+        <div class="copyrightbox">toughradius.net Copyright 2015</div>
+    </div>
+    </body>
+</html>

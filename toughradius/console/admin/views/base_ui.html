@@ -1,0 +1,86 @@
+<%def name="page_nav()">
+<a href="/" class="logo"><img src="/static/img/toughradius-logo.png"></a>
+<!-- Header Navbar: style can be found in header.less -->
+<nav class="navbar navbar-static-top" role="navigation">
+    <!-- Sidebar toggle button-->
+    <a href="#" class="sidebar-toggle" data-toggle="offcanvas" role="button">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+    </a>
+
+    <div class="navbar-custom-menu">
+        <ul class="nav navbar-nav navbar-right">
+            <li><a href="/dashboard">控制面板</a></li>
+            <li><a href="/passwd">修改密码</a></li>
+            <li><a href="javascript:clean_cache();">刷新缓存</a></li>
+            % if permit.match("/control"):
+            <li><a target="_blank" href="javascript:go_control();">系统管理</a></li>
+            % endif
+            <li><a target="_blank" href="http://support.toughstruct.com" style="text-decoration:none;">技术支持</a></li>
+            <li><a href="/logout">(${get_cookie("username")}) 退出</a></li>
+        </ul>
+    </div>
+</nav>
+</%def>
+
+
+<%def name="page_sidebar()">
+
+<%
+def inactive(req,menu):
+    _path = req.fullpath
+    if _path.endswith("/"):
+        _path = _path[:-1]
+    return _path in [ it['path'] for it in menu['items'] ] and 'active' or ''
+
+def aclass(req,path):
+    _path = req.fullpath
+    if _path.endswith("/"):
+        _path = _path[:-1]
+    return _path==path and 'active' or ''
+%>
+<!-- sidebar: style can be found in sidebar.less -->
+<section class="sidebar">
+    <!-- Sidebar user panel -->
+    <!--<div class="user-panel">-->
+        <!--<div class="pull-left image">-->
+            <!--&lt;!&ndash;<a target="_blank" href="http://www.toughradius.net"><img&ndash;&gt;-->
+                    <!--&lt;!&ndash;src="/static/img/toughradius-logo.png"></a>&ndash;&gt;-->
+        <!--</div>-->
+    <!--</div>-->
+
+    <!-- sidebar menu: : style can be found in sidebar.less -->
+    <ul class="sidebar-menu">
+        <li class="header">功能导航</li>
+        % for menu in all_menus:
+        % if permit.check_opr_category(get_cookie('username'),menu['category']):
+        <li class="treeview ${inactive(request,menu)}">
+            <a href="#">
+                <i class="${menu_icons.get(menu['category'])}"></i> <span>${menu['category']}</span> <i class="fa fa-angle-left pull-right"></i>
+            </a>
+            <ul class="treeview-menu">
+                % for item in sorted(menu['items'],key=lambda r:r['order']):
+                % if item['is_menu'] and permit.match(item['path']):
+                <li class="${aclass(request,item['path'])}"><a  href="${item['path']}"><i class="fa fa-circle-o"></i>${item['name']}</a></li>
+                % endif
+                % endfor
+            </ul>
+        </li>
+        % endif
+        % endfor
+    </ul>
+</section>
+<!-- /.sidebar -->
+</%def>
+
+
+<%def name="page_footer()">
+<footer class="main-footer">
+    <div class="pull-right hidden-xs">
+        <b>Version</b> ${sys_version or 'unknow'}
+    </div>
+    <strong>Copyright © 2015 <a href="http://toughradius.net">toughradius.net</a>.</strong> All rights reserved.
+</footer>
+</%def>

@@ -22,8 +22,8 @@ def send_dm(coa_clients,online):
         }
         dmeq = coa_client.createDisconnectPacket(**attrs)
         coa_client.sendCoA(dmeq)
-    except:
-        log.err('send dm error')
+    except Exception as err:
+        log.err(err,'send dm error')
 
 def process(req=None,user=None,radiusd=None,**kwargs):
     if req.get_acct_status_type() not in (STATUS_TYPE_UPDATE,STATUS_TYPE_STOP):

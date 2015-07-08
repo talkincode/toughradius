@@ -16,7 +16,7 @@ def gen_secret(clen=32):
     return ''.join([rg.choice(r) for _ in range(clen)])
 
 def update(config):
-    conf_file = config.get('DEFAULT','appconf')
+    conf_file = config.get('DEFAULT','cfgfile')
     shutil.copy(conf_file,"%s.%s"%(conf_file,int(time.time())))
     old_secret = config.get('DEFAULT','secret')
     config.set('DEFAULT','secret',gen_secret(32))

@@ -26,7 +26,7 @@ app.config['__prefix__'] = __prefix__
 # ticket manage
 ###############################################################################
 
-@app.route('/ticket', apply=auth_opr, method=['GET', 'POST'])
+@app.route('/', apply=auth_opr, method=['GET', 'POST'])
 def ticket_query(db, render):
     node_id = request.params.get('node_id')
     account_number = request.params.get('account_number')
@@ -74,5 +74,4 @@ def ticket_query(db, render):
     return render("ops_ticket_list", page_data=get_page_data(_query),
                   node_list=opr_nodes, **request.params)
 
-
-permit.add_route("%s/ticket" % __prefix__, u"上网日志查询", u"维护管理", is_menu=True, order=3)
+permit.add_route("/ticket", u"上网日志查询", u"维护管理", is_menu=True, order=3)
