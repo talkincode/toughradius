@@ -114,7 +114,7 @@ def member_query(db, render):
                 j.account_number, utils.decrypt(j.password), _product_name,
                 j.expire_date, utils.fen2yuan(j.balance),
                 utils.sec2hour(j.time_length), utils.kb2mb(j.flow_length), j.user_concur_number, j.ip_address,
-                forms.user_state[j.status], j.create_time
+                member_forms.user_state[j.status], j.create_time
             ))
         name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
         return export_file(name, data)
