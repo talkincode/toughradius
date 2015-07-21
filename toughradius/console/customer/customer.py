@@ -97,7 +97,7 @@ def customer_index(db, render):
 
 
 @app.get("/active/<code>")
-def active_user(db,code):
+def active_user(db,code, render):
     member = db.query(models.SlcMember).filter(
         models.SlcMember.active_code == code,
     ).first()
