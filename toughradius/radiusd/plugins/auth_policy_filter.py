@@ -34,6 +34,10 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     if user['user_concur_number'] > 0 :
         if store.count_online(user['account_number']) == user['user_concur_number']:
             try:
+                auto_unlock = int(store.get_param("auth_auto_unlock") or 0)
+                if auto_unlock == 0:
+                    return error_auth(resp, 'user session to limit')
+
                 online = store.get_nas_onlines_byuser(user['account_number'])[0]
                 coa_client = radiusd.coa_clients.get(online['nas_addr'])
                 attrs = {
