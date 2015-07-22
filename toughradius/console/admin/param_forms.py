@@ -59,6 +59,7 @@ rad_form = pyforms.Form(
     pyforms.Textbox("acct_interim_intelval", rules.is_number, description=u"Radius记账间隔(秒)",help=u"radius向bas设备下发的全局记账间隔，bas不支持则不生效", **input_style),
     pyforms.Textbox("max_session_timeout", rules.is_number, description=u"Radius最大会话时长(秒)",help=u"用户在线达到最大会话时长时会自动断开", **input_style),
     pyforms.Textbox("reject_delay", rules.is_number, description=u"拒绝延迟时间(秒)(0-9)",help=u"延迟拒绝消息的下发间隔，防御ddos攻击", **input_style),
+    pyforms.Dropdown("auth_auto_unlock", args=booleans.items(), description=u"并发自动解锁", help=u"如果账号被挂死，认证时自动踢下线",**input_style),
     # pyforms.Textbox("portal_secret", description=u"portal登陆密钥", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
