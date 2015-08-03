@@ -58,7 +58,7 @@ def backup_dump(render):
         return dict(code=1, msg="backup fail! %s" % (err))
 
 
-@app.post('/restore', apply=auth_opr)
+@app.post('/restore', apply=auth_ctl)
 def backup_restore(render):
     from toughradius.tools.backup import dumpdb, restoredb
     from toughradius.tools.config import find_config
@@ -74,7 +74,7 @@ def backup_restore(render):
         return dict(code=1, msg="restore fail! %s" % (err))
 
 
-@app.post('/delete', apply=auth_opr)
+@app.post('/delete', apply=auth_ctl)
 def backup_delete(render):
     backup_path = app.config.get('database.backup_path', '/var/toughradius/data')
     bakfs = request.params.get("bakfs")
@@ -85,7 +85,7 @@ def backup_delete(render):
         return dict(code=1, msg="delete fail! %s" % (err))
 
 
-@app.route('/download/:path#.+#', apply=auth_opr)
+@app.route('/download/:path#.+#', apply=auth_ctl)
 def backup_download(path,render):
     backup_path = app.config.get('database.backup_path', '/var/toughradius/data')
     return static_file(path, root=backup_path, download=True, mimetype="application/x-gzip")
