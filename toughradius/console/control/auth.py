@@ -31,12 +31,12 @@ def ctl_login(render):
     username = request.params.get("username")
     password = request.params.get("password")
     if username != app.config['control.user']:
-        raise abort(403, u"%s not exists" % username)
+        return dict(code=1,msg="user: %s is not exist" %username)
     if password != app.config['control.passwd']:
-        raise abort(403, u"password not match")
+        return dict(code=1,msg="password cannot match")
     set_cookie('control_admin', username, path="/")
     set_cookie('control_admin_ip', request.remote_addr, path="/")
-    redirect("/")
+    return dict(code=0,msg="OK")
 
 
 @app.get("/logout")
