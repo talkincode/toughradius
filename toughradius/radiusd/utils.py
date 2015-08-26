@@ -326,7 +326,10 @@ class AuthPacket2(AuthPacket):
             _nas_addr = tools.DecodeAddress(self.get(4)[0])
         except:pass
 
-        if not _nas_addr or (_nas_addr != self.source[0]):
+        if not _nas_addr:
+            return self.source[0]
+
+        if _nas_addr != self.source[0]:
             return self.source[0]
 
         
