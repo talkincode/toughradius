@@ -327,10 +327,11 @@ class AuthPacket2(AuthPacket):
         except:pass
 
         if not _nas_addr:
-            return self.source[0]
+            _nas_addr = self.source[0]
 
         if _nas_addr != self.source[0]:
-            return self.source[0]
+            _nas_addr = self.source[0]
+        return _nas_addr
 
         
     def get_mac_addr(self):
@@ -539,10 +540,11 @@ class AcctPacket2(AcctPacket):
         except:pass
 
         if not _nas_addr:
-            return self.source[0]
+            _nas_addr =  self.source[0]
 
         if _nas_addr != self.source[0]:
-            return self.source[0]
+            _nas_addr =  self.source[0]
+        return _nas_addr
 
     def get_nas_port(self):
         try:return tools.DecodeInteger(self.get(5)[0]) or 0
