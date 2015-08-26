@@ -325,7 +325,10 @@ class AuthPacket2(AuthPacket):
         try:
             _nas_addr = tools.DecodeAddress(self.get(4)[0])
         except:pass
-        return _nas_addr or self.source[0]
+
+        if not _nas_addr or (_nas_addr != self.source[0]):
+            return self.source[0]
+
         
     def get_mac_addr(self):
         if self.client_macaddr:return self.client_macaddr
