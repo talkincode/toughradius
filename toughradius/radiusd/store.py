@@ -89,9 +89,20 @@ class Store():
     def get_user_attrs(self,username):
         with self.db_engine.begin() as conn:
             cur = conn.execute(_sql("select * from slc_rad_account_attr where account_number = :account "),account=username)
-            return cur.fetchall()  
+            return cur.fetchall()
 
-    def get_user_balance(self,username):
+
+    @cache.cache('get_user_attr', expire=__cache_timeout__)
+    def get_user_attr(self, username,attr_name):
+        with self.db_engine.begin() as conn:
+            cur = conn.execute(_sql("""select attr_value from slc_rad_account_attr
+                                    where account_number = :account
+                                    and attr_name = :attr_name"""),
+                               account=username,attr_name=attr_name)
+            b = cur.fetchone()
+            return b and b['attr_value'] or None
+
+def get_user_balance(self,username):
         with self.db_engine.begin() as conn:
             cur = conn.execute(_sql("select balance from slc_rad_account where account_number = :account "),account=username)
             b = cur.fetchone()  
