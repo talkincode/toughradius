@@ -102,7 +102,7 @@ class Store():
             b = cur.fetchone()
             return b and b['attr_value'] or None
 
-def get_user_balance(self,username):
+    def get_user_balance(self,username):
         with self.db_engine.begin() as conn:
             cur = conn.execute(_sql("select balance from slc_rad_account where account_number = :account "),account=username)
             b = cur.fetchone()  
