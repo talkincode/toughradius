@@ -40,10 +40,10 @@ acct_before_plugins = [
 ]
 
 acct_plugins = [
+    'acct_bill_process',
     'acct_start_process',
     'acct_stop_process',
     'acct_update_process',
-    'acct_bill_process',
     'acct_onoff_process',
 ]
 
