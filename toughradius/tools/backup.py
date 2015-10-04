@@ -59,5 +59,3 @@ def restoredb(config,restorefs):
                     import traceback
                     traceback.print_exc()
         db.close()
-
-    
