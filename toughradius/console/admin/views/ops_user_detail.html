@@ -31,7 +31,17 @@
                         <td>资费名称</td>
                         <td>${user.product_name}</td>
                         <td>用户状态</td>
-                        <td>${{1:u"正常",2:u"停机",3:u"销户",4:u"到期",6:u"未激活"}[user.status]}</td>                 
+                        <td>
+                            % if is_expire(user.expire_date) or user.status == 4:
+                                <span class="label label-warning">到期</span>
+                            % elif user.status == 1:
+                                <span class="label label-success">正常</span>
+                            % elif user.status == 2:
+                                <span class="label label-default">停机</span>
+                            % elif user.status == 3:
+                                <span class="label label-danger">销户</span>
+                            % endif
+                        </td>
                     </tr>
                     <tr>
                         <td>过期时间</td>

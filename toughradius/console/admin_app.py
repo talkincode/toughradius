@@ -158,6 +158,7 @@ class AdminServer(object):
             kb2mb=utils.kb2mb,
             mb2kb=utils.mb2kb,
             sec2hour=utils.sec2hour,
+            is_expire=utils.is_expire,
             request=request,
             sys_param_value=self._sys_param_value,
             get_product_name=self._get_product_name,
