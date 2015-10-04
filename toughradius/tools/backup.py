@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 #coding:utf-8
+import json
+import os
+import gzip
+
 from sqlalchemy import *
-from sqlalchemy.orm import scoped_session, sessionmaker
+
 from toughradius.tools.dbengine import get_engine
 from toughradius.console import models
-import json,os,gzip
 
 excludes = ['slc_rad_ticket','slc_rad_billing','slc_rad_online']
 
