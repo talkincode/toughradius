@@ -4,8 +4,7 @@ import decimal
 import datetime
 from Crypto.Cipher import AES
 from Crypto import Random
-import hashlib
-import binascii
+import json
 import hashlib
 import base64
 import calendar
@@ -200,7 +199,22 @@ def add_months(dt,months):
     year = dt.year + month / 12
     month = month % 12 + 1
     day = min(dt.day,calendar.monthrange(year,month)[1])
-    return dt.replace(year=year, month=month, day=day)    
+    return dt.replace(year=year, month=month, day=day)
+
+def safestr(val):
+    if val is None:
+        return ''
+    elif isinstance(val, unicode):
+        return val.encode('utf-8')
+    elif isinstance(val, str):
+        return val
+    elif isinstance(val, int):
+        return str(val)
+    elif isinstance(val, float):
+        return str(val)
+    elif isinstance(val, dict):
+        return json.dumps(val, ensure_ascii=False)
+    return val
 
 if __name__ == '__main__':
     print gen_order_id()

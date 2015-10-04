@@ -133,7 +133,10 @@ def __clear_ticket_job(mk_db):
         log.msg("start clear ticket task..")
         db = mk_db()
         try:
-            td = datetime.timedelta(days=90)
+            _days = db.query(models.SlcParam.param_value).filter_by(
+                param_name='ticket_expire_days').scalar()
+
+            td = datetime.timedelta(days=_days or 90)
             _now = datetime.datetime.now() 
             edate = (_now - td).strftime("%Y-%m-%d 23:59:59")
             db.query(models.SlcRadTicket).filter(
