@@ -6,7 +6,6 @@ from twisted.python import log
 from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
-from bottle import run as runserver
 
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin,mako_plugin, utils
