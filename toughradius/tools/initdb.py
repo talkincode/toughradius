@@ -26,6 +26,7 @@ def init_db(db):
         ('online_support', u"开启在线支持功能", u"1"),
         ('customer_must_active',u"激活邮箱才能自助开户充值(0:否|1:是)",u"0"),
         ('radiusd_address',u'Radius服务IP地址',u'127.0.0.1'),
+        ('ticket_expire_days', u'上网日志保留天数', '90'),
         ('radiusd_admin_port',u'Radius服务管理端口',u'1815'),
         ('is_debug',u'DEBUG模式',u'0'),
         ('weixin_qrcode',u'微信公众号二维码图片(宽度230px)',u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'),

@@ -21,6 +21,7 @@ from toughradius.console.base import (
     get_member_by_name,
     get_account_by_number,
     get_online_status,
+    get_product_name,
     Connect,
 )
 import functools
@@ -144,6 +145,7 @@ class CustomerServer(object):
             kb2mb = utils.kb2mb,
             mb2kb = utils.mb2kb,
             sec2hour = utils.sec2hour,
+            is_expire=utils.is_expire,
             request = request,
             sys_param_value = self._sys_param_value,
             get_member = self._get_member_by_name,

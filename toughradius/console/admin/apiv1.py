@@ -1,24 +1,13 @@
 #!/usr/bin/env python
 # coding=utf-8
-from twisted.python import log
-from bottle import Bottle
-from bottle import request
-from bottle import response
-from bottle import redirect
-from bottle import static_file
-from bottle import mako_template as render
-from tablib import Dataset
-from toughradius.console.websock import websock
-from toughradius.console import models
-from toughradius.console.libs import utils
-from toughradius.console.base import *
-from toughradius.console.admin import forms
 from hashlib import md5
-import bottle
-import datetime
 import json
 import time
-from sqlalchemy import func
+
+from bottle import Bottle
+
+from toughradius.console.websock import websock
+from toughradius.console.base import *
 
 __prefix__ = "/api/v1"
 

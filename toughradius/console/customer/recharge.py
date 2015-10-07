@@ -37,6 +37,19 @@ app.config['__prefix__'] = __prefix__
 # recharge
 ###############################################################################
 
+def check_card(card):
+    if not card:
+        return dict(code=1, data=u"充值卡不存在")
+    if card.card_status == CardInActive:
+        return dict(code=1, data=u"充值卡未激活")
+    elif card.card_status == CardUsed:
+        return dict(code=1, data=u"充值卡已被使用")
+    elif card.card_status == CardRecover:
+        return dict(code=1, data=u"充值卡已被回收")
+    if card.expire_date < utils.get_currdate():
+        return dict(code=1, data=u"充值卡已过期")
+    return dict(code=0)
+
 @app.get('/')
 def account_recharge(db, render):
     member = db.query(models.SlcMember).get(get_cookie("customer_id"))

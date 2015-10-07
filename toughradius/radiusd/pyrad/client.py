@@ -112,18 +112,7 @@ class Client(host.Host):
         return host.Host.CreateCoAPacket(self, secret=self.secret, **args)        
 
     def _SendPacket(self, pkt, port):
-        """Send a packet to a RADIUS server.
-
-        :param pkt:  the packet to send
-        :type pkt:   pyrad.packet.Packet
-        :param port: UDP port to send packet to
-        :type port:  integer
-        :return:     the reply packet received
-        :rtype:      pyrad.packet.Packet
-        :raise Timeout: RADIUS server does not reply
-        """
         self._SocketOpen()
-
         for attempt in range(self.retries):
             if attempt and pkt.code == packet.AccountingRequest:
                 if "Acct-Delay-Time" in pkt:

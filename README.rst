@@ -32,4 +32,4 @@ TOUGHRADIUS同时提供一份 `商业授权 <https://github.com/talkincode/Tough
 TOUGHRADIUS 文档
 ====================================
 
-http://docs.toughradius.net/build/html
+http://docs.toughradius.net

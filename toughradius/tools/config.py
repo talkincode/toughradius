@@ -6,13 +6,9 @@ from toughradius.tools.shell import shell as sh
 from toughradius.tools.secret import gen_secret
 
 def find_config(conf_file=None):
-    windows_dir = os.getenv("WINDIR") and os.path.join(os.getenv("WINDIR"),'radiusd.conf') or None
     cfgs = [
         conf_file,
-        '/etc/radiusd.conf',
-        './radiusd.conf',
-        '~/radiusd.conf',
-        windows_dir
+        '/etc/radiusd.conf'
     ]
     config = ConfigParser.ConfigParser()
     flag = False

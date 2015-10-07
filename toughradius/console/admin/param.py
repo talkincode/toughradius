@@ -1,26 +1,11 @@
 #!/usr/bin/env python
 # coding=utf-8
-import sys, os
 from bottle import Bottle
-from bottle import request
-from bottle import response
-from bottle import redirect
-from bottle import MakoTemplate
-from bottle import static_file
-from bottle import abort
-from beaker.cache import cache_managers
-from toughradius.console.libs.paginator import Paginator
-from toughradius.console.libs import utils
+import bottle
+
 from toughradius.console.websock import websock
-from toughradius.console import models
 from toughradius.console.base import *
 from toughradius.console.admin import param_forms
-from hashlib import md5
-from twisted.python import log
-import bottle
-import datetime
-import json
-import functools
 
 __prefix__ = "/param"
 
