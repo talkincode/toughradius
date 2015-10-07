@@ -4,7 +4,7 @@ import sys,os
 import time
 import smtplib
 from email.mime.text import MIMEText
-from email.Header import Header
+from email import Header
 
 class Mail(object):
     
@@ -17,7 +17,7 @@ class Mail(object):
 
     def sendmail(self,mailto,topic,content):
         if not mailto or not topic:return
-        #print 'mailto',mailto,topic,content
+        # print 'mailto',mailto,topic,content
         topic = topic.replace("\n","<br>")
         content = content.replace("\n","<br>")
         mail = MIMEText(content, 'html', 'utf-8')
