@@ -1,6 +1,5 @@
 #coding:utf-8
 from toughradius.console.libs import pyforms
-from toughradius.console.libs.pyforms import dataform
 from toughradius.console.libs.pyforms import rules
 from toughradius.console.libs.pyforms.rules import button_style,input_style
 
@@ -13,6 +12,7 @@ sys_form = pyforms.Form(
     pyforms.Textbox("customer_system_name", description=u"自助服务系统名称", **input_style),
     pyforms.Textbox("customer_system_url", description=u"自助服务系统网站地址", **input_style),
     pyforms.Dropdown("online_support", args=booleans.items(), description=u"开启在线支持功能",help=u"开启此项，可以随时向ToughRADIUS开发团队反馈问题", **input_style),
+    pyforms.Textbox("ticket_expire_days", description=u"上网日志保留天数", **input_style),
     pyforms.Dropdown("is_debug", args=booleans.items(), description=u"开启DEBUG",help=u"开启此项，可以获取更多的系统日志纪录", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
@@ -54,7 +54,7 @@ mail_form = pyforms.Form(
 rad_form = pyforms.Form(
     pyforms.Dropdown("radiusd_bypass", args=bool_bypass.items(), description=u"Radius认证模式", **input_style),
     pyforms.Dropdown("allow_show_pwd", args=booleans.items(), description=u"是否允许查询用户密码", **input_style),
-    pyforms.Textbox("radiusd_address", description=u"Radius服务地址",help=u"填写radius服务器真实的ip地址或域名", **input_style),
+    pyforms.Textbox("radiusd_address", description=u"Radius外部服务地址",help=u"填写radius服务器外部ip地址或域名", **input_style),
     pyforms.Textbox("radiusd_admin_port", rules.is_number, description=u"Radius服务管理端口",help=u"默认为1815,此端口提供一些管理接口功能", **input_style),
     pyforms.Textbox("acct_interim_intelval", rules.is_number, description=u"Radius记账间隔(秒)",help=u"radius向bas设备下发的全局记账间隔，bas不支持则不生效", **input_style),
     pyforms.Textbox("max_session_timeout", rules.is_number, description=u"Radius最大会话时长(秒)",help=u"用户在线达到最大会话时长时会自动断开", **input_style),

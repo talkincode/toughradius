@@ -105,6 +105,7 @@ function do_delete(member_id)
                 <th>区域</th>
                 <th>用户账号</th>
                 <th>用户姓名</th>
+                <th>状态</th>
                 <th>资费</th>
                 <th>创建时间</th>
                 <th>到期时间</th>
@@ -119,6 +120,17 @@ function do_delete(member_id)
                     <a href="/member/detail?account_number=${account.account_number}">${account.account_number}</a>
                 </td>
                 <td>${member.realname}</td>
+                <td>
+                    % if is_expire(account.expire_date) or account.status == 4:
+                        <span class="label label-warning">到期</span>
+                    % elif account.status == 1:
+                        <span class="label label-success">正常</span>
+                    % elif account.status == 2:
+                        <span class="label label-default">停机</span>
+                    % elif account.status == 3:
+                        <span class="label label-danger">销户</span>
+                    % endif
+                </td>
                 <td>${product_name}</td>
                 <td>${member.create_time}</td>
                 <td>${account.expire_date}</td>

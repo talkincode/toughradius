@@ -6,7 +6,6 @@ from twisted.python import log
 from twisted.internet import reactor
 from twisted.web import server, wsgi
 from twisted.python.logfile import DailyLogFile
-from bottle import run as runserver
 
 from toughradius.console.base import *
 from toughradius.console.libs import sqla_plugin,mako_plugin, utils
@@ -158,6 +157,7 @@ class AdminServer(object):
             kb2mb=utils.kb2mb,
             mb2kb=utils.mb2kb,
             sec2hour=utils.sec2hour,
+            is_expire=utils.is_expire,
             request=request,
             sys_param_value=self._sys_param_value,
             get_product_name=self._get_product_name,

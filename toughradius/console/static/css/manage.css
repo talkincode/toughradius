@@ -79,9 +79,9 @@ form .footbotron {
     box-shadow: 2px 2px 3px rgba(174, 173, 173, 0.38);
 }
 
-.panel-heading .bar a:link,
-.panel-heading .bar a:visited,
-.panel-heading .bar a:active,
+.box-header .bar a:link,
+.box-header .bar a:visited,
+.box-header .bar a:active,
 .panel-footer a:link,
 .panel-footer a:visited,
 .panel-footer a:active{
@@ -96,7 +96,7 @@ form .footbotron {
 }
 
 
-.panel-heading .bar a:hover,
+.box-header .bar a:hover,
 .panel-footer a:hover{
     background-color: #e1e3e1;
     color: #000;
@@ -219,7 +219,38 @@ form .footbotron {
     margin: 20px 30px 10px 30px;
 }
 
+.menu > li > a:hover, .skin-blue .sidebar-menu > li.active > a {
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.skin-blue .sidebar a {
+    font-size: 14px;
+}
+
 .sidebar-menu .treeview-menu > li > a {
-    font-size: 12px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.skin-blue .main-header .navbar {
+    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.38);
+}
+
+.skin-blue .main-header .logo {
+    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.18);
+}
+
+input{
+    border-radius: 3px;
+}
+
+.box-header > .fa, .box-header > .glyphicon, .box-header > .ion, .box-header .box-title {
+    color: gray;
+    font-size: 14px;
+}
+
+.box-header > .fa, .box-header > .glyphicon, .box-header > .ion{
+    color: #3c8dbc;
 }
 

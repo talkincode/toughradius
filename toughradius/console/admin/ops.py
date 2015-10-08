@@ -49,11 +49,22 @@ def user_query(db, render):
         _query = _query.filter(models.SlcRadAccount.product_id==product_id)
     if user_name:
         _query = _query.filter(models.SlcRadAccount.account_number.like('%'+user_name+'%'))
+
+    # 用户状态判断
+    _now = datetime.datetime.now()
     if status:
-        _query = _query.filter(models.SlcRadAccount.status == status)
+        if status == '4':
+            _query = _query.filter(models.SlcRadAccount.expire_date <= _now.strftime("%Y-%m-%d"))
+        elif status == '1':
+            _query = _query.filter(
+                models.SlcRadAccount.status == status,
+                models.SlcRadAccount.expire_date >= _now.strftime("%Y-%m-%d")
+            )
+        else:
+            _query = _query.filter(models.SlcRadAccount.status == status)
 
     if request.path == '/user':
-        return render("ops_user_list", page_data = get_page_data(_query),
+        return render("ops_user_list", page_data=get_page_data(_query),
                        node_list=opr_nodes, 
                        product_list=db.query(models.SlcRadProduct),**request.params)
                        
