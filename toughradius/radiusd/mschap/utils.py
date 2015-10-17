@@ -126,7 +126,7 @@ def int2hex_str(number_int16):
 
 def str2unicode(src):
     res = ''
-    for i in string:
+    for i in src:
         res = res + i + '\000'
     return res
 
