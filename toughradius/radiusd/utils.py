@@ -252,7 +252,7 @@ def format_packet_str(pkt):
     _str += "\nhost:%s:%s" % pkt.source
     _str += "\nid:%s" % pkt.id
     _str += "\ncode:%s" % pkt.code
-    _str += "\nauthenticator:%s" % pkt.authenticator
+    _str += "\nauthenticator:%s" % binascii.hexlify(pkt.authenticator)
     _str += "\nAttributes: "     
     for attr in attr_keys:
         try:
