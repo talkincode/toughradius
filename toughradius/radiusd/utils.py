@@ -458,6 +458,8 @@ class AuthPacket2(AuthPacket):
                 self.authenticator,
                 recv_salt
             )
+            print 'send_key',mschap.convert_to_hex_string(send_key),len(send_key)
+            print 'recv_key',mschap.convert_to_hex_string(recv_key),len(recv_key)
             self.ext_attrs['MS-MPPE-Send-Key'] = send_key
             self.ext_attrs['MS-MPPE-Recv-Key'] = recv_key
             return True
