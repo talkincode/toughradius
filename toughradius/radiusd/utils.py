@@ -426,15 +426,6 @@ class AuthPacket2(AuthPacket):
             userpwd,
         )
 
-        print 'request_authenticator',mschap.convert_to_hex_string(self.authenticator),len(self.authenticator)
-        print 'username',_user_name
-        print 'passwd',userpwd
-        print 'authenticator_challenge',mschap.convert_to_hex_string(authenticator_challenge),len(
-            authenticator_challenge)
-        print 'peer_challenge',mschap.convert_to_hex_string(peer_challenge),len(peer_challenge)
-        print 'nt_response', mschap.convert_to_hex_string(nt_response),len(nt_response)
-        print 'my_nt_resp', mschap.convert_to_hex_string(nt_resp), len(nt_resp)
-
         if nt_resp == nt_response:
             auth_resp = mschap.generate_authenticator_response(
                 userpwd,
@@ -448,8 +439,6 @@ class AuthPacket2(AuthPacket):
             self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
             mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
             send_key, recv_key = mppe.gen_radius_encrypt_keys(mppeSendKey,mppeRecvKey,self.secret,self.authenticator)
-            print 'send_key',mschap.convert_to_hex_string(send_key),len(send_key)
-            print 'recv_key',mschap.convert_to_hex_string(recv_key),len(recv_key)
             self.ext_attrs['MS-MPPE-Send-Key'] = send_key
             self.ext_attrs['MS-MPPE-Recv-Key'] = recv_key
             return True
