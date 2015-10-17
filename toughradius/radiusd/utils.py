@@ -447,19 +447,7 @@ class AuthPacket2(AuthPacket):
             self.ext_attrs['MS-MPPE-Encryption-Policy'] = '\x00\x00\x00\x01'
             self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
             mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
-            send_salt, recv_salt = mppe.create_salts()
-            send_key = mppe.radius_encrypt_keys(
-                mppe.create_plain_text(mppeSendKey),
-                self.secret,
-                self.authenticator,
-                send_salt
-            )
-            recv_key = mppe.radius_encrypt_keys(
-                mppe.create_plain_text(mppeRecvKey),
-                self.secret,
-                self.authenticator,
-                recv_salt
-            )
+            send_key, recv_key = mppe.gen_radius_encrypt_keys(mppeSendKey,mppeRecvKey,self.secret,self.authenticator)
             print 'send_key',mschap.convert_to_hex_string(send_key),len(send_key)
             print 'recv_key',mschap.convert_to_hex_string(recv_key),len(recv_key)
             self.ext_attrs['MS-MPPE-Send-Key'] = send_key
