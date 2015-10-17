@@ -425,6 +425,7 @@ class AuthPacket2(AuthPacket):
             userpwd,
         )
 
+        print 'request_authenticator',mschap.convert_to_hex_string(self.authenticator),len(self.authenticator)
         print 'username',_user_name
         print 'passwd',userpwd
         print 'authenticator_challenge',mschap.convert_to_hex_string(authenticator_challenge),len(
