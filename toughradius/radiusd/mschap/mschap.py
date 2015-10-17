@@ -20,6 +20,7 @@ def challenge_hash(peer_challenge, authenticator_challenge, username):
 def nt_password_hash(passwd):
     """NtPasswordHash"""
     pw = utils.str2unicode(passwd)
+    print 'unicode pw',pw
     md4_context = md4.new()
     md4_context.update(pw)
     return md4_context.digest()
