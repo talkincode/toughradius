@@ -85,7 +85,7 @@ GetNewKeyFromSHA(MasterReceiveKey, MasterReceiveKey, 16,
       rc4_key(SendRC4key, 16, SendSessionKey)
       rc4_key(ReceiveRC4key, 16, ReceiveSessionKey)
     """
-    password_hash = mschap.nt_password_hash(password, False)
+    password_hash = mschap.nt_password_hash(password)
     password_hash_hash = mschap.hash_nt_password_hash(password_hash)
     master_key = get_master_key(password_hash_hash, nt_response)
     master_send_key = get_asymetric_start_key(master_key, 16, True, True)
