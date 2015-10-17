@@ -1,5 +1,5 @@
 import mschap
-import sha, md5
+import hashlib
 import random
 
 SHSpad1 = \
@@ -119,7 +119,7 @@ def get_master_key(password_hash_hash, nt_response):
    }
 
     """
-    sha_hash = sha.new()
+    sha_hash = hashlib.sha1()
     sha_hash.update(password_hash_hash)
     sha_hash.update(nt_response)
     sha_hash.update(Magic1)
@@ -182,7 +182,7 @@ VOID
             s = Magic2
         else:
             s = Magic3
-    sha_hash = sha.new()
+    sha_hash = hashlib.sha1()
     sha_hash.update(master_key)
     sha_hash.update(SHSpad1)
     sha_hash.update(s)
@@ -235,14 +235,13 @@ def radius_encrypt_keys(plain_text, secret, request_authenticator, salt):
       c(1)+c(2)+...+c(i).
     """
     i = len(plain_text) / 16
-    b = md5.new(secret + request_authenticator + salt).digest()
+    b = hashlib.new("md5", secret + request_authenticator + salt).digest()
     c = xor(plain_text[:16], b)
     result = c
     for x in range(1, i):
-        b = md5.new(secret + c).digest()
+        b = hashlib.new("md5", secret + c).digest()
         c = xor(plain_text[x * 16:(x + 1) * 16], b)
         result += c
-
     return result
 
 
