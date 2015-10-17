@@ -208,13 +208,13 @@ def create_salt():
 
 def gen_radius_encrypt_keys(send_key, recv_key, secret, request_authenticator):
     send_salt, recv_salt = create_salts()
-    _send_key = radius_encrypt_keys(
+    _send_key = send_salt + radius_encrypt_keys(
         create_plain_text(send_key),
         secret,
         request_authenticator,
         send_salt
     )
-    _recv_key = radius_encrypt_keys(
+    _recv_key = recv_salt + radius_encrypt_keys(
         create_plain_text(recv_key),
         secret,
         request_authenticator,
