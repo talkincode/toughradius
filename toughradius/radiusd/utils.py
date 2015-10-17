@@ -442,11 +442,11 @@ class AuthPacket2(AuthPacket):
                 _user_name
             )
             self.ext_attrs['MS-CHAP2-Success'] = auth_resp
-            self.ext_attrs['MS-MPPE-Encryption-Policy'] = '\x00\x00\x00\x01'
-            self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
-            mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
-            self.ext_attrs['MS-MPPE-Send-Key'] = mppeSendKey
-            self.ext_attrs['MS-MPPE-Recv-Key'] = mppeRecvKey
+            # self.ext_attrs['MS-MPPE-Encryption-Policy'] = '\x00\x00\x00\x01'
+            # self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
+            # mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
+            # self.ext_attrs['MS-MPPE-Send-Key'] = mppeSendKey
+            # self.ext_attrs['MS-MPPE-Recv-Key'] = mppeRecvKey
             return True
         else:
             self.ext_attrs['Reply-Message'] = "E=691 R=1 C=%s V=3 M=<password error>" % ('\0' * 32)
