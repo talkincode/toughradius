@@ -425,6 +425,12 @@ class AuthPacket2(AuthPacket):
             userpwd,
         )
 
+        print 'username',_user_name
+        print 'passwd',userpwd
+        print 'peer_challenge',mschap.convert_to_hex_string(peer_challenge),len(peer_challenge)
+        print 'nt_response', mschap.convert_to_hex_string(nt_response),len(nt_response)
+        print 'my_nt_resp', mschap.convert_to_hex_string(nt_resp), len(nt_resp)
+
         if nt_resp == nt_response:
             auth_resp = mschap.generate_authenticator_response(
                 userpwd,
