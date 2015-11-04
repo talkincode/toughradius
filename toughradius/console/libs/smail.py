@@ -4,7 +4,7 @@ import sys,os
 import time
 import smtplib
 from email.mime.text import MIMEText
-from email import Header
+from email.header import Header
 
 class Mail(object):
     
