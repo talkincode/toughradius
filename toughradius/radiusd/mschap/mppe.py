@@ -1,47 +1,48 @@
 import mschap
-import sha,md5
+import hashlib
 import random
 
 SHSpad1 = \
-   "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"+\
-   "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"+\
-   "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"+\
-   "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + \
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + \
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00" + \
+    "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
 
 SHSpad2 = \
-   "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2"+\
-   "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2"+\
-   "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2"+\
-   "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2"
+    "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2" + \
+    "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2" + \
+    "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2" + \
+    "\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2\xf2"
 
 Magic1 = \
-    "\x54\x68\x69\x73\x20\x69\x73\x20\x74"+\
-    "\x68\x65\x20\x4d\x50\x50\x45\x20\x4d"+\
+    "\x54\x68\x69\x73\x20\x69\x73\x20\x74" + \
+    "\x68\x65\x20\x4d\x50\x50\x45\x20\x4d" + \
     "\x61\x73\x74\x65\x72\x20\x4b\x65\x79"
 
 Magic2 = \
-    "\x4f\x6e\x20\x74\x68\x65\x20\x63\x6c\x69"+\
-    "\x65\x6e\x74\x20\x73\x69\x64\x65\x2c\x20"+\
-    "\x74\x68\x69\x73\x20\x69\x73\x20\x74\x68"+\
-    "\x65\x20\x73\x65\x6e\x64\x20\x6b\x65\x79"+\
-    "\x3b\x20\x6f\x6e\x20\x74\x68\x65\x20\x73"+\
-    "\x65\x72\x76\x65\x72\x20\x73\x69\x64\x65"+\
-    "\x2c\x20\x69\x74\x20\x69\x73\x20\x74\x68"+\
-    "\x65\x20\x72\x65\x63\x65\x69\x76\x65\x20"+\
+    "\x4f\x6e\x20\x74\x68\x65\x20\x63\x6c\x69" + \
+    "\x65\x6e\x74\x20\x73\x69\x64\x65\x2c\x20" + \
+    "\x74\x68\x69\x73\x20\x69\x73\x20\x74\x68" + \
+    "\x65\x20\x73\x65\x6e\x64\x20\x6b\x65\x79" + \
+    "\x3b\x20\x6f\x6e\x20\x74\x68\x65\x20\x73" + \
+    "\x65\x72\x76\x65\x72\x20\x73\x69\x64\x65" + \
+    "\x2c\x20\x69\x74\x20\x69\x73\x20\x74\x68" + \
+    "\x65\x20\x72\x65\x63\x65\x69\x76\x65\x20" + \
     "\x6b\x65\x79\x2e"
 
 Magic3 = \
-    "\x4f\x6e\x20\x74\x68\x65\x20\x63\x6c\x69"+\
-    "\x65\x6e\x74\x20\x73\x69\x64\x65\x2c\x20"+\
-    "\x74\x68\x69\x73\x20\x69\x73\x20\x74\x68"+\
-    "\x65\x20\x72\x65\x63\x65\x69\x76\x65\x20"+\
-    "\x6b\x65\x79\x3b\x20\x6f\x6e\x20\x74\x68"+\
-    "\x65\x20\x73\x65\x72\x76\x65\x72\x20\x73"+\
-    "\x69\x64\x65\x2c\x20\x69\x74\x20\x69\x73"+\
-    "\x20\x74\x68\x65\x20\x73\x65\x6e\x64\x20"+\
-    "\x6b\x65\x79\x2e"    
+    "\x4f\x6e\x20\x74\x68\x65\x20\x63\x6c\x69" + \
+    "\x65\x6e\x74\x20\x73\x69\x64\x65\x2c\x20" + \
+    "\x74\x68\x69\x73\x20\x69\x73\x20\x74\x68" + \
+    "\x65\x20\x72\x65\x63\x65\x69\x76\x65\x20" + \
+    "\x6b\x65\x79\x3b\x20\x6f\x6e\x20\x74\x68" + \
+    "\x65\x20\x73\x65\x72\x76\x65\x72\x20\x73" + \
+    "\x69\x64\x65\x2c\x20\x69\x74\x20\x69\x73" + \
+    "\x20\x74\x68\x65\x20\x73\x65\x6e\x64\x20" + \
+    "\x6b\x65\x79\x2e"
 
-def mppe_chap2_gen_keys(password,nt_response):
+
+def mppe_chap2_gen_keys(password, nt_response):
     """
 3.3.  Generating 128-bit Session Keys
 
@@ -84,15 +85,15 @@ GetNewKeyFromSHA(MasterReceiveKey, MasterReceiveKey, 16,
       rc4_key(SendRC4key, 16, SendSessionKey)
       rc4_key(ReceiveRC4key, 16, ReceiveSessionKey)
     """
-    password_hash=mschap.nt_password_hash(password,False)
-    password_hash_hash=mschap.hash_nt_password_hash(password_hash)
-    master_key=get_master_key(password_hash_hash,nt_response)
-    master_send_key=get_asymetric_start_key(master_key,16,True,True)
-    master_recv_key=get_asymetric_start_key(master_key,16,False,True)
-    return (master_send_key,master_recv_key)
+    password_hash = mschap.nt_password_hash(password)
+    password_hash_hash = mschap.hash_nt_password_hash(password_hash)
+    master_key = get_master_key(password_hash_hash, nt_response)
+    master_send_key = get_asymetric_start_key(master_key, 16, True, True)
+    master_recv_key = get_asymetric_start_key(master_key, 16, False, True)
+    return master_send_key, master_recv_key
 
 
-def get_master_key(password_hash_hash,nt_response):
+def get_master_key(password_hash_hash, nt_response):
     """
    GetMasterKey(
    IN  16-octet  PasswordHashHash,
@@ -118,13 +119,14 @@ def get_master_key(password_hash_hash,nt_response):
    }
 
     """
-    sha_hash=sha.new()
+    sha_hash = hashlib.sha1()
     sha_hash.update(password_hash_hash)
     sha_hash.update(nt_response)
     sha_hash.update(Magic1)
     return sha_hash.digest()[:16]
 
-def get_asymetric_start_key(master_key,session_key_length,is_send,is_server):
+
+def get_asymetric_start_key(master_key, session_key_length, is_send, is_server):
     """
 
 VOID
@@ -171,37 +173,58 @@ VOID
    }
     """
     if is_send:
-	if is_server:
-	    s=Magic3
-	else:
-	    s=Magic2
+        if is_server:
+            s = Magic3
+        else:
+            s = Magic2
     else:
-	if is_server:
-	    s=Magic2
-	else:
-	    s=Magic3
-    sha_hash=sha.new()
+        if is_server:
+            s = Magic2
+        else:
+            s = Magic3
+    sha_hash = hashlib.sha1()
     sha_hash.update(master_key)
     sha_hash.update(SHSpad1)
     sha_hash.update(s)
     sha_hash.update(SHSpad2)
     return sha_hash.digest()[:session_key_length]
 
+
 def create_plain_text(key):
-    key_len=len(key)
-    while (len(key)+1)%16: key+="\000"
-    return chr(key_len)+key
+    key_len = len(key)
+    while (len(key) + 1) % 16: key += "\000"
+    return chr(key_len) + key
+
 
 def create_salts():
-    send_salt=create_salt()
-    recv_salt=create_salt()
-    while send_salt==recv_salt: recv_salt=create_salt()
-    return (send_salt,recv_salt)    
+    send_salt = create_salt()
+    recv_salt = create_salt()
+    while send_salt == recv_salt: recv_salt = create_salt()
+    return (send_salt, recv_salt)
+
 
 def create_salt():
-    return chr(128+random.randrange(0,128))+chr(random.randrange(0,256))
+    return chr(128 + random.randrange(0, 128)) + chr(random.randrange(0, 256))
 
-def radius_encrypt_keys(plain_text,secret,request_authenticator,salt):
+def gen_radius_encrypt_keys(send_key, recv_key, secret, request_authenticator):
+    send_salt, recv_salt = create_salts()
+    _send_key = send_salt + radius_encrypt_keys(
+        create_plain_text(send_key),
+        secret,
+        request_authenticator,
+        send_salt
+    )
+    _recv_key = recv_salt + radius_encrypt_keys(
+        create_plain_text(recv_key),
+        secret,
+        request_authenticator,
+        recv_salt
+    )
+
+    return _send_key, _recv_key
+
+
+def radius_encrypt_keys(plain_text, secret, request_authenticator, salt):
     """
   Construct a plaintext version of the String field by concate-
          nating the Key-Length and Key sub-fields.  If necessary, pad
@@ -228,17 +251,16 @@ def radius_encrypt_keys(plain_text,secret,request_authenticator,salt):
       The   resulting   encrypted   String   field    will    contain
       c(1)+c(2)+...+c(i).
     """
-    i=len(plain_text)/16
-    b=md5.new(secret+request_authenticator+salt).digest()
-    c=xor(plain_text[:16],b)
-    result=c
-    for x in range(1,i):
-	b=md5.new(secret+c).digest()
-	c=xor(plain_text[x*16:(x+1)*16],b)
-	result+=c
-
+    i = len(plain_text) / 16
+    b = hashlib.new("md5", secret + request_authenticator + salt).digest()
+    c = xor(plain_text[:16], b)
+    result = c
+    for x in range(1, i):
+        b = hashlib.new("md5", secret + c).digest()
+        c = xor(plain_text[x * 16:(x + 1) * 16], b)
+        result += c
     return result
-    
-def xor(str1,str2):
-    return ''.join(map(lambda s1,s2:chr(ord(s1)^ord(s2)),str1,str2))
-    
+
+
+def xor(str1, str2):
+    return ''.join(map(lambda s1, s2: chr(ord(s1) ^ ord(s2)), str1, str2))
