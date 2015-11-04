@@ -45,6 +45,23 @@ PacketStatusTypeMap = {
     45 : 'CoANAK',
 }
 
+
+# XXX - ''.join([(len(`chr(x)`)==3) and chr(x) or '.' for x in range(256)])
+__vis_filter = """................................ !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[.]^_`abcdefghijklmnopqrstuvwxyz{|}~................................................................................................................................."""
+
+
+def hexdump(buf, length=16):
+    """Return a hexdump output string of the given buffer."""
+    n = 0
+    res = []
+    while buf:
+        line, buf = buf[:length], buf[length:]
+        hexa = ' '.join(['%02x' % ord(x) for x in line])
+        line = line.translate(__vis_filter)
+        res.append('  %04d:  %-*s %s' % (n, length * 3, hexa, line))
+        n += length
+    return '\n'.join(res)
+
 def is_expire(dstr):
     if not dstr:
         return False
@@ -235,6 +252,7 @@ def format_packet_str(pkt):
     _str += "\nhost:%s:%s" % pkt.source
     _str += "\nid:%s" % pkt.id
     _str += "\ncode:%s" % pkt.code
+    _str += "\nauthenticator:%s" % binascii.hexlify(pkt.authenticator)
     _str += "\nAttributes: "     
     for attr in attr_keys:
         try:
@@ -387,38 +405,7 @@ class AuthPacket2(AuthPacket):
 
         _pwd =  md5_constructor("%s%s%s"%(chapid,userpwd,challenge)).digest()
         return password == _pwd
-        
-        
-    def verifyMsChapV1(self,userpwd):
-        ms_chap_response = self['MS-CHAP-Response'][0]
-        authenticator_challenge = self['MS-CHAP-Challenge'][0]
-        if len(ms_chap_response)!=50:
-            raise Exception("Invalid MSCHAPV1-Response attribute length")
-        
-        flag = ms_chap_response[1]
-        lm_password = None
-        nt_password = None
-        if flag == 0:
-            lm_password = ms_chap_response[2:26]
-        else:
-            nt_password = ms_chap_response[26:50]
-        
-        resp = None
-        auth_ok = False
-        if nt_password:
-            resp = mschap.generate_nt_response_mschap(authenticator_challenge,userpwd)
-            auth_ok = (resp == nt_password)
-        elif lm_password:
-            resp = mschap.generate_lm_response_mschap(authenticator_challenge,userpwd)
-            auth_ok = (resp == lm_password)
-        if not auth_ok:return False
-        
-        nt_hash = mschap.nt_password_hash(userpwd)
-        lm_hash = mschap.lm_password_hash(userpwd)
-        _key = (nt_hash + lm_hash).ljust(32,'0')
-        mppekey = mppe.radius_encrypt_keys(_key,self.secret,self.authenticator,mppe.create_salt())
-        self.ext_attrs['MS-CHAP-MPPE-Keys'] = mppekey    
-        return True
+
         
         
     def verifyMsChapV2(self,userpwd):
@@ -438,6 +425,7 @@ class AuthPacket2(AuthPacket):
             _user_name,
             userpwd,
         )
+
         if nt_resp == nt_response:
             auth_resp = mschap.generate_authenticator_response(
                 userpwd,
@@ -449,12 +437,13 @@ class AuthPacket2(AuthPacket):
             self.ext_attrs['MS-CHAP2-Success'] = auth_resp
             self.ext_attrs['MS-MPPE-Encryption-Policy'] = '\x00\x00\x00\x01'
             self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
-            nt_pwd_hash = mschap.nt_password_hash(userpwd)
             mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
-            self.ext_attrs['MS-MPPE-Send-Key'] = mppeSendKey
-            self.ext_attrs['MS-MPPE-Recv-Key'] = mppeRecvKey
+            send_key, recv_key = mppe.gen_radius_encrypt_keys(mppeSendKey,mppeRecvKey,self.secret,self.authenticator)
+            self.ext_attrs['MS-MPPE-Send-Key'] = send_key
+            self.ext_attrs['MS-MPPE-Recv-Key'] = recv_key
             return True
         else:
+            self.ext_attrs['Reply-Message'] = "E=691 R=1 C=%s V=3 M=<password error>" % ('\0' * 32)
             return False
         
         
@@ -472,13 +461,14 @@ class AuthPacket2(AuthPacket):
 
     def is_valid_pwd(self,userpwd):
         pwd_type = self.get_pwd_type()
+        print ':::::::: auth type %s' % pwd_type
         try:
             if pwd_type == 'pap':
                 return userpwd == self.get_passwd()
             elif pwd_type == 'chap':
                 return self.verifyChapEcrypt(userpwd)
             elif pwd_type == 'mschapv1':
-                return self.verifyMsChapV1(userpwd)
+                return False
             elif pwd_type == 'mschapv2':
                 return self.verifyMsChapV2(userpwd)
             else:

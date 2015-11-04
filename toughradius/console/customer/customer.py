@@ -1,37 +1,23 @@
 #!/usr/bin/env python
 #coding:utf-8
-import sys,os
+
+import os
 from twisted.internet import reactor
 from bottle import Bottle
-from bottle import request
-from bottle import response
-from bottle import redirect
-from bottle import run as runserver
-from bottle import static_file
 from bottle import abort
-from hashlib import md5
-from tablib import Dataset
-from toughradius.console.libs import sqla_plugin 
-from urlparse import urljoin
+from sqlalchemy.sql import exists
 from toughradius.console.base import *
 from toughradius.console.libs import utils
-from toughradius.console.libs.validate import vcache
 from toughradius.console.libs.smail import mail
 from toughradius.console.websock import websock
 from toughradius.console import models
 from toughradius.console.customer import forms
-from sqlalchemy.sql import exists
-import time
-import bottle
-import decimal
-import datetime
-import functools
 
 app = Bottle()
 
 ###############################################################################
 # Basic handle         
-###############################################################################   
+###############################################################################
 
 @app.route('/static/:path#.+#')
 def route_static(path,render):
@@ -313,7 +299,7 @@ def email_reactive(db, render):
 @app.get('/account/detail',apply=auth_cus)
 def account_detail(db, render):
     account_number = request.params.get('account_number')  
-    user  = db.query(
+    user = db.query(
         models.SlcMember.realname,
         models.SlcRadAccount.member_id,
         models.SlcRadAccount.account_number,
@@ -447,4 +433,3 @@ def portal_auth(db, render):
         return abort(403,'token is invalid')
         
 
-        
