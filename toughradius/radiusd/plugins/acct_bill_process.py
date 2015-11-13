@@ -49,7 +49,7 @@ def process(req=None,user=None,radiusd=None,**kwargs):
 
     def process_pptimes():
         # 预付费时长
-        radiusd.syslog.info('[username:%s] > Prepaid long time billing '%req.get_user_name())
+        radiusd.syslog.debug('[username:%s] > Prepaid long time billing '%req.get_user_name())
         user_balance = store.get_user_balance(user['account_number'])
         sessiontime = decimal.Decimal(req.get_acct_sessiontime())
         billing_times = decimal.Decimal(online['billing_times'])
@@ -88,7 +88,7 @@ def process(req=None,user=None,radiusd=None,**kwargs):
         
     def process_botimes():
         #买断时长
-        radiusd.syslog.info('[username:%s] > Buyout long time billing '%req.get_user_name())
+        radiusd.syslog.debug('[username:%s] > Buyout long time billing '%req.get_user_name())
         time_length = store.get_user_time_length(user['account_number'])
         sessiontime = req.get_acct_sessiontime()
         billing_times = online['billing_times']
@@ -121,7 +121,7 @@ def process(req=None,user=None,radiusd=None,**kwargs):
         
     def process_ppflows():
         #预付费流量
-        radiusd.syslog.info('[username:%s] > Prepaid flow billing '%req.get_user_name())
+        radiusd.syslog.debug('[username:%s] > Prepaid flow billing '%req.get_user_name())
         user_balance = store.get_user_balance(user['account_number'])
         output_total = decimal.Decimal(req.get_output_total())
         billing_output_total = decimal.Decimal(online['output_total'])
@@ -159,7 +159,7 @@ def process(req=None,user=None,radiusd=None,**kwargs):
         
     def process_boflows():
         #买断流量
-        radiusd.syslog.info('[username:%s] > Buyout flow billing '%req.get_user_name())
+        radiusd.syslog.debug('[username:%s] > Buyout flow billing '%req.get_user_name())
         flow_length = store.get_user_flow_length(user['account_number'])
         output_total = req.get_output_total()
         billing_output_total = online['output_total']

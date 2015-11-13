@@ -67,12 +67,12 @@ class CoAClient(protocol.DatagramProtocol):
             **kwargs)    
     
     def sendCoA(self,pkt):
-        self.syslog.info("send radius Coa Request [username:%s]: %s" % (pkt['User-Name'], repr(pkt)))
+        self.syslog.debug("send radius Coa Request [username:%s]: %s" % (pkt['User-Name'], repr(pkt)))
         try:
             print self.vendor_id
             if self.vendor_id == ikuai.VENDOR_ID:
                 pkg = ikuai.create_dm_pkg(self.secret,pkt["User-Name"][0])
-                self.syslog.info("send ikuai radius Coa Request [username:%s]: %s" % (pkt['User-Name'], repr(pkg)))
+                self.syslog.debug("send ikuai radius Coa Request [username:%s]: %s" % (pkt['User-Name'], repr(pkg)))
                 self.transport.write(pkg,(self.addr, self.port))
             else:
                 self.transport.write(pkt.RequestPacket(),(self.addr, self.port))
@@ -85,7 +85,7 @@ class CoAClient(protocol.DatagramProtocol):
         try:
             coaResponse = self.createPacket(packet=datagram)
             coaResponse.source = (host, port)
-            self.syslog.info("Received Radius Coa Response: %s" % (repr(coaResponse)))
+            self.syslog.debug("Received Radius Coa Response: %s" % (repr(coaResponse)))
             if self.debug:
                 log.msg(coaResponse.format_str(),level=logging.DEBUG)
             self.processPacket(coaResponse)
@@ -127,7 +127,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
             _packet = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(secret)),vendor_id=vendor_id)
             _packet.deferred.addCallbacks(self.reply,self.on_exception)
             _packet.source = (host, port)
-            self.syslog.info("Received radius request: %s" % (str(_packet)))
+            self.syslog.debug("Received radius request: %s" % (str(_packet)))
             if self.debug:
                 log.msg(_packet.format_str(),level=logging.DEBUG)    
             self.processPacket(_packet)
@@ -135,7 +135,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
             self.syslog.error('Dropping invalid packet from %s: %s'%((host, port),str(err)))
 
     def reply(self,reply):
-        self.syslog.info("send radius response: %s"%(repr(reply)))
+        self.syslog.debug("send radius response: %s"%(repr(reply)))
         if self.debug:
             log.msg(reply.format_str(),level=logging.DEBUG)
         self.transport.write(reply.ReplyPacket(), reply.source)  
@@ -244,10 +244,10 @@ class AdminServerProtocol(WebSocketServerProtocol):
     radiusd = None
 
     def onConnect(self, request):
-        self.syslog.info("Client connecting: {0}".format(request.peer))
+        log.msg("Client connecting: {0}".format(request.peer))
 
     def onOpen(self):
-        self.syslog.info("WebSocket connection open.")
+        log.msg("WebSocket connection open.")
 
     def onMessage(self, payload, isBinary):
         req_msg = None
@@ -263,7 +263,7 @@ class AdminServerProtocol(WebSocketServerProtocol):
             self.radiusd.midware.process(plugin,req=req_msg,admin=self)
 
     def onClose(self, wasClean, code, reason):
-        self.syslog.info("WebSocket connection closed: {0}".format(reason))
+        log.msg("WebSocket connection closed: {0}".format(reason))
 
 ###############################################################################
 # Radius  Server                                                              ####
