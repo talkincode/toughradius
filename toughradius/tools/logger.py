@@ -46,7 +46,9 @@ class SysLogger:
 
         print 'enable basic logging'
         stream_handler = logging.StreamHandler(sys.stderr)
-        stream_handler.setFormatter(FORMATTER)
+        formatter = logging.Formatter(u'%(name)-7s %(asctime)s %(levelname)-8s %(message)s',
+                                      '%a, %d %b %Y %H:%M:%S', )
+        stream_handler.setFormatter(formatter)
         self.syslogger.addHandler(stream_handler)
 
         self.info = self.syslogger.info
