@@ -327,7 +327,7 @@ class RadiusServer(object):
     def init_db_engine(self):
         if not self.db_engine:
             self.db_engine = get_engine(self.config)
-        self.store = Store(self.config,self.db_engine)
+        self.store = Store(self.config,self.db_engine,syslog=self.syslog)
 
     def reload_coa_clients(self):
         for bas in self.store.list_bas():
