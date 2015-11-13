@@ -6,6 +6,7 @@ from twisted.web.client import getPage
 from twisted.internet import task
 from sqlalchemy.sql import func
 from toughradius.console import models
+from toughradius.console.base import  syslog
 from toughradius.console.libs.smail import mail
 from urllib import quote
 import datetime
@@ -32,7 +33,7 @@ def __online_stat_job(mk_db):
             log.msg("online stat task done")
         except Exception as err:
             db.rollback()
-            log.err(err,'online_stat_job err')
+            syslog.error('online_stat_job err,%s'%(str(err)))
         finally:
             db.close()
 
@@ -64,7 +65,7 @@ def __flow_stat_job(mk_db):
             log.msg("flow stat task done")
         except  Exception as err:
             db.rollback()
-            log.err(err,'flow_stat_job err')
+            syslog.error('flow_stat_job err %s'%str(err))
         finally:
             db.close()
 
@@ -103,7 +104,7 @@ def __expire_notify(mk_db):
             models.SlcRadAccount.status == 1
         )
 
-        log.msg('expire_notify total: %s'%expire_query.count())
+        syslog.info('expire_notify total: %s'%expire_query.count())
         commands = []
         for account,expire,email,mobile in expire_query:
             ctx = notify_tpl.replace('#account#',account)
@@ -124,7 +125,7 @@ def __expire_notify(mk_db):
 
     except Exception as err:
         db.rollback()
-        log.err(err,'expire notify erro')
+        syslog.error('expire notify error %s' % str(err))
     finally:
         db.close()
         
@@ -146,7 +147,7 @@ def __clear_ticket_job(mk_db):
             log.msg("clear ticket task done")
         except  Exception as err:
             db.rollback()
-            log.err(err,'clear_ticket_job err')
+            syslog.error('clear_ticket_job err %s' % str(err))
         finally:
             db.close()
 

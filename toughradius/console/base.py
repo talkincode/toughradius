@@ -8,6 +8,7 @@ from bottle import HTTPError
 from bottle import static_file
 from bottle import mako_template
 from toughradius.console.libs.paginator import Paginator
+from toughradius.tools import logger,config as iconfig
 from toughradius.console.libs import utils
 from toughradius.console import models
 from beaker.cache import CacheManager
@@ -59,7 +60,9 @@ page_size = 20
 
 __cache_timeout__ = 600
 
-cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }}) 
+cache = CacheManager(cache_regions={'short_term':{ 'type': 'memory', 'expire': __cache_timeout__ }})
+
+syslog = logger.SysLogger(iconfig.find_config())
    
 class Connect:
     def __init__(self, mkdb):

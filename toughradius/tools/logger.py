@@ -29,7 +29,7 @@ class SysLogger:
         self.syslog_port = config.getint("DEFAULT", 'syslog_port') or 514
         if self.syslog_server:
             self.syslog_address = (self.syslog_server,self.syslog_port)
-        self.level = string_to_level(config.get("DEFAULT", 'syslog_level', 'INFO'))
+        self.level = logging.INFO
         if config.getboolean("DEFAULT", "debug"):
             self.level = logging.DEBUG
         self.syslogger = logging.getLogger('toughradius')

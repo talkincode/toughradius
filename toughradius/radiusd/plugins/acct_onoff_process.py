@@ -15,8 +15,8 @@ def process(req=None,user=None,radiusd=None,**kwargs):
     if req.get_acct_status_type() == STATUS_TYPE_ACCT_ON:
         store.unlock_online(req.get_nas_addr(),None,STATUS_TYPE_ACCT_ON)
         runstat.acct_on += 1  
-        log.msg('bas accounting on success',level=logging.INFO)
+        radiusd.syslog.info('bas accounting on success')
     else:
         store.unlock_online(req.get_nas_addr(),None,STATUS_TYPE_ACCT_OFF)
-        runstat.acct_off += 1  
-        log.msg('bas accounting off success',level=logging.INFO)
+        runstat.acct_off += 1
+        radiusd.syslog.info('bas accounting off success')

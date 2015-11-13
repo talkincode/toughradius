@@ -12,7 +12,7 @@ def process(req=None,user=None,radiusd=None,**kwargs):
         return   
 
     if not user:
-        return log.err("[Acct] Received an accounting update request but user[%s] not exists"%req.get_user_name())      
+        return radiusd.syslog.error("[Acct] Received an accounting update request but [username:%s] not exists"%req.get_user_name())
 
     runstat=radiusd.runstat
     store = radiusd.store
@@ -37,7 +37,6 @@ def process(req=None,user=None,radiusd=None,**kwargs):
             output_total = req.get_output_total(),
             start_source = STATUS_TYPE_UPDATE
         )
-        store.add_online(online)   
+        store.add_online(online)
 
-    log.msg('%s Accounting update request, update online'%req.get_user_name(),level=logging.INFO)
-        
+    radiusd.syslog.info('[username:%s] Accounting update request, update online'%req.get_user_name())

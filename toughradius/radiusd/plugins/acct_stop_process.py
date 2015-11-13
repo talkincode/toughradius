@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 from twisted.python import log
-from toughradius.radiusd.pyrad import packet
 from toughradius.radiusd.settings import *
-from toughradius.radiusd import utils
 import logging
 import datetime
 
@@ -38,7 +36,7 @@ def process(req=None,user=None,radiusd=None,**kwargs):
         ticket.stop_source = STATUS_TYPE_STOP
         store.add_ticket(ticket)
 
-    log.msg('%s Accounting stop request, remove online'%req.get_user_name(),level=logging.INFO)
+    radiusd.syslog.info('[username:%s] Accounting stop request, remove online'%req.get_user_name(),level=logging.INFO)
 
 
 

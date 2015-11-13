@@ -16,11 +16,11 @@ def process(req=None,user=None,radiusd=None,**kwargs):
     
     if store.is_online(req.get_nas_addr(),req.get_acct_sessionid()):
         runstat.acct_drop += 1
-        return log.err('online %s is exists'%req.get_acct_sessionid())
+        return radiusd.syslog.error('online [username:%s] %s is exists'% (req.get_user_name(), req.get_acct_sessionid()))
 
     if not user:
         runstat.acct_drop += 1
-        return log.err('user %s not exists'%req.get_user_name())
+        return radiusd.syslog.error('[username:%s] %s not exists'%req.get_user_name())
 
     runstat.acct_start += 1    
     online = utils.Storage(
@@ -39,4 +39,4 @@ def process(req=None,user=None,radiusd=None,**kwargs):
 
     store.add_online(online)
 
-    log.msg('%s Accounting start request, add new online'%req.get_user_name(),level=logging.INFO)
+    radiusd.syslog.info('[username:%s] Accounting start request, add new online'%req.get_user_name())

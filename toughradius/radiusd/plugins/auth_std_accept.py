@@ -75,6 +75,7 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
             else:
                 _attrs[attr_name] = [attr_value]
         except:
+            radiusd.syslog.error("process product attr error")
             import traceback
             traceback.print_exc()
     

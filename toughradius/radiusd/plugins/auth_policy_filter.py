@@ -51,7 +51,7 @@ def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
                 coa_client.sendCoA(dmeq)
                 return resp
             except:
-                log.err('send dm error')
+                radiusd.syslog.error('send dm error')
                 return error_auth(resp, 'user session to limit & send dm error')
         elif store.count_online(user['account_number']) > user['user_concur_number']:
             return error_auth(resp, 'user session to limit')

@@ -57,7 +57,7 @@ def warp_html(code, value):
 
 def execute(cmd):
     try:
-        log.msg("execute %s"%cmd)
+        syslog.info("execute %s"%cmd)
         rcode, stdout, stderr = run_command(cmd, True)
         return dict(value=warp_html(rcode, (stdout or stderr)))
     except ToughError, err:
