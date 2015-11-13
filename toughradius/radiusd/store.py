@@ -2,6 +2,7 @@
 #coding=utf-8
 from beaker.cache import CacheManager
 from sqlalchemy.sql import text as _sql
+from toughradius.tools import logger,config as iconfig
 import functools
 import settings
 import datetime
@@ -34,9 +35,10 @@ ticket_fds = [
 
 class Store():
 
-    def __init__(self,config,db_engine):
+    def __init__(self,config,db_engine,syslog=None):
         global __cache_timeout__
         __cache_timeout__ = config.get("radiusd",'cache_timeout')
+        self.syslog = syslog or logger.SysLogger(iconfig.find_config())
         self.db_engine = db_engine
 
     @cache.cache('get_param',expire=__cache_timeout__)   

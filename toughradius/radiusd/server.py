@@ -1,32 +1,27 @@
 #!/usr/bin/env python
 #coding=utf-8
-import sys,os
-import ConfigParser
-from twisted.python.logfile import DailyLogFile
+import sys
+import datetime
+import logging
+import time
+import json
+import os
 from twisted.python import log
 from twisted.internet import task
-from twisted.internet.defer import Deferred
 from twisted.internet import protocol
 from twisted.internet import reactor
 from autobahn.twisted.websocket import WebSocketServerProtocol
 from autobahn.twisted.websocket import WebSocketServerFactory
+import six
 from toughradius.radiusd.settings import *
 from toughradius.radiusd.pyrad import dictionary
 from toughradius.radiusd.pyrad import host
 from toughradius.radiusd.pyrad import packet
 from toughradius.radiusd.store import Store
 from toughradius.radiusd import middleware
-from toughradius.radiusd import settings
 from toughradius.radiusd import utils
+from toughradius.tools import logger
 from toughradius.tools.dbengine import get_engine
-import datetime
-import logging
-import pprint
-import socket
-import time
-import json
-import six
-import os
 import ikuai
 
 __verson__ = '0.7'
@@ -39,7 +34,7 @@ class PacketError(Exception):pass
 
 class CoAClient(protocol.DatagramProtocol):
     
-    def __init__(self, bas,dict=None,debug=False):
+    def __init__(self, bas,dict=None,debug=False, syslog=None):
         assert bas 
         self.bas = bas
         self.dict = dict
@@ -48,6 +43,7 @@ class CoAClient(protocol.DatagramProtocol):
         self.port = self.bas['coa_port']
         self.vendor_id = int(self.bas['vendor_id'])
         self.debug=debug
+        self.syslog = syslog
         self.uport = reactor.listenUDP(0, self)
 
     def close(self):
@@ -55,7 +51,7 @@ class CoAClient(protocol.DatagramProtocol):
         try:
             self.uport.stopListening()
         except:
-            pass
+            self.syslog.error("close coa client error")
         
     def processPacket(self, pkt):
         pass
@@ -71,33 +67,33 @@ class CoAClient(protocol.DatagramProtocol):
             **kwargs)    
     
     def sendCoA(self,pkt):
-        log.msg("send radius Coa Request: %s"%(pkt),level=logging.INFO)
+        self.syslog.info("send radius Coa Request [username:%s]: %s" % (pkt['User-Name'], repr(pkt)))
         try:
             print self.vendor_id
             if self.vendor_id == ikuai.VENDOR_ID:
                 pkg = ikuai.create_dm_pkg(self.secret,pkt["User-Name"][0])
-                log.msg("send ikuai radius Coa Request: %s"%(repr(pkg)),level=logging.INFO)
+                self.syslog.info("send ikuai radius Coa Request [username:%s]: %s" % (pkt['User-Name'], repr(pkg)))
                 self.transport.write(pkg,(self.addr, self.port))
             else:
                 self.transport.write(pkt.RequestPacket(),(self.addr, self.port))
         except packet.PacketError as err:
-            log.err(err,'::send radius Coa Request error %s: %s'%((host,self.port),str(err)))
+            self.syslog.error('send radius Coa Request [username:%s] error %s: %s' % (pkt['User-Name'], (host,self.port),str(err)))
 
     def datagramReceived(self, datagram, (host, port)):
         if host != self.addr:
-            return log.msg('Dropping Radius Coa Packet from unknown host ' + host,level=logging.INFO)
+            return self.syslog.error('Dropping Radius Coa Packet from unknown host ' + host)
         try:
             coaResponse = self.createPacket(packet=datagram)
             coaResponse.source = (host, port)
-            log.msg("::Received Radius Coa Response: %s"%(str(coaResponse)),level=logging.INFO)
+            self.syslog.info("Received Radius Coa Response: %s" % (repr(coaResponse)))
             if self.debug:
-                log.msg(coaResponse.format_str(),level=logging.DEBUG)    
+                log.msg(coaResponse.format_str(),level=logging.DEBUG)
             self.processPacket(coaResponse)
         except packet.PacketError as err:
-            log.err(err,'::Dropping invalid CoA Response packet from %s: %s'%((host, port),str(err)))
+            self.syslog.error('Dropping invalid CoA Response packet from %s: %s'%((host, port),str(err)))
 
     def on_exception(self,err):
-        log.msg('CoA Packet process error：%s' % str(err))   
+        self.syslog.error('CoA Packet process error：%s' % str(err))
 
 ###############################################################################
 # Basic RADIUS                                                            ####
@@ -108,6 +104,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
         _dict = dictionary.Dictionary(radiusd.dictfile)
         host.Host.__init__(self,dict=_dict)
         self.debug = radiusd.debug
+        self.syslog = radiusd.syslog
         self.user_trace = radiusd.trace
         self.midware = radiusd.midware
         self.runstat = radiusd.runstat
@@ -124,21 +121,21 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
     def datagramReceived(self, datagram, (host, port)):
         bas = self.store.get_bas(host)
         if not bas:
-            return log.msg('Dropping packet from unknown host ' + host,level=logging.DEBUG)
+            return self.syslog.error('Dropping packet from unknown host ')
         secret,vendor_id = bas['bas_secret'],bas['vendor_id']
         try:
             _packet = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(secret)),vendor_id=vendor_id)
             _packet.deferred.addCallbacks(self.reply,self.on_exception)
             _packet.source = (host, port)
-            log.msg("::Received radius request: %s"%(str(_packet)),level=logging.INFO)
+            self.syslog.info("Received radius request: %s" % (str(_packet)))
             if self.debug:
                 log.msg(_packet.format_str(),level=logging.DEBUG)    
             self.processPacket(_packet)
         except packet.PacketError as err:
-            log.err(err,'::Dropping invalid packet from %s: %s'%((host, port),str(err)))
+            self.syslog.error('Dropping invalid packet from %s: %s'%((host, port),str(err)))
 
     def reply(self,reply):
-        log.msg("send radius response: %s"%(reply),level=logging.INFO)
+        self.syslog.info("send radius response: %s"%(repr(reply)))
         if self.debug:
             log.msg(reply.format_str(),level=logging.DEBUG)
         self.transport.write(reply.ReplyPacket(), reply.source)  
@@ -148,7 +145,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
             self.runstat.auth_accept += 1
  
     def on_exception(self,err):
-        log.msg('Packet process error：%s' % str(err))   
+        self.syslog.error('radius packet process error：%s' % str(err))
 
     def process_delay(self):
         while self.auth_delay.delay_len() > 0:
@@ -159,7 +156,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
                 else:
                     self.reply(self.auth_delay.pop_delay_reject())
             except:
-                log.err("process_delay error")
+                self.syslog.error("process_delay error")
 
 ###############################################################################
 # Auth Server                                                              ####
@@ -247,10 +244,10 @@ class AdminServerProtocol(WebSocketServerProtocol):
     radiusd = None
 
     def onConnect(self, request):
-        log.msg("Client connecting: {0}".format(request.peer))
+        self.syslog.info("Client connecting: {0}".format(request.peer))
 
     def onOpen(self):
-        log.msg("WebSocket connection open.")
+        self.syslog.info("WebSocket connection open.")
 
     def onMessage(self, payload, isBinary):
         req_msg = None
@@ -258,15 +255,15 @@ class AdminServerProtocol(WebSocketServerProtocol):
             _msg = utils.decrypt(payload)
             req_msg = json.loads(_msg)
         except:
-            log.err('decrypt message error : %s'%payload)
+            self.syslog.error('decrypt message error : %s'%payload)
         
         if req_msg:
-            log.msg("websocket admin request: %s"%str(req_msg))
+            self.syslog.debug("websocket admin request: %s"%str(req_msg))
             plugin = req_msg.get("process")
             self.radiusd.midware.process(plugin,req=req_msg,admin=self)
 
     def onClose(self, wasClean, code, reason):
-        log.msg("WebSocket connection closed: {0}".format(reason))
+        self.syslog.info("WebSocket connection closed: {0}".format(reason))
 
 ###############################################################################
 # Radius  Server                                                              ####
@@ -276,6 +273,7 @@ class RadiusServer(object):
     
     def __init__(self,config,db_engine=None,daemon=False):
         self.config = config
+        self.syslog = logger.SysLogger(config)
         self.db_engine = db_engine
         self.daemon = daemon
         self.tasks = {}
@@ -382,11 +380,8 @@ class RadiusServer(object):
         self.tasks['check_online_over'] = _online_task
         
     def run_normal(self):
-        if self.debug:
-            log.startLogging(sys.stdout)
-        else:
-            log.startLogging(DailyLogFile.fromFullPath(self.logfile))
-        log.msg('server listen %s'%self.radiusd_host)  
+        log.startLogging(sys.stdout)
+        log.msg('server listen %s'%self.radiusd_host)
         reactor.listenUDP(self.authport, self.auth_protocol,interface=self.radiusd_host)
         reactor.listenUDP(self.acctport, self.acct_protocol,interface=self.radiusd_host)
         if self.use_ssl:

@@ -1,24 +1,8 @@
 #!/usr/bin/env python
 # coding:utf-8
-import sys, os
-from twisted.internet import reactor
 from bottle import Bottle
-from bottle import request
-from bottle import response
-from bottle import redirect
-from bottle import static_file
-from bottle import abort
-from hashlib import md5
-from urlparse import urljoin
 from toughradius.console.base import *
-from toughradius.console.libs import utils
-from toughradius.console.libs.validate import vcache
 from toughradius.console.control import config_forms
-import time
-import bottle
-import decimal
-import datetime
-import functools
 import ConfigParser
 
 
@@ -67,6 +51,9 @@ def update_default(render):
     cfg.set('DEFAULT','ssl',request.forms.get("ssl"))
     cfg.set('DEFAULT','privatekey',request.forms.get("privatekey"))
     cfg.set('DEFAULT','certificate',request.forms.get("certificate"))
+    cfg.set('DEFAULT', 'syslog_enable', request.forms.get("syslog_enable"))
+    cfg.set('DEFAULT', 'syslog_server', request.forms.get("syslog_server"))
+    cfg.set('DEFAULT', 'syslog_port', request.forms.get("syslog_port"))
 
     with open(app.config['DEFAULT.cfgfile'],'wb') as configfile:
         cfg.write(configfile)

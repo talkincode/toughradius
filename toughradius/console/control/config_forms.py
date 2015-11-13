@@ -15,6 +15,9 @@ default_form = pyforms.Form(
     pyforms.Dropdown("ssl", args=booleans.items(), description=u"开启SSL", help=u"开启此项，可以使用安全HTTP访问", **input_style),
     pyforms.Textbox("privatekey", description=u"安全证书路径", **input_style),
     pyforms.Textbox("certificate", description=u"安全证书签名路径", **input_style),
+    pyforms.Dropdown("syslog_enable", args=booleans.items(), description=u"开启syslog", help=u"开启此项，可以使用syslog服务", **input_style),
+    pyforms.Textbox("syslog_server", description=u"syslog服务器", **input_style),
+    pyforms.Textbox("syslog_port", description=u"syslog服务端口(UDP)", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"系统配置管理",
     action="/config/default/update"
