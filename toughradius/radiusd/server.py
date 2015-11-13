@@ -121,7 +121,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
     def datagramReceived(self, datagram, (host, port)):
         bas = self.store.get_bas(host)
         if not bas:
-            return self.syslog.error('Dropping packet from unknown host ')
+            return self.syslog.error('Dropping packet from unknown host ' + host)
         secret,vendor_id = bas['bas_secret'],bas['vendor_id']
         try:
             _packet = self.createPacket(packet=datagram,dict=self.dict,secret=six.b(str(secret)),vendor_id=vendor_id)
