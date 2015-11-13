@@ -35,12 +35,6 @@ class SysLogger:
         self.syslogger = logging.getLogger('toughradius')
         self.syslogger.setLevel(self.level)
 
-        def set_basic():
-            print 'enable basic logging'
-            stream_handler = logging.StreamHandler(sys.stderr)
-            stream_handler.setFormatter(FORMATTER)
-            self.syslogger.addHandler(stream_handler)
-
         if self.syslog_enable and self.syslog_server:
             try:
                 handler = logging.handlers.SysLogHandler(address=(self.syslog_server, self.syslog_port))
@@ -48,11 +42,12 @@ class SysLogger:
                 self.syslogger.addHandler(handler)
                 print 'enable syslog logging'
             except:
-                set_basic()
-        else:
-            set_basic()
+                pass
 
-
+        print 'enable basic logging'
+        stream_handler = logging.StreamHandler(sys.stderr)
+        stream_handler.setFormatter(FORMATTER)
+        self.syslogger.addHandler(stream_handler)
 
         self.info = self.syslogger.info
         self.debug = self.syslogger.debug
