@@ -365,6 +365,7 @@ class RadiusServer(object):
         self.admin_factory.protocol = AdminServerProtocol
         self.admin_factory.setProtocolOptions(allowHixie76=True)
         self.admin_factory.protocol.radiusd = self
+        self.admin_factory.protocol.syslog = self.syslog
         
     def _check_online_over(self):
         reactor.callInThread(self.store.check_online_over)
