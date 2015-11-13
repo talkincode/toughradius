@@ -299,14 +299,15 @@ class AuthPacket2(AuthPacket):
         return format_packet_str(self)
 
     def __str__(self):
-        _str = PacketStatusTypeMap[self.code]
-        _str += " host=%s:%s" % self.source
-        _str += ",id=%s"%self.id
-        if self.code == 1:
-            _str += ",username=%s,mac_addr=%s" % (self.get_user_name(),self.get_mac_addr())
-        if 'Reply-Message' in self:
-            _str += ',Reply-Message="%s"' % self['Reply-Message'][0]
-        return _str   
+        # _str = PacketStatusTypeMap[self.code]
+        # _str += " host=%s:%s" % self.source
+        # _str += ",id=%s"%self.id
+        # if self.code == 1:
+        #     _str += ",username=%s,mac_addr=%s" % (self.get_user_name(),self.get_mac_addr())
+        # if 'Reply-Message' in self:
+        #     _str += ',Reply-Message="%s"' % self['Reply-Message'][0]
+        # return _str
+        return format_packet_str(self).replace("\n", ';').replace("\t", '')
 
     def CreateReply(self, msg=None,**attributes):
         reply = AuthPacket2(AccessAccept, self.id,
