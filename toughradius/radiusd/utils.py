@@ -307,7 +307,7 @@ class AuthPacket2(AuthPacket):
         # if 'Reply-Message' in self:
         #     _str += ',Reply-Message="%s"' % self['Reply-Message'][0]
         # return _str
-        return format_packet_str(self).replace("\n", ';').replace("\t", '')
+        return format_packet_str(self).replace("\n", ' ').replace("\t", '')
 
     def CreateReply(self, msg=None,**attributes):
         reply = AuthPacket2(AccessAccept, self.id,
