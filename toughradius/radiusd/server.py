@@ -135,7 +135,7 @@ class RADIUS(host.Host, protocol.DatagramProtocol):
             self.syslog.error('Dropping invalid packet from %s: %s'%((host, port),str(err)))
 
     def reply(self,reply):
-        self.syslog.debug("send radius response: %s"%(repr(reply)))
+        self.syslog.debug("send radius response: %s"%(reply))
         if self.debug:
             log.msg(reply.format_str(),level=logging.DEBUG)
         self.transport.write(reply.ReplyPacket(), reply.source)  
