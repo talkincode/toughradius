@@ -437,7 +437,7 @@ class AuthPacket2(AuthPacket):
             self.ext_attrs['MS-CHAP2-Success'] = auth_resp
             self.ext_attrs['MS-MPPE-Encryption-Policy'] = '\x00\x00\x00\x01'
             self.ext_attrs['MS-MPPE-Encryption-Type'] = '\x00\x00\x00\x06'
-            mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,peer_challenge)
+            mppeSendKey,mppeRecvKey = mppe.mppe_chap2_gen_keys(userpwd,nt_response)
             send_key, recv_key = mppe.gen_radius_encrypt_keys(mppeSendKey,mppeRecvKey,self.secret,self.authenticator)
             self.ext_attrs['MS-MPPE-Send-Key'] = send_key
             self.ext_attrs['MS-MPPE-Recv-Key'] = recv_key
