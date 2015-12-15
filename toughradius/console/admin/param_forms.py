@@ -45,6 +45,7 @@ mail_form = pyforms.Form(
     pyforms.Textbox("smtp_server", description=u"SMTP服务器", **input_style),
     pyforms.Textbox("smtp_user", description=u"SMTP用户名", **input_style),
     pyforms.Textbox("smtp_pwd", description=u"SMTP密码", help=u"如果密码不是必须的，请填写none", **input_style),
+    pyforms.Textbox("smtp_fromaddr", description=u"From Address", **input_style),
     # pyforms.Textbox("smtp_sender", description=u"smtp发送人名称", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",

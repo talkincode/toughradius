@@ -172,7 +172,7 @@ class CustomerServer(object):
             server=self._sys_param_value('smtp_server'),
             user=self._sys_param_value('smtp_user'),
             pwd=self._sys_param_value('smtp_pwd'),
-            fromaddr=self._sys_param_value('smtp_user'),
+            fromaddr=self._sys_param_value('smtp_fromaddr'),
             sender=self._sys_param_value('smtp_sender')
         )
         

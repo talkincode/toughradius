@@ -42,6 +42,7 @@ def init_db(db):
         ('smtp_server',u'SMTP服务器地址',u'smtp.mailgun.org'),
         ('smtp_user',u'SMTP用户名',u'service@toughradius.org'),
         ('smtp_pwd',u'SMTP密码',u'service2015'),
+        ('smtp_fromaddr',u'Email发送地址',u'service@toughradius.org'),
         ('smtp_sender',u'SMTP发送人名称',u'运营中心'),
         ('acct_interim_intelval',u'Radius记账间隔(秒)',u'120'),
         ('max_session_timeout',u'Radius最大会话时长(秒)',u'86400'),
