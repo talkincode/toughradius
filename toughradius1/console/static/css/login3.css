@@ -1,0 +1,14 @@
+body {
+    /*background: #7c7f7a url(/static/img/login-bg.jpg) repeat top;overflow: -moz-scrollbars-vertical;*/
+}
+
+.login-box-body{
+    border-radius: 9px;
+    -webkit-box-shadow: 2px 2px 3px rgba(174, 173, 173, 0.38);
+    box-shadow: 2px 2px 3px rgba(174, 173, 173, 0.38);
+}
+
+.login-page, .register-page {
+    background: url(/static/img/textured_paper.png) repeat top;
+
+}

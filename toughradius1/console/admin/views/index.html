@@ -1,0 +1,280 @@
+<%inherit file="base.html"/>
+<%namespace name="dashboard_ui" file="dashboard_ui.html"/>
+<%def name="head()">
+<script src="/static/js/highcharts.js"></script>
+<script src="/static/js/charttheme.js"></script>
+<script src="/static/js/exporting.js"></script>
+<script>
+
+var wsock = {
+    socket: null,
+    chart:null,
+    start: function (addr,port) {
+        var _prefix = "${use_ssl and 'wss' or 'ws'}";
+        var url = _prefix+"://"+addr+":"+port;
+        wsock.socket = new WebSocket(url);
+        wsock.socket.onmessage = function (event) {
+            message = JSON.parse(event.data);
+            console.log(message);
+            for (p in message){
+                $("#"+p).html(message[p])
+            }
+            var auth_stat = {name:'认证消息',data:message.auth_stat};
+            var acct_stat = {name:'计费消息',data:message.acct_stat};
+            wsock.chart.series[0].update(auth_stat) ;
+            wsock.chart.series[1].update(acct_stat) ;
+        };
+        
+        wsock.socket.updateStat =function(){
+            if(wsock.chart==null){
+                wsock.chart = new Highcharts.Chart(msgstat_options);
+            }
+            data = JSON.stringify({process:"admin_stat_query"});
+            $.post("/encrypt", {data:data} , function (ev) {
+                wsock.socket.send(ev.data);
+            }, "json");
+        };
+
+        wsock.socket.onopen =function(event){
+            wsock.socket.updateStat();
+        };
+    }
+};
+
+var msgstat_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'msgstat-chart',height:300},
+    title: {text: '最近15分钟的消息统计'},
+    xAxis: {type: 'datetime',tickInterval : 60*1000},
+    yAxis: {title: {text: '消息量'},
+        labels: {formatter: function() {return this.value;}}              
+    },
+    tooltip: {shared: true},
+    legend: {
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+                x: 150,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },  
+    plotOptions: {areaspline: {
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{},{}]
+};
+
+
+var online_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'online-chart',height:300},
+    title: {text: '在线用户统计'},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
+    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    yAxis: {
+        title: {text: '在线数'},
+        labels: {formatter: function() {return this.value + '人';}}            
+    },
+    tooltip: {shared: true},
+    legend: {enabled: false},    
+    plotOptions: {areaspline: {
+        stacking: 'normal',
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{}]
+};
+
+var flow_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'flow-chart',height:300},
+    title: {text: '流量统计'},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(currdate(),currdate())}'},
+    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    yAxis: {title: {text: '使用流量'},
+        labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
+    },
+    tooltip: {shared: true, valueSuffix: 'MB'},
+    legend: {
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+                x: 150,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },  
+    plotOptions: {areaspline: {
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{}]
+};
+
+function update_online()
+{
+    $.post("/online_stat/data", {day_code:'${currdate()}'} , function (ev) {
+        if (ev.code == 0) {
+            online_options.series = ev.data;
+            new Highcharts.Chart(online_options);
+        }
+    }, "json");
+}
+
+function update_flow()
+{
+    $.post("/flow_stat/data", {day_code:'${currdate()}'} , function (ev) {
+        if (ev.code == 0) {
+            flow_options.series = ev.data;
+            new Highcharts.Chart(flow_options);
+        }
+    }, "json");
+}
+
+$(document).ready(function (){
+    Highcharts.setOptions({global: {useUTC: false}});
+    ws_addr = "${sys_param_value('radiusd_address')}";
+    if("127.0.0.1" == ws_addr){
+        ws_addr = location.hostname;
+    }
+    wsock.start(ws_addr,"${sys_param_value('radiusd_admin_port')}");
+    update_online();
+    update_flow();
+});
+
+
+</script>
+</%def>
+<%def name="body()">
+<section class="content">
+<div class="box">
+    <div class="panel-heading"><i class="fa fa-dashboard"></i>  系统信息
+    </div>
+    <!-- /.box-header -->
+        <div class="box-body">
+        <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="4"> 当前登录管理员  </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>登录管理员</td>
+                        <td>${get_cookie("username")}</td>
+                        <td>登录时间</td>
+                        <td>${get_cookie("login_time")}</td>
+                    </tr>
+                    <tr>
+                        <td>登录IP地址</td>
+                        <td>${get_cookie("login_ip")}</td>
+                        <td>系统版本</td>
+                        <td>${sys_version or 'unknow'}</td>
+                    </tr>
+                    <!--<tr>-->
+                        <!--<td>软件授权码</td>-->
+                        <!--<td>000000</td>-->
+                        <!--<td></td>-->
+                        <!--<td></td>-->
+                    <!--</tr>-->
+            </tbody>
+
+        </table>
+    </div>
+</div>
+
+<div class="box">
+    <div class="panel-heading"><i class="fa  fa-area-chart"></i> 消息统计
+        <div class="bar pull-right">
+            <a href="javascript:wsock.socket.updateStat();">刷新数据</a>
+        </div>
+    </div>
+    <div class="panel-body">
+        <div class="container center" id="msgstat-chart"> </div>
+        <br>
+        <div id="msgstat_list">
+        <ul class="list-group col-md-6">
+            <li class="list-group-item">
+                <span class="badge" id="auth_all"></span>
+                认证消息总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="auth_accept"></span>
+                认证成功总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="auth_reject"></span>
+                认证拒绝总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="auth_drop"></span>
+                认证丢弃总数
+            </li>
+        </ul>
+        <ul class="list-group col-md-6">
+            <li class="list-group-item">
+                <span class="badge" id="acct_all"></span>
+                记账消息总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_start"></span>
+                记账上线总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_update"></span>
+                记账更新总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_stop"></span>
+                记账下线总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_drop"></span>
+                记账丢弃总数
+            </li>
+            <li class="list-group-item">
+                <span class="badge" id="acct_retry"></span>
+                记账重发总数
+            </li>
+        </ul>
+        </div>
+    </div>
+</div>
+
+
+<div class="box">
+    <div class="panel-heading"><i class="fa  fa-area-chart"></i> 在线统计
+    <div class="bar pull-right">
+        <a href="javascript:update_online();">刷新数据</a>
+    </div>
+    </div>
+    <div class="panel-body">
+        <div class="container center" id="online-chart"> </div>
+        <div class="well well-sm">
+            当前在线用户数 ${online_count}/${user_total}
+        </div>
+    </div>
+</div>
+
+<div class="box">
+    <div class="panel-heading"><i class="fa fa-area-chart"></i> 流量统计
+    <div class="bar pull-right">
+        <a href="javascript:update_flow();">刷新数据</a>
+    </div>
+    </div>
+    <div class="panel-body">
+        <div class="container center" id="flow-chart"></div>
+    </div>
+</div>
+
+
+
+
+</div>
+</section>
+
+</%def>

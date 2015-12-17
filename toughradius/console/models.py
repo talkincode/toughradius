@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from hashlib import md5
-from toughradius.console.libs import utils
+from toughradius.common import utils
 import functools
 
 DeclarativeBase = declarative_base()
@@ -20,26 +20,23 @@ def get_metadata(db_engine):
     metadata.bind = db_engine
     return metadata
 
-class SlcNode(DeclarativeBase):
+class TrNode(DeclarativeBase):
     """区域表"""
-    __tablename__ = 'slc_node'
+    __tablename__ = 'tr_node'
 
     __table_args__ = {}
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"区域编号")
     node_name = Column(u'node_name', Unicode(length=32), nullable=False,doc=u"区域名")
     node_desc = Column(u'node_desc', Unicode(length=64), nullable=False,doc=u"区域描述")
 
-    #relation definitions
 
-class SlcOperator(DeclarativeBase):
+class TrOperator(DeclarativeBase):
     """操作员表 操作员类型 0 系统管理员 1 普通操作员"""
-    __tablename__ = 'slc_operator'
+    __tablename__ = 'tr_operator'
 
     __table_args__ = {}
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"操作员id")
     operator_type = Column('operator_type', INTEGER(), nullable=False,doc=u"操作员类型")
     operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员名称")
@@ -47,19 +44,18 @@ class SlcOperator(DeclarativeBase):
     operator_status = Column(u'operator_status', INTEGER(), nullable=False,doc=u"操作员状态,0/1")
     operator_desc = Column(u'operator_desc', Unicode(255), nullable=False,doc=u"操作员描述")
     
-class SlcOperatorNodes(DeclarativeBase):
+class TrOperatorNodes(DeclarativeBase):
     """操作员表关联区域"""
-    __tablename__ = 'slc_operator_nodes'
+    __tablename__ = 'tr_operator_nodes'
 
     __table_args__ = {}
 
-    #column definitions
     operator_name = Column(u'operator_name', Unicode(32),primary_key=True,nullable=False,doc=u"操作员名称")
     node_name = Column(u'node_name', Unicode(32), primary_key=True,nullable=False,doc=u"区域名称")
 
-class SlcOperatorProducts(DeclarativeBase):
-    """操作员表关联区域"""
-    __tablename__ = 'slc_operator_products'
+class TrOperatorProducts(DeclarativeBase):
+    """操作员表关联产品"""
+    __tablename__ = 'tr_operator_products'
 
     __table_args__ = {}
 
@@ -67,9 +63,9 @@ class SlcOperatorProducts(DeclarativeBase):
     operator_name = Column(u'operator_name', Unicode(32), primary_key=True, nullable=False, doc=u"操作员名称")
     product_id = Column(u'product_id', Unicode(32), primary_key=True, nullable=False, doc=u"资费ID")
 
-class SlcOperatorRule(DeclarativeBase):
+class TrOperatorRule(DeclarativeBase):
     """操作员权限表"""
-    __tablename__ = 'slc_operator_rule'
+    __tablename__ = 'tr_operator_rule'
 
     __table_args__ = {}
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"权限id")
@@ -79,26 +75,23 @@ class SlcOperatorRule(DeclarativeBase):
     rule_category = Column(u'rule_category', Unicode(128), nullable=False,doc=u"权限分类")
 
 
-class SlcParam(DeclarativeBase):
-    """系统参数表  <radiusd default table>"""
-    __tablename__ = 'slc_param'
+class TrParam(DeclarativeBase):
+    """系统参数表 """
+    __tablename__ = 'tr_param'
 
     __table_args__ = {}
 
-    #column definitions
     param_name = Column(u'param_name', Unicode(length=64), primary_key=True, nullable=False,doc=u"参数名")
     param_value = Column(u'param_value', Unicode(length=1024), nullable=False,doc=u"参数值")
     param_desc = Column(u'param_desc', Unicode(length=255),doc=u"参数描述")
 
-    #relation definitions
 
-class SlcRadBas(DeclarativeBase):
-    """BAS设备表 <radiusd default table>"""
-    __tablename__ = 'slc_rad_bas'
+class TrBas(DeclarativeBase):
+    """BAS设备表"""
+    __tablename__ = 'tr_bas'
 
     __table_args__ = {}
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"设备id")
     vendor_id = Column(u'vendor_id', Unicode(length=32), nullable=False,doc=u"厂商标识")
     ip_addr = Column(u'ip_addr', Unicode(length=15), nullable=False,doc=u"IP地址")
@@ -107,17 +100,22 @@ class SlcRadBas(DeclarativeBase):
     coa_port = Column(u'coa_port', INTEGER(), nullable=False,doc=u"CoA端口")
     time_type = Column(u'time_type', SMALLINT(), nullable=False,doc=u"时区类型")
 
-    #relation definitions
-
-
-
-class SlcRadRoster(DeclarativeBase):
-    """黑白名单 0 白名单 1 黑名单 <radiusd default table>"""
-    __tablename__ = 'slc_rad_roster'
+class TrBasNode(DeclarativeBase):
+    """BAS设备关联区域"""
+    __tablename__ = 'tr_bas_node'
 
     __table_args__ = {}
 
-    #column definitions
+    bas_id = Column(u'bas_id', INTEGER(), primary_key=True, nullable=False,doc=u"设备id")
+    node_id = Column(u'node_id', INTEGER(), primary_key=True, nullable=False,doc=u"区域id")
+
+
+class TrRoster(DeclarativeBase):
+    """黑白名单 0 白名单 1 黑名单"""
+    __tablename__ = 'tr_roster'
+
+    __table_args__ = {}
+
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"黑白名单id")
     mac_addr = Column('mac_addr', Unicode(length=17), nullable=False,doc=u"mac地址")
     begin_time = Column('begin_time', Unicode(length=19), nullable=False,doc=u"生效开始时间")
@@ -125,17 +123,17 @@ class SlcRadRoster(DeclarativeBase):
     roster_type = Column('roster_type', SMALLINT(), nullable=False,doc=u"黑白名单类型")
 
 
-class SlcMember(DeclarativeBase):
+class TrCustomer(DeclarativeBase):
     """用户信息表"""
-    __tablename__ = 'slc_member'
+    __tablename__ = 'tr_customer'
 
     __table_args__ = {}
 
-    member_id = Column('member_id', INTEGER(),
-        Sequence('member_id_seq', start=100001, increment=1),
+    customer_id = Column('customer_id', INTEGER(),
+        Sequence('customer_id_seq', start=100001, increment=1),
         primary_key=True,nullable=False,doc=u"用户id")
     node_id = Column('node_id', INTEGER(), nullable=False,doc=u"区域id")
-    member_name = Column('member_name', Unicode(length=64), nullable=False,doc=u"用户登录名")
+    customer_name = Column('customer_name', Unicode(length=64), nullable=False,doc=u"用户登录名")
     password = Column('password', Unicode(length=128), nullable=False,doc=u"用户登录密码")
     realname = Column('realname', Unicode(length=64), nullable=False,doc=u"")
     idcard = Column('idcard', Unicode(length=32),doc=u"用户证件号码")
@@ -147,22 +145,22 @@ class SlcMember(DeclarativeBase):
     mobile = Column('mobile', Unicode(length=16), nullable=True,doc=u"用户手机")
     mobile_active = Column('mobile_active', SMALLINT(), default=0,doc=u"用户手机绑定状态")
     address = Column('address', Unicode(length=255), nullable=True,doc=u"用户地址")
-    member_desc = Column(u'member_desc', Unicode(255),doc=u"用户描述")
+    customer_desc = Column(u'customer_desc', Unicode(255),doc=u"用户描述")
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
     update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
 
-class SlcMemberOrder(DeclarativeBase):
+class TrCustomerOrder(DeclarativeBase):
     """
     订购信息表(交易记录)
     pay_status交易支付状态：0-未支付，1-已支付，2-已取消
     """
-    __tablename__ = 'slc_member_order'
+    __tablename__ = 'tr_customer_order'
 
     __table_args__ = {}
 
     order_id = Column('order_id', Unicode(length=32),primary_key=True,nullable=False,doc=u"订单id")
-    member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
+    customer_id = Column('customer_id', INTEGER(),nullable=False,doc=u"用户id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
     account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
     order_fee = Column('order_fee', INTEGER(), nullable=False,doc=u"订单费用")
@@ -174,14 +172,14 @@ class SlcMemberOrder(DeclarativeBase):
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"交易时间")
 
 
-class SlcRechargerCard(DeclarativeBase):
+class TrRechargerCard(DeclarativeBase):
     """
     充值卡表
     批次号：batch_no，以年月开始紧跟顺序号，如20150201
     卡类型 0 资费卡   1 余额卡
     状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收
     """
-    __tablename__ = 'slc_recharge_card'
+    __tablename__ = 'tr_recharge_card'
 
     __table_args__ = {}
 
@@ -199,36 +197,36 @@ class SlcRechargerCard(DeclarativeBase):
     expire_date = Column('expire_date', Unicode(length=10), nullable=False,doc=u"过期时间- ####-##-##")
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
 
-class SlcRechargeLog(DeclarativeBase):
+class TrRechargeLog(DeclarativeBase):
     """
     充值记录
     """
-    __tablename__ = 'slc_recharge_log'
+    __tablename__ = 'tr_recharge_log'
 
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
     card_number = Column('card_number', Unicode(length=16),nullable=False,doc=u"充值卡号")
-    member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
+    customer_id = Column('customer_id', INTEGER(),nullable=False,doc=u"用户id")
     account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
     recharge_status = Column('recharge_status', INTEGER(), nullable=False,doc=u"充值结果")
     recharge_time = Column('recharge_time', Unicode(length=19), nullable=False,doc=u"充值时间")
 
 
-class SlcRadAccount(DeclarativeBase):
+class TrAccount(DeclarativeBase):
     """
     上网账号表，每个会员可以同时拥有多个上网账号
     account_number 为每个套餐对应的上网账号，每个上网账号全局唯一
     用户状态 0:"预定",1:"正常", 2:"停机" , 3:"销户", 4:"到期"
-    <radiusd default table>
+   
     """
 
-    __tablename__ = 'slc_rad_account'
+    __tablename__ = 'tr_account'
 
     __table_args__ = {}
 
     account_number = Column('account_number', Unicode(length=32),primary_key=True,nullable=False,doc=u"上网账号")
-    member_id = Column('member_id', INTEGER(),nullable=False,doc=u"用户id")
+    customer_id = Column('customer_id', INTEGER(),nullable=False,doc=u"用户id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
     group_id = Column('group_id', INTEGER(),doc=u"用户组id")
     password = Column('password', Unicode(length=128), nullable=False,doc=u"上网密码")
@@ -251,51 +249,25 @@ class SlcRadAccount(DeclarativeBase):
     update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
 
-class SlcRadAccountHistory(DeclarativeBase):
-    """
-    上网账号历史纪录
-    """
-
-    __tablename__ = 'slc_rad_account_history'
-
-    __table_args__ = {}
-
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False, doc=u"id")
-    accept_id = Column('accept_id', INTEGER(), nullable=False, doc=u"受理id")
-    account_number = Column('account_number', Unicode(length=32), nullable=False, doc=u"上网账号")
-    member_id = Column('member_id', INTEGER(), nullable=False, doc=u"用户id")
-    product_id = Column('product_id', INTEGER(), nullable=False, doc=u"资费id")
-    group_id = Column('group_id', INTEGER(), doc=u"用户组id")
-    password = Column('password', Unicode(length=128), nullable=False, doc=u"上网密码")
-    install_address = Column('install_address', Unicode(length=128), nullable=False, doc=u"装机地址")
-    expire_date = Column('expire_date', Unicode(length=10), nullable=False, doc=u"过期时间- ####-##-##")
-    user_concur_number = Column('user_concur_number', INTEGER(), nullable=False, doc=u"用户并发数")
-    bind_mac = Column('bind_mac', SMALLINT(), nullable=False, doc=u"是否绑定mac")
-    bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False, doc=u"是否绑定vlan")
-    account_desc = Column(u'account_desc', Unicode(255), doc=u"用户描述")
-    create_time = Column('create_time', Unicode(length=19), nullable=False, doc=u"创建时间")
-    operate_time = Column('operate_time', Unicode(length=19), nullable=False, doc=u"操作时间")
-    new_expire_date = Column('new_expire_date', Unicode(length=10), doc=u"变更后过期时间- ####-##-##")
-    new_product_id = Column('new_product_id', INTEGER(), doc=u"变更后资费id")
-
-class SlcRadAccountAttr(DeclarativeBase):
+class TrAccountAttr(DeclarativeBase):
     """上网账号扩展策略属性表"""
-    __tablename__ = 'slc_rad_account_attr'
+    __tablename__ = 'tr_account_attr'
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"属性id")
     account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
+    attr_type = Column('attr_type', INTEGER(), default=1, doc=u"属性类型，0，一般；1，radius属性")
     attr_name = Column(u'attr_name', Unicode(length=255), nullable=False,doc=u"属性名")
     attr_value = Column(u'attr_value', Unicode(length=255), nullable=False,doc=u"属性值")
     attr_desc = Column(u'attr_desc', Unicode(length=255),doc=u"属性描述")
 
-class SlcRadProduct(DeclarativeBase):
+class TrProduct(DeclarativeBase):
     '''
-    资费信息表 <radiusd default table>
+    资费信息表
     资费类型 product_policy 0 预付费包月 1 预付费时长 2 买断包月 3 买断时长 4 预付费流量 5 买断流量
     销售状态 product_status 0 正常 1 停用 资费停用后不允许再订购
     '''
-    __tablename__ = 'slc_rad_product'
+    __tablename__ = 'tr_product'
 
     __table_args__ = {}
 
@@ -311,30 +283,31 @@ class SlcRadProduct(DeclarativeBase):
     fee_times = Column('fee_times', INTEGER(),doc=u"买断时长(秒)")
     fee_flows = Column('fee_flows', INTEGER(),doc=u"买断流量(kb)")
     fee_price = Column('fee_price', INTEGER(),nullable=False,doc=u"资费价格")
+    fee_period = Column('fee_period', Unicode(length=11),doc=u"计费认证时段")
     input_max_limit = Column('input_max_limit', INTEGER(), nullable=False,doc=u"上行速率")
     output_max_limit = Column('output_max_limit', INTEGER(), nullable=False,doc=u"下行速率")
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
     update_time = Column('update_time', Unicode(length=19), nullable=False,doc=u"更新时间")
 
-class SlcRadProductAttr(DeclarativeBase):
-    '''资费扩展属性表 <radiusd default table>'''
-    __tablename__ = 'slc_rad_product_attr'
+class TrProductAttr(DeclarativeBase):
+    '''资费扩展属性表'''
+    __tablename__ = 'tr_product_attr'
 
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"属性id")
     product_id = Column('product_id', INTEGER(),nullable=False,doc=u"资费id")
+    attr_type = Column('attr_type', INTEGER(), default=1, doc=u"属性类型，0，一般；1，radius属性")
     attr_name = Column(u'attr_name', Unicode(length=255), nullable=False,doc=u"属性名")
     attr_value = Column(u'attr_value', Unicode(length=255), nullable=False,doc=u"属性值")
     attr_desc = Column(u'attr_desc', Unicode(length=255),doc=u"属性描述")
 
-class SlcRadBilling(DeclarativeBase):
-    """计费信息表 is_deduct 0 未扣费 1 已扣费 <radiusd default table>"""
-    __tablename__ = 'slc_rad_billing'
+class TrBilling(DeclarativeBase):
+    """计费信息表 is_deduct 0 未扣费 1 已扣费"""
+    __tablename__ = 'tr_billing'
 
     __table_args__ = { }
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"计费id")
     account_number = Column(u'account_number', Unicode(length=253), nullable=False,doc=u"上网账号")
     nas_addr = Column(u'nas_addr', Unicode(length=15), nullable=False,doc=u"bas地址")
@@ -354,13 +327,12 @@ class SlcRadBilling(DeclarativeBase):
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"计费时间")
 
 
-class SlcRadTicket(DeclarativeBase):
-    """上网日志表 <radiusd default table>"""
-    __tablename__ = 'slc_rad_ticket'
+class TrTicket(DeclarativeBase):
+    """上网日志表"""
+    __tablename__ = 'tr_ticket'
 
     __table_args__ = { }
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
     account_number = Column(u'account_number', Unicode(length=253), nullable=False,doc=u"上网账号")
     acct_input_gigawords = Column(u'acct_input_gigawords', INTEGER(),doc=u"会话的上行的字（4字节）的吉倍数")
@@ -388,17 +360,15 @@ class SlcRadTicket(DeclarativeBase):
     start_source = Column(u'start_source', INTEGER(), nullable=False,doc=u"会话开始来源")
     stop_source = Column(u'stop_source', INTEGER(), nullable=False,doc=u"会话中止来源")
 
-    #relation definitions
 
-class SlcRadOnline(DeclarativeBase):
-    """用户在线信息表 <radiusd default table>"""
-    __tablename__ = 'slc_rad_online'
+class TrOnline(DeclarativeBase):
+    """用户在线信息表"""
+    __tablename__ = 'tr_online'
 
     __table_args__ = {
         'mysql_engine' : 'MEMORY'
     }
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"在线id")
     account_number = Column(u'account_number', Unicode(length=32), nullable=False,doc=u"上网账号")
     nas_addr = Column(u'nas_addr', Unicode(length=32), nullable=False,doc=u"bas地址")
@@ -412,41 +382,13 @@ class SlcRadOnline(DeclarativeBase):
     output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
     start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"记账开始来源")
 
-class SlcRadOnlineStat(DeclarativeBase):
-    """用户在线统计表 """
-    __tablename__ = 'slc_rad_online_stat'
 
-    __table_args__ = {}
-
-    #column definitions
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
-    node_id = Column('node_id', INTEGER(),nullable=False,doc=u"区域id")
-    stat_time = Column(u'stat_time', INTEGER(),  nullable=False,doc=u"统计时间")
-    total = Column(u'total', INTEGER(),doc=u"在线数")
-
-    #relation definitions
-
-class SlcRadFlowStat(DeclarativeBase):
-    """用户在线统计表 """
-    __tablename__ = 'slc_rad_flow_stat'
-
-    __table_args__ = {}
-
-    #column definitions
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
-    node_id = Column('node_id', INTEGER(),nullable=False,doc=u"区域id")
-    stat_time = Column(u'stat_time', INTEGER(),  nullable=False,doc=u"统计时间")
-    input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
-    output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
-
-    #relation definitions
-
-class SlcRadAcceptLog(DeclarativeBase):
+class TrAcceptLog(DeclarativeBase):
     '''
     业务受理日志表
     open:开户 pause:停机 resume:复机 cancel:销户 next:续费 charge:充值
     '''
-    __tablename__ = 'slc_rad_accept_log'
+    __tablename__ = 'tr_accept_log'
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
@@ -457,13 +399,12 @@ class SlcRadAcceptLog(DeclarativeBase):
     accept_source = Column(u'accept_source', Unicode(length=128),doc=u"受理渠道来源")
     accept_time = Column(u'accept_time', Unicode(length=19), nullable=False,doc=u"受理时间")
 
-class SlcRadOperateLog(DeclarativeBase):
+class TrOperateLog(DeclarativeBase):
     """操作日志表"""
-    __tablename__ = 'slc_rad_operate_log'
+    __tablename__ = 'tr_operate_log'
 
     __table_args__ = {}
 
-    #column definitions
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
     operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员名称")
     operate_ip = Column(u'operate_ip', Unicode(length=128),doc=u"操作员ip")
@@ -471,77 +412,38 @@ class SlcRadOperateLog(DeclarativeBase):
     operate_desc = Column(u'operate_desc', Unicode(length=1024),doc=u"操作描述")
 
 
-class SlcCustomerManager(DeclarativeBase):
-    """23. 客户经理表"""
-
-    __tablename__ = 'slc_customer_manager'
-
-    __table_args__ = {}
-
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"客户经理id")
-    manager_code = Column(u'manager_code', Unicode(length=64),nullable=False,unique=True,doc=u"客户经理工号")
-    manager_name = Column(u'manager_name', Unicode(length=128),nullable=False,doc=u"客户经理姓名")
-    manager_mobile = Column(u'manager_mobile', Unicode(length=64),nullable=False,doc=u"客户经理手机")
-    manager_email = Column(u'manager_email', Unicode(length=64),nullable=True,doc=u"客户经理邮箱")
-    operator_name = Column(u'operator_name', Unicode(32), nullable=True,doc=u"关联操作员")
-    create_time = Column(u'create_time', VARCHAR(length=19))   
-
-###############################################################################
-# 工单模块数据模型                                                            ####
-###############################################################################
-
-class SlcIssues(DeclarativeBase):
-    """
-    24. 
-    用户工单表  issues_type 0:新装/1:故障/2:投诉/3:其他
-    处理状态 1-处理中 2-挂起 3－取消 4-处理完成
-    """
-    __tablename__ = 'slc_issues'
-
-    __table_args__ = {}
-
-    #column definitions
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"工单id")    
-    account_number  = Column(u'account_number',Unicode(length=32),nullable=False,doc=u"上网账号")
-    date_time =  Column(u'date_time', Unicode(length=19), nullable=False,doc=u"操作时间")
-    issues_type = Column('issues_type', INTEGER(),nullable=False,doc=u"工单类型")
-    content = Column(u'content', Unicode(length=512), nullable=False,doc=u"工单内容")
-    assign_operator = Column(u'assign_operator', Unicode(length=32), nullable=False,doc=u"指派操作员")
-    status =  Column('status', INTEGER(),nullable=False,doc=u"工单状态")
-
-class SlcIssuesAppend(DeclarativeBase):
-    """25. 用户工单补充内容表"""
-    __tablename__ = 'slc_issues_append'
-
-    __table_args__ = {}
-
-    #column definitions
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"工单id")    
-    issues_id = Column('issues_id', INTEGER(),nullable=False,doc=u"工单id")
-    append_content  = Column(u'append_content',Unicode(length=1024),nullable=False,doc=u"工单补充内容")
-    append_time =  Column(u'append_time', Unicode(length=19), nullable=False,doc=u"操作时间")
-
-
-class SlcIssuesFlow(DeclarativeBase):
-    """26. 工单流程跟踪表"""
-    __tablename__ = 'slc_issues_flow'
-
-    __table_args__ = {}
-
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"工单流id")    
-    issues_id = Column('issues_id', INTEGER(),nullable=False,doc=u"工单id")
-    operator_name = Column(u'operator_name', Unicode(32), nullable=False,doc=u"操作员")
-    accept_time = Column(u'accept_time', Unicode(length=19), nullable=False,doc=u"操作时间")
-    accept_result = Column(u'accept_result', Unicode(length=1024), nullable=False,doc=u"处理结果")
-    accept_status =  Column('accept_status', INTEGER(),nullable=False,doc=u"工单处理状态")
 
 ###############################################################################
 # 统计数据模型                                                               ####
 ###############################################################################
 
-class SlcUserStat(DeclarativeBase):
+class TrOnlineStat(DeclarativeBase):
+    """用户在线统计表 """
+    __tablename__ = 'tr_online_stat'
+
+    __table_args__ = {}
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    node_id = Column('node_id', INTEGER(),nullable=False,doc=u"区域id")
+    stat_time = Column(u'stat_time', INTEGER(),  nullable=False,doc=u"统计时间")
+    total = Column(u'total', INTEGER(),doc=u"在线数")
+
+
+class TrFlowStat(DeclarativeBase):
+    """用户在线统计表 """
+    __tablename__ = 'tr_flow_stat'
+
+    __table_args__ = {}
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    node_id = Column('node_id', INTEGER(),nullable=False,doc=u"区域id")
+    stat_time = Column(u'stat_time', INTEGER(),  nullable=False,doc=u"统计时间")
+    input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
+    output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
+
+class TrUserStat(DeclarativeBase):
     """28. 用户发展统计"""
-    __tablename__ = 'slc_user_stat'
+    __tablename__ = 'tr_user_stat'
 
     __table_args__ = {}
 
@@ -554,9 +456,9 @@ class SlcUserStat(DeclarativeBase):
     next_count = Column(u'next_count', INTEGER(),  nullable=False,doc=u"续费数")
     valid_count = Column(u'valid_count', INTEGER(),  nullable=False,doc=u"在网数")
 
-class SlcProductStat(DeclarativeBase):
+class TrProductStat(DeclarativeBase):
     """29. 资费统计表"""
-    __tablename__ = 'slc_product_stat'
+    __tablename__ = 'tr_product_stat'
 
     __table_args__ = {}
 
@@ -565,9 +467,9 @@ class SlcProductStat(DeclarativeBase):
     product_id = Column('product_id', INTEGER(),primary_key=True,nullable=False,doc=u"资费id")
     count = Column(u'count', INTEGER(),nullable=False,doc=u"服务订购数")
 
-class SlcFeeStat(DeclarativeBase):
+class TrFeeStat(DeclarativeBase):
     """30. 费用统计表"""
-    __tablename__ = 'slc_fee_stat'
+    __tablename__ = 'tr_fee_stat'
 
     __table_args__ = {}
 

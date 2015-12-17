@@ -1,0 +1,90 @@
+html,
+body {
+    font-size: 110%;
+    line-height: 160%;
+    background:#e6e6e6;
+}
+
+.main-box{
+  padding: 10px;
+}
+
+.container img{
+    max-width: 480px;
+}
+
+.notify_text{
+    color:#cecece;
+    display: block;
+    padding: 5px 0 0 10px;
+}
+
+
+
+
+.container {
+    width: auto;
+}
+.well{
+    border-radius: 8px;
+}
+
+
+.bottom10{
+    margin-bottom: 10px;
+}
+
+
+
+form .footbotron {
+    padding: 10px;
+    margin:20px 0px 10px 0;
+    color: inherit;
+}
+
+.form-group{
+    margin-bottom: 1px;
+}
+
+
+
+
+.panel {
+    border: 1px solid #f6f4f4;
+    border-radius: 4px;
+}
+
+.ist-group{
+    border: 1px solid #f6f4f4;
+    border-radius: 4px;
+}
+
+.glyphicon{
+    color: #787878;
+}
+
+.media-list{
+    padding: 7px 3px 7px 3px;
+    background: rgba(198, 198, 198, 0.40);
+    border-radius: 7px;
+}
+
+.media{
+    border: 1px solid #ddd;
+    border-radius: 7px;
+    padding: 7px;
+    margin:5px;
+
+}
+.media img{
+    max-width: 84px;
+}
+
+
+.form-inline-group {
+    margin-top: 10px;
+}
+
+.top10 {
+    margin-top: 10px;
+}

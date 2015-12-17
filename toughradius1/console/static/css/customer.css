@@ -1,0 +1,447 @@
+html,
+body {
+    background-color: #d7d5d5;
+    font-size: 13px;
+    line-height: 160%;
+    height: 100%;
+}
+
+img{ 
+max-width:100%;height:auto; 
+} 
+
+.top10{
+    margin-top: 10px;
+}
+
+
+
+.navbar{
+    /*background: url(/static/img/navbg.png) repeat;*/
+    background-color: #33383a;
+    min-height: 30px;
+    margin-bottom: 10px;
+}
+
+.navbar-form .form-control{
+   width: 200px;
+   border-radius: 15px;
+   height: 32px;
+}
+
+#footer{
+    height: 197px;
+    background-color: white;
+}
+
+#footer .container .text-muted {
+  margin: 20px 0;
+}
+
+
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid #f6f4f4;
+    border-radius: 3px;
+    -webkit-box-shadow: 1px 2px 3px rgba(174, 173, 173, 0.38);
+    box-shadow: 1px 2px 3px rgba(174, 173, 173, 0.38);
+}
+
+.panel .glyphicon{
+    color: gray;
+}
+
+.panel-heading{
+    background: url(/static/img/navbg2.png) repeat;
+}
+
+.panel-footer{
+    background: url(/static/img/navbg2.png) repeat;  
+    border-top:1px solid rgba(225, 223, 223, 0.51); 
+}
+
+.panel-heading-w {
+    color: #333;
+    background-color: #fff;
+    border-color: #ddd;    
+    padding: 10px 15px;
+    border-bottom: 1px solid transparent;
+    border-top-right-radius: 3px;
+    border-top-left-radius: 3px;
+}
+
+.panel-heading-w .title,
+.panel-heading-w .title a{
+    font-size: 14px;
+    font-weight: 500;
+    color:gray;
+}
+
+.panel-heading-w .conn{
+    font-size: 18px;
+    color: gray;
+    padding: 0 5px 0 5px;
+}
+
+.sidebar-box{
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid #eaeaea;
+    border-radius: 9px;
+/*    -webkit-box-shadow: 1px 2px 3px rgba(174, 173, 173, 0.38);
+    box-shadow: 1px 2px 3px rgba(174, 173, 173, 0.38);*/
+}
+
+.sidebar-box .login h3,
+.sidebar-box .userinfo h3{
+    font-size: 15px;
+    margin: 5px 0 0 0;
+    padding: 0;
+}
+
+.sidebar-box small{
+    line-height: 160%;
+    font-size: 12px;
+    color: gray;
+}
+
+.sidebar-box .login,
+.sidebar-box .userinfo{
+    padding: 5px 20px 10px 15px;
+}
+
+.sidebar-box .login p,
+.sidebar-box .userinfo p{
+    padding: 7px 0 0 0 ;
+}
+
+
+.sidebar-box .media{
+    padding: 5px 10px 5px 10px;
+}
+
+.sidebar-box .media-object{
+    max-width: 48px;
+    padding-top: 5px;
+}
+
+.sidebar-box .list-group{
+    margin: 0;
+}
+
+.sidebar-box h4{
+    padding: 10px 0 5px 10px;
+    font-size: 14px;
+    color: gray;
+    margin: 0px;
+    border: none;
+}
+
+.sidebar-box .list-group .list-group-item{
+    border: none;
+}
+
+.sidebar-box hr{
+   margin: 5px 0 0 0;
+}
+
+.sidebar-box .credit_bar{
+     padding: 10px 5px 10px 5px;
+     color: gray;
+}
+
+.sidebar-box .credit_bar .balance{
+    display: inline;
+    padding: 7px;
+    font-weight: 500;
+    line-height: 1;
+    color: #9F9B9B;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .6em;
+    background-color: #f2f4f2;
+}
+
+.sidebar-box .credit_bar .balance a{
+    color: gray;
+}
+.sidebar-box .node_intro{
+    padding: 20px;
+    line-height: 200%;
+    color: #3f3f3f;
+}
+
+.replys hr,
+.posts hr{
+    margin:5px 0;
+}
+
+.user-profile hr,
+.post-detail hr{
+    margin: 5px 0 10px 0;
+}
+
+.user-profile .media,
+.replys .media,
+.posts .media,
+.post-detail .media{
+    margin: none;
+    padding: 5px 5px 5px 5px;
+    margin-top: 0px;
+}
+
+.posts .media-object{
+    max-width: 46px;
+}
+
+.replys .media-object{
+    max-width: 46px;
+}
+
+.user-profile .media-object{
+    max-width: 72px;
+}
+.post-detail .media-object{
+    max-width: 54px;
+}
+
+.posts .media-heading
+{
+    margin-top: 2px;
+    font-size: 14px;
+    color: gray;
+}
+.user-profile .media-heading
+.post-detail .media-heading{
+    margin-top: 2px;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 150%;
+}
+
+.posts .media-heading > a{
+    color: gray;
+}
+
+.replys .media-note{
+    margin-top: 0;
+    margin-bottom: 5px;
+}
+.replys .media-note img{
+    max-width: 768px;
+}
+
+.user-profile .media-note,
+.posts .media-note,
+.post-detail .media-note{
+    color:gray;
+    margin-top: 12px;
+}
+
+
+.post-img{
+    max-width: 100%;
+}
+
+.user-profile .media-note .gray-text,
+.replys .media-note .gray-text,
+.posts .media-note .gray-text,
+.post-append .gray-text,
+.post-detail .gray-text{
+    font-size: 85%;
+    color:#dbdbdb;
+}
+
+.post-append{
+    background-color: #fcfcfc;
+    padding:5px 10px 5px 20px;
+}
+.post-append p{
+    border-top: 1px solid #f3f3f3;
+    padding-top: 10px;
+}
+
+.user-profile .media-note > a,
+.replys .media-note > a,
+.posts .media-note > a,
+.post-detail .media-note > a{
+    font-size: 88%;
+    font-weight: 500;
+    color: #848484;
+}
+
+.user-profile .media-note > a .label,
+.replys .media-note > a .label,
+.posts .media-note > a .label,
+.post-detail .media-note > a .label{
+    display: inline;
+    padding: .3em .6em .3em;
+    font-size: 88%;
+    font-weight: 500;
+    line-height: 1;
+    color: #9F9B9B;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .6em;
+    background-color: #f2f4f2;
+}
+
+.panel-heading-w .bar a:link,
+.panel-heading-w .bar a:visited, 
+.panel-heading-w .bar a:active{
+    font-size: 13px;
+    line-height: 12px;
+    color: #424242;
+    text-decoration: none;
+    display: inline-block;
+    padding: 7px 10px 7px 10px;
+    border-radius: 9px;
+    /*text-shadow: 0px 1px 0px #fff;    */
+}
+
+.panel-heading-w .bar .active{
+    background-color: #e1e3e1;
+    color: #000;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 9px;   
+}
+
+.panel-heading .bar a:link,
+.panel-heading .bar a:visited, 
+.panel-heading .bar a:active,
+.panel-footer a:link, 
+.panel-footer a:visited, 
+.panel-footer a:active{
+    font-size: 12px;
+    line-height: 12px;
+    color: #778087;
+    text-decoration: none;
+    display: inline-block;
+    padding: 5px 10px 5px 10px;
+    border-radius: 9px;
+    /*text-shadow: 0px 1px 0px #fff;*/
+}
+
+
+.panel-heading-w .bar a:hover,
+.panel-heading .bar a:hover,
+.panel-footer a:hover{
+    background-color: #e1e3e1;
+    color: #000;
+    text-decoration: none;
+    border-radius: 9px;
+}
+
+.panel-heading-w .bar .active a{
+    background-color: #e1e3e1;
+    color: #000;
+    text-decoration: none;
+    border-radius: 9px;
+}
+
+
+.pagination>.active>a, 
+.pagination>.active>span, 
+.pagination>.active>a:hover, 
+.pagination>.active>span:hover, 
+.pagination>.active>a:focus, 
+.pagination>.active>span:focus
+{
+    z-index: 2;
+    color: #838080;
+    background-color: rgba(5, 5, 5, 0.1);
+    border-color: #C7C9CC;
+    cursor: default;
+}
+
+
+.opt-btn{
+    display: inline-block;
+    margin: 0 3px;
+    font-weight: 300;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    background-image: none;
+    background-color: rgba(193, 194, 202, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.11);
+    white-space: nowrap;
+    padding: 3px 6px;
+    font-size: 12px;
+    line-height: 1.1;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+.opt-btn:hover{
+    text-decoration: none;
+    background-color: rgba(164, 202, 187, 0.18);
+}
+
+.books .title{
+    line-height: 150%;
+}
+
+.books .title > a{
+    color: gray;
+}
+.books .title > a:hover{
+    color: black;
+}
+
+.books .thumbnail{
+    background-color: #f2f2f2;
+    min-height: 330px;
+    border: 1px solid #e5e5e5;
+}
+
+#footer .container ul{
+    padding: 15px 10px 5px 10px;
+    list-style: none;
+    margin-bottom: 0px;
+}
+
+#footer .container ul li {  
+    padding: 10px 10px 5px 10px;
+    display: inline;
+}
+
+#footer .container ul li a{
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #6c6c6c;
+    font-weight: 700;
+    font-size: 90%;
+}
+
+#footer .container .copy a{
+    text-transform: uppercase;
+    text-decoration: none;
+    color: #6c6c6c;
+}
+
+
+#footer .container .copy{
+    padding: 5px 5px 10px 20px;
+    color: #bfbfbf;
+}
+
+
+#footer .container .ads{
+    margin: 15px 0px 20px 0px;
+    padding: 5px 5px 10px 20px;
+}
+
+.img-center{
+    text-align: center;
+    margin-bottom: 10px;
+}
+

@@ -1,0 +1,256 @@
+html,
+body {
+    font-size: 12px;
+}
+
+.container{
+    width: auto;
+}
+.main-box{
+    padding-top: 15px;
+    min-height: 100vh;
+    background-color: #E5E5E5;
+}
+
+.main-bg{
+    padding-top: 15px;
+    min-height: 112vh;
+    background-color: #E5E5E5;
+}
+
+.center{
+    text-align: center;
+}
+
+.container img{
+    max-width: 480px;
+}
+
+.notify_text{
+    color:#cecece;
+    display: block;
+    padding: 5px 0 0 10px;
+}
+
+
+.well{
+    border-radius: 8px;
+}
+
+#footer {
+    height: 90px;
+    background-color: #f3f3f3;
+}
+
+#footer .container .text-muted {
+    margin: 20px 0;
+}
+
+
+
+.current a,
+.current a:visited {
+    color: #003bb3;
+}
+
+.accordion-group {
+    border: none;
+}
+
+.bottom10{
+    margin-bottom: 10px;
+}
+
+
+
+form .footbotron {
+    padding: 10px;
+    margin:20px 0px 10px 0;
+    color: inherit;
+}
+
+
+.panel {
+    margin-bottom: 20px;
+    background-color: #fff;
+    border: 1px solid #f6f4f4;
+    border-radius: 4px;
+    -webkit-box-shadow: 2px 2px 3px rgba(174, 173, 173, 0.38);
+    box-shadow: 2px 2px 3px rgba(174, 173, 173, 0.38);
+}
+
+.box-header .bar a:link,
+.box-header .bar a:visited,
+.box-header .bar a:active,
+.panel-footer a:link,
+.panel-footer a:visited,
+.panel-footer a:active{
+    font-size: 12px;
+    line-height: 12px;
+    color: #778087;
+    text-decoration: none;
+    display: inline-block;
+    padding: 5px 10px 5px 10px;
+    border-radius: 9px;
+    /*text-shadow: 0px 1px 0px #fff;*/
+}
+
+
+.box-header .bar a:hover,
+.panel-footer a:hover{
+    background-color: #e1e3e1;
+    color: #000;
+    text-decoration: none;
+    border-radius: 9px;
+}
+
+
+.menus .panel{
+    border:none;
+    box-shadow:none;
+    -webkit-box-shadow:none;
+}
+
+.glyphicon{
+    color: #787878;
+}
+
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+    z-index: 2;
+    color: #232323;
+    background-color: #e5e5e5;
+    border-color: #e5e5e5;
+    cursor: default;
+}
+
+
+.opt-btn{
+    display: inline-block;
+    margin: 0 3px;
+    font-weight: 300;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    background-image: none;
+    background-color: rgba(193, 194, 202, 0.07);
+    border: 1px solid rgba(0, 0, 0, 0.11);
+    white-space: nowrap;
+    padding: 3px 6px;
+    font-size: 12px;
+    line-height: 1.1;
+    border-radius: 4px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+
+}
+
+
+
+.opt-btn:hover{
+    text-decoration: none;
+    background-color: rgba(164, 202, 187, 0.18);
+}
+
+
+.tab-pane-box {
+    margin-top: 10px;
+    margin-left: 20px;
+    padding: 10px;
+}
+
+.form-inline-group {
+    margin-top: 10px;
+}
+
+.form-well{
+    min-height: 20px;
+    padding: 19px;
+    /*background-color: rgba(247, 247, 247, 0.66);*/
+    /*border: 1px solid rgba(240, 240, 240, 0.42);*/
+    border-radius: 9px;
+    margin-bottom:20px;
+}
+
+.top10 {
+    margin-top: 10px;
+}
+
+.list-group-item-text{
+   padding: 5px 0 5px 5px;
+}
+
+.input-help{
+    margin-top: 5px;
+    font-size: 18px;
+    color: #8c8c8c;
+}
+
+
+.status_header{
+    background-color: #f2f2f2;
+    font-size: 13px;
+    color: #8b8b8b;
+}
+.status_ok{
+    background-color: #ccffcc;
+}
+.status_warn{
+    background-color:#ffff99; 
+}
+.status_fail{
+    background-color: #ff9999;
+}
+.status_unknow{
+    background-color: #ffcc99;
+}
+
+.perf-chart{
+    margin: 20px 20px 0 10px;
+}
+
+.perf-table{
+    margin: 20px 30px 10px 30px;
+}
+
+.menu > li > a:hover, .skin-blue .sidebar-menu > li.active > a {
+    font-size: 14px;
+    font-weight: 900;
+}
+
+.skin-blue .sidebar a {
+    font-size: 14px;
+}
+
+.sidebar-menu .treeview-menu > li > a {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.skin-blue .main-header .navbar {
+    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.38);
+}
+
+.skin-blue .main-header .logo {
+    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.18);
+}
+
+input{
+    border-radius: 3px;
+}
+
+.box-header > .fa, .box-header > .glyphicon, .box-header > .ion, .box-header .box-title {
+    color: gray;
+    font-size: 14px;
+}
+
+.box-header > .fa, .box-header > .glyphicon, .box-header > .ion{
+    color: #3c8dbc;
+}
+

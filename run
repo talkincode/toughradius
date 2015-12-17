@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+
+admin()
+{
+    pypy toughctl --admin -c etc/toughradius.conf
+}
+
+
+initdb()
+{
+    pypy toughctl --initdb -c etc/toughradius.conf
+}
+
+case "$1" in
+
+  admin)
+    admin
+  ;;
+
+  initdb)
+    initdb
+  ;;
+
+esac

@@ -32,7 +32,7 @@
         function doLogin() {
             var username = $("#username").val();
             var password = $("#password").val();
-            params = {username: username, password: password, _xsrf: ''};
+            params = {username: username, password: password, _xsrf: '${handler.xsrf_token}'};
             $.post("/login", params, function (data) {
                 if (data.code > 0) {
                     alert(data.msg)
