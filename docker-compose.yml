@@ -1,0 +1,38 @@
+raddb:
+    image: "index.alauda.cn/toughstruct/mysql"
+    privileged: true
+    expose:
+        - "3306"
+    environment:
+        - MYSQL_USER=raduser
+        - MYSQL_PASSWORD=radpwd
+        - MYSQL_DATABASE=radiusd
+        - MYSQL_ROOT_PASSWORD=radroot
+    restart: always
+    volumes:
+        - /home/var/mysql:/var/lib/mysql
+
+portal:
+    image: 'index.alauda.cn/toughstruct/toughradius'
+    privileged: true
+    ports:
+        - "1815:1816"
+        - "1815:1817"
+        - "1812:1812/udp"
+        - "1813:1813/udp"
+        - "12222:22"
+    links:
+        - raddb
+    environment:
+        - ROOT_PASSWORD=toughradius
+        - DB_TYPE=mysql
+        - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
+        - TIMEZONE=CST-8
+        - SYSLOG_ENABLE=1
+        - SYSLOG_SERVER=121.201.15.99
+        - SYSLOG_PORT=514
+        - SYSLOG_LEVEL=INFO
+    restart: always
+    volumes:
+        - /home/var/toughradius:/var/toughradius
+
