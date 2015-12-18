@@ -22,14 +22,18 @@ EOF
 initserv()
 {
     echo 'init server...'
-    if [ ! -f ${rundir}/.install ]; then
+    if [ ! -f ${rundir}/log ]; then
         mkdir -p ${rundir}/log
+    fi
+    if [ ! -f ${rundir}/data ]; then
         mkdir -p ${rundir}/data
+    fi
+    if [ ! -f ${rundir}/.install ]; then
         pypy /opt/toughradius/toughctl --initdb
-        echo "install ok" > ${rundir}/.install
-        echo 'init done'
+        echo "install db ok" > ${rundir}/.install
+        echo 'init db done'
     else
-        echo "already init done"
+        echo "already init db done"
     fi
 }
 
@@ -83,7 +87,9 @@ restart()
 upgrade()
 {
     echo 'starting upgrade...'
-    cd ${appdir} &&  git checkout stable &&  git pull origin stable
+    cd ${appdir}   
+    git fetch origin stable
+    git checkout stable 
     supervisorctl restart radiusd
     supervisorctl restart admin
     supervisorctl restart customer

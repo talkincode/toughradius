@@ -11,7 +11,6 @@ import cyclone.web
 import tempfile
 from cyclone.util import ObjectDict
 from toughradius.common import utils
-from twisted.python import log
 from toughradius.common.paginator import Paginator
 from toughradius import __version__ as sys_version
 from toughradius.common.permit import permit
@@ -61,7 +60,7 @@ class BaseHandler(cyclone.web.RequestHandler):
             template_vars["code"] = 0
         resp = json.dumps(template_vars, ensure_ascii=False)
         if self.settings.debug:
-            log.msg("[api debug] :::::::: %s response body: %s" % (self.request.path, utils.safestr(resp)))
+            self.syslog.debug("[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
         self.write(resp)
 
 

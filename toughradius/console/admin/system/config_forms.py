@@ -24,8 +24,8 @@ dbtypes = {'mysql': u"mysql",'sqlite':u"sqlite"}
 
 database_form = pyforms.Form(
     pyforms.Dropdown("echo", args=booleans.items(), description=u"开启数据库DEBUG", help=u"开启此项，可以在控制台打印SQL语句", **input_style),
-    pyforms.Dropdown("dbtype", args=dbtypes.items(), description=u"数据库类型", **input_style),
-    pyforms.Textbox("dburl", description=u"数据库连接字符串", **input_style),
+    pyforms.Textbox("dbtype",description=u"数据库类型", readonly="readonly",**input_style),
+    pyforms.Textbox("dburl", description=u"数据库连接字符串", readonly="readonly", **input_style),
     pyforms.Textbox("pool_size", description=u"连接池大小", **input_style),
     pyforms.Textbox("pool_recycle", description=u"连接池回收间隔（秒）", **input_style),
     pyforms.Textbox("backup_path", description=u"数据库备份路径", **input_style),
@@ -34,11 +34,3 @@ database_form = pyforms.Form(
     action="/config/database/update"
 )
 
-admin_form = pyforms.Form(
-    pyforms.Textbox("host", description=u"管理监听地址", readonly="readonly", **input_style),
-    pyforms.Textbox("port", description=u"管理监听端口", readonly="readonly", **input_style),
-    pyforms.Textbox("logfile", description=u"日志文件", readonly="readonly", **input_style),
-    pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
-    title=u"管理配置管理",
-    action="/config/handlers/update"
-)

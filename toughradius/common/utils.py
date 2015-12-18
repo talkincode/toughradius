@@ -245,6 +245,11 @@ def safestr(val):
         return str(val)
     elif isinstance(val, dict):
         return json.dumps(val, ensure_ascii=False)
+    else:
+        try:
+            return str(val)
+        except:
+            return val
     return val
 
 def safeunicode(val):
@@ -262,6 +267,13 @@ def safeunicode(val):
         return str(val).decode('utf-8')
     elif isinstance(val, float):
         return str(val).decode('utf-8')
+    elif isinstance(val, dict):
+        return json.dumps(val)
+    else:
+        try:
+            return str(val).decode('utf-8')
+        except:
+            return val
     return val
 
 

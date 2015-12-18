@@ -47,7 +47,7 @@ def customer_import_form(nodes=[], products=[]):
     )
 
 
-user_import_vform = dataform.Form(
+customer_import_vform = dataform.Form(
     dataform.Item("realname", rules.not_null, description=u"用户姓名"),
     dataform.Item("idcard", rules.len_of(0, 32), description=u"证件号码"),
     dataform.Item("mobile", rules.len_of(0, 32), description=u"用户手机号码"),

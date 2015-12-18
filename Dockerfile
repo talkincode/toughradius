@@ -1,19 +1,23 @@
 FROM index.alauda.cn/toughstruct/tough-pypy
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
+# install toughengine
+RUN git clone -b master https://github.com/talkincode/toughengine.git /opt/toughengine
+RUN chmod +x /opt/toughengine/toughctl
+RUN ln -s /opt/toughengine/etc/toughengine.conf /etc/toughengine.conf
+
+#install toughradius
 RUN git clone -b stable https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
-
-RUN ln -s /opt/toughradius/toughctl /usr/bin/toughctl && chmod +x /usr/bin/toughctl
-
-RUN ln -s /opt/toughradius/docker/radiusd.conf /etc/radiusd.conf
-RUN ln -s /opt/toughradius/docker/supervisord.conf /etc/supervisord.conf
-RUN ln -s /opt/toughradius/docker/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
-RUN ln -s /opt/toughradius/docker/privkey.pem /var/toughradius/privkey.pem
-RUN ln -s /opt/toughradius/docker/cacert.pem /var/toughradius/cacert.pem
+RUN chmod +x /opt/toughradius/toughctl
+RUN ln -s /opt/toughradius/etc/toughradius.conf /etc/toughradius.conf
+RUN ln -s /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
+RUN ln -s /opt/toughradius/etc/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
 
 RUN pypy /opt/toughradius/toughctl --initdb
 
-EXPOSE 1815 1816 1817 1819
+EXPOSE 1816
+EXPOSE 1817
+EXPOSE 12222
 EXPOSE 1812/udp
 EXPOSE 1813/udp
 

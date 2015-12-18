@@ -24,7 +24,7 @@ class Logger:
 
     def __init__(self,config):
         self.formatter = logging.Formatter(
-            u'%(asctime)s {0} %(name)s %(levelname)-8s %(module)s %(message)s'.format(config.defaults.syslog_shost),
+            u'%(asctime)s {0} %(name)s %(levelname)-8s %(module)s -> %(funcName)s (%(lineno)d) %(message)s'.format(config.defaults.syslog_shost),
             '%b %d %H:%M:%S', )
         self.syslog_enable = config.defaults.get("syslog_enable") in ('1', 'true', 'on')
         self.syslog_server = config.defaults.get('syslog_server')
@@ -43,7 +43,7 @@ class Logger:
             handler.setFormatter(self.formatter)
             self.syslogger.addHandler(handler)
 
-        if config.defaults.debug:
+        elif config.defaults.debug:
             stream_handler = logging.StreamHandler(sys.stderr)
             stream_handler.setFormatter(self.formatter)
             self.syslogger.addHandler(stream_handler)

@@ -35,7 +35,7 @@ def run():
     parser = argparse.ArgumentParser()
     parser.add_argument('-admin', '--admin', action='store_true', default=False, dest='admin', help='run admin')
     parser.add_argument('-customer', '--customer', action='store_true', default=False, dest='customer', help='run customer')
-    parser.add_argument('-port', '--port', type=int, default=0, dest='port', help='handlers port')
+    parser.add_argument('-port', '--port', type=int, default=0, dest='port', help='server port')
     parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
     parser.add_argument('-dumpdb', '--dumpdb', type=str, default=None, dest='dumpdb', help='run dumpdb')
     parser.add_argument('-restoredb', '--restoredb', type=str, default=None, dest='restoredb', help='run restoredb')
@@ -48,9 +48,6 @@ def run():
     if args.debug:
         config.defaults.debug = True
 
-    if args.port > 0:
-        config.admin.port = args.port
-
     if args.dumpdb:
         return run_dumpdb(config, args.dumpdb)
 
@@ -58,9 +55,15 @@ def run():
         return run_restoredb(config, args.restoredb)
 
     if args.admin:
+        if args.port > 0:
+            config.admin.port = args.port
         run_admin(config)    
+
     if args.customer:
+        if args.port > 0:
+            config.customer.port = args.port        
         run_customer(config)
+        
     elif args.initdb:
         run_initdb(config)
     else:

@@ -76,7 +76,7 @@ class DashboardHandler(BaseHandler):
 class InitdbHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
-        return self.render_json(**execute("/opt/toughradius/toughctl --initdb"))
+        return self.render_json(**execute("pypy /opt/toughradius/toughctl --initdb"))
 
 
 @permit.route(r"/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)
@@ -99,7 +99,7 @@ class UpgradeHandler(BaseHandler):
     def post(self):
         release = self.get_argument("release")
         cmd1 = "cd /opt/toughradius"
-        cmd2 = "git checkout %s git pull origin %s " % (release, release)
+        cmd2 = "git fetch origin %s && git checkout %s" % (release, release)
         cmd3 = "supervisorctl restart all"
         return self.render_json(**execute("%s && %s && %s" % (cmd1, cmd2, cmd3)))
 
