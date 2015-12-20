@@ -12,7 +12,7 @@ raddb:
     volumes:
         - /home/var/mysql:/var/lib/mysql
 
-portal:
+radiusd:
     image: 'index.alauda.cn/toughstruct/toughradius'
     privileged: true
     ports:

@@ -32,10 +32,7 @@ class LoginHandler(BaseHandler):
         if opr.operator_status == 1:
             return self.render_json(code=1, msg=u"该操作员账号已被停用")
 
-        self.set_secure_cookie("tr_user", uname, expires_days=None)
-        self.set_secure_cookie("tr_login_time", utils.get_currtime(), expires_days=None)
-        self.set_secure_cookie("tr_login_ip", self.request.remote_ip, expires_days=None)
-        self.set_secure_cookie("tr_opr_type", str(opr.operator_type), expires_days=None)
+        self.set_session_user(uname, self.request.remote_ip, opr.operator_type, utils.get_currtime())
 
         if opr.operator_type == 1:
             for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=uname):

@@ -8,10 +8,9 @@ class LogoutHandler(BaseHandler):
 
     def get(self):
         if not self.current_user:
-            self.clear_all_cookies()
             self.redirect("/login")
             return
-        self.clear_all_cookies()    
+        self.clear_session()
         self.redirect("/login",permanent=False)
 
 

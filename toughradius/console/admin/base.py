@@ -16,6 +16,7 @@ from toughradius import __version__ as sys_version
 from toughradius.common.permit import permit
 from toughradius.common.settings import *
 from toughradius.console import models
+from toughradius.common import session
 
 class BaseHandler(cyclone.web.RequestHandler):
     
@@ -23,6 +24,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         super(BaseHandler, self).__init__(*argc, **argkw)
         self.syslog = self.application.syslog
         self.aes = self.application.aes
+        self.session = session.Session(self.application.session_manager, self)
 
     def initialize(self):
         self.tp_lookup = self.application.tp_lookup
@@ -110,17 +112,31 @@ class BaseHandler(cyclone.web.RequestHandler):
 
         qdict['page'] = page
         return path + '?' + urllib.urlencode(qdict)
+
+    def set_session_user(self, username, ipaddr, opr_type, login_time):
+        session_opr = ObjectDict()
+        session_opr.username = username
+        session_opr.ipaddr = ipaddr
+        session_opr.opr_type = opr_type
+        session_opr.login_time = login_time
+        self.session['session_opr'] = session_opr
+        self.session.save()
+
+    def clear_session(self):
+        self.session.clear()
+        self.session.save()
+        self.clear_all_cookies()  
         
     def get_current_user(self):
-        username = self.get_secure_cookie("tr_user")
+        return self.session.get("session_opr")
         if not username: return None
-        ipaddr = self.get_secure_cookie("tr_login_ip")
+        ipaddr = self.session.get("tr_login_ip")
 
         user = ObjectDict()
         user.username = username
         user.ipaddr = ipaddr
-        user.opr_type = self.get_secure_cookie("tr_opr_type")
-        user.login_time = self.get_secure_cookie("tr_login_time")
+        user.opr_type = self.session.get("tr_opr_type")
+        user.login_time = self.session.get("tr_login_time")
         return user
 
 

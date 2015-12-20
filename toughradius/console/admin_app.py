@@ -15,22 +15,28 @@ from toughradius.console import models
 from toughradius.common.dbengine import get_engine
 from toughradius.common.permit import permit, load_handlers
 from toughradius.common.settings import *
-
+from toughradius.common import session
+from txyam.client import YamClient
 
 class Application(cyclone.web.Application):
     def __init__(self, config=None, **kwargs):
 
         self.config = config
 
+        hosts = [h.split(":") for h in config.memcached.hosts.split(",")]
+        hosts = [(h, int(p)) for h, p in hosts]
+        self.mcache = YamClient(hosts)
+
         try:
             if 'TZ' not in os.environ:
-                os.environ["TZ"] = config.defaults.tz
+                os.environ["TZ"] = self.config.defaults.tz
             time.tzset()
         except:
             pass
 
         settings = dict(
             cookie_secret="12oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
+            session_secret="12oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
             login_url="/login",
             template_path=os.path.join(os.path.dirname(__file__), "admin/views"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
@@ -40,10 +46,11 @@ class Application(cyclone.web.Application):
             xheaders=True,
         )
 
+        self.session_manager = session.SessionManager(settings["session_secret"], hosts, 600)
+
         self.cache = CacheManager(**parse_cache_config_options({
-            'cache.type': 'file',
-            'cache.data_dir': '/tmp/cache/data',
-            'cache.lock_dir': '/tmp/cache/lock'
+            'cache.type': 'ext:memcached',
+            'cache.url': self.config.memcached.hosts,
         }))
 
         self.tp_lookup = TemplateLookup(directories=[settings['template_path']],

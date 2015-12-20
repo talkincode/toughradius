@@ -43,6 +43,7 @@ class Config():
             raise Exception("no config")
 
         self.defaults = ConfigDict(**{k: v for k, v in self.config.items("DEFAULT")})
+        self.memcached = ConfigDict(**{k: v for k, v in self.config.items("memcached") if k not in self.defaults})
         self.admin = ConfigDict(**{k: v for k, v in self.config.items("admin") if k not in self.defaults})
         self.customer = ConfigDict(**{k: v for k, v in self.config.items("customer") if k not in self.defaults})
         self.database = ConfigDict(**{k: v for k, v in self.config.items("database") if k not in self.defaults})
@@ -63,6 +64,7 @@ class Config():
         _timezone = os.environ.get("TIMEZONE")
         _db_type = os.environ.get("DB_TYPE")
         _db_url = os.environ.get("DB_URL")
+        _memcached_hosts = os.environ.get("MEMCACHED_HOSTS")
 
         if _syslog_enable:
             self.defaults.syslog_enable = _syslog_enable
@@ -78,11 +80,18 @@ class Config():
             self.database.dbtype = _db_type
         if _db_url:
             self.database.dburl = _db_url
+        if _memcached_hosts:
+            self.memcached.hosts = _memcached_hosts
+
 
     def update(self):
         """ update config file"""
         for k, v in self.defaults.iteritems():
             self.config.set("DEFAULT", k, v)
+
+        for k, v in self.memcached.iteritems():
+            if k not in self.defaults:
+                self.config.set("memcached", k, v)
 
         for k, v in self.admin.iteritems():
             if k not in self.defaults:
