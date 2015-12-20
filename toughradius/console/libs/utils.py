@@ -194,7 +194,7 @@ def fmt_online_time(ctime):
 
     if int(d) > 0:
         return u"%s天%s小时%s分钟" % (int(d), int(h), int(m))
-    elif int(d) > 0 and int(h) > 0:
+    elif int(d) == 0 and int(h) > 0:
         return u"%s小时%s分钟" % (int(h), int(m))
     else:
         return u"%s分钟" % (int(m))
