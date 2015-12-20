@@ -11,6 +11,15 @@ class AuthorizeHandler(api_base.ApiHandler):
     """ authorize handler"""
 
     def post(self):
+
+        @self.cache.cache('get_account_by_username',expire=600)   
+        def get_account_by_username(username):
+            return self.db.query(models.TrAccount).filter_by(account_number=username).first()
+
+        @self.cache.cache('get_product_by_id',expire=600)   
+        def get_product_by_id(product_id):
+            return self.db.query(models.TrProduct).filter_by(id=product_id).first()
+
         try:
             req_msg = self.parse_request()
             if 'username' not in req_msg:
@@ -21,14 +30,13 @@ class AuthorizeHandler(api_base.ApiHandler):
 
         try:
             username = req_msg['username']
-            account = self.db.query(models.TrAccount).filter_by(account_number=username).first()
+            account = get_account_by_username(username)
             if not account:
                 self.render_result(code=1, msg=u'user  {0} not exists'.format(utils.safeunicode(username)))
                 return
 
             passwd = self.aes.decrypt(account.password)
-            product = self.db.query(models.TrProduct).filter_by(id=account.product_id).first()
-
+            product = get_product_by_id(account.product_id)
 
             result = dict(
                 code=0,

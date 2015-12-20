@@ -44,7 +44,7 @@ def run():
     args = parser.parse_args(sys.argv[1:])
 
     config = iconfig.find_config(args.conf)
-
+    
     if args.debug:
         config.defaults.debug = True
 

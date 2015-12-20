@@ -37,3 +37,15 @@ MENU_ICONS = {
 }
 
 MAX_EXPIRE_DATE = '3000-12-30'
+
+# CACHE_NOTIFY
+
+NOTIFY_NAS_UPDATE = 'nas_update'
+NOTIFY_USER_UPDATE = 'user_update'
+
+NOTIFY_NAS_UPDATE_KEY = 'nasaddr'
+NOTIFY_USER_UPDATE_KEY = 'username'
+
+
+
+

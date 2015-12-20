@@ -3,7 +3,7 @@
 
 admin()
 {
-    pypy toughctl --admin -c etc/toughradius.conf
+    pypy toughctl --admin --debug -c etc/toughradius.conf
 }
 
 

@@ -36,13 +36,12 @@ def account_update_form():
         pyforms.Textbox("ip_address", description=u"用户IP地址", **input_style),
         pyforms.Hidden("install_address", description=u"用户安装地址", **input_style),
         pyforms.Textbox("new_password", description=u"认证密码(留空不修改)", **input_style),
-        pyforms.Textbox("user_concur_number", rules.is_number, description=u"用户并发数", required="required",
-                        **input_style),
+        pyforms.Textbox("user_concur_number", rules.is_number, description=u"用户并发数", required="required", **input_style),
         pyforms.Dropdown("bind_mac", args=boolean.items(), description=u"是否绑定MAC", **input_style),
         pyforms.Dropdown("bind_vlan", args=boolean.items(), description=u"是否绑定VLAN", **input_style),
         pyforms.Textarea("account_desc", description=u"用户描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
-        title=u"用户变更资料",
+        title=u"用户策略修改",
         action="/account/update"
     )
 

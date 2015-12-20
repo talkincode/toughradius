@@ -7,9 +7,11 @@ import logging
 from cyclone.web import RequestHandler
 from cyclone.websocket import WebSocketHandler
 
+MEM_CACHE_KEY = 'toughengine.permit.cache'
 
 class Permit():
     """ 权限菜单管理
+    @TODO: ⚠注意，这个权限管理在多进程时可能会有数据一致性问题，不过现在展示不解决它
     """
     routes = {}
     all_handlers = []

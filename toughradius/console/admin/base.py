@@ -24,6 +24,8 @@ class BaseHandler(cyclone.web.RequestHandler):
         super(BaseHandler, self).__init__(*argc, **argkw)
         self.syslog = self.application.syslog
         self.aes = self.application.aes
+        self.cache = self.application.cache
+        self.beanstalk = self.application.beanstalk
         self.session = session.Session(self.application.session_manager, self)
 
     def initialize(self):
@@ -34,7 +36,9 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.db.close()
         
     def get_error_html(self, status_code=500, **kwargs):
-        self.syslog.error("http error : [status_code:{0}], {1}".format(status_code, utils.safestr(kwargs)))
+        # self.syslog.error("http error : [status_code:{0}], {1}".format(status_code, utils.safestr(kwargs)))
+        if self.settings.debug:
+            traceback.print_exc()
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
@@ -202,6 +206,16 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.set_header ('Content-Disposition', 'attachment; filename=' + filename)
         self.write(data.xls)
         self.finish()
+
+    def update_user_cache(self,username):
+        self.beanstalk.use('cache_notify')
+        msg = {
+            'notify' : NOTIFY_USER_UPDATE,
+            NOTIFY_USER_UPDATE_KEY : username
+        }
+        json_msg = json.dumps(msg, ensure_ascii=False)
+        self.syslog.info(json_msg)
+        self.beanstalk.put(json_msg)
 
 
 

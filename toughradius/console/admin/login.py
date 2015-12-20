@@ -38,12 +38,7 @@ class LoginHandler(BaseHandler):
             for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=uname):
                 permit.bind_opr(rule.operator_name, rule.rule_path)
 
-        ops_log = models.TrOperateLog()
-        ops_log.operator_name = uname
-        ops_log.operate_ip = self.request.remote_ip
-        ops_log.operate_time = utils.get_currtime()
-        ops_log.operate_desc = u'操作员(%s)登陆' % (uname,)
-        self.db.add(ops_log)
+        self.add_oplog(u'操作员(%s)登陆' % (uname))
         self.db.commit()
 
         self.render_json(code=0, msg="ok")

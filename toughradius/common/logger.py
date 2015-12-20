@@ -23,6 +23,7 @@ def string_to_level(log_level):
 class Logger:
 
     def __init__(self,config):
+        self.config = config
         self.formatter = logging.Formatter(
             u'%(asctime)s {0} %(name)s %(levelname)-8s %(module)s -> %(funcName)s (%(lineno)d) %(message)s'.format(config.defaults.syslog_shost),
             '%b %d %H:%M:%S', )
@@ -35,7 +36,7 @@ class Logger:
         if config.defaults.debug:
             self.level = string_to_level("DEBUG")
 
-        self.syslogger = logging.getLogger('toughadmin')
+        self.syslogger = logging.getLogger('toughradius')
         self.syslogger.setLevel(self.level)
 
         if self.syslog_enable and self.syslog_server:
@@ -43,7 +44,7 @@ class Logger:
             handler.setFormatter(self.formatter)
             self.syslogger.addHandler(handler)
 
-        elif config.defaults.debug:
+        if self.config.defaults.debug:
             stream_handler = logging.StreamHandler(sys.stderr)
             stream_handler.setFormatter(self.formatter)
             self.syslogger.addHandler(stream_handler)

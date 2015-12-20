@@ -17,15 +17,27 @@ from toughradius.common.permit import permit, load_handlers
 from toughradius.common.settings import *
 from toughradius.common import session
 from txyam.client import YamClient
+from twisted.internet import protocol, defer, task
+import beanstalk
+
 
 class Application(cyclone.web.Application):
     def __init__(self, config=None, **kwargs):
 
         self.config = config
 
+        self.syslog = logger.Logger(config)
+
         hosts = [h.split(":") for h in config.memcached.hosts.split(",")]
         hosts = [(h, int(p)) for h, p in hosts]
         self.mcache = YamClient(hosts)
+
+        d = protocol.ClientCreator(reactor,beanstalk.twisted_client.Beanstalk).connectTCP(
+            self.config.beanstalkd.host,
+            int(self.config.beanstalkd.port)
+        )
+        d.addCallback(self.init_beanstalkd)
+
 
         try:
             if 'TZ' not in os.environ:
@@ -63,7 +75,6 @@ class Application(cyclone.web.Application):
         self.db_engine = get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
 
-        self.syslog = logger.Logger(config)
 
         self.aes = utils.AESCipher(key=self.config.defaults.secret)
 
@@ -76,6 +87,10 @@ class Application(cyclone.web.Application):
 
         self.init_route()
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
+
+    def init_beanstalkd(self, beanstalk):
+        self.beanstalk = beanstalk
+
 
     def init_route(self):
         handler_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "admin")

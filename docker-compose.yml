@@ -13,7 +13,7 @@ raddb:
         - /home/var/mysql:/var/lib/mysql
 
 radiusd:
-    image: 'index.alauda.cn/toughstruct/toughradius'
+    build: .
     privileged: true
     ports:
         - "1815:1816"

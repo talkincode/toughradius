@@ -15,6 +15,11 @@ class NasFetchHandler(api_base.ApiHandler):
         self.post()
 
     def post(self):
+
+        @self.cache.cache('get_bas_by_addr',expire=600)   
+        def get_bas_by_addr(nasaddr):
+            return self.db.query(models.TrBas).filter_by(ip_addr=nasaddr).first()
+
         try:
             req_msg = self.parse_request()
             if 'nasaddr' not in req_msg:
@@ -25,7 +30,7 @@ class NasFetchHandler(api_base.ApiHandler):
 
         try:
             nasaddr = req_msg['nasaddr']
-            nas = self.db.query(models.TrBas).filter_by(ip_addr=nasaddr).first()
+            nas = get_bas_by_addr(nasaddr)
             if not nas:
                 self.render_result(code=1, msg=u'nas {0} not exists'.format(nasaddr))
                 return
