@@ -13,7 +13,7 @@ RUN ln -s /opt/toughradius/etc/toughradius.conf /etc/toughradius.conf
 RUN ln -s /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
 RUN ln -s /opt/toughradius/etc/nginx.conf /etc/nginx.conf
 RUN ln -s /opt/toughradius/etc/toughradius-nginx.conf /etc/toughradius-nginx.conf
-RUN ln -s /opt/toughradius/etc/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
+RUN ln -s /opt/toughradius/bin/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
 
 RUN pypy /opt/toughradius/toughctl --initdb
 
