@@ -15,8 +15,6 @@ RUN ln -s /opt/toughradius/etc/nginx.conf /etc/nginx.conf
 RUN ln -s /opt/toughradius/etc/toughradius-nginx.conf /etc/toughradius-nginx.conf
 RUN ln -s /opt/toughradius/bin/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
 
-RUN pypy /opt/toughradius/toughctl --initdb
-
 EXPOSE 1816
 EXPOSE 1817
 EXPOSE 12222
