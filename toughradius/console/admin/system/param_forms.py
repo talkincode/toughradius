@@ -6,6 +6,7 @@ from toughradius.common.pyforms.rules import button_style,input_style
 boolean = {0:u"否", 1:u"是"}
 booleans = {'0': u"否", '1': u"是"}
 bool_bypass = {'0': u"免密码认证", '1': u"强制密码认证"}
+ra_protocols = {'http': u"HTTP协议", 'zmq': u"ZMQ协议"}
 
 sys_form = pyforms.Form(
     pyforms.Textbox("system_name", description=u"管理系统名称",help=u"管理系统名称,可以根据你的实际情况进行定制", **input_style),
@@ -48,6 +49,7 @@ mail_form = pyforms.Form(
 
 rad_form = pyforms.Form(
     pyforms.Dropdown("radius_bypass", args=bool_bypass.items(), description=u"Radius认证模式", **input_style),
+    pyforms.Dropdown("radius_agent_protocol", args=ra_protocols.items(), description=u"Radius认证接口协议", **input_style),
     pyforms.Textbox("radius_acct_interim_intelval", rules.is_number, description=u"Radius记账间隔(秒)",help=u"radius向bas设备下发的全局记账间隔，bas不支持则不生效", **input_style),
     pyforms.Textbox("radius_max_session_timeout", rules.is_number, description=u"Radius最大会话时长(秒)",help=u"用户在线达到最大会话时长时会自动断开", **input_style),
     pyforms.Textbox("radius_reject_delay", rules.is_number, description=u"拒绝延迟时间(秒)(0-9)",help=u"延迟拒绝消息的下发间隔，防御ddos攻击", **input_style),
