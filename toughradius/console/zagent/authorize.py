@@ -50,7 +50,7 @@ class ZAuthAgent:
 
 
     def process(self, msgid, message):
-        self.syslog.info("accept auth message %s, %r" % (msgid, message))
+        self.syslog.info("accept auth message %r" % (utils.safeunicode(message)))
         @self.cache.cache('get_account_by_username',expire=600)   
         def get_account_by_username(username):
             return self.db.query(models.TrAccount).filter_by(account_number=username).first()
@@ -65,16 +65,17 @@ class ZAuthAgent:
                 raise ValueError('username is empty')
         except Exception as err:
             resp = apibase.make_response(self.secret, code=1, msg=utils.safestr(err.message))
-            return self.agent.reply(msgid, resp)
+            self.agent.reply(msgid, resp)
+            return
             
         try:
             username = req_msg['username']
             account = get_account_by_username(username)
             if not account:
                 apibase.make_response(self.secret, code=1, msg=u'user  {0} not exists'.format(utils.safeunicode(username)))
-                return self.agent.reply(msgid, resp)
+                self.agent.reply(msgid, resp)
+                return
                 
-
             passwd = self.app.aes.decrypt(account.password)
             product = get_product_by_id(account.product_id)
 
@@ -91,8 +92,9 @@ class ZAuthAgent:
                 }
             )
 
-            apibase.make_response(self.secret, **result)
-
+            resp = apibase.make_response(self.secret, **result)
+            self.agent.reply(msgid, resp)
+            self.syslog.info("send auth response %r" % (utils.safeunicode(resp)))
         except Exception as err:
             self.syslog.error(u"api authorize error %s" % utils.safeunicode(err.message))
             resp = apibase.make_response(self.secret, code=1, msg=utils.safestr(err.message))
