@@ -41,6 +41,7 @@ initserv()
 start()
 {
     initserv
+    echo "root:${ROOT_PASSWORD}" | chpasswd
      # toughradius not running, start it
     if [ ! $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then
