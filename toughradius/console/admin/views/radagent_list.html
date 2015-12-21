@@ -1,0 +1,55 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script>
+    function deleteAgent(agent_id)
+    {
+        if(confirm("确认删除吗？"))
+        {
+            window.location.href = "/radagent/delete?agent_id="+agent_id;
+        }
+    }
+</script>
+</%def>
+
+<%def name="body()">
+<section class="content">
+    <div class="box box-primary">
+        <div class="box-header">
+            <i class="fa fa-sitemap"></i>
+            <h3 class="box-title">认证接入代理列表</h3>
+        </div>
+        <div class="box-body">
+            <div class="container">
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>接入协议</th>
+                            <th>接入类型</th>
+                            <th>接入点</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        % for agent in agents:
+                            <tr>
+                                <td>${agent.protocol}</td>
+                                <td>${agent.radius_type}</td>
+                                <td>${agent.endpoint}</td>
+                                <td>${agent.create_time}</td>
+                                <td>
+                                    % if permit.match(current_user.username,'/radagent/delete'):
+                                    <a class="opt-btn btn-default" href="javascript:deleteAgent('${agent.id}')">删除</a>
+                                    % endif
+                                </td>
+                            </tr>
+                        % endfor
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</section>
+</%def>

@@ -85,6 +85,19 @@ class TrParam(DeclarativeBase):
     param_value = Column(u'param_value', Unicode(length=1024), nullable=False,doc=u"参数值")
     param_desc = Column(u'param_desc', Unicode(length=255),doc=u"参数描述")
 
+class TrRadAgent(DeclarativeBase):
+    """RadiusAgent节点表"""
+    __tablename__ = 'tr_rad_agent'
+
+    __table_args__ = {}
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"节点id")
+    radius_type = Column(u'radius_type', Unicode(length=32), nullable=False,doc=u"接入类型")
+    protocol = Column(u'protocol', Unicode(length=32), nullable=False,doc=u"协议")
+    endpoint = Column(u'endpoint', Unicode(length=32), nullable=False,doc=u"接入地址")
+    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
+    last_check = Column('last_check', Unicode(length=19), nullable=False,doc=u"最后监测")
+
 
 class TrBas(DeclarativeBase):
     """BAS设备表"""

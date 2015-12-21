@@ -35,23 +35,35 @@ class NasFetchHandler(api_base.ApiHandler):
                 self.render_result(code=1, msg=u'nas {0} not exists'.format(nasaddr))
                 return
 
+            auth_agents = conn.query(models.TrRadAgent).filter_by(
+                protocol='zeromq',
+                radius_type='authorize'
+            )
+            acct_agents = conn.query(models.TrRadAgent).filter_by(
+                protocol='zeromq',
+                radius_type='acctounting'
+            )
+
             api_addr = "{0}://{1}".format(self.request.protocol, self.request.host)
             
             result = {
-                'code'        : 0,
-                'msg'         : 'ok',
-                'ipaddr'      : nasaddr,
-                'secret'      : nas.bas_secret,
-                'vendor_id'   : nas.vendor_id,
-                'coa_port'    : int(nas.coa_port or 3799),
-                'api_auth_url': "{0}/api/authorize".format(api_addr),
-                'api_acct_url': "{0}/api/acctounting".format(api_addr),
-                'nonce'       : str(int(time.time())),
+                'code'          : 0,
+                'msg'           : 'ok',
+                'ipaddr'        : nasaddr,
+                'secret'        : nas.bas_secret,
+                'vendor_id'     : nas.vendor_id,
+                'coa_port'      : int(nas.coa_port or 3799),
+                'api_auth_url'  : "{0}/api/authorize".format(api_addr),
+                'api_acct_url'  : "{0}/api/acctounting".format(api_addr),
+                'radius_agent'  : "zeromq",   
+                'auth_endpoints': ",".join([ a.endpoint for a in auth_agents]),    
+                'acct_endpoints': ",".join([ a.endpoint for a in acct_agents]), 
+                'nonce'         : str(int(time.time())),
             }
 
             self.render_result(**result)
         except Exception as err:
-            self.syslog.error(u"api authorize error, %s" % utils.safeunicode(traceback.format_exc()))
+            self.syslog.error(u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
             self.render_result(code=1, msg=u"api error")
 
 

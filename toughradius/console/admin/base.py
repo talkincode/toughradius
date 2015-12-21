@@ -25,7 +25,6 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.syslog = self.application.syslog
         self.aes = self.application.aes
         self.cache = self.application.cache
-        self.beanstalk = self.application.beanstalk
         self.session = session.Session(self.application.session_manager, self)
 
     def initialize(self):
@@ -206,16 +205,6 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.set_header ('Content-Disposition', 'attachment; filename=' + filename)
         self.write(data.xls)
         self.finish()
-
-    def update_user_cache(self,username):
-        self.beanstalk.use('cache_notify')
-        msg = {
-            'notify' : NOTIFY_USER_UPDATE,
-            NOTIFY_USER_UPDATE_KEY : username
-        }
-        json_msg = json.dumps(msg, ensure_ascii=False)
-        self.syslog.info(json_msg)
-        self.beanstalk.put(json_msg)
 
 
 

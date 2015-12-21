@@ -41,7 +41,6 @@ class AccountUpdatetHandler(account.AccountHandler):
 
         self.add_oplog(u'修改上网账号信息:%s' % (account.account_number))
         self.db.commit()
-        self.update_user_cache(account.account_number)
         self.redirect(self.detail_url_fmt(account.account_number))
 
 
