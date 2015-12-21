@@ -50,7 +50,7 @@ class ZAuthAgent:
 
 
     def process(self, msgid, message):
-        self.syslog.info("accept auth message %r" % (utils.safeunicode(message)))
+        self.syslog.info("accept auth message @ %s : %r" % (self.listen, utils.safeunicode(message)))
         @self.cache.cache('get_account_by_username',expire=600)   
         def get_account_by_username(username):
             return self.db.query(models.TrAccount).filter_by(account_number=username).first()
