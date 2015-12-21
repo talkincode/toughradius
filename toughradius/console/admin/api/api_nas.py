@@ -16,7 +16,7 @@ class NasFetchHandler(api_base.ApiHandler):
 
     def post(self):
 
-        @self.cache.cache('get_bas_by_addr',expire=600)   
+        @self.cache.cache('get_bas_by_addr',expire=60)   
         def get_bas_by_addr(nasaddr):
             return self.db.query(models.TrBas).filter_by(ip_addr=nasaddr).first()
 
