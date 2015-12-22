@@ -45,7 +45,6 @@ class Config():
         self.defaults = ConfigDict(**{k: v for k, v in self.config.items("DEFAULT")})
         self.memcached = ConfigDict(**{k: v for k, v in self.config.items("memcached") if k not in self.defaults})
         self.admin = ConfigDict(**{k: v for k, v in self.config.items("admin") if k not in self.defaults})
-        self.customer = ConfigDict(**{k: v for k, v in self.config.items("customer") if k not in self.defaults})
         self.database = ConfigDict(**{k: v for k, v in self.config.items("database") if k not in self.defaults})
 
         self.update_boolean()
@@ -96,10 +95,6 @@ class Config():
         for k, v in self.admin.iteritems():
             if k not in self.defaults:
                 self.config.set("admin", k, v)
-
-        for k, v in self.customer.iteritems():
-            if k not in self.defaults:
-                self.config.set("customer", k, v)
 
         for k, v in self.database.iteritems():
             if k not in self.defaults:
