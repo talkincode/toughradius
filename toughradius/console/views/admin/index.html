@@ -1,0 +1,127 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script>
+    function busy(flag) {
+        if (flag) {
+            $("#loading").show();
+            $("#inbox").html("")
+            $("#inbox").hide();
+        } else {
+            $("#loading").hide();
+            $("#inbox").show();
+        }
+    }
+
+
+    function update() {
+        busy(true);
+        $.post("/admin/dashboard/update", {_xsrf: '${handler.xsrf_token}'}, function (data) {
+            $("#status_line").html(data.value)
+            busy(false);
+        },"json");
+    }
+
+
+    function restart() {
+        busy(true);
+        $.ajax({
+            url: '/admin/dashboard/restart',
+            data:{_xsrf: '${handler.xsrf_token}'},
+            dataType:"json",
+            type: 'POST',
+            timeout: 9000,
+            error: function (xhr, textStatus) {
+                busy(false);
+                update()
+            },
+        });
+        setTimeout("update()", 9000);
+    }
+
+    $(document).ready(function () {
+        $("#loading").hide();
+        $("#inbox").hide();
+
+        $("#restart").click(function () {
+            restart();
+        });
+
+        $("#refresh").click(function () {
+            update()
+        });
+
+        update();
+    });
+
+</script>
+</%def>
+
+
+<%def name="body()">
+<section class="content">
+    <div class="box box-primary">
+        <div class="box-header">
+            <i class="fa fa-dashboard"></i>
+            <h3 class="box-title">控制面板</h3>
+        </div>
+        <div class="box-body">
+            <div class="container">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th colspan="4"> 当前登录管理员</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>登录管理员</td>
+                    <td>${current_user.username}</td>
+                    <td>登录时间</td>
+                    <td>${current_user.login_time}</td>
+                </tr>
+                <tr>
+                    <td>登录IP地址</td>
+                    <td>${current_user.ipaddr or ''}</td>
+                    <td>系统版本</td>
+                    <td>${sys_version or '1.0'}</td>
+                </tr>
+                </tbody>
+
+            </table>
+            <hr/>
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th width="15%">服务名</th>
+                    <th>服务状态</th>
+                    <th width="20%"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>系统控制台</td>
+                    <td><span id="status_line"></span></td>
+                    <td>
+                        % if permit.match(current_user.username,'/admin/dashboard/restart'):
+                        <button type="button" id="restart" class="btn btn-sm btn-info">重启服务</button>
+                        % endif
+                        % if permit.match(current_user.username,'/admin/dashboard/update'):
+                        <button type="button" id="refresh" class="btn btn-sm btn-info">刷新状态</button>
+                        % endif
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+
+            <hr>
+            <div id="loading" style="display: none;"><img style="max-height: 90px;width: auto;"
+                                                          src="/static/img/loading.gif"></div>
+            <div id="inbox" class="text-info" style="height:120px;overflow:auto">
+
+            </div>
+        </div>
+    </div>
+        </div>
+</section>
+</%def>
+

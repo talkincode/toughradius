@@ -1,0 +1,84 @@
+<%inherit file="base.html"/>
+<%namespace name="main_ui" file="main_ui.html"/>
+<%namespace name="sidebar_ui" file="sidebar_ui.html"/>
+<%def name="head()">
+</%def>
+
+<%def name="main()">
+<div class="panel panel-default">
+    <div class="panel-heading"><i class="fa fa-user"></i> 账号信息
+        <div class="bar pull-right">
+            <a href="javascript:history.go(-1);">返回上页</a>
+        </div>
+    </div>
+    <div class="panel-body posts">
+        <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="6"> 基本信息</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>用户账号</td>
+                        <td>${user.account_number}</td>
+                        <td>资费名称</td>
+                        <td>${user.product_name}</td>
+                        <td>用户状态</td>
+                        <td>
+                            % if is_expire(user.expire_date) or user.status == 4:
+                                <span class="label label-warning">到期</span>
+                            % elif user.status == 1:
+                                <span class="label label-success">正常</span>
+                            % elif user.status == 2:
+                                <span class="label label-default">停机</span>
+                            % elif user.status == 3:
+                                <span class="label label-danger">销户</span>
+                            % endif
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>过期时间</td>
+                        <td>${user.expire_date}</td>
+                        <td>余额</td>
+                        <td>${fen2yuan(user.balance)}元</td>
+                        <td>剩余时长</td>
+                        <td>${sec2hour(user.time_length)}小时</td>
+                    </tr>      
+                    <tr>
+                        <td>剩余流量</td>
+                        <td>${kb2mb(user.flow_length)}MB</td>
+                        <td>并发数</td>
+                        <td>${user.user_concur_number}</td>
+                        <td>绑定MAC</td>
+                        <td>${{0:u"否", 1:u"是"}[user.bind_mac]}</td>                        
+                    </tr>   
+                    <tr>
+                        <td>绑定VLAN</td>
+                        <td>${{0:u"否", 1:u"是"}[user.bind_vlan]}</td>
+                        <td>VLANID1/VLANID2</td>
+                        <td>${user.vlan_id}/${user.vlan_id2}</td>
+                        <td>MAC地址</td>
+                        <td>${user.mac_addr}</td>                     
+                    </tr>   
+                    <tr>
+                        <td>IP地址</td>
+                        <td>${user.ip_address}</td>
+                        <td>安装地址</td>
+                        <td>${user.install_address}</td>
+                        <td>创建时间</td>
+                        <td>${user.create_time}</td>                        
+                    </tr>                                                                      
+            </tbody>
+
+        </table>
+    </div>
+</div>
+</%def>
+
+<%def name="sidebar()">
+    ${sidebar_ui.login_box()}
+    ${sidebar_ui.user_box()}
+    ${sidebar_ui.service_box()}
+    ${sidebar_ui.qrcode_box()}
+</%def>

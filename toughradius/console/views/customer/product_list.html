@@ -1,0 +1,60 @@
+<%inherit file="base.html"/>
+<%namespace name="main_ui" file="main_ui.html"/>
+<%namespace name="sidebar_ui" file="sidebar_ui.html"/>
+<%def name="head()">
+</%def>
+
+<%def name="main()">
+<div class="panel panel-default">
+    <div class="panel-heading">
+    <div class="bar">
+        <span class="glyphicon glyphicon-user"></span> 资费列表
+    </div>
+    </div>
+    <div class="panel-body posts">
+        % for product in products:
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th colspan="6">
+                    ${product.product_name} 
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>资费类型</td>
+                <td>
+                    ${{0:u'预付费包月',1:u"预付费时长",2:u"买断包月"}[product.product_policy]}
+                </td>
+                <td>资费价格</td>
+                <td>${fen2yuan(product.fee_price)}</td>
+                <td>同时在线数</td>
+                <td>${product.concur_number}</td>
+            </tr>
+            <tr>
+                <td>VLAN绑定</td>
+                <td>${product.bind_vlan and u'是' or u'否'}</td>
+                <td>MAC地址绑定</td>
+                <td>${product.bind_mac and u'是' or u'否'}</td>
+                <td>开放认证时段</td>
+                <td>${product.fee_period}</td>
+            </tr>
+            <tr>
+                <td>上行速率</td>
+                <td>${product.input_max_limit/1024} kbps</td>
+                <td>下行速率</td>
+                <td colspan="3">${product.output_max_limit/1024} kbps</td>
+            </tr>
+            </tbody>
+        </table>
+        <hr>
+         % endfor
+    </div>
+</div>
+</%def>
+
+<%def name="sidebar()">
+    ${sidebar_ui.login_box()}
+    ${sidebar_ui.user_box()}
+</%def>

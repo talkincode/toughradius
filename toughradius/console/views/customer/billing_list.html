@@ -1,0 +1,97 @@
+<%inherit file="base.html"/>
+<%namespace name="main_ui" file="main_ui.html"/>
+<%namespace name="sidebar_ui" file="sidebar_ui.html"/>
+
+<%def name="head()">
+<script src="/static/js/bootstrap-datetimepicker.min.js"></script>
+<link rel="stylesheet" href="/static/js/bootstrap-datetimepicker.min.css">
+   <script>
+    $(document).ready(function(){
+        $("#query_begin_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+        $("#query_end_time").datetimepicker({format: 'yyyy-mm-dd hh:ii:ss',autoclose: true,todayBtn: true});
+    });
+
+   </script>
+</%def>
+
+<%def name="main()">
+<div class="panel panel-default">
+    <div class="panel-heading"><i class="fa fa-user"></i> 用户计费查询</div>
+    <div class="panel-body">
+        <form id="query_form" class="form-horizontal" role="form" action="/billing" method="post">
+            <div class="form-group">
+                <label for="query_begin_time" class="col-md-2 control-label">开始时间</label>
+
+                <div class="col-md-3">
+                    <input type="text" id="query_begin_time" name="query_begin_time" value="${query_begin_time or ''}" class="form-control form_datetime"  >
+                </div>
+                 <label for="query_end_time" class="col-md-2 control-label">结束时间</label>
+                <div class="col-md-3">
+                    <input type="text" id="query_end_time" name="query_end_time" value="${query_end_time or ''}"  class="form-control form_datetime">
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="account_number" class="col-md-2 control-label">用户账号</label>
+                <div class="col-md-3">
+                    <select id="account_number" name="account_number" class="form-control" >
+                    <option value=""></option>
+                    % for account in accounts:
+                      <option value="${account.account_number}"  ${account.account_number==account_number and "selected" or ""}>${account.account_number}</option>
+                    % endfor
+                    </select>
+                </div>  
+                <div class="col-md-7">
+                    <button type="submit" class="btn btn-primary">查询</button>
+                </div>                
+            </div>               
+        </form>
+        <hr>
+
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>账号</th>
+                <!-- <th>会话编号</th> -->
+                <th>开始时间</th>
+                <th>会话时长</th>
+                <th>已扣时长</th>
+                <th>已扣流量</th>
+                <th>应扣费用</th>
+                <th>实扣费用</th>
+                <th>剩余余额</th>
+                <th>剩余时长</th>
+                <th>剩余流量</th>
+                <th>扣费时间</th>
+            </tr>
+            </thead>
+            <tbody>
+            % for bill,_ in page_data.result:
+            <tr>
+                <td>${bill.account_number}</td>
+                <!-- <td>${bill.acct_session_id}</td> -->
+                <td>${bill.acct_start_time}</td>
+                <td>${fmt_second(bill.acct_session_time)}</td>
+                <td>${fmt_second(bill.acct_times)}</td>
+                <td>${kb2mb(bill.acct_flows)}M</td>
+                <td>${fen2yuan(bill.acct_fee)}</td>
+                <td>${fen2yuan(bill.actual_fee)}</td>
+                <td>${fen2yuan(bill.balance)}</td>
+                <td>${sec2hour(bill.time_length)}</td>
+                <td>${kb2mb(bill.flow_length)}</td>
+                <td>${bill.create_time}</td>
+            </tr>
+            % endfor
+            </tbody>
+        </table>
+
+        ${page_data.render(form_id="query_form")}
+    </div>
+</div>
+</%def>
+
+<%def name="sidebar()">
+    ${sidebar_ui.login_box()}
+    ${sidebar_ui.user_box()}
+    ${sidebar_ui.service_box()}
+    ${sidebar_ui.qrcode_box()}
+</%def>

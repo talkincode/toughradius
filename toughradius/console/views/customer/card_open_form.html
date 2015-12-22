@@ -1,0 +1,59 @@
+<%inherit file="base.html"/>
+<%namespace name="sidebar_ui" file="sidebar_ui.html"/>
+<%def name="head()">
+<script>
+function updateProduct(){
+    var recharge_card = $("#recharge_card").val();
+    if(recharge_card==''){
+        return;
+    }
+    $.get("/open/querycp?recharge_card="+recharge_card, {}, function (ev) {
+        if(ev.code==1){
+            $("#alert").show();
+            $("#alert").html(ev.data);
+            return false;
+        }
+        $("#alert").hide();
+        $("#alert").html('');
+        $("#product_id").empty();
+        $.each(ev.data.products, function (index, product) {
+            console.log(product[0]);
+            console.log(product[1]);
+            $("#product_id").append("<option value='" + product[0] + "'>" + product[1] + "</option>");
+        });
+    }, "json");
+}    
+$(document).ready(function(){
+    $("#alert").hide();
+    updateProduct();
+    $('#recharge_card').blur(function() {
+        updateProduct();
+    });  
+});    
+</script>
+</%def>
+<%def name="main()">
+<div class="panel panel-default">
+    <div class="panel-heading"><span class="glyphicon glyphicon-cog"></span> ${form.title}
+    <div class="bar pull-right">
+        <a href="javascript:history.go(-1);">返回上页</a>
+    </div>
+    </div>
+        <div class="panel-body">
+            <p id="alert" class="alert alert-warning"></p>
+            % if msg:
+            <p class="alert alert-warning">
+            ${msg}
+            </p>
+            % endif
+            <form class="form-horizontal" role="form" action="${form.action}" method="post">
+            ${form.render_css()}
+        </form>
+    </div>
+</div>
+</%def>
+
+<%def name="sidebar()">
+    ${sidebar_ui.login_box()}
+    ${sidebar_ui.user_box()}
+</%def>
