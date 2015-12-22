@@ -17,7 +17,7 @@ default_form = pyforms.Form(
     # pyforms.Textbox("certificate", description=u"安全证书签名路径", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"系统配置管理",
-    action="/config/default/update"
+    action="/admin/config/default/update"
 )
 
 dbtypes = {'mysql': u"mysql",'sqlite':u"sqlite"}
@@ -31,6 +31,6 @@ database_form = pyforms.Form(
     pyforms.Textbox("backup_path", description=u"数据库备份路径", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"数据库配置管理",
-    action="/config/database/update"
+    action="/admin/config/database/update"
 )
 

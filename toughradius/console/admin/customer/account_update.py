@@ -12,7 +12,7 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.settings import * 
 
-@permit.route(r"/account/update", u"用户策略修改",MenuUser, order=2.2000)
+@permit.route(r"/admin/account/update", u"用户策略修改",MenuUser, order=2.2000)
 class AccountUpdatetHandler(account.AccountHandler):
 
     @cyclone.web.authenticated

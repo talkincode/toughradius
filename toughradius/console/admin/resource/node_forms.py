@@ -13,7 +13,7 @@ node_add_form = pyforms.Form(
     pyforms.Textbox("node_desc", rules.len_of(2, 128), description=u"区域描述", required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"增加区域",
-    action="/node/add"
+    action="/admin/node/add"
 )
 
 node_update_form = pyforms.Form(
@@ -22,5 +22,5 @@ node_update_form = pyforms.Form(
     pyforms.Textbox("node_desc", rules.len_of(2, 128), description=u"区域描述", required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"修改区域",
-    action="/node/update"
+    action="/admin/node/update"
 )

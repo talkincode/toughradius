@@ -32,7 +32,7 @@ def customer_open_form(nodes=[], products=[]):
         pyforms.Textarea("customer_desc", description=u"用户描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户开户",
-        action="/customer/open"
+        action="/admin/customer/open"
     )
 
 
@@ -43,7 +43,7 @@ def customer_import_form(nodes=[], products=[]):
         pyforms.File("import_file", description=u"用户数据文件", required="required", **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>立即导入</b>", **button_style),
         title=u"用户数据导入",
-        action="/customer/import"
+        action="/admin/customer/import"
     )
 
 
@@ -77,5 +77,5 @@ def customer_update_form(nodes=[]):
         pyforms.Textarea("customer_desc", description=u"用户描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户基本信息修改",
-        action="/customer/update"
+        action="/admin/customer/update"
     )

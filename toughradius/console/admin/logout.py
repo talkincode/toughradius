@@ -3,14 +3,14 @@
 from toughradius.console.admin.base import BaseHandler
 from toughradius.common.permit import permit
 
-@permit.route(r"/logout")
+@permit.route(r"/admin/logout")
 class LogoutHandler(BaseHandler):
 
     def get(self):
         if not self.current_user:
-            self.redirect("/login")
+            self.redirect("/admin/login")
             return
         self.clear_session()
-        self.redirect("/login",permanent=False)
+        self.redirect("/admin/login",permanent=False)
 
 

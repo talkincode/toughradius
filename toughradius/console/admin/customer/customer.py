@@ -16,10 +16,10 @@ from toughradius.common.settings import *
 
 class CustomerHandler(BaseHandler):
 
-    detail_url_fmt = "/customer/detail?account_number={0}".format
+    detail_url_fmt = "/admin/customer/detail?account_number={0}".format
 
 
-@permit.route(r"/customer", u"用户信息管理",MenuUser, order=1.0000, is_menu=True)
+@permit.route(r"/admin/customer", u"用户信息管理",MenuUser, order=1.0000, is_menu=True)
 class CustomerListHandler(CustomerHandler):
 
     @cyclone.web.authenticated
@@ -87,13 +87,13 @@ class CustomerListHandler(CustomerHandler):
             _query = _query.filter(models.TrAccount.expire_date <= edate)
             _query = _query.filter(models.TrAccount.expire_date >= _now.strftime("%Y-%m-%d"))
 
-        if self.request.path == '/customer':
+        if self.request.path == '/admin/customer':
             return self.render("customer_list.html",
                           page_data=self.get_page_data(_query),
                           node_list=opr_nodes,
                           products=self.db.query(models.TrProduct),
                           **self.get_params())
-        elif self.request.path == "/customer/export":
+        elif self.request.path == "/admin/customer/export":
             data = Dataset()
             data.append((
                 u'区域', u'姓名', u'证件号', u'邮箱', u'联系电话', u'地址',
@@ -111,7 +111,7 @@ class CustomerListHandler(CustomerHandler):
             name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
             self.export_file(name, data)
 
-@permit.route(r"/customer/export", u"用户导出",MenuUser, order=1.0001)
+@permit.route(r"/admin/customer/export", u"用户导出",MenuUser, order=1.0001)
 class CustomerExportHandler(CustomerListHandler):
     pass
 

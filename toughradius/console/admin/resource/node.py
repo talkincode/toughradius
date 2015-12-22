@@ -12,14 +12,14 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.settings import * 
 
-@permit.route(r"/node", u"区域管理",MenuRes, order=1.0000, is_menu=True)
+@permit.route(r"/admin/node", u"区域管理",MenuRes, order=1.0000, is_menu=True)
 class NodeListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
         nodes = self.db.query(models.TrNode)
         return self.render('node_list.html',nodes=nodes)
 
-@permit.route(r"/node/add", u"新增区域", MenuRes, order=1.0001)
+@permit.route(r"/admin/node/add", u"新增区域", MenuRes, order=1.0001)
 class NodeAddHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -41,9 +41,9 @@ class NodeAddHandler(BaseHandler):
 
         self.db.commit()
 
-        self.redirect("/node",permanent=False)
+        self.redirect("/admin/node",permanent=False)
 
-@permit.route(r"/node/update", u"修改区域", MenuRes, order=1.0002)
+@permit.route(r"/admin/node/update", u"修改区域", MenuRes, order=1.0002)
 class NodeUpdateHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -66,10 +66,10 @@ class NodeUpdateHandler(BaseHandler):
 
         self.db.commit()
 
-        self.redirect("/node",permanent=False)
+        self.redirect("/admin/node",permanent=False)
 
 
-@permit.route(r"/node/delete", u"删除区域", MenuRes, order=1.0003)
+@permit.route(r"/admin/node/delete", u"删除区域", MenuRes, order=1.0003)
 class NodeDeleteHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -83,7 +83,7 @@ class NodeDeleteHandler(BaseHandler):
 
         self.db.commit()
 
-        self.redirect("/node",permanent=False)
+        self.redirect("/admin/node",permanent=False)
 
 
 

@@ -12,7 +12,7 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.settings import * 
 
-@permit.route(r"/account/open", u"用户开户",MenuUser, order=2.0000)
+@permit.route(r"/admin/account/open", u"用户开户",MenuUser, order=2.0000)
 class AccountOpentHandler(account.AccountHandler):
 
     @cyclone.web.authenticated

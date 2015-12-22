@@ -13,16 +13,16 @@ sys_form = pyforms.Form(
     pyforms.Textbox("system_ticket_expire_days", description=u"上网日志保留天数", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
-    action="/param/update?active=syscfg"
+    action="/admin/param/update?active=syscfg"
 )
 
 serv_form = pyforms.Form(
-    pyforms.Textbox("customer_weixin_qrcode", description=u"微信公众号二维码图片(宽度230px)", **input_style),
+    pyforms.Textbox("customer_qrcode", description=u"二维码图片(宽度230px)", **input_style),
     pyforms.Textbox("customer_service_phone", description=u"客户服务电话", **input_style),
     pyforms.Textbox("customer_service_qq", description=u"客户服务QQ号码", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
-    action="/param/update?active=servcfg"
+    action="/admin/param/update?active=servcfg"
 )
 
 notify_form = pyforms.Form(
@@ -33,7 +33,7 @@ notify_form = pyforms.Form(
     pyforms.Textbox("expire_addrpool", description=u"到期提醒下发地址池", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
-    action="/param/update?active=notifycfg"
+    action="/admin/param/update?active=notifycfg"
 )
 
 mail_form = pyforms.Form(
@@ -44,7 +44,7 @@ mail_form = pyforms.Form(
     pyforms.Textbox("smtp_pwd", description=u"SMTP密码", help=u"如果密码不是必须的，请填写none", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
-    action="/param/update?active=mailcfg"
+    action="/admin/param/update?active=mailcfg"
 )
 
 rad_form = pyforms.Form(
@@ -56,7 +56,7 @@ rad_form = pyforms.Form(
     pyforms.Dropdown("radius_auth_auto_unlock", args=booleans.items(), description=u"并发自动解锁", help=u"如果账号被挂死，认证时自动踢下线",**input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
-    action="/param/update?active=radcfg"
+    action="/admin/param/update?active=radcfg"
 )
 
 

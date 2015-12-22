@@ -6,7 +6,7 @@ from toughradius.console.admin.base import BaseHandler
 from toughradius.console import models
 from toughradius.common.permit import permit
 
-@permit.route(r"/login")
+@permit.route(r"/admin/login")
 class LoginHandler(BaseHandler):
 
     def get(self):

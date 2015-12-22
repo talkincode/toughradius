@@ -9,7 +9,7 @@ from toughradius.console import models
 from toughradius.common.permit import permit
 from toughradius.common.settings import * 
 
-@permit.route("/param", u"系统参数管理", MenuSys, is_menu=True, order=2.0005)
+@permit.route("/admin/param", u"系统参数管理", MenuSys, is_menu=True, order=2.0005)
 class ParamHandler(BaseHandler):
 
     @cyclone.web.authenticated
@@ -36,7 +36,7 @@ class ParamHandler(BaseHandler):
                       rad_form=rad_form)
 
 
-@permit.route("/param/update", u"系统参数更新", MenuSys, order=2.0006)
+@permit.route("/admin/param/update", u"系统参数更新", MenuSys, order=2.0006)
 class ParamUpdateHandler(BaseHandler):
 
     @cyclone.web.authenticated
@@ -57,4 +57,4 @@ class ParamUpdateHandler(BaseHandler):
 
         self.add_oplog(u'操作员(%s)修改参数' % (self.current_user.username))
         self.db.commit()
-        self.redirect("/param?active=%s" % active)
+        self.redirect("/admin/param?active=%s" % active)

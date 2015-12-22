@@ -16,7 +16,7 @@ from toughradius.common import utils
 from toughradius.common.settings import * 
 
 
-@permit.route(r"/customer/import", u"用户资料导入",MenuUser, order=1.3000, is_menu=True)
+@permit.route(r"/admin/customer/import", u"用户资料导入",MenuUser, order=1.3000, is_menu=True)
 class CustomerImportHandler(CustomerHandler):
 
     @cyclone.web.authenticated
@@ -158,4 +158,4 @@ class CustomerImportHandler(CustomerHandler):
 
         self.add_oplog(u"导入开户，用户数：%s" % _unums)
         self.db.commit()
-        self.redirect("/customer")
+        self.redirect("/admin/customer")

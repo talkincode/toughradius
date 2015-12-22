@@ -26,7 +26,7 @@ def account_open_form(products=[]):
         pyforms.Textarea("account_desc", description=u"用户描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户新开账号",
-        action="/account/open"
+        action="/admin/account/open"
     )
 
 
@@ -42,7 +42,7 @@ def account_update_form():
         pyforms.Textarea("account_desc", description=u"用户描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户策略修改",
-        action="/account/update"
+        action="/admin/account/update"
     )
 
 
@@ -57,7 +57,7 @@ account_next_form = pyforms.Form(
         pyforms.Textarea("operate_desc", rules.len_of(0,512), description=u"操作描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户续费",
-        action="/account/next"
+        action="/admin/account/next"
     )
 
 
@@ -67,7 +67,7 @@ account_charge_form = pyforms.Form(
     pyforms.Textarea("operate_desc", rules.len_of(0, 512),description=u"操作描述", rows=4, **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"用户充值",
-    action="/account/charge"
+    action="/admin/account/charge"
 )
 
 account_cancel_form = pyforms.Form(
@@ -76,7 +76,7 @@ account_cancel_form = pyforms.Form(
     pyforms.Textarea("operate_desc", rules.len_of(0, 512),description=u"操作描述", rows=4, **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"用户销户",
-    action="/account/cancel"
+    action="/admin/account/cancel"
 )
 
 
@@ -93,5 +93,5 @@ def account_change_form(products=[]):
         pyforms.Textarea("operate_desc", rules.len_of(0, 512),description=u"操作描述", rows=4, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"用户资费变更",
-        action="/account/change"
+        action="/admin/account/change"
     )

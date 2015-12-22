@@ -78,7 +78,10 @@ restart()
 {
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then
-        supervisorctl restart all
+        supervisorctl restart admin
+        supervisorctl restart radauth
+        supervisorctl restart radacct
+        supervisorctl status
     else
         supervisord -c /etc/supervisord.conf
     fi
@@ -89,11 +92,11 @@ upgrade()
 {
     echo 'starting upgrade...'
     cd ${appdir}   
-    git fetch origin stable
-    git checkout stable 
-    supervisorctl restart radiusd
+    git fetch origin stable_v2
+    git checkout stable_v2 
     supervisorctl restart admin
-    supervisorctl restart customer
+    supervisorctl restart radauth
+    supervisorctl restart radacct
     supervisorctl status
     echo 'upgrade done'
 }

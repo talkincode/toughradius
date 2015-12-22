@@ -13,7 +13,7 @@ from toughradius.common import utils
 from toughradius.common.settings import * 
 
 
-@permit.route(r"/product", u"资费管理",MenuRes, order=3.0000, is_menu=True)
+@permit.route(r"/admin/product", u"资费管理",MenuRes, order=3.0000, is_menu=True)
 class ProductListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -25,7 +25,7 @@ class ProductListHandler(BaseHandler):
             page_data=self.get_page_data(query)
         )
 
-@permit.route(r"/product/add", u"新增资费",MenuRes, order=3.0001)
+@permit.route(r"/admin/product/add", u"新增资费",MenuRes, order=3.0001)
 class ProductAddListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -57,9 +57,9 @@ class ProductAddListHandler(BaseHandler):
         self.db.add(product)
         self.add_oplog(u'新增资费信息:%s' % utils.safeunicode(product.product_name))
         self.db.commit()
-        self.redirect("/product", permanent=False)
+        self.redirect("/admin/product", permanent=False)
 
-@permit.route(r"/product/update", u"修改资费",MenuRes, order=3.0002)
+@permit.route(r"/admin/product/update", u"修改资费",MenuRes, order=3.0002)
 class ProductUpdateListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -97,10 +97,10 @@ class ProductUpdateListHandler(BaseHandler):
         product.update_time = utils.get_currtime()
         self.add_oplog(u'修改资费信息:%s' % utils.safeunicode(product.product_name))
         self.db.commit()
-        self.redirect("/product", permanent=False)
+        self.redirect("/admin/product", permanent=False)
 
 
-@permit.route(r"/product/delete", u"删除资费",MenuRes, order=3.0003)
+@permit.route(r"/admin/product/delete", u"删除资费",MenuRes, order=3.0003)
 class ProductDeleteListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -111,9 +111,9 @@ class ProductDeleteListHandler(BaseHandler):
         self.db.query(models.TrProduct).filter_by(id=product_id).delete()
         self.add_oplog(u'删除资费信息:%s' % product_id)
         self.db.commit()
-        self.redirect("/product", permanent=False)
+        self.redirect("/admin/product", permanent=False)
 
-@permit.route(r"/product/detail", u"资费详情",MenuRes, order=3.0004)
+@permit.route(r"/admin/product/detail", u"资费详情",MenuRes, order=3.0004)
 class ProductDeleteListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):

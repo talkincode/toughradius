@@ -14,7 +14,7 @@ from toughradius.common.settings import *
 ###############################################################################
 # password update
 ###############################################################################
-@permit.route(r"/password", u"密码修改", MenuSys, order=1.0100, is_menu=False)
+@permit.route(r"/admin/password", u"密码修改", MenuSys, order=1.0100, is_menu=False)
 class PasswordUpdateHandler(BaseHandler):
     def get(self):
         form = password_forms.password_update_form()
@@ -40,6 +40,6 @@ class PasswordUpdateHandler(BaseHandler):
         self.db.add(ops_log)
 
         self.db.commit()
-        self.redirect("/")
+        self.redirect("/admin")
 
 

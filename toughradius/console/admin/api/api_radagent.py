@@ -32,6 +32,8 @@ class AgentFetchHandler(api_base.ApiHandler):
                 radius_type='acctounting'
             )
 
+            radius_agent_protocol = self.get_param_value('radius_agent_protocol', 'http')
+
             api_addr = "{0}://{1}".format(self.request.protocol, self.request.host)
             
             result = {
@@ -39,7 +41,7 @@ class AgentFetchHandler(api_base.ApiHandler):
                 'msg'           : 'ok',
                 'api_auth_url'  : "{0}/api/authorize".format(api_addr),
                 'api_acct_url'  : "{0}/api/acctounting".format(api_addr),
-                'protocol'  : "zeromq",   
+                'protocol'      : radius_agent_protocol,   
                 'auth_endpoints': ",".join([ a.endpoint for a in auth_agents]),    
                 'acct_endpoints': ",".join([ a.endpoint for a in acct_agents]), 
                 'nonce'         : str(int(time.time())),

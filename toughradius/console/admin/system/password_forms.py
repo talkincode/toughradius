@@ -12,5 +12,5 @@ password_update_form = pyforms.Form(
     pyforms.Password("tra_user_pass_chk", rules.len_of(6, 32), description=u"确认管理员新密码", size=32,value="", required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"管理密码更新",
-    action="/password"
+    action="/admin/password"
 )

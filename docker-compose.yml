@@ -27,6 +27,8 @@ radiusd:
         - ROOT_PASSWORD=toughradius
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
+        - API_URL=http://127.0.0.1:1816/api
+        - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
         - TIMEZONE=CST-8
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99

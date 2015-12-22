@@ -16,7 +16,7 @@ from toughradius.console.admin.system.operator_form import opr_status_dict
 from toughradius.common.settings import * 
 
 
-@permit.route(r"/operator", u"操作员管理", MenuSys, order=3.0000, is_menu=True)
+@permit.route(r"/admin/operator", u"操作员管理", MenuSys, order=3.0000, is_menu=True)
 class OperatorHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -24,7 +24,7 @@ class OperatorHandler(BaseHandler):
                       operator_list=self.db.query(models.TrOperator),opr_status=opr_status_dict)
 
 
-@permit.route(r"/operator/add", u"操作员新增", MenuSys, order=3.0001)
+@permit.route(r"/admin/operator/add", u"操作员新增", MenuSys, order=3.0001)
 class AddHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -78,9 +78,9 @@ class AddHandler(BaseHandler):
         for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=operator.operator_name):
             permit.bind_opr(rule.operator_name, rule.rule_path)
 
-        self.redirect("/operator",permanent=False)
+        self.redirect("/admin/operator",permanent=False)
 
-@permit.route(r"/operator/update", u"操作员修改", MenuSys, order=3.0002)
+@permit.route(r"/admin/operator/update", u"操作员修改", MenuSys, order=3.0002)
 class UpdateHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -153,9 +153,9 @@ class UpdateHandler(BaseHandler):
         for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=operator.operator_name):
             permit.bind_opr(rule.operator_name, rule.rule_path)
 
-        self.redirect("/operator",permanent=False)
+        self.redirect("/admin/operator",permanent=False)
 
-@permit.route(r"/operator/delete", u"操作员删除", MenuSys, order=3.0003)
+@permit.route(r"/admin/operator/delete", u"操作员删除", MenuSys, order=3.0003)
 class DeleteHandler(BaseHandler):
 
     @cyclone.web.authenticated
@@ -167,7 +167,7 @@ class DeleteHandler(BaseHandler):
 
         self.add_oplog(u'删除操作员%s信息' % utils.safeunicode(opr.operator_name))
         self.db.commit()
-        self.redirect("/operator",permanent=False)
+        self.redirect("/admin/operator",permanent=False)
 
 
 

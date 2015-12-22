@@ -16,7 +16,7 @@ def operator_add_form(nodes=[], products=[]):
         pyforms.Dropdown("operator_products", description=u"关联资费(多选)", args=products, required="required",multiple="multiple", size=6, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"增加操作员",
-        action="/operator/add"
+        action="/admin/operator/add"
     )
 
 
@@ -31,5 +31,5 @@ def operator_update_form(nodes=[], products=[]):
         pyforms.Dropdown("operator_products", description=u"关联资费(多选)", args=products, required="required",multiple="multiple", size=6, **input_style),
         pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
         title=u"修改操作员",
-        action="/operator/update"
+        action="/admin/operator/update"
     )

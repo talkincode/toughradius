@@ -27,7 +27,7 @@ bas_add_form = pyforms.Form(
     pyforms.Dropdown("time_type", description=u"时间类型", args=timetype.items(), required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"增加接入设备",
-    action="/bas/add"
+    action="/admin/bas/add"
 )
 
 bas_update_form = pyforms.Form(
@@ -40,5 +40,5 @@ bas_update_form = pyforms.Form(
     pyforms.Dropdown("time_type", description=u"时间类型", args=timetype.items(), required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"修改接入设备",
-    action="/bas/update"
+    action="/admin/bas/update"
 )

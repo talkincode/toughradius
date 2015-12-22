@@ -12,7 +12,7 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.settings import * 
 
-@permit.route(r"/account/charge", u"用户充值",MenuUser, order=2.4000)
+@permit.route(r"/admin/account/charge", u"用户充值",MenuUser, order=2.4000)
 class AccountChargeHandler(account.AccountHandler):
 
     @cyclone.web.authenticated

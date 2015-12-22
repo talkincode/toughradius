@@ -15,7 +15,7 @@ from toughradius.common.settings import *
 
 
 
-@permit.route(r"/product/attr/add", u"新增资费属性",MenuRes, order=3.0001)
+@permit.route(r"/admin/product/attr/add", u"新增资费属性",MenuRes, order=3.0001)
 class ProductAddListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -41,9 +41,9 @@ class ProductAddListHandler(BaseHandler):
         self.add_oplog(u'新增资费属性信息:%s' %  attr.attr_name)
         self.db.commit()
 
-        self.redirect("/product/detail?product_id=%s" % form.d.product_id)
+        self.redirect("/admin/product/detail?product_id=%s" % form.d.product_id)
 
-@permit.route(r"/product/attr/update", u"修改资费属性",MenuRes, order=3.0002)
+@permit.route(r"/admin/product/attr/update", u"修改资费属性",MenuRes, order=3.0002)
 class ProductUpdateListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -65,9 +65,9 @@ class ProductUpdateListHandler(BaseHandler):
         attr.attr_desc = form.d.attr_desc
         self.add_oplog(u'修改资费属性信息:%s' % attr.attr_name)
         self.db.commit()
-        self.redirect("/product/detail?product_id=%s" % form.d.product_id)
+        self.redirect("/admin/product/detail?product_id=%s" % form.d.product_id)
 
-@permit.route(r"/product/attr/delete", u"删除资费属性",MenuRes, order=3.0003)
+@permit.route(r"/admin/product/attr/delete", u"删除资费属性",MenuRes, order=3.0003)
 class ProductDeleteListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -77,7 +77,7 @@ class ProductDeleteListHandler(BaseHandler):
         self.db.query(models.TrProductAttr).filter_by(id=attr_id).delete()
         self.add_oplog(u'删除资费属性信息:%s' % attr.attr_name)
         self.db.commit()
-        self.redirect("/product/detail?product_id=%s" % product_id)
+        self.redirect("/admin/product/detail?product_id=%s" % product_id)
 
 
 

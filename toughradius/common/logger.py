@@ -6,6 +6,7 @@ import logging
 import logging.handlers
 
 
+
 def string_to_level(log_level):
     if log_level == "CRITICAL":
         return logging.CRITICAL

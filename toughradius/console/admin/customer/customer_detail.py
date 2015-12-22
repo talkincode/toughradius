@@ -15,7 +15,7 @@ from toughradius.common import utils
 from toughradius.common.settings import * 
 
 
-@permit.route(r"/customer/detail", u"用户详情",MenuUser, order=1.2000)
+@permit.route(r"/admin/customer/detail", u"用户详情",MenuUser, order=1.2000)
 class CustomerDetailHandler(CustomerHandler):
 
     @cyclone.web.authenticated

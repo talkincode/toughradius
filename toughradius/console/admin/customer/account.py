@@ -16,10 +16,38 @@ from toughradius.common.settings import *
 
 class AccountHandler(BaseHandler):
 
-    detail_url_fmt = "/customer/detail?account_number={0}".format
+    detail_url_fmt = "/admin/customer/detail?account_number={0}".format
+
+    def query_account(self, account_number):
+        return self.db.query(
+            models.TrCustomer.realname,
+            models.TrAccount.customer_id,
+            models.TrAccount.product_id,
+            models.TrAccount.account_number,
+            models.TrAccount.expire_date,
+            models.TrAccount.balance,
+            models.TrAccount.time_length,
+            models.TrAccount.flow_length,
+            models.TrAccount.user_concur_number,
+            models.TrAccount.status,
+            models.TrAccount.mac_addr,
+            models.TrAccount.vlan_id,
+            models.TrAccount.vlan_id2,
+            models.TrAccount.ip_address,
+            models.TrAccount.bind_mac,
+            models.TrAccount.bind_vlan,
+            models.TrAccount.ip_address,
+            models.TrAccount.install_address,
+            models.TrAccount.create_time,
+            models.TrProduct.product_name
+        ).filter(
+            models.TrProduct.id == models.TrAccount.product_id,
+            models.TrCustomer.customer_id == models.TrAccount.customer_id,
+            models.TrAccount.account_number == account_number
+        ).first()
 
 
-@permit.route(r"/account/opencalc")
+@permit.route(r"/admin/account/opencalc")
 class OpencalcHandler(AccountHandler):
 
     @cyclone.web.authenticated

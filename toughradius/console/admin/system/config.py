@@ -13,7 +13,7 @@ from toughradius.console import models
 from toughradius.common.settings import * 
 
 
-@permit.route(r"/config", u"数据库配置", MenuSys, order=2.0000, is_menu=True)
+@permit.route(r"/admin/config", u"数据库配置", MenuSys, order=2.0000, is_menu=True)
 class ConfigHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -22,7 +22,7 @@ class ConfigHandler(BaseHandler):
         self.render("config.html",database_form=database_form)
 
 
-@permit.route(r"/config/database/update", u"数据库配置", u"系统管理", order=2.0002, is_menu=False)
+@permit.route(r"/admin/config/database/update", u"数据库配置", u"系统管理", order=2.0002, is_menu=False)
 class DatabaseHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):

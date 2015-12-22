@@ -12,7 +12,7 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.settings import * 
 
-@permit.route(r"/bas", u"设备管理",MenuRes, order=2.0000, is_menu=True)
+@permit.route(r"/admin/bas", u"设备管理",MenuRes, order=2.0000, is_menu=True)
 class BasListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -20,7 +20,7 @@ class BasListHandler(BaseHandler):
                   bastype=bas_forms.bastype,
                   bas_list=self.db.query(models.TrBas))
 
-@permit.route(r"/bas/add", u"新增接入设备", MenuRes, order=2.0001)
+@permit.route(r"/admin/bas/add", u"新增接入设备", MenuRes, order=2.0001)
 class BasAddHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -48,9 +48,9 @@ class BasAddHandler(BaseHandler):
         self.add_oplog(u'新增接入设备信息:%s' % bas.ip_addr)
 
         self.db.commit()
-        self.redirect("/bas",permanent=False)
+        self.redirect("/admin/bas",permanent=False)
 
-@permit.route(r"/bas/update", u"修改接入设备", MenuRes, order=2.0002)
+@permit.route(r"/admin/bas/update", u"修改接入设备", MenuRes, order=2.0002)
 class BasUpdateHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -74,10 +74,10 @@ class BasUpdateHandler(BaseHandler):
         self.add_oplog(u'修改接入设备信息:%s' % bas.ip_addr)
 
         self.db.commit()
-        self.redirect("/bas",permanent=False)
+        self.redirect("/admin/bas",permanent=False)
 
 
-@permit.route(r"/bas/delete", u"删除接入设备", MenuRes, order=2.0003)
+@permit.route(r"/admin/bas/delete", u"删除接入设备", MenuRes, order=2.0003)
 class BasDeleteHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -87,4 +87,4 @@ class BasDeleteHandler(BaseHandler):
         self.add_oplog(u'删除接入设备信息:%s' % bas_id)
 
         self.db.commit()
-        self.redirect("/bas",permanent=False)
+        self.redirect("/admin/admin/bas",permanent=False)

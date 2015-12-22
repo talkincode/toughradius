@@ -14,7 +14,7 @@ from toughradius.common import utils
 from toughradius.common.settings import * 
 
 
-@permit.route(r"/customer/delete", u"用户删除",MenuUser, order=1.5000)
+@permit.route(r"/admin/customer/delete", u"用户删除",MenuUser, order=1.5000)
 class CustomerDeleteHandler(CustomerHandler):
 
     @cyclone.web.authenticated

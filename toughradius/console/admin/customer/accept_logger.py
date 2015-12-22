@@ -12,7 +12,7 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.settings import * 
 
-@permit.route(r"/customer/acceptlog", u"用户受理日志",MenuUser, order=3.0000, is_menu=True)
+@permit.route(r"/admin/customer/acceptlog", u"用户受理日志",MenuUser, order=3.0000, is_menu=True)
 class CustomerAcceptLoggerHandler(BaseHandler):
 
     @cyclone.web.authenticated
@@ -60,7 +60,7 @@ class CustomerAcceptLoggerHandler(BaseHandler):
         _query = _query.order_by(models.TrAcceptLog.accept_time.desc())
         type_map = ACCEPT_TYPES
 
-        if self.request.path == '/customer/acceptlog':
+        if self.request.path == '/admin/customer/acceptlog':
             return self.render(
                 "acceptlog_list.html",
                 page_data=self.get_page_data(_query),
@@ -69,7 +69,7 @@ class CustomerAcceptLoggerHandler(BaseHandler):
                 get_orderid=lambda aid: self.db.query(models.TrCustomerOrder.order_id).filter_by(accept_id=aid).scalar(),
                 **self.get_params()
             )
-        elif self.request.path == '/customer/acceptlog/export':
+        elif self.request.path == '/admin/customer/acceptlog/export':
             data = Dataset()
             data.append((u'区域', u'上网账号', u'受理类型', u'受理时间', u'受理渠道', u'操作员', u'受理描述'))
             for i in _query:
@@ -80,7 +80,7 @@ class CustomerAcceptLoggerHandler(BaseHandler):
             name = u"RADIUS-ACCEPTLOG-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
             return self.export_file(name, data)
 
-@permit.route(r"/customer/acceptlog/export", u"用户受理日志导出",MenuUser, order=3.0001)
+@permit.route(r"/admin/customer/acceptlog/export", u"用户受理日志导出",MenuUser, order=3.0001)
 class CustomerAcceptLoggerExportHandler(CustomerAcceptLoggerHandler):
     pass
 

@@ -4,6 +4,7 @@ import sys
 import os
 import time
 import cyclone.web
+from twisted.python import log
 from twisted.internet import reactor
 from beaker.cache import CacheManager
 from beaker.util import parse_cache_config_options
@@ -41,8 +42,8 @@ class Application(cyclone.web.Application):
         settings = dict(
             cookie_secret="12oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
             session_secret="12oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
-            login_url="/login",
-            template_path=os.path.join(os.path.dirname(__file__), "admin/views"),
+            login_url="/admin/login",
+            template_path=os.path.join(os.path.dirname(__file__), "views"),
             static_path=os.path.join(os.path.dirname(__file__), "static"),
             xsrf_cookies=True,
             config=config,
@@ -87,6 +88,9 @@ class Application(cyclone.web.Application):
         handler_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "admin")
         load_handlers(handler_path=handler_path, pkg_prefix="toughradius.console.admin")
 
+        chandler_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), "customer")
+        load_handlers(handler_path=chandler_path, pkg_prefix="toughradius.console.customer")
+
         conn = self.db()
         try:
             oprs = conn.query(models.TrOperator)
@@ -103,7 +107,8 @@ class Application(cyclone.web.Application):
 
 
 def run(config):
-    print ('admin web server listen %s' % config.admin.host)
+    log.startLogging(sys.stderr)
+    log.msg('admin web server listen %s' % config.admin.host)
     app = Application(config)
     reactor.listenTCP(int(config.admin.port), app, interface=config.admin.host)
     reactor.run()

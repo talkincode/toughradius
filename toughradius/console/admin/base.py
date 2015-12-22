@@ -52,11 +52,11 @@ class BaseHandler(cyclone.web.RequestHandler):
             return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
     def render(self, template_name, **template_vars):
-        html = self.render_string(template_name, **template_vars)
+        html = self.render_string("admin/%s" % template_name, **template_vars)
         self.write(html)
 
     def render_error(self, **template_vars):
-        tpl = "error.html"
+        tpl = "admin/error.html"
         html = self.render_string(tpl, **template_vars)
         self.write(html)
 
@@ -190,6 +190,11 @@ class BaseHandler(cyclone.web.RequestHandler):
             models.TrNode.node_name == models.TrOperatorNodes.node_name,
             models.TrOperatorNodes.operator_name == opr_name
         )
+
+    def get_param_value(self, name, defval=None):
+        val = self.db.query(models.TrParam.param_value).filter_by(param_name = name).scalar()
+        return val or defval
+
 
 
     def add_oplog(self,message):
