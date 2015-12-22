@@ -99,7 +99,7 @@ class UpgradeHandler(BaseHandler):
     def post(self):
         release = self.get_argument("release")
         cmd1 = "cd /opt/toughradius"
-        cmd2 = "git fetch origin %s && git checkout %s" % (release, release)
+        cmd2 = "git fetch origin %s && git checkout %s && git submodule update --recursive" % (release, release)
         cmd3 = "supervisorctl restart all"
         return self.render_json(**execute("%s && %s && %s" % (cmd1, cmd2, cmd3)))
 

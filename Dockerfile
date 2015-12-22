@@ -2,7 +2,7 @@ FROM index.alauda.cn/toughstruct/tough-pypy
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 #install toughradius
-RUN git clone --recursive -b tr20 https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
+RUN git clone --recursive -b stable_v2 https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
 RUN chmod +x /opt/toughradius/toughengine/toughctl
 RUN ln -s /opt/toughradius/toughengine/etc/toughengine.conf /etc/toughengine.conf
