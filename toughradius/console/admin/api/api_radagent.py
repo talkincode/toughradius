@@ -42,8 +42,8 @@ class AgentFetchHandler(api_base.ApiHandler):
                 'api_auth_url'  : "{0}/api/authorize".format(api_addr),
                 'api_acct_url'  : "{0}/api/acctounting".format(api_addr),
                 'protocol'      : radius_agent_protocol,   
-                'auth_endpoints': ",".join([ a.endpoint for a in auth_agents]),    
-                'acct_endpoints': ",".join([ a.endpoint for a in acct_agents]), 
+                'auth_endpoints': ",".join([ a.endpoint.replace('*', self.request.host) for a in auth_agents]),    
+                'acct_endpoints': ",".join([ a.endpoint.replace('*', self.request.host) for a in acct_agents]), 
                 'nonce'         : str(int(time.time())),
             }
 

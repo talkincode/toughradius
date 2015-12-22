@@ -16,7 +16,7 @@ class ZAcctAgent:
         self.secret = app.config.defaults.secret
 
         zfactory = ZmqFactory()
-        self.listen = "tcp://{0}:{1}".format(self.config.admin.agent_addr, int(self.config.admin.port)+97)
+        self.listen = "tcp://*:{0}".format(int(self.config.admin.port)+97)
         endpoint = ZmqEndpoint('bind', self.listen)
         self.agent = ZmqREPConnection(zfactory, endpoint)
         self.agent.gotMessage = self.process

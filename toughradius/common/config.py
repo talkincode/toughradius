@@ -64,7 +64,6 @@ class Config():
         _db_type = os.environ.get("DB_TYPE")
         _db_url = os.environ.get("DB_URL")
         _memcached_hosts = os.environ.get("MEMCACHED_HOSTS")
-        _agent_addr = os.environ.get("AGENT_ADDR")
 
         if _syslog_enable:
             self.defaults.syslog_enable = _syslog_enable
@@ -82,8 +81,6 @@ class Config():
             self.database.dburl = _db_url
         if _memcached_hosts:
             self.memcached.hosts = _memcached_hosts        
-        if _agent_addr:
-            self.admin.agent_addr = _agent_addr
 
 
     def update(self):

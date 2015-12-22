@@ -15,16 +15,13 @@ raddb:
 radius:
     build: .
     privileged: true
-    ports:
-        - "1816:1816"
-        - "12222:22"
+    net: "host"
     links:
         - raddb
     environment:
         - ROOT_PASSWORD=toughradius
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
-        - AGENT_ADDR=radius
         - TIMEZONE=CST-8
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99
