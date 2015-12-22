@@ -12,7 +12,7 @@ RUN ln -s /opt/toughradius/etc/toughradius-nginx.conf /etc/nginx/conf.d/toughrad
 RUN ln -s /opt/toughradius/bin/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
 
 EXPOSE 1816
-EXPOSE 12222
+EXPOSE 22
 
 VOLUME [ "/var/toughradius" ]
 ENTRYPOINT ["/usr/bin/toughrad","start"]
