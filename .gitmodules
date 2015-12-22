@@ -1,0 +1,3 @@
+[submodule "toughengine"]
+	path = toughengine
+	url = git@github.com:talkincode/toughengine.git
