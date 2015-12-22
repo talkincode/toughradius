@@ -67,7 +67,7 @@ def execute(cmd):
 def do_upgrade(render):
     release = request.params.get("release")
     cmd1 = "cd /opt/toughradius"
-    cmd2 = "git checkout %s && git pull origin %s  " % (release, release)
+    cmd2 = "git fetch origin %s && git checkout %s && git pull origin %s " % (release, release, release)
     cmd3 = "supervisorctl restart radiusd"
     cmd4 = "supervisorctl restart admin"
     cmd5 = "supervisorctl restart customer"
