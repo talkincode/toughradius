@@ -12,11 +12,11 @@ raddb:
     volumes:
         - /home/var/mysql:/var/lib/mysql
 
-radiusd:
+radius:
     build: .
     privileged: true
     ports:
-        - "1816:1816"
+        - "1816:1815"
         - "1812:1812/udp"
         - "1813:1813/udp"
         - "12222:22"
@@ -26,8 +26,7 @@ radiusd:
         - ROOT_PASSWORD=toughradius
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
-        - API_URL=http://127.0.0.1:1816/api
-        - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
+        - AGENT_ADDR=radius
         - TIMEZONE=CST-8
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99
@@ -36,4 +35,27 @@ radiusd:
     restart: always
     volumes:
         - /home/var/toughradius:/var/toughradius
+
+engine:
+    image: "index.alauda.cn/toughstruct/toughengine"
+    privileged: true
+    ports:
+        - "1812:1823/udp"
+        - "1813:1813/udp"
+        - "1815:1815"
+        - "10322:22"
+    links:
+        - radius
+    environment:
+        - ROOT_PASSWORD=toughstruct
+        - TIMEZONE=CST-8
+        - API_URL=http://radius:1816/api
+        - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
+        - SYSLOG_ENABLE=1
+        - SYSLOG_SERVER=121.201.15.99
+        - SYSLOG_PORT=514
+        - SYSLOG_LEVEL=INFO
+    restart: always
+    volumes:
+        - /home/var/toughengine:/var/toughengine
 
