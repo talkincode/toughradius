@@ -92,8 +92,8 @@ upgrade()
 {
     echo 'starting upgrade...'
     cd ${appdir}   
-    git fetch origin stable_v2
-    git checkout stable_v2 
+    git pull origin stable_v2
+    git submodule update --recursive
     supervisorctl restart admin
     supervisorctl restart radauth
     supervisorctl restart radacct
