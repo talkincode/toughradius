@@ -19,7 +19,7 @@ radius:
     environment:
         - ROOT_PASSWORD=toughradius
         - DB_TYPE=mysql
-        - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
+        - DB_URL=mysql://raduser:radpwd@127.0.0.1:3306/radiusd?charset=utf8
         - TIMEZONE=CST-8
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99
