@@ -1,7 +1,7 @@
 raddb:
     image: "index.alauda.cn/toughstruct/mysql:M1"
     privileged: true
-    expose:
+    ports:
         - "3306:3306"
     environment:
         - MYSQL_USER=raduser
