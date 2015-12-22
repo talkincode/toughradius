@@ -2,7 +2,7 @@ raddb:
     image: "index.alauda.cn/toughstruct/mysql:M1"
     privileged: true
     expose:
-        - "3306"
+        - "3306:3306"
     environment:
         - MYSQL_USER=raduser
         - MYSQL_PASSWORD=radpwd
@@ -16,8 +16,6 @@ radius:
     build: .
     privileged: true
     net: "host"
-    links:
-        - raddb
     environment:
         - ROOT_PASSWORD=toughradius
         - DB_TYPE=mysql
@@ -39,12 +37,10 @@ engine:
         - "1813:1813/udp"
         - "1815:1815"
         - "12223:22"
-    links:
-        - radius
     environment:
         - ROOT_PASSWORD=toughstruct
         - TIMEZONE=CST-8
-        - API_URL=http://radius:1816/api
+        - API_URL=http://127.0.0.1:1816/api
         - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99
