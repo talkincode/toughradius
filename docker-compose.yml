@@ -29,7 +29,8 @@ radius:
         - SYSLOG_SERVER=121.201.15.99
         - SYSLOG_PORT=514
         - SYSLOG_LEVEL=INFO
-        - TCP_PORTS="18162, 18163"
+        - TCP_PORTS=18162,18163
+        - EXCLUDE_PORTS=22
     restart: always
     volumes:
         - /opt/toughrun/toughradius:/var/toughradius
@@ -39,7 +40,9 @@ haradius:
     links:
         - radius:radius
     ports:
-        - "8080:1816"
+        - "8080:80"
+        - "18162:18162"
+        - "18163:18163"
 
 
 engine:

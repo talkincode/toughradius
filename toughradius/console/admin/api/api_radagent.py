@@ -34,7 +34,11 @@ class AgentFetchHandler(api_base.ApiHandler):
 
             radius_agent_protocol = self.get_param_value('radius_agent_protocol', 'http')
 
-            api_addr = "{0}://{1}".format(self.request.protocol, self.request.host)
+            _host = self.request.host
+
+            api_addr = "{0}://{1}".format(self.request.protocol, _host)
+
+            agent_addr = ':' in _host and _host[:_host.index(':')] or _host
             
             result = {
                 'code'          : 0,
@@ -42,8 +46,8 @@ class AgentFetchHandler(api_base.ApiHandler):
                 'api_auth_url'  : "{0}/api/authorize".format(api_addr),
                 'api_acct_url'  : "{0}/api/acctounting".format(api_addr),
                 'protocol'      : radius_agent_protocol,   
-                'auth_endpoints': ",".join([ a.endpoint.replace('*', self.request.host) for a in auth_agents]),    
-                'acct_endpoints': ",".join([ a.endpoint.replace('*', self.request.host) for a in acct_agents]), 
+                'auth_endpoints': ",".join([ a.endpoint.replace('*', agent_addr) for a in auth_agents]),    
+                'acct_endpoints': ",".join([ a.endpoint.replace('*', agent_addr) for a in acct_agents]), 
                 'nonce'         : str(int(time.time())),
             }
 
