@@ -20,7 +20,7 @@ radius:
         - "18162"
         - "18163"
     links:
-        - raddb
+        - raddb:raddb
     environment:
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
@@ -37,16 +37,16 @@ radius:
 haradius:
     image: tutum/haproxy
     links:
-        - radius
+        - radius:radius
     ports:
-        - "8080:80"
+        - "8080:1816"
 
 
 engine:
     image: "index.alauda.cn/toughstruct/toughengine"
     privileged: true
     links:
-        - haradius
+        - haradius:haradius
     ports:
         - "1812:1823/udp"
         - "1813:1813/udp"
