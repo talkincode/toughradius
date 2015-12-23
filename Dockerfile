@@ -12,6 +12,8 @@ RUN ln -s /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
 RUN ln -s /opt/toughradius/bin/toughrad /usr/bin/toughrad && chmod +x /usr/bin/toughrad
 
 EXPOSE 1816
+EXPOSE 18162
+EXPOSE 18163
 
 VOLUME [ "/var/toughradius" ]
 ENTRYPOINT ["/usr/bin/toughrad","start"]
