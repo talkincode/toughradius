@@ -12,7 +12,7 @@ raddb:
     volumes:
         - /opt/toughrun/mysql:/var/lib/mysql
 
-radius:
+radius1:
     build: .
     privileged: true
     ports:
@@ -33,27 +33,47 @@ radius:
     volumes:
         - /opt/toughrun/toughradius:/var/toughradius
 
-engine:
-    image: "index.alauda.cn/toughstruct/toughengine"
+radius2:
+    build: .
     privileged: true
-    links:
-        - radius
     ports:
-        - "1812:1823/udp"
-        - "1813:1813/udp"
-        - "1815:1815"
+        - "1826:1816"
+        - "18262:18162"
+        - "18263:18163"
+    links:
+        - raddb
     environment:
+        - DB_TYPE=mysql
+        - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
         - TIMEZONE=CST-8
-        - API_URL=http://radius:1816/api
-        - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99
         - SYSLOG_PORT=514
         - SYSLOG_LEVEL=INFO
     restart: always
     volumes:
-        - /home/toughrun/toughengine:/var/toughengine
+        - /opt/toughrun/toughradius:/var/toughradius
 
+radius3:
+    build: .
+    privileged: true
+    ports:
+        - "1836:1816"
+        - "18362:18162"
+        - "18363:18163"
+    links:
+        - raddb
+    environment:
+        - DB_TYPE=mysql
+        - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
+        - TIMEZONE=CST-8
+        - SYSLOG_ENABLE=1
+        - SYSLOG_SERVER=121.201.15.99
+        - SYSLOG_PORT=514
+        - SYSLOG_LEVEL=INFO
+    restart: always
+    volumes:
+        - /opt/toughrun/toughradius:/var/toughradius
 
 nginx:
     image: "index.alauda.cn/toughstruct/docker-nginx"
@@ -69,4 +89,23 @@ nginx:
         - /opt/toughrun/nginx/etc/nginx.conf:/etc/nginx.conf
         - /opt/toughrun/nginx/etc/nginx/conf.d/toughradius-nginx.conf:/etc/nginx/conf.d/toughradius-nginx.conf
 
-
+engine:
+    image: "index.alauda.cn/toughstruct/toughengine"
+    privileged: true
+    links:
+        - radius
+    ports:
+        - "1812:1823/udp"
+        - "1813:1813/udp"
+        - "1815:1815"
+    environment:
+        - TIMEZONE=CST-8
+        - API_URL=http://radius:8080/api
+        - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
+        - SYSLOG_ENABLE=1
+        - SYSLOG_SERVER=121.201.15.99
+        - SYSLOG_PORT=514
+        - SYSLOG_LEVEL=INFO
+    restart: always
+    volumes:
+        - /home/toughrun/toughengine:/var/toughengine
