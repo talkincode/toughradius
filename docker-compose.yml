@@ -15,10 +15,10 @@ raddb:
 radius1:
     build: .
     privileged: true
-    ports:
-        - "1816:1816"
-        - "18162:18162"
-        - "18163:18163"
+    expose:
+        - "1816"
+        - "18162"
+        - "18163"
     links:
         - raddb
     environment:
@@ -36,10 +36,10 @@ radius1:
 radius2:
     build: .
     privileged: true
-    ports:
-        - "1826:1816"
-        - "18262:18162"
-        - "18263:18163"
+    expose:
+        - "1816"
+        - "18162"
+        - "18163"
     links:
         - raddb
     environment:
@@ -57,10 +57,10 @@ radius2:
 radius3:
     build: .
     privileged: true
-    ports:
-        - "1836:1816"
-        - "18362:18162"
-        - "18363:18163"
+    expose:
+        - "1816"
+        - "18162"
+        - "18163"
     links:
         - raddb
     environment:
@@ -81,7 +81,9 @@ nginx:
         - "8080:80"
         - "8443:443"
     links:
-        - radius
+        - radius1
+        - radius2
+        - radius3
     restart: always
     volumes:
         - /opt/toughrun/nginx/cache:/var/cache/nginx
@@ -94,6 +96,9 @@ engine:
     privileged: true
     links:
         - nginx
+        - radius1
+        - radius2
+        - radius3
     ports:
         - "1812:1823/udp"
         - "1813:1813/udp"
