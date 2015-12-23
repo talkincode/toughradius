@@ -1,7 +1,7 @@
 FROM index.alauda.cn/toughstruct/tough-pypy:kiss
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
-RUN git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
+RUN git clone -b master https://github.com/sojo21/ToughRADIUS.git /opt/toughradius
 
 RUN ln -s /opt/toughradius/toughradius.conf /etc/toughradius.conf
 
