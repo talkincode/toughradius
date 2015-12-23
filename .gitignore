@@ -32,7 +32,6 @@ rmenv
 *.properties
 *.iml
 RadiusServer.jar
-build
 console/testusers.txt
 xls/
 testusers.txt
