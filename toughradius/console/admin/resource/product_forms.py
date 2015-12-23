@@ -36,7 +36,7 @@ def product_add_form():
         pyforms.Dropdown("product_status", args=product_status_dict.items(), description=u"资费状态", required="required",**input_style),
         pyforms.Button("submit", type="submit", id="submit", html=u"<b>提交</b>", **button_style),
         title=u"增加资费",
-        action="/product/add"
+        action="/admin/product/add"
     )
 
 
@@ -59,7 +59,7 @@ def product_update_form():
         pyforms.Textbox("output_max_limit", rules.is_number3, description=u"最大下行速率(Mbps)", required="required",**input_style),
         pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
         title=u"修改资费",
-        action="/product/update"
+        action="/admin/product/update"
     )
 
 
@@ -70,7 +70,7 @@ product_attr_add_form = pyforms.Form(
     pyforms.Textbox("attr_desc", rules.len_of(1, 255), description=u"策略描述", required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
     title=u"增加策略属性",
-    action="/product/attr/add"
+    action="/admin/product/attr/add"
 )
 
 product_attr_update_form = pyforms.Form(
@@ -81,6 +81,6 @@ product_attr_update_form = pyforms.Form(
     pyforms.Textbox("attr_desc", rules.len_of(1, 255), description=u"策略描述", required="required", **input_style),
     pyforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"修改策略属性",
-    action="/product/attr/update"
+    action="/admin/product/attr/update"
 )
 
