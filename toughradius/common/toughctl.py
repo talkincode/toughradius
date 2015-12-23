@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 from toughradius.common import choosereactor
 choosereactor.install_optimal_reactor(True)
+from twisted.internet import reactor
 import argparse
 from toughradius.common import config as iconfig
 from toughradius.common.dbengine import get_engine
 from toughradius.common import initdb as init_db
 import sys
+import os
 
 
 def run_admin(config):
@@ -44,6 +46,16 @@ def run():
     args = parser.parse_args(sys.argv[1:])
 
     config = iconfig.find_config(args.conf)
+
+    try:
+        backup_path = config.database.backup_path
+        if not os.path.exists(backup_path):
+            os.system("mkdir -p  %s" % backup_path)
+        if not os.path.exists("/var/toughradius"):
+            os.system("mkdir -p /var/toughradius")
+    except Exception as err:
+        import traceback
+        traceback.print_exc()
     
     if args.debug:
         config.defaults.debug = True

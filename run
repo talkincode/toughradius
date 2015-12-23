@@ -3,13 +3,13 @@
 
 admin()
 {
-    pypy toughctl --admin --debug -c etc/toughradius.conf
+    pypy toughctl --admin --debug -c toughradius.conf
 }
 
 
 initdb()
 {
-    pypy toughctl --initdb -c etc/toughradius.conf
+    pypy toughctl --initdb -c toughradius.conf
 }
 
 case "$1" in
