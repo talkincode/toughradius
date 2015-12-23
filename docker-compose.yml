@@ -10,17 +10,18 @@ raddb:
         - MYSQL_ROOT_PASSWORD=radroot
     restart: always
     volumes:
-        - /home/var/mysql:/var/lib/mysql
+        - /opt/toughrun/mysql:/var/lib/mysql
 
 radius:
     build: .
     privileged: true
     ports:
         - "1816:1816"
+        - "18162:18162"
+        - "18163:18163"
     links:
         - raddb
     environment:
-        - ROOT_PASSWORD=toughradius
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
         - TIMEZONE=CST-8
@@ -30,7 +31,7 @@ radius:
         - SYSLOG_LEVEL=INFO
     restart: always
     volumes:
-        - /home/var/toughradius:/var/toughradius
+        - /opt/toughrun/toughradius:/var/toughradius
 
 engine:
     image: "index.alauda.cn/toughstruct/toughengine"
@@ -42,7 +43,6 @@ engine:
         - "1813:1813/udp"
         - "1815:1815"
     environment:
-        - ROOT_PASSWORD=toughstruct
         - TIMEZONE=CST-8
         - API_URL=http://radius:1816/api
         - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
@@ -52,5 +52,21 @@ engine:
         - SYSLOG_LEVEL=INFO
     restart: always
     volumes:
-        - /home/var/toughengine:/var/toughengine
+        - /home/toughrun/toughengine:/var/toughengine
+
+
+nginx:
+    image: "index.alauda.cn/toughstruct/docker-nginx"
+    ports:
+        - "8080:80"
+        - "8443:443"
+    links:
+        - radius
+    restart: always
+    volumes:
+        - /opt/toughrun/nginx/cache:/var/cache/nginx
+        - /opt/toughrun/nginx/log:/var/log/nginx
+        - /opt/toughrun/nginx/etc/nginx.conf:/etc/nginx.conf
+        - /opt/toughrun/nginx/etc/nginx/conf.d/toughradius-nginx.conf:/etc/nginx/conf.d/toughradius-nginx.conf
+
 

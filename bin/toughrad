@@ -79,8 +79,6 @@ restart()
     if [ $( pgrep -f supervisord | wc -l ) -gt 0 ]
     then
         supervisorctl restart admin
-        supervisorctl restart radauth
-        supervisorctl restart radacct
         supervisorctl status
     else
         supervisord -c /etc/supervisord.conf
@@ -90,15 +88,12 @@ restart()
 # support docker
 upgrade()
 {
-    echo 'starting upgrade...'
+    echo 'starting upgrade master...'
     cd ${appdir}   
-    git pull origin stable_v2
-    git submodule update --recursive
+    git pull origin master
     supervisorctl restart admin
-    supervisorctl restart radauth
-    supervisorctl restart radacct
     supervisorctl status
-    echo 'upgrade done'
+    echo 'upgrade master done'
 }
 
 

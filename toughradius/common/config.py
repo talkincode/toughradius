@@ -64,6 +64,8 @@ class Config():
         _db_type = os.environ.get("DB_TYPE")
         _db_url = os.environ.get("DB_URL")
         _memcached_hosts = os.environ.get("MEMCACHED_HOSTS")
+        _zauth_port = os.environ.get("ZAUTH_PORT")
+        _zacct_port = os.environ.get("ZACCT_PORT")
 
         if _syslog_enable:
             self.defaults.syslog_enable = _syslog_enable
@@ -80,7 +82,11 @@ class Config():
         if _db_url:
             self.database.dburl = _db_url
         if _memcached_hosts:
-            self.memcached.hosts = _memcached_hosts        
+            self.memcached.hosts = _memcached_hosts             
+        if _zauth_port:
+            self.admin._zauth_port = _zauth_port                  
+        if _zacct_port:
+            self.admin._zacct_port = _zacct_port        
 
 
     def update(self):

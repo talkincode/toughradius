@@ -16,7 +16,7 @@ class ZAuthAgent:
         self.secret = app.config.defaults.secret
 
         zfactory = ZmqFactory()
-        self.listen = "tcp://*:{0}".format(int(self.config.admin.port)+79)
+        self.listen = "tcp://*:{0}".format(int(self.config.admin.zauth_port))
         endpoint = ZmqEndpoint('bind', self.listen)
         self.agent = ZmqREPConnection(zfactory, endpoint)
         self.agent.gotMessage = self.process
