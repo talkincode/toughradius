@@ -36,7 +36,7 @@ radius:
         - /opt/toughrun/toughradius:/var/toughradius
 
 haradius:
-    image: tutum/haproxy
+    image: "index.alauda.cn/tutum/haproxy"
     links:
         - radius:radius
     ports:
@@ -48,15 +48,13 @@ haradius:
 engine:
     image: "index.alauda.cn/toughstruct/toughengine"
     privileged: true
-    links:
-        - haradius:haradius
     ports:
         - "1812:1823/udp"
         - "1813:1813/udp"
         - "1815:1815"
     environment:
         - TIMEZONE=CST-8
-        - API_URL=http://haradius:1816/api
+        - API_URL=http://0.0.0.0:8080/api
         - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99

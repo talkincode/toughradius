@@ -69,9 +69,6 @@ class Application(cyclone.web.Application):
         self.db_engine = get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
 
-        self.zauth_agent = authorize.ZAuthAgent(self)
-        self.zacct_agent = acctounting.ZAcctAgent(self)
-
         self.aes = utils.AESCipher(key=self.config.defaults.secret)
 
         permit.add_route(cyclone.web.StaticFileHandler,
@@ -82,6 +79,10 @@ class Application(cyclone.web.Application):
                          order=1.0405)
 
         self.init_route()
+
+        self.zauth_agent = authorize.ZAuthAgent(self)
+        self.zacct_agent = acctounting.ZAcctAgent(self)
+
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
     def init_route(self):
