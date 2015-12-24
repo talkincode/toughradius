@@ -10,7 +10,7 @@ raddb:
         - MYSQL_ROOT_PASSWORD=radroot
     restart: always
     volumes:
-        - /opt/toughrun/mysql:/var/lib/mysql
+        - /home/toughrun/mysql:/var/lib/mysql
 
 radius:
     build: ./toughradius
@@ -31,10 +31,9 @@ radius:
         - SYSLOG_PORT=514
         - SYSLOG_LEVEL=INFO
         - TCP_PORTS=18162,18163
-        - EXCLUDE_PORTS=22
     restart: always
     volumes:
-        - /opt/toughrun/toughradius:/var/toughradius
+        - /home/toughrun/toughradius:/var/toughradius
 
 haradius:
     image: "index.alauda.cn/tutum/haproxy"

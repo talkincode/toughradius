@@ -10,16 +10,10 @@ raddb:
         - MYSQL_ROOT_PASSWORD=radroot
     restart: always
     volumes:
-        - /opt/toughrun/mysql:/var/lib/mysql
-
-memcached:
-    images: "index.alauda.cn/tutum/memcached"
-    restart: always
-    expose:
-        - "11211"
+        - /home/toughrun/mysql:/var/lib/mysql
 
 radius:
-    image: "index.alauda.cn/toughstruct/toughradius"
+    image: "index.alauda.cn/toughstruct/toughradius:v2"
     command: pypy /opt/toughengine/toughctl --admin
     expose:
         - "1816"
@@ -27,21 +21,18 @@ radius:
         - "18163"
     links:
         - raddb:raddb
-        - memcached:memcached
     environment:
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
-        - MEMCACHED_HOSTS=memcached:11211
         - TIMEZONE=CST-8
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99
         - SYSLOG_PORT=514
         - SYSLOG_LEVEL=INFO
         - TCP_PORTS=18162,18163
-        - EXCLUDE_PORTS=22
     restart: always
     volumes:
-        - /opt/toughrun/toughradius:/var/toughradius
+        - /home/toughrun/toughradius:/var/toughradius
 
 haradius:
     image: "index.alauda.cn/tutum/haproxy"
