@@ -62,6 +62,8 @@ class ZAuthAgent:
 
         try:
             req_msg = apibase.parse_request(self.secret, message)
+            if req_msg.get("action") == 'ping':
+                return self.agent.reply(msgid, apibase.make_response(self.secret,code=0))
             if 'username' not in req_msg:
                 raise ValueError('username is empty')
         except Exception as err:

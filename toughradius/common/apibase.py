@@ -23,6 +23,12 @@ def check_sign(secret, msg, debug=True):
     local_sign = mksign(secret, params)
     return sign == local_sign
 
+def make_request(secret, **params):
+    if 'nonce' not in params:
+        params['nonce' ] = str(int(time.time()))
+    params['sign'] = mksign(secret, params.values())
+    return json.dumps(params, ensure_ascii=False)
+
 def make_response(secret, **result):
     if 'code' not in result:
         result["code"] = 0

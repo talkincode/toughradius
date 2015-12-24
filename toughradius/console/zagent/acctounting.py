@@ -54,5 +54,15 @@ class ZAcctAgent:
 
     @timecast
     def process(self, msgid, message):
-        print "Replying to %s, %r" % (msgid, message)
-        self.agent.reply(msgid, "%s %r " % (msgid, message))
+        self.syslog.info("accept acct message @ %s : %r" % (self.listen, utils.safeunicode(message)))
+        try:
+            req_msg = apibase.parse_request(self.secret, message)
+            if req_msg.get("action") == 'ping':
+                return self.agent.reply(msgid, apibase.make_response(self.secret,code=0))
+        except Exception as err:
+            resp = apibase.make_response(self.secret, code=1, msg=utils.safestr(err.message))
+            self.agent.reply(msgid, resp)
+            return
+
+
+
