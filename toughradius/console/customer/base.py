@@ -17,7 +17,7 @@ from toughradius import __version__ as sys_version
 from toughradius.common.permit import permit
 from toughradius.common.settings import *
 from toughradius.console import models
-from toughradius.common import session
+from toughradius.common import db_session as session
 
 def authenticated(method):
     """ 登陆校验装饰器 """
@@ -60,7 +60,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         super(BaseHandler, self).__init__(*argc, **argkw)
         self.syslog = self.application.syslog
         self.aes = self.application.aes
-        self.cache = self.application.cache
+        self.cache = self.application.mcache
         self.session = session.Session(self.application.session_manager, self)
 
     def initialize(self):

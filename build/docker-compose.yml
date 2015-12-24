@@ -14,7 +14,7 @@ raddb:
 
 radius:
     build: ./toughradius
-    command: pypy /opt/toughengine/toughctl --admin
+    command: pypy /opt/toughradius/toughctl --admin
     privileged: true
     expose:
         - "1816"
@@ -55,7 +55,7 @@ engine:
         - "1815:1815"
     environment:
         - TIMEZONE=CST-8
-        - API_URL=http://0.0.0.0:8080/api
+        - API_URL=http://0.0.0.0:1816/api
         - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
         - SYSLOG_ENABLE=1
         - SYSLOG_SERVER=121.201.15.99

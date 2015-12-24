@@ -1,13 +1,9 @@
-'''
-@author: Manuel Mejia
-https://raw.githubusercontent.com/mmejia27/tornado-memcached-sessions/master/session.py
-'''
-
 import pickle
+import time
 import hmac
 import uuid
 import hashlib
-import memcache
+from sqlalchemy.sql import text as _sql
 
 class SessionData(dict):
     def __init__(self, session_id, hmac_key):
@@ -31,19 +27,58 @@ class Session(SessionData):
     
     def save(self):
         self.session_manager.set(self.request_handler, self)
-        
+
+
 class SessionManager(object):
-    def __init__(self, secret, memcached_address, session_timeout):
+    def __init__(self, secret, dbengine, session_timeout):
         self.secret = secret
-        self.memcached_address = memcached_address
+        self.dbengine = dbengine
         self.session_timeout = session_timeout
+
+    def _raw_get(self, key, **kwargs):
+        raw_data = None
+        with self.dbengine.begin() as conn:
+            try:
+                cur = conn.execute(_sql("select _value, _time from system_session where _key = :key "),key=key)
+                session =  cur.fetchone()
+                if session:
+                    _time = int(session['_time'])
+                    if (time.time() - _time) > self.session_timeout:
+                        conn.execute(_sql("delete from system_session where _key = :key "),key=key)
+                    else:
+                        raw_data = session['_value']
+            except:
+                import traceback
+                traceback.print_exc()
+        return raw_data
+
+    def _raw_set(self, key, value, timeout,**kwargs):
+        with self.dbengine.begin() as conn:
+            _time = int(time.time()) + int(timeout)
+            try:
+                conn.execute(_sql("insert into system_session values (:key, :value, :time) "),
+                    key=key,value=value,time=_time)
+            except:
+                self._raw_replace(key,value,timeout)
+
+    def _raw_replace(self, key, value, timeout,**kwargs):
+        with self.dbengine.begin() as conn:
+            _time = int(time.time()) + int(timeout)
+            try:
+                conn.execute(_sql("""update system_session 
+                                    set _value=:value, _time=:time
+                                    where _key=:key"""),
+                                    key=key,value=value,time=_time)
+            except:
+                import traceback
+                traceback.print_exc()
+
         
     def _fetch(self, session_id):
         try:
-            mc = memcache.Client(self.memcached_address, debug=0)
-            session_data = raw_data = mc.get(session_id)
+            session_data = raw_data = self._raw_get(session_id)
             if raw_data != None:
-                mc.replace(session_id, raw_data, self.session_timeout, 0)
+                self._raw_replace(session_id, raw_data, self.session_timeout)
                 session_data = pickle.loads(raw_data)
             if type(session_data) == type({}):
                 return session_data
@@ -85,8 +120,7 @@ class SessionManager(object):
         request_handler.set_secure_cookie("session_id", session.session_id)
         request_handler.set_secure_cookie("verification", session.hmac_key)
         session_data = pickle.dumps(dict(session.items()), pickle.HIGHEST_PROTOCOL)
-        mc = memcache.Client(self.memcached_address, debug=0)
-        mc.set(session.session_id, session_data, self.session_timeout, 0)
+        self._raw_set(session.session_id, session_data, self.session_timeout)
         
     def _generate_id(self):
         new_id = hashlib.sha256(self.secret + str(uuid.uuid4()))

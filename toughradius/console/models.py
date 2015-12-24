@@ -20,6 +20,30 @@ def get_metadata(db_engine):
     metadata.bind = db_engine
     return metadata
 
+class SystemSession(DeclarativeBase):
+    """session表"""
+    __tablename__ = 'system_session'
+
+    __table_args__ = {
+        'mysql_engine' : 'MEMORY'
+    }
+
+    key = Column(u'_key', Unicode(length=512), primary_key=True, nullable=False,doc=u"session key")
+    value = Column(u'_value', Unicode(length=2048), nullable=False,doc=u"session value")
+    time = Column(u'_time', INTEGER(), nullable=False,doc=u"session timeout")
+
+class SystemCache(DeclarativeBase):
+    """cache表"""
+    __tablename__ = 'system_cache'
+
+    __table_args__ = {
+        'mysql_engine' : 'MEMORY'
+    }
+
+    key = Column(u'_key', Unicode(length=512), primary_key=True, nullable=False,doc=u"cache key")
+    value = Column(u'_value', Unicode(length=4096), nullable=False,doc=u"cache value")
+    time = Column(u'_time', INTEGER(), nullable=False,doc=u"cache timeout")
+
 class TrNode(DeclarativeBase):
     """区域表"""
     __tablename__ = 'tr_node'

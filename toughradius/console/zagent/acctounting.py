@@ -4,13 +4,14 @@ from twisted.internet import reactor
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqREQConnection, ZmqREPConnection, ZmqRequestTimeoutError
 from toughradius.common import apibase, utils
 from toughradius.console import models
+from toughradius.common.utils import timecast
 
 class ZAcctAgent:
 
     def __init__(self, app):
         self.app = app
         self.config = app.config
-        self.cache = app.cache
+        self.cache = app.mcache
         self.db = app.db
         self.syslog = app.syslog
         self.secret = app.config.defaults.secret
@@ -51,7 +52,7 @@ class ZAcctAgent:
             
         reactor.callLater(10.0, self.register, )
 
-
+    @timecast
     def process(self, msgid, message):
         print "Replying to %s, %r" % (msgid, message)
         self.agent.reply(msgid, "%s %r " % (msgid, message))

@@ -4,6 +4,7 @@ import decimal
 import datetime
 from Crypto.Cipher import AES
 from Crypto import Random
+from twisted.python import log
 import hashlib
 import binascii
 import hashlib
@@ -14,6 +15,7 @@ import os
 import time
 import uuid
 import json
+import functools
 
 random_generator = random.SystemRandom()
 
@@ -275,6 +277,16 @@ def safeunicode(val):
         except:
             return val
     return val
+
+def timecast(func):
+    @functools.wraps(func)
+    def warp(*args,**kargs):
+        _start = time.clock()
+        result = func(*args,**kargs)
+        log.msg("%s cast %.6f second"%(func.__name__,time.clock()-_start))
+        return result
+    return warp
+
 
 
 if __name__ == '__main__':

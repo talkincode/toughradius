@@ -1,5 +1,6 @@
-TOUGHRADIUS 简介
-====================================
+[![](https://badge.imagelayers.io/talkincode/toughradius:latest.svg)](https://imagelayers.io/?images=talkincode/toughradius:latest 'Get your own badge on imagelayers.io')
+
+# TOUGHRADIUS 简介
 
 TOUGHRADIUS是一个开源的Radius服务软件，自1.1版本起采用于AGPL许可协议发布，1.0.x版本仍然使用BSD协议。
 
@@ -15,13 +16,13 @@ TOUGHRADIUS网站：http://www.toughradius.net
 
 
 
-TOUGHRADIUS 商业授权
-================================
-
-TOUGHRADIUS `商业授权 <https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst>`_。
+# TOUGHRADIUS 商业授权
 
 
-TOUGHRADIUS 文档
-====================================
+[TOUGHRADIUS 商业授权] (https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
+
+
+# TOUGHRADIUS 文档
+
 
 http://docs.toughradius.net

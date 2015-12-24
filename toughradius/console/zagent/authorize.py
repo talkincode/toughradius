@@ -4,13 +4,14 @@ from twisted.internet import reactor
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqREQConnection, ZmqREPConnection, ZmqRequestTimeoutError
 from toughradius.common import apibase, utils
 from toughradius.console import models
+from toughradius.common.utils import timecast
 
 class ZAuthAgent:
 
     def __init__(self, app):
         self.app = app
         self.config = app.config
-        self.cache = app.cache
+        self.cache = app.mcache
         self.db = app.db
         self.syslog = app.syslog
         self.secret = app.config.defaults.secret
@@ -48,14 +49,14 @@ class ZAuthAgent:
 
         reactor.callLater(10.0, self.register, )
 
-
+    @timecast
     def process(self, msgid, message):
         self.syslog.info("accept auth message @ %s : %r" % (self.listen, utils.safeunicode(message)))
-        @self.cache.cache('get_account_by_username',expire=600)   
+        @self.cache.cache(expire=600)   
         def get_account_by_username(username):
             return self.db.query(models.TrAccount).filter_by(account_number=username).first()
 
-        @self.cache.cache('get_product_by_id',expire=600)   
+        @self.cache.cache(expire=600)   
         def get_product_by_id(product_id):
             return self.db.query(models.TrProduct).filter_by(id=product_id).first()
 

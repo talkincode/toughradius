@@ -6,8 +6,6 @@ import time
 import cyclone.web
 from twisted.python import log
 from twisted.internet import reactor
-from beaker.cache import CacheManager
-from beaker.util import parse_cache_config_options
 from mako.lookup import TemplateLookup
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius.common import utils
@@ -16,8 +14,8 @@ from toughradius.console import models
 from toughradius.common.dbengine import get_engine
 from toughradius.common.permit import permit, load_handlers
 from toughradius.common.settings import *
-from toughradius.common import session
-from txyam.client import YamClient
+from toughradius.common import db_session as session
+from toughradius.common import db_cache as cache
 from toughradius.console.zagent import authorize, acctounting
 
 
@@ -27,10 +25,6 @@ class Application(cyclone.web.Application):
         self.config = config
 
         self.syslog = logger.Logger(config)
-
-        hosts = [h.split(":") for h in config.memcached.hosts.split(",")]
-        hosts = [(h, int(p)) for h, p in hosts]
-        self.mcache = YamClient(hosts)
 
         try:
             if 'TZ' not in os.environ:
@@ -51,14 +45,6 @@ class Application(cyclone.web.Application):
             xheaders=True,
         )
 
-        self.session_manager = session.SessionManager(settings["session_secret"], hosts, 600)
-
-        self.cache = CacheManager(**parse_cache_config_options({
-            'cache.type': 'ext:memcached',
-            'cache.url': self.config.memcached.hosts,
-        }))
-
-
         self.tp_lookup = TemplateLookup(directories=[settings['template_path']],
                                         default_filters=['decode.utf8'],
                                         input_encoding='utf-8',
@@ -68,6 +54,8 @@ class Application(cyclone.web.Application):
 
         self.db_engine = get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
+        self.session_manager = session.SessionManager(settings["session_secret"], self.db_engine, 600)
+        self.mcache = cache.CacheManager(self.db_engine)
 
         self.aes = utils.AESCipher(key=self.config.defaults.secret)
 
