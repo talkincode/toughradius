@@ -1,52 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from toughradius.common import choosereactor
+from toughlib import choosereactor
 choosereactor.install_optimal_reactor(True)
 from twisted.internet import reactor
+from twisted.python import log
 import argparse
-from toughradius.common import config as iconfig
-from toughradius.common.dbengine import get_engine
+from toughlib import config as iconfig
+from toughlib import logger
+from toughlib.dbengine import get_engine
 from toughradius.common import initdb as init_db
+from toughradius.manage import webserver
 import sys
 import os
 
+def update_timezone(config):
+    try:
+        if 'TZ' not in os.environ:
+            os.environ["TZ"] = config.system.tz
+        time.tzset()
+    except:
+        pass
 
-def run_admin(config):
-    from toughradius.console import admin_app
-    admin_app.run(config)
-
-def run_customer(config):
-    from toughradius.console import customer_app
-    customer_app.run(config)
-
-def run_initdb(config):
-    init_db.update(get_engine(config))
-
-
-def run_dumpdb(config, dumpfs):
-    from toughradius.tools import backup
-    backup.dumpdb(config, dumpfs)
-
-
-def run_restoredb(config, restorefs):
-    from toughradius.tools import backup
-    backup.restoredb(config, restorefs)
-
-
-def run():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-admin', '--admin', action='store_true', default=False, dest='admin', help='run admin')
-    parser.add_argument('-customer', '--customer', action='store_true', default=False, dest='customer', help='run customer')
-    parser.add_argument('-port', '--port', type=int, default=0, dest='port', help='server port')
-    parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
-    parser.add_argument('-dumpdb', '--dumpdb', type=str, default=None, dest='dumpdb', help='run dumpdb')
-    parser.add_argument('-restoredb', '--restoredb', type=str, default=None, dest='restoredb', help='run restoredb')
-    parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
-    parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.conf", dest='conf', help='config file')
-    args = parser.parse_args(sys.argv[1:])
-
-    config = iconfig.find_config(args.conf)
-
+def check_env(config):
     try:
         backup_path = config.database.backup_path
         if not os.path.exists(backup_path):
@@ -59,30 +34,37 @@ def run():
     except Exception as err:
         import traceback
         traceback.print_exc()
-    
+
+def run_initdb(config):
+    init_db.update(get_engine(config))
+
+
+def run():
+    log.startLogging(sys.stdout)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-manage', '--manage', action='store_true', default=False, dest='manage', help='run manage')
+    parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
+    parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
+    parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.json", dest='conf', help='config file')
+    args = parser.parse_args(sys.argv[1:])
+
+    config = iconfig.find_config(args.conf)
+    syslog = logger.Logger(config)
+
+    update_timezone(config)
+    check_env(config)
+
     if args.debug:
         config.defaults.debug = True
 
-    if args.dumpdb:
-        return run_dumpdb(config, args.dumpdb)
-
-    if args.restoredb:
-        return run_restoredb(config, args.restoredb)
-
-    if args.admin:
-        if args.port > 0:
-            config.admin.port = args.port
-        run_admin(config)    
-
-    if args.customer:
-        if args.port > 0:
-            config.customer.port = args.port        
-        run_customer(config)
+    if args.manage:
+        webserver.run(config,log=syslog)
+        reactor.run()
         
     elif args.initdb:
         run_initdb(config)
     else:
-        print 'do nothing'
+        parser.print_help()
     
         
 

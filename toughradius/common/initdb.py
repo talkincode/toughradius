@@ -5,8 +5,8 @@ import os
 
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
-from toughradius.common import utils
-from toughradius.console import models
+from toughlib import utils
+from toughradius.manage import models
 from sqlalchemy.orm import scoped_session, sessionmaker
 from hashlib import md5
 

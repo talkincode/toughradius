@@ -24,11 +24,6 @@ radius:
     environment:
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
-        - TIMEZONE=CST-8
-        - SYSLOG_ENABLE=1
-        - SYSLOG_SERVER=121.201.15.99
-        - SYSLOG_PORT=514
-        - SYSLOG_LEVEL=INFO
         - TCP_PORTS=18162,18163
     restart: always
     volumes:
