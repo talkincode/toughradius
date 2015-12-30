@@ -15,5 +15,5 @@ EXPOSE 1816
 EXPOSE 18162
 EXPOSE 18163
 
-CMD ["pypy", "/opt/toughradius/toughctl", "--admin"]
+CMD ["pypy", "/opt/toughradius/toughctl", "--manage"]
 
