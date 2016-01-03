@@ -17,28 +17,28 @@ class RadiusAcctUpdate(RadiusBilling):
             return self.log.error(
                 "[Acct] Received an accounting update request but user[%s] not exists"% self.request['username'])     
 
-        ticket = self.ticket
+        ticket = Storage(**self.request)
         online = self.get_online(ticket.nas_addr,ticket.acct_session_id)     
         if not online:         
             sessiontime = ticket.acct_session_time
             updatetime = datetime.datetime.now()
             _starttime = updatetime - datetime.timedelta(seconds=sessiontime)       
-            online = models.TrOnline()
-            online.account_number = self.account.account_number,
-            online.nas_addr = ticket.nas_addr,
-            online.acct_session_id = ticket.acct_session_id,
-            online.acct_start_time = _starttime.strftime( "%Y-%m-%d %H:%M:%S"),
-            online.framed_ipaddr = ticket.framed_ipaddr,
-            online.mac_addr = ticket.mac_addr,
-            online.nas_port_id = ticket.nas_port_id,
-            online.billing_times = ticket.acct_session_time,
-            online.input_total = self.get_input_total(),
-            online.output_total = self.get_output_total(),
-            online.start_source = STATUS_TYPE_UPDATE
-            self.db.add(online)   
-            self.db.commit()
+            online = Storage(
+                account_number = self.account.account_number,
+                nas_addr = ticket.nas_addr,
+                acct_session_id = ticket.acct_session_id,
+                acct_start_time = _starttime.strftime( "%Y-%m-%d %H:%M:%S"),
+                framed_ipaddr = ticket.framed_ipaddr,
+                mac_addr = ticket.mac_addr,
+                nas_port_id = ticket.nas_port_id,
+                billing_times = ticket.acct_session_time,
+                input_total = self.get_input_total(),
+                output_total = self.get_output_total(),
+                start_source = STATUS_TYPE_UPDATE
+            )
+            self.add_online(online)
 
-        self.billing()
+        self.billing(online)
         self.log.info('%s Accounting update request, update online'% self.account.account_number)
 
 

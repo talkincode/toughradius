@@ -32,7 +32,7 @@ class RadiusAuth(RadiusBasic):
     def authorize(self):
         try:
             if not self.account:
-                self.failure('user %s not exists'% self.request['username'])
+                self.failure('user %s not exists'% self.request.account_number)
                 return self.reply
 
             self.product = self.get_product_by_id(self.account.product_id)
@@ -53,7 +53,7 @@ class RadiusAuth(RadiusBasic):
 
     @timecast
     def status_filter(self):
-        self.reply['username'] = self.request['username']
+        self.reply['username'] = self.request.account_number
         self.reply['bypass'] = self.get_param_value("radiusd_bypass", 0)
         if self.reply['bypass'] == 1:
             self.reply['passwd'] = self.app.aes.decrypt(self.account.password)

@@ -19,7 +19,7 @@ from toughlib.db_backup import DBBackup
 import toughradius
 
 class WebManageServer(cyclone.web.Application):
-    def __init__(self, config=None, log=None, **kwargs):
+    def __init__(self, config=None, dbengine=None, log=None, **kwargs):
 
         self.config = config
         self.syslog = log or logger.Logger(config)
@@ -44,7 +44,7 @@ class WebManageServer(cyclone.web.Application):
             module_directory="/tmp/admin"
         )
 
-        self.db_engine = get_engine(config)
+        self.db_engine = dbengine or get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         self.session_manager = session.SessionManager(settings["cookie_secret"], self.db_engine, 600)
         self.mcache = cache.CacheManager(self.db_engine)
@@ -84,7 +84,7 @@ class WebManageServer(cyclone.web.Application):
             conn.close()
 
 
-def run(config, log=None):
-    app = WebManageServer(config, log)
+def run(config, dbengine,log=None):
+    app = WebManageServer(config, dbengine, log)
     reactor.listenTCP(int(config.admin.port), app, interface=config.admin.host)
 

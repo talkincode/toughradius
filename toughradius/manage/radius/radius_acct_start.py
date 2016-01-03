@@ -6,6 +6,7 @@ from toughlib.storage import Storage
 from toughradius.manage import models
 from toughlib import  utils
 from toughradius.manage.settings import *
+import datetime
 
 class RadiusAcctStart(RadiusBasic):
 
@@ -13,26 +14,26 @@ class RadiusAcctStart(RadiusBasic):
         RadiusBasic.__init__(self, app, request)
 
     def acctounting(self):
-        if self.is_online(self.request['nasaddr'],self.request['session_id']):
-            return self.log.error('online %s is exists' % self.request['session_id'])
+        if self.is_online(self.request.nas_addr,self.request.acct_session_id):
+            return self.log.error('online %s is exists' % self.request.acct_session_id)
 
         if not self.account:
-            return self.log.error('user %s not exists' % self.request['username'])
+            return self.log.error('user %s not exists' % self.request.account_number)
 
-        online = models.TrOnline()
-        online.account_number = self.request['username'],
-        online.nas_addr = self.request['nasaddr'],
-        online.acct_session_id = self.request['session_id'],
-        online.acct_start_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
-        online.framed_ipaddr = self.request['ipaddr'],
-        online.mac_addr = self.request['macaddr'],
-        online.nas_port_id = self.request['nas_port_id'],
-        online.billing_times = 0,
-        online.input_total = 0,
-        online.output_total = 0,
-        online.start_source = STATUS_TYPE_START
-        self.db.add(online)
-        self.db.commit()
+        online = Storage(
+            account_number = self.request.account_number,
+            nas_addr = self.request.nas_addr,
+            acct_session_id = self.request.acct_session_id,
+            acct_start_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
+            framed_ipaddr = self.request.framed_ipaddr,
+            mac_addr = self.request.mac_addr,
+            nas_port_id = self.request.nas_port_id,
+            billing_times = 0,
+            input_total = 0,
+            output_total = 0,
+            start_source = STATUS_TYPE_START
+        )
+        self.add_online(online)
         self.log.info('%s Accounting start request, add new online'%online.account_number)
 
 

@@ -41,6 +41,7 @@ def parse_h3c(req):
 
 
 _parses = {
+            '0' : parse_zte,
             '9' : parse_cisco,
             '2352' : parse_radback,
             '3902' : parse_zte,

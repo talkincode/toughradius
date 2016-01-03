@@ -54,6 +54,7 @@ def run():
 
     config = iconfig.find_config(args.conf)
     syslog = logger.Logger(config)
+    dbengine = get_engine(config)
 
     update_timezone(config)
     check_env(config)
@@ -62,21 +63,21 @@ def run():
         config.defaults.debug = True
 
     if args.manage:
-        webserver.run(config,log=syslog)
+        webserver.run(config,dbengine=dbengine,log=syslog)
         reactor.run()    
 
     elif args.auth:
-        radiusd.run_auth(config,log=syslog)
+        radiusd.run_auth(config,dbengine=dbengine,log=syslog)
         reactor.run()
     
     elif args.acct:
-        radiusd.run_acct(config,log=syslog)
+        radiusd.run_acct(config,dbengine=dbengine,log=syslog)
         reactor.run()
 
     elif args.standalone:
-        radiusd.run_auth(config,log=syslog)
-        radiusd.run_acct(config,log=syslog)
-        webserver.run(config,log=syslog)
+        radiusd.run_auth(config,dbengine=dbengine,log=syslog)
+        radiusd.run_acct(config,dbengine=dbengine,log=syslog)
+        webserver.run(config,dbengine=dbengine,log=syslog)
         reactor.run()
         
     elif args.initdb:

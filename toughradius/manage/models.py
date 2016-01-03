@@ -373,7 +373,7 @@ class TrTicket(DeclarativeBase):
     acct_terminate_cause = Column(u'acct_terminate_cause',INTEGER(),doc=u"会话中止原因")
     mac_addr = Column(u'mac_addr', Unicode(length=128),doc=u"mac地址")
     calling_station_id =  Column(u'calling_station_id', Unicode(length=128),doc=u"用户接入物理信息")
-    framed_netmask = Column(u'frame_id_netmask', Unicode(length=15),doc=u"地址掩码")
+    framed_netmask = Column(u'framed_netmask', Unicode(length=15),doc=u"地址掩码")
     framed_ipaddr = Column(u'framed_ipaddr', Unicode(length=15),doc=u"IP地址")
     nas_class = Column(u'nas_class', Unicode(length=253),doc=u"bas class")
     nas_addr = Column(u'nas_addr', Unicode(length=15), nullable=False,doc=u"bas地址")
@@ -382,6 +382,8 @@ class TrTicket(DeclarativeBase):
     nas_port_type = Column(u'nas_port_type', INTEGER(),doc=u"接入端口类型")
     service_type = Column(u'service_type', INTEGER(),doc=u"接入服务类型")
     session_timeout = Column(u'session_timeout', INTEGER(),doc=u"会话超时时间")
+    start_source = Column(u'start_source', INTEGER(), nullable=False,doc=u"会话开始来源")
+    stop_source = Column(u'stop_source', INTEGER(), nullable=False,doc=u"会话中止来源")
 
 
 class TrOnline(DeclarativeBase):

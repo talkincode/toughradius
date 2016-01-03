@@ -17,7 +17,7 @@ class RadiusAcctStop(RadiusBilling):
             return self.log.error(
                 "[Acct] Received an accounting update request but user[%s] not exists"% self.request['username'])  
 
-        ticket = self.ticket
+        ticket = Storage(**self.request)
         _datetime = datetime.datetime.now() 
         online = self.get_online(ticket.nas_addr,ticket.acct_session_id)    
         if not online:

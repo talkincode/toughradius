@@ -23,16 +23,15 @@ class RadiusBilling(RadiusBasic):
         }
 
     def billing(self, online):
-        ticket = self.ticket
         product = self.get_product_by_id(self.account.product_id)
         if not product:
             self.log.error('product <%s> not exists' % self.account.product_id)
             return
 
         if product.product_policy not in (PPTimes,BOTimes,PPFlow,BOFlows):
-            self.update_online(
-                ticket.nas_addr,ticket.acct_session_id,
-                billing_times=ticket.acct_session_time,
+            self.update_online(self.request.nas_addr,
+                self.request.acct_session_id,
+                billing_times=self.request.acct_session_time,
                 input_total=self.get_input_total(),
                 output_total=self.get_output_total())
         else:
@@ -41,9 +40,8 @@ class RadiusBilling(RadiusBasic):
     def bill_pptimes(self,online):
         # 预付费时长
         self.log.info('%s > Prepaid long time billing ' % self.account.account_number)
-        ticket = self.ticket
         user_balance = self.get_user_balance()
-        sessiontime = decimal.Decimal(ticket.acct_session_time)
+        sessiontime = decimal.Decimal(self.request.acct_session_time)
         billing_times = decimal.Decimal(online.billing_times)
         acct_times = sessiontime - billing_times
         fee_price = decimal.Decimal(product['fee_price'])
@@ -60,7 +58,7 @@ class RadiusBilling(RadiusBasic):
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,
             acct_start_time = online.acct_start_time,
-            acct_session_time = ticket.acct_session_time,
+            acct_session_time = self.request.acct_session_time,
             input_total = self.get_input_total(),
             output_total = self.get_output_total(),
             acct_times = int(acct_times.to_integral_value()),
@@ -80,9 +78,8 @@ class RadiusBilling(RadiusBasic):
     def bill_botimes(self,online):
         #买断时长
         self.log.info('%s > Buyout long time billing ' % self.account.account_number)
-        ticket = self.ticket
         time_length = self.get_user_time_length()
-        sessiontime = ticket.acct_session_time
+        sessiontime = self.request.acct_session_time
         billing_times = online.billing_times
         acct_times = sessiontime - billing_times
         user_time_length = time_length - acct_times
@@ -94,7 +91,7 @@ class RadiusBilling(RadiusBasic):
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,
             acct_start_time = online.acct_start_time,
-            acct_session_time = ticket.acct_session_time,
+            acct_session_time = self.request.acct_session_time,
             input_total = self.get_input_total(),
             output_total = self.get_output_total(),
             acct_times = acct_times,
@@ -114,7 +111,6 @@ class RadiusBilling(RadiusBasic):
     def bill_ppflows(self, online):
         #预付费流量
         self.log.info('%s > Prepaid flow billing '% self.account.account_number)
-        ticket = self.ticket
         user_balance = self.get_user_balance()
         output_total = decimal.Decimal(self.get_output_total())
         billing_output_total = decimal.Decimal(online.output_total)
@@ -133,7 +129,7 @@ class RadiusBilling(RadiusBasic):
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,
             acct_start_time = online.acct_start_time,
-            acct_session_time = ticket.acct_session_time,
+            acct_session_time = self.request.acct_session_time,
             input_total = self.get_input_total(),
             output_total = self.get_output_total(),
             acct_times = 0,
@@ -153,7 +149,6 @@ class RadiusBilling(RadiusBasic):
     def bill_boflows(self):
         #买断流量
         self.log.info('%s > Buyout flow billing ' % self.account.account_number)
-        ticket = self.ticket
         flow_length = self.get_user_flow_length()
         output_total = self.get_output_total()
         billing_output_total = online.output_total
@@ -167,7 +162,7 @@ class RadiusBilling(RadiusBasic):
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,
             acct_start_time = online.acct_start_time,
-            acct_session_time = ticket.acct_session_time,
+            acct_session_time = self.request.acct_session_time,
             input_total = self.get_input_total(),
             output_total = self.get_output_total(),
             acct_times = 0,

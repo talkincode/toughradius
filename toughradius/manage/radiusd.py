@@ -35,12 +35,12 @@ class PacketError(Exception):
 ###############################################################################
 
 class RADIUS(protocol.DatagramProtocol):
-    def __init__(self, config, log):
+    def __init__(self, config, dbengine,log):
         self.config = config
         self.dict = dictionary.Dictionary(
             os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
         self.syslog = log
-        self.db_engine = get_engine(config)
+        self.db_engine = dbengine or get_engine(config)
         self.mcache = mcache.Mcache()
 
     def get_nas(self,ip_addr):
@@ -78,6 +78,8 @@ class RADIUS(protocol.DatagramProtocol):
             errstr = 'RadiusError:Dropping invalid packet from {0} {1},{2}'.format(
                 host, port, utils.safeunicode(err))
             self.syslog.error(errstr)
+            import traceback
+            traceback.print_exc()
             
 
 
@@ -115,7 +117,7 @@ class RADIUSAccess(RADIUS):
             reply.vendor_id = req.vendor_id
 
             aaa_request = dict(
-                username=req.get_user_name(),
+                account_number=req.get_user_name(),
                 domain=req.get_domain(),
                 macaddr=req.client_mac,
                 nasaddr=req.get_nas_addr(),
@@ -203,37 +205,20 @@ class RADIUSAccounting(RADIUS):
             raise PacketError('VerifyAcctRequest error')
 
         reply = req.CreateReply()
-        acct_request = dict(
-            acct_status_type=req.get_acct_status_type(),
-            username=req.get_user_name(),
-            session_id=req.get_acct_sessionid(),
-            session_time=req.get_acct_sessiontime(),
-            session_timeout=req.get_session_timeout(),
-            macaddr=req.get_mac_addr(),
-            nasaddr=req.get_nas_addr(),
-            ipaddr=req.get_framed_ipaddr(),
-            input_octets=req.get_input_total(),
-            output_octets=req.get_output_total(),
-            input_pkts=req.get_acct_input_packets(),
-            output_pkts=req.get_acct_output_packets(),
-            nas_port=req.get_nas_port(),
-            event_timestamp=req.get_event_timestamp(),
-            nas_port_type=req.get_nas_port_type(),
-            nas_port_id=req.get_nas_portid()
-        )
-        if acct_request['acct_status_type'] in RADIUSAccounting.acct_class:
-            RADIUSAccounting.acct_class[acct_request['acct_status_type']](self,acct_request).acctounting()
+        status_type = req.get_acct_status_type()
+        if status_type in RADIUSAccounting.acct_class:
+            RADIUSAccounting.acct_class[status_type](self,req.get_ticket()).acctounting()
         return reply
 
 ###############################################################################
 # Radius  Run                                                              ####
 ###############################################################################
 
-def run_auth(config, log=None):
-    auth_protocol = RADIUSAccess(config, log)
+def run_auth(config, dbengine, log=None):
+    auth_protocol = RADIUSAccess(config,dbengine, log)
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
-def run_acct(config, log=None):
-    acct_protocol = RADIUSAccounting(config, log)
+def run_acct(config, dbengine, log=None):
+    acct_protocol = RADIUSAccounting(config,dbengine, log)
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 

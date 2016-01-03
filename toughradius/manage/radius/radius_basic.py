@@ -7,7 +7,8 @@ from toughradius.manage.settings import *
 from toughlib.storage import Storage
 from toughlib.utils import timecast
 import decimal
-
+import datetime
+import copy
 decimal.getcontext().prec = 16
 decimal.getcontext().rounding = decimal.ROUND_UP
 
@@ -16,10 +17,9 @@ class RadiusBasic:
     def __init__(self, app, request):
         self.app = app
         self.cache = self.app.mcache
-        self.request = request
+        self.request = Storage(request)
         self.log = self.app.syslog
-        self.account = self.get_account_by_username(self.request['username'])
-        self._ticket = None
+        self.account = self.get_account_by_username(self.request.account_number)
         
     #@timecast
     def get_param_value(self, name, defval=None):
@@ -109,14 +109,19 @@ class RadiusBasic:
         with self.app.db_engine.begin() as conn:
             return conn.execute(table.select().where(
                 table.c.nas_addr==nasaddr).where(
-                table.c.acct_session_id==session_id)).first()        
+                table.c.acct_session_id==session_id)).first()       
+
+    def add_online(self,online):
+        table = models.TrOnline.__table__
+        with self.app.db_engine.begin() as conn:
+            conn.execute(table.insert().values(**online)) 
 
     def is_online(self, nasaddr, session_id):
         table = models.TrOnline.__table__
         with self.app.db_engine.begin() as conn:
             return conn.execute(table.count().where(
                 table.c.nas_addr==nasaddr).where(
-                table.c.acct_session_id==session_id)) > 0
+                table.c.acct_session_id==session_id)).scalar() > 0
 
     def del_online(self, nasaddr, session_id):
         table = models.TrOnline.__table__
@@ -130,13 +135,13 @@ class RadiusBasic:
         table = models.TrOnline.__table__
         with self.app.db_engine.begin() as conn:
             return conn.execute(table.count().where(
-                table.c.account_number==self.account.account_number))
+                table.c.account_number==self.account.account_number)).scalar()
 
     def update_online(self, nasaddr, session_id, **kwargs):
         table = models.TrOnline.__table__
         with self.app.db_engine.begin() as conn:
             stmt = table.update().where(table.c.nas_addr==nasaddr).where(
-                acct_session_id==session_id).values(**kwargs)
+                table.c.acct_session_id==session_id).values(**kwargs)
             conn.execute(stmt)
 
     def disconnect(self,nasaddr, session_id):
@@ -144,54 +149,22 @@ class RadiusBasic:
 
 
     def get_input_total(self):
-        bl = decimal.Decimal(self.ticket.acct_input_octets)/decimal.Decimal(1024)
-        gl = decimal.Decimal(self.ticket.acct_input_gigawords)*decimal.Decimal(4*1024*1024)
+        bl = decimal.Decimal(self.request.acct_input_octets)/decimal.Decimal(1024)
+        gl = decimal.Decimal(self.request.acct_input_gigawords)*decimal.Decimal(4*1024*1024)
         tl = bl + gl
         return int(tl.to_integral_value())   
         
     def get_output_total(self):
-        bl = decimal.Decimal(self.ticket.acct_input_octets)/decimal.Decimal(1024)
-        gl = decimal.Decimal(self.ticket.acct_output_gigawords)*decimal.Decimal(4*1024*1024)
+        bl = decimal.Decimal(self.request.acct_input_octets)/decimal.Decimal(1024)
+        gl = decimal.Decimal(self.request.acct_output_gigawords)*decimal.Decimal(4*1024*1024)
         tl = bl + gl
         return int(tl.to_integral_value())      
 
-    @property
-    def ticket(self):
-        if self._ticket:
-            return self._ticket
-        else:
-            self._ticket = Storage(
-                account_number = self.request['username'],
-                mac_addr = self.request['macaddr'],
-                nas_addr = self.request['nasaddr'],
-                nas_port = self.request['nas_port'],
-                service_type = self.request.get('service_type','radius'),
-                framed_ipaddr = self.request['ipaddr'],
-                framed_netmask = self.request.get('netmask',''),
-                nas_class = self.request.get('nas_class',''),
-                session_timeout = self.request['session_timeout'],
-                calling_stationid = self.request.get('calling_stationid',''),
-                acct_status_type = self.request['acct_status_type'],
-                acct_input_octets = self.request['input_octets'],
-                acct_output_octets = self.request['output_octets'],
-                acct_session_id = self.request['session_id'],
-                acct_session_time = self.request['session_time'],
-                acct_input_packets = self.request['input_pkts'],
-                acct_output_packets = self.request['output_pkts'],
-                acct_terminate_cause = self.request['terminate_cause'],
-                acct_input_gigawords = self.request.get('input_gigawords',0),
-                acct_output_gigawords = self.request.get('output_gigawords',0),
-                event_timestamp = self.request['event_timestamp'],
-                nas_port_type=self.grequest['nas_port_type'],
-                nas_port_id=self.request['nas_port_id']
-            )
-        return self._ticket
-
     def add_ticket(self,ticket):
         table = models.TrTicket.__table__
+        data = {k.name:ticket[k.name] for k in table.columns if k.name not in 'id'}
         with self.app.db_engine.begin() as conn:
-            conn.execute(table.insert().values(**ticket))
-
+            conn.execute(table.insert().values(**data))
 
     def update_billing(self, billing):
         acctount_table = models.TrAccount.__table__
@@ -220,7 +193,7 @@ class RadiusBasic:
             _starttime = datetime.datetime.strptime(online.acct_start_time,"%Y-%m-%d %H:%M:%S")
             session_time = (_datetime - _starttime).seconds
             stop_time = _datetime.strftime( "%Y-%m-%d %H:%M:%S")
-            ticket = models.TrTicket()
+            ticket = Storage()
             ticket.account_number = online.account_number,
             ticket.acct_session_id = online.acct_session_id,
             ticket.acct_start_time = online.acct_start_time,
