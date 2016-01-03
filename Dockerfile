@@ -4,6 +4,7 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 VOLUME [ "/var/toughradius" ]
 
 RUN pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
+RUN pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 
 RUN git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
@@ -12,8 +13,8 @@ RUN ln -s /opt/toughradius/toughradius.conf /etc/toughradius.conf
 RUN chmod +x /opt/toughradius/toughctl
 
 EXPOSE 1816
-EXPOSE 18162
-EXPOSE 18163
+EXPOSE 1812/udp
+EXPOSE 1813/udp
 
-CMD ["pypy", "/opt/toughradius/toughctl", "--manage"]
+CMD ["pypy", "/opt/toughradius/toughctl", "--standalone"]
 

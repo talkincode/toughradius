@@ -14,17 +14,16 @@ raddb:
 
 radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
-    command: pypy /opt/toughengine/toughctl --admin
+    command: pypy /opt/toughradius/toughctl --standalone
     expose:
-        - "1816"
-        - "18162"
-        - "18163"
+        - "1816:1816"
+        - "1812:1812/udp"
+        - "1813:1813/udp"
     links:
         - raddb:raddb
     environment:
         - DB_TYPE=mysql
         - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
-        - TCP_PORTS=18162,18163
     restart: always
     volumes:
         - /home/toughrun/toughradius:/var/toughradius
@@ -35,24 +34,5 @@ haradius:
         - radius:radius
     ports:
         - "1816:80"
-        - "18162:18162"
-        - "18163:18163"
 
-engine:
-    image: "index.alauda.cn/toughstruct/toughengine"
-    command: pypy /opt/toughengine/toughctl --standalone
-    ports:
-        - "1812:1823/udp"
-        - "1813:1813/udp"
-        - "1815:1815"
-    environment:
-        - TIMEZONE=CST-8
-        - API_URL=http://0.0.0.0:8080/api
-        - API_SECRET=LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920
-        - SYSLOG_ENABLE=1
-        - SYSLOG_SERVER=121.201.15.99
-        - SYSLOG_PORT=514
-        - SYSLOG_LEVEL=INFO
-    restart: always
-    volumes:
-        - /home/toughrun/toughengine:/var/toughengine
+
