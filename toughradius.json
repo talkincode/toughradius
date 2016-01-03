@@ -1,14 +1,17 @@
 {
     "admin": {
         "host": "0.0.0.0", 
-        "port": 1816,
-        "zauth_port": 18162,
-        "zacct_port": 18163
+        "port": 1816
+    }, 
+    "radiusd": {
+        "host": "0.0.0.0", 
+        "auth_port": 1812,
+        "acct_port": 1813
     }, 
     "database": {
         "backup_path": "/var/toughradius/data", 
-        "dbtype": "sqlite", 
-        "dburl": "sqlite:////var/toughradius/toughradius.sqlite3", 
+        "dbtype": "mysql", 
+        "dburl": "mysql://root@127.0.0.1/toughradius?charset=utf8", 
         "echo": 0, 
         "pool_recycle": 300, 
         "pool_size": 120

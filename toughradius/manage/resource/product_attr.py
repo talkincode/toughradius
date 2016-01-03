@@ -10,7 +10,7 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.resource import product_forms
 from toughlib.permit import permit
 from toughlib import utils
-from toughradius.common.radius_attrs import radius_attrs 
+from toughradius.manage.radius.radius_attrs import radius_attrs 
 from toughradius.manage.settings import * 
 
 

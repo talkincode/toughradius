@@ -55,11 +55,11 @@ class BaseHandler(cyclone.web.RequestHandler):
             return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
     def render(self, template_name, **template_vars):
-        html = self.render_string("admin/%s" % template_name, **template_vars)
+        html = self.render_string(template_name, **template_vars)
         self.write(html)
 
     def render_error(self, **template_vars):
-        tpl = "admin/error.html"
+        tpl = "error.html"
         html = self.render_string(tpl, **template_vars)
         self.write(html)
 
@@ -86,7 +86,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         template_vars["all_menus"] = permit.build_menus(
             order_cats=ADMIN_MENUS
         )
-        mytemplate = self.tp_lookup.get_template(template_name)
+        mytemplate = self.tp_lookup.get_template("admin/{0}".format(template_name))
         return mytemplate.render(**template_vars)
 
 
@@ -130,7 +130,7 @@ class BaseHandler(cyclone.web.RequestHandler):
 
     def clear_session(self):
         self.session.clear()
-        self.session.save()
+        self.session.clear()
         self.clear_all_cookies()  
         
     def get_current_user(self):

@@ -124,7 +124,7 @@ class CustomerOpenHandler(CustomerHandler):
         account.user_concur_number = product.concur_number
         account.bind_mac = product.bind_mac
         account.bind_vlan = product.bind_vlan
-        account.vlan_id = 0
+        account.vlan_id1 = 0
         account.vlan_id2 = 0
         account.create_time = customer.create_time
         account.update_time = customer.create_time

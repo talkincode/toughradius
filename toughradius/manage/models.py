@@ -44,6 +44,7 @@ class SystemCache(DeclarativeBase):
     value = Column(u'_value', Unicode(length=4096), nullable=False,doc=u"cache value")
     time = Column(u'_time', INTEGER(), nullable=False,doc=u"cache timeout")
 
+
 class TrNode(DeclarativeBase):
     """区域表"""
     __tablename__ = 'tr_node'
@@ -108,19 +109,6 @@ class TrParam(DeclarativeBase):
     param_name = Column(u'param_name', Unicode(length=64), primary_key=True, nullable=False,doc=u"参数名")
     param_value = Column(u'param_value', Unicode(length=1024), nullable=False,doc=u"参数值")
     param_desc = Column(u'param_desc', Unicode(length=255),doc=u"参数描述")
-
-class TrRadAgent(DeclarativeBase):
-    """RadiusAgent节点表"""
-    __tablename__ = 'tr_rad_agent'
-
-    __table_args__ = {}
-
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"节点id")
-    radius_type = Column(u'radius_type', Unicode(length=32), nullable=False,doc=u"接入类型")
-    protocol = Column(u'protocol', Unicode(length=32), nullable=False,doc=u"协议")
-    endpoint = Column(u'endpoint', Unicode(length=32), nullable=False,doc=u"接入地址")
-    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
-    last_check = Column('last_check', Unicode(length=19), nullable=False,doc=u"最后监测")
 
 
 class TrBas(DeclarativeBase):
@@ -269,7 +257,7 @@ class TrAccount(DeclarativeBase):
     password = Column('password', Unicode(length=128), nullable=False,doc=u"上网密码")
     status = Column('status', INTEGER(), nullable=False,doc=u"用户状态")
     install_address = Column('install_address', Unicode(length=128), nullable=False,doc=u"装机地址")
-    balance = Column('balance', INTEGER(), nullable=False,doc=u"用户余额-分")
+    balance = Column('balance', INTEGER(), nullable=False, default=0, doc=u"用户余额-分")
     time_length = Column('time_length', INTEGER(), nullable=False,default=0,doc=u"用户时长-秒")
     flow_length = Column('flow_length', INTEGER(), nullable=False,default=0,doc=u"用户流量-kb")
     expire_date = Column('expire_date', Unicode(length=10), nullable=False,doc=u"过期时间- ####-##-##")
@@ -277,7 +265,7 @@ class TrAccount(DeclarativeBase):
     bind_mac = Column('bind_mac', SMALLINT(), nullable=False,doc=u"是否绑定mac")
     bind_vlan = Column('bind_vlan', SMALLINT(), nullable=False,doc=u"是否绑定vlan")
     mac_addr = Column('mac_addr', Unicode(length=17),doc=u"mac地址")
-    vlan_id = Column('vlan_id', INTEGER(),doc=u"内层vlan")
+    vlan_id1 = Column('vlan_id1', INTEGER(),doc=u"内层vlan")
     vlan_id2 = Column('vlan_id2', INTEGER(),doc=u"外层vlan")
     ip_address = Column('ip_address', Unicode(length=15),doc=u"静态IP地址")
     last_pause = Column('last_pause', Unicode(length=19),doc=u"最后停机时间")
@@ -394,8 +382,6 @@ class TrTicket(DeclarativeBase):
     nas_port_type = Column(u'nas_port_type', INTEGER(),doc=u"接入端口类型")
     service_type = Column(u'service_type', INTEGER(),doc=u"接入服务类型")
     session_timeout = Column(u'session_timeout', INTEGER(),doc=u"会话超时时间")
-    start_source = Column(u'start_source', INTEGER(), nullable=False,doc=u"会话开始来源")
-    stop_source = Column(u'stop_source', INTEGER(), nullable=False,doc=u"会话中止来源")
 
 
 class TrOnline(DeclarativeBase):
@@ -407,8 +393,8 @@ class TrOnline(DeclarativeBase):
     }
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"在线id")
-    account_number = Column(u'account_number', Unicode(length=32), nullable=False,doc=u"上网账号")
-    nas_addr = Column(u'nas_addr', Unicode(length=32), nullable=False,doc=u"bas地址")
+    account_number = Column(u'account_number', Unicode(length=32), nullable=False, index=True, doc=u"上网账号")
+    nas_addr = Column(u'nas_addr', Unicode(length=32), nullable=False, doc=u"bas地址")
     acct_session_id = Column(u'acct_session_id', Unicode(length=64), nullable=False,doc=u"会话id")
     acct_start_time = Column(u'acct_start_time', Unicode(length=19), nullable=False,doc=u"会话开始时间")
     framed_ipaddr = Column(u'framed_ipaddr', Unicode(length=32), nullable=False,doc=u"IP地址")

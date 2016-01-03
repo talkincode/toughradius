@@ -10,6 +10,7 @@ from toughlib import logger
 from toughlib.dbengine import get_engine
 from toughradius.common import initdb as init_db
 from toughradius.manage import webserver
+from toughradius.manage import radiusd
 import sys
 import os
 
@@ -43,6 +44,9 @@ def run():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser()
     parser.add_argument('-manage', '--manage', action='store_true', default=False, dest='manage', help='run manage')
+    parser.add_argument('-auth', '--auth', action='store_true', default=False, dest='auth', help='run auth')
+    parser.add_argument('-acct', '--acct', action='store_true', default=False, dest='acct', help='run acct')
+    parser.add_argument('-standalone', '--standalone', action='store_true', default=False, dest='standalone', help='run standalone')
     parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
     parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
     parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.json", dest='conf', help='config file')
@@ -58,6 +62,20 @@ def run():
         config.defaults.debug = True
 
     if args.manage:
+        webserver.run(config,log=syslog)
+        reactor.run()    
+
+    elif args.auth:
+        radiusd.run_auth(config,log=syslog)
+        reactor.run()
+    
+    elif args.acct:
+        radiusd.run_acct(config,log=syslog)
+        reactor.run()
+
+    elif args.standalone:
+        radiusd.run_auth(config,log=syslog)
+        radiusd.run_acct(config,log=syslog)
         webserver.run(config,log=syslog)
         reactor.run()
         

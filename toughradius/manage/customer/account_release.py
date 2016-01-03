@@ -20,7 +20,7 @@ class AccountReleasetHandler(account.AccountHandler):
         account_number = self.get_argument('account_number')  
         user = self.db.query(models.TrAccount).filter_by(account_number=account_number).first()
         user.mac_addr = ''
-        user.vlan_id = 0
+        user.vlan_id1 = 0
         user.vlan_id2 = 0
         self.add_oplog(u'释放用户账号（%s）绑定信息'%(account_number))
         self.db.commit()

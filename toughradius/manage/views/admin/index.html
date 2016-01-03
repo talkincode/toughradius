@@ -69,7 +69,7 @@
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th colspan="4"> 当前登录管理员</th>
+                    <th colspan="4"> <i class="fa fa-user"></i> 当前登录管理员</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -86,31 +86,33 @@
                     <td>${sys_version or '1.0'}</td>
                 </tr>
                 </tbody>
-
-            </table>
-            <hr/>
-            <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th width="15%">服务名</th>
-                    <th>服务状态</th>
-                    <th width="20%"></th>
+                    <th colspan="4"> <i class="fa fa-laptop"></i> 管理服务信息</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <td>系统控制台</td>
-                    <td><span id="status_line"></span></td>
-                    <td>
-                        % if permit.match(current_user.username,'/admin/dashboard/restart'):
-                        <button type="button" id="restart" class="btn btn-sm btn-info">重启服务</button>
-                        % endif
-                        % if permit.match(current_user.username,'/admin/dashboard/update'):
-                        <button type="button" id="refresh" class="btn btn-sm btn-info">刷新状态</button>
-                        % endif
-                    </td>
+                    <td>监听地址</td>
+                    <td>${config.admin.host}</td>
+                    <td>WEB管理端口</td>
+                    <td>${config.admin.port}</td>                    
                 </tr>
                 </tbody>
+                <thead>
+                <tr>
+                    <th colspan="4"><i class="fa fa-laptop"></i>  Radius 服务信息</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>监听地址</td>
+                    <td>${config.radiusd.host}</td>
+                    <td>认证端口/记账端口</td>
+                    <td>${config.radiusd.auth_port}／${config.radiusd.acct_port}</td>                    
+                </tr>
+                </tbody>
+
             </table>
 
             <hr>

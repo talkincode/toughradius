@@ -16,7 +16,6 @@ from toughradius.manage.settings import *
 from toughlib import db_session as session
 from toughlib import db_cache as cache
 from toughlib.db_backup import DBBackup
-from toughradius.manage.zagent import authorize, acctounting
 import toughradius
 
 class WebManageServer(cyclone.web.Application):
@@ -63,14 +62,12 @@ class WebManageServer(cyclone.web.Application):
 
         self.init_route()
 
-        self.zauth_agent = authorize.ZAuthAgent(self)
-        self.zacct_agent = acctounting.ZAcctAgent(self)
-
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
     def init_route(self):
         handler_path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-        load_handlers(handler_path=handler_path, pkg_prefix="toughradius.manage",excludes=['views','webserver','zagent'])
+        load_handlers(handler_path=handler_path, pkg_prefix="toughradius.manage",
+            excludes=['views','webserver','radius','ssportal'])
 
         conn = self.db()
         try:

@@ -15,6 +15,27 @@ CARD_STATUS = (CardInActive, CardActive, CardUsed, CardRecover) = (0, 1, 2, 3)
 
 CARD_TYPES = (ProductCard, BalanceCard) = (0, 1)
 
+STAT_AUTH_ALL = 'STAT_AUTH_ALL'
+STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'
+STAT_AUTH_REJECT = 'STAT_AUTH_REJECT'
+STAT_AUTH_DROP = 'STAT_AUTH_DROP'
+STAT_ACCT_ALL = 'STAT_ACCT_ALL'
+STAT_ACCT_START = 'STAT_ACCT_START'
+STAT_ACCT_UPDATE = 'STAT_ACCT_UPDATE'
+STAT_ACCT_STOP = 'STAT_ACCT_STOP'
+STAT_ACCT_ON = 'STAT_ACCT_ON'
+STAT_ACCT_OFF = 'STAT_ACCT_OFF'
+STAT_ACCT_DROP = 'STAT_ACCT_DROP'
+STAT_ACCT_RETRY = 'STAT_ACCT_RETRY'
+
+STATUS_TYPE_START   = 1
+STATUS_TYPE_STOP    = 2
+STATUS_TYPE_UPDATE  = 3
+STATUS_TYPE_UNLOCK = 4
+STATUS_TYPE_CHECK_ONLINE = 5
+STATUS_TYPE_ACCT_ON  = 7
+STATUS_TYPE_ACCT_OFF = 8
+
 ACCEPT_TYPES = {
     'open'  : u'开户',
     'pause' : u'停机',
@@ -38,13 +59,12 @@ MENU_ICONS = {
 
 MAX_EXPIRE_DATE = '3000-12-30'
 
-# CACHE_NOTIFY
+param_cache_key = 'toughradius.cache.param.{0}'.format
+account_cache_key = 'toughradius.cache.account.{0}'.format
+product_cache_key = 'toughradius.cache.product.{0}'.format
+product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
+bas_cache_key = 'toughradius.cache.bas.{0}'.format
 
-NOTIFY_NAS_UPDATE = 'nas_update'
-NOTIFY_USER_UPDATE = 'user_update'
-
-NOTIFY_NAS_UPDATE_KEY = 'nasaddr'
-NOTIFY_USER_UPDATE_KEY = 'username'
 
 
 
