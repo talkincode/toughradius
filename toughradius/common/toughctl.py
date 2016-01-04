@@ -29,9 +29,6 @@ def check_env(config):
             os.system("mkdir -p  %s" % backup_path)
         if not os.path.exists("/var/toughradius"):
             os.system("mkdir -p /var/toughradius")
-        if not os.path.exists("/var/toughradius/.install"):
-            run_initdb(config)
-            os.system("touch /var/toughradius/.install ")
     except Exception as err:
         import traceback
         traceback.print_exc()

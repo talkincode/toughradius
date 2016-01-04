@@ -65,7 +65,7 @@ EOF
 
     cat > ${rundir}/$instance/docker-compose.yml <<EOF 
 raddb:
-    image: "index.alauda.cn/toughstruct/mysql:512M"
+    image: "index.alauda.cn/toughstruct/mysql"
     privileged: true
     expose:
         - "3306"
@@ -80,7 +80,6 @@ raddb:
 
 radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
-    command: pypy /opt/toughradius/toughctl --standalone
     ports:
         - "${web_port}:1816"
         - "${auth_port}:1812/udp"
@@ -100,7 +99,14 @@ EOF
     cat ${rundir}/$instance/docker-compose.yml
 
     docker-compose up -d raddb
-    sleep 2
+    
+    echo 3
+    sleep 1
+    echo 2
+    sleep 1
+    echo 1
+    sleep 1
+
     docker-compose up -d radius
 
     docker-compose ps
@@ -158,14 +164,13 @@ EOF
     cat > ${rundir}/$instance/docker-compose.yml  <<EOF
 radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
-    command: pypy /opt/toughradius/toughctl --standalone
     ports:
         - "${web_port}:1816"
         - "${auth_port}:1812/udp"
         - "${acct_port}:1813/udp"
     environment:
         - DB_TYPE=mysql
-        - DB_URL=mysql://$mysql_user:$mysql_password@raddb:3306/$mysql_database?charset=utf8
+        - DB_URL=mysql://$mysql_user:$mysql_password@$mysql_host:3306/$mysql_database?charset=utf8
     restart: always
     volumes:
         - ${rundir}/$instance:/var/toughradius

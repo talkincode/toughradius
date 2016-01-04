@@ -1,0 +1,95 @@
+#!/bin/sh
+# toughradius docker install script
+# author: jamiesun.net@gmail.com
+# version: 0.0.1
+
+set -e
+
+install()
+{
+    pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
+
+    pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
+
+    git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
+
+    ln -s /opt/toughradius/toughradius.json /etc/toughradius.json
+
+    chmod +x /opt/toughradius/toughctl
+}
+
+initserv()
+{
+    if [ ! -f "/var/toughradius/data" ];then
+        mkdir -p /var/toughradius/data
+    fi
+
+    if [ ! -f "/var/toughradius/.install" ];then
+        pypy /opt/toughradius/toughctl --initdb
+        echo "ok" > /var/toughradius/.install
+        echo "init database ok!"
+    fi
+
+    if [ ! -f "/var/toughradius/toughradius.json" ];then
+        ln -s /opt/toughradius/toughradius.json /var/toughradius/toughradius.json
+    fi
+
+    if [ ! -f "/var/toughradius/toughshell" ];then
+        ln -s /usr/local/bin/toughshell /var/toughradius/toughshell
+    fi
+
+    echo "init service ok!"
+}
+
+standalone()
+{
+    initserv
+    pypy /opt/toughradius/toughctl --standalone
+}
+
+manage()
+{
+    initserv
+    pypy /opt/toughradius/toughctl --manage
+}
+
+auth()
+{
+    initserv
+    pypy /opt/toughradius/toughctl --auth
+}
+
+acct()
+{
+    initserv
+    pypy /opt/toughradius/toughctl --acct
+}
+
+case "$1" in
+
+  install)
+    install
+  ;;
+
+  initdb)
+    initdb
+  ;;
+
+  standalone)
+    standalone
+  ;;
+
+  manage)
+    manage
+  ;;
+
+  auth)
+    auth
+  ;;
+
+  acct)
+    acct
+  ;;
+
+esac
+
