@@ -16,6 +16,8 @@ Usage: $0 [OPTIONS]
   standalone         install toughradius with already exists mysql
   with_mysql         install toughradius with new docker mysql instance
   remove             uninstall toughradius and database
+  status             toughradius instance status
+  logs               toughradius instance logs
 All other options are passed to the toughrad program.
 EOF
         exit 1
