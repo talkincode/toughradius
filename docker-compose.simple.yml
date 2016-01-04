@@ -1,5 +1,5 @@
 raddb:
-    image: "index.alauda.cn/toughstruct/mysql:M512"
+    image: "index.alauda.cn/toughstruct/mysql:512M"
     privileged: true
     expose:
         - "3306"

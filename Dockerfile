@@ -8,7 +8,7 @@ RUN pypy -m pip install https://github.com/talkincode/txradius/archive/master.zi
 
 RUN git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
-RUN ln -s /opt/toughradius/toughradius.conf /etc/toughradius.conf
+RUN ln -s /opt/toughradius/toughradius.json /etc/toughradius.json
 
 RUN chmod +x /opt/toughradius/toughctl
 
