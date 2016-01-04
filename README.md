@@ -61,33 +61,33 @@ http://docs.toughradius.net
     $ vi /opt/radius/docker-compose.yml
     
     raddb:
-    image: "index.alauda.cn/toughstruct/mysql:512M"
-    privileged: true
-    expose:
-        - "3306"
-    environment:
-        - MYSQL_USER=raduser
-        - MYSQL_PASSWORD=radpwd
-        - MYSQL_DATABASE=radiusd
-        - MYSQL_ROOT_PASSWORD=radroot
-    restart: always
-    volumes:
-        - /home/toughrun/trmysql:/var/lib/mysql
+        image: "index.alauda.cn/toughstruct/mysql:512M"
+        privileged: true
+        expose:
+            - "3306"
+        environment:
+            - MYSQL_USER=raduser
+            - MYSQL_PASSWORD=radpwd
+            - MYSQL_DATABASE=radiusd
+            - MYSQL_ROOT_PASSWORD=radroot
+        restart: always
+        volumes:
+            - /home/toughrun/trmysql:/var/lib/mysql
     
     radius:
-    images: "index.alauda.cn/toughstruct/toughradius:v2"
-    ports:
-        - "1816:1816"
-        - "1812:1812/udp"
-        - "1813:1813/udp"
-    links:
-        - raddb:raddb
-    environment:
-        - DB_TYPE=mysql
-        - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
-    restart: always
-    volumes:
-        - /home/toughrun/toughradius:/var/toughradius
+        images: "index.alauda.cn/toughstruct/toughradius:v2"
+        ports:
+            - "1816:1816"
+            - "1812:1812/udp"
+            - "1813:1813/udp"
+        links:
+            - raddb:raddb
+        environment:
+            - DB_TYPE=mysql
+            - DB_URL=mysql://raduser:radpwd@raddb:3306/radiusd?charset=utf8
+        restart: always
+        volumes:
+            - /home/toughrun/toughradius:/var/toughradius
 
 ### 部署实例
 
