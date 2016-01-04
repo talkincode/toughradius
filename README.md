@@ -1,6 +1,6 @@
 # README
 
-[![](#)(https://badge.imagelayers.io/talkincode/toughradius:latest.svg)](https://imagelayers.io/?images=talkincode/toughradius:latest 'Get your own badge on imagelayers.io')
+[![](https://badge.imagelayers.io/talkincode/toughradius:v2.svg)](https://imagelayers.io/?images=talkincode/toughradius:v2 'Get your own badge on imagelayers.io')
 
 # TOUGHRADIUS 简介
 
