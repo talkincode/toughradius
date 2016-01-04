@@ -71,8 +71,8 @@ case "$1" in
     install
   ;;
 
-  initdb)
-    initdb
+  initserv)
+    initserv
   ;;
 
   standalone)
