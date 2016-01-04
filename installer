@@ -26,6 +26,7 @@ EOF
 with_mysql()
 {
     mkdir -p ${rundir}/$instance
+    cd ${rundir}/$instance
 
     read -p "mysql user [raduser]: " mysql_user
     mysql_user=${mysql_user:-raduser}
@@ -49,7 +50,8 @@ with_mysql()
     acct_port=${acct_port:-1813}
 
     cat <<EOF
-    toughradius instance config:
+
+    ToughRADIUS instance config:
 
     instance name: $instance
     mysql_user: ${mysql_user}
@@ -59,6 +61,7 @@ with_mysql()
     web_port: ${web_port}
     auth_port: ${auth_port}
     acct_port: ${acct_port}
+
 EOF
 
     cat > ${rundir}/$instance/docker-compose.yml <<EOF 
@@ -103,6 +106,7 @@ EOF
 standalone()
 {
     mkdir -p ${rundir}/$instance
+    cd ${rundir}/$instance
 
     read -p "mysql host (must): " mysql_host
     if [ -z $mysql_host ]; then
@@ -132,7 +136,8 @@ standalone()
     acct_port=${acct_port:-1813}
 
     cat <<EOF
-ToughRADIUS instance config:
+
+    ToughRADIUS instance config:
 
     instance name: $instance
     mysql_host: ${mysql_host}
@@ -143,6 +148,7 @@ ToughRADIUS instance config:
     web_port: ${web_port}
     auth_port: ${auth_port}
     acct_port: ${acct_port}
+
 EOF
 
     cat > ${rundir}/$instance/docker-compose.yml  <<EOF
@@ -160,8 +166,6 @@ radius:
     volumes:
         - ${rundir}/$instance:/var/toughradius
 EOF
-
-    cd ${rundir}/$instance
 
     docker-compose up -d
 
