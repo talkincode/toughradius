@@ -26,7 +26,6 @@ EOF
 with_mysql()
 {
     mkdir -p ${rundir}/$instance
-    cd ${rundir}/$instance
 
     read -p "mysql user [raduser]: " mysql_user
     mysql_user=${mysql_user:-raduser}
@@ -94,9 +93,15 @@ radius:
     restart: always
     volumes:
         - ${rundir}/$instance:/var/toughradius
-EOF 
+EOF
 
-    docker-compose up -d
+    cd ${rundir}/$instance
+
+    cat ${rundir}/$instance/docker-compose.yml
+
+    docker-compose up -d raddb
+    sleep 2
+    docker-compose up -d radius
 
     docker-compose ps
 
@@ -106,7 +111,6 @@ EOF
 standalone()
 {
     mkdir -p ${rundir}/$instance
-    cd ${rundir}/$instance
 
     read -p "mysql host (must): " mysql_host
     if [ -z $mysql_host ]; then
@@ -167,6 +171,10 @@ radius:
         - ${rundir}/$instance:/var/toughradius
 EOF
 
+    cd ${rundir}/$instance
+
+    cat ${rundir}/$instance/docker-compose.yml
+
     docker-compose up -d
 
     docker-compose ps
@@ -190,13 +198,14 @@ remove()
     cd ${rundir}/$instance
     read -p "remove database [y/n](n): " rmdata
     rmdata=${rmdata:-n}
-    if [ rmdata == 'y' ]; then
-        docker-compose stop raddb
+    if [ $rmdata == "y" ]; then
+        echo "${rundir}/$instance rm database"
+        docker-compose kill raddb
         docker-compose rm raddb
         rm -fr ${rundir}/$instance/trmysql
     fi 
     
-    docker-compose stop radius
+    docker-compose kill radius
     docker-compose rm radius
     rm -f ${rundir}/$instance/.install
 }

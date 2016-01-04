@@ -81,17 +81,14 @@ def init_db(db):
 
 
 def update(config):
-    try:
-        db_engine = get_engine(config)
-        print 'starting update database...'
-        metadata = models.get_metadata(db_engine)
-        metadata.drop_all(db_engine)
-        metadata.create_all(db_engine)
-        print 'update database done'
-        db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
-        init_db(db)
-    except:
-        time.sleep(1.0)
-        update(config)
+    db_engine = get_engine(config)
+    print 'starting update database...'
+    metadata = models.get_metadata(db_engine)
+    metadata.drop_all(db_engine)
+    metadata.create_all(db_engine)
+    print 'update database done'
+    db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
+    init_db(db)
+
 
 
