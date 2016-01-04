@@ -4,6 +4,10 @@
 
 rundir=/home/toughrun
 
+read -p "instance name [toughradius]: " instance
+instance=${instance:-toughradius}
+
+
 usage ()
 {
     cat <<EOF
@@ -19,7 +23,7 @@ EOF
 
 with_mysql()
 {
-    mkdir -p ${rundir}/toughradius
+    mkdir -p ${rundir}/$instance
 
     read -p "mysql user [raduser]: " mysql_user
     mysql_user=${mysql_user:-raduser}
@@ -43,8 +47,9 @@ with_mysql()
     acct_port=${acct_port:-1813}
 
     cat <<EOF
-    toughradius install config:
+    toughradius instance config:
 
+    instance name: $instance
     mysql_user: ${mysql_user}
     mysql_password: ${mysql_password}
     mysql_database: ${mysql_database}
@@ -54,7 +59,7 @@ with_mysql()
     acct_port: ${acct_port}
 EOF
 
-    cat > ${rundir}/toughradius/docker-compose.yml <<EOF 
+    cat > ${rundir}/$instance/docker-compose.yml <<EOF 
 raddb:
     image: "index.alauda.cn/toughstruct/mysql:512M"
     privileged: true
@@ -67,7 +72,7 @@ raddb:
         - MYSQL_ROOT_PASSWORD=$mysql_root_password
     restart: always
     volumes:
-        - ${rundir}/trmysql:/var/lib/mysql
+        - ${rundir}/$instance/trmysql:/var/lib/mysql
 
 radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
@@ -83,7 +88,7 @@ radius:
         - DB_URL=mysql://$mysql_user:$mysql_password@raddb:3306/$mysql_database?charset=utf8
     restart: always
     volumes:
-        - ${rundir}/toughradius:/var/toughradius
+        - ${rundir}/$instance:/var/toughradius
 EOF 
 
     docker-compose up -d
@@ -95,7 +100,7 @@ EOF
 
 standalone()
 {
-    mkdir -p ${rundir}/toughradius
+    mkdir -p ${rundir}/$instance
 
     read -p "mysql host (must): " mysql_host
     if [ -z $mysql_host ]; then
@@ -125,8 +130,9 @@ standalone()
     acct_port=${acct_port:-1813}
 
     cat <<EOF
-ToughRADIUS install config:
+ToughRADIUS instance config:
 
+    instance name: $instance
     mysql_host: ${mysql_host}
     mysql_user: ${mysql_user}
     mysql_password: ${mysql_password}
@@ -137,7 +143,7 @@ ToughRADIUS install config:
     acct_port: ${acct_port}
 EOF
 
-    cat > ${rundir}/toughradius/docker-compose.yml  <<EOF
+    cat > ${rundir}/$instance/docker-compose.yml  <<EOF
 radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
     command: pypy /opt/toughradius/toughctl --standalone
@@ -150,10 +156,10 @@ radius:
         - DB_URL=mysql://$mysql_user:$mysql_password@raddb:3306/$mysql_database?charset=utf8
     restart: always
     volumes:
-        - ${rundir}/toughradius:/var/toughradius
+        - ${rundir}/$instance:/var/toughradius
 EOF
 
-    cd ${rundir}/toughradius
+    cd ${rundir}/$instance
 
     docker-compose up -d
 
@@ -175,15 +181,17 @@ docker()
 
 remove()
 {
-    cd ${rundir}/toughradius
+    cd ${rundir}/$instance
     read -p "remove database [y/n](n): " rmdata
     if [ rmdata == 'y' ]; then
         docker-compose stop raddb
         docker-compose rm raddb
+        rm -fr ${rundir}/$instance/trmysql
     fi 
     
     docker-compose stop radius
     docker-compose rm radius
+    rm -f ${rundir}/$instance/.install
 }
 
 
