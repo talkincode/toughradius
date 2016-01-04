@@ -80,9 +80,9 @@ radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
     command: pypy /opt/toughradius/toughctl --standalone
     ports:
-        - "${web_port}:${web_port}"
-        - "${auth_port}:${auth_port}/udp"
-        - "${acct_port}:${acct_port}/udp"
+        - "${web_port}:1816"
+        - "${auth_port}:1812/udp"
+        - "${acct_port}:1813/udp"
     links:
         - raddb:raddb
     environment:
@@ -150,9 +150,9 @@ radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
     command: pypy /opt/toughradius/toughctl --standalone
     ports:
-        - "${web_port}:${web_port}"
-        - "${auth_port}:${auth_port}/udp"
-        - "${acct_port}:${acct_port}/udp"
+        - "${web_port}:1816"
+        - "${auth_port}:1812/udp"
+        - "${acct_port}:1813/udp"
     environment:
         - DB_TYPE=mysql
         - DB_URL=mysql://$mysql_user:$mysql_password@raddb:3306/$mysql_database?charset=utf8
