@@ -80,8 +80,9 @@ def init_db(db):
     db.close()
 
 
-def update(db_engine):
+def update(config):
     try:
+        db_engine = get_engine(config)
         print 'starting update database...'
         metadata = models.get_metadata(db_engine)
         metadata.drop_all(db_engine)
@@ -91,6 +92,6 @@ def update(db_engine):
         init_db(db)
     except:
         time.sleep(3.0)
-        update(db_engine)
+        update(config)
 
 

@@ -31,13 +31,13 @@ def check_env(config):
             os.system("mkdir -p /var/toughradius")
         if not os.path.exists("/var/toughradius/.install"):
             run_initdb(config)
-            os.system("echo 'ok'  > /var/toughradius/.install ")
+            os.system("touch /var/toughradius/.install ")
     except Exception as err:
         import traceback
         traceback.print_exc()
 
 def run_initdb(config):
-    init_db.update(get_engine(config))
+    init_db.update(config)
 
 
 def run():
