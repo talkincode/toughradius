@@ -10,7 +10,7 @@ raddb:
         - MYSQL_ROOT_PASSWORD=radroot
     restart: always
     volumes:
-        - /home/toughrun/mysql:/var/lib/mysql
+        - /home/toughrun/trmysql:/var/lib/mysql
 
 radius:
     build: .
