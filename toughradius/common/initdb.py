@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-
+import time
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
 from toughlib import utils
@@ -81,11 +81,16 @@ def init_db(db):
 
 
 def update(db_engine):
-    print 'starting update database...'
-    metadata = models.get_metadata(db_engine)
-    metadata.drop_all(db_engine)
-    metadata.create_all(db_engine)
-    print 'update database done'
-    db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
-    init_db(db)
+    try:
+        print 'starting update database...'
+        metadata = models.get_metadata(db_engine)
+        metadata.drop_all(db_engine)
+        metadata.create_all(db_engine)
+        print 'update database done'
+        db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
+        init_db(db)
+    except:
+        time.sleep(3.0)
+        update(db_engine)
+
 
