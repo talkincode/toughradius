@@ -6,7 +6,7 @@ rundir=/home/toughrun
 
 usage ()
 {
-        cat <<EOF
+    cat <<EOF
 Usage: $0 [OPTIONS]
   docker             install docker, docker-compose
   standalone         install toughradius with already exists mysql
@@ -52,10 +52,9 @@ with_mysql()
     web_port: ${web_port}
     auth_port: ${auth_port}
     acct_port: ${acct_port}
-
 EOF
 
-    cat <<EOF
+    cat > ${rundir}/toughradius/docker-compose.yml <<EOF 
 raddb:
     image: "index.alauda.cn/toughstruct/mysql:512M"
     privileged: true
@@ -85,7 +84,7 @@ radius:
     restart: always
     volumes:
         - ${rundir}/toughradius:/var/toughradius
-EOF >  ${rundir}/toughradius/docker-compose.yml
+EOF 
 
     docker-compose up -d
 
@@ -126,7 +125,7 @@ standalone()
     acct_port=${acct_port:-1813}
 
     cat <<EOF
-    toughradius install config:
+ToughRADIUS install config:
 
     mysql_host: ${mysql_host}
     mysql_user: ${mysql_user}
@@ -136,10 +135,9 @@ standalone()
     web_port: ${web_port}
     auth_port: ${auth_port}
     acct_port: ${acct_port}
-
 EOF
 
-    cat <<EOF
+    cat > ${rundir}/toughradius/docker-compose.yml  <<EOF
 radius:
     image: "index.alauda.cn/toughstruct/toughradius:v2"
     command: pypy /opt/toughradius/toughctl --standalone
@@ -153,7 +151,7 @@ radius:
     restart: always
     volumes:
         - ${rundir}/toughradius:/var/toughradius
-EOF >  ${rundir}/toughradius/docker-compose.yml
+EOF
 
     cd ${rundir}/toughradius
 
@@ -213,4 +211,3 @@ case "$1" in
   ;;
 
 esac
-
