@@ -19,8 +19,16 @@ TOUGHRADIUS网站：http://www.toughradius.net
 
 # TOUGHRADIUS 文档
 
-
 http://docs.toughradius.net
+
+# Linux 下一键部署
+
+    $ wget https://github.com/talkincode/ToughRADIUS/raw/master/installer -O /tmp/installer
+    $ chmod +x  /tmp/installer
+
+## 一键部署mysql与toughradius实例
+
+    $ /tmp/installer with_mysql
 
 # 快速指南
 
@@ -55,8 +63,6 @@ http://docs.toughradius.net
 配置内容根据实际修改，如果想链接已经存在的数据库，可将 raddb的部分删除，并修改数据库连接部分配置。
 
     $ mkdir -p /opt/radius
-    
-    $ curl https://github.com/talkincode/ToughRADIUS/raw/master/docker-compose.simple.yml > /opt/radius/docker-compose.yml
     
     $ vi /opt/radius/docker-compose.yml
     
