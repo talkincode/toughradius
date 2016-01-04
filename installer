@@ -195,6 +195,19 @@ remove()
 }
 
 
+status()
+{
+    cd ${rundir}/$instance
+    docker-compose ps
+}
+
+
+logs()
+{
+    cd ${rundir}/$instance
+    docker-compose logs
+}
+
 
 case "$1" in
 
@@ -212,6 +225,14 @@ case "$1" in
 
   remove)
     remove
+  ;;
+
+  status)
+    status
+  ;;
+
+  logs)
+    logs
   ;;
 
   *)
