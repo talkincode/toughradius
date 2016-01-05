@@ -8,11 +8,14 @@ usage ()
 {
     cat <<EOF
 Usage: $0 [OPTIONS]
-  docker             install docker, docker-compose
+  docker_setup       install docker, docker-compose
   standalone         install toughradius with already exists mysql
   with_mysql         install toughradius with new docker mysql instance
   remove             uninstall toughradius and database
   status             toughradius instance status
+  restart            toughradius instance restart
+  stop               toughradius instance stop
+  upgrade            toughradius instance upgrade
   logs               toughradius instance logs
 All other options are passed to the toughrad program.
 EOF
@@ -50,7 +53,7 @@ with_mysql()
 
     cat <<EOF
 
-    ToughRADIUS instance config:
+    ToughRADIUS instance config(with mysql):
 
     instance name: $instance
     mysql_user: ${mysql_user}
@@ -63,8 +66,10 @@ with_mysql()
 
 EOF
 
-    cat > ${rundir}/$instance/docker-compose.yml <<EOF 
+    rm -f ${rundir}/$instance/docker-compose.yml
+    cat > ${rundir}/$instance/docker-compose.yml <<EOF
 raddb:
+    container_name: raddb_${instance}
     image: "index.alauda.cn/toughstruct/mysql"
     privileged: true
     expose:
@@ -79,6 +84,7 @@ raddb:
         - ${rundir}/$instance/trmysql:/var/lib/mysql
 
 radius:
+    container_name: radius_${instance}
     image: "index.alauda.cn/toughstruct/toughradius:v2"
     ports:
         - "${web_port}:1816"
@@ -150,7 +156,7 @@ standalone()
 
     cat <<EOF
 
-    ToughRADIUS instance config:
+    ToughRADIUS instance config(standalone):
 
     instance name: $instance
     mysql_host: ${mysql_host}
@@ -164,8 +170,10 @@ standalone()
 
 EOF
 
+    rm -f ${rundir}/$instance/docker-compose.yml
     cat > ${rundir}/$instance/docker-compose.yml  <<EOF
 radius:
+    container_name: radius_${instance}
     image: "index.alauda.cn/toughstruct/toughradius:v2"
     ports:
         - "${web_port}:1816"
@@ -191,7 +199,7 @@ EOF
 }
 
 
-docker()
+docker_setup()
 {
     curl -sSL https://get.daocloud.io/docker | sh
 
@@ -248,6 +256,15 @@ stop()
     docker-compose ps
 }
 
+upgrade()
+{
+    read -p "instance name [toughradius]: " instance
+    instance=${instance:-toughradius}    
+    cd ${rundir}/$instance
+    docker exec -it radius_$instance /usr/local/bin/toughrun upgrade
+    docker-compose restart radius
+    docker-compose ps
+}
 
 logs()
 {

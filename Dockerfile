@@ -3,13 +3,13 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME [ "/var/toughradius" ]
 
-ADD toughshell /usr/local/bin/toughshell
-RUN chmod +x /usr/local/bin/toughshell
-RUN /usr/local/bin/toughshell install
+ADD toughrun /usr/local/bin/toughrun
+RUN chmod +x /usr/local/bin/toughrun
+RUN /usr/local/bin/toughrun install
 
 EXPOSE 1816
 EXPOSE 1812/udp
 EXPOSE 1813/udp
 
-CMD ["/usr/local/bin/toughshell", "standalone"]
+CMD ["/usr/local/bin/toughrun", "standalone"]
 
