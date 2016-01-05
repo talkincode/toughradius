@@ -24,9 +24,11 @@ TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署
 
     chmod +x /usr/local/bin/trshell
 
+
 - 安装docker环境
 
     trshell docker_setup
+
 
 - 一键部署 TOUGHRADIUS, 同时部署一个MySQL实例
 

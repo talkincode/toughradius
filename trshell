@@ -258,7 +258,7 @@ upgrade()
 {
     instance=${1:-toughradius}    
     cd ${rundir}/$instance
-    docker exec -it radius_$instance /usr/local/bin/toughrun upgrade
+    docker exec -it radius_$instance /opt/toughradius/toughrun upgrade
     docker-compose restart radius
     docker-compose ps
 }
@@ -272,7 +272,7 @@ logs()
 
 dsh()
 {
-    instance=${$1:-toughwlan}    
+    instance=${1:-toughwlan}    
     cd ${rundir}/$instance
     docker exec -it radius_$instance bash
 }
@@ -292,39 +292,43 @@ case "$1" in
   ;;
 
   standalone)
-    standalone
+    standalone $2
   ;;
 
   with_mysql)
-    with_mysql
+    with_mysql $2
   ;;
 
   remove)
-    remove
+    remove $2
   ;;
 
   status)
-    status
+    status $2
   ;;
 
   restart)
-    restart
+    restart $2
   ;;
 
   stop)
-    stop
+    stop $2
   ;;
 
   logs)
-    logs
+    logs $2
   ;;
 
   dsh)
-    dsh
+    dsh $2
   ;;
 
   pull)
     pull
+  ;;
+
+  upgrade)
+    upgrade
   ;;
 
 
