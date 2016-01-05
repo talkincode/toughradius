@@ -230,6 +230,24 @@ status()
     docker-compose ps
 }
 
+restart()
+{
+    read -p "instance name [toughradius]: " instance
+    instance=${instance:-toughradius}    
+    cd ${rundir}/$instance
+    docker-compose restart
+    docker-compose ps
+}
+
+stop()
+{
+    read -p "instance name [toughradius]: " instance
+    instance=${instance:-toughradius}    
+    cd ${rundir}/$instance
+    docker-compose stop
+    docker-compose ps
+}
+
 
 logs()
 {
@@ -260,6 +278,14 @@ case "$1" in
 
   status)
     status
+  ;;
+
+  restart)
+    restart
+  ;;
+
+  stop)
+    stop
   ;;
 
   logs)
