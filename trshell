@@ -287,8 +287,8 @@ pull()
 
 case "$1" in
 
-  docker)
-    docker
+  docker_setup)
+    docker_setup
   ;;
 
   standalone)
