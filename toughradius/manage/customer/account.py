@@ -31,7 +31,7 @@ class AccountHandler(BaseHandler):
             models.TrAccount.user_concur_number,
             models.TrAccount.status,
             models.TrAccount.mac_addr,
-            models.TrAccount.vlan_id,
+            models.TrAccount.vlan_id1,
             models.TrAccount.vlan_id2,
             models.TrAccount.ip_address,
             models.TrAccount.bind_mac,
