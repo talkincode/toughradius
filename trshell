@@ -7,17 +7,21 @@ rundir=/home/toughrun
 usage ()
 {
     cat <<EOF
-Usage: $0 [OPTIONS]
-  docker_setup       install docker, docker-compose
-  standalone         install toughradius with already exists mysql
-  with_mysql         install toughradius with new docker mysql instance
-  remove             uninstall toughradius and database
-  status             toughradius instance status
-  restart            toughradius instance restart
-  stop               toughradius instance stop
-  upgrade            toughradius instance upgrade
-  logs               toughradius instance logs
-All other options are passed to the toughrad program.
+    Usage: $0 [OPTIONS] instance
+
+    docker_setup       install docker, docker-compose
+    pull               toughradius docker images pull
+    standalone         install toughradius with already exists mysql
+    with_mysql         install toughradius with new docker mysql instance
+    remove             uninstall toughradius and database
+    status             toughradius instance status
+    restart            toughradius instance restart
+    stop               toughradius instance stop
+    upgrade            toughradius instance upgrade
+    logs               toughradius instance logs
+    dsh                toughwlan instance bash term
+
+    All other options are passed to the toughrad program.
 EOF
         exit 1
 }
@@ -25,8 +29,7 @@ EOF
 
 with_mysql()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}
+    instance=${1:-toughradius}
 
     mkdir -p ${rundir}/$instance
 
@@ -122,8 +125,7 @@ EOF
 
 standalone()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}
+    instance=${1:-toughradius}
 
     mkdir -p ${rundir}/$instance
 
@@ -211,8 +213,7 @@ docker_setup()
 
 remove()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}
+    instance=${1:-toughradius}
 
     cd ${rundir}/$instance
     read -p "remove database [y/n](n): " rmdata
@@ -232,16 +233,14 @@ remove()
 
 status()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}    
+    instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker-compose ps
 }
 
 restart()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}    
+    instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker-compose restart
     docker-compose ps
@@ -249,8 +248,7 @@ restart()
 
 stop()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}    
+    instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker-compose stop
     docker-compose ps
@@ -258,8 +256,7 @@ stop()
 
 upgrade()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}    
+    instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker exec -it radius_$instance /usr/local/bin/toughrun upgrade
     docker-compose restart radius
@@ -268,10 +265,23 @@ upgrade()
 
 logs()
 {
-    read -p "instance name [toughradius]: " instance
-    instance=${instance:-toughradius}
+    instance=${1:-toughradius}
     cd ${rundir}/$instance
     docker-compose logs
+}
+
+dsh()
+{
+    instance=${$1:-toughwlan}    
+    cd ${rundir}/$instance
+    docker exec -it radius_$instance bash
+}
+
+
+pull()
+{
+    docker pull index.alauda.cn/toughstruct/mysql
+    docker pull index.alauda.cn/toughstruct/toughradius:v2
 }
 
 
@@ -307,6 +317,14 @@ case "$1" in
 
   logs)
     logs
+  ;;
+
+  dsh)
+    dsh
+  ;;
+
+  pull)
+    pull
   ;;
 
 
