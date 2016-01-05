@@ -140,15 +140,17 @@ def admin_login_post(db, render):
 
 @app.get("/logout")
 def admin_logout(db, render):
-    ops_log = models.SlcRadOperateLog()
-    ops_log.operator_name = get_cookie("username")
-    ops_log.operate_ip = get_cookie("login_ip")
-    ops_log.operate_time = utils.get_currtime()
-    ops_log.operate_desc = u'操作员(%s)登出'%(get_cookie("username"),)
-    db.add(ops_log)    
-    db.commit()
-    if get_cookie('opt_type') > 0:
-        permit.unbind_opr(get_cookie("username"))
+
+    if get_cookie("username") and get_cookie("username"):
+        ops_log = models.SlcRadOperateLog()
+        ops_log.operator_name = get_cookie("username")
+        ops_log.operate_ip = get_cookie("login_ip")
+        ops_log.operate_time = utils.get_currtime()
+        ops_log.operate_desc = u'操作员(%s)登出'%(get_cookie("username"),)
+        db.add(ops_log)
+        db.commit()
+        if get_cookie('opt_type') > 0:
+            permit.unbind_opr(get_cookie("username"))
     set_cookie('username',None)
     set_cookie('login_time', None)
     set_cookie('opr_type',None)

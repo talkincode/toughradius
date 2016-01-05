@@ -74,7 +74,7 @@ class Host:
         :return: a new empty packet instance
         :rtype:  pyrad.packet.Packet
         """
-        return host.Host.CreateCoAPacket(self, secret=self.secret, **args)        
+        return packet.CoAPacket(self, secret=self.secret, **args)
 
     def SendPacket(self, fd, pkt):
         """Send a packet.

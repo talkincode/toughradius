@@ -48,7 +48,14 @@ class CoAClient(protocol.DatagramProtocol):
         self.port = self.bas['coa_port']
         self.vendor_id = int(self.bas['vendor_id'])
         self.debug=debug
-        reactor.listenUDP(0, self)
+        self.uport = reactor.listenUDP(0, self)
+
+    def close(self):
+        self.transport = None
+        try:
+            self.uport.stopListening()
+        except:
+            pass
         
     def processPacket(self, pkt):
         pass
@@ -74,7 +81,7 @@ class CoAClient(protocol.DatagramProtocol):
             else:
                 self.transport.write(pkt.RequestPacket(),(self.addr, self.port))
         except packet.PacketError as err:
-            log.err(err,'::send radius Coa Request error %s: %s'%((host, port),str(err)))
+            log.err(err,'::send radius Coa Request error %s: %s'%((host,self.port),str(err)))
 
     def datagramReceived(self, datagram, (host, port)):
         if host != self.addr:
@@ -323,6 +330,18 @@ class RadiusServer(object):
         if not self.db_engine:
             self.db_engine = get_engine(self.config)
         self.store = Store(self.config,self.db_engine)
+
+    def reload_coa_clients(self):
+        for bas in self.store.list_bas():
+
+            if bas['ip_addr'] in self.coa_clients:
+                self.coa_clients[bas['ip_addr']].close()
+
+            self.coa_clients[bas['ip_addr']] = CoAClient(
+                bas,
+                dictionary.Dictionary(self.dictfile),
+                debug=self.debug
+            )
         
     def init_protocol(self):
         # rundata

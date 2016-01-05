@@ -117,10 +117,16 @@ def int2hex_str(number_int16):
     return res
 
 #--------------------------------------------------------------------------------------------
-def str2unicode(string):
-    "converts ascii string to dumb unicode"
+# def str2unicode(string):
+#     "converts ascii string to dumb unicode"
+#     res = ''
+#     for i in string:
+#         res = res + i + '\000'
+#     return res
+
+def str2unicode(src):
     res = ''
-    for i in string:
+    for i in src:
         res = res + i + '\000'
     return res
 

@@ -16,20 +16,10 @@ TOUGHRADIUS网站：http://www.toughradius.net
 TOUGHRADIUS 商业授权
 ================================
 
-TOUGHRADIUS同时提供一份 `商业授权 <https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst>`_。
-
-购买商业授权后, 您可以:
-
-1. 修改 TOUGHRADIUS 的代码并无需公开自己的修改
-
-2. 获得为期一年的技术支持 (可续)
-
-3. 将 TOUGHRADIUS 集成到自己的商业产品中
-
-购买商业授权，请访问硬派科技官方网站 http://www.toughstruct.com , 联系销售人员。
+`商业授权 <https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst>`_。
 
 
 TOUGHRADIUS 文档
 ====================================
 
-http://docs.toughradius.net/build/html
+http://docs.toughradius.net

@@ -3,6 +3,7 @@
 from toughradius.radiusd.plugins import error_auth
 from toughradius.radiusd.settings import *
 from toughradius.radiusd import utils
+from twisted.python import log
 
 def process(req=None,resp=None,user=None,radiusd=None,**kwargs):
     """执行计费策略校验，用户到期检测，用户余额，时长检测"""
