@@ -135,16 +135,6 @@ class BaseHandler(cyclone.web.RequestHandler):
         
     def get_current_user(self):
         return self.session.get("session_opr")
-        if not username: return None
-        ipaddr = self.session.get("tr_login_ip")
-
-        user = ObjectDict()
-        user.username = username
-        user.ipaddr = ipaddr
-        user.opr_type = self.session.get("tr_opr_type")
-        user.login_time = self.session.get("tr_login_time")
-        return user
-
 
     def get_params(self):
         arguments = self.request.arguments
