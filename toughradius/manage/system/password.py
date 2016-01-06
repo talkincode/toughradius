@@ -18,7 +18,7 @@ from toughradius.manage.settings import *
 class PasswordUpdateHandler(BaseHandler):
     def get(self):
         form = password_forms.password_update_form()
-        form.fill(tra_user=self.get_secure_cookie("tra_user"))
+        form.fill(tr_user=self.current_user.username)
         return self.render("base_form.html", form=form)
 
     def post(self):
@@ -26,18 +26,13 @@ class PasswordUpdateHandler(BaseHandler):
         if not form.validates(source=self.get_params()):
             self.render("base_form.html", form=form)
             return
-        if form.d.tra_user_pass != form.d.tra_user_pass_chk:
+        if form.d.tr_user_pass != form.d.tr_user_pass_chk:
             self.render("base_form.html", form=form, msg=u'确认密码不一致')
             return
-        opr = self.db.query(models.TraOperator).filter_by(operator_name=form.d.tra_user).first()
-        opr.operator_pass = md5(form.d.tra_user_pass).hexdigest()
+        opr = self.db.query(models.TrOperator).filter_by(operator_name=form.d.tr_user).first()
+        opr.operator_pass = md5(form.d.tr_user_pass).hexdigest()
 
-        ops_log = models.TraOperateLog()
-        ops_log.operator_name = self.get_secure_cookie("tra_user")
-        ops_log.operate_ip = self.get_secure_cookie("tra_login_ip")
-        ops_log.operate_time = utils.get_currtime()
-        ops_log.operate_desc = u'操作员(%s)修改密码' % (self.get_secure_cookie("tra_user"),)
-        self.db.add(ops_log)
+        self.add_oplog(u'修改%s密码 ' % (self.current_user.username))
 
         self.db.commit()
         self.redirect("/admin")
