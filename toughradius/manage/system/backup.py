@@ -31,9 +31,11 @@ class DumpHandler(BaseHandler):
         backup_path = self.settings.config.database.backup_path
         backup_file = "toughradius_db_%s.json.gz" % utils.gen_backep_id()
         try:
-            dumpdb(self.settings.config, os.path.join(backup_path, backup_file))
+            self.db_backup.dumpdb(os.path.join(backup_path, backup_file))
             return self.render_json(code=0, msg="backup done!")
         except Exception as err:
+            import traceback
+            traceback.print_exc()
             return self.render_json(code=1, msg="backup fail! %s" % (err))
 
 @permit.route(r"/admin/backup/restore", u"恢复数据", MenuSys, order=5.0003)
@@ -44,10 +46,12 @@ class RestoreHandler(BaseHandler):
         backup_file = "toughradius_db_%s.before_restore.json.gz" % utils.gen_backep_id()
         rebakfs = self.get_argument("bakfs")
         try:
-            dumpdb(self.settings.config, os.path.join(backup_path, backup_file))
-            restoredb(self.settings.config, os.path.join(backup_path, rebakfs))
+            self.db_backup.dumpdb(os.path.join(backup_path, backup_file))
+            self.db_backup.restoredb(os.path.join(backup_path, rebakfs))
             return self.render_json(code=0, msg="restore done!")
         except Exception as err:
+            import traceback
+            traceback.print_exc()
             return self.render_json(code=1, msg="restore fail! %s" % (err))
 
 
@@ -61,6 +65,8 @@ class DeleteHandler(BaseHandler):
             os.remove(os.path.join(backup_path, bakfs))
             return self.render_json(code=0, msg="delete done!")
         except Exception as err:
+            import traceback
+            traceback.print_exc()
             return self.render_json(code=1, msg="delete fail! %s" % (err))
 
 

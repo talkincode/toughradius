@@ -54,7 +54,7 @@ class WebManageServer(cyclone.web.Application):
         self.aes = utils.AESCipher(key=self.config.system.secret)
 
         permit.add_route(cyclone.web.StaticFileHandler,
-                         r"/backup/download/(.*)",
+                         r"/admin/backup/download/(.*)",
                          u"下载数据",
                          MenuSys,
                          handle_params={"path": self.config.database.backup_path},
