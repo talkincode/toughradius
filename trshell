@@ -13,6 +13,7 @@ usage ()
     pull               toughradius docker images pull
     standalone         install toughradius with already exists mysql
     with_mysql         install toughradius with new docker mysql instance
+    with_sqlite        install toughradius with sqlite instance
     remove             uninstall toughradius and database
     status             toughradius instance status
     restart            toughradius instance restart
@@ -122,6 +123,59 @@ EOF
 
     exit 0
 }
+
+with_sqlite()
+{
+    instance=${1:-toughradius}
+
+    mkdir -p ${rundir}/$instance
+
+    read -p "toughradius web port [1816]: " web_port
+    web_port=${web_port:-1816}
+
+    read -p "toughradius auth port [1812]: " auth_port
+    auth_port=${auth_port:-1812}
+
+    read -p "toughradius acct port [1813]: " acct_port
+    acct_port=${acct_port:-1813}
+
+    cat <<EOF
+
+    ToughRADIUS instance config(with_sqlite):
+
+    instance name: $instance
+    web_port: ${web_port}
+    auth_port: ${auth_port}
+    acct_port: ${acct_port}
+
+EOF
+
+    rm -f ${rundir}/$instance/docker-compose.yml
+    cat > ${rundir}/$instance/docker-compose.yml  <<EOF
+radius:
+    container_name: radius_${instance}
+    image: "index.alauda.cn/toughstruct/toughradius:v2"
+    ports:
+        - "${web_port}:1816"
+        - "${auth_port}:1812/udp"
+        - "${acct_port}:1813/udp"
+    restart: always
+    volumes:
+        - ${rundir}/$instance:/var/toughradius
+EOF
+
+    cd ${rundir}/$instance
+
+    cat ${rundir}/$instance/docker-compose.yml
+
+    docker-compose up -d
+
+    docker-compose ps
+
+    exit 0
+}
+
+
 
 standalone()
 {
@@ -302,6 +356,10 @@ case "$1" in
 
   standalone)
     standalone $2
+  ;;
+
+  with_sqlite)
+    with_sqlite $2
   ;;
 
   with_mysql)
