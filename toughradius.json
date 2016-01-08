@@ -10,8 +10,8 @@
     }, 
     "database": {
         "backup_path": "/var/toughradius/data", 
-        "dbtype": "mysql", 
-        "dburl": "mysql://root@127.0.0.1/toughradius?charset=utf8", 
+        "dbtype": "sqlite", 
+        "dburl": "sqlite:////var/toughradius/toughradius.sqlite3", 
         "echo": 0, 
         "pool_recycle": 300, 
         "pool_size": 120
