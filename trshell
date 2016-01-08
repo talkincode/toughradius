@@ -337,11 +337,11 @@ case "$1" in
   ;;
 
   upgrade)
-    upgrade
+    upgrade $2
   ;;
 
   uplib)
-    uplib
+    uplib $2
   ;;
 
 
