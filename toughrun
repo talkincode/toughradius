@@ -1,7 +1,7 @@
 #!/bin/sh
 # toughradius docker install script
 # author: jamiesun.net@gmail.com
-# version: 0.0.6
+# version: 0.0.7
 
 set -e
 
@@ -13,7 +13,7 @@ install()
 
     git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
-    ln -s /opt/toughradius/toughradius.json /etc/toughradius.json
+    cp /opt/toughradius/toughradius.json /etc/toughradius.json
 
     chmod +x /opt/toughradius/toughctl
     chmod +x /opt/toughradius/toughrun
@@ -33,10 +33,6 @@ initserv()
 
     if [ ! -f "/var/toughradius/toughradius.json" ];then
         ln -s /opt/toughradius/toughradius.json /var/toughradius/toughradius.json
-    fi
-
-    if [ ! -f "/var/toughradius/toughrun" ];then
-        ln -s /usr/local/bin/toughrun /var/toughradius/toughrun
     fi
 
     echo "init service ok!"
@@ -72,6 +68,12 @@ upgrade()
     git pull origin master
 }
 
+uplib()
+{
+    pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
+    pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
+}
+
 case "$1" in
 
   install)
@@ -100,6 +102,10 @@ case "$1" in
 
   upgrade)
     upgrade
+  ;;
+
+  uplib)
+    uplib
   ;;
 
 esac

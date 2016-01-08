@@ -258,7 +258,16 @@ upgrade()
 {
     instance=${1:-toughradius}    
     cd ${rundir}/$instance
-    docker exec -it radius_$instance /opt/toughradius/toughrun upgrade
+    docker exec -it radius_$instance /usr/local/bin/toughrun upgrade
+    docker-compose restart radius
+    docker-compose ps
+}
+
+uplib()
+{
+    instance=${1:-toughradius}    
+    cd ${rundir}/$instance
+    docker exec -it radius_$instance /usr/local/bin/toughrun uplib
     docker-compose restart radius
     docker-compose ps
 }
@@ -329,6 +338,10 @@ case "$1" in
 
   upgrade)
     upgrade
+  ;;
+
+  uplib)
+    uplib
   ;;
 
 
