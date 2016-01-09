@@ -188,8 +188,6 @@ class BaseHandler(cyclone.web.RequestHandler):
         val = self.db.query(models.TrParam.param_value).filter_by(param_name = name).scalar()
         return val or defval
 
-
-
     def add_oplog(self,message):
         ops_log = models.TrOperateLog()
         ops_log.operator_name = self.current_user.username

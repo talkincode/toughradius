@@ -67,7 +67,7 @@ class WebManageServer(cyclone.web.Application):
     def init_route(self):
         handler_path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
         load_handlers(handler_path=handler_path, pkg_prefix="toughradius.manage",
-            excludes=['views','webserver','radius','ssportal'])
+            excludes=['views','webserver','radius'])
 
         conn = self.db()
         try:

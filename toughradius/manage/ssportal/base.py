@@ -87,11 +87,11 @@ class BaseHandler(cyclone.web.RequestHandler):
             return self.render_error(msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
     def render(self, template_name, **template_vars):
-        html = self.render_string("customer/%s" % template_name, **template_vars)
+        html = self.render_string("ssportal/%s" % template_name, **template_vars)
         self.write(html)
 
     def render_error(self, **template_vars):
-        tpl = "customer/error.html"
+        tpl = "ssportal/error.html"
         html = self.render_string(tpl, **template_vars)
         self.write(html)
 
@@ -162,14 +162,6 @@ class BaseHandler(cyclone.web.RequestHandler):
         
     def get_current_user(self):
         return self.session.get("session_user")
-        if not username: return None
-
-        user = ObjectDict()
-        user.username = username
-        user.ipaddr = self.session.get("tr_login_ip")
-        user.login_time = self.session.get("tr_login_time")
-        return user
-
 
     def get_params(self):
         arguments = self.request.arguments
