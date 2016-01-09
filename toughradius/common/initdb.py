@@ -38,9 +38,10 @@ def init_db(db):
         ('smtp_user', u'SMTP用户名', u'service@toughradius.org'),
         ('smtp_pwd', u'SMTP密码', u'service2015'),
         ('smtp_sender', u'SMTP发送人名称', u'运营中心'),
-        ('acct_interim_intelval', u'Radius记账间隔(秒)', u'120'),
-        ('max_session_timeout', u'Radius最大会话时长(秒)', u'86400'),
-        ('reject_delay', u'拒绝延迟时间(秒)(0-9)', '0')
+        ('radius_bypass', u'Radius认证密码模式', u'0'),
+        ('radius_acct_interim_intelval', u'Radius记账间隔(秒)', u'120'),
+        ('radius_max_session_timeout', u'Radius最大会话时长(秒)', u'86400'),
+        ('radius_auth_auto_unlock', u'并发自动解锁', '0')
     ]
 
     for p in params:

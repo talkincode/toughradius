@@ -54,7 +54,7 @@ class RadiusAuth(RadiusBasic):
     @timecast
     def status_filter(self):
         self.reply['username'] = self.request.account_number
-        self.reply['bypass'] = self.get_param_value("radiusd_bypass", 0)
+        self.reply['bypass'] = int(self.get_param_value("radiusd_bypass", 1))
         if self.reply['bypass'] == 1:
             self.reply['passwd'] = self.app.aes.decrypt(self.account.password)
         if self.account.status == UsrExpire:

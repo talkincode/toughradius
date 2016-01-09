@@ -41,6 +41,7 @@ class RADIUS(protocol.DatagramProtocol):
             os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
         self.syslog = log
         self.db_engine = dbengine or get_engine(config)
+        self.aes = utils.AESCipher(key=self.config.system.secret)
         self.mcache = mcache.Mcache()
 
     def get_nas(self,ip_addr):
@@ -126,13 +127,14 @@ class RADIUSAccess(RADIUS):
             )
 
             auth_resp = RadiusAuth(self,aaa_request).authorize()
+            print auth_resp
 
             if auth_resp['code'] > 0:
                 reply['Reply-Message'] = auth_resp['msg']
                 reply.code = packet.AccessReject
                 return reply
 
-            if 'bypass' in auth_resp and auth_resp['bypass'] == 0:
+            if 'bypass' in auth_resp and int(auth_resp['bypass']) == 0:
                 is_pwd_ok = True
             else:
                 is_pwd_ok = req.is_valid_pwd(auth_resp.get('passwd'))

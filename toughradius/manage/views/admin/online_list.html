@@ -4,22 +4,18 @@
 <title>在线用户管理</title>
 <script>
 
-function unlock_online(nas_addr,session_id){
-        var message = {
-            nas_addr : nas_addr,
-            acct_session_id : session_id
-        };
-        data = JSON.stringify(message);
-        
-}
-
-function disconnect_online(nas_addr,session_id){
-        var message = {
-            nas_addr : nas_addr,
-            acct_session_id : session_id,
-        };
-        data = JSON.stringify(message);
-        
+function unlock_online(username, nas_addr,session_id){
+    param = {
+        'username': username,
+        'nas_addr': nas_addr,
+        'session_id':session_id,
+        '_xsrf': '${handler.xsrf_token}'
+    }
+    $.post("/admin/customer/online/unlock", param, function (ev) {
+        console.log(ev);
+        alert(ev.msg);
+        window.location.reload();
+    }, "json");
 }
 
 $(document).ready(function (){
@@ -32,7 +28,7 @@ $(document).ready(function (){
         }
         if(confirm("是否解锁该bas下所有用户?"))
         {
-             unlock_online(nas_addr,'')
+             unlock_online('',nas_addr,'')
         }
     });
 
@@ -137,8 +133,7 @@ $(document).ready(function (){
                 <td>${utils.fmt_online_time(online.acct_start_time)}</td>
                 <td>${utils.kb2mb(online.input_total)}M/${utils.kb2mb(online.output_total)}M</td>
                 <td>
-                <a class="opt-btn btn-default" href="javascript:unlock_online('${online.nas_addr}','${online.acct_session_id}');">解锁</a>
-                <a class="opt-btn btn-default" href="javascript:disconnect_online('${online.nas_addr}','${online.acct_session_id}');">强制下线</a>
+                <a class="opt-btn btn-default" href="javascript:unlock_online('${online.account_number}','${online.nas_addr}','${online.acct_session_id}');">解锁</a>
                 </td>
             </tr>
                 % endfor
