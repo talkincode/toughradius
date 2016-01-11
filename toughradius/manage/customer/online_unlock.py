@@ -54,8 +54,11 @@ class CustomerOnlineUnlockHandler(BaseHandler):
             radius_acct_stop.RadiusAcctStop(self.application, disconnect_req).acctounting()
         self.render_json(code=0, msg=u"send disconnect ok! coa resp : %s" % resp)
 
-    def onSendError(self,err):
-        self.render_json(code=0, msg=u"send disconnect failure! %s" % repr(err))
+    def onSendError(self,err, disconnect_req):
+        if self.db.query(models.TrOnline).filter_by(
+            nas_addr=disconnect_req.nas_addr, acct_session_id=disconnect_req.acct_session_id).count() > 0:
+            radius_acct_stop.RadiusAcctStop(self.application, disconnect_req).acctounting()
+        self.render_json(code=0, msg=u"send disconnect done! %s" % err.getErrorMessage())
 
     @cyclone.web.authenticated
     def get(self):
@@ -103,7 +106,7 @@ class CustomerOnlineUnlockHandler(BaseHandler):
 
         deferd.addCallback(
             self.onSendResp, self.get_request(online)).addErrback(
-            self.onSendError)
+            self.onSendError, self.get_request(online))
 
         return deferd
 
