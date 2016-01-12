@@ -397,7 +397,7 @@ case "$1" in
   ;;
 
   stop)
-    stop $2
+    stop $2 $3
   ;;
 
   logs)
