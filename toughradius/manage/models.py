@@ -436,6 +436,15 @@ class TrOperateLog(DeclarativeBase):
     operate_time = Column(u'operate_time', Unicode(length=19), nullable=False,doc=u"操作时间")
     operate_desc = Column(u'operate_desc', Unicode(length=1024),doc=u"操作描述")
 
+class TrNotifyTemplate(DeclarativeBase):
+    """通知模板"""
+    __tablename__ = 'tr_notify_tempalte'
+
+    __table_args__ = {}
+
+    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"id")
+    tpl_type = Column(u'tpl_type', Unicode(32), nullable=False,doc=u"模板类型")
+    tpl_content = Column(u'tpl_content', Unicode(length=1024),doc=u"模板内容")
 
 
 ###############################################################################
