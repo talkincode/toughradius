@@ -15,6 +15,7 @@ usage ()
     with_mysql         install toughradius with new docker mysql instance
     with_sqlite        install toughradius with sqlite instance
     remove             uninstall toughradius and database
+    config             toughradius instance config edit
     status             toughradius instance status
     restart            toughradius instance restart
     stop               toughradius instance stop
@@ -175,8 +176,6 @@ EOF
     exit 0
 }
 
-
-
 standalone()
 {
     instance=${1:-toughradius}
@@ -263,27 +262,32 @@ docker_setup()
     chmod +x /usr/local/bin/docker-compose
 
     ln -s /usr/local/bin/docker-compose /usr/local/bin/docp
+
+    service docker start
 }
+
 
 remove()
 {
     instance=${1:-toughradius}
 
     cd ${rundir}/$instance
-    read -p "remove database [y/n](n): " rmdata
-    rmdata=${rmdata:-n}
-    if [ $rmdata == "y" ]; then
-        echo "${rundir}/$instance rm database"
-        docker-compose kill raddb
-        docker-compose rm raddb
+    read -p "Will delete all, do you confirm? [y/n](n): " is_rm
+    is_rm=${is_rm:-n}
+    if [ $is_rm == "y" ]; then
+        docker-compose kill
+        docker-compose rm
         rm -fr ${rundir}/$instance/trmysql
+        rm -f ${rundir}/$instance/.install
     fi 
-    
-    docker-compose kill radius
-    docker-compose rm radius
-    rm -f ${rundir}/$instance/.install
 }
 
+
+config()
+{
+    instance=${1:-toughradius}    
+    vi ${rundir}/$instance/docker-compose.yml
+}
 
 status()
 {
@@ -294,9 +298,9 @@ status()
 
 restart()
 {
-    instance=${1:-toughradius}    
+    instance=${1:-toughradius}      
     cd ${rundir}/$instance
-    docker-compose restart
+    docker-compose restart $2
     docker-compose ps
 }
 
@@ -304,7 +308,7 @@ stop()
 {
     instance=${1:-toughradius}    
     cd ${rundir}/$instance
-    docker-compose stop
+    docker-compose stop $2
     docker-compose ps
 }
 
@@ -313,7 +317,7 @@ upgrade()
     instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker exec -it radius_$instance /usr/local/bin/toughrun upgrade
-    docker-compose restart radius
+    docker-compose restart
     docker-compose ps
 }
 
@@ -322,7 +326,7 @@ uplib()
     instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker exec -it radius_$instance /usr/local/bin/toughrun uplib
-    docker-compose restart radius
+    docker-compose restart 
     docker-compose ps
 }
 
@@ -370,12 +374,16 @@ case "$1" in
     remove $2
   ;;
 
+  config)
+    config $2
+  ;;
+
   status)
     status $2
   ;;
 
   restart)
-    restart $2
+    restart $2 $3
   ;;
 
   stop)
