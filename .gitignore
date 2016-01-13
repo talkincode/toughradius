@@ -38,7 +38,6 @@ testusers.txt
 testdata.py
 modules/
 windows/
-fabfile.py
 toughradius.egg-info
 dist
 .DS_Store

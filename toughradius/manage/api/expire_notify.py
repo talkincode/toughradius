@@ -24,10 +24,8 @@ class ExpireNotifyHandler(ApiHandler):
     def post(self):
         try:
             req_msg = self.parse_request()
-            if 'username' not in req_msg:
-                raise ValueError('username is empty')
         except Exception as err:
-            return self.render_result(msg=utils.safeunicode(err.message))
+            return self.render_result(code=1, msg=utils.safeunicode(err.message))
 
         if 'sms' == req_msg['notify_type']:
             self.send_sms(req_msg)
