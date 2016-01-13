@@ -9,19 +9,19 @@ usage ()
     cat <<EOF
     Usage: $0 [OPTIONS] instance
 
-    docker_setup       install docker, docker-compose
-    pull               toughradius docker images pull
-    standalone         install toughradius with already exists mysql
-    with_mysql         install toughradius with new docker mysql instance
-    with_sqlite        install toughradius with sqlite instance
-    remove             uninstall toughradius and database
-    config             toughradius instance config edit
-    status             toughradius instance status
-    restart            toughradius instance restart
-    stop               toughradius instance stop
-    upgrade            toughradius instance upgrade
-    logs               toughradius instance logs
-    dsh                toughwlan instance bash term
+    docker_setup                install docker, docker-compose
+    pull                        toughradius docker images pull
+    install                     install toughradius with already exists mysql
+    install_with_lmysql         install toughradius with local docker mysql instance
+    install_with_rmysql         install toughradius with remote mysql server
+    remove                      uninstall toughradius and database
+    config                      toughradius instance config edit
+    status                      toughradius instance status
+    restart                     toughradius instance restart
+    stop                        toughradius instance stop
+    upgrade                     toughradius instance upgrade
+    logs                        toughradius instance logs
+    dsh                         toughwlan instance bash term
 
     All other options are passed to the toughrad program.
 EOF
@@ -29,7 +29,7 @@ EOF
 }
 
 
-with_mysql()
+install_with_lmysql()
 {
     instance=${1:-toughradius}
 
@@ -61,7 +61,7 @@ with_mysql()
 
     cat <<EOF
 
-    ToughRADIUS instance config(with mysql):
+    ToughRADIUS instance config (create local mysql):
 
     instance name: $instance
     mysql_user: ${mysql_user}
@@ -100,6 +100,11 @@ radius:
         - "${acct_port}:1813/udp"
     links:
         - raddb:raddb
+    ulimits:
+        nproc: 65535
+        nofile:
+          soft: 20000
+          hard: 40000
     environment:
         - DB_TYPE=mysql
         - DB_URL=mysql://$mysql_user:$mysql_password@raddb:3306/$mysql_database?charset=utf8
@@ -128,7 +133,7 @@ EOF
     exit 0
 }
 
-with_sqlite()
+install()
 {
     instance=${1:-toughradius}
 
@@ -148,7 +153,7 @@ with_sqlite()
 
     cat <<EOF
 
-    ToughRADIUS instance config(with_sqlite):
+    ToughRADIUS instance config (with sqlite):
 
     instance name: $instance
     web_port: ${web_port}
@@ -167,6 +172,11 @@ radius:
         - "${auth_port}:1812/udp"
         - "${acct_port}:1813/udp"
     restart: always
+    ulimits:
+        nproc: 65535
+        nofile:
+          soft: 20000
+          hard: 40000
     volumes:
         - ${rundir}/$instance:/var/toughradius
 EOF
@@ -182,7 +192,7 @@ EOF
     exit 0
 }
 
-standalone()
+install_with_rmysql()
 {
     instance=${1:-toughradius}
 
@@ -220,7 +230,7 @@ standalone()
 
     cat <<EOF
 
-    ToughRADIUS instance config (standalone):
+    ToughRADIUS instance config (with remote mysql):
 
     instance name: $instance
     mysql_host: ${mysql_host}
@@ -247,6 +257,11 @@ radius:
         - DB_TYPE=mysql
         - DB_URL=mysql://$mysql_user:$mysql_password@$mysql_host:3306/$mysql_database?charset=utf8
     restart: always
+    ulimits:
+        nproc: 65535
+        nofile:
+          soft: 20000
+          hard: 40000    
     volumes:
         - ${rundir}/$instance:/var/toughradius
 EOF
@@ -368,16 +383,16 @@ case "$1" in
     docker_setup
   ;;
 
-  standalone)
-    standalone $2
+  install)
+    install $2
   ;;
 
-  with_sqlite)
-    with_sqlite $2
+  install_with_lmysql)
+    install_with_lmysql $2
   ;;
 
-  with_mysql)
-    with_mysql $2
+  install_with_rmysql)
+    install_with_rmysql $2
   ;;
 
   remove)

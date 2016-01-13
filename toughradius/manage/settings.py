@@ -15,6 +15,26 @@ CARD_STATUS = (CardInActive, CardActive, CardUsed, CardRecover) = (0, 1, 2, 3)
 
 CARD_TYPES = (ProductCard, BalanceCard) = (0, 1)
 
+TPL_TYPES = (
+    OpenNotify,
+    NextNotify,
+    ExpireNotify,
+    InstallNotify,
+    MaintainNotify,
+    OpenNoteRemark,
+    NextNotePrint,
+    RefundNodeRemark
+) = (
+    'open_notify',
+    'next_notify',
+    'expire_notify',
+    'install_notify',
+    'maintain_notify',
+    'open_note_remark',
+    'next_note_remark',
+    'refund_note_remark'
+)
+
 STAT_AUTH_ALL = 'STAT_AUTH_ALL'
 STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'
 STAT_AUTH_REJECT = 'STAT_AUTH_REJECT'

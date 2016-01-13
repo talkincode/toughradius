@@ -4,13 +4,14 @@
 <title>在线用户管理</title>
 <script>
 
-function unlock_online(username, nas_addr,session_id){
+function unlock_online(obj,username, nas_addr,session_id){
     param = {
         'username': username,
         'nas_addr': nas_addr,
         'session_id':session_id,
         '_xsrf': '${handler.xsrf_token}'
     }
+    $(obj).attr("disabled","disabled")
     $.post("/admin/customer/online/unlock", param, function (ev) {
         console.log(ev);
         alert(ev.msg);
@@ -133,7 +134,7 @@ $(document).ready(function (){
                 <td>${utils.fmt_online_time(online.acct_start_time)}</td>
                 <td>${utils.kb2mb(online.input_total)}M/${utils.kb2mb(online.output_total)}M</td>
                 <td>
-                <a class="opt-btn btn-default" href="javascript:unlock_online('${online.account_number}','${online.nas_addr}','${online.acct_session_id}');">解锁</a>
+                <a class="opt-btn btn-default" href="javascript:unlock_online(this,'${online.account_number}','${online.nas_addr}','${online.acct_session_id}');">解锁</a>
                 </td>
             </tr>
                 % endfor

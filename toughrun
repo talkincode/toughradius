@@ -16,7 +16,6 @@ install()
     cp /opt/toughradius/toughradius.json /etc/toughradius.json
 
     chmod +x /opt/toughradius/toughctl
-    chmod +x /opt/toughradius/toughrun
 }
 
 initserv()

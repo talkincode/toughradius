@@ -17,7 +17,7 @@ def account_open_form(products=[]):
         btforms.Textbox("account_number", description=u"用户账号", required="required", **input_style),
         btforms.Textbox("password", description=u"认证密码", required="required", **input_style),
         btforms.Textbox("ip_address", description=u"用户IP地址", **input_style),
-        btforms.Textbox("address", description=u"用户装机地址", **input_style),
+        btforms.Textbox("address", description=u"用户装机地址", required="required",  **input_style),
         btforms.Dropdown("product_id", args=products, description=u"资费", required="required", **input_style),
         btforms.Textbox("months", rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
         btforms.Textbox("fee_value", rules.is_rmb, description=u"缴费金额", required="required", **input_style),
@@ -34,7 +34,7 @@ def account_update_form():
     return btforms.Form(
         btforms.Textbox("account_number", description=u"用户账号", readonly="readonly", **input_style),
         btforms.Textbox("ip_address", description=u"用户IP地址", **input_style),
-        btforms.Hidden("install_address", description=u"用户安装地址", **input_style),
+        btforms.Hidden("install_address", description=u"用户安装地址", required="required", **input_style),
         btforms.Textbox("new_password", description=u"认证密码(留空不修改)", **input_style),
         btforms.Textbox("user_concur_number", rules.is_number, description=u"用户并发数", required="required", **input_style),
         btforms.Dropdown("bind_mac", args=boolean.items(), description=u"是否绑定MAC", **input_style),
