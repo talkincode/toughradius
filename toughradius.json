@@ -3,11 +3,7 @@
         "host": "0.0.0.0", 
         "port": 1816
     }, 
-    "radiusd": {
-        "host": "0.0.0.0", 
-        "auth_port": 1812,
-        "acct_port": 1813
-    }, 
+    "conf_file": "toughradius.json", 
     "database": {
         "backup_path": "/var/toughradius/data", 
         "dbtype": "sqlite", 
@@ -15,6 +11,11 @@
         "echo": 0, 
         "pool_recycle": 300, 
         "pool_size": 120
+    }, 
+    "radiusd": {
+        "acct_port": 1813, 
+        "auth_port": 1812, 
+        "host": "0.0.0.0"
     }, 
     "syslog": {
         "enable": 0, 
@@ -25,7 +26,7 @@
     }, 
     "system": {
         "debug": 1, 
-        "secret": "LpWE9AtfDPQ3ufXBS6gJ37WW8TnSF920", 
+        "secret": "0BOTrVO6WRtkRnKTmM52nKfQpvCGY8vD", 
         "tz": "CST-8"
     }
 }

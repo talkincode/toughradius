@@ -1,33 +1,81 @@
 <%inherit file="base.html"/>
 <%def name="head()">
 <script>
+    % if not permit.match(current_user.username, '/admin/config'):
+        $(document).ready(function (){
+            $("input").each(function() {
+                $(this).attr("readonly", 'readonly');
+            })
+            $("textarea").each(function() {
+                $(this).attr("readonly", 'readonly');
+            })
+            $("#submit").hide();
+        });
+    % endif
     $(function () {
         $('[data-toggle="popover"]').popover()
     })
+
+function update_secret()
+{
+    $.post("/admin/config/secret/update", {'_xsrf': '${handler.xsrf_token}'}, function (data) {
+        window.location.reload();
+    },"json");
+}
+
 </script>
 </%def>
-
-
 <%def name="body()">
-
 <section class="content">
     <div class="box box-primary">
         <div class="box-header">
             <i class="fa fa-cog"></i>
-            <h3 class="box-title">数据库配置管理</h3>
+            <h3 class="box-title">系统配置管理</h3>
         </div>
         <div class="box-body">
             <div class="container">
-        % if msg:
-        <div class="alert alert-warning">${msg}</div>
-        % endif
-            <form class="form-horizontal form-well" role="form" action="${database_form.action}" method="post">
-                ${xsrf_form_html()}
-                ${database_form.render_css()}
-            </form>
-    </div>
+            <div role="tabpanel">
+
+                <!-- Nav tabs -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="${active=='system' and 'active' or '' }">
+                        <a href="#system" aria-controls="system" role="tab" data-toggle="tab">系统配置</a>
+                    </li>
+                    <li role="presentation" class="${active=='database' and 'active' or '' }">
+                        <a href="#database" aria-controls="database" role="tab" data-toggle="tab">数据库配置</a>
+                    </li>
+                    <li role="presentation" class="${active=='syslog' and 'active' or '' }">
+                        <a href="#syslog" aria-controls="syslog" role="tab" data-toggle="tab">syslog 配置</a>
+                    </li>
+                </ul>
+
+                <!-- Tab panes -->
+                <div class="tab-content">
+                    <div role="tabpanel" class="tab-pane ${active=='system' and 'active' or '' }" id="system">
+                        <form class="form-horizontal form-well" role="form" action="${system_form.action}" method="post">
+                            ${xsrf_form_html()}
+                            ${system_form.render_css()}
+                        </form>
+                    </div>
+                    <div role="tabpanel" class="tab-pane ${active=='database' and 'active' or '' }"  id="database">
+                        <form class="form-horizontal form-well" role="form" action="${database_form.action}" method="post">
+                            ${xsrf_form_html()}
+                            ${database_form.render_css()}
+                        </form>
+                    </div>
+                    <div role="tabpanel" class="tab-pane ${active=='syslog' and 'active' or '' }" id="syslog">
+                        <form class="form-horizontal form-well" role="form" action="${syslog_form.action}" method="post">
+                            ${xsrf_form_html()}
+                            ${syslog_form.render_css()}
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
     </div>
 </div>
-</section>
+</div>
+    </section>
 </%def>
-

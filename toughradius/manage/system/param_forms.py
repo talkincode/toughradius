@@ -26,7 +26,9 @@ serv_form = btforms.Form(
 )
 
 notify_form = btforms.Form(
+    btforms.Dropdown("expire_notify_enable", args=booleans.items(), description=u"启动到期提醒任务", **input_style),
     btforms.Textbox("expire_notify_days", rules.is_number, description=u"到期提醒提前天数", **input_style),
+    btforms.Textbox("expire_notify_interval", rules.is_number, description=u"到期提醒间隔(分钟)", **input_style),
     btforms.Textarea("expire_notify_tpl", description=u"到期提醒邮件模板", rows=5, **input_style),
     btforms.Textbox("expire_notify_url", description=u"到期通知触发URL", **input_style),
     btforms.Textbox("expire_session_timeout", description=u"到期用户下发最大会话时长(秒)", **input_style),
@@ -38,7 +40,7 @@ notify_form = btforms.Form(
 
 mail_form = btforms.Form(
     btforms.Textbox("smtp_server", description=u"SMTP服务器", **input_style),
-    btforms.Textbox("smtp_port", description=u"SMTP服务器", **input_style),
+    btforms.Textbox("smtp_port", description=u"SMTP服务器端口", **input_style),
     btforms.Textbox("smtp_from", description=u"SMTP邮件发送地址", **input_style),
     btforms.Textbox("smtp_user", description=u"SMTP用户名", **input_style),
     btforms.Textbox("smtp_pwd", description=u"SMTP密码", help=u"如果密码不是必须的，请填写none", **input_style),

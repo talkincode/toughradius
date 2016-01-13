@@ -11,6 +11,7 @@ from toughlib.dbengine import get_engine
 from toughradius.common import initdb as init_db
 from toughradius.manage import webserver
 from toughradius.manage import radiusd
+from toughradius.manage import taskd
 import sys
 import os
 
@@ -41,6 +42,7 @@ def run():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser()
     parser.add_argument('-manage', '--manage', action='store_true', default=False, dest='manage', help='run manage')
+    parser.add_argument('-task', '--task', action='store_true', default=False, dest='task', help='run task')
     parser.add_argument('-auth', '--auth', action='store_true', default=False, dest='auth', help='run auth')
     parser.add_argument('-acct', '--acct', action='store_true', default=False, dest='acct', help='run acct')
     parser.add_argument('-standalone', '--standalone', action='store_true', default=False, dest='standalone', help='run standalone')
@@ -60,21 +62,26 @@ def run():
         config.defaults.debug = True
 
     if args.manage:
-        webserver.run(config,dbengine=dbengine,log=syslog)
+        webserver.run(config,dbengine,log=syslog)
         reactor.run()    
 
     elif args.auth:
-        radiusd.run_auth(config,dbengine=dbengine,log=syslog)
+        radiusd.run_auth(config,dbengine,log=syslog)
         reactor.run()
     
     elif args.acct:
-        radiusd.run_acct(config,dbengine=dbengine,log=syslog)
+        radiusd.run_acct(config,dbengine,log=syslog)
+        reactor.run()   
+
+    elif args.task:
+        taskd.run(config,dbengine,log=syslog)
         reactor.run()
 
     elif args.standalone:
-        radiusd.run_auth(config,dbengine=dbengine,log=syslog)
-        radiusd.run_acct(config,dbengine=dbengine,log=syslog)
-        webserver.run(config,dbengine=dbengine,log=syslog)
+        radiusd.run_auth(config,dbengine,log=syslog)
+        radiusd.run_acct(config,dbengine,log=syslog)
+        webserver.run(config,dbengine,log=syslog)
+        taskd.run(config,dbengine,log=syslog)
         reactor.run()
         
     elif args.initdb:
