@@ -118,8 +118,9 @@ class TrBas(DeclarativeBase):
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"设备id")
+    dns_name = Column(u'dns_name', Unicode(length=128), nullable=True, doc=u"DNS名称")
     vendor_id = Column(u'vendor_id', Unicode(length=32), nullable=False,doc=u"厂商标识")
-    ip_addr = Column(u'ip_addr', Unicode(length=15), nullable=False,doc=u"IP地址")
+    ip_addr = Column(u'ip_addr', Unicode(length=15), nullable=True,doc=u"IP地址")
     bas_name = Column(u'bas_name', Unicode(length=64), nullable=False,doc=u"bas名称")
     bas_secret = Column(u'bas_secret', Unicode(length=64), nullable=False,doc=u"共享密钥")
     coa_port = Column(u'coa_port', INTEGER(), nullable=False,doc=u"CoA端口")
@@ -195,47 +196,6 @@ class TrCustomerOrder(DeclarativeBase):
     order_source = Column('order_source', Unicode(length=64), nullable=False,doc=u"订单来源")
     order_desc = Column('order_desc', Unicode(length=255),doc=u"订单描述")
     create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"交易时间")
-
-
-class TrRechargerCard(DeclarativeBase):
-    """
-    充值卡表
-    批次号：batch_no，以年月开始紧跟顺序号，如20150201
-    卡类型 0 资费卡   1 余额卡
-    状态 card_status 0 未激活 1 已激活 2 已使用 3 已回收
-    """
-    __tablename__ = 'tr_recharge_card'
-
-    __table_args__ = {}
-
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"充值卡id")
-    batch_no = Column('batch_no', INTEGER(), nullable=False,doc=u"批次号")
-    card_number = Column('card_number', Unicode(length=16),nullable=False,unique=True,doc=u"充值卡号")
-    card_passwd = Column('card_passwd', Unicode(length=128),nullable=False,doc=u"充值卡密码")
-    card_type = Column('card_type', INTEGER(),nullable=False,doc=u"充值卡类型")
-    card_status = Column('card_status', INTEGER(), nullable=False,doc=u"状态")
-    product_id = Column('product_id', INTEGER(),nullable=True,doc=u"资费id")
-    fee_value = Column('fee_value', INTEGER(), nullable=False,doc=u"充值卡面值-元")
-    months = Column('months', INTEGER(),nullable=True,doc=u"授权月数")
-    times = Column('times', INTEGER(),nullable=True,doc=u"授权时长(秒)")
-    flows = Column('flows', INTEGER(),nullable=True,doc=u"授权流量(kb)")
-    expire_date = Column('expire_date', Unicode(length=10), nullable=False,doc=u"过期时间- ####-##-##")
-    create_time = Column('create_time', Unicode(length=19), nullable=False,doc=u"创建时间")
-
-class TrRechargeLog(DeclarativeBase):
-    """
-    充值记录
-    """
-    __tablename__ = 'tr_recharge_log'
-
-    __table_args__ = {}
-
-    id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"日志id")
-    card_number = Column('card_number', Unicode(length=16),nullable=False,doc=u"充值卡号")
-    customer_id = Column('customer_id', INTEGER(),nullable=False,doc=u"用户id")
-    account_number = Column('account_number', Unicode(length=32),nullable=False,doc=u"上网账号")
-    recharge_status = Column('recharge_status', INTEGER(), nullable=False,doc=u"充值结果")
-    recharge_time = Column('recharge_time', Unicode(length=19), nullable=False,doc=u"充值时间")
 
 
 class TrAccount(DeclarativeBase):

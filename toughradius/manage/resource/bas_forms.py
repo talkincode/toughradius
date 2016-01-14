@@ -19,7 +19,8 @@ bastype = {
 }
 
 bas_add_form = btforms.Form(
-    btforms.Textbox("ip_addr", rules.is_ip, description=u"接入设备地址", required="required", **input_style),
+    btforms.Textbox("ip_addr", rules.is_ip, description=u"接入设备地址",  **input_style),
+    btforms.Textbox("dns_name", rules.len_of(1, 128), description=u"DNS域名", help=u"动态IP专用", **input_style),
     btforms.Textbox("bas_name", rules.len_of(2, 64), description=u"接入设备名称", required="required", **input_style),
     btforms.Textbox("bas_secret", rules.is_alphanum2(4, 32), description=u"共享秘钥", required="required", **input_style),
     btforms.Dropdown("vendor_id", description=u"接入设备类型", args=bastype.items(), required="required", **input_style),
@@ -32,7 +33,8 @@ bas_add_form = btforms.Form(
 
 bas_update_form = btforms.Form(
     btforms.Hidden("id", description=u"编号"),
-    btforms.Textbox("ip_addr", rules.is_ip, description=u"接入设备地址", readonly="readonly", **input_style),
+    btforms.Textbox("dns_name", rules.len_of(1, 128), description=u"DNS域名", help=u"动态IP专用", **input_style),
+    btforms.Textbox("ip_addr", rules.is_ip, description=u"接入设备地址",  **input_style),
     btforms.Textbox("bas_name", rules.len_of(2, 64), description=u"接入设备名称", required="required", **input_style),
     btforms.Textbox("bas_secret", rules.is_alphanum2(4, 32), description=u"共享秘钥", required="required", **input_style),
     btforms.Dropdown("vendor_id", description=u"接入设备类型", args=bastype.items(), required="required", **input_style),

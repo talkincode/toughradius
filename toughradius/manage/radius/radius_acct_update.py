@@ -15,7 +15,7 @@ class RadiusAcctUpdate(RadiusBilling):
     def acctounting(self):
         if not self.account:
             return self.log.error(
-                "[Acct] Received an accounting update request but user[%s] not exists"% self.request['username'])     
+                "[Acct] Received an accounting update request but user[%s] not exists"% self.request.account_number)     
 
         ticket = Storage(**self.request)
         online = self.get_online(ticket.nas_addr,ticket.acct_session_id)     

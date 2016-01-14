@@ -33,11 +33,15 @@ class BasAddHandler(BaseHandler):
         if not form.validates(source=self.get_params()):
             return self.render("base_form.html", form=form)
 
+        if not any([form.d.ip_addr,form.d.dns_name]):
+            return self.render("base_form.html", form=form, msg=u"ip地址或域名至少填写一项")
+
         if self.db.query(models.TrBas.id).filter_by(ip_addr=form.d.ip_addr).count() > 0:
             return self.render("base_form.html", form=form, msg=u"接入设备地址已经存在")
 
         bas = models.TrBas()
         bas.ip_addr = form.d.ip_addr
+        bas.dns_name = form.d.dns_name
         bas.bas_name = form.d.bas_name
         bas.time_type = form.d.time_type
         bas.vendor_id = form.d.vendor_id
@@ -65,6 +69,7 @@ class BasUpdateHandler(BaseHandler):
         if not form.validates(source=self.get_params()):
             return self.render("base_form.html", form=form)
         bas = self.db.query(models.TrBas).get(form.d.id)
+        bas.dns_name = form.d.dns_name
         bas.bas_name = form.d.bas_name
         bas.time_type = form.d.time_type
         bas.vendor_id = form.d.vendor_id
