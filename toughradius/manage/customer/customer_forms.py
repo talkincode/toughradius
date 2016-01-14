@@ -14,13 +14,13 @@ bind_state = {0: u"不绑定", 1: u"绑定"}
 def customer_open_form(nodes=[], products=[]):
     return btforms.Form(
         btforms.Dropdown("node_id", description=u"区域", args=nodes, required="required", **input_style),
-        btforms.Textbox("realname", rules.len_of(1, 32), description=u"用户姓名", required="required", **input_style),
+        btforms.Textbox("realname", rules.len_of(2, 32), description=u"用户姓名", required="required", **input_style),
         btforms.Checkbox("is_samename", description=u"启用独立的自助服务用户名", checked=""),
         btforms.Textbox("customer_name", rules.len_of(0, 64), description=u"自助服务用户名", **input_style),
         btforms.Textbox("customer_password", rules.len_of(0, 128), description=u"自助服务用户密码", **input_style),
         btforms.Textbox("idcard", rules.len_of(1, 32), description=u"证件号码", **input_style),
         btforms.Textbox("mobile", rules.len_of(1, 32), description=u"用户手机号码", **input_style),
-        btforms.Textbox("address",rules.len_of(1, 32), description=u"用户地址", hr=True, **input_style),
+        btforms.Textbox("address",rules.len_of(1, 32), description=u"用户地址", hr=True, required="required", **input_style),
         btforms.Textbox("account_number", description=u"用户账号", required="required", **input_style),
         btforms.Textbox("password", description=u"认证密码", required="required", **input_style),
         btforms.Textbox("ip_address", description=u"用户IP地址", **input_style),
