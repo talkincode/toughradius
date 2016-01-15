@@ -16,14 +16,13 @@ import toughradius
 
 class TaskDaemon():
 
-    def __init__(self, config=None, dbengine=None, log=None, **kwargs):
+    def __init__(self, config=None, dbengine=None, **kwargs):
 
         self.config = config
-        self.syslog = log or logger.Logger(config)
         self.db_engine = dbengine or get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
-        self.expire_notify_task = expire_notify.ExpireNotifyTask(config,self.db,log)
-        self.ddns_update_task = ddns_update.DdnsUpdateTask(config,self.db,log)
+        self.expire_notify_task = expire_notify.ExpireNotifyTask(config,self.db)
+        self.ddns_update_task = ddns_update.DdnsUpdateTask(config,self.db)
 
     def start_expire_notify(self):
         _time = self.expire_notify_task.process()
@@ -40,6 +39,6 @@ class TaskDaemon():
 
 
 
-def run(config, dbengine=None,log=None):
-    app = TaskDaemon(config, dbengine, log)
+def run(config, dbengine=None):
+    app = TaskDaemon(config, dbengine)
     app.start()

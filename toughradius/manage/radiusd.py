@@ -5,11 +5,10 @@ import os
 import six
 from twisted.internet import protocol
 from twisted.internet import reactor
-from twisted.python import log
 from twisted.internet import defer
 from toughlib import utils
 from toughlib import mcache
-from toughlib import logger
+from toughlib import logger,dispatch
 from toughlib import db_cache as cache
 from toughlib.dbengine import get_engine
 from txradius.radius import dictionary
@@ -35,11 +34,10 @@ class PacketError(Exception):
 ###############################################################################
 
 class RADIUS(protocol.DatagramProtocol):
-    def __init__(self, config, dbengine,log):
+    def __init__(self, config, dbengine):
         self.config = config
         self.dict = dictionary.Dictionary(
             os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
-        self.syslog = log
         self.db_engine = dbengine or get_engine(config)
         self.aes = utils.AESCipher(key=self.config.system.secret)
         self.mcache = mcache.Mcache()
@@ -62,33 +60,33 @@ class RADIUS(protocol.DatagramProtocol):
         try:
             bas = self.get_nas(host)
             if not bas:
-                self.syslog.info('[Radiusd] :: Dropping packet from unknown host ' + host)
+                dispatch.pub(logger.EVENT_INFO,'[Radiusd] :: Dropping packet from unknown host ' + host)
                 return
 
             secret, vendor_id = bas['bas_secret'], bas['vendor_id']
             radius_request = self.createPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
-            self.syslog.info("[Radiusd] :: Received radius request: %s" % (repr(radius_request)))
+            dispatch.pub(logger.EVENT_INFO,"[Radiusd] :: Received radius request: %s" % (repr(radius_request)))
             if self.config.system.debug:
-                log.msg(radius_request.format_str())
+                dispatch.pub(logger.EVENT_DEBUG,radius_request.format_str())
 
             reply = self.processPacket(radius_request, bas)
             self.reply(reply, (host, port))
         except Exception as err:
             errstr = 'RadiusError:Dropping invalid packet from {0} {1},{2}'.format(
                 host, port, utils.safeunicode(err))
-            self.syslog.error(errstr)
+            dispatch.pub(logger.EVENT_ERROR,errstr)
             import traceback
             traceback.print_exc()
             
 
 
     def reply(self, reply, (host, port)):
-        self.syslog.info("[Radiusd] :: Send radius response: %s" % repr(reply))
+        dispatch.pub(logger.EVENT_INFO,"[Radiusd] :: Send radius response: %s" % repr(reply))
 
         if self.config.system.debug:
-            log.msg(reply.format_str())
+            dispatch.pub(logger.EVENT_DEBUG,reply.format_str())
 
         self.transport.write(reply.ReplyPacket(), (host, port))
 
@@ -156,7 +154,7 @@ class RADIUSAccess(RADIUS):
                     except Exception as err:
                         errstr = "RadiusError:current radius cannot support attribute {0},{1}".format(
                             attr_name,utils.safestr(err.message))
-                        self.syslog.error(errstr)
+                        dispatch.pub(logger.EVENT_ERROR,errstr)
 
                 for attr, attr_val in req.resp_attrs.iteritems():
                     reply[attr] = attr_val
@@ -216,11 +214,11 @@ class RADIUSAccounting(RADIUS):
 # Radius  Run                                                              ####
 ###############################################################################
 
-def run_auth(config, dbengine, log=None):
-    auth_protocol = RADIUSAccess(config,dbengine, log)
+def run_auth(config, dbengine):
+    auth_protocol = RADIUSAccess(config,dbengine)
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
-def run_acct(config, dbengine, log=None):
-    acct_protocol = RADIUSAccounting(config,dbengine, log)
+def run_acct(config, dbengine):
+    acct_protocol = RADIUSAccounting(config,dbengine)
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 

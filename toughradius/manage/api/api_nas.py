@@ -2,7 +2,7 @@
 #coding=utf-8
 import time
 import traceback
-from toughlib import utils, apiutils
+from toughlib import utils, apiutils, dispatch
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
@@ -49,7 +49,7 @@ class NasFetchHandler(ApiHandler):
 
             self.render_result(**result)
         except Exception as err:
-            self.syslog.error(u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
+            dispatch.pub(logger.EVENT_ERROR,u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
             self.render_result(code=1, msg=u"api error")
 
 

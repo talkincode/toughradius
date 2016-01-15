@@ -6,7 +6,7 @@ from twisted.internet import reactor
 from twisted.python import log
 import argparse
 from toughlib import config as iconfig
-from toughlib import logger
+from toughlib import dispatch,logger
 from toughlib.dbengine import get_engine
 from toughradius.common import initdb as init_db
 from toughradius.manage import webserver
@@ -54,6 +54,7 @@ def run():
     config = iconfig.find_config(args.conf)
     syslog = logger.Logger(config)
     dbengine = get_engine(config)
+    dispatch.register(syslog)
 
     update_timezone(config)
     check_env(config)
@@ -62,26 +63,26 @@ def run():
         config.defaults.debug = True
 
     if args.manage:
-        webserver.run(config,dbengine,log=syslog)
+        webserver.run(config,dbengine)
         reactor.run()    
 
     elif args.auth:
-        radiusd.run_auth(config,dbengine,log=syslog)
+        radiusd.run_auth(config,dbengine)
         reactor.run()
     
     elif args.acct:
-        radiusd.run_acct(config,dbengine,log=syslog)
+        radiusd.run_acct(config,dbengine)
         reactor.run()   
 
     elif args.task:
-        taskd.run(config,dbengine,log=syslog)
+        taskd.run(config,dbengine)
         reactor.run()
 
     elif args.standalone:
-        radiusd.run_auth(config,dbengine,log=syslog)
-        radiusd.run_acct(config,dbengine,log=syslog)
-        webserver.run(config,dbengine,log=syslog)
-        taskd.run(config,dbengine,log=syslog)
+        radiusd.run_auth(config,dbengine)
+        radiusd.run_acct(config,dbengine)
+        webserver.run(config,dbengine)
+        taskd.run(config,dbengine)
         reactor.run()
         
     elif args.initdb:

@@ -8,21 +8,21 @@ from twisted.python import log
 from twisted.internet import reactor
 from mako.lookup import TemplateLookup
 from sqlalchemy.orm import scoped_session, sessionmaker
-from toughlib import logger, utils
+from toughlib import logger, utils, dispatch
 from toughradius.manage import models
 from toughlib.dbengine import get_engine
 from toughlib.permit import permit, load_handlers
 from toughradius.manage.settings import *
 from toughlib import db_session as session
 from toughlib import db_cache as cache
+from toughlib import dispatch
 from toughlib.db_backup import DBBackup
 import toughradius
 
 class WebManageServer(cyclone.web.Application):
-    def __init__(self, config=None, dbengine=None, log=None, **kwargs):
+    def __init__(self, config=None, dbengine=None, **kwargs):
 
         self.config = config
-        self.syslog = log or logger.Logger(config)
 
         settings = dict(
             cookie_secret="12oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
@@ -79,12 +79,12 @@ class WebManageServer(cyclone.web.Application):
                 elif opr.operator_type == 0:  # 超级管理员授权所有
                     permit.bind_super(opr.operator_name)
         except Exception as err:
-            self.syslog.error("init route error , %s" % str(err))
+            dispatch.pub(logger.EVENT_ERROR,"init route error , %s" % str(err))
         finally:
             conn.close()
 
 
-def run(config, dbengine,log=None):
-    app = WebManageServer(config, dbengine, log)
+def run(config, dbengine):
+    app = WebManageServer(config, dbengine)
     reactor.listenTCP(int(config.admin.port), app, interface=config.admin.host)
 

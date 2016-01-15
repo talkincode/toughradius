@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 import cyclone.web
-from toughlib import utils
+from toughlib import utils, logger, dispatch
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
 from toughradius.manage.system import config_forms
@@ -60,7 +60,7 @@ class SyslogHandler(BaseHandler):
         self.settings.config['syslog']['port'] = int(self.get_argument("port",514))
         self.settings.config['syslog']['level'] = self.get_argument("level")
         self.settings.config.save()
-        self.application.syslog.setup(self.settings.config)
+        dispatch.pub(logger.EVENT_SETUP,self.settings.config)
         self.redirect("/admin/config?active=syslog")
 
 @permit.route(r"/admin/config/secret/update", u"系统密钥更新", u"系统管理", order=2.0004, is_menu=False)

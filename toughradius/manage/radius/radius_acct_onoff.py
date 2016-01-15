@@ -4,7 +4,7 @@
 from toughradius.manage.radius.radius_basic import  RadiusBasic
 from toughlib.storage import Storage
 from toughradius.manage import models
-from toughlib import  utils
+from toughlib import  utils, dispatch, logger
 from toughradius.manage.settings import *
 
 class RadiusAcctOnoff(RadiusBasic):
@@ -18,7 +18,7 @@ class RadiusAcctOnoff(RadiusBasic):
                 "[Acct] Received an accounting onoff request but user[%s] not exists"% self.request.account_number)     
 
         self.unlock_online(self.request.account_number,None)
-        self.log.info('bas accounting onoff success')
+        dispatch.pub(logger.EVENT_INFO,'bas accounting onoff success')
 
 
         

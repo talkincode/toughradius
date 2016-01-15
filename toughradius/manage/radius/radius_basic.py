@@ -18,7 +18,6 @@ class RadiusBasic:
         self.app = app
         self.cache = self.app.mcache
         self.request = Storage(request)
-        self.log = self.app.syslog
         self.account = self.get_account_by_username(self.request.account_number)
         
     #@timecast

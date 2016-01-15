@@ -3,7 +3,7 @@
 import datetime
 from toughlib.storage import Storage
 from toughradius.manage import models
-from toughlib import  utils
+from toughlib import  utils, logger, dispatch
 from toughradius.manage.settings import *
 from toughradius.manage.radius.radius_billing import RadiusBilling
 
@@ -14,7 +14,7 @@ class RadiusAcctUpdate(RadiusBilling):
 
     def acctounting(self):
         if not self.account:
-            return self.log.error(
+            return dispatch.pub(logger.EVENT_ERROR,
                 "[Acct] Received an accounting update request but user[%s] not exists"% self.request.account_number)     
 
         ticket = Storage(**self.request)
@@ -39,7 +39,7 @@ class RadiusAcctUpdate(RadiusBilling):
             self.add_online(online)
 
         self.billing(online)
-        self.log.info('%s Accounting update request, update online'% self.account.account_number)
+        dispatch.pub(logger.EVENT_INFO,'%s Accounting update request, update online'% self.account.account_number)
 
 
         

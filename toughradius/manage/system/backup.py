@@ -5,7 +5,7 @@ import os.path
 import cyclone.auth
 import cyclone.escape
 import cyclone.web
-from toughlib import utils
+from toughlib import utils,dispatch,logger
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
 from toughradius.manage.settings import * 
@@ -34,8 +34,7 @@ class DumpHandler(BaseHandler):
             self.db_backup.dumpdb(os.path.join(backup_path, backup_file))
             return self.render_json(code=0, msg="backup done!")
         except Exception as err:
-            import traceback
-            traceback.print_exc()
+            dispatch.pub(logger.EVENT_EXCEPTION,err)
             return self.render_json(code=1, msg="backup fail! %s" % (err))
 
 @permit.route(r"/admin/backup/restore", u"恢复数据", MenuSys, order=5.0003)
@@ -50,8 +49,7 @@ class RestoreHandler(BaseHandler):
             self.db_backup.restoredb(os.path.join(backup_path, rebakfs))
             return self.render_json(code=0, msg="restore done!")
         except Exception as err:
-            import traceback
-            traceback.print_exc()
+            dispatch.pub(logger.EVENT_EXCEPTION,err)
             return self.render_json(code=1, msg="restore fail! %s" % (err))
 
 
@@ -65,8 +63,7 @@ class DeleteHandler(BaseHandler):
             os.remove(os.path.join(backup_path, bakfs))
             return self.render_json(code=0, msg="delete done!")
         except Exception as err:
-            import traceback
-            traceback.print_exc()
+            dispatch.pub(logger.EVENT_EXCEPTION,err)
             return self.render_json(code=1, msg="delete fail! %s" % (err))
 
 
@@ -82,6 +79,7 @@ class UploadHandler(BaseHandler):
             tf.close()
             self.write("upload success")
         except Exception as err:
+            dispatch.pub(logger.EVENT_EXCEPTION,err)
             self.write("upload fail %s" % str(err))
 
 

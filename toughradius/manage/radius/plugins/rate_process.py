@@ -43,8 +43,8 @@ def h3c_rate(resp, _in, _out):
 
 
 def zte_rate(resp, _in, _out):
-    resp['ZTE-Rate-Ctrl-Scr-Up'] = _in / 1024
-    resp['ZTE-Rate-Ctrl-Scr-Down'] = _out / 1024
+    resp['ZTE-Rate-Ctrl-Scr-Up'] = _in 
+    resp['ZTE-Rate-Ctrl-Scr-Down'] = _out 
     return resp
 
 

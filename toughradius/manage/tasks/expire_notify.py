@@ -2,6 +2,7 @@
 #coding:utf-8
 
 from toughlib import  utils,httpclient
+from toughlib import dispatch,logger
 from toughradius.manage import models
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
@@ -34,7 +35,7 @@ class ExpireNotifyTask(TaseBasic):
                         port=smtp_port, username=smtp_user, password=smtp_pwd)
 
     def process(self, *args, **kwargs):
-        self.syslog.info("process expire notify task..")
+        dispatch.pub(logger.EVENT_INFO,"process expire notify task..")
         with make_db(self.db) as db:
             _enable = int(self.get_param_value("expire_notify_enable",0))
             if not _enable:
@@ -58,7 +59,7 @@ class ExpireNotifyTask(TaseBasic):
                 models.TrAccount.status == 1
             )
 
-            self.syslog.info('expire_notify total: %s'%expire_query.count())
+            dispatch.pub(logger.EVENT_INFO,'expire_notify total: %s'%expire_query.count())
             for account,expire,email,mobile in expire_query:
                 ctx = notify_tpl.replace('#account#',account)
                 ctx = ctx.replace('#expire#',expire)

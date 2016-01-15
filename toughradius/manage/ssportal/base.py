@@ -11,7 +11,7 @@ import cyclone.web
 import tempfile
 import functools
 from cyclone.util import ObjectDict
-from toughlib import utils
+from toughlib import utils,logger,dispatch
 from toughlib.paginator import Paginator
 from toughradius import __version__ as sys_version
 from toughlib.permit import permit
@@ -58,7 +58,6 @@ class BaseHandler(cyclone.web.RequestHandler):
     
     def __init__(self, *argc, **argkw):
         super(BaseHandler, self).__init__(*argc, **argkw)
-        self.syslog = self.application.syslog
         self.aes = self.application.aes
         self.cache = self.application.mcache
         self.session = session.Session(self.application.session_manager, self)
@@ -71,7 +70,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.db.close()
         
     def get_error_html(self, status_code=500, **kwargs):
-        # self.syslog.error("http error : [status_code:{0}], {1}".format(status_code, utils.safestr(kwargs)))
+        dispatch.pub(logger.EVENT_ERROR,"http error : [status_code:{0}], {1}".format(status_code, utils.safestr(kwargs)))
         if self.settings.debug:
             traceback.print_exc()
         if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -100,7 +99,7 @@ class BaseHandler(cyclone.web.RequestHandler):
             template_vars["code"] = 0
         resp = json.dumps(template_vars, ensure_ascii=False)
         if self.settings.debug:
-            self.syslog.debug("[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
+            dispatch.pub(logger.EVENT_DEBUG,"[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
         self.write(resp)
 
 
