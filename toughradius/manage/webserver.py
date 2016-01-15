@@ -3,6 +3,7 @@
 import sys
 import os
 import time
+import importlib
 import cyclone.web
 from twisted.python import log
 from twisted.internet import reactor
@@ -62,6 +63,10 @@ class WebManageServer(cyclone.web.Application):
 
         self.init_route()
 
+        event_path = os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__)))
+        pkg_prefix="toughradius.manage.events"
+        self.load_events(event_path,pkg_prefix)
+
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
     def init_route(self):
@@ -82,6 +87,27 @@ class WebManageServer(cyclone.web.Application):
             dispatch.pub(logger.EVENT_ERROR,"init route error , %s" % str(err))
         finally:
             conn.close()
+
+    def load_events(self,event_path=None,pkg_prefix=None):
+        _excludes = ['__init__'] 
+        evs = set(os.path.splitext(it)[0] for it in os.listdir(event_path))
+        evs = [it for it in evs if it not in _excludes]
+        for ev in evs:
+            try:
+                sub_module = os.path.join(event_path, ev)
+                if os.path.isdir(sub_module):
+                    dispatch.pub(logger.EVENT_INFO,'load sub event %s' % ev)
+                    load_events(
+                        event_path=sub_module,
+                        pkg_prefix="{0}.{1}".format(pkg_prefix, ev)
+                    )
+                _ev = "{0}.{1}".format(pkg_prefix, ev)
+                dispatch.pub(logger.EVENT_INFO,'load_event %s' % _ev)
+                dispatch.register(importlib.import_module(_ev).get_instance(self))
+            except Exception as err:
+                dispatch.pub(logger.EVENT_EXCEPTION,err)
+                dispatch.pub(logger.EVENT_ERROR,"%s, skip event %s.%s" % (str(err),pkg_prefix,ev))
+                continue
 
 
 def run(config, dbengine):
