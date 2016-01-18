@@ -97,7 +97,7 @@ class WebManageServer(cyclone.web.Application):
                 sub_module = os.path.join(event_path, ev)
                 if os.path.isdir(sub_module):
                     dispatch.pub(logger.EVENT_INFO,'load sub event %s' % ev)
-                    load_events(
+                    self.load_events(
                         event_path=sub_module,
                         pkg_prefix="{0}.{1}".format(pkg_prefix, ev)
                     )
