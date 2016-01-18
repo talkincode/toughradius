@@ -12,7 +12,7 @@ from toughlib.permit import permit
 from toughlib import utils
 from toughradius.manage.settings import * 
 
-@permit.route(r"/admin/bas", u"设备管理",MenuRes, order=2.0000, is_menu=True)
+@permit.route(r"/admin/bas", u"接入设备管理",MenuRes, order=2.0000, is_menu=True)
 class BasListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
