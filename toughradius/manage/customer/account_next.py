@@ -9,8 +9,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
+from toughradius.manage.events.settings import ACCOUNT_NEXT_EVENT
 
 @permit.route(r"/admin/account/next", u"用户续费",MenuUser, order=2.3000)
 class AccountNextHandler(account.AccountHandler):
@@ -87,6 +88,9 @@ class AccountNextHandler(account.AccountHandler):
         self.add_oplog(order.order_desc)
 
         self.db.commit()
+
+        dispatch.pub(ACCOUNT_NEXT_EVENT, account)
+
         self.redirect(self.detail_url_fmt(account_number))
 
 

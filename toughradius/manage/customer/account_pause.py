@@ -10,8 +10,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
+from toughradius.manage.events.settings import ACCOUNT_PAUSE_EVENT
 
 @permit.route(r"/admin/account/pause", u"用户停机",MenuUser, order=2.1000)
 class AccountPausetHandler(account.AccountHandler):
@@ -39,9 +40,7 @@ class AccountPausetHandler(account.AccountHandler):
 
         self.db.commit()
 
-        onlines = self.db.query(models.TrOnline).filter_by(account_number=account_number)
-        for _online in onlines:
-            pass
+        dispatch.pub(ACCOUNT_PAUSE_EVENT, account)
 
         return self.render_json(msg=u"操作成功")
 
