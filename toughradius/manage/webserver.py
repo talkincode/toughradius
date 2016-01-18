@@ -89,7 +89,7 @@ class WebManageServer(cyclone.web.Application):
             conn.close()
 
     def load_events(self,event_path=None,pkg_prefix=None):
-        _excludes = ['__init__'] 
+        _excludes = ['__init__','settings'] 
         evs = set(os.path.splitext(it)[0] for it in os.listdir(event_path))
         evs = [it for it in evs if it not in _excludes]
         for ev in evs:
