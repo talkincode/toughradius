@@ -107,7 +107,7 @@ class WebManageServer(cyclone.web.Application):
                     )
                 _ev = "{0}.{1}".format(pkg_prefix, ev)
                 dispatch.pub(logger.EVENT_INFO,'load_event %s' % _ev)
-                dispatch.register(importlib.import_module(_ev)(
+                dispatch.register(importlib.import_module(_ev).__call__(
                     dbengine=self.db_engine, mcache=self.mcache))
             except Exception as err:
                 dispatch.pub(logger.EVENT_EXCEPTION,err)
