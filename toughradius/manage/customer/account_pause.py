@@ -40,7 +40,7 @@ class AccountPausetHandler(account.AccountHandler):
 
         self.db.commit()
 
-        dispatch.pub(ACCOUNT_PAUSE_EVENT, account)
+        dispatch.pub(ACCOUNT_PAUSE_EVENT, account.account_number, async=True)
 
         return self.render_json(msg=u"操作成功")
 

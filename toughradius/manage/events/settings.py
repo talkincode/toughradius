@@ -8,6 +8,7 @@ ACCOUNT_RESUME_EVENT = 'account_resume'
 ACCOUNT_CHANGE_EVENT = 'account_change'
 ACCOUNT_REFUND_EVENT = 'account_refund'
 ACCOUNT_CHANNEL_EVENT = 'account_cancel'
+ACCOUNT_DELETE_EVENT = 'account_delete'
 
 
 SERVICE_INSTALL_EVENT = 'service_install'

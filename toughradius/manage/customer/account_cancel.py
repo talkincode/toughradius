@@ -9,8 +9,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
+from toughradius.manage.events.settings import ACCOUNT_CHANNEL_EVENT
 
 @permit.route(r"/admin/account/cancel", u"用户销户",MenuUser, order=2.7000)
 class AccountCanceltHandler(account.AccountHandler):
@@ -65,9 +66,7 @@ class AccountCanceltHandler(account.AccountHandler):
 
         self.db.commit()
 
-        onlines = self.db.query(models.TrOnline).filter_by(account_number=account_number)
-        for _online in onlines:
-            pass
+        dispatch.pub(ACCOUNT_CHANNEL_EVENT, account.account_number, async=True)
 
         self.redirect(self.detail_url_fmt(account_number))
 

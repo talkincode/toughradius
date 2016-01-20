@@ -109,7 +109,7 @@ class AccountOpentHandler(account.AccountHandler):
         self.add_oplog(u"用户增开子账号 %s" % account.account_number)
         self.db.commit()
 
-        dispatch.pub(ACCOUNT_OPEN_EVENT, account)
+        dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
 
         self.redirect(self.detail_url_fmt(account.account_number))
 
