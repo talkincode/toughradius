@@ -217,7 +217,7 @@ class RadiusBasic:
                     online_table.c.nas_addr==nasaddr).where(
                     acct_session_id==session_id))
 
-        elif nas_addr and not session_id:
+        elif nasaddr and not session_id:
             with self.app.db_engine.begin() as conn:
                 onlines = conn.execute(online_table.select().where(online_table.c.nas_addr==nasaddr))
                 tickets = (new_ticket(ol) for ol in onlines)
