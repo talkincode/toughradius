@@ -13,11 +13,7 @@ class RadiusAcctOnoff(RadiusBasic):
         RadiusBasic.__init__(self, app, request)
 
     def acctounting(self):
-        if not self.account:
-            return self.log.error(
-                "[Acct] Received an accounting onoff request but user[%s] not exists"% self.request.account_number)     
-
-        self.unlock_online(self.request.account_number,None)
+        self.unlock_online(self.request.nas_addr,None)
         dispatch.pub(logger.EVENT_INFO,'bas accounting onoff success')
 
 

@@ -173,7 +173,9 @@ class RadiusBasic:
         with self.app.db_engine.begin() as conn:
             conn.execute(acctount_table.update().where(
                 acctount_table.c.account_number==billing.account_number).values(
-                    balance=balance, time_length=time_length, flow_length=flow_length))
+                    balance=billing.balance, 
+                    time_length=billing.time_length, 
+                    flow_length=billing.flow_length))
 
             conn.execute(bill_table.insert().values(**billing))
 
