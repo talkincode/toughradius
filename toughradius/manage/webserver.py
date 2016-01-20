@@ -63,6 +63,10 @@ class WebManageServer(cyclone.web.Application):
 
         self.init_route()
 
+        # cache event init
+        dispatch.register(self.mcache)
+
+        # app event init
         event_path = os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__)))
         pkg_prefix="toughradius.manage.events"
         self.load_events(event_path,pkg_prefix)
@@ -103,12 +107,12 @@ class WebManageServer(cyclone.web.Application):
                     )
                 _ev = "{0}.{1}".format(pkg_prefix, ev)
                 dispatch.pub(logger.EVENT_INFO,'load_event %s' % _ev)
-                dispatch.register(importlib.import_module(_ev).instance())
+                dispatch.register(importlib.import_module(_ev)(
+                    dbengine=self.db_engine, mcache=self.mcache))
             except Exception as err:
                 dispatch.pub(logger.EVENT_EXCEPTION,err)
                 dispatch.pub(logger.EVENT_ERROR,"%s, skip event %s.%s" % (str(err),pkg_prefix,ev))
                 continue
-
 
 def run(config, dbengine):
     app = WebManageServer(config, dbengine)
