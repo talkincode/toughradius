@@ -218,11 +218,12 @@ class RadiusBasic:
                     acct_session_id==session_id))
 
         elif nas_addr and not session_id:
-            onlines = conn.execute(online_table.select().where(online_table.c.nas_addr==nasaddr))
-            tickets = (new_ticket(online) for ol in onlines)
             with self.app.db_engine.begin() as conn:
-                conn.execute(ticket_table.insert(),tickets)
-                conn.execute(online_table.delete().where(online_table.c.nas_addr==nasaddr))
+                onlines = conn.execute(online_table.select().where(online_table.c.nas_addr==nasaddr))
+                tickets = (new_ticket(ol) for ol in onlines)
+                with self.app.db_engine.begin() as conn:
+                    conn.execute(ticket_table.insert(),tickets)
+                    conn.execute(online_table.delete().where(online_table.c.nas_addr==nasaddr))
 
 
 
