@@ -11,8 +11,9 @@ from toughradius.manage import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
+from toughradius.manage.events.settings import ACCOUNT_OPEN_EVENT
 
 @permit.route(r"/admin/customer/open", u"用户快速开户",MenuUser, order=1.1000, is_menu=True)
 class CustomerOpenHandler(CustomerHandler):
@@ -132,8 +133,10 @@ class CustomerOpenHandler(CustomerHandler):
         self.db.add(account)
 
         self.add_oplog(u"用户新开账号 %s" % account.account_number)
-
         self.db.commit()
+
+        dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
+
         self.redirect(self.detail_url_fmt(account.account_number))
 
 

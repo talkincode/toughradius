@@ -16,7 +16,7 @@ TOUGHRADIUS提供了RADIUS核心服务引擎与Web管理控制台,用户自助�
 
 TOUGHRADIUS网站：http://www.toughradius.net
 
-## Linux 快读部署
+## Linux 快速部署
 
 TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署与管理
 
@@ -25,17 +25,17 @@ TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署
     chmod +x /usr/local/bin/trshell
 
 
-- 安装docker环境
+#### 安装docker环境
 
     trshell docker_setup
 
 
-- 一键部署 TOUGHRADIUS, 同时部署一个MySQL实例
+#### 一键部署 TOUGHRADIUS, 同时部署一个MySQL实例
 
     trshell with_mysql t1     # t1表示实例名，可自定义
 
 
-- 一键部署TOUGHRADIUS, 连接已有的MySQL数据库
+#### 一键部署TOUGHRADIUS, 连接已有的MySQL数据库
 
     trshell standalone t1     ＃ t1表示实例名，可自定义
 

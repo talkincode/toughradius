@@ -9,8 +9,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
+from toughradius.manage.events.settings import ACCOUNT_DELETE_EVENT
 
 @permit.route(r"/admin/account/delete", u"用户账号删除",MenuUser, order=2.6000)
 class AccountDeleteHandler(account.AccountHandler):
@@ -30,10 +31,9 @@ class AccountDeleteHandler(account.AccountHandler):
         self.db.query(models.TrOnline).filter_by(account_number=account.account_number).delete()
         self.db.query(models.TrAccount).filter_by(account_number=account.account_number).delete()
         self.db.query(models.TrCustomerOrder).filter_by(account_number=account.account_number).delete()
-
         self.add_oplog(u'删除用户账号%s' % (account_number))
-
         self.db.commit()
+        dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
         return self.redirect("/admin/customer")
 
 

@@ -9,8 +9,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
+from toughradius.manage.events.settings import ACCOUNT_NEXT_EVENT
 
 @permit.route(r"/admin/account/next", u"用户续费",MenuUser, order=2.3000)
 class AccountNextHandler(account.AccountHandler):
@@ -39,7 +40,7 @@ class AccountNextHandler(account.AccountHandler):
         accept_log = models.TrAcceptLog()
         accept_log.accept_type = 'next'
         accept_log.accept_source = 'console'
-        accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元;%s" % (account_number, form.d.fee_value,form.d.operate_desc)
+        accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元;%s" % (account_number, form.d.fee_value,form.d.operate_desc or '')
         accept_log.account_number = form.d.account_number
         accept_log.accept_time = utils.get_currtime()
         accept_log.operator_name = self.current_user.username
@@ -87,6 +88,9 @@ class AccountNextHandler(account.AccountHandler):
         self.add_oplog(order.order_desc)
 
         self.db.commit()
+
+        dispatch.pub(ACCOUNT_NEXT_EVENT, order.account_number, async=True)
+
         self.redirect(self.detail_url_fmt(account_number))
 
 

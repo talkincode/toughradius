@@ -173,7 +173,9 @@ class RadiusBasic:
         with self.app.db_engine.begin() as conn:
             conn.execute(acctount_table.update().where(
                 acctount_table.c.account_number==billing.account_number).values(
-                    balance=balance, time_length=time_length, flow_length=flow_length))
+                    balance=billing.balance, 
+                    time_length=billing.time_length, 
+                    flow_length=billing.flow_length))
 
             conn.execute(bill_table.insert().values(**billing))
 
@@ -215,12 +217,13 @@ class RadiusBasic:
                     online_table.c.nas_addr==nasaddr).where(
                     acct_session_id==session_id))
 
-        elif nas_addr and not session_id:
-            onlines = conn.execute(online_table.select().where(online_table.c.nas_addr==nasaddr))
-            tickets = (new_ticket(online) for ol in onlines)
+        elif nasaddr and not session_id:
             with self.app.db_engine.begin() as conn:
-                conn.execute(ticket_table.insert(),tickets)
-                conn.execute(online_table.delete().where(online_table.c.nas_addr==nasaddr))
+                onlines = conn.execute(online_table.select().where(online_table.c.nas_addr==nasaddr))
+                tickets = (new_ticket(ol) for ol in onlines)
+                with self.app.db_engine.begin() as conn:
+                    conn.execute(ticket_table.insert(),tickets)
+                    conn.execute(online_table.delete().where(online_table.c.nas_addr==nasaddr))
 
 
 

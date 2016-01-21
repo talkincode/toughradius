@@ -35,9 +35,9 @@ class RadiusBilling(RadiusBasic):
                 input_total=self.get_input_total(),
                 output_total=self.get_output_total())
         else:
-            self.bill_funcs[product.product_policy](online)
+            self.bill_funcs[product.product_policy](online, product)
             
-    def bill_pptimes(self,online):
+    def bill_pptimes(self,online,product):
         # 预付费时长
         dispatch.pub(logger.EVENT_INFO,'%s > Prepaid long time billing ' % self.account.account_number)
         user_balance = self.get_user_balance()
@@ -75,7 +75,7 @@ class RadiusBilling(RadiusBasic):
         if balance == 0 :
             self.disconnect(online)
 
-    def bill_botimes(self,online):
+    def bill_botimes(self,online, product):
         #买断时长
         dispatch.pub(logger.EVENT_INFO,'%s > Buyout long time billing ' % self.account.account_number)
         time_length = self.get_user_time_length()
@@ -86,7 +86,7 @@ class RadiusBilling(RadiusBasic):
         if user_time_length < 0 :
             user_time_length = 0
 
-        store.update_billing(Storage(
+        self.update_billing(Storage(
             account_number = online.account_number,
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,
@@ -108,7 +108,7 @@ class RadiusBilling(RadiusBasic):
         if user_time_length == 0 :
             self.disconnect(online)
 
-    def bill_ppflows(self, online):
+    def bill_ppflows(self, online, product):
         #预付费流量
         dispatch.pub(logger.EVENT_INFO,'%s > Prepaid flow billing '% self.account.account_number)
         user_balance = self.get_user_balance()
@@ -124,7 +124,7 @@ class RadiusBilling(RadiusBasic):
             balance = 0
             actual_fee = user_balance
             
-        store.update_billing(Storage(
+        self.update_billing(Storage(
             account_number = online.account_number,
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,
@@ -143,10 +143,10 @@ class RadiusBilling(RadiusBasic):
             create_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S")
         ))
         
-        if user_time_length == 0 :
+        if balance == 0:
             self.disconnect(online)
 
-    def bill_boflows(self):
+    def bill_boflows(self, online, product):
         #买断流量
         dispatch.pub(logger.EVENT_INFO,'%s > Buyout flow billing ' % self.account.account_number)
         flow_length = self.get_user_flow_length()
@@ -157,7 +157,7 @@ class RadiusBilling(RadiusBasic):
         if user_flow_length < 0 :
             user_flow_length = 0
             
-        store.update_billing(Storage(
+        self.update_billing(Storage(
             account_number = online.account_number,
             nas_addr = online.nas_addr,
             acct_session_id = online.acct_session_id,

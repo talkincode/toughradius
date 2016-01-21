@@ -12,7 +12,7 @@ from toughlib.permit import permit
 from toughlib import utils
 from toughradius.manage.settings import * 
 
-@permit.route(r"/admin/node", u"区域管理",MenuRes, order=1.0000, is_menu=True)
+@permit.route(r"/admin/node", u"区域节点管理",MenuRes, order=1.0000, is_menu=True)
 class NodeListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):

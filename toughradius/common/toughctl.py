@@ -15,6 +15,8 @@ from toughradius.manage import taskd
 import sys
 import os
 
+reactor.suggestThreadPoolSize(60)
+
 def update_timezone(config):
     try:
         if 'TZ' not in os.environ:
