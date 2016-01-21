@@ -20,28 +20,32 @@ TOUGHRADIUS网站：http://www.toughradius.net
 
 TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署与管理
 
-    wget  https://github.com/talkincode/ToughRADIUS/raw/master/trshell  -O /usr/local/bin/trshell
+    $ wget  https://github.com/talkincode/ToughRADIUS/raw/master/trshell  -O /usr/local/bin/trshell
 
-    chmod +x /usr/local/bin/trshell
+    $ chmod +x /usr/local/bin/trshell
 
 
 #### 安装docker环境
 
-    trshell docker_setup
+    $ trshell docker_setup
 
 
-+ 一键部署 TOUGHRADIUS，默认使用sqlite数据库
-
-    trshell install t1     # t1表示实例名，可自定义
+一键部署 TOUGHRADIUS，默认使用sqlite数据库
 
 
-+ 一键部署TOUGHRADIUS, 连接已有的远程MySQL数据库
+    $ trshell install t1     # t1表示实例名，可自定义
 
-    trshell install_with_rmysql t1     ＃ t1表示实例名，可自定义
 
-+ 一键部署TOUGHRADIUS, 创建一个本地MySQL实例并连接它。
+一键部署TOUGHRADIUS, 连接已有的远程MySQL数据库
 
-    trshell install_with_lmysql t1     ＃ t1表示实例名，可自定义
+
+    $ trshell install_with_rmysql t1     ＃ t1表示实例名，可自定义
+
+
+一键部署TOUGHRADIUS, 创建一个本地MySQL实例并连接它。
+
+
+    $ trshell install_with_lmysql t1     ＃ t1表示实例名，可自定义
 
 
 访问 http://server:1816  进入管理系统，默认用户名密码是 admin/root
