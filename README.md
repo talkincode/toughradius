@@ -30,19 +30,19 @@ TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署
     $ trshell docker_setup
 
 
-+ 一键部署 TOUGHRADIUS，默认使用sqlite数据库
+一键部署 TOUGHRADIUS，默认使用sqlite数据库
 
 
     $ trshell install t1     # t1表示实例名，可自定义
 
 
-+ 一键部署TOUGHRADIUS, 连接已有的远程MySQL数据库
+一键部署TOUGHRADIUS, 连接已有的远程MySQL数据库
 
 
     $ trshell install_with_rmysql t1     ＃ t1表示实例名，可自定义
 
 
-+ 一键部署TOUGHRADIUS, 创建一个本地MySQL实例并连接它。
+一键部署TOUGHRADIUS, 创建一个本地MySQL实例并连接它。
 
 
     $ trshell install_with_lmysql t1     ＃ t1表示实例名，可自定义
