@@ -44,4 +44,4 @@ dist
 radiusd_cnf.conf
 .tags
 .tags_sorted_by_file
-
+toughradius_test.json
