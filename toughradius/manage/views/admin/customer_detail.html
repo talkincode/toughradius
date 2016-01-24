@@ -35,10 +35,10 @@ function release(account_number)
     },"json");
 }
 
-function do_delete(account_number)
+function do_delete(customer_id)
 {
     if(confirm("删除账号将删除账号所有相关数据，包括账号，日志，订单等，不可恢复，确认操作吗？")) {
-        window.location.href = "/admin/account/delete?account_number="+account_number;
+        window.location.href = "/admin/customer/delete?customer_id="+customer_id;
     }
     
 }
@@ -117,7 +117,7 @@ function do_delete(account_number)
             % endif
             
             % if permit.match(current_user.username,'/admin/account/delete'):
-            <a class="btn btn-sm btn-danger" href="javascript:do_delete('${user.account_number}');">删除</a>
+            <a class="btn btn-sm btn-danger" href="javascript:do_delete('${customer.customer_id}');">删除</a>
             % endif
             </div>
         </div>   
