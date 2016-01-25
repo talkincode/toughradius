@@ -254,3 +254,10 @@ input{
     color: #3c8dbc;
 }
 
+.form-group {
+    margin-bottom: 5px;
+}
+
+.form-control {
+    height: 32px;
+}
