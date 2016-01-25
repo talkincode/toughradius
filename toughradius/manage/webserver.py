@@ -12,11 +12,12 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils, dispatch
 from toughradius.manage import models
 from toughlib.dbengine import get_engine
-from toughlib.permit import permit, load_handlers
+from toughlib.permit import permit, load_events, load_handlers
 from toughradius.manage.settings import *
 from toughlib import db_session as session
 from toughlib import db_cache as cache
 from toughlib import dispatch
+from toughlib.dbutils import make_db
 from toughlib.db_backup import DBBackup
 import toughradius
 
@@ -28,7 +29,7 @@ class WebManageServer(cyclone.web.Application):
         settings = dict(
             cookie_secret="12oETzKXQAGaYdkL5gEmGeJJFuYh7EQnp2XdTP1o/Vo=",
             login_url="/admin/login",
-            template_path=os.path.join(os.path.dirname(__file__), "views"),
+            template_path=os.path.join(os.path.dirname(toughradius.__file__), "views"),
             static_path=os.path.join(os.path.dirname(toughradius.__file__), "static"),
             xsrf_cookies=True,
             config=self.config,
@@ -41,7 +42,7 @@ class WebManageServer(cyclone.web.Application):
             default_filters=['decode.utf8'],
             input_encoding='utf-8',
             output_encoding='utf-8',
-            encoding_errors='replace',
+            encoding_errors='ignore',
             module_directory="/tmp/admin"
         )
 
@@ -54,65 +55,40 @@ class WebManageServer(cyclone.web.Application):
 
         self.aes = utils.AESCipher(key=self.config.system.secret)
 
-        permit.add_route(cyclone.web.StaticFileHandler,
-                         r"/admin/backup/download/(.*)",
-                         u"下载数据",
-                         MenuSys,
-                         handle_params={"path": self.config.database.backup_path},
-                         order=1.0405)
-
-        self.init_route()
-
         # cache event init
         dispatch.register(self.mcache)
 
+        # app init_route
+        load_handlers(handler_path=os.path.join(os.path.abspath(os.path.dirname(__file__))),
+            pkg_prefix="toughradius.manage", excludes=['views','webserver','radius'])
+
+        self.init_route_permit()
+
         # app event init
-        event_path = os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__)))
-        pkg_prefix="toughradius.manage.events"
-        self.load_events(event_path,pkg_prefix)
+        load_events(os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))),
+            "toughradius.manage.events", excludes=[],
+            dbengine=self.db_engine, mcache=self.mcache, aes=self.aes)
+
+        permit.add_route(cyclone.web.StaticFileHandler, 
+                            r"/admin/backup/download/(.*)",
+                            u"下载数据",MenuSys, 
+                            handle_params={"path": self.config.database.backup_path},
+                            order=5.0005)
 
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
-    def init_route(self):
-        handler_path = os.path.join(os.path.abspath(os.path.dirname(__file__)))
-        load_handlers(handler_path=handler_path, pkg_prefix="toughradius.manage",
-            excludes=['views','webserver','radius'])
-
-        conn = self.db()
-        try:
-            oprs = conn.query(models.TrOperator)
-            for opr in oprs:
-                if opr.operator_type > 0:
-                    for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=opr.operator_name):
-                        permit.bind_opr(rule.operator_name, rule.rule_path)
-                elif opr.operator_type == 0:  # 超级管理员授权所有
-                    permit.bind_super(opr.operator_name)
-        except Exception as err:
-            dispatch.pub(logger.EVENT_ERROR,"init route error , %s" % str(err))
-        finally:
-            conn.close()
-
-    def load_events(self,event_path=None,pkg_prefix=None):
-        _excludes = ['__init__','settings'] 
-        evs = set(os.path.splitext(it)[0] for it in os.listdir(event_path))
-        evs = [it for it in evs if it not in _excludes]
-        for ev in evs:
+    def init_route_permit(self):
+        with make_db(self.db) as conn:
             try:
-                sub_module = os.path.join(event_path, ev)
-                if os.path.isdir(sub_module):
-                    dispatch.pub(logger.EVENT_INFO,'load sub event %s' % ev)
-                    self.load_events(
-                        event_path=sub_module,
-                        pkg_prefix="{0}.{1}".format(pkg_prefix, ev)
-                    )
-                _ev = "{0}.{1}".format(pkg_prefix, ev)
-                dispatch.pub(logger.EVENT_INFO,'load_event %s' % _ev)
-                dispatch.register(importlib.import_module(_ev).__call__(
-                    dbengine=self.db_engine, mcache=self.mcache, aes=self.aes))
+                oprs = conn.query(models.TrOperator)
+                for opr in oprs:
+                    if opr.operator_type > 0:
+                        for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=opr.operator_name):
+                            permit.bind_opr(rule.operator_name, rule.rule_path)
+                    elif opr.operator_type == 0:  # 超级管理员授权所有
+                        permit.bind_super(opr.operator_name)
             except Exception as err:
-                dispatch.pub(logger.EVENT_EXCEPTION,err)
-                dispatch.pub(logger.EVENT_ERROR,"%s, skip event %s.%s" % (str(err),pkg_prefix,ev))
-                continue
+                dispatch.pub(logger.EVENT_ERROR,"init route error , %s" % str(err))
 
 def run(config, dbengine):
     app = WebManageServer(config, dbengine)

@@ -49,7 +49,7 @@ class CustomerBillingHandler(BaseHandler):
                           node_list=opr_nodes,
                           page_data=self.get_page_data(_query), **self.get_params())
 
-        elif request.path == '/admin/customer/billing/export':
+        elif self.request.path == '/admin/customer/billing/export':
             data = Dataset()
             data.append((
                 u'区域', u'上网账号', u'BAS地址', u'会话编号', u'记账开始时间', u'会话时长',
