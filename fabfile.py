@@ -10,23 +10,23 @@ def tag():
     local("git push origin v%s:v%s"%(__version__,__version__))
 
 def auth():
-    local("pypy toughctl --auth -c toughradius.json")
+    local("pypy toughctl --auth -c toughradius_test.json")
 
 
 def acct():
-    local("pypy toughctl --acct -c toughradius.json")
+    local("pypy toughctl --acct -c toughradius_test.json")
 
 
 def manage():
-    local("pypy toughctl --manage -c toughradius.json")
+    local("pypy toughctl --manage -c toughradius_test.json")
 
 
 def all():
-    local("pypy toughctl --standalone -c toughradius.json")
+    local("pypy toughctl --standalone -c toughradius_test.json")
 
 
 def initdb():
-    local("pypy toughctl --initdb -c toughradius.json")
+    local("pypy toughctl --initdb -c toughradius_test.json")
 
 def uplib():
     local("pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps")

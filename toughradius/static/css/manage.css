@@ -32,7 +32,6 @@ body {
     padding: 5px 0 0 10px;
 }
 
-
 .well{
     border-radius: 8px;
 }
@@ -252,5 +251,25 @@ input{
 
 .box-header > .fa, .box-header > .glyphicon, .box-header > .ion{
     color: #3c8dbc;
+}
+
+.form-group {
+    margin-bottom: 5px;
+}
+
+.form-control {
+    height: 32px;
+}
+
+#error_box .jumbotron {
+    padding: 30px;
+    margin-bottom: 30px;
+    color: inherit;
+    background-color:#ffffff;
+    background: url(/static/img/errbg.jpg) repeat;
+}
+
+#error_box .jumbotron .container {
+    padding-left: 70px;
 }
 

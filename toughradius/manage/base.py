@@ -9,6 +9,7 @@ import cyclone.auth
 import cyclone.escape
 import cyclone.web
 import tempfile
+import traceback
 from cyclone.util import ObjectDict
 from toughlib import utils
 from toughlib.paginator import Paginator
@@ -38,20 +39,22 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.db.close()
         
     def get_error_html(self, status_code=500, **kwargs):
-        dispatch.pub(logger.EVENT_ERROR,"http error : [status_code:{0}], {1}".format(status_code, utils.safestr(kwargs)))
-        if self.settings.debug:
-            traceback.print_exc()
-        if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
+        try:
+            # dispatch.pub(logger.EVENT_ERROR,"HTTPError : [status_code:{0}], {1}".format(status_code, repr(kwargs)))
+            if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
-        if status_code == 404:
-            return self.render_string("error.html", msg=u"404:页面不存在")
-        elif status_code == 403:
-            return self.render_string("error.html", msg=u"403:非法的请求")
-        elif status_code == 500:
-            self.syslog.error(traceback.format_exc())
-            return self.render_string("error.html", msg=u"500:服务器处理失败，请联系管理员")
-        else:
+            if status_code == 404:
+                return self.render_string("error.html", msg=u"404:页面不存在")
+            elif status_code == 403:
+                return self.render_string("error.html", msg=u"403:非法的请求")
+            elif status_code == 500:
+                return self.render_string("error.html", msg=u"500:服务器处理失败，请联系管理员")
+            else:
+                return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
+        except:
+            import traceback
+            traceback.print_exc()
             return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
     def render(self, template_name, **template_vars):
@@ -201,9 +204,5 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.set_header ('Content-Disposition', 'attachment; filename=' + filename)
         self.write(data.xls)
         self.finish()
-
-
-
-
 
 
