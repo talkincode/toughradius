@@ -11,6 +11,7 @@ from mako.lookup import TemplateLookup
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils, dispatch
 from toughradius.manage import models
+from toughradius.manage import base
 from toughlib.dbengine import get_engine
 from toughlib.permit import permit, load_events, load_handlers
 from toughradius.manage.settings import *
@@ -74,7 +75,6 @@ class WebManageServer(cyclone.web.Application):
                             u"下载数据",MenuSys, 
                             handle_params={"path": self.config.database.backup_path},
                             order=5.0005)
-
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
     def init_route_permit(self):

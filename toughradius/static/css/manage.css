@@ -32,7 +32,6 @@ body {
     padding: 5px 0 0 10px;
 }
 
-
 .well{
     border-radius: 8px;
 }
@@ -261,3 +260,16 @@ input{
 .form-control {
     height: 32px;
 }
+
+#error_box .jumbotron {
+    padding: 30px;
+    margin-bottom: 30px;
+    color: inherit;
+    background-color:#ffffff;
+    background: url(/static/img/errbg.jpg) repeat;
+}
+
+#error_box .jumbotron .container {
+    padding-left: 70px;
+}
+
