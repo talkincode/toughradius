@@ -1,7 +1,7 @@
 #!/bin/sh
 # toughradius docker install script
 # author: jamiesun.net@gmail.com
-# version: 0.0.12
+# version: 0.0.13
 
 set -e
 
@@ -60,7 +60,7 @@ acct()
 
 task()
 {
-    pypy /opt/toughradius/toughctl --worker
+    pypy /opt/toughradius/toughctl --task
 }
 
 worker()
@@ -104,6 +104,14 @@ case "$1" in
 
   acct)
     acct
+  ;;
+
+  task)
+    task
+  ;;
+
+  worker)
+    worker
   ;;
 
   upgrade)

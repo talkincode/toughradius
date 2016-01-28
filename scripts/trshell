@@ -21,7 +21,7 @@ usage ()
     stop                        toughradius instance stop
     upgrade                     toughradius instance upgrade
     logs                        toughradius instance logs
-    dsh                         toughwlan instance bash term
+    dsh                         toughradius instance bash term
 
     All other options are passed to the toughrad program.
 EOF
@@ -363,7 +363,7 @@ logs()
 
 dsh()
 {
-    instance=${1:-toughwlan}    
+    instance=${1:-toughradius}    
     cd ${rundir}/$instance
     docker exec -it radius_$instance bash
 }
