@@ -81,7 +81,7 @@ class AccountOpentHandler(account.AccountHandler):
         order.accept_id = accept_log.id
         order.order_source = 'console'
         order.create_time = _datetime
-        order.order_desc = u"用户增开账号"
+        order.order_desc = u"用户新开账号,赠送天数：%s" % (form.d.giftdays)
         self.db.add(order)
 
         account = models.TrAccount()
@@ -106,7 +106,7 @@ class AccountOpentHandler(account.AccountHandler):
         account.update_time = _datetime
         account.account_desc = form.d.account_desc
         self.db.add(account)
-        self.add_oplog(u"用户增开子账号 %s" % account.account_number)
+        self.add_oplog(u"用户增开子账号 %s, 赠送天数：%s " % (account.account_number,form.d.giftdays))
         self.db.commit()
 
         dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)

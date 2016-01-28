@@ -83,7 +83,8 @@ class AccountNextHandler(account.AccountHandler):
         elif product.product_policy == BOFlows:
             account.flow_length += product.fee_flows
 
-        order.order_desc = u"用户续费,续费前到期:%s,续费后到期:%s" % (old_expire_date, account.expire_date)
+        order.order_desc = u"用户续费,续费前到期:%s,续费后到期:%s, 赠送天数: %s" % (
+            old_expire_date, account.expire_date, form.d.giftdays)
         self.db.add(order)
         self.add_oplog(order.order_desc)
 

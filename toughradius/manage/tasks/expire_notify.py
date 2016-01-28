@@ -10,6 +10,8 @@ from twisted.internet import reactor
 from twisted.mail.smtp import sendmail
 from email.mime.text import MIMEText
 from email import Header
+import datetime
+from urllib import quote
 
 class ExpireNotifyTask(TaseBasic):
 
@@ -34,8 +36,25 @@ class ExpireNotifyTask(TaseBasic):
         return sendmail(smtp_server, from_addr, mailto, message,
                         port=smtp_port, username=smtp_user, password=smtp_pwd)
 
+    def get_notify_interval(self):
+        try:
+            notify_interval = int(self.get_param_value("expire_notify_interval",1440)) * 60.0
+            notify_time = self.get_param_value("expire_notify_time", None)
+            if notify_time:
+                _now_hm = datetime.datetime.now().strftime("%H:%M")
+                _ymd = utils.get_currdate()
+                if _now_hm  > notify_time:
+                    _ymd = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") 
+                _now = datetime.datetime.now()
+                _interval = datetime.datetime.strptime("%s %s"%(_ymd,notify_time),"%Y-%m-%d %H:%M") -_now
+                notify_interval = int(_interval.total_seconds())
+            return abs(notify_interval)
+        except:
+            return 120
+
+
     def process(self, *args, **kwargs):
-        dispatch.pub(logger.EVENT_INFO,"process expire notify task..")
+        logger.info("process expire notify task..")
         with make_db(self.db) as db:
             _enable = int(self.get_param_value("expire_notify_enable",0))
             if not _enable:
@@ -43,7 +62,10 @@ class ExpireNotifyTask(TaseBasic):
             _ndays = self.get_param_value("expire_notify_days")
             notify_tpl = self.get_param_value("expire_notify_tpl")
             notify_url = self.get_param_value("expire_notify_url")
-            notify_interval = int(self.get_param_value("expire_notify_interval",1440)) * 60.0
+            notify_interval = self.get_notify_interval()
+
+            if notify_interval > 3:
+                return notify_interval
 
             _now = datetime.datetime.now()
             _date = (datetime.datetime.now() + datetime.timedelta(days=int(_ndays))).strftime("%Y-%m-%d")
@@ -59,8 +81,9 @@ class ExpireNotifyTask(TaseBasic):
                 models.TrAccount.status == 1
             )
 
-            dispatch.pub(logger.EVENT_INFO,'expire_notify total: %s'%expire_query.count())
+            logger.info('expire_notify total: %s'%expire_query.count())
             for account,expire,email,mobile in expire_query:
+                dispatch.pub('account_expire',account, async=False)
                 ctx = notify_tpl.replace('#account#',account)
                 ctx = ctx.replace('#expire#',expire)
                 topic = ctx[:ctx.find('\n')]
@@ -73,9 +96,8 @@ class ExpireNotifyTask(TaseBasic):
                 url = url.replace('{mobile}',mobile)
                 url = url.encode('utf-8')
                 url = quote(url,":?=/&")
-                httpclient.get(url).addCallbacks(self.syslog.info,self.syslog.error)
-
-        return notify_interval
+                httpclient.get(url).addCallbacks(logger.info,logger.error)
 
 
+        return self.get_notify_interval() + 120
 
