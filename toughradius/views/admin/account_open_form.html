@@ -9,6 +9,7 @@ function productCalc(){
     param = {
         'months': $("#months").val() || 0,
         'product_id':$("#product_id").val(),
+        'giftdays':$("#giftdays").val(),
         '_xsrf': '${handler.xsrf_token}'
     }
     $.post("/admin/account/opencalc", param, function (ev) {
@@ -39,20 +40,34 @@ function check_samename()
     }
 }
 
+function reBuildAccount(){
+    $.get("/admin/customer/account/build", function (ev) {
+        console.log(ev);
+        if(ev.code==0){
+            console.log(ev);
+            $("#account_number").val(ev.account);
+            $("#password").val(ev.passwd);
+        }
+    }, "json");
+}
 
 //页面初始化
 $(document).ready(function (){
-    $("#expire_date").datepicker();
+    // $("#expire_date").datepicker();
     $('#product_id').change(function() {
         productCalc();
     });
     $('#months').blur(function() {
         productCalc();
     });    
+    $('#giftdays').blur(function() {
+        productCalc();
+    });    
     check_samename();
     $("#is_samename_").click(function(){
         check_samename();
     });
+    reBuildAccount();  
 });
 </script>
 

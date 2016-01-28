@@ -55,6 +55,7 @@ class OpencalcHandler(AccountHandler):
         months = self.get_argument('months',0)
         product_id = self.get_argument("product_id",None)
         old_expire = self.get_argument("old_expire",None)
+        giftdays = int(self.get_argument('giftdays',0))
         product = self.db.query(models.TrProduct).get(product_id)
 
         # 预付费时长，预付费流量，
@@ -75,7 +76,7 @@ class OpencalcHandler(AccountHandler):
             start_expire = datetime.datetime.now()
             if old_expire:
                 start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")
-            expire_date = utils.add_months(start_expire,int(months))
+            expire_date = utils.add_months(start_expire,int(months),days=giftdays)
             expire_date = expire_date.strftime( "%Y-%m-%d")
             return self.render_json(code=0,
                 data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
@@ -86,7 +87,7 @@ class OpencalcHandler(AccountHandler):
             if old_expire:
                 start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")
             fee_value = utils.fen2yuan(product.fee_price)
-            expire_date = utils.add_months(start_expire,product.fee_months)
+            expire_date = utils.add_months(start_expire,product.fee_months,days=giftdays)
             expire_date = expire_date.strftime( "%Y-%m-%d")
             return self.render_json(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
 

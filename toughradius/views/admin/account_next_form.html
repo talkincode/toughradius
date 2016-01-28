@@ -9,6 +9,7 @@ function productCalc(){
         'months': $("#months").val() || 0,
         'product_id':$("#product_id").val(),
         'old_expire':$("#old_expire").val(),
+        'giftdays':$("#giftdays").val(),
         '_xsrf': '${handler.xsrf_token}'
     }
     $.post("/admin/account/opencalc", param, function (ev) {
@@ -29,14 +30,17 @@ function productCalc(){
 
 //页面初始化
 $(document).ready(function (){
-    $("#expire_date").datepicker();
+    //$("#expire_date").datepicker();
     productCalc();
     $('#product_id').change(function() {
         productCalc();
     });
     $('#months').blur(function() {
         productCalc();
-    });    
+    }); 
+    $('#giftdays').blur(function() {
+        productCalc();
+    });       
 });
 </script>
 

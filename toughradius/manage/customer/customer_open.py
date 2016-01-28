@@ -6,6 +6,7 @@ import cyclone.escape
 import cyclone.web
 import decimal
 import datetime
+import random
 from hashlib import md5
 from toughradius.manage import models
 from toughradius.manage.customer import customer_forms
@@ -106,7 +107,7 @@ class CustomerOpenHandler(CustomerHandler):
         order.accept_id = accept_log.id
         order.order_source = 'console'
         order.create_time = customer.create_time
-        order.order_desc = u"用户新开账号"
+        order.order_desc = u"用户新开账号,赠送天数：%s" % (form.d.giftdays)
         self.db.add(order)
 
         account = models.TrAccount()
@@ -132,11 +133,32 @@ class CustomerOpenHandler(CustomerHandler):
         account.account_desc = customer.customer_desc
         self.db.add(account)
 
-        self.add_oplog(u"用户新开账号 %s" % account.account_number)
+        self.add_oplog(u"用户新开账号 %s, 赠送天数：%s " % (account.account_number,form.d.giftdays))
         self.db.commit()
 
         dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
 
         self.redirect(self.detail_url_fmt(account.account_number))
+
+
+@permit.route(r"/admin/customer/account/build", u"生成用户规则",MenuUser, order=1.1001, is_menu=False)
+class CustomerBuildAccountHandler(CustomerHandler):
+
+    def next_account_number(self):
+        year = datetime.datetime.now().year
+        account_number = "{0}{1}".format(year,random.randint(10000,99999))
+        if self.db.query(models.TrAccount).get(account_number):
+            return self.next_account_number()
+        else:
+            return account_number
+
+    @cyclone.web.authenticated
+    def get(self):
+        passwd = ''.join([random.choice(list('1234567890')) for _ in range(6)])
+        self.render_json(account=str(self.next_account_number()),passwd=passwd)
+
+
+
+
 
 

@@ -9,7 +9,7 @@ from toughlib.btforms.rules import button_style, input_style
 boolean = {0: u"否", 1: u"是"}
 user_state = {1: u"正常", 2: u"停机", 3: u"销户", 4: u"到期"}
 bind_state = {0: u"不绑定", 1: u"绑定"}
-
+_btn_style = {"class":"opt-btn btn-default"}
 
 def customer_open_form(nodes=[], products=[]):
     return btforms.Form(
@@ -23,11 +23,13 @@ def customer_open_form(nodes=[], products=[]):
         btforms.Textbox("address",rules.len_of(1, 32), description=u"用户地址", hr=True, required="required", **input_style),
         btforms.Textbox("account_number", description=u"用户账号", required="required", **input_style),
         btforms.Textbox("password", description=u"认证密码", required="required", **input_style),
+        btforms.Button("button", type="button", onclick="reBuildAccount();", html=u"<b>重新生成账号密码</b>", **_btn_style),
         btforms.Textbox("ip_address", description=u"用户IP地址", **input_style),
         btforms.Dropdown("product_id", args=products, description=u"资费", required="required", **input_style),
         btforms.Textbox("months", rules.is_number, description=u"月数(包月有效)", required="required", **input_style),
+        btforms.Textbox("giftdays", rules.is_number, description=u"赠送天数", value=0, required="required", **input_style),
         btforms.Textbox("fee_value", rules.is_rmb, description=u"缴费金额", required="required", **input_style),
-        btforms.Textbox("expire_date", rules.is_date, description=u"过期日期", required="required", **input_style),
+        btforms.Textbox("expire_date", rules.is_date, description=u"过期日期", readonly="readonly", **input_style),
         btforms.Hidden("status", value=1, description=u"用户状态", **input_style),
         btforms.Textarea("customer_desc", description=u"用户描述", rows=4, **input_style),
         btforms.Button("submit", type="submit", html=u"<b>提交</b>", **button_style),
