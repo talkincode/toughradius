@@ -12,14 +12,18 @@ def tag():
 def auth():
     local("pypy toughctl --auth -c toughradius_test.json")
 
-
 def acct():
     local("pypy toughctl --acct -c toughradius_test.json")
+
+def worker():
+    local("pypy toughctl --worker -c toughradius_test.json")
 
 
 def manage():
     local("pypy toughctl --manage -c toughradius_test.json")
 
+def task():
+    local("pypy toughctl --task -c toughradius_test.json")
 
 def all():
     local("pypy toughctl --standalone -c toughradius_test.json")

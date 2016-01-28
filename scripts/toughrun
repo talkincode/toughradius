@@ -1,7 +1,7 @@
 #!/bin/sh
 # toughradius docker install script
 # author: jamiesun.net@gmail.com
-# version: 0.0.10
+# version: 0.0.11
 
 set -e
 
@@ -13,7 +13,8 @@ install()
 
     git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
-    cp /opt/toughradius/toughradius.json /etc/toughradius.json
+    cp /opt/toughradius/etc/toughradius.json /etc/toughradius.json
+    cp /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
 
     chmod +x /opt/toughradius/toughctl
 }
@@ -55,6 +56,16 @@ acct()
 {
     initserv
     pypy /opt/toughradius/toughctl --acct
+}
+
+task()
+{
+    pypy /opt/toughradius/toughctl --worker
+}
+
+worker()
+{
+    pypy /opt/toughradius/toughctl --worker
 }
 
 upgrade()

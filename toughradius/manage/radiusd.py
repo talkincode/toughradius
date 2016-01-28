@@ -3,6 +3,10 @@
 import datetime
 import os
 import six
+import umsgpack
+import toughradius
+import zmq
+from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet import defer
@@ -13,6 +17,7 @@ from toughlib import db_cache as cache
 from toughlib.dbengine import get_engine
 from txradius.radius import dictionary
 from txradius.radius import packet
+from txradius.radius.packet import PacketError
 from txradius import message
 from toughlib.utils import timecast
 from toughradius.manage import models
@@ -23,17 +28,29 @@ from toughradius.manage.radius.radius_acct_start import RadiusAcctStart
 from toughradius.manage.radius.radius_acct_update import RadiusAcctUpdate
 from toughradius.manage.radius.radius_acct_stop import RadiusAcctStop
 from toughradius.manage.radius.radius_acct_onoff import RadiusAcctOnoff
-import toughradius
 
-class PacketError(Exception):
-    """ packet exception"""
-    pass
 
-###############################################################################
-# Basic RADIUS                                                            ####
-###############################################################################
+class RADIUSMaster(protocol.DatagramProtocol):
+    def __init__(self, config, service='auth'):
+        self.config = config
+        self.service = service
+        self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-%s-message' % service))
+        self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-%s-result' % service))
+        self.puller.onPull = self.reply
+        logger.info("init %s master pusher : %s " % (self.service, self.pusher))
+        logger.info("init %s master puller : %s " % (self.service, self.puller))
 
-class RADIUS(protocol.DatagramProtocol):
+    def datagramReceived(self, datagram, (host, port)):
+        message = umsgpack.packb([datagram, host, port])
+        self.pusher.push(message)
+        
+    def reply(self, result):
+        data, host, port = umsgpack.unpackb(result[0])
+        self.transport.write(data, (host, int(port)))
+
+
+class RADIUSAuthWorker(object):
+
     def __init__(self, config, dbengine):
         self.config = config
         self.dict = dictionary.Dictionary(
@@ -41,65 +58,28 @@ class RADIUS(protocol.DatagramProtocol):
         self.db_engine = dbengine or get_engine(config)
         self.aes = utils.AESCipher(key=self.config.system.secret)
         self.mcache = mcache.Mcache()
+        self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-result'))
+        self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-message'))
+        self.puller.onPull = self.process
+        logger.info("init auth worker pusher : %s " % (self.pusher))
+        logger.info("init auth worker puller : %s " % (self.puller))
 
-    def get_nas(self,ip_addr):
+    def find_nas(self,ip_addr):
         def fetch_result():
             table = models.TrBas.__table__
             with self.db_engine.begin() as conn:
                 return conn.execute(table.select().where(table.c.ip_addr==ip_addr)).first()
         return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
 
-    def processPacket(self, pkt,bas=None):
-        pass
-
-    def createPacket(self, **kwargs):
-        raise NotImplementedError('Attempted to use a pure base class')
-
-    @timecast
-    def datagramReceived(self, datagram, (host, port)):
-        try:
-            bas = self.get_nas(host)
-            if not bas:
-                dispatch.pub(logger.EVENT_INFO,'[Radiusd] :: Dropping packet from unknown host ' + host)
-                return
-
-            secret, vendor_id = bas['bas_secret'], bas['vendor_id']
-            radius_request = self.createPacket(packet=datagram, 
-                dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
-
-            dispatch.pub(logger.EVENT_INFO,"[Radiusd] :: Received radius request: %s" % (repr(radius_request)))
-            if self.config.system.debug:
-                dispatch.pub(logger.EVENT_DEBUG,radius_request.format_str())
-
-            reply = self.processPacket(radius_request, bas)
-            self.reply(reply, (host, port))
-        except Exception as err:
-            errstr = 'RadiusError:Dropping invalid packet from {0} {1},{2}'.format(
-                host, port, utils.safeunicode(err))
-            dispatch.pub(logger.EVENT_ERROR,errstr)
-            import traceback
-            traceback.print_exc()
-            
-
-
-    def reply(self, reply, (host, port)):
-        dispatch.pub(logger.EVENT_INFO,"[Radiusd] :: Send radius response: %s" % repr(reply))
-
+    def process(self, message):
+        datagram, host, port =  umsgpack.unpackb(message[0])
+        reply = self.processAuth(datagram, host, port)
+        logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
-            dispatch.pub(logger.EVENT_DEBUG,reply.format_str())
+            logger.debug(reply.format_str())
+        self.pusher.push(umsgpack.packb([reply.ReplyPacket(),host,port]))
 
-        self.transport.write(reply.ReplyPacket(), (host, port))
-
-
-
-###############################################################################
-# Auth Server                                                              ####
-###############################################################################
-class RADIUSAccess(RADIUS):
-    """ Radius Access Handler
-    """
-
-    def createPacket(self, **kwargs):
+    def createAuthPacket(self, **kwargs):
         vendor_id = kwargs.pop('vendor_id',0)
         auth_message = message.AuthMessage(**kwargs)
         auth_message.vendor_id = vendor_id
@@ -107,11 +87,23 @@ class RADIUSAccess(RADIUS):
         auth_message = vlan_parse.process(auth_message)
         return auth_message
 
-    def processPacket(self, req,bas=None):
-        if req.code != packet.AccessRequest:
-            raise PacketError('non-AccessRequest packet on authentication socket')
-
+    def processAuth(self, datagram, host, port):
         try:
+            bas = self.find_nas(host)
+            if not bas:
+                raise PacketError('[Radiusd] :: Dropping packet from unknown host %s' % host)
+
+            secret, vendor_id = bas['bas_secret'], bas['vendor_id']
+            req = self.createAuthPacket(packet=datagram, 
+                dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
+
+            logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
+            if self.config.system.debug:
+                logger.debug(req.format_str())
+
+            if req.code != packet.AccessRequest:
+                raise PacketError('non-AccessRequest packet on authentication socket')
+
             reply = req.CreateReply()
             reply.vendor_id = req.vendor_id
 
@@ -125,7 +117,6 @@ class RADIUSAccess(RADIUS):
             )
 
             auth_resp = RadiusAuth(self,aaa_request).authorize()
-            print auth_resp
 
             if auth_resp['code'] > 0:
                 reply['Reply-Message'] = auth_resp['msg']
@@ -154,7 +145,7 @@ class RADIUSAccess(RADIUS):
                     except Exception as err:
                         errstr = "RadiusError:current radius cannot support attribute {0},{1}".format(
                             attr_name,utils.safestr(err.message))
-                        dispatch.pub(logger.EVENT_ERROR,errstr)
+                        logger.error(errstr)
 
                 for attr, attr_val in req.resp_attrs.iteritems():
                     reply[attr] = attr_val
@@ -165,60 +156,105 @@ class RADIUSAccess(RADIUS):
                 raise PacketError('VerifyReply error')
             return reply
         except Exception as err:
-            reply['Reply-Message'] =  "auth failure, %s" % utils.safeunicode(err.message)
-            reply.code = packet.AccessReject
-            return reply
+            errstr = 'RadiusError:Dropping invalid auth packet from {0} {1},{2}'.format(
+                host, port, utils.safeunicode(err))
+            logger.error(errstr)
+            import traceback
+            traceback.print_exc()
 
 
-###############################################################################
-# Acct Server                                                              ####
-############################################################################### 
 
-class RADIUSAccounting(RADIUS):
-    """ Radius Accounting Handler
-    """
-    acct_class = {
-        STATUS_TYPE_START: RadiusAcctStart,
-        STATUS_TYPE_STOP: RadiusAcctStop,
-        STATUS_TYPE_UPDATE: RadiusAcctUpdate,
-        STATUS_TYPE_ACCT_ON: RadiusAcctOnoff,
-        STATUS_TYPE_ACCT_OFF: RadiusAcctOnoff
-    }
+class RADIUSAcctWorker(object):
 
-    def createPacket(self, **kwargs):
+    def __init__(self, config, dbengine):
+        self.config = config
+        self.dict = dictionary.Dictionary(
+            os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
+        self.db_engine = dbengine or get_engine(config)
+        self.mcache = mcache.Mcache()
+        self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-acct-result'))
+        self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-acct-message'))
+        self.puller.onPull = self.process
+        logger.info("init acct worker pusher : %s " % (self.pusher))
+        logger.info("init acct worker puller : %s " % (self.puller))
+        self.acct_class = {
+            STATUS_TYPE_START: RadiusAcctStart,
+            STATUS_TYPE_STOP: RadiusAcctStop,
+            STATUS_TYPE_UPDATE: RadiusAcctUpdate,
+            STATUS_TYPE_ACCT_ON: RadiusAcctOnoff,
+            STATUS_TYPE_ACCT_OFF: RadiusAcctOnoff
+        }
 
+
+    def find_nas(self,ip_addr):
+        def fetch_result():
+            table = models.TrBas.__table__
+            with self.db_engine.begin() as conn:
+                return conn.execute(table.select().where(table.c.ip_addr==ip_addr)).first()
+        return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
+
+    def process(self, message):
+        datagram, host, port =  umsgpack.unpackb(message[0])
+        reply = self.processAcct(datagram, host, port)
+        logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
+        if self.config.system.debug:
+            logger.debug(reply.format_str())
+        self.pusher.push(umsgpack.packb([reply.ReplyPacket(),host,port]))
+
+
+    def createAcctPacket(self, **kwargs):
         vendor_id = 0
         if 'vendor_id' in kwargs:
             vendor_id = kwargs.pop('vendor_id')
-
         acct_message = message.AcctMessage(**kwargs)
         acct_message.vendor_id = vendor_id
         acct_message = mac_parse.process(acct_message)
         acct_message = vlan_parse.process(acct_message)
         return acct_message
 
-    def processPacket(self, req, bas=None):
-        if req.code != packet.AccountingRequest:
-            raise PacketError('non-AccountingRequest packet on authentication socket')
+    def processAcct(self, datagram, host, port):
+        try:
+            bas = self.find_nas(host)
+            if not bas:
+                raise PacketError('[Radiusd] :: Dropping packet from unknown host %s' % host)
 
-        if not req.VerifyAcctRequest():
-            raise PacketError('VerifyAcctRequest error')
+            secret, vendor_id = bas['bas_secret'], bas['vendor_id']
+            req = self.createAcctPacket(packet=datagram, 
+                dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
-        reply = req.CreateReply()
-        status_type = req.get_acct_status_type()
-        if status_type in RADIUSAccounting.acct_class:
-            RADIUSAccounting.acct_class[status_type](self,req.get_ticket()).acctounting()
-        return reply
+            logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
+            if self.config.system.debug:
+                logger.debug(req.format_str())
 
-###############################################################################
-# Radius  Run                                                              ####
-###############################################################################
+            if req.code != packet.AccountingRequest:
+                raise PacketError('non-AccountingRequest packet on authentication socket')
 
-def run_auth(config, dbengine):
-    auth_protocol = RADIUSAccess(config,dbengine)
+            if not req.VerifyAcctRequest():
+                raise PacketError('VerifyAcctRequest error')
+
+            reply = req.CreateReply()
+            status_type = req.get_acct_status_type()
+            if status_type in self.acct_class:
+                acct_func = self.acct_class[status_type](self,req.get_ticket()).acctounting
+                reactor.callLater(0.1,acct_func)
+            return reply
+        except Exception as err:
+            errstr = 'RadiusError:Dropping invalid acct packet from {0} {1},{2}'.format(
+                host, port, utils.safeunicode(err))
+            logger.error(errstr)
+            import traceback
+            traceback.print_exc()
+
+def run_auth(config):
+    auth_protocol = RADIUSMaster(config, service='auth')
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
-def run_acct(config, dbengine):
-    acct_protocol = RADIUSAccounting(config,dbengine)
+def run_acct(config):
+    acct_protocol = RADIUSMaster(config,service='acct')
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
+
+def run_worker(config,dbengine):
+    RADIUSAuthWorker(config,dbengine)
+    RADIUSAcctWorker(config,dbengine)
+
 

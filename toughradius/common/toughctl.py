@@ -47,6 +47,7 @@ def run():
     parser.add_argument('-task', '--task', action='store_true', default=False, dest='task', help='run task')
     parser.add_argument('-auth', '--auth', action='store_true', default=False, dest='auth', help='run auth')
     parser.add_argument('-acct', '--acct', action='store_true', default=False, dest='acct', help='run acct')
+    parser.add_argument('-worker', '--worker', action='store_true', default=False, dest='worker', help='run worker')
     parser.add_argument('-standalone', '--standalone', action='store_true', default=False, dest='standalone', help='run standalone')
     parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
     parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
@@ -69,11 +70,15 @@ def run():
         reactor.run()    
 
     elif args.auth:
-        radiusd.run_auth(config,dbengine)
+        radiusd.run_auth(config)
         reactor.run()
     
     elif args.acct:
-        radiusd.run_acct(config,dbengine)
+        radiusd.run_acct(config)
+        reactor.run()
+
+    elif args.worker:
+        radiusd.run_worker(config,dbengine)
         reactor.run()   
 
     elif args.task:
@@ -81,9 +86,10 @@ def run():
         reactor.run()
 
     elif args.standalone:
-        radiusd.run_auth(config,dbengine)
-        radiusd.run_acct(config,dbengine)
         webserver.run(config,dbengine)
+        radiusd.run_auth(config)
+        radiusd.run_acct(config)
+        radiusd.run_worker(config,dbengine)
         taskd.run(config,dbengine)
         reactor.run()
         
