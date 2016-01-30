@@ -11,8 +11,8 @@ from toughradius.manage.radius.radius_basic import  RadiusBasic
 
 class RadiusAuth(RadiusBasic):
 
-    def __init__(self, app, request):
-        RadiusBasic.__init__(self, app, request)
+    def __init__(self, dbengine=None,cache=None,aes=None,request=None):
+        RadiusBasic.__init__(self, dbengine,cache,aes, request)
         self.reply = {'code':0, 'msg':'success', 'attrs':{}}
         self.filters = [
             self.status_filter,
@@ -56,7 +56,7 @@ class RadiusAuth(RadiusBasic):
         self.reply['username'] = self.request.account_number
         self.reply['bypass'] = int(self.get_param_value("radiusd_bypass", 1))
         if self.reply['bypass'] == 1:
-            self.reply['passwd'] = self.app.aes.decrypt(self.account.password)
+            self.reply['passwd'] = self.aes.decrypt(self.account.password)
         if self.account.status == UsrExpire:
             self.reply['Framed-Pool'] = self.get_param_value("expire_addrpool",'')
 

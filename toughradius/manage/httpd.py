@@ -22,7 +22,7 @@ from toughlib.dbutils import make_db
 from toughlib.db_backup import DBBackup
 import toughradius
 
-class WebManageServer(cyclone.web.Application):
+class HttpServer(cyclone.web.Application):
     def __init__(self, config=None, dbengine=None, **kwargs):
 
         self.config = config
@@ -91,6 +91,6 @@ class WebManageServer(cyclone.web.Application):
                 dispatch.pub(logger.EVENT_ERROR,"init route error , %s" % str(err))
 
 def run(config, dbengine):
-    app = WebManageServer(config, dbengine)
+    app = HttpServer(config, dbengine)
     reactor.listenTCP(int(config.admin.port), app, interface=config.admin.host)
 

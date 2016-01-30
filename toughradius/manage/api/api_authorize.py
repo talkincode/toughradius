@@ -18,6 +18,8 @@ class AuthorizeHandler(ApiHandler):
         except Exception as err:
             return self.render_result(msg=utils.safeunicode(err.message))
             
-        self.render_result(**RadiusAuth(self.application, req_msg).authorize())
+        self.render_result(**RadiusAuth(self.application.db_engine,
+                                        self.application.mcache,
+                                        self.application.aes,req_msg).authorize())
 
 

@@ -9,7 +9,7 @@ from toughlib import config as iconfig
 from toughlib import dispatch,logger
 from toughlib.dbengine import get_engine
 from toughradius.common import initdb as init_db
-from toughradius.manage import webserver
+from toughradius.manage import httpd
 from toughradius.manage import radiusd
 from toughradius.manage import taskd
 import sys
@@ -66,7 +66,7 @@ def run():
         config.defaults.debug = True
 
     if args.manage:
-        webserver.run(config,dbengine)
+        httpd.run(config,dbengine)
         reactor.run()    
 
     elif args.auth:
@@ -86,7 +86,7 @@ def run():
         reactor.run()
 
     elif args.standalone:
-        webserver.run(config,dbengine)
+        httpd.run(config,dbengine)
         radiusd.run_auth(config)
         radiusd.run_acct(config)
         radiusd.run_worker(config,dbengine)

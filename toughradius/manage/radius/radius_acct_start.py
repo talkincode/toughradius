@@ -9,8 +9,8 @@ import datetime
 
 class RadiusAcctStart(RadiusBasic):
 
-    def __init__(self, app, request):
-        RadiusBasic.__init__(self, app, request)
+    def __init__(self, dbengine=None,cache=None,aes=None,request=None):
+        RadiusBasic.__init__(self, dbengine,cache,aes, request)
 
     def acctounting(self):
         if self.is_online(self.request.nas_addr,self.request.acct_session_id):

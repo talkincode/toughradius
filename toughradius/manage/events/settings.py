@@ -13,3 +13,5 @@ ACCOUNT_DELETE_EVENT = 'account_delete'
 
 SERVICE_INSTALL_EVENT = 'service_install'
 SERVICE_MAINTAIN_EVENT = 'service_maintain'
+
+UNLOCK_ONLINE_EVENT = 'unlock_online'

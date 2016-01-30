@@ -34,7 +34,10 @@ class AcctountingHandler(ApiHandler):
             return
 
         if req_msg['acct_status_type'] in AcctountingHandler.acct_class:
-            AcctountingHandler.acct_class[req_msg['acct_status_type']](self.application,req_msg).acctounting()
+            AcctountingHandler.acct_class[req_msg['acct_status_type']](
+                                        self.application.db_engine,
+                                        self.application.mcache,
+                                        self.application.aes,req_msg).acctounting()
 
 
 

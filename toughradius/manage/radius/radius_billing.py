@@ -13,8 +13,8 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 
 class RadiusBilling(RadiusBasic):
 
-    def __init__(self, app, request):
-        RadiusBasic.__init__(self, app, request)
+    def __init__(self, dbengine=None,cache=None,aes=None,request=None):
+        RadiusBasic.__init__(self, dbengine,cache,aes, request)
         self.bill_funcs = {
             PPTimes:self.bill_pptimes,
             BOTimes:self.bill_botimes,

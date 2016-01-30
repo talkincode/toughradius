@@ -116,7 +116,7 @@ class RADIUSAuthWorker(object):
                 vlanid2=req.vlanid2
             )
 
-            auth_resp = RadiusAuth(self,aaa_request).authorize()
+            auth_resp = RadiusAuth(self.db_engine,self.mcache,self.aes,aaa_request).authorize()
 
             if auth_resp['code'] > 0:
                 reply['Reply-Message'] = auth_resp['msg']
@@ -235,7 +235,8 @@ class RADIUSAcctWorker(object):
             reply = req.CreateReply()
             status_type = req.get_acct_status_type()
             if status_type in self.acct_class:
-                acct_func = self.acct_class[status_type](self,req.get_ticket()).acctounting
+                acct_func = self.acct_class[status_type](
+                        self.db_engine,self.mcache,self.aes,req.get_ticket()).acctounting
                 reactor.callLater(0.1,acct_func)
             return reply
         except Exception as err:

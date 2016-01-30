@@ -9,8 +9,8 @@ from toughradius.manage.radius.radius_billing import RadiusBilling
 
 class RadiusAcctUpdate(RadiusBilling):
 
-    def __init__(self, app, request):
-        RadiusBilling.__init__(self, app, request)
+    def __init__(self, dbengine=None,cache=None,aes=None,request=None):
+        RadiusBasic.__init__(self, dbengine,cache,aes, request)
 
     def acctounting(self):
         if not self.account:

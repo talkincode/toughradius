@@ -9,13 +9,9 @@ from toughradius.manage.settings import *
 
 class RadiusAcctOnoff(RadiusBasic):
 
-    def __init__(self, app, request):
-        RadiusBasic.__init__(self, app, request)
+    def __init__(self, dbengine=None,cache=None,aes=None,request=None):
+        RadiusBasic.__init__(self, dbengine,cache,aes, request)
 
     def acctounting(self):
         self.unlock_online(self.request.nas_addr,None)
         dispatch.pub(logger.EVENT_INFO,'bas accounting onoff success')
-
-
-        
-        
