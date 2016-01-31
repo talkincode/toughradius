@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # coding:utf-8
 import os
+import json
 import subprocess
 import os.path
 import cyclone.auth
@@ -8,6 +9,7 @@ import cyclone.escape
 import cyclone.web
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
+from collections import deque
 from toughradius.manage.settings import * 
 
 ##############################################################################
@@ -74,6 +76,19 @@ class DashboardHandler(BaseHandler):
         self.render("index.html",config=config)
 
 
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        print obj
+        if type(obj) == deque:
+            return [i for i in obj]
+        return json.JSONEncoder.default(self, obj)
+
+@permit.route(r"/admin/dashboard/msgstat", u"消息统计", MenuSys, order=1.0001, is_menu=False)
+class MsgStatHandler(BaseHandler):
+    @cyclone.web.authenticated
+    def get(self):
+        resp = json.dumps(self.cache.get(radius_statcache_key), cls=ComplexEncoder,ensure_ascii=False)
+        self.write(resp)
 
 @permit.route(r"/admin/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)
 class RestartHandler(BaseHandler):

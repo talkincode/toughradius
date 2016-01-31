@@ -5,9 +5,10 @@ from toughradius.manage import models
 
 class TaseBasic:
 
-    def __init__(self, config=None, db=None, **kwargs):
-        self.config = config
-        self.db = db
+    def __init__(self, taskd, **kwargs):
+        self.config = taskd.config
+        self.db = taskd.db
+        self.cache = taskd.cache
 
     def process(self,*args, **kwargs):
         pass

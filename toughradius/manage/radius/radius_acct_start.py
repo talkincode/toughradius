@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 # coding=utf-8
 from toughradius.manage.radius.radius_basic import  RadiusBasic
+from toughradius.manage.radius.radius_billing import RadiusBilling
 from toughlib.storage import Storage
 from toughradius.manage import models
 from toughlib import  utils, dispatch, logger
 from toughradius.manage.settings import *
 import datetime
 
-class RadiusAcctStart(RadiusBasic):
+class RadiusAcctStart(RadiusBilling):
 
     def __init__(self, dbengine=None,cache=None,aes=None,request=None):
-        RadiusBasic.__init__(self, dbengine,cache,aes, request)
+        RadiusBilling.__init__(self, dbengine,cache,aes, request)
 
     def acctounting(self):
         if self.is_online(self.request.nas_addr,self.request.acct_session_id):

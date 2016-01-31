@@ -64,6 +64,7 @@ account_cache_key = 'toughradius.cache.account.{0}'.format
 product_cache_key = 'toughradius.cache.product.{0}'.format
 product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
 bas_cache_key = 'toughradius.cache.bas.{0}'.format
+radius_statcache_key = 'toughradius.cache.radius.stat'
 
 
 

@@ -5,10 +5,10 @@ import os
 import six
 import msgpack
 import toughradius
-import zmq
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
 from twisted.internet import protocol
 from twisted.internet import reactor
+from twisted.internet.threads import deferToThread
 from twisted.internet import defer
 from toughlib import utils
 from toughlib import mcache
@@ -59,10 +59,12 @@ class RADIUSAuthWorker(object):
         self.aes = utils.AESCipher(key=self.config.system.secret)
         self.mcache = mcache.Mcache()
         self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-result'))
+        self.stat_pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-stat-task'))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-message'))
         self.puller.onPull = self.process
         logger.info("init auth worker pusher : %s " % (self.pusher))
         logger.info("init auth worker puller : %s " % (self.puller))
+        logger.info("init auth stat pusher : %s " % (self.stat_pusher))
 
     def find_nas(self,ip_addr):
         def fetch_result():
@@ -71,9 +73,25 @@ class RADIUSAuthWorker(object):
                 return conn.execute(table.select().where(table.c.ip_addr==ip_addr)).first()
         return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
 
+    def do_stat(self,code):
+        try:
+            stat_msg = ['auth_drop']
+            if code in (1,2,3,11):
+                stat_msg = ['auth_all']
+                if code == packet.AccessAccept:
+                    stat_msg.append('auth_accept')
+                elif  code == packet.AccessReject:
+                    stat_msg.append('auth_reject')
+            deferToThread(self.stat_pusher.push,msgpack.packb(stat_msg))
+        except:
+            pass
+
     def process(self, message):
         datagram, host, port =  msgpack.unpackb(message[0])
         reply = self.processAuth(datagram, host, port)
+        if not reply:
+            return
+        self.do_stat(reply.code)
         logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
             logger.debug(reply.format_str())
@@ -96,6 +114,8 @@ class RADIUSAuthWorker(object):
             secret, vendor_id = bas['bas_secret'], bas['vendor_id']
             req = self.createAuthPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
+
+            self.do_stat(req.code)
 
             logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
             if self.config.system.debug:
@@ -156,6 +176,7 @@ class RADIUSAuthWorker(object):
                 raise PacketError('VerifyReply error')
             return reply
         except Exception as err:
+            self.do_stat(0)
             errstr = 'RadiusError:Dropping invalid auth packet from {0} {1},{2}'.format(
                 host, port, utils.safeunicode(err))
             logger.error(errstr)
@@ -173,10 +194,12 @@ class RADIUSAcctWorker(object):
         self.db_engine = dbengine or get_engine(config)
         self.mcache = mcache.Mcache()
         self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-acct-result'))
+        self.stat_pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-stat-task'))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-acct-message'))
         self.puller.onPull = self.process
         logger.info("init acct worker pusher : %s " % (self.pusher))
         logger.info("init acct worker puller : %s " % (self.puller))
+        logger.info("init auth stat pusher : %s " % (self.stat_pusher))
         self.acct_class = {
             STATUS_TYPE_START: RadiusAcctStart,
             STATUS_TYPE_STOP: RadiusAcctStop,
@@ -193,9 +216,30 @@ class RADIUSAcctWorker(object):
                 return conn.execute(table.select().where(table.c.ip_addr==ip_addr)).first()
         return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
 
+    def do_stat(self,code, status_type=0):
+        try:
+            stat_msg = ['acct_drop']
+            if code  in (4,5):
+                stat_msg = ['acct_all']
+                if status_type == 1:
+                    stat_msg.append('acct_start')
+                elif status_type == 2:
+                    stat_msg.append('acct_stop')        
+                elif status_type == 3:
+                    stat_msg.append('acct_update')        
+                elif status_type == 7:
+                    stat_msg.append('acct_on')        
+                elif status_type == 8:
+                    stat_msg.append('acct_off')
+            deferToThread(self.stat_pusher.push,msgpack.packb(stat_msg))
+        except:
+            pass
+
     def process(self, message):
         datagram, host, port =  msgpack.unpackb(message[0])
         reply = self.processAcct(datagram, host, port)
+        if not reply:
+            return
         logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
             logger.debug(reply.format_str())
@@ -222,6 +266,8 @@ class RADIUSAcctWorker(object):
             req = self.createAcctPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
+            self.do_stat(req.code, req.get_acct_status_type())
+
             logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
             if self.config.system.debug:
                 logger.debug(req.format_str())
@@ -236,10 +282,13 @@ class RADIUSAcctWorker(object):
             status_type = req.get_acct_status_type()
             if status_type in self.acct_class:
                 acct_func = self.acct_class[status_type](
-                        self.db_engine,self.mcache,self.aes,req.get_ticket()).acctounting
+                        self.db_engine,self.mcache,None,req.get_ticket()).acctounting
                 reactor.callLater(0.1,acct_func)
-            return reply
+                return reply
+            else:
+                raise PacketError('status_type <%s> not support' % status_type)
         except Exception as err:
+            self.do_stat(0)
             errstr = 'RadiusError:Dropping invalid acct packet from {0} {1},{2}'.format(
                 host, port, utils.safeunicode(err))
             logger.error(errstr)
@@ -255,7 +304,7 @@ def run_acct(config):
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
 def run_worker(config,dbengine):
-    RADIUSAuthWorker(config,dbengine)
-    RADIUSAcctWorker(config,dbengine)
+    logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine))
+    logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine))
 
 
