@@ -55,8 +55,8 @@ class RadiusEvents:
                         conn.execute(online_table.delete().where(online_table.c.nas_addr==nasaddr))
 
 
-        def event_disconnect(self):
-            pass
+    def event_disconnect(self):
+        pass
 
 def __call__(dbengine=None, mcache=None, **kwargs):
     return RadiusEvents(dbengine=dbengine, cache=mcache, **kwargs)

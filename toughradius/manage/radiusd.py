@@ -3,7 +3,7 @@
 import datetime
 import os
 import six
-import umsgpack
+import msgpack
 import toughradius
 import zmq
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
@@ -41,11 +41,11 @@ class RADIUSMaster(protocol.DatagramProtocol):
         logger.info("init %s master puller : %s " % (self.service, self.puller))
 
     def datagramReceived(self, datagram, (host, port)):
-        message = umsgpack.packb([datagram, host, port])
+        message = msgpack.packb([datagram, host, port])
         self.pusher.push(message)
         
     def reply(self, result):
-        data, host, port = umsgpack.unpackb(result[0])
+        data, host, port = msgpack.unpackb(result[0])
         self.transport.write(data, (host, int(port)))
 
 
@@ -72,12 +72,12 @@ class RADIUSAuthWorker(object):
         return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
 
     def process(self, message):
-        datagram, host, port =  umsgpack.unpackb(message[0])
+        datagram, host, port =  msgpack.unpackb(message[0])
         reply = self.processAuth(datagram, host, port)
         logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
             logger.debug(reply.format_str())
-        self.pusher.push(umsgpack.packb([reply.ReplyPacket(),host,port]))
+        self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
 
     def createAuthPacket(self, **kwargs):
         vendor_id = kwargs.pop('vendor_id',0)
@@ -194,12 +194,12 @@ class RADIUSAcctWorker(object):
         return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
 
     def process(self, message):
-        datagram, host, port =  umsgpack.unpackb(message[0])
+        datagram, host, port =  msgpack.unpackb(message[0])
         reply = self.processAcct(datagram, host, port)
         logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
             logger.debug(reply.format_str())
-        self.pusher.push(umsgpack.packb([reply.ReplyPacket(),host,port]))
+        self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
 
 
     def createAcctPacket(self, **kwargs):
