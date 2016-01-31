@@ -73,11 +73,6 @@ class DashboardHandler(BaseHandler):
         config = self.settings.config
         self.render("index.html",config=config)
 
-@permit.route(r"/admin/dashboard/initdb", u"初始化数据库", MenuSys, order=1.0001, is_menu=False)
-class InitdbHandler(BaseHandler):
-    @cyclone.web.authenticated
-    def post(self):
-        return self.render_json(**execute("pypy /opt/toughradius/toughctl --initdb"))
 
 
 @permit.route(r"/admin/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)

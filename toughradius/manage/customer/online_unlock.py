@@ -51,13 +51,17 @@ class CustomerOnlineUnlockHandler(BaseHandler):
     def onSendResp(self, resp, disconnect_req):
         if self.db.query(models.TrOnline).filter_by(
             nas_addr=disconnect_req.nas_addr, acct_session_id=disconnect_req.acct_session_id).count() > 0:
-            radius_acct_stop.RadiusAcctStop(self.application, disconnect_req).acctounting()
+            radius_acct_stop.RadiusAcctStop(self.application.db_engine,
+                                            self.application.mcache,
+                                            self.application.aes,disconnect_req).acctounting()
         self.render_json(code=0, msg=u"send disconnect ok! coa resp : %s" % resp)
 
     def onSendError(self,err, disconnect_req):
         if self.db.query(models.TrOnline).filter_by(
             nas_addr=disconnect_req.nas_addr, acct_session_id=disconnect_req.acct_session_id).count() > 0:
-            radius_acct_stop.RadiusAcctStop(self.application, disconnect_req).acctounting()
+            radius_acct_stop.RadiusAcctStop(self.application.db_engine,
+                                            self.application.mcache,
+                                            self.application.aes, disconnect_req).acctounting()
         self.render_json(code=0, msg=u"send disconnect done! %s" % err.getErrorMessage())
 
     @cyclone.web.authenticated
@@ -74,8 +78,9 @@ class CustomerOnlineUnlockHandler(BaseHandler):
         if nas_addr and not session_id:
             onlines = self.db.query(models.TrOnline).filter_by(nas_addr=nas_addr)
             for online in onlines:
-                radius_acct_stop.RadiusAcctStop(
-                    self.application, self.get_request(online)).acctounting()
+                radius_acct_stop.RadiusAcctStop(self.application.db_engine,
+                                                self.application.mcache,
+                                                self.application.aes, self.get_request(online)).acctounting()
             self.render_json(code=1,msg=u"unlock all online done!")
             return
 

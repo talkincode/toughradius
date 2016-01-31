@@ -29,15 +29,16 @@ class AcctountingHandler(ApiHandler):
             req_msg = self.parse_request()
             if 'username' not in req_msg:
                 raise ValueError('username is empty')
+
+            if req_msg['acct_status_type'] in AcctountingHandler.acct_class:
+                acctcls =  AcctountingHandler.acct_class[req_msg.acct_status_type] 
+                app = self.application
+                acctcls(app.db_engine,app.mcache,app.aes,req_msg).acctounting()
         except Exception as err:
             self.render_result(code=1, msg=utils.safeunicode(err))
             return
 
-        if req_msg['acct_status_type'] in AcctountingHandler.acct_class:
-            AcctountingHandler.acct_class[req_msg['acct_status_type']](
-                                        self.application.db_engine,
-                                        self.application.mcache,
-                                        self.application.aes,req_msg).acctounting()
+        
 
 
 

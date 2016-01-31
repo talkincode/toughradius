@@ -19,14 +19,14 @@ class ApiHandler(BaseHandler):
     def render_result(self, **result):
         resp = apiutils.make_message(self.settings.config.system.secret, **result)
         if self.settings.debug:
-            dispatch.pub(logger.EVENT_DEBUG,"[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
+            logger.debug("[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
         self.write(resp)
 
     def parse_request(self):
         try:
-            return apiutils.parse_request(self.settings.config.system.secret, self.request.body)
+            return apiutils.parse_request(self.settings.config.system.secret, self.get_params())
         except Exception as err:
-            dispatch.pub(logger.EVENT_ERROR,u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
+            logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
             raise ValueError(u"parse params error")
 
 

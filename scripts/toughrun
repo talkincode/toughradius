@@ -8,7 +8,6 @@ set -e
 install()
 {
     pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
-
     pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 
     git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
@@ -71,7 +70,9 @@ worker()
 upgrade()
 {
     cd /opt/toughradius
-    git pull origin master
+    git fetch origin sxtver
+    git reset --hard FETCH_HEAD
+    git clean -df
 }
 
 uplib()
