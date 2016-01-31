@@ -13,7 +13,7 @@ class DdnsUpdateTask(TaseBasic):
 
     @defer.inlineCallbacks
     def process(self, *args, **kwargs):
-        dispatch.pub(logger.EVENT_INFO,"process ddns update task..")
+        logger.info("process ddns update task..")
         with make_db(self.db) as db:
             try:
                 nas_list = db.query(models.TrBas)
