@@ -13,7 +13,6 @@ class DdnsUpdateTask(TaseBasic):
 
     @defer.inlineCallbacks
     def process(self, *args, **kwargs):
-        logger.info("process ddns update task..")
         with make_db(self.db) as db:
             try:
                 nas_list = db.query(models.TrBas)

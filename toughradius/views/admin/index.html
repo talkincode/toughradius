@@ -69,6 +69,36 @@ function update() {
     },"json");
 }
 
+var online_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'online-chart',height:300},
+    title: {text: '在线用户统计'},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(utils.get_currdate(),utils.get_currdate())}'},
+    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    yAxis: {
+        title: {text: '在线数'},
+        labels: {formatter: function() {return this.value + '人';}}            
+    },
+    tooltip: {shared: true},
+    legend: {enabled: false},    
+    plotOptions: {areaspline: {
+        stacking: 'normal',
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{}]
+};
+
+function update_online()
+{
+    $.get("/admin/dashboard/onlinestat", {day_code:'${utils.get_currdate()}'} , function (ev) {
+        if (ev.code == 0) {
+            online_options.series = ev.data;
+            new Highcharts.Chart(online_options);
+        }
+    }, "json");
+}
+
 
 function restart() {
     busy(true);
@@ -99,6 +129,7 @@ $(document).ready(function () {
         update()
     });
     updateMsgStat();
+    update_online();
 });
 
 </script>
@@ -136,28 +167,15 @@ $(document).ready(function () {
                 </tbody>
                 <thead>
                 <tr>
-                    <th colspan="4"> <i class="fa fa-laptop"></i> 管理服务信息</th>
+                    <th colspan="4"> <i class="fa fa-laptop"></i> 系统状态信息</th>
                 </tr>
                 </thead>
                 <tbody>
                 <tr>
-                    <td>监听地址</td>
-                    <td>${config.admin.host}</td>
-                    <td>WEB管理端口</td>
-                    <td>${config.admin.port}</td>                    
-                </tr>
-                </tbody>
-                <thead>
-                <tr>
-                    <th colspan="4"><i class="fa fa-laptop"></i>  Radius 服务信息</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                    <td>监听地址</td>
-                    <td>${config.radiusd.host}</td>
-                    <td>认证端口/记账端口</td>
-                    <td>${config.radiusd.auth_port}／${config.radiusd.acct_port}</td>                    
+                    <td>cpu使用率</td>
+                    <td>${'; '.join([ 'cpu%s: %s/%%'%(cpuuse.index(c),c)  for c in cpuuse])}</td>
+                    <td>内存使用率</td>
+                    <td>${memuse.percent}% ;  ${int(memuse.available/1024.0/1024.0)}MB / ${int(memuse.total/1024.0/1024.0)}MB</td>                    
                 </tr>
                 </tbody>
 
@@ -172,6 +190,25 @@ $(document).ready(function () {
         </div>
     </div>
         </div>
+
+    <div class="box box-default">
+        <div class="box-header">
+            <i class="fa fa-area-chart"></i>
+            <h3 class="box-title">在线统计</h3>
+            <div class="bar pull-right">
+                        <a href="javascript:update_online();">刷新数据</a>
+            </div>
+        </div>
+        <div class="box-body">
+            <div class="container center" id="online-chart">  </div>
+            <div class="container">
+            <div class="well well-sm">
+                当前在线用户数 ${online_count}/${user_total}
+            </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="box box-default">
         <div class="box-header">

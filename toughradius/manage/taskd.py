@@ -10,7 +10,9 @@ from toughlib import logger, utils,dispatch
 from toughradius.manage import models
 from toughlib.dbengine import get_engine
 from toughlib import db_cache as cache
-from toughradius.manage.tasks import expire_notify, ddns_update, radius_stat
+from toughradius.manage.tasks import (
+    expire_notify, ddns_update, radius_stat, online_stat
+)
 from toughradius.manage.events import radius_events
 import toughradius
 
@@ -27,6 +29,7 @@ class TaskDaemon():
         self.expire_notify_task = expire_notify.ExpireNotifyTask(self)
         self.ddns_update_task = ddns_update.DdnsUpdateTask(self)
         self.radius_stat_task = radius_stat.RadiusStatTask(self)
+        self.online_stat_task = online_stat.OnlineStatTask(self)
 
         dispatch.register(radius_events.__call__(self.db_engine,self.cache))
 
@@ -42,11 +45,17 @@ class TaskDaemon():
         _time = self.radius_stat_task.process()
         reactor.callLater(_time, self.start_radius_stat_update)
 
+    def start_online_stat_task(self):
+        _time = self.online_stat_task.process()
+        reactor.callLater(_time, self.start_online_stat_task)
+
 
     def start(self):
         self.start_expire_notify()
         self.start_ddns_update()
         self.start_radius_stat_update()
+        self.start_online_stat_task()
+        logger.info('init task done')
 
 
 

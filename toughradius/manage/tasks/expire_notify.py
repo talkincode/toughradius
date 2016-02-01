@@ -54,7 +54,6 @@ class ExpireNotifyTask(TaseBasic):
 
 
     def process(self, *args, **kwargs):
-        logger.info("process expire notify task..")
         with make_db(self.db) as db:
             _enable = int(self.get_param_value("expire_notify_enable",0))
             if not _enable:

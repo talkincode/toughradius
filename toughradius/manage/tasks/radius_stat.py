@@ -25,7 +25,6 @@ class RadiusStatTask(TaseBasic):
             self.statdata.incr(statattr,incr=1)
 
     def process(self, *args, **kwargs):
-        logger.info("process radius stat task..")
         try:
             self.statdata.run_stat()
             if self.cache.get(radius_statcache_key):
