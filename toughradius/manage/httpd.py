@@ -88,7 +88,7 @@ class HttpServer(cyclone.web.Application):
                     elif opr.operator_type == 0:  # 超级管理员授权所有
                         permit.bind_super(opr.operator_name)
             except Exception as err:
-                dispatch.pub(logger.EVENT_ERROR,"init route error , %s" % str(err))
+                logger.error("init route error , %s" % str(err))
 
 def run(config, dbengine):
     app = HttpServer(config, dbengine)

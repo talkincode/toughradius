@@ -40,7 +40,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         
     def get_error_html(self, status_code=500, **kwargs):
         try:
-            # dispatch.pub(logger.EVENT_ERROR,"HTTPError : [status_code:{0}], {1}".format(status_code, repr(kwargs)))
+            # logger.error("HTTPError : [status_code:{0}], {1}".format(status_code, repr(kwargs)))
             if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
@@ -71,7 +71,7 @@ class BaseHandler(cyclone.web.RequestHandler):
             template_vars["code"] = 0
         resp = json.dumps(template_vars, ensure_ascii=False)
 #        if self.settings.debug:
-#            dispatch.pub(logger.EVENT_DEBUG,"[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
+#            logger.debug("[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
         self.write(resp)
 
 

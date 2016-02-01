@@ -14,7 +14,7 @@ class RadiusAcctUpdate(RadiusBilling):
 
     def acctounting(self):
         if not self.account:
-            return dispatch.pub(logger.EVENT_ERROR,
+            return logger.error(
                 "[Acct] Received an accounting update request but user[%s] not exists"% self.request.account_number)     
 
         ticket = Storage(**self.request)
@@ -39,7 +39,7 @@ class RadiusAcctUpdate(RadiusBilling):
             self.add_online(online)
 
         self.billing(online)
-        dispatch.pub(logger.EVENT_INFO,'%s Accounting update request, update online'% self.account.account_number)
+        logger.info('%s Accounting update request, update online'% self.account.account_number)
 
 
         

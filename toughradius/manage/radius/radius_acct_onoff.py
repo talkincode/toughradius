@@ -14,4 +14,4 @@ class RadiusAcctOnoff(RadiusBasic):
 
     def acctounting(self):
         self.unlock_online(self.request.nas_addr,None)
-        dispatch.pub(logger.EVENT_INFO,'bas accounting onoff success')
+        logger.info('bas accounting onoff success')

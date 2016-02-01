@@ -25,7 +25,7 @@ class RadiusBilling(RadiusBasic):
     def billing(self, online):
         product = self.get_product_by_id(self.account.product_id)
         if not product:
-            dispatch.pub(logger.EVENT_ERROR,'product <%s> not exists' % self.account.product_id)
+            logger.error('product <%s> not exists' % self.account.product_id)
             return
 
         if product.product_policy not in (PPTimes,BOTimes,PPFlow,BOFlows):
@@ -39,7 +39,7 @@ class RadiusBilling(RadiusBasic):
             
     def bill_pptimes(self,online,product):
         # 预付费时长
-        dispatch.pub(logger.EVENT_INFO,'%s > Prepaid long time billing ' % self.account.account_number)
+        logger.info('%s > Prepaid long time billing ' % self.account.account_number)
         user_balance = self.get_user_balance()
         sessiontime = decimal.Decimal(self.request.acct_session_time)
         billing_times = decimal.Decimal(online.billing_times)
@@ -77,7 +77,7 @@ class RadiusBilling(RadiusBasic):
 
     def bill_botimes(self,online, product):
         #买断时长
-        dispatch.pub(logger.EVENT_INFO,'%s > Buyout long time billing ' % self.account.account_number)
+        logger.info('%s > Buyout long time billing ' % self.account.account_number)
         time_length = self.get_user_time_length()
         sessiontime = self.request.acct_session_time
         billing_times = online.billing_times
@@ -110,7 +110,7 @@ class RadiusBilling(RadiusBasic):
 
     def bill_ppflows(self, online, product):
         #预付费流量
-        dispatch.pub(logger.EVENT_INFO,'%s > Prepaid flow billing '% self.account.account_number)
+        logger.info('%s > Prepaid flow billing '% self.account.account_number)
         user_balance = self.get_user_balance()
         output_total = decimal.Decimal(self.get_output_total())
         billing_output_total = decimal.Decimal(online.output_total)
@@ -148,7 +148,7 @@ class RadiusBilling(RadiusBasic):
 
     def bill_boflows(self, online, product):
         #买断流量
-        dispatch.pub(logger.EVENT_INFO,'%s > Buyout flow billing ' % self.account.account_number)
+        logger.info('%s > Buyout flow billing ' % self.account.account_number)
         flow_length = self.get_user_flow_length()
         output_total = self.get_output_total()
         billing_output_total = online.output_total

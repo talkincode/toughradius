@@ -49,7 +49,7 @@ class NasFetchHandler(ApiHandler):
 
             self.render_result(**result)
         except Exception as err:
-            dispatch.pub(logger.EVENT_ERROR,u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
+            logger.error(u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
             self.render_result(code=1, msg=u"api error")
 
 

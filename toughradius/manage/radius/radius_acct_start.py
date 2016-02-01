@@ -15,10 +15,10 @@ class RadiusAcctStart(RadiusBilling):
 
     def acctounting(self):
         if self.is_online(self.request.nas_addr,self.request.acct_session_id):
-            return dispatch.pub(logger.EVENT_ERROR,'online %s is exists' % self.request.acct_session_id)
+            return logger.error('online %s is exists' % self.request.acct_session_id)
 
         if not self.account:
-            return dispatch.pub(logger.EVENT_ERROR,'user %s not exists' % self.request.account_number)
+            return logger.error('user %s not exists' % self.request.account_number)
 
         online = Storage(
             account_number = self.request.account_number,
@@ -34,7 +34,7 @@ class RadiusAcctStart(RadiusBilling):
             start_source = STATUS_TYPE_START
         )
         self.add_online(online)
-        dispatch.pub(logger.EVENT_INFO,'%s Accounting start request, add new online'%online.account_number)
+        logger.info('%s Accounting start request, add new online'%online.account_number)
 
 
 
