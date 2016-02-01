@@ -100,6 +100,46 @@ function update_online()
 }
 
 
+var flow_options = {
+    credits : {enabled:false},
+    chart: {type: 'areaspline',renderTo: 'flow-chart',height:300},
+    title: {text: '流量统计'},
+    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(utils.get_currdate(),utils.get_currdate())}'},
+    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    yAxis: {title: {text: '使用流量'},
+        labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
+    },
+    tooltip: {shared: true, valueSuffix: 'MB'},
+    legend: {
+                layout: 'vertical',
+                align: 'left',
+                verticalAlign: 'top',
+                x: 150,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: '#FFFFFF'
+            },  
+    plotOptions: {areaspline: {
+        marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+        fillOpacity: 0.4
+    }},           
+    series: [{}]
+};
+
+function update_flow()
+{
+    $.get("/admin/dashboard/flowstat", {day_code:'${utils.get_currdate()}'} , function (ev) {
+        if (ev.code == 0) {
+            flow_options.series = ev.data;
+            new Highcharts.Chart(flow_options);
+        }
+    }, "json");
+}
+
+
+
+
 function restart() {
     busy(true);
     $.ajax({
@@ -130,6 +170,7 @@ $(document).ready(function () {
     });
     updateMsgStat();
     update_online();
+    update_flow();
 });
 
 </script>
@@ -189,25 +230,7 @@ $(document).ready(function () {
             
         </div>
     </div>
-        </div>
-
-    <div class="box box-default">
-        <div class="box-header">
-            <i class="fa fa-area-chart"></i>
-            <h3 class="box-title">在线统计</h3>
-            <div class="bar pull-right">
-                        <a href="javascript:update_online();">刷新数据</a>
-            </div>
-        </div>
-        <div class="box-body">
-            <div class="container center" id="online-chart">  </div>
-            <div class="container">
-            <div class="well well-sm">
-                当前在线用户数 ${online_count}/${user_total}
-            </div>
-            </div>
-        </div>
-    </div>
+ </div>
 
 
     <div class="box box-default">
@@ -268,6 +291,38 @@ $(document).ready(function () {
                 </div>
             </div>
         </div>
+        </div>
+
+    <div class="box box-default">
+        <div class="box-header">
+            <i class="fa fa-area-chart"></i>
+            <h3 class="box-title">在线统计</h3>
+            <div class="bar pull-right">
+                        <a href="javascript:update_online();">刷新数据</a>
+            </div>
+        </div>
+        <div class="box-body">
+            <div class="container center" id="online-chart">  </div>
+            <div class="container">
+            <div class="well well-sm">
+                当前在线用户数 ${online_count}/${user_total}
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="box box-default">
+        <div class="box-header">
+            <i class="fa fa-area-chart"></i>
+            <h3 class="box-title">流量统计</h3>
+            <div class="bar pull-right">
+                <a href="javascript:update_flow();">刷新数据</a>
+            </div>
+        </div>
+        <div class="box-body">
+            <div class="container center" id="flow-chart">  </div>
+        </div>
+    </div>
 </section>
 </%def>
 

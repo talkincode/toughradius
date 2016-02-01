@@ -70,8 +70,8 @@ class BaseHandler(cyclone.web.RequestHandler):
         if not template_vars.has_key("code"):
             template_vars["code"] = 0
         resp = json.dumps(template_vars, ensure_ascii=False)
-        if self.settings.debug:
-            dispatch.pub(logger.EVENT_DEBUG,"[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
+#        if self.settings.debug:
+#            dispatch.pub(logger.EVENT_DEBUG,"[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
         self.write(resp)
 
 
