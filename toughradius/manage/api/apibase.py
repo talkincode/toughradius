@@ -7,7 +7,7 @@ import json
 import time
 import traceback
 from hashlib import md5
-from toughlib import utils, apiutils, dispatch
+from toughlib import utils, apiutils, dispatch, logger
 from toughradius.manage.base import BaseHandler
 
 
@@ -22,9 +22,16 @@ class ApiHandler(BaseHandler):
             logger.debug("[api debug] :: %s response body: %s" % (self.request.path, utils.safeunicode(resp)))
         self.write(resp)
 
-    def parse_request(self):
+    def parse_form_request(self):
         try:
             return apiutils.parse_request(self.settings.config.system.secret, self.get_params())
+        except Exception as err:
+            logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
+            raise ValueError(u"parse params error")
+
+    def parse_request(self):
+        try:
+            return apiutils.parse_request(self.settings.config.system.secret, self.request.body)
         except Exception as err:
             logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
             raise ValueError(u"parse params error")
