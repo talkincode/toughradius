@@ -90,6 +90,7 @@ raddb:
     restart: always
     volumes:
         - ${rundir}/$instance/trmysql:/var/lib/mysql
+        - ${rundir}/$instance/backup:/var/backup
 
 radius:
     container_name: radius_${instance}

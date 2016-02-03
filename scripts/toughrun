@@ -70,7 +70,7 @@ worker()
 upgrade()
 {
     cd /opt/toughradius
-    git fetch origin sxtver
+    git fetch origin master
     git reset --hard FETCH_HEAD
     git clean -df
 }
