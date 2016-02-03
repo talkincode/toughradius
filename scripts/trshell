@@ -207,6 +207,9 @@ install_with_rmysql()
         exit 1
     fi
 
+    read -p "mysql port (3306): " mysql_port
+    mysql_port=${mysql_port:-"3306"}
+
     read -p "mysql user [raduser]: " mysql_user
     mysql_user=${mysql_user:-raduser}
 
@@ -234,6 +237,7 @@ install_with_rmysql()
 
     instance name: $instance
     mysql_host: ${mysql_host}
+    mysql_port: ${mysql_port}
     mysql_user: ${mysql_user}
     mysql_password: ${mysql_password}
     mysql_database: ${mysql_database}
@@ -255,7 +259,7 @@ radius:
         - "${acct_port}:1813/udp"
     environment:
         - DB_TYPE=mysql
-        - DB_URL=mysql://$mysql_user:$mysql_password@$mysql_host:3306/$mysql_database?charset=utf8
+        - DB_URL=mysql://$mysql_user:$mysql_password@$mysql_host:$mysql_port/$mysql_database?charset=utf8
     restart: always
     ulimits:
         nproc: 65535
@@ -358,7 +362,7 @@ logs()
 {
     instance=${1:-toughradius}
     cd ${rundir}/$instance
-    docker-compose logs
+    tail -f ./toughradius.log
 }
 
 dsh()

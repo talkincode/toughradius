@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding:utf-8
+import os
 import cyclone.web
 from toughlib import utils, logger, dispatch
 from toughradius.manage.base import BaseHandler
@@ -16,6 +17,10 @@ class ConfigHandler(BaseHandler):
         system_form = config_forms.system_form()
         system_form.fill(self.settings.config.system)
         database_form = config_forms.database_form()
+        if 'DB_TYPE' in os.environ and 'DB_URL' in os.environ:
+            self.settings.config['database']['dbtype'] = os.environ.get('DB_TYPE')
+            self.settings.config['database']['dburl'] = os.environ.get('DB_URL')
+
         database_form.fill(self.settings.config.database)        
         syslog_form = config_forms.syslog_form()
         syslog_form.fill(self.settings.config.syslog)
