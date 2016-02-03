@@ -97,17 +97,17 @@ def init_db(db):
 def update(config):
     try:
         db_engine = get_engine(config)
-        print 'starting update database...'
-        metadata = models.get_metadata(db_engine)
-        metadata.drop_all(db_engine)
-        metadata.create_all(db_engine)
-        print 'update database done'
-        db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
-        init_db(db)
+        if db_engine.dbinit == 1:
+            print 'starting update database...'
+            metadata = models.get_metadata(db_engine)
+            metadata.drop_all(db_engine)
+            metadata.create_all(db_engine)
+            print 'update database done'
+            db = scoped_session(sessionmaker(bind=db_engine, autocommit=False, autoflush=True))()
+            init_db(db)
     except:
-        print 'initdb error, retry wait 5 second'
-        time.sleep(5.0)
-        update(config)
+        import traceback
+        traceback.print_exc()
 
 
 
