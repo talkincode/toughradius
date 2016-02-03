@@ -79,7 +79,7 @@ class NodeDeleteHandler(BaseHandler):
             
         self.db.query(models.TrNode).filter_by(id=node_id).delete()
 
-        self.add_oplog(u'删除区域信息:%s' % ops_log.operator_name)
+        self.add_oplog(u'删除区域信息:%s' % node_id)
 
         self.db.commit()
 
