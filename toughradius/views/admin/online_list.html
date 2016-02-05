@@ -4,17 +4,34 @@
 <title>在线用户管理</title>
 <script>
 
+function busy(flag) {
+    if (flag) {
+        $(".dorelease").attr("disabled", "disabled"); 
+        $("#realse_all").attr("disabled", "disabled");    
+        $("#query_action").attr("disabled", "disabled");    
+    } else {
+        $(".dorelease").removeAttr("disabled");
+        $("#realse_all").removeAttr("disabled");
+        $("#query_action").removeAttr("disabled");
+    }
+}
+
+
 function unlock_online(obj,username, nas_addr,session_id){
+    busy(true);
     param = {
         'username': username,
         'nas_addr': nas_addr,
         'session_id':session_id,
         '_xsrf': '${handler.xsrf_token}'
     }
-    $(obj).attr("disabled","disabled")
+    if(obj){
+        $(obj).attr("disabled","disabled")
+    }
     $.post("/admin/customer/online/unlock", param, function (ev) {
         console.log(ev);
         alert(ev.msg);
+        busy(false);
         window.location.reload();
     }, "json");
 }
@@ -29,7 +46,7 @@ $(document).ready(function (){
         }
         if(confirm("是否解锁该bas下所有用户?"))
         {
-             unlock_online('',nas_addr,'')
+             unlock_online('','',nas_addr,'')
         }
     });
 
@@ -98,9 +115,9 @@ $(document).ready(function (){
 
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" class="btn btn-primary">查询</button>&nbsp;&nbsp;
+                    <button type="submit" id="query_action" class="btn btn-primary">查询</button>&nbsp;&nbsp;
                     % if int(current_user.opr_type) == 0 :
-                    <button type="button" class="btn btn-default" id="realseAll">BAS用户下线</button>
+                    <button type="button" id="realse_all" class="btn btn-default" id="realseAll">BAS用户下线</button>
                     % endif
                 </div>
             </div>
@@ -134,7 +151,7 @@ $(document).ready(function (){
                 <td>${utils.fmt_online_time(online.acct_start_time)}</td>
                 <td>${utils.kb2mb(online.input_total)}M/${utils.kb2mb(online.output_total)}M</td>
                 <td>
-                <a class="opt-btn btn-default" href="javascript:unlock_online(this,'${online.account_number}','${online.nas_addr}','${online.acct_session_id}');">解锁</a>
+                <a class="opt-btn btn-default dorelease" href="javascript:unlock_online(this,'${online.account_number}','${online.nas_addr}','${online.acct_session_id}');">解锁</a>
                 </td>
             </tr>
                 % endfor

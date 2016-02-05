@@ -235,17 +235,13 @@ class RADIUSAcctWorker(object):
         except:
             pass
 
-    def process(self, message):
-        datagram, host, port =  msgpack.unpackb(message[0])
-        reply = self.processAcct(datagram, host, port)
-        if not reply:
-            return
-        logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
-        if self.config.system.debug:
-            logger.debug(reply.format_str())
+    def sendResp(self,reply,host,port):
         self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
 
-
+    def process(self, message):
+        datagram, host, port =  msgpack.unpackb(message[0])
+        self.processAcct(datagram, host, port, callback=self.sendResp)
+        
     def createAcctPacket(self, **kwargs):
         vendor_id = 0
         if 'vendor_id' in kwargs:
@@ -256,7 +252,7 @@ class RADIUSAcctWorker(object):
         acct_message = vlan_parse.process(acct_message)
         return acct_message
 
-    def processAcct(self, datagram, host, port):
+    def processAcct(self, datagram, host, port, callback=None):
         try:
             bas = self.find_nas(host)
             if not bas:
@@ -279,14 +275,19 @@ class RADIUSAcctWorker(object):
                 raise PacketError('VerifyAcctRequest error')
 
             reply = req.CreateReply()
+            callback(reply, host, port)
+            self.do_stat(reply.code)
+            logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
+            if self.config.system.debug:
+                logger.debug(reply.format_str())
+
             status_type = req.get_acct_status_type()
             if status_type in self.acct_class:
                 acct_func = self.acct_class[status_type](
                         self.db_engine,self.mcache,None,req.get_ticket()).acctounting
                 reactor.callLater(0.1,acct_func)
-                return reply
             else:
-                raise PacketError('status_type <%s> not support' % status_type)
+                logger.error('status_type <%s> not support' % status_type)
         except Exception as err:
             self.do_stat(0)
             errstr = 'RadiusError:Dropping invalid acct packet from {0} {1},{2}'.format(

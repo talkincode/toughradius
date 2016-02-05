@@ -74,6 +74,14 @@ class CustomerOnlineUnlockHandler(BaseHandler):
         nas_addr = self.get_argument('nas_addr',None)
         session_id = self.get_argument('session_id',None)
         nas = self.db.query(models.TrBas).filter_by(ip_addr=nas_addr).first()
+        if nas_addr and not nas:
+            self.db.query(models.TrOnline).filter_by(
+                nas_addr=nas_addr,
+                acct_session_id=session_id
+            ).delete()
+            self.db.commit()
+            self.render_json(code=1,msg=u"nasaddr not exists, online clear!")
+            return
 
         if nas_addr and not session_id:
             onlines = self.db.query(models.TrOnline).filter_by(nas_addr=nas_addr)
@@ -98,11 +106,11 @@ class CustomerOnlineUnlockHandler(BaseHandler):
             os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
 
         deferd = authorize.disconnect(
-            int(nas.vendor_id), 
+            int(nas.vendor_id or 0), 
             CustomerOnlineUnlockHandler.dictionary, 
             nas.bas_secret, 
             nas.ip_addr, 
-            coa_port=int(nas.coa_port), 
+            coa_port=int(nas.coa_port or 3799), 
             debug=True,
             User_Name=username,
             NAS_IP_Address=nas.ip_addr,

@@ -216,7 +216,7 @@ $(document).ready(function () {
                     <td>cpu使用率</td>
                     <td>${'; '.join([ 'cpu%s: %s/%%'%(cpuuse.index(c),c)  for c in cpuuse])}</td>
                     <td>内存使用率</td>
-                    <td>${memuse.percent}% ;  ${int(memuse.available/1024.0/1024.0)}MB / ${int(memuse.total/1024.0/1024.0)}MB</td>                    
+                    <td>${memuse.percent}% ;  ${int((memuse.total-memuse.available)/1024.0/1024.0)}MB / ${int(memuse.total/1024.0/1024.0)}MB</td>                    
                 </tr>
                 </tbody>
 
@@ -288,8 +288,15 @@ $(document).ready(function () {
                         </li>
                     </ul>
                     </div>
+
                 </div>
             </div>
+
+                    <div class="container">
+                    <div class="well well-sm">
+                        最高峰值： <span id="last_max"></span>/每秒, 发生在 <span id="last_max_date"></span>
+                    </div>
+                    </div>
         </div>
         </div>
 
