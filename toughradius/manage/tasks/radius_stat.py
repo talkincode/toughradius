@@ -30,7 +30,6 @@ class RadiusStatTask(TaseBasic):
             if self.cache.get(radius_statcache_key):
                 self.cache.update(radius_statcache_key,self.statdata)
             else:
-                self.statdata = statistics.MessageStat()
                 self.cache.set(radius_statcache_key,self.statdata)
         except Exception as err:
             logger.error('radius stat process error %s' % utils.safeunicode(err.message))
