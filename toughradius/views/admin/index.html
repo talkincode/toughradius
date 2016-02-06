@@ -42,26 +42,38 @@ var msgstat_options = {
 };
 
 var msgstat_chart;
+
+function updateMsgChart(data){
+    console.log(data)
+    for (p in data){
+        $("#"+p).html(data[p])
+    }
+    var auth_req_stat = {name:'认证请求消息',data:data.auth_req_stat};
+    var auth_resp_stat = {name:'认证响应消息',data:data.auth_resp_stat};
+    var acct_req_stat = {name:'计费请求消息',data:data.acct_req_stat};
+    var acct_resp_stat = {name:'计费响应消息',data:data.acct_resp_stat};
+    msgstat_chart.series[0].update(auth_req_stat) ;
+    msgstat_chart.series[1].update(auth_resp_stat) ;
+    msgstat_chart.series[2].update(acct_req_stat) ;
+    msgstat_chart.series[3].update(acct_resp_stat) ;
+}
+
 function updateMsgStat(){
     if(!msgstat_chart){
         msgstat_chart = new Highcharts.Chart(msgstat_options);
     }
     $.get("/admin/dashboard/msgstat", function (data) {
-        console.log(data)
-        for (p in data){
-            $("#"+p).html(data[p])
-        }
-        var auth_req_stat = {name:'认证请求消息',data:data.auth_req_stat};
-        var auth_resp_stat = {name:'认证响应消息',data:data.auth_resp_stat};
-        var acct_req_stat = {name:'计费请求消息',data:data.acct_req_stat};
-        var acct_resp_stat = {name:'计费响应消息',data:data.acct_resp_stat};
-        msgstat_chart.series[0].update(auth_req_stat) ;
-        msgstat_chart.series[1].update(auth_resp_stat) ;
-        msgstat_chart.series[2].update(acct_req_stat) ;
-        msgstat_chart.series[3].update(acct_resp_stat) ;
+        updateMsgChart(data);
     },"json");
-    setTimeout("updateMsgStat()", 9000);
+    setTimeout("updateMsgStat()", 10000);
 }
+
+function resetMsgStat() {
+    $.get("/admin/dashboard/msgstat/reset", function (data) {
+        updateMsgChart(data);
+    },"json");
+}
+
 
 function update() {
     busy(true);
@@ -71,11 +83,6 @@ function update() {
     },"json");
 }
 
-function resetMsgStat() {
-    $.get("/admin/dashboard/msgstat/reset", function (data) {
-        updateMsgStat();
-    },"json");
-}
 
 var online_options = {
     credits : {enabled:false},

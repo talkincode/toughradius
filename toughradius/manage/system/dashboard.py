@@ -103,8 +103,9 @@ class MsgStatHandler(BaseHandler):
 class MsgStatResetHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
-        self.cache.update(radius_statcache_key,statistics.MessageStat())
-        self.render_json(code=0)
+        self.cache.delete(radius_statcache_key)
+        resp = json.dumps(statistics.MessageStat(), cls=ComplexEncoder,ensure_ascii=False)
+        self.write(resp)
 
 @permit.route(r"/admin/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)
 class RestartHandler(BaseHandler):
