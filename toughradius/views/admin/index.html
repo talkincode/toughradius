@@ -42,6 +42,7 @@ var msgstat_options = {
 };
 
 var msgstat_chart;
+var mstimer;
 
 function updateMsgChart(data){
     console.log(data)
@@ -58,14 +59,20 @@ function updateMsgChart(data){
     msgstat_chart.series[3].update(acct_resp_stat) ;
 }
 
-function updateMsgStat(){
-    if(!msgstat_chart){
+function updateMsgStat()
+{
+    if(!msgstat_chart)
+    {
         msgstat_chart = new Highcharts.Chart(msgstat_options);
+    }
+    if(mstimer)
+    {
+        clearTimeout(mstimer);
     }
     $.get("/admin/dashboard/msgstat", function (data) {
         updateMsgChart(data);
     },"json");
-    setTimeout("updateMsgStat()", 10000);
+    mstimer = setTimeout("updateMsgStat()", 10000);
 }
 
 function resetMsgStat() {
