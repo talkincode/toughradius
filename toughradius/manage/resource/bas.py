@@ -92,4 +92,4 @@ class BasDeleteHandler(BaseHandler):
         self.add_oplog(u'删除接入设备信息:%s' % bas_id)
 
         self.db.commit()
-        self.redirect("/admin/admin/bas",permanent=False)
+        self.redirect("/admin/bas",permanent=False)
