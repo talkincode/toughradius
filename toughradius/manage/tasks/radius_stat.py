@@ -34,4 +34,4 @@ class RadiusStatTask(TaseBasic):
         except Exception as err:
             logger.error('radius stat process error %s' % utils.safeunicode(err.message))
 
-        return 15.0
+        return 10.0

@@ -78,7 +78,9 @@ class RADIUSAuthWorker(object):
             stat_msg = ['auth_drop']
             if code in (1,2,3,11):
                 stat_msg = ['auth_all']
-                if code == packet.AccessAccept:
+                if code == packet.AccessRequest:
+                    stat_msg.append('auth_req')
+                elif code == packet.AccessAccept:
                     stat_msg.append('auth_accept')
                 elif  code == packet.AccessReject:
                     stat_msg.append('auth_reject')
@@ -221,6 +223,12 @@ class RADIUSAcctWorker(object):
             stat_msg = ['acct_drop']
             if code  in (4,5):
                 stat_msg = ['acct_all']
+
+                if code == packet.AccountingRequest:
+                    stat_msg.append('acct_req')
+                elif code == packet.AccountingResponse:
+                    stat_msg.append('acct_resp')
+
                 if status_type == 1:
                     stat_msg.append('acct_start')
                 elif status_type == 2:
