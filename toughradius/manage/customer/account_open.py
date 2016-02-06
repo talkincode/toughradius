@@ -9,7 +9,7 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils, dispatch
+from toughlib import utils, dispatch,db_cache
 from toughradius.manage.settings import * 
 from toughradius.manage.events.settings import ACCOUNT_OPEN_EVENT
 
@@ -110,6 +110,7 @@ class AccountOpentHandler(account.AccountHandler):
         self.db.commit()
 
         dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
+        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
 
         self.redirect(self.detail_url_fmt(account.account_number))
 

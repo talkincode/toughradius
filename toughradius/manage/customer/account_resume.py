@@ -10,7 +10,7 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils,dispatch,db_cache
 from toughradius.manage.settings import * 
 
 @permit.route(r"/admin/account/resume", u"用户复机",MenuUser, order=2.1000)
@@ -41,6 +41,7 @@ class AccountResumetHandler(account.AccountHandler):
         self.db.add(accept_log)
 
         self.db.commit()
+        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
         return self.render_json(msg=u"操作成功")
 
 

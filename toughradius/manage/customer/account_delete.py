@@ -9,7 +9,7 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils, dispatch
+from toughlib import utils, dispatch,db_cache
 from toughradius.manage.settings import * 
 from toughradius.manage.events.settings import ACCOUNT_DELETE_EVENT
 
@@ -34,6 +34,7 @@ class AccountDeleteHandler(account.AccountHandler):
         self.add_oplog(u'删除用户账号%s' % (account_number))
         self.db.commit()
         dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
+        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account_number), async=True)
         return self.redirect("/admin/customer")
 
 
