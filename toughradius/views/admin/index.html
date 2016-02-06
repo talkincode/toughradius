@@ -76,6 +76,8 @@ function updateMsgStat()
 }
 
 function resetMsgStat() {
+    if(!confirm("确认重置数据吗？"))
+        return;
     $.get("/admin/dashboard/msgstat/reset", function (data) {
         updateMsgChart(data);
     },"json");
