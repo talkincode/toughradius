@@ -7,6 +7,7 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.system import param_forms
 from toughradius.manage import models
 from toughlib.permit import permit
+from toughlib import dispatch,db_cache
 from toughradius.manage.settings import * 
 
 @permit.route("/admin/param", u"系统参数管理", MenuSys, is_menu=True, order=2.0005)
@@ -54,6 +55,8 @@ class ParamUpdateHandler(BaseHandler):
                 self.db.add(param)
             else:
                 param.param_value = self.get_argument(param_name)
+
+            dispatch.pub(db_cache.CACHE_SET_EVENT,param.param_name,param.param_value,600)
 
         self.add_oplog(u'操作员(%s)修改参数' % (self.current_user.username))
         self.db.commit()
