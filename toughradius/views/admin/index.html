@@ -69,6 +69,12 @@ function update() {
     },"json");
 }
 
+function resetMsgStat() {
+    $.get("/admin/dashboard/msgstat/reset", function (data) {
+        updateMsgStat();
+    },"json");
+}
+
 var online_options = {
     credits : {enabled:false},
     chart: {type: 'areaspline',renderTo: 'online-chart',height:300},
@@ -238,7 +244,8 @@ $(document).ready(function () {
             <i class="fa fa-area-chart"></i>
             <h3 class="box-title">消息统计</h3>
             <div class="bar pull-right">
-                        <a href="javascript:updateMsgStat();">刷新数据</a>
+                <a href="javascript:resetMsgStat();">重置数据</a> 
+                <a href="javascript:updateMsgStat();">刷新数据</a>
             </div>
         </div>
         <div class="box-body">

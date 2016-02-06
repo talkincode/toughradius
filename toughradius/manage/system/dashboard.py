@@ -98,6 +98,13 @@ class MsgStatHandler(BaseHandler):
         resp = json.dumps(self.cache.get(radius_statcache_key), cls=ComplexEncoder,ensure_ascii=False)
         self.write(resp)
 
+@permit.route(r"/admin/dashboard/msgstat/reset", u"消息统计重置", MenuSys, order=1.0001, is_menu=False)
+class MsgStatResetHandler(BaseHandler):
+    @cyclone.web.authenticated
+    def get(self):
+        self.cache.delete(radius_statcache_key)
+        self.render_json(code=0)
+
 @permit.route(r"/admin/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)
 class RestartHandler(BaseHandler):
     @cyclone.web.authenticated
