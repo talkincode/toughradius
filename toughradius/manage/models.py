@@ -41,7 +41,7 @@ class SystemCache(DeclarativeBase):
     }
 
     key = Column(u'_key', Unicode(length=512), primary_key=True, nullable=False,doc=u"cache key")
-    value = Column(u'_value', Unicode(length=4096), nullable=False,doc=u"cache value")
+    value = Column(u'_value', Unicode(length=8192), nullable=False,doc=u"cache value")
     time = Column(u'_time', INTEGER(), nullable=False,doc=u"cache timeout")
 
 
