@@ -10,6 +10,7 @@ import cyclone.auth
 import cyclone.escape
 import cyclone.web
 from toughradius.manage.base import BaseHandler
+from txradius import statistics
 from toughlib.permit import permit
 from toughlib import utils
 from collections import deque
@@ -102,7 +103,7 @@ class MsgStatHandler(BaseHandler):
 class MsgStatResetHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
-        self.cache.delete(radius_statcache_key)
+        self.cache.update(radius_statcache_key,statistics.MessageStat())
         self.render_json(code=0)
 
 @permit.route(r"/admin/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)
