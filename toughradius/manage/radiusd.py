@@ -75,15 +75,15 @@ class RADIUSAuthWorker(object):
 
     def do_stat(self,code):
         try:
-            stat_msg = ['auth_drop']
-            if code in (1,2,3,11):
-                stat_msg = ['auth_all']
-                if code == packet.AccessRequest:
-                    stat_msg.append('auth_req')
-                elif code == packet.AccessAccept:
-                    stat_msg.append('auth_accept')
-                elif  code == packet.AccessReject:
-                    stat_msg.append('auth_reject')
+            stat_msg = []
+            if code == packet.AccessRequest:
+                stat_msg.append('auth_req')
+            elif code == packet.AccessAccept:
+                stat_msg.append('auth_accept')
+            elif  code == packet.AccessReject:
+                stat_msg.append('auth_reject')
+            else:
+                stat_msg = ['auth_drop']
             deferToThread(self.stat_pusher.push,msgpack.packb(stat_msg))
         except:
             pass
@@ -222,8 +222,7 @@ class RADIUSAcctWorker(object):
         try:
             stat_msg = ['acct_drop']
             if code  in (4,5):
-                stat_msg = ['acct_all']
-
+                stat_msg = []
                 if code == packet.AccountingRequest:
                     stat_msg.append('acct_req')
                 elif code == packet.AccountingResponse:
@@ -243,12 +242,9 @@ class RADIUSAcctWorker(object):
         except:
             pass
 
-    def sendResp(self,reply,host,port):
-        self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
-
     def process(self, message):
         datagram, host, port =  msgpack.unpackb(message[0])
-        self.processAcct(datagram, host, port, callback=self.sendResp)
+        self.processAcct(datagram, host, port)
         
     def createAcctPacket(self, **kwargs):
         vendor_id = 0
@@ -260,7 +256,7 @@ class RADIUSAcctWorker(object):
         acct_message = vlan_parse.process(acct_message)
         return acct_message
 
-    def processAcct(self, datagram, host, port, callback=None):
+    def processAcct(self, datagram, host, port):
         try:
             bas = self.find_nas(host)
             if not bas:
@@ -283,7 +279,7 @@ class RADIUSAcctWorker(object):
                 raise PacketError('VerifyAcctRequest error')
 
             reply = req.CreateReply()
-            callback(reply, host, port)
+            self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
             self.do_stat(reply.code)
             logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
             if self.config.system.debug:
