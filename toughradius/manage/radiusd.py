@@ -84,7 +84,7 @@ class RADIUSAuthWorker(object):
                 stat_msg.append('auth_reject')
             else:
                 stat_msg = ['auth_drop']
-            deferToThread(self.stat_pusher.push,msgpack.packb(stat_msg))
+            self.stat_pusher.push(msgpack.packb(stat_msg))
         except:
             pass
 
@@ -238,7 +238,7 @@ class RADIUSAcctWorker(object):
                     stat_msg.append('acct_on')        
                 elif status_type == 8:
                     stat_msg.append('acct_off')
-            deferToThread(self.stat_pusher.push,msgpack.packb(stat_msg))
+            self.stat_pusher.push(msgpack.packb(stat_msg))
         except:
             pass
 
