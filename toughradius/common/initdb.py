@@ -97,7 +97,7 @@ def init_db(db):
 def update(config):
     try:
         db_engine = get_engine(config)
-        if os.environ.get("DB_INIT", 1) == 1:
+        if int(os.environ.get("DB_INIT", 1)) == 1:
             print 'starting update database...'
             metadata = models.get_metadata(db_engine)
             metadata.drop_all(db_engine)
