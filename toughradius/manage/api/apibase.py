@@ -7,6 +7,7 @@ import json
 import time
 import traceback
 from hashlib import md5
+from cyclone.util import ObjectDict
 from toughlib import utils, apiutils, dispatch, logger
 from toughradius.manage.base import BaseHandler
 
@@ -35,5 +36,13 @@ class ApiHandler(BaseHandler):
         except Exception as err:
             logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
             raise ValueError(u"parse params error")
+
+    def get_current_user(self):
+        session_opr = ObjectDict()
+        session_opr.username = 'api'
+        session_opr.ipaddr = self.request.remote_ip
+        session_opr.opr_type = 0
+        session_opr.login_time = utils.get_currtime()
+        return session_opr
 
 
