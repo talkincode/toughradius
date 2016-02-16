@@ -14,12 +14,14 @@ from toughradius.manage import models
 
 customer_add_vform = dataform.Form(
     dataform.Item("realname", rules.not_null, description=u"用户姓名"),
+    dataform.Item("node_id", rules.not_null, description=u"区域id"),
     dataform.Item("idcard", rules.len_of(0, 32), description=u"证件号码"),
     dataform.Item("mobile", rules.len_of(0, 32), description=u"用户手机号码"),
     dataform.Item("email", rules.is_email, description=u"用户Email"),
     dataform.Item("address", description=u"用户地址"),
-    dataform.Item("account_number", rules.not_null, description=u"用户账号"),
-    dataform.Item("product_id", rules.not_null, description=u"资费"),
+    dataform.Item("customer_name",description=u"客户自助服务账号"),
+    dataform.Item("account_number", rules.not_null, description=u"用户认证账号"),
+    dataform.Item("product_id", rules.not_null, description=u"资费id"),
     dataform.Item("password", rules.not_null, description=u"用户密码"),
     dataform.Item("begin_date", rules.is_date, description=u"开通日期"),
     dataform.Item("expire_date", rules.is_date, description=u"过期日期"),
@@ -49,10 +51,10 @@ class CustomerAddHandler(ApiHandler):
 
         try:
             customer = models.TrCustomer()
-            customer.node_id = node_id
+            customer.node_id = form.d.node_id
             customer.realname = form.d.realname
             customer.idcard = form.d.idcard
-            customer.customer_name = form.d.account_number
+            customer.customer_name = form.d.customer_name or form.d.account_number
             customer.password = md5(form.d.password.encode()).hexdigest()
             customer.sex = '1'
             customer.age = '0'
