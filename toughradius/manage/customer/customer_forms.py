@@ -15,9 +15,6 @@ def customer_open_form(nodes=[], products=[]):
     return btforms.Form(
         btforms.Dropdown("node_id", description=u"区域", args=nodes, required="required", **input_style),
         btforms.Textbox("realname", rules.len_of(2, 32), description=u"用户姓名", required="required", **input_style),
-        btforms.Checkbox("is_samename", description=u"启用独立的自助服务用户名", checked=""),
-        btforms.Textbox("customer_name", rules.len_of(0, 64), description=u"自助服务用户名", **input_style),
-        btforms.Textbox("customer_password", rules.len_of(0, 128), description=u"自助服务用户密码", **input_style),
         btforms.Textbox("idcard", rules.len_of(1, 32), description=u"证件号码", **input_style),
         btforms.Textbox("mobile", rules.len_of(1, 32), description=u"用户手机号码", **input_style),
         btforms.Textbox("address",rules.len_of(1, 32), description=u"用户地址", hr=True, required="required", **input_style),

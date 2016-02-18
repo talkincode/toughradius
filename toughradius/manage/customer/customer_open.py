@@ -41,15 +41,14 @@ class CustomerOpenHandler(CustomerHandler):
             return self.render("account_open_form.html", form=form, msg=u"ip%s已经被使用" % form.d.ip_address)
 
         if self.db.query(models.TrCustomer).filter_by(
-            customer_name=form.d.customer_name).count() > 0:
-            return self.render("account_open_form.html", form=form, msg=u"用户名%s已经存在" % form.d.customer_name)
+            customer_name=form.d.account_number).count() > 0:
+            return self.render("account_open_form.html", form=form, msg=u"用户名%s已经存在" % form.d.account_number)
 
         customer = models.TrCustomer()
         customer.node_id = form.d.node_id
         customer.realname = form.d.realname
-        customer.customer_name = form.d.customer_name or form.d.account_number
-        mpwd = form.d.customer_password or form.d.password
-        customer.password = md5(mpwd.encode()).hexdigest()
+        customer.customer_name = form.d.account_number
+        customer.password = md5(form.d.password.encode()).hexdigest()
         customer.idcard = form.d.idcard
         customer.sex = '1'
         customer.age = '0'
