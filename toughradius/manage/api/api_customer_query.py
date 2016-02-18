@@ -35,7 +35,7 @@ class CustomerAccountsHandler(ApiHandler):
             if customer_name:
                 customer = self.db.query(models.TrCustomer).filter_by(customer_name=customer_name).first()
             else:
-                customer = self.db.query(models.TrAccount).filter(
+                customer = self.db.query(models.TrCustomer).filter(
                     models.TrCustomer.customer_id==models.TrAccount.customer_id,
                     models.TrAccount.account_number==account_number
                 ).first()
@@ -43,8 +43,9 @@ class CustomerAccountsHandler(ApiHandler):
             if not customer:
                 raise Exception("customer is not exists")
 
+            excludes = ['password','email_active','active_code','mobile_active']
             customer_data = { c.name : getattr(customer, c.name) \
-                for c in customer.__table__.columns if c.name not in 'password'}
+                for c in customer.__table__.columns if c.name not in excludes}
 
             accounts = self.db.query(models.TrAccount).filter_by(customer_id=customer.customer_id)
             if account_number:
@@ -58,7 +59,7 @@ class CustomerAccountsHandler(ApiHandler):
 
             self.render_result(code=0, msg='success',customer=customer_data, accounts=account_datas)
         except Exception as err:
-            self.render_result(code=1, msg=safeunicode(err.message))
+            self.render_result(code=1, msg=utils.safeunicode(err.message))
             return
 
 

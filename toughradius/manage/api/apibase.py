@@ -25,17 +25,17 @@ class ApiHandler(BaseHandler):
 
     def parse_form_request(self):
         try:
-            return apiutils.parse_request(self.settings.config.system.secret, self.get_params())
+            return apiutils.parse_form_request(self.settings.config.system.secret, self.get_params())
         except Exception as err:
             logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
-            raise ValueError(u"parse params error")
+            raise ValueError(u"Error: %s" % utils.safeunicode(err.message))
 
     def parse_request(self):
         try:
             return apiutils.parse_request(self.settings.config.system.secret, self.request.body)
         except Exception as err:
             logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
-            raise ValueError(u"parse params error")
+            raise ValueError(u"Error: %s" % utils.safeunicode(err.message))
 
     def get_current_user(self):
         session_opr = ObjectDict()

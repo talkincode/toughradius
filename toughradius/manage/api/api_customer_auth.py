@@ -8,6 +8,7 @@ from toughlib import utils, apiutils, dispatch
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
+from hashlib import md5
 
 """ 客户登陆校验，支持自助服务名登陆，支持上网账号登陆
 """
@@ -41,10 +42,10 @@ class CustomerAuthHandler(ApiHandler):
             if account_number:
                 account = self.db.query(models.TrAccount).filter_by(account_number=account_number).first()
 
-            if not any(customer,account):
+            if not any([customer,account]):
                 raise Exception('auth failure,customer or account not exists')
 
-            if customer and password == self.aes.decrypt(customer.password):
+            if customer and md5(password.encode()).hexdigest() == customer.password:
                 return self.render_result(code=0, msg='success')
 
             if account and password == self.aes.decrypt(account.password):
@@ -53,7 +54,9 @@ class CustomerAuthHandler(ApiHandler):
             raise Exception('auth failure, password not match')
 
         except Exception as err:
-            self.render_result(code=1, msg=safeunicode(err.message))
+            self.render_result(code=1, msg=utils.safeunicode(err.message))
+            import traceback
+            traceback.print_exc()
             return
 
 

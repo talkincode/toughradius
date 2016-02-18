@@ -37,7 +37,7 @@ class NodeQueryHandler(ApiHandler):
             self.render_result(code=0, msg='success',nodes=node_datas)
 
         except Exception as err:
-            self.render_result(code=1, msg=safeunicode(err.message))
+            self.render_result(code=1, msg=utils.safeunicode(err.message))
             return
 
 

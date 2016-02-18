@@ -8,6 +8,8 @@ from toughlib import utils, apiutils, dispatch
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
+from toughradius.manage.settings import *
+from hashlib import md5
 
 """ 客户新开户
 """
@@ -41,12 +43,12 @@ class CustomerAddHandler(ApiHandler):
         form = customer_add_vform()
         try:
             request = self.parse_form_request()
-            if not vform.validates(**request):
-                raise Exception(vform.errors)
+            if not form.validates(**request):
+                raise Exception(form.errors)
             if self.db.query(models.TrAccount).filter_by(account_number=form.d.account_number).count() > 0:
                 raise Exception("account already exists")
         except Exception as err:
-            self.render_result(code=1, msg=safeunicode(err.message))
+            self.render_result(code=1, msg=utils.safeunicode(err.message))
             return
 
         try:
@@ -58,7 +60,7 @@ class CustomerAddHandler(ApiHandler):
             customer.password = md5(form.d.password.encode()).hexdigest()
             customer.sex = '1'
             customer.age = '0'
-            customer.email = ''
+            customer.email = form.d.email
             customer.mobile = form.d.mobile
             customer.address = form.d.address
             customer.create_time = form.d.begin_date + ' 00:00:00'
@@ -102,7 +104,7 @@ class CustomerAddHandler(ApiHandler):
             order = models.TrCustomerOrder()
             order.order_id = utils.gen_order_id()
             order.customer_id = customer.customer_id
-            order.product_id = form.d.product.id
+            order.product_id = product.id
             order.account_number = form.d.account_number
             order.order_fee = order_fee
             order.actual_fee = actual_fee
@@ -110,7 +112,7 @@ class CustomerAddHandler(ApiHandler):
             order.accept_id = accept_log.id
             order.order_source = 'console'
             order.create_time = customer.update_time
-            order.order_desc = u"用户导入开户"
+            order.order_desc = u"API开通账号"
             self.db.add(order)
 
             account = models.TrAccount()
@@ -138,6 +140,8 @@ class CustomerAddHandler(ApiHandler):
             self.db.commit()
             self.render_result(code=0, msg='success')
         except Exception as e:
-            self.render_result(code=1, msg=safeunicode(e.message))
+            self.render_result(code=1, msg=utils.safeunicode(e.message))
+            import traceback
+            traceback.print_exc()
 
 
