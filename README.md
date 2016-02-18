@@ -53,7 +53,7 @@ TOUGHRADIUS网站：http://www.toughradius.net
 
 TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署与管理
 
-    $ wget  https://github.com/talkincode/ToughRADIUS/raw/master/trshell  -O /usr/local/bin/trshell
+    $ wget  https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/scripts/trshell  -O /usr/local/bin/trshell
 
     $ chmod +x /usr/local/bin/trshell
 
