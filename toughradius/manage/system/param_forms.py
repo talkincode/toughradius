@@ -16,15 +16,6 @@ sys_form = btforms.Form(
     action="/admin/param/update?active=syscfg"
 )
 
-serv_form = btforms.Form(
-    btforms.Textbox("customer_qrcode", description=u"二维码图片(宽度230px)", **input_style),
-    btforms.Textbox("customer_service_phone", description=u"客户服务电话", **input_style),
-    btforms.Textbox("customer_service_qq", description=u"客户服务QQ号码", **input_style),
-    btforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
-    title=u"参数配置管理",
-    action="/admin/param/update?active=servcfg"
-)
-
 notify_form = btforms.Form(
     btforms.Dropdown("expire_notify_enable", args=booleans.items(), description=u"启动到期提醒任务", **input_style),
     btforms.Textbox("expire_notify_days", rules.is_number, description=u"到期提醒提前天数", **input_style),

@@ -31,10 +31,7 @@
                 <!-- Nav tabs -->
                 <ul class="nav nav-tabs" role="tablist">
                     <li role="presentation" class="${active=='syscfg' and 'active' or '' }">
-                        <a href="#syscfg" aria-controls="syscfg" role="tab" data-toggle="tab">管理服务</a>
-                    </li>
-                    <li role="presentation" class="${active=='servcfg' and 'active' or '' }">
-                        <a href="#servcfg" aria-controls="servcfg" role="tab" data-toggle="tab">自助服务</a>
+                        <a href="#syscfg" aria-controls="syscfg" role="tab" data-toggle="tab">管理设置</a>
                     </li>
                     <li role="presentation" class="${active=='notifycfg' and 'active' or '' }">
                         <a href="#notifycfg" aria-controls="notifycfg" role="tab" data-toggle="tab">到期提醒</a>
@@ -53,12 +50,6 @@
                         <form class="form-horizontal form-well" role="form" action="${sys_form.action}" method="post">
                             ${xsrf_form_html()}
                             ${sys_form.render_css()}
-                        </form>
-                    </div>
-                    <div role="tabpanel" class="tab-pane ${active=='servcfg' and 'active' or '' }"  id="servcfg">
-                        <form class="form-horizontal form-well" role="form" action="${serv_form.action}" method="post">
-                            ${xsrf_form_html()}
-                            ${serv_form.render_css()}
                         </form>
                     </div>
                     <div role="tabpanel" class="tab-pane ${active=='notifycfg' and 'active' or '' }" id="notifycfg">

@@ -17,7 +17,6 @@ class ParamHandler(BaseHandler):
     def get(self):
         active = self.get_argument("active","syscfg")
         sys_form = param_forms.sys_form()
-        serv_form = param_forms.serv_form()
         notify_form = param_forms.notify_form()
         mail_form = param_forms.mail_form()
         rad_form = param_forms.rad_form()
@@ -25,13 +24,12 @@ class ParamHandler(BaseHandler):
         for p in self.db.query(models.TrParam):
             fparam[p.param_name] = p.param_value
 
-        for form in (sys_form, serv_form, notify_form, mail_form, rad_form):
+        for form in (sys_form, notify_form, mail_form, rad_form):
             form.fill(fparam)
 
         return self.render("param.html",
                       active=active,
                       sys_form=sys_form,
-                      serv_form=serv_form,
                       notify_form=notify_form,
                       mail_form=mail_form,
                       rad_form=rad_form)
