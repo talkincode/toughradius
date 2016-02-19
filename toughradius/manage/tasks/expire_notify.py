@@ -7,7 +7,7 @@ from toughradius.manage import models
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor
-from twisted.mail.smtp import sendmail
+from toughlib.mail import send_mail as sendmail
 from email.mime.text import MIMEText
 from email import Header
 import datetime
@@ -21,51 +21,36 @@ class ExpireNotifyTask(TaseBasic):
         smtp_port = int(self.get_param_value("smtp_port",25))
         smtp_user = self.get_param_value("smtp_user",None)
         smtp_pwd = self.get_param_value("smtp_pwd",None)
-        to = ["bob@gmail.com", "charlie@gmail.com"]
-
-        message = MIMEText(content,'html', 'utf-8')
-        message["Subject"] = Header("[Notify]:%s"%topic,'utf-8')
-        message["From"] = Header("%s <%s>"%(fromaddr[:fromaddr.find('@')],fromaddr),'utf-8')
-        message["To"] = mailto
-        message["Accept-Language"]="zh-CN"
-        message["Accept-Charset"]="ISO-8859-1,utf-8"
-        if '@toughradius.org' in fromaddr:
-            message['X-Mailgun-SFlag'] = 'yes'
-            message['X-Mailgun-SScore'] = 'yes'
-
-        return sendmail(smtp_server, from_addr, mailto, message,
-                        port=smtp_port, username=smtp_user, password=smtp_pwd)
+        return sendmail(server=smtp_server, port=smtp_port,user=smtp_user, password=smtp_pwd, 
+            from_addr=from_addr, mailto=mailto, topic=topic, content=content)
 
     def get_notify_interval(self):
         try:
             notify_interval = int(self.get_param_value("expire_notify_interval",1440)) * 60.0
-            notify_time = self.get_param_value("expire_notify_time", None)
-            if notify_time:
-                _now_hm = datetime.datetime.now().strftime("%H:%M")
-                _ymd = utils.get_currdate()
-                if _now_hm  > notify_time:
-                    _ymd = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") 
-                _now = datetime.datetime.now()
-                _interval = datetime.datetime.strptime("%s %s"%(_ymd,notify_time),"%Y-%m-%d %H:%M") -_now
-                notify_interval = int(_interval.total_seconds())
+            # notify_time = self.get_param_value("expire_notify_time", None)
+            # if notify_time:
+            #     _now_hm = datetime.datetime.now().strftime("%H:%M")
+            #     _ymd = utils.get_currdate()
+            #     if _now_hm  > notify_time:
+            #         _ymd = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d") 
+            #     _now = datetime.datetime.now()
+            #     _interval = datetime.datetime.strptime("%s %s"%(_ymd,notify_time),"%Y-%m-%d %H:%M") -_now
+            #     notify_interval = int(_interval.total_seconds())
             return abs(notify_interval)
         except:
             return 120
 
 
     def process(self, *args, **kwargs):
+        logger.info("start process expire_notify task")
+        _enable = int(self.get_param_value("expire_notify_enable",0))
+        if not _enable:
+            return 120.0
+        _ndays = self.get_param_value("expire_notify_days")
+        notify_tpl = self.get_param_value("expire_notify_tpl")
+        notify_url = self.get_param_value("expire_notify_url")
+
         with make_db(self.db) as db:
-            _enable = int(self.get_param_value("expire_notify_enable",0))
-            if not _enable:
-                return 120.0
-            _ndays = self.get_param_value("expire_notify_days")
-            notify_tpl = self.get_param_value("expire_notify_tpl")
-            notify_url = self.get_param_value("expire_notify_url")
-            notify_interval = self.get_notify_interval()
-
-            if notify_interval > 3:
-                return notify_interval
-
             _now = datetime.datetime.now()
             _date = (datetime.datetime.now() + datetime.timedelta(days=int(_ndays))).strftime("%Y-%m-%d")
             expire_query = db.query(
@@ -87,7 +72,7 @@ class ExpireNotifyTask(TaseBasic):
                 ctx = ctx.replace('#expire#',expire)
                 topic = ctx[:ctx.find('\n')]
                 if email:
-                    self.send_mail(email, topic, ctx).addCallbacks(self.syslog.info,self.syslog.error)
+                    self.send_mail(email, topic, ctx).addCallbacks(logger.info,logger.error)
                 
                 url = notify_url.replace('{account}',account)
                 url = url.replace('{expire}',expire)
@@ -95,8 +80,8 @@ class ExpireNotifyTask(TaseBasic):
                 url = url.replace('{mobile}',mobile)
                 url = url.encode('utf-8')
                 url = quote(url,":?=/&")
-                httpclient.get(url).addCallbacks(logger.info,logger.error)
+                httpclient.get(url).addCallbacks(lambda r: logger.info(r.code),logger.error)
 
 
-        return self.get_notify_interval() + 120
+        return self.get_notify_interval()
 

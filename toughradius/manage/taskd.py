@@ -36,6 +36,7 @@ class TaskDaemon():
 
     def start_expire_notify(self):
         _time = self.expire_notify_task.process()
+        logger.info("next expire_notify times: %s" % _time)
         reactor.callLater(_time, self.start_expire_notify)
 
     def start_ddns_update(self):
