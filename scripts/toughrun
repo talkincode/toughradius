@@ -75,6 +75,15 @@ upgrade()
     git clean -df
 }
 
+upgrade_dev()
+{
+    cd /opt/toughradius
+    git fetch origin master
+    git reset --hard FETCH_HEAD
+    git clean -df
+}
+
+
 uplib()
 {
     pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
