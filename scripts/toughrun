@@ -10,7 +10,7 @@ install()
     pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
     pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 
-    git clone -b master https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
+    git clone -b stable_v2 https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
     cp /opt/toughradius/etc/toughradius.json /etc/toughradius.json
     cp /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
@@ -70,7 +70,7 @@ worker()
 upgrade()
 {
     cd /opt/toughradius
-    git fetch origin master
+    git fetch origin stable_v2
     git reset --hard FETCH_HEAD
     git clean -df
 }

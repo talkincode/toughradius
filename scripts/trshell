@@ -1,5 +1,5 @@
 #!/bin/sh
-# toughradius v2.0 install script
+# toughradius stable_v2.0 install script
 # author: jamiesun.net@gmail.com
 
 rundir=/home/toughrun
@@ -35,8 +35,8 @@ install_with_lmysql()
 
     mkdir -p ${rundir}/$instance
 
-    read -p "version [v2,dev](v2): " tr_release
-    tr_release=${tr_release:-v2}
+    read -p "version [stable_v2,dev](stable_v2): " tr_release
+    tr_release=${tr_release:-stable_v2}
 
     read -p "mysql user [raduser]: " mysql_user
     mysql_user=${mysql_user:-raduser}
@@ -140,8 +140,8 @@ install()
 
     mkdir -p ${rundir}/$instance
 
-    read -p "version [v2,dev](v2): " tr_release
-    tr_release=${tr_release:-v2}
+    read -p "version [stable_v2,dev](stable_v2): " tr_release
+    tr_release=${tr_release:-stable_v2}
 
     read -p "toughradius web port [1816]: " web_port
     web_port=${web_port:-1816}
@@ -199,8 +199,8 @@ install_with_rmysql()
 
     mkdir -p ${rundir}/$instance
 
-    read -p "version [v2,dev](v2): " tr_release
-    tr_release=${tr_release:-v2}
+    read -p "version [stable_v2,dev](stable_v2): " tr_release
+    tr_release=${tr_release:-stable_v2}
 
     read -p "mysql host (must): " mysql_host
     if [ -z $mysql_host ]; then
@@ -381,7 +381,7 @@ dsh()
 pull()
 {
     docker pull index.alauda.cn/toughstruct/mysql
-    docker pull index.alauda.cn/toughstruct/toughradius:v2
+    docker pull index.alauda.cn/toughstruct/toughradius:stable_v2
     docker pull index.alauda.cn/toughstruct/toughradius:dev
 }
 
