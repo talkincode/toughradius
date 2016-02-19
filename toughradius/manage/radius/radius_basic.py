@@ -155,7 +155,7 @@ class RadiusBasic:
         return int(tl.to_integral_value())   
         
     def get_output_total(self):
-        bl = decimal.Decimal(self.request.acct_input_octets)/decimal.Decimal(1024)
+        bl = decimal.Decimal(self.request.acct_output_octets)/decimal.Decimal(1024)
         gl = decimal.Decimal(self.request.acct_output_gigawords)*decimal.Decimal(4*1024*1024)
         tl = bl + gl
         return int(tl.to_integral_value())      
