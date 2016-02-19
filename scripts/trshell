@@ -19,7 +19,8 @@ usage ()
     status                      toughradius instance status
     restart                     toughradius instance restart
     stop                        toughradius instance stop
-    upgrade                     toughradius instance upgrade
+    upgrade                     toughradius instance stable version upgrade
+    upgrade_dev                 toughradius instance develop version upgrade
     logs                        toughradius instance logs
     dsh                         toughradius instance bash term
 
@@ -354,6 +355,16 @@ upgrade()
     docker-compose ps
 }
 
+upgrade_dev()
+{
+    instance=${1:-toughradius}    
+    cd ${rundir}/$instance
+    docker exec -it radius_$instance /usr/local/bin/toughrun upgrade_dev
+    docker-compose restart
+    docker-compose ps
+}
+
+
 uplib()
 {
     instance=${1:-toughradius}    
@@ -383,6 +394,12 @@ pull()
     docker pull index.alauda.cn/toughstruct/mysql
     docker pull index.alauda.cn/toughstruct/toughradius:stable_v2
     docker pull index.alauda.cn/toughstruct/toughradius:dev
+}
+
+update_shell()
+{
+    wget  https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/scripts/trshell  -O /usr/local/bin/trshell
+    chmod +x /usr/local/bin/trshell
 }
 
 
@@ -440,8 +457,16 @@ case "$1" in
     upgrade $2
   ;;
 
+  upgrade_dev)
+    upgrade_dev $2
+  ;;
+
   uplib)
     uplib $2
+  ;;
+
+  update_shell)
+    update_shell
   ;;
 
 
