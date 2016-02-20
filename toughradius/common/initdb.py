@@ -22,13 +22,7 @@ def init_db(db):
     params = [
         ('system_name', u'管理系统名称', u'ToughRADIUS管理控制台'),
         ('system_ticket_expire_days', u'上网日志保留天数', '90'),
-        ('customer_system_name', u'自助服务系统名称', u'ToughRADIUS自助服务中心'),
-        ('customer_system_url', u"自助服务系统地址", u"http://forum.toughradius.net"),
         ('is_debug', u'DEBUG模式', u'0'),
-        ('customer_qrcode', u'微信公众号二维码图片(宽度230px)', u'http://img.toughradius.net/toughforum/jamiesun/1421820686.jpg!230'),
-        ('customer_service_phone', u'客户服务电话', u'000000'),
-        ('customer_service_qq', u'客户服务QQ号码', u'000000'),
-        ('rcard_order_url', u'充值卡订购网站地址', u'http://www.tmall.com'),
         ('expire_notify_days', '到期提醒提前天数', u'7'),
         ('expire_notify_interval', '到期提醒提前间隔(分钟)', u'1440'),
         ('expire_notify_tpl', '到期提醒邮件模板', u'账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
