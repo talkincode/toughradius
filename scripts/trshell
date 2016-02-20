@@ -51,6 +51,9 @@ install_with_lmysql()
     read -p "mysql root password [radroot]: " mysql_root_password
     mysql_root_password=${mysql_root_password:-radroot}
 
+    read -p "mysql max memary [512M,1G,4G](default none): " mysql_max_mem
+    mysql_max_mem=${mysql_max_mem:-""}
+
     read -p "toughradius web port [1816]: " web_port
     web_port=${web_port:-1816}
 
@@ -84,6 +87,7 @@ raddb:
     expose:
         - "3306"
     environment:
+        - MYSQL_MAX_MEM=$mysql_max_mem
         - MYSQL_USER=$mysql_user
         - MYSQL_PASSWORD=$mysql_password
         - MYSQL_DATABASE=$mysql_database
