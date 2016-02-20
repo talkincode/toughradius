@@ -356,8 +356,8 @@ class TrOnline(DeclarativeBase):
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"在线id")
     account_number = Column(u'account_number', Unicode(length=32), nullable=False, index=True, doc=u"上网账号")
-    nas_addr = Column(u'nas_addr', Unicode(length=32), nullable=False, doc=u"bas地址")
-    acct_session_id = Column(u'acct_session_id', Unicode(length=64), nullable=False,doc=u"会话id")
+    nas_addr = Column(u'nas_addr', Unicode(length=32), nullable=False,index=True, doc=u"bas地址")
+    acct_session_id = Column(u'acct_session_id', Unicode(length=64),index=True, nullable=False,doc=u"会话id")
     acct_start_time = Column(u'acct_start_time', Unicode(length=19), nullable=False,doc=u"会话开始时间")
     framed_ipaddr = Column(u'framed_ipaddr', Unicode(length=32), nullable=False,doc=u"IP地址")
     mac_addr = Column(u'mac_addr', Unicode(length=32), nullable=False,doc=u"mac地址")
@@ -366,6 +366,7 @@ class TrOnline(DeclarativeBase):
     input_total = Column(u'input_total', INTEGER(),doc=u"上行流量（kb）")
     output_total = Column(u'output_total', INTEGER(),doc=u"下行流量（kb）")
     start_source = Column(u'start_source', SMALLINT(), nullable=False,doc=u"记账开始来源")
+    UniqueConstraint('nas_addr', 'acct_session_id', name='unique_nas_session')
 
 
 class TrAcceptLog(DeclarativeBase):
