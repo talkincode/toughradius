@@ -20,7 +20,7 @@ class RadiusBasic:
         self.aes = aes
         self.request = Storage(request)
         self.account = self.get_account_by_username(self.request.account_number)
-        
+
     #@timecast
     def get_param_value(self, name, defval=None):
         def fetch_result():
@@ -74,14 +74,14 @@ class RadiusBasic:
         with self.dbengine.begin() as conn:
             return conn.execute(
                 table.select(table.c.time_length).with_only_columns([table.c.time_length]).where(
-                    table.c.account_number==self.account.account_number)).scalar()        
+                    table.c.account_number==self.account.account_number)).scalar()
 
     def get_user_flow_length(self):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
             return conn.execute(
                 table.select(table.c.flow_length).with_only_columns([table.c.flow_length]).where(
-                    table.c.account_number==self.account.account_number)).scalar()           
+                    table.c.account_number==self.account.account_number)).scalar()
 
     def update_user_mac(self, macaddr):
         table = models.TrAccount.__table__
@@ -109,12 +109,12 @@ class RadiusBasic:
         with self.dbengine.begin() as conn:
             return conn.execute(table.select().where(
                 table.c.nas_addr==nasaddr).where(
-                table.c.acct_session_id==session_id)).first()       
+                table.c.acct_session_id==session_id)).first()
 
     def add_online(self,online):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
-            conn.execute(table.insert().values(**online)) 
+            conn.execute(table.insert().values(**online))
 
     def is_online(self, nasaddr, session_id):
         table = models.TrOnline.__table__
@@ -152,13 +152,13 @@ class RadiusBasic:
         bl = decimal.Decimal(self.request.acct_input_octets)/decimal.Decimal(1024)
         gl = decimal.Decimal(self.request.acct_input_gigawords)*decimal.Decimal(4*1024*1024)
         tl = bl + gl
-        return int(tl.to_integral_value())   
-        
+        return int(tl.to_integral_value())
+
     def get_output_total(self):
         bl = decimal.Decimal(self.request.acct_output_octets)/decimal.Decimal(1024)
         gl = decimal.Decimal(self.request.acct_output_gigawords)*decimal.Decimal(4*1024*1024)
         tl = bl + gl
-        return int(tl.to_integral_value())      
+        return int(tl.to_integral_value())
 
     def add_ticket(self,ticket):
         table = models.TrTicket.__table__
@@ -174,8 +174,8 @@ class RadiusBasic:
         with self.dbengine.begin() as conn:
             conn.execute(acctount_table.update().where(
                 acctount_table.c.account_number==billing.account_number).values(
-                    balance=billing.balance, 
-                    time_length=billing.time_length, 
+                    balance=billing.balance,
+                    time_length=billing.time_length,
                     flow_length=billing.flow_length))
 
             conn.execute(bill_table.insert().values(**billing))
@@ -213,7 +213,7 @@ class RadiusBasic:
 
                 ticket = new_ticket(online)
                 conn.execute(ticket_table.insert().values(**ticket))
-                
+
                 conn.execute(online_table.delete().where(
                     online_table.c.nas_addr==nasaddr).where(
                     acct_session_id==session_id))

@@ -463,5 +463,43 @@ class TrFeeStat(DeclarativeBase):
     refund_fee  = Column(u'refund_fee', INTEGER(),nullable=False,doc=u"退费")
 
 
+def print_header():
+    print "|%s|%s|%s|%s|"%("属性".ljust(26,' '),"类型（长度）".ljust(25,' '),"可否为空".ljust(23,' '),'描述'.ljust(30,' '))
+    print "|%s|:%s|:%s:|%s:|"%("-"*23,"-"*17,"-"*16,"-"*26)
+
+def print_model(tmdl):
+    print "##", tmdl.__tablename__
+    print 
+    if tmdl.__doc__ :
+        print tmdl.__doc__
+        print
+
+    pk = ",".join( c.name for c in tmdl.__table__.primary_key.columns)
+    print_header()
+    for c in  tmdl.__table__.columns:
+        # print c.name,c.type,c.nullable
+        _name = str(c.name).ljust(21," ")
+        _type = str(c.type).ljust(16," ")
+        _null = str(c.nullable).ljust(16," ")
+        _doc = str((c.doc or '').encode("utf-8")).ljust(30,' ')
+        print "|%s  |%s  |%s  |%s|"%(_name,_type,_null,_doc)
+    # print_end()
+
+
+mdls = [
+    TrProduct,
+    TrCustomer,
+    TrAccount,
+]
+
+if __name__ == '__main__':
+    print "# ToughRADIUS数据字典\n\n"
+    for mdl in mdls:
+        print_model(mdl)
+        print
+
+
+
+
 
 
