@@ -182,7 +182,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         if opr_type == 0:
             return self.db.query(models.TrNode)
         opr_name = self.current_user.username
-        return db.query(models.TrNode).filter(
+        return self.db.query(models.TrNode).filter(
             models.TrNode.node_name == models.TrOperatorNodes.node_name,
             models.TrOperatorNodes.operator_name == opr_name
         )
