@@ -8,7 +8,7 @@ from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
 
 
-@permit.route(r"/api/nas/fetch")
+@permit.route(r"/api/v1/nas/fetch")
 class NasFetchHandler(ApiHandler):
 
     def get(self):

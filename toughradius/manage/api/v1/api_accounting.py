@@ -12,7 +12,7 @@ from toughradius.manage.radius.radius_acct_onoff import RadiusAcctOnoff
 from toughradius.manage.settings import *
 
 
-@permit.route(r"/api/acctounting")
+@permit.route(r"/api/v1/acctounting")
 class AcctountingHandler(ApiHandler):
 
     acct_class = {

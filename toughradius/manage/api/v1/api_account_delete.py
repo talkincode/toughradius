@@ -16,7 +16,7 @@ from hashlib import md5
 """ 客户账号删除，删除客户账号资料及相关数据，但不删除客户信息
 """
 
-@permit.route(r"/api/account/delete")
+@permit.route(r"/api/v1/account/delete")
 class AccountDeleteHandler(ApiHandler):
     """ @param: 
         account_number: str,

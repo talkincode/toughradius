@@ -33,7 +33,7 @@ customer_add_vform = dataform.Form(
     title="api customer add"
 )
 
-@permit.route(r"/api/customer/add")
+@permit.route(r"/api/v1/customer/add")
 class CustomerAddHandler(ApiHandler):
 
     def get(self):

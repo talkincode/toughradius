@@ -12,7 +12,7 @@ from toughradius.manage import models
 """ 区域节点管理
 """
 
-@permit.route(r"/api/node/query")
+@permit.route(r"/api/v1/node/query")
 class NodeQueryHandler(ApiHandler):
     """ @param: 
         node_id: str
