@@ -12,7 +12,7 @@ from toughradius.manage import models
 """ 产品套餐查询
 """
 
-@permit.route(r"/api/product/query")
+@permit.route(r"/api/v1/product/query")
 class ProductQueryHandler(ApiHandler):
     """ @param: 
         product_id: str

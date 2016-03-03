@@ -13,7 +13,7 @@ from toughradius.manage import models
 """
 
 
-@permit.route(r"/api/customer/query")
+@permit.route(r"/api/v1/customer/query")
 class CustomerAccountsHandler(ApiHandler):
     """ @param: 
         customer_name: str,
