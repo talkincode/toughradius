@@ -490,6 +490,7 @@ mdls = [
     TrProduct,
     TrCustomer,
     TrAccount,
+    TrBas
 ]
 
 if __name__ == '__main__':

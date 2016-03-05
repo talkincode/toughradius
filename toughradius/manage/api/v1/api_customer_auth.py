@@ -27,14 +27,20 @@ class CustomerAuthHandler(ApiHandler):
     def post(self):
         try:
             request = self.parse_form_request()
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
+        except Exception as err:
+            return self.render_parse_err(err)
+
+        try:
             account_number = request.get('account_number')
             customer_name = request.get('customer_name')
             password = request.get('password')
 
             if not any([account_number, customer_name]):
-                raise Exception("account_number, customer_name must one")
+                return self.render_verify_err(msg="account_number, customer_name must one")
             if not password:
-                raise Exception("password is empty")
+                return self.render_verify_err(msg="password is empty")
 
             customer, account = None,None
             if customer_name:
@@ -43,21 +49,21 @@ class CustomerAuthHandler(ApiHandler):
                 account = self.db.query(models.TrAccount).filter_by(account_number=account_number).first()
 
             if not any([customer,account]):
-                raise Exception('auth failure,customer or account not exists')
+                return self.render_verify_err(msg='auth failure,customer or account not exists')
 
             if customer and md5(password.encode()).hexdigest() == customer.password:
-                return self.render_result(code=0, msg='success')
+                return self.render_success()
 
             if account and password == self.aes.decrypt(account.password):
-                return self.render_result(code=0, msg='success')
+                return self.render_success()
 
-            raise Exception('auth failure, password not match')
+            return self.render_verify_err(msg='auth failure, password not match')
 
         except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err.message))
+            self.render_unknow(err)
             import traceback
             traceback.print_exc()
-            return
+         
 
 
 

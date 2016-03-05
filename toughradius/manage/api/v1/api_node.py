@@ -24,6 +24,12 @@ class NodeQueryHandler(ApiHandler):
     def post(self):
         try:
             request = self.parse_form_request()
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
+        except Exception as err:
+            return self.render_parse_err(err)
+
+        try:
             node_id = request.get('node_id')
             nodes = self.db.query(models.TrNode)
             if node_id:
@@ -34,11 +40,10 @@ class NodeQueryHandler(ApiHandler):
                 node_data = { c.name : getattr(node, c.name) for c in node.__table__.columns}
                 node_datas.append(node_data)
 
-            self.render_result(code=0, msg='success',nodes=node_datas)
+            self.render_success(nodes=node_datas)
 
         except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err.message))
-            return
+            return self.render_unknow(err)
 
 
 
