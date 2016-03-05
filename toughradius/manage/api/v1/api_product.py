@@ -36,11 +36,9 @@ class ProductQueryHandler(ApiHandler):
                         for c in product.__table__.columns if c.name not in excludes}
                 product_datas.append(product_data)
 
-            self.render_result(code=0, msg='success',products=product_datas)
-
+            self.render_success(products=product_datas)
         except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err.message))
-            return
+            self.render_unknow(err)
 
 
 

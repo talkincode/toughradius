@@ -16,7 +16,7 @@ from hashlib import md5
 """ 客户账号删除，删除客户账号资料及相关数据，但不删除客户信息
 """
 
-@permit.route(r"/api/v1/account/delete")
+@permit.route(r"/api/account/delete")
 class AccountDeleteHandler(ApiHandler):
     """ @param: 
         account_number: str,
@@ -28,20 +28,14 @@ class AccountDeleteHandler(ApiHandler):
     def post(self):
         try:
             request = self.parse_form_request()
-        except apiutils.SignError, err:
-            return self.render_sign_err(err)
-        except Exception as err:
-            return self.render_parse_err(err)
-
-        try:
             account_number = request.get('account_number')
 
             if not account_number:
-                return self.render_verify_err(msg="account_number is empty")
+                raise Exception("account_number is empty")
 
             account = self.db.query(models.TrAccount).filter_by(account_number=account_number).first()
             if not account:
-                return self.render_verify_err(msg="account is not exists")
+                raise Exception("account is not exists")
 
             self.db.query(models.TrAcceptLog).filter_by(account_number=account.account_number).delete()
             self.db.query(models.TrAccountAttr).filter_by(account_number=account.account_number).delete()
@@ -54,11 +48,12 @@ class AccountDeleteHandler(ApiHandler):
             self.db.commit()
             dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
             dispatch.pub(cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True) 
-            self.render_success()
+            return self.render_result(code=0, msg='success')
         except Exception as err:
-            self.render_unknow(err)
+            self.render_result(code=1, msg=utils.safeunicode(err.message))
             import traceback
             traceback.print_exc()
+            return
 
 
 

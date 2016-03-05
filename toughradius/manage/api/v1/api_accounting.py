@@ -26,15 +26,21 @@ class AcctountingHandler(ApiHandler):
 
     def post(self):
         try:
-            req_msg = self.parse_request()
-            if req_msg['acct_status_type'] in AcctountingHandler.acct_class:
-                acctcls =  AcctountingHandler.acct_class[req_msg.acct_status_type] 
-                app = self.application
-                acctcls(app.db_engine,app.mcache,app.aes,req_msg).acctounting()
-            self.render_result(code=0,msg='done')
+            request = self.parse_form_request()
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
         except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err))
-            return
+            return self.render_parse_err(err)
+
+        try:
+            if request['acct_status_type'] in AcctountingHandler.acct_class:
+                acctcls =  AcctountingHandler.acct_class[request.acct_status_type] 
+                app = self.application
+                acctcls(app.db_engine,app.mcache,app.aes,request).acctounting()
+            self.render_success()
+        except Exception as err:
+            self.render_unknow(err)
+
 
         
 
