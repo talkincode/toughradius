@@ -16,7 +16,7 @@ from hashlib import md5
 """ 客户删除，删除客户资料及相关数据
 """
 
-@permit.route(r"/api/customer/delete")
+@permit.route(r"/api/v1/customer/delete")
 class CustomerDeleteHandler(ApiHandler):
     """ @param: 
         customer_name: str,

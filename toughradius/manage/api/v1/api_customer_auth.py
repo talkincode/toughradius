@@ -13,7 +13,7 @@ from hashlib import md5
 """ 客户登陆校验，支持自助服务名登陆，支持上网账号登陆
 """
 
-@permit.route(r"/api/customer/auth")
+@permit.route(r"/api/v1/customer/auth")
 class CustomerAuthHandler(ApiHandler):
     """ @param: 
         account_number: str, 
