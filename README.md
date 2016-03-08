@@ -98,7 +98,7 @@ Github 文档地址: https://github.com/talkincode/ToughRADIUS-GitBook
 
 ## 商业支持
 
-通常按照 TOUGHRADIUS 遵循的 AGPL 协议 使用 TOUGHRADIUS，无需为此支付费用，TOUGHRADIUS 同时提供了一份 [《商业授权》](#)(https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
+通常按照 TOUGHRADIUS 遵循的 AGPL 协议 使用 TOUGHRADIUS，无需为此支付费用，TOUGHRADIUS 同时提供了一份 [《商业授权》](https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
 
 官方支持网站：http://www.toughstruct.com
 
