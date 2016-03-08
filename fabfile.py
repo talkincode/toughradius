@@ -9,6 +9,12 @@ def tag():
     local("git tag -a v%s -m 'version %s'"%(__version__,__version__))
     local("git push origin v%s:v%s"%(__version__,__version__))
 
+
+def tag2():
+    local("git tag -a v%s -m 'version %s'"%(__version__,__version__))
+    local("git push src v%s:v%s"%(__version__,__version__))
+
+
 def auth():
     local("pypy toughctl --auth -c ~/toughradius_test.json")
 
