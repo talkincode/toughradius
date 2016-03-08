@@ -112,6 +112,8 @@ class FeedbackHandler(BaseHandler):
 
         if not topic or len(topic.strip()) == 0:
             return self.render_json(code=0,msg=u"描述不能为空")
+        if len(topic.strip()) > 90:
+            return self.render_json(code=0,msg=u"描述不能大于90个字符")
 
         online_count = self.db.query(models.TrOnline.id).count()
         user_total = self.db.query(models.TrAccount.account_number).filter_by(status=1).count()

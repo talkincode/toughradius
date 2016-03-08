@@ -57,13 +57,13 @@ $(document).ready(function (){
                     
                     <label class="col-sm-3 control-label" id="lab_topic_name" for="topic">附加描述</label>
                     <div class="col-sm-6">
-                    <textarea rows="2" class="form-control" id="topic" placeholder="问题描述" name="topic"></textarea>
+                    <input type="text" required="required" class="form-control" id="topic" placeholder="问题描述" name="topic"></textarea>
                     </div>
                     </div>
                     <div class="form-group">
                     <label class="col-sm-3 control-label" id="lab_email_name" for="email">联系邮箱</label>
                     <div class="col-sm-6">
-                    <input type="text" id="email" name="email" class="form-control" value="${email or ''}">
+                    <input type="email" id="email" name="email" class="form-control" value="${email or ''}">
                     </div>
 
                     <div class="col-sm-2">
