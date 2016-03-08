@@ -33,7 +33,7 @@ customer_add_vform = dataform.Form(
     title="api customer add"
 )
 
-@permit.route(r"/api/customer/add")
+@permit.route(r"/api/v1/customer/add")
 class CustomerAddHandler(ApiHandler):
 
     def get(self):
@@ -43,13 +43,18 @@ class CustomerAddHandler(ApiHandler):
         form = customer_add_vform()
         try:
             request = self.parse_form_request()
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
+        except Exception as err:
+            return self.render_parse_err(err)
+
+        try:
             if not form.validates(**request):
                 raise Exception(form.errors)
             if self.db.query(models.TrAccount).filter_by(account_number=form.d.account_number).count() > 0:
                 raise Exception("account already exists")
-        except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err.message))
-            return
+        except Exception, err:
+            return self.render_verify_err(err)
 
         try:
             customer = models.TrCustomer()
@@ -138,9 +143,9 @@ class CustomerAddHandler(ApiHandler):
             self.db.add(account)
             self.add_oplog(u"API开户，%s" % form.d.account_number)
             self.db.commit()
-            self.render_result(code=0, msg='success')
+            self.render_success()
         except Exception as e:
-            self.render_result(code=1, msg=utils.safeunicode(e.message))
+            self.render_unknow(err)
             import traceback
             traceback.print_exc()
 

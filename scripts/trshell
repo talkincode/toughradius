@@ -382,7 +382,8 @@ logs()
 {
     instance=${1:-toughradius}
     cd ${rundir}/$instance
-    tail -f ./toughradius.log
+    logname=${2:-manage}    
+    tail -f ./radius-$logname.log
 }
 
 dsh()
@@ -446,7 +447,7 @@ case "$1" in
   ;;
 
   logs)
-    logs $2
+    logs $2 $3
   ;;
 
   dsh)

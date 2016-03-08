@@ -13,7 +13,7 @@ from toughradius.manage import models
 """
 
 
-@permit.route(r"/api/customer/query")
+@permit.route(r"/api/v1/customer/query")
 class CustomerAccountsHandler(ApiHandler):
     """ @param: 
         customer_name: str,
@@ -25,11 +25,17 @@ class CustomerAccountsHandler(ApiHandler):
     def post(self):
         try:
             request = self.parse_form_request()
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
+        except Exception as err:
+            return self.render_parse_err(err)
+
+        try:
             customer_name = request.get('customer_name')
             account_number = request.get('account_number')
 
             if not any([customer_name,account_number]):
-                raise Exception("customer_name,account_number must one")
+                return self.render_verify_err(msg="customer_name,account_number must one")
 
             customer = None
             if customer_name:
@@ -41,7 +47,7 @@ class CustomerAccountsHandler(ApiHandler):
                 ).first()
 
             if not customer:
-                raise Exception("customer is not exists")
+                return self.render_verify_err(msg="customer is not exists")
 
             excludes = ['password','email_active','active_code','mobile_active']
             customer_data = { c.name : getattr(customer, c.name) \
@@ -57,10 +63,9 @@ class CustomerAccountsHandler(ApiHandler):
                         for c in account.__table__.columns if c.name not in 'password'}
                 account_datas.append(account_data)
 
-            self.render_result(code=0, msg='success',customer=customer_data, accounts=account_datas)
+            self.render_success(customer=customer_data, accounts=account_datas)
         except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err.message))
-            return
+            self.render_unknow(err)
 
 
 

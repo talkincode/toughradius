@@ -7,7 +7,7 @@ from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
 from toughradius.manage.radius.radius_authorize import RadiusAuth
 
-@permit.route(r"/api/authorize")
+@permit.route(r"/api/v1/authorize")
 class AuthorizeHandler(ApiHandler):
 
     def post(self):

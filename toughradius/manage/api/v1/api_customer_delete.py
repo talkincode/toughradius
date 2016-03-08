@@ -16,7 +16,7 @@ from hashlib import md5
 """ 客户删除，删除客户资料及相关数据
 """
 
-@permit.route(r"/api/customer/delete")
+@permit.route(r"/api/v1/customer/delete")
 class CustomerDeleteHandler(ApiHandler):
     """ @param: 
         customer_name: str,
@@ -28,14 +28,20 @@ class CustomerDeleteHandler(ApiHandler):
     def post(self):
         try:
             request = self.parse_form_request()
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
+        except Exception as err:
+            return self.render_parse_err(err)
+
+        try:
             customer_name = request.get('customer_name')
 
             if not customer_name:
-                raise Exception("customer_name is empty")
+                return self.render_verify_err(msg="customer_name is empty")
 
             customer = self.db.query(models.TrCustomer).filter_by(customer_name=customer_name).first()
             if not customer:
-                raise Exception("customer is not exists")
+                return self.render_verify_err(msg="customer is not exists")
 
             for account in self.db.query(models.TrAccount).filter_by(customer_id=customer.customer_id):
                 self.db.query(models.TrAcceptLog).filter_by(account_number=account.account_number).delete()
@@ -52,9 +58,9 @@ class CustomerDeleteHandler(ApiHandler):
             self.db.query(models.TrCustomer).filter_by(customer_name=customer_name).delete()
             self.add_oplog(u'API删除用户资料 %s' % (customer_name))    
             self.db.commit()
-            return self.render_result(code=0, msg='success')
+            self.render_success()
         except Exception as err:
-            self.render_result(code=1, msg=utils.safeunicode(err.message))
+            self.render_unknow(err)
             import traceback
             traceback.print_exc()
             return

@@ -83,10 +83,26 @@ TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署
 
 访问 http://server:1816  进入管理系统，默认用户名密码是 admin/root
 
-## TOUGHRADIUS 文档
+了解更多的信息，请查阅 TOUGHRADIUS 文档 http://docs.toughradius.net
 
-http://docs.toughradius.net
+## 社区支持
 
-## TOUGHRADIUS 商业授权
+QQ交流群组: 464025428，247860313 (使用交流)，487229323 (开发交流)
 
-[TOUGHRADIUS 商业授权](#) (https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
+TOUGHRADIUS 文档: http://docs.toughradius.net
+
+Github 项目地址: https://github.com/talkincode/ToughRADIUS
+
+Github 文档地址: https://github.com/talkincode/ToughRADIUS-GitBook
+
+
+## 商业支持
+
+通常按照 TOUGHRADIUS 遵循的 AGPL 协议 使用 TOUGHRADIUS，无需为此支付费用，TOUGHRADIUS 同时提供了一份 [《商业授权》](https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
+
+官方支持网站：http://www.toughstruct.com
+
+
+
+
+
