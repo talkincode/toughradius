@@ -1,0 +1,77 @@
+<%inherit file="base.html"/>
+<%def name="head()">
+<script>
+
+$(document).ready(function (){
+    $("#send_feedback").click(function(){
+        param = {
+            'email': $("#email").val(),
+            'topic': $("#topic").val(),
+            '_xsrf': '${handler.xsrf_token}'
+        }
+        $.post("/admin/feedback", param, function (ev) {
+            console.log(ev);
+            alert(ev.msg);
+        }, "json");
+    });
+
+});
+</script>
+</%def>
+<%def name="body()">
+<section class="content">
+    <div class="box box-primary">
+        <div class="box-header">
+            <i class="fa fa-hdd-o"></i>
+            <h3 class="box-title">日志查询</h3>
+            <div class="bar pull-right"><a href="javascript:history.go(-1);">返回</a></div>
+        </div>
+        <div class="box-body">
+            <div class="container">
+                <form class="form-horizontal form-well" role="form" action="/admin/logger" method="post" >
+                    ${xsrf_form_html()}
+                    <label class="col-sm-3 control-label" id="lab_log_name_name" for="log_name">日志类型</label>
+                    <div class="col-sm-6">
+                    <select required="required" class="form-control" id="log_name" placeholder="日志类型" name="log_name">
+                     <option value="radius-manage">管理系统日志</option>
+                     <option value="radius-worker">认证计费日志</option>
+                     <option value="radius-task">任务执行日志</option>
+                    </select>
+                    </div>
+                    <div class="col-sm-3">
+                    <button type="submit" class="btn btn-primary" id="submit" placeholder="submit" name="submit"><b>查询</b></button>
+                    </div>
+                </form>
+                <br>
+                <hr>
+                
+                    <form class="form-horizontal form-well well" role="form" action="/admin/feedback" method="post" >
+                    ${xsrf_form_html()}
+                   <div class="form-group">
+                    
+                    <label class="col-sm-3 control-label" id="lab_topic_name" for="topic">附加描述</label>
+                    <div class="col-sm-7">
+                    <textarea rows="2" class="form-control" id="topic" placeholder="问题描述" name="topic"></textarea>
+                    </div>
+                    </div>
+                    <div class="form-group">
+                    <label class="col-sm-3 control-label" id="lab_email_name" for="email">联系邮箱</label>
+                    <div class="col-sm-5">
+                    <input type="text" id="email" name="email" class="form-control" value="${email or ''}">
+                    </div>
+
+                    <div class="col-sm-2">
+                    <button type="button" class="btn btn-primary" id="send_feedback" name="button"><b>提交反馈</b></button>
+                    </div>
+                    </div>
+                </form>
+
+                % if msg:
+                <div class="well">
+                ${msg}</div>
+                % endif
+            </div>
+        </div>
+    </div>
+</section>
+</%def>

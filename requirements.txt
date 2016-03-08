@@ -16,3 +16,6 @@ SQLAlchemy
 pyzmq
 txzmq
 supervisor
+psutil
+toughlib
+txradius
