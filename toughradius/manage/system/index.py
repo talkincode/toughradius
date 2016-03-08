@@ -31,4 +31,8 @@ class HomeHandler(BaseHandler):
     def get(self):
         self.redirect("/admin/dashboard")
 
-
+@permit.route(r"/about")
+class HomeHandler(BaseHandler):
+    @cyclone.web.authenticated
+    def get(self):
+        self.render("about.html")

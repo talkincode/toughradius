@@ -4,6 +4,12 @@
 
 $(document).ready(function (){
     $("#send_feedback").click(function(){
+        alertinfo = "提交反馈操作将会提交当前ToughRADIUS的版本信息以及部分日志信息到 toughstruct，如果你填写了有效的电子邮件地址，toughstruct可能会就您的反馈报告与您联系，您提交的日志信息都将按照 toughstruct 的隐私政策受到保护，提交该反馈表示您同意toughstruct使用您提交的信息来改进 ToughRADIUS 的产品与服务。";
+        if(!confirm(alertinfo))
+        {
+            return false;
+        }
+
         param = {
             'email': $("#email").val(),
             'topic': $("#topic").val(),
@@ -50,18 +56,18 @@ $(document).ready(function (){
                    <div class="form-group">
                     
                     <label class="col-sm-3 control-label" id="lab_topic_name" for="topic">附加描述</label>
-                    <div class="col-sm-7">
+                    <div class="col-sm-6">
                     <textarea rows="2" class="form-control" id="topic" placeholder="问题描述" name="topic"></textarea>
                     </div>
                     </div>
                     <div class="form-group">
                     <label class="col-sm-3 control-label" id="lab_email_name" for="email">联系邮箱</label>
-                    <div class="col-sm-5">
+                    <div class="col-sm-6">
                     <input type="text" id="email" name="email" class="form-control" value="${email or ''}">
                     </div>
 
                     <div class="col-sm-2">
-                    <button type="button" class="btn btn-primary" id="send_feedback" name="button"><b>提交反馈</b></button>
+                    <button type="button" class="btn btn-default" id="send_feedback" name="button"><b>发送反馈</b></button>
                     </div>
                     </div>
                 </form>
