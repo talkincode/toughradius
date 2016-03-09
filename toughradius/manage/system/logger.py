@@ -104,11 +104,11 @@ class FeedbackHandler(BaseHandler):
 
         service_url = '%s/service/feedback'%self.settings.config.system.service_url
         param_data = dict(
-            topic=topic,
+            topic=utils.safestr(topic),
             email=email,
             uuid=get_uuid(),
             license=self.settings.config.system.license,
-            content=self.warp_content()
+            content=utils.safestr(self.warp_content())
         )
 
         resp = yield httpclient.post(service_url.encode('utf-8'), data=param_data)
