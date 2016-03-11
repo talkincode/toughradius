@@ -169,12 +169,16 @@ class BaseHandler(cyclone.web.RequestHandler):
     def get_opr_products(self):
         opr_type = int(self.current_user.opr_type)
         if opr_type == 0:
-            return self.db.query(models.TrProduct).filter(models.TrProduct.product_status == 0)
+            return self.db.query(models.TrProduct).filter(
+                models.TrProduct.product_status == 0,
+                models.TrProduct.product_policy < FreeFee
+            )
         else:
             return self.db.query(models.TrProduct).filter(
                 models.TrProduct.id == models.TrOperatorProducts.product_id,
                 models.TrOperatorProducts.operator_name == self.current_user.username,
-                models.TrProduct.product_status == 0
+                models.TrProduct.product_status == 0,
+                models.TrProduct.product_policy < FreeFee
             )
 
     def get_opr_nodes(self):

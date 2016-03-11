@@ -15,7 +15,8 @@ product_policy = {
     BOMonth: u"买断包月", 
     BOTimes: u"买断时长", 
     PPFlow: u"预付费流量", 
-    BOFlows: u"买断流量"
+    BOFlows: u"买断流量",
+    FreeFee: u"自由资费"
 }
 product_status_dict = {0: u'正常', 1: u"停用"}
 

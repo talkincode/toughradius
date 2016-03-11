@@ -19,7 +19,7 @@
     <div class="box-body">
      <div class="container">
         <div class="pull-right bottom10">
-            % if permit.match(current_user.username,'/admin/product/attr/add'):
+            % if permit.match(current_user.username,'/admin/product/attr/add') and product.product_policy not in (6,):
             <a href="/admin/product/attr/add?product_id=${product.id}" class="btn btn-sm btn-info">增加策略属性</a>
             % endif
         </div>   
@@ -73,6 +73,7 @@
             </tbody>
         </table>
 
+        % if product.product_policy not in (6,):
         <table class="table table-hover ">
                 <thead>
                     <tr>
@@ -102,7 +103,8 @@
             </tr>
             % endfor
             </tbody>
-        </table>        
+        </table>       
+        % endif 
     </div>
 </div>
 </div>

@@ -68,7 +68,7 @@ class HttpServer(cyclone.web.Application):
         # app event init
         event_params= dict(dbengine=self.db_engine, mcache=self.mcache, aes=self.aes)
         load_events(os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))),
-            "toughradius.manage.events", excludes=[],event_params=event_params)
+            "toughradius.manage.events", excludes=['.DS_Store'],event_params=event_params)
 
         permit.add_route(cyclone.web.StaticFileHandler, 
                             r"/admin/backup/download/(.*)",

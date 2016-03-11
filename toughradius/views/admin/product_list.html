@@ -59,11 +59,13 @@
                 <td>${utils.bps2mbps(product.output_max_limit)} Mbps</td>
                 <td>${product.product_status and u'停用' or u'正常'}</td>
                 <td>
+                    % if not product.product_policy == 6:
                     % if permit.match(current_user.username, '/admin/product/update'):
                     <a class="opt-btn btn-default" href="/admin/product/update?product_id=${product.id}">修改</a>
                     % endif
                     % if permit.match(current_user.username, '/admin/product/delete'):
                     <a class="opt-btn btn-default"  href="javascript:deleteProduct('${product.id}')">删除</a>
+                    % endif
                     % endif
                 </td>
             </tr>

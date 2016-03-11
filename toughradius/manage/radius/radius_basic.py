@@ -41,6 +41,18 @@ class RadiusBasic:
                 return val and Storage(val.items()) or None
         return self.cache.aget(account_cache_key(username),fetch_result, expire=600)
 
+    def get_account_attr(self,attr_name, radius=False):
+        def fetch_result():
+            table = models.TrAccountAttr.__table__
+            with self.dbengine.begin() as conn:
+                val = conn.execute(table.select().where(
+                    table.c.account_number==self.account.account_number).where(
+                    table.c.attr_name==attr_name).where(
+                    table.c.attr_type==(radius and 1 or 0))).first()
+                return val and Storage(val.items()) or None
+        return self.cache.aget(account_attr_cache_key(
+            self.account.account_number,attr_name),fetch_result, expire=600)
+
     #@timecast
     def get_product_by_id(self,product_id):
         def fetch_result():
