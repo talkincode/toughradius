@@ -27,17 +27,8 @@
     "system": {
         "debug": 1, 
         "secret": "0BOTrVO6WRtkRnKTmM52nKfQpvCGY8vD", 
+        "service_url": "http://service.toughstruct.net:9079",
+        "license": "free license",
         "tz": "CST-8"
-    },
-    "alipay" : {
-        "ALIPAY_KEY" : "",
-        "ALIPAY_INPUT_CHARSET" : "utf-8",
-        "ALIPAY_PARTNER" : "",
-        "ALIPAY_SELLER_EMAIL" : "",
-        "ALIPAY_SIGN_TYPE" : "MD5",
-        "ALIPAY_RETURN_URL" : "",
-        "ALIPAY_NOTIFY_URL" : "",
-        "ALIPAY_SHOW_URL" : "",
-        "ALIPAY_TRANSPORT" : "https"
     }
 }
