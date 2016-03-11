@@ -155,7 +155,7 @@ class RadiusAuth(RadiusBasic):
             
         elif acct_policy  == PPTimes:
             user_balance = self.get_user_balance()
-            fee_price = decimal.Decimal(product['fee_price']) 
+            fee_price = decimal.Decimal(self.product['fee_price']) 
             _sstime = user_balance/fee_price*decimal.Decimal(3600)
             _session_timeout = int(_sstime.to_integral_value())
             if _session_timeout < session_timeout:
