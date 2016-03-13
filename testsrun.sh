@@ -8,5 +8,4 @@ sleep 15
 
 python trial toughradius.tests
 
-ps aux | grep "toughctl --standalone" | awk '{print $2}' | xargs  kill 
 
