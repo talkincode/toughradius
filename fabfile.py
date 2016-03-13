@@ -33,6 +33,11 @@ def tests(exitwith=3600.0,kill=1):
     print '\n-------------- RUN TESTS ---------------------------- \n'
     local("pypy coverage run trial toughradius.tests")
 
+def cov_report():
+    local("echo 'coverage report: version:%s   date:%s' > coverage.txt" % (__version__,time.ctime()))
+    local("echo >> coverage.txt")
+    local("coverage report >> coverage.txt")
+
 
 
 def auth():
