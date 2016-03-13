@@ -34,6 +34,10 @@ def tests(exitwith=3600.0,kill=1):
     local("pypy coverage run trial toughradius.tests")
 
 def cov_report():
+    try:
+        local("ps aux | grep '/test.json' | awk '{print $2}' | xargs  kill")
+    except:
+        pass
     local("echo 'coverage report: version:%s   date:%s' > coverage.txt" % (__version__,time.ctime()))
     local("echo >> coverage.txt")
     local("coverage report >> coverage.txt")

@@ -1,4 +1,4 @@
-coverage report: version:2.0.5   date:Sun Mar 13 19:48:17 2016
+coverage report: version:2.0.5   date:Sun Mar 13 20:08:04 2016
 
 Name                                                Stmts   Miss  Cover
 -----------------------------------------------------------------------
@@ -27,7 +27,7 @@ toughradius/manage/api/v1/api_product.py               27     15    44%
 toughradius/manage/auth/__init__.py                     0      0   100%
 toughradius/manage/auth/login.py                       29      6    79%
 toughradius/manage/auth/logout.py                      10      5    50%
-toughradius/manage/base.py                            157     64    59%
+toughradius/manage/base.py                            157     47    70%
 toughradius/manage/customer/__init__.py                 0      0   100%
 toughradius/manage/customer/accept_logger.py           51     33    35%
 toughradius/manage/customer/account.py                 45     28    38%
@@ -78,19 +78,19 @@ toughradius/manage/resource/bas.py                     67     27    60%
 toughradius/manage/resource/bas_forms.py                9      0   100%
 toughradius/manage/resource/node.py                    58     35    40%
 toughradius/manage/resource/node_forms.py               7      0   100%
-toughradius/manage/resource/product.py                 98     71    28%
+toughradius/manage/resource/product.py                 98     41    58%
 toughradius/manage/resource/product_attr.py            63     42    33%
-toughradius/manage/resource/product_forms.py           14      2    86%
+toughradius/manage/resource/product_forms.py           14      1    93%
 toughradius/manage/settings.py                         39      0   100%
 toughradius/manage/system/__init__.py                   0      0   100%
 toughradius/manage/system/backup.py                    69     45    35%
-toughradius/manage/system/config.py                    66     34    48%
+toughradius/manage/system/config.py                    66     43    35%
 toughradius/manage/system/config_forms.py              12      0   100%
 toughradius/manage/system/dashboard.py                133     50    62%
 toughradius/manage/system/index.py                     23      2    91%
-toughradius/manage/system/logger.py                    78     52    33%
+toughradius/manage/system/logger.py                    78     41    47%
 toughradius/manage/system/operate_log.py               26     15    42%
-toughradius/manage/system/operator.py                 128    102    20%
+toughradius/manage/system/operator.py                 128    103    20%
 toughradius/manage/system/operator_form.py              8      2    75%
 toughradius/manage/system/param.py                     41     26    37%
 toughradius/manage/system/param_forms.py               11      0   100%
@@ -105,4 +105,4 @@ toughradius/manage/tasks/online_stat.py                26      3    88%
 toughradius/manage/tasks/radius_stat.py                29      5    83%
 toughradius/manage/tasks/task_base.py                  13      1    92%
 -----------------------------------------------------------------------
-TOTAL                                                4790   2770    42%
+TOTAL                                                4790   2721    43%
