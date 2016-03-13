@@ -14,6 +14,8 @@ def tag2():
     local("git tag -a v%s -m 'version %s'"%(__version__,__version__))
     local("git push src v%s:v%s"%(__version__,__version__))
 
+def tests():
+    local("pypy trial toughradius.tests")
 
 def auth():
     local("pypy toughctl --auth -c ~/toughradius_test.json")
@@ -33,7 +35,6 @@ def task():
 
 def all():
     local("pypy toughctl --standalone -c ~/toughradius_test.json")
-
 
 def super():
     local("supervisord -c etc/supervisord_test.conf")

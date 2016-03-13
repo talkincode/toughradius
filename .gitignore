@@ -19,6 +19,7 @@ release
 target
 _build
 _build/*
+_trial_temp
 Thumbs.db
 *.pyc
 *.pyo
