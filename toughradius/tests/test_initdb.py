@@ -6,7 +6,10 @@ import os
 class InitdbTestCase(unittest.TestCase):
 
     def setUp(self):
-        os.mkdir("/tmp/toughradius")
+        try:
+            os.mkdir("/tmp/toughradius")
+        except:
+            print "/tmp/toughradius exists"
 
     def test_update(self):
         testfile = os.path.join(os.path.abspath(os.path.dirname(__file__)),"test.json")

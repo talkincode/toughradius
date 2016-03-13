@@ -15,7 +15,7 @@ def tag2():
     local("git push src v%s:v%s"%(__version__,__version__))
 
 def tests():
-    local("pypy trial toughradius.tests")
+    local("pypy coverage run trial toughradius.tests")
 
 def auth():
     local("pypy toughctl --auth -c ~/toughradius_test.json")
