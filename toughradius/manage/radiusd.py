@@ -51,13 +51,13 @@ class RADIUSMaster(protocol.DatagramProtocol):
 
 class RADIUSAuthWorker(object):
 
-    def __init__(self, config, dbengine):
+    def __init__(self, config, dbengine, radcache=None):
         self.config = config
         self.dict = dictionary.Dictionary(
             os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
         self.db_engine = dbengine or get_engine(config)
         self.aes = utils.AESCipher(key=self.config.system.secret)
-        self.mcache = mcache.Mcache()
+        self.mcache = radcache
         self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-result'))
         self.stat_pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-stat-task'))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-message'))
@@ -189,12 +189,12 @@ class RADIUSAuthWorker(object):
 
 class RADIUSAcctWorker(object):
 
-    def __init__(self, config, dbengine):
+    def __init__(self, config, dbengine,radcache=None):
         self.config = config
         self.dict = dictionary.Dictionary(
             os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
         self.db_engine = dbengine or get_engine(config)
-        self.mcache = mcache.Mcache()
+        self.mcache = radcache
         self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-acct-result'))
         self.stat_pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-stat-task'))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-acct-message'))
@@ -309,7 +309,8 @@ def run_acct(config):
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
 def run_worker(config,dbengine):
-    logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine))
-    logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine))
+    _cache = cache.CacheManager(dbengine, cache_name='RadiusWorkerCache-%s'%os.getpid())
+    logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
+    logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))
 
 

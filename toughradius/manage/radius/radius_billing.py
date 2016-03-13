@@ -19,7 +19,8 @@ class RadiusBilling(RadiusBasic):
             PPTimes:self.bill_pptimes,
             BOTimes:self.bill_botimes,
             PPFlow:self.bill_ppflows,
-            BOFlows:self.bill_boflows
+            BOFlows:self.bill_boflows,
+            FreeFee:self.bill_freefee
         }
 
     def billing(self, online):
@@ -36,7 +37,15 @@ class RadiusBilling(RadiusBasic):
                 output_total=self.get_output_total())
         else:
             self.bill_funcs[product.product_policy](online, product)
-            
+
+    def bill_freefee(self, online, product):
+        bill_type = self.get_account_attr('bill_type')
+        if bill_type == FreeTimeLen:
+            self.bill_botimes(online, product)
+        elif bill_type == FreeFeeFlow:
+            self.bill_boflows(online, product)
+
+
     def bill_pptimes(self,online,product):
         # 预付费时长
         logger.info('%s > Prepaid long time billing ' % self.account.account_number)

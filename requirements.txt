@@ -1,8 +1,9 @@
 Mako
 Beaker
 MarkupSafe
+requests
 PyYAML
-Twisted
+Twisted>=15.0.0
 treq
 tablib
 cyclone
@@ -15,6 +16,7 @@ MySQL-python
 SQLAlchemy
 pyzmq
 txzmq
+msgpack-python
 supervisor
 psutil
 toughlib

@@ -1,0 +1,13 @@
+language: python
+python:
+    - "2.7"
+
+install:
+    - pip install -r requirements.txt
+    - pip install coveralls
+    - pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
+    - pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
+
+script: sh testsrun.sh
+
+after_success: coveralls
