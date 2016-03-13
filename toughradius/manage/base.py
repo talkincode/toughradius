@@ -32,7 +32,8 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.session = session.Session(self.application.session_manager, self)
 
     def check_xsrf_cookie(self):
-        pass
+        if self.settings.config.system.get('production'):
+            return super(BaseHandler, self).check_xsrf_cookie()
 
     def initialize(self):
         self.tp_lookup = self.application.tp_lookup

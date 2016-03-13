@@ -26,6 +26,7 @@
     }, 
     "system": {
         "debug": 1, 
+        "production" : 0,
         "secret": "0BOTrVO6WRtkRnKTmM52nKfQpvCGY8vD", 
         "service_url": "http://service.toughstruct.net:9079",
         "license": "free license",

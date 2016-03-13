@@ -1,4 +1,4 @@
-coverage report: version:2.0.5   date:Sun Mar 13 20:08:04 2016
+coverage report: version:2.0.5   date:Sun Mar 13 20:15:14 2016
 
 Name                                                Stmts   Miss  Cover
 -----------------------------------------------------------------------
@@ -43,13 +43,13 @@ toughradius/manage/customer/account_release.py         22      9    59%
 toughradius/manage/customer/account_resume.py          36     22    39%
 toughradius/manage/customer/account_update.py          35     21    40%
 toughradius/manage/customer/billing.py                 45     30    33%
-toughradius/manage/customer/customer.py                70     49    30%
+toughradius/manage/customer/customer.py                70     24    66%
 toughradius/manage/customer/customer_delete.py         33     18    45%
 toughradius/manage/customer/customer_detail.py         23      8    65%
-toughradius/manage/customer/customer_forms.py          15      3    80%
-toughradius/manage/customer/customer_import.py        129    112    13%
+toughradius/manage/customer/customer_forms.py          15      2    87%
+toughradius/manage/customer/customer_import.py        129    108    16%
 toughradius/manage/customer/customer_open.py          126    104    17%
-toughradius/manage/customer/customer_order.py          51     35    31%
+toughradius/manage/customer/customer_order.py          51     16    69%
 toughradius/manage/customer/customer_update.py         40     24    40%
 toughradius/manage/customer/online.py                  34     21    38%
 toughradius/manage/customer/online_unlock.py           54     33    39%
@@ -76,9 +76,9 @@ toughradius/manage/radiusd.py                         238    152    36%
 toughradius/manage/resource/__init__.py                 0      0   100%
 toughradius/manage/resource/bas.py                     67     27    60%
 toughradius/manage/resource/bas_forms.py                9      0   100%
-toughradius/manage/resource/node.py                    58     35    40%
+toughradius/manage/resource/node.py                    58     19    67%
 toughradius/manage/resource/node_forms.py               7      0   100%
-toughradius/manage/resource/product.py                 98     41    58%
+toughradius/manage/resource/product.py                 98     46    53%
 toughradius/manage/resource/product_attr.py            63     42    33%
 toughradius/manage/resource/product_forms.py           14      1    93%
 toughradius/manage/settings.py                         39      0   100%
@@ -88,7 +88,7 @@ toughradius/manage/system/config.py                    66     43    35%
 toughradius/manage/system/config_forms.py              12      0   100%
 toughradius/manage/system/dashboard.py                133     50    62%
 toughradius/manage/system/index.py                     23      2    91%
-toughradius/manage/system/logger.py                    78     41    47%
+toughradius/manage/system/logger.py                    78     52    33%
 toughradius/manage/system/operate_log.py               26     15    42%
 toughradius/manage/system/operator.py                 128    103    20%
 toughradius/manage/system/operator_form.py              8      2    75%
@@ -105,4 +105,4 @@ toughradius/manage/tasks/online_stat.py                26      3    88%
 toughradius/manage/tasks/radius_stat.py                29      5    83%
 toughradius/manage/tasks/task_base.py                  13      1    92%
 -----------------------------------------------------------------------
-TOTAL                                                4790   2721    43%
+TOTAL                                                4790   2672    44%

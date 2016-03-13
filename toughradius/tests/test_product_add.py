@@ -6,7 +6,7 @@ from twisted.internet import reactor
 import sys
 import os
 
-class InitdbTestCase(unittest.TestCase,TestMixin):
+class ProductTestCase(unittest.TestCase,TestMixin):
 
     def setUp(self):
         self.init_rundir()
