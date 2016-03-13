@@ -31,6 +31,9 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.db_backup = self.application.db_backup
         self.session = session.Session(self.application.session_manager, self)
 
+    def check_xsrf_cookie(self):
+        pass
+
     def initialize(self):
         self.tp_lookup = self.application.tp_lookup
         self.db = self.application.db()

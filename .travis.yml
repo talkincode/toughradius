@@ -8,5 +8,6 @@ install:
     - pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
     - pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 
-script: coverage run trial toughradius.tests
+script: trial toughradius.tests
+
 after_success: coveralls
