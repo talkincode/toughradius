@@ -14,7 +14,7 @@ from toughradius.manage.settings import *
 """
 
 @permit.route(r"/api/v1/account/pw/update")
-class AccountDeleteHandler(ApiHandler):
+class AccountPwUpdateHandler(ApiHandler):
     """ @param: 
         account_number: str,
     """
