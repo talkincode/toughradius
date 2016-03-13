@@ -50,7 +50,7 @@ class HttpServer(cyclone.web.Application):
         self.db_engine = dbengine or get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         self.session_manager = session.SessionManager(settings["cookie_secret"], self.db_engine, 600)
-        self.mcache = cache.CacheManager(self.db_engine)
+        self.mcache = cache.CacheManager(self.db_engine,cache_name='RadiusManageCache-%s'%os.getpid())
         self.db_backup = DBBackup(models.get_metadata(self.db_engine), excludes=[
             'tr_online','system_session','system_cache','tr_ticket'])
 
