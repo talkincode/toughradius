@@ -1,10 +1,8 @@
 language: python
 python:
     - "2.7"
-    - "pypy"
 
 install:
-    - wget https://raw.githubusercontent.com/pyca/cryptography/master/.travis/install.sh && sh install.sh
     - pip install -r requirements.txt
     - pip install coveralls
     - pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
