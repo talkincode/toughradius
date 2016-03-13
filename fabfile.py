@@ -17,7 +17,7 @@ def tag2():
 def tests(exitwith=3600.0,kill=1):
     if kill:
         try:
-            local("ps aux | grep 'test.json' | awk '{print $2}' | xargs  kill")
+            local("ps aux | grep '/test.json' | awk '{print $2}' | xargs  kill")
             local("rm -f /tmp/trtest.log ")
         except:
             pass
