@@ -1,0 +1,35 @@
+{
+    "admin": {
+        "host": "0.0.0.0", 
+        "port": 18160
+    }, 
+    "conf_file": "test.json", 
+    "database": {
+        "backup_path": "/tmp/toughradius/data", 
+        "dbtype": "sqlite", 
+        "dburl": "sqlite:////tmp/toughradius/toughradius.sqlite3", 
+        "echo": 0, 
+        "pool_recycle": 300, 
+        "pool_size": 120
+    }, 
+    "radiusd": {
+        "acct_port": 18130, 
+        "auth_port": 18120, 
+        "host": "0.0.0.0"
+    }, 
+    "syslog": {
+        "enable": 0, 
+        "level": "INFO", 
+        "port": 514, 
+        "server": "127.0.0.1", 
+        "shost": "toughradius_admin"
+    }, 
+    "system": {
+        "debug": 1, 
+        "production" : 0,
+        "secret": "0BOTrVO6WRtkRnKTmM52nKfQpvCGY8vD", 
+        "service_url": "http://service.toughstruct.net:9079",
+        "license": "free license",
+        "tz": "CST-8"
+    }
+}

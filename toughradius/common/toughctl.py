@@ -39,7 +39,6 @@ def check_env(config):
 def run_initdb(config):
     init_db.update(config)
 
-
 def run():
     log.startLogging(sys.stdout)
     parser = argparse.ArgumentParser()
@@ -51,6 +50,7 @@ def run():
     parser.add_argument('-standalone', '--standalone', action='store_true', default=False, dest='standalone', help='run standalone')
     parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
     parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
+    parser.add_argument('-exitwith', '--exitwith', type=float, default=0, dest='exitwith', help='exitwith option')
     parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.json", dest='conf', help='config file')
     args = parser.parse_args(sys.argv[1:])
 
@@ -91,6 +91,9 @@ def run():
         radiusd.run_acct(config)
         radiusd.run_worker(config,dbengine)
         taskd.run(config,dbengine)
+        if args.exitwith > 0:
+            log.msg("testing application running and exit after %s seconds" % args.exitwith) 
+            reactor.callLater(args.exitwith,reactor.stop)
         reactor.run()
         
     elif args.initdb:

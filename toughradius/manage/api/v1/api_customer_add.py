@@ -28,13 +28,26 @@ customer_add_vform = dataform.Form(
     dataform.Item("begin_date", rules.is_date, description=u"开通日期"),
     dataform.Item("expire_date", rules.is_date, description=u"过期日期"),
     dataform.Item("balance", rules.is_rmb, description=u"用户余额"),
-    dataform.Item("time_length", description=u"用户时长"),
-    dataform.Item("flow_length", description=u"用户流量"),
+    dataform.Item("time_length", rules.is_number, default=0, description=u"用户时长"),
+    dataform.Item("flow_length", rules.is_number, default=0, description=u"用户流量"),
+    dataform.Item("bind_mac", rules.is_number, default=0, description=u"用户是否绑定 MAC"),
+    dataform.Item("bind_vlan", rules.is_number, default=0, description=u"用户是否绑定 vlan"),
+    dataform.Item("concur_number", rules.is_number, default=0, description=u"用户并发数"),
+    dataform.Item("ip_address",  default="",description=u"用户IP地址"),
+    dataform.Item("input_max_limit", rules.is_number, description=u"用户上行速度 Mbps"),
+    dataform.Item("output_max_limit", rules.is_number, description=u"用户下行速度 Mbps"),
+    dataform.Item("free_bill_type", rules.is_number, default=9999,description=u"用户下行速度 Mbps"),
     title="api customer add"
 )
 
 @permit.route(r"/api/v1/customer/add")
 class CustomerAddHandler(ApiHandler):
+
+    def get_account_attr(self, account_number, attr_name):
+        pass
+
+    def set_account_attr(self, account_number, attr_name, attr_value, attr_desc=None):
+        pass
 
     def get(self):
         self.post()
@@ -94,17 +107,35 @@ class CustomerAddHandler(ApiHandler):
             time_length = 0
             flow_length = 0
             expire_date = form.d.expire_date
+            user_concur_number = product.concur_number
+            user_bind_mac = product.bind_mac
+            user_bind_vlan = product.bind_vlan
+
             product = self.db.query(models.TrProduct).get(form.d.product_id)
-            # 买断时长
+            
             if product.product_policy == BOTimes:
+                # 买断时长
                 time_length = int(form.d.time_length)
-            # 买断流量
             elif product.product_policy == BOFlows:
+                # 买断流量
                 flow_length = int(form.d.flow_length)
-            # 预付费时长,预付费流量
             elif product.product_policy in (PPTimes, PPFlow):
+                # 预付费时长,预付费流量
                 balance = utils.yuan2fen(form.d.balance)
                 expire_date = MAX_EXPIRE_DATE
+            elif product.product_policy == FreeFee:
+                # 自由资费
+                if int(form.d.free_bill_type) not in (FreeFeeDate,FreeFeeFlow,FreeFeeTimeLen):
+                    return self.render_verify_err(msg=u"free_bill_type in (0,1,2)")
+                time_length = int(form.d.time_length)
+                flow_length = int(form.d.flow_length)
+                balance = utils.yuan2fen(form.d.balance)
+                user_concur_number = int(form.d.concur_number)
+                user_bind_mac = int(form.d.bind_mac)
+                user_bind_vlan = int(form.d.bind_vlan)
+                self.set_account_attr(form.d.account_number,'bill_type',form.d.free_bill_type)
+                self.set_account_attr(form.d.account_number,'input_max_limit',form.d.input_max_limit)
+                self.set_account_attr(form.d.account_number,'output_max_limit',form.d.output_max_limit)
 
             order = models.TrCustomerOrder()
             order.order_id = utils.gen_order_id()
@@ -125,7 +156,7 @@ class CustomerAddHandler(ApiHandler):
             account.customer_id = customer.customer_id
             account.product_id = order.product_id
             account.install_address = customer.address
-            account.ip_address = ''
+            account.ip_address = form.d.ip_address
             account.mac_addr = ''
             account.password = self.aes.encrypt(form.d.password)
             account.status = 1
@@ -133,15 +164,16 @@ class CustomerAddHandler(ApiHandler):
             account.time_length = time_length
             account.flow_length = flow_length
             account.expire_date = expire_date
-            account.user_concur_number = product.concur_number
-            account.bind_mac = product.bind_mac
-            account.bind_vlan = product.bind_vlan
+            account.user_concur_number = user_concur_number
+            account.bind_mac = user_bind_mac
+            account.bind_vlan = user_bind_vlan
             account.vlan_id1 = 0
             account.vlan_id2 = 0
             account.create_time = customer.create_time
             account.update_time = customer.update_time
             self.db.add(account)
             self.add_oplog(u"API开户，%s" % form.d.account_number)
+
             self.db.commit()
             self.render_success()
         except Exception as e:

@@ -22,8 +22,8 @@ class TaskDaemon():
     def __init__(self, config=None, dbengine=None, **kwargs):
 
         self.config = config
-        self.db_engine = dbengine or get_engine(config)
-        self.cache = cache.CacheManager(self.db_engine)
+        self.db_engine = dbengine or get_engine(config,pool_size=20)
+        self.cache = cache.CacheManager(self.db_engine,cache_name='RadiusTaskCache-%s'%os.getpid())
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         # init task
         self.expire_notify_task = expire_notify.ExpireNotifyTask(self)

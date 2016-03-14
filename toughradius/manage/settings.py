@@ -7,13 +7,17 @@ decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
 
 
-FEES = (PPMonth, PPTimes, BOMonth, BOTimes, PPFlow, BOFlows) = (0, 1, 2, 3, 4, 5)
+FEES = (PPMonth, PPTimes, BOMonth, BOTimes, PPFlow, BOFlows, FreeFee) = (0, 1, 2, 3, 4, 5, 6)
 
 ACCOUNT_STATUS = (UsrPreAuth, UsrNormal, UsrPause, UsrCancel, UsrExpire) = (0, 1, 2, 3, 4)
 
 CARD_STATUS = (CardInActive, CardActive, CardUsed, CardRecover) = (0, 1, 2, 3)
 
 CARD_TYPES = (ProductCard, BalanceCard) = (0, 1)
+
+FREE_FEE_BILLS = (FreeFeeDate,FreeFeeFlow,FreeTimeLen) = (0,1,2)
+
+FREE_FEE_PID = 0
 
 STAT_AUTH_ALL = 'STAT_AUTH_ALL'
 STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'
@@ -61,6 +65,7 @@ MAX_EXPIRE_DATE = '3000-12-30'
 
 param_cache_key = 'toughradius.cache.param.{0}'.format
 account_cache_key = 'toughradius.cache.account.{0}'.format
+account_attr_cache_key = 'toughradius.cache.account.attr.{0}.{1}'.format
 product_cache_key = 'toughradius.cache.product.{0}'.format
 product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
 bas_cache_key = 'toughradius.cache.bas.{0}'.format

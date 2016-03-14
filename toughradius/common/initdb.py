@@ -9,6 +9,7 @@ from toughlib import utils
 from toughradius.manage import models
 from toughlib.dbengine import get_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+from toughradius.manage.settings import FREE_FEE_PID, FreeFee
 from hashlib import md5
 
 
@@ -65,6 +66,25 @@ def init_db(db):
     bas.coa_port = 3799
     bas.time_type = 0
     db.add(bas)
+
+    free_product = models.TrProduct()
+    free_product.id = FREE_FEE_PID
+    free_product.product_name = u"自由资费"
+    free_product.product_policy = FreeFee
+    free_product.product_status = 0
+    free_product.fee_months = 0
+    free_product.fee_times = 0
+    free_product.fee_flows = 0
+    free_product.bind_mac = 0
+    free_product.bind_vlan = 0
+    free_product.concur_number = 0
+    free_product.fee_price = 0
+    free_product.fee_period =  '' 
+    free_product.input_max_limit = 0
+    free_product.output_max_limit = 0
+    free_product.create_time = utils.get_currtime()
+    free_product.update_time = utils.get_currtime()
+    db.add(free_product)
 
     product = models.TrProduct()
     product.product_name = u"测试2M包月20元"
