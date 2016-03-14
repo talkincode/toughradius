@@ -63,7 +63,7 @@ class HttpServer(cyclone.web.Application):
         load_handlers(handler_path=os.path.join(os.path.abspath(os.path.dirname(__file__))),
             pkg_prefix="toughradius.manage", excludes=['views','webserver','radius'])
 
-        self.init_route_permit()
+        # self.init_route_permit()
 
         # app event init
         event_params= dict(dbengine=self.db_engine, mcache=self.mcache, aes=self.aes)
@@ -77,18 +77,18 @@ class HttpServer(cyclone.web.Application):
                             order=5.0005)
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
-    def init_route_permit(self):
-        with make_db(self.db) as conn:
-            try:
-                oprs = conn.query(models.TrOperator)
-                for opr in oprs:
-                    if opr.operator_type > 0:
-                        for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=opr.operator_name):
-                            permit.bind_opr(rule.operator_name, rule.rule_path)
-                    elif opr.operator_type == 0:  # 超级管理员授权所有
-                        permit.bind_super(opr.operator_name)
-            except Exception as err:
-                logger.error("init route error , %s" % str(err))
+    # def init_route_permit(self):
+    #     with make_db(self.db) as conn:
+    #         try:
+    #             oprs = conn.query(models.TrOperator)
+    #             for opr in oprs:
+    #                 if opr.operator_type > 0:
+    #                     for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=opr.operator_name):
+    #                         permit.bind_opr(rule.operator_name, rule.rule_path)
+    #                 elif opr.operator_type == 0:  # 超级管理员授权所有
+    #                     permit.bind_super(opr.operator_name)
+    #         except Exception as err:
+    #             logger.error("init route error , %s" % str(err))
 
 def run(config, dbengine):
     app = HttpServer(config, dbengine)

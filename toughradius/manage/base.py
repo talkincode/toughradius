@@ -88,11 +88,12 @@ class BaseHandler(cyclone.web.RequestHandler):
         template_vars["handler"] = self
         template_vars["utils"] = utils
         template_vars['sys_version'] = sys_version
-        template_vars["permit"] = permit
-        template_vars["menu_icons"] = MENU_ICONS
-        template_vars["all_menus"] = permit.build_menus(
-            order_cats=ADMIN_MENUS
-        )
+        if self.current_user:
+            template_vars["permit"] = self.current_user.permit
+            template_vars["menu_icons"] = MENU_ICONS
+            template_vars["all_menus"] = self.current_user.permit.build_menus(
+                order_cats=ADMIN_MENUS
+            )
         mytemplate = self.tp_lookup.get_template("admin/{0}".format(template_name))
         return mytemplate.render(**template_vars)
 
@@ -126,12 +127,14 @@ class BaseHandler(cyclone.web.RequestHandler):
         qdict['page'] = page
         return path + '?' + urllib.urlencode(qdict)
 
+
     def set_session_user(self, username, ipaddr, opr_type, login_time):
         session_opr = ObjectDict()
         session_opr.username = username
         session_opr.ipaddr = ipaddr
         session_opr.opr_type = opr_type
         session_opr.login_time = login_time
+        session_opr.resources = [r.rule_path for r in self.db.query(models.TrOperatorRule).filter_by(operator_name=username)]
         self.session['session_opr'] = session_opr
         self.session.save()
 
@@ -141,7 +144,9 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.clear_all_cookies()  
         
     def get_current_user(self):
-        return self.session.get("session_opr")
+        opr = self.session.get("session_opr")
+        opr.permit = permit.fork(opr.username,opr.opr_type,opr.resources)
+        return opr
 
     def get_params(self):
         arguments = self.request.arguments

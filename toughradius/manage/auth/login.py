@@ -26,6 +26,7 @@ class LoginHandler(BaseHandler):
             operator_name=uname,
             operator_pass=enpasswd
         ).first()
+        
         if not opr:
             return self.render_json(code=1, msg=u"用户名密码不符")
 
@@ -33,10 +34,6 @@ class LoginHandler(BaseHandler):
             return self.render_json(code=1, msg=u"该操作员账号已被停用")
 
         self.set_session_user(uname, self.request.remote_ip, opr.operator_type, utils.get_currtime())
-
-        if opr.operator_type == 1:
-            for rule in self.db.query(models.TrOperatorRule).filter_by(operator_name=uname):
-                permit.bind_opr(rule.operator_name, rule.rule_path)
 
         self.add_oplog(u'操作员(%s)登陆' % (uname))
         self.db.commit()
