@@ -145,7 +145,8 @@ class BaseHandler(cyclone.web.RequestHandler):
         
     def get_current_user(self):
         opr = self.session.get("session_opr")
-        opr.permit = permit.fork(opr.username,opr.opr_type,opr.resources)
+        if opr:
+            opr.permit = permit.fork(opr.username,opr.opr_type,opr.resources)
         return opr
 
     def get_params(self):
