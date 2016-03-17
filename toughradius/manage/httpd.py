@@ -17,6 +17,7 @@ from toughlib.permit import permit, load_events, load_handlers
 from toughradius.manage.settings import *
 from toughlib import db_session as session
 from toughlib import db_cache as cache
+from toughlib import redis_cache
 from toughlib import dispatch
 from toughlib.dbutils import make_db
 from toughlib.db_backup import DBBackup
@@ -50,7 +51,13 @@ class HttpServer(cyclone.web.Application):
         self.db_engine = dbengine or get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         self.session_manager = session.SessionManager(settings["cookie_secret"], self.db_engine, 600)
-        self.mcache = cache.CacheManager(self.db_engine,cache_name='RadiusManageCache-%s'%os.getpid())
+
+        redisconf = config.get('redis')
+        if redisconf:
+            self.mcache = redis_cache.CacheManager(redisconf,cache_name='RadiusManageCache-%s'%os.getpid())
+            self.mcache.print_hit_stat(10)
+        else:
+            self.mcache = cache.CacheManager(self.db_engine,cache_name='RadiusManageCache-%s'%os.getpid())
         self.db_backup = DBBackup(models.get_metadata(self.db_engine), excludes=[
             'tr_online','system_session','system_cache','tr_ticket'])
 

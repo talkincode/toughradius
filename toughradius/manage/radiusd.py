@@ -14,6 +14,7 @@ from toughlib import utils
 from toughlib import mcache
 from toughlib import logger,dispatch
 from toughlib import db_cache as cache
+from toughlib import redis_cache
 from toughlib.dbengine import get_engine
 from txradius.radius import dictionary
 from txradius.radius import packet
@@ -309,7 +310,13 @@ def run_acct(config):
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
 def run_worker(config,dbengine):
-    _cache = cache.CacheManager(dbengine, cache_name='RadiusWorkerCache-%s'%os.getpid())
+    _cache = None
+    redisconf = config.get('redis')
+    if redisconf:
+        _cache = redis_cache.CacheManager(redisconf,cache_name='RadiusWorkerCache-%s'%os.getpid())
+        _cache.print_hit_stat(10)
+    else:
+        _cache = cache.CacheManager(dbengine, cache_name='RadiusWorkerCache-%s'%os.getpid())
     logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
     logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))
 

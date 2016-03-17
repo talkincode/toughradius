@@ -21,7 +21,7 @@ class RadiusBasic:
         self.request = Storage(request)
         self.account = self.get_account_by_username(self.request.account_number)
 
-    #@timecast
+    @timecast
     def get_param_value(self, name, defval=None):
         def fetch_result():
             table = models.TrParam.__table__
@@ -29,9 +29,13 @@ class RadiusBasic:
                 return conn.execute(
                     table.select().with_only_columns([table.c.param_value]).where(
                         table.c.param_name==name)).scalar() or defval
-        return self.cache.aget(param_cache_key(name),fetch_result, expire=600)
+        result = self.cache.get(param_cache_key(name))
+        if not result:
+            self.cache.set(param_cache_key(name),fetch_result(),expire=600)
+        return result
+        # return self.cache.aget(param_cache_key(name),fetch_result, expire=600)
 
-    #@timecast
+    @timecast
     def get_account_by_username(self,username):
         def fetch_result():
             table = models.TrAccount.__table__
@@ -39,8 +43,14 @@ class RadiusBasic:
                 val = conn.execute(table.select().where(
                     table.c.account_number==username)).first()
                 return val and Storage(val.items()) or None
-        return self.cache.aget(account_cache_key(username),fetch_result, expire=600)
+        result = self.cache.get(account_cache_key(username))
+        if not result:
+            self.cache.set(account_cache_key(username),fetch_result(),expire=600)
+        return result
+        # return self.cache.aget(account_cache_key(username),fetch_result, expire=600)
 
+
+    @timecast
     def get_account_attr(self,attr_name, radius=False):
         def fetch_result():
             table = models.TrAccountAttr.__table__
@@ -49,20 +59,30 @@ class RadiusBasic:
                     table.c.account_number==self.account.account_number).where(
                     table.c.attr_name==attr_name).where(
                     table.c.attr_type==(radius and 1 or 0))).first()
-                return val and Storage(val.items()) or None
-        return self.cache.aget(account_attr_cache_key(
-            self.account.account_number,attr_name),fetch_result, expire=600)
+                return val and Storage(val.items()) or ''
+        cache_key = account_attr_cache_key(self.account.account_number,attr_name)
+        result = self.cache.get(cache_key)
+        if result is None:
+            self.cache.set(cache_key,fetch_result(),expire=600)
+        return result
+        # return self.cache.aget(account_attr_cache_key(
+        #     self.account.account_number,attr_name),fetch_result, expire=600)
 
-    #@timecast
+    @timecast
     def get_product_by_id(self,product_id):
         def fetch_result():
             table = models.TrProduct.__table__
             with self.dbengine.begin() as conn:
                 val = conn.execute(table.select().where(table.c.id==product_id)).first()
                 return val and Storage(val.items()) or None
-        return self.cache.aget(product_cache_key(product_id),fetch_result,expire=600)
+        cache_key = product_cache_key(product_id)
+        result = self.cache.get(cache_key)
+        if not result:
+            self.cache.set(cache_key,fetch_result(),expire=600)
+        return result
+        # return self.cache.aget(product_cache_key(product_id),fetch_result,expire=600)
 
-    #@timecast
+    @timecast
     def get_product_attrs(self,product_id):
         def fetch_result():
             table = models.TrProductAttr.__table__
@@ -71,9 +91,15 @@ class RadiusBasic:
                     table.c.product_id==product_id).where(
                     table.c.attr_type==1))
                 return vals and [Storage(val.items()) for val in vals] or []
-        return self.cache.aget(product_attrs_cache_key(product_id),fetch_result,expire=600)
+        cache_key = product_attrs_cache_key(product_id)
+        result = self.cache.get(cache_key)
+        if not result:
+            self.cache.set(cache_key,fetch_result(),expire=600)
+        return result
+        # return self.cache.aget(product_attrs_cache_key(product_id),fetch_result,expire=600)
 
 
+    @timecast
     def get_user_balance(self):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
@@ -81,6 +107,7 @@ class RadiusBasic:
                 table.select().with_only_columns([table.c.balance]).where(
                     table.c.account_number==self.account.account_number)).scalar()
 
+    @timecast
     def get_user_time_length(self):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
@@ -88,6 +115,7 @@ class RadiusBasic:
                 table.select(table.c.time_length).with_only_columns([table.c.time_length]).where(
                     table.c.account_number==self.account.account_number)).scalar()
 
+    @timecast
     def get_user_flow_length(self):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
@@ -95,6 +123,7 @@ class RadiusBasic:
                 table.select(table.c.flow_length).with_only_columns([table.c.flow_length]).where(
                     table.c.account_number==self.account.account_number)).scalar()
 
+    @timecast
     def update_user_mac(self, macaddr):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
@@ -102,6 +131,7 @@ class RadiusBasic:
                 table.c.account_number==self.account.account_number).values(mac_addr=macaddr)
             conn.execute(stmt)
 
+    @timecast
     def update_user_vlan_id1(self, vlan_id1):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
@@ -109,6 +139,7 @@ class RadiusBasic:
                 table.c.account_number==self.account.account_number).values(vlan_id1=vlan_id1)
             conn.execute(stmt)
 
+    @timecast
     def update_user_vlan_id2(self, vlan_id2):
         table = models.TrAccount.__table__
         with self.dbengine.begin() as conn:
@@ -116,6 +147,7 @@ class RadiusBasic:
                 table.c.account_number==self.account.account_number).values(vlan_id2=vlan_id2)
             conn.execute(stmt)
 
+    @timecast
     def get_online(self, nasaddr, session_id):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
@@ -123,11 +155,13 @@ class RadiusBasic:
                 table.c.nas_addr==nasaddr).where(
                 table.c.acct_session_id==session_id)).first()
 
+    @timecast
     def add_online(self,online):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
             conn.execute(table.insert().values(**online))
 
+    @timecast
     def is_online(self, nasaddr, session_id):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
@@ -135,6 +169,7 @@ class RadiusBasic:
                 table.c.nas_addr==nasaddr).where(
                 table.c.acct_session_id==session_id)).scalar() > 0
 
+    @timecast
     def del_online(self, nasaddr, session_id):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
@@ -143,12 +178,14 @@ class RadiusBasic:
                 table.c.acct_session_id==session_id)
             conn.execute(stmt)
 
+    @timecast
     def count_online(self):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
             return conn.execute(table.count().where(
                 table.c.account_number==self.account.account_number)).scalar()
 
+    @timecast
     def update_online(self, nasaddr, session_id, **kwargs):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
@@ -172,12 +209,14 @@ class RadiusBasic:
         tl = bl + gl
         return int(tl.to_integral_value())
 
+    @timecast
     def add_ticket(self,ticket):
         table = models.TrTicket.__table__
         data = {k.name:ticket[k.name] for k in table.columns if k.name not in 'id'}
         with self.dbengine.begin() as conn:
             conn.execute(table.insert().values(**data))
 
+    @timecast
     def update_billing(self, billing):
         acctount_table = models.TrAccount.__table__
         bill_table = models.TrBilling.__table__
@@ -199,6 +238,7 @@ class RadiusBasic:
                         input_total=billing.input_total,
                         output_total=billing.output_total))
 
+    @timecast
     def unlock_online(self, nasaddr, session_id):
         online_table = models.TrOnline.__table__
         ticket_table = models.TrTicket.__table__

@@ -245,6 +245,7 @@ class TrAccountAttr(DeclarativeBase):
     attr_name = Column(u'attr_name', Unicode(length=255), nullable=False,doc=u"属性名")
     attr_value = Column(u'attr_value', Unicode(length=255), nullable=False,doc=u"属性值")
     attr_desc = Column(u'attr_desc', Unicode(length=255),doc=u"属性描述")
+    UniqueConstraint('account_number','attr_name','attr_type',name='tr_account_attr_idx')
 
 class TrProduct(DeclarativeBase):
     '''
@@ -277,7 +278,6 @@ class TrProduct(DeclarativeBase):
 class TrProductAttr(DeclarativeBase):
     '''资费扩展属性表'''
     __tablename__ = 'tr_product_attr'
-
     __table_args__ = {}
 
     id = Column(u'id', INTEGER(), primary_key=True, nullable=False,doc=u"属性id")
@@ -286,6 +286,7 @@ class TrProductAttr(DeclarativeBase):
     attr_name = Column(u'attr_name', Unicode(length=255), nullable=False,doc=u"属性名")
     attr_value = Column(u'attr_value', Unicode(length=255), nullable=False,doc=u"属性值")
     attr_desc = Column(u'attr_desc', Unicode(length=255),doc=u"属性描述")
+    UniqueConstraint('product_id','attr_type',name='tr_product_attr_idx')
 
 class TrBilling(DeclarativeBase):
     """计费信息表 is_deduct 0 未扣费 1 已扣费"""

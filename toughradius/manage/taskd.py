@@ -10,6 +10,7 @@ from toughlib import logger, utils,dispatch
 from toughradius.manage import models
 from toughlib.dbengine import get_engine
 from toughlib import db_cache as cache
+from toughlib import redis_cache
 from toughradius.manage.tasks import (
     expire_notify, ddns_update, radius_stat, online_stat,flow_stat
 )
@@ -23,7 +24,12 @@ class TaskDaemon():
 
         self.config = config
         self.db_engine = dbengine or get_engine(config,pool_size=20)
-        self.cache = cache.CacheManager(self.db_engine,cache_name='RadiusTaskCache-%s'%os.getpid())
+        redisconf = config.get('redis')
+        if redisconf:
+            self.cache = redis_cache.CacheManager(redisconf,cache_name='RadiusTaskCache-%s'%os.getpid())
+            self.cache.print_hit_stat(10)
+        else:
+            self.cache = cache.CacheManager(self.db_engine,cache_name='RadiusTaskCache-%s'%os.getpid())
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         # init task
         self.expire_notify_task = expire_notify.ExpireNotifyTask(self)
