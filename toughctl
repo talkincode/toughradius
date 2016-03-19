@@ -67,7 +67,7 @@ def main():
     parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
     parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
     parser.add_argument('-exitwith', '--exitwith', type=float, default=0, dest='exitwith', help='exitwith option')
-    parser.add_argument('-fork', '--fork', type=int, default=4, dest='fork', help='fork num')
+    parser.add_argument('-fork', '--fork', type=int, default=2, dest='fork', help='fork num')
     parser.add_argument('-flag', '--flag', type=int, default=0, dest='flag', help='running flag')
     parser.add_argument('-v', '--verb', action='store_true', default=False, dest='verb', help='show more logging')
     parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.json", dest='conf', help='config file')

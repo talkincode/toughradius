@@ -69,7 +69,7 @@ class WorkerSubscriber:
         reactor.callFromThread(reactor.stop)
 
 
-class RADIUSAuthWorker:
+class RADIUSAuthWorker(protocol.DatagramProtocol):
 
     def __init__(self, config, dbengine, radcache=None):
         self.config = config
@@ -82,6 +82,7 @@ class RADIUSAuthWorker:
         self.stat_pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-stat-task'))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-auth-message'))
         self.puller.onPull = self.process
+        reactor.listenUDP(0, self)
         logger.info("init auth worker pusher : %s " % (self.pusher))
         logger.info("init auth worker puller : %s " % (self.puller))
         logger.info("init auth stat pusher : %s " % (self.stat_pusher))
@@ -117,7 +118,8 @@ class RADIUSAuthWorker:
         logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
             logger.debug(reply.format_str())
-        self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
+        # self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
+        self.transport.write(reply.ReplyPacket(), (host,port))
 
     def createAuthPacket(self, **kwargs):
         vendor_id = kwargs.pop('vendor_id',0)
