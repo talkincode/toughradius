@@ -68,9 +68,11 @@ def task():
 def all():
     local("pypy toughctl --standalone -c ~/toughradius_test.json")
 
+def run():
+    local("pypy toughctl --run -c ~/toughradius_test.json")
+
 def super():
     local("supervisord -c etc/supervisord_test.conf")
-
 
 def initdb():
     local("pypy toughctl --initdb -c ~/toughradius_test.json")

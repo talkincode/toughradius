@@ -71,7 +71,13 @@ product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
 bas_cache_key = 'toughradius.cache.bas.{0}'.format
 radius_statcache_key = 'toughradius.cache.radius.stat'
 
+# exit_signal defined
 
+signal_worker_exit = "signal_tr_rad_worker_exit"
+signal_master_exit = "signal_tr_rad_master_exit"
+signal_manage_exit = "signal_tr_manage_exit"
+signal_task_exit = "signal_tr_task_exit"
 
+signal_all_exit = (signal_worker_exit,signal_master_exit,signal_manage_exit,signal_task_exit)
 
 

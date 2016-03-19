@@ -14,6 +14,7 @@ from toughradius.manage import models
 from toughradius.manage import base
 from toughlib.dbengine import get_engine
 from toughlib.permit import permit, load_events, load_handlers
+from txzmq import ZmqEndpoint, ZmqFactory, ZmqSubConnection
 from toughradius.manage.settings import *
 from toughlib import db_session as session
 from toughlib import db_cache as cache
@@ -82,6 +83,13 @@ class HttpServer(cyclone.web.Application):
                             order=5.0005)
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
+        self.subscriber = ZmqSubConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
+        self.subscriber.subscribe(signal_manage_exit)
+        self.subscriber.gotMessage = self.on_quit
+
+    def on_quit(self,*args):
+        logger.info("Termination signal received: %r" % (args, ))
+        reactor.callLater(0.1,reactor.stop)
 
 def run(config, dbengine):
     app = HttpServer(config, dbengine)

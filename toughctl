@@ -1,17 +1,163 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import sys,os
+from toughlib import choosereactor
+choosereactor.install_optimal_reactor(False)
+import sys,os,signal
 sys.path.insert(0,os.path.split(__file__)[0])
-from toughradius.common.toughctl import run as runctl
+from twisted.internet import reactor
+from twisted.python import log
+import argparse
+from toughlib import config as iconfig
+from toughlib import dispatch,logger
+from toughlib.dbengine import get_engine
+from txzmq import ZmqEndpoint, ZmqFactory, ZmqPubConnection
+from toughradius.common import initdb as init_db
+from toughradius.manage import httpd
+from toughradius.manage import radiusd
+from toughradius.manage import taskd
+from toughradius.manage import settings
+from toughlib import mputils
 
-if __name__ == '__main__':
-    runctl()
+reactor.suggestThreadPoolSize(60)
 
+def update_timezone(config):
+    try:
+        if 'TZ' not in os.environ:
+            os.environ["TZ"] = config.system.tz
+        time.tzset()
+    except:
+        pass
+
+def check_env(config):
+    try:
+        backup_path = config.database.backup_path
+        if not os.path.exists(backup_path):
+            os.system("mkdir -p  %s" % backup_path)
+        if not os.path.exists("/var/toughradius"):
+            os.system("mkdir -p /var/toughradius")
+    except Exception as err:
+        import traceback
+        traceback.print_exc()
+
+def run_initdb(config):
+    init_db.update(config)
+
+def setup_logger(config):
+    log.startLogging(sys.stdout)
+    syslog = logger.Logger(config)
+    dispatch.register(syslog)
+    return syslog
+
+def reactor_run():
+    def ExitHandler(signum, stackframe):
+        print "Got signal: %s" % signum
+        reactor.callFromThread(reactor.stop)
+    signal.signal(signal.SIGKILL, ExitHandler)
+    reactor.run()
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-manage', '--manage', action='store_true', default=False, dest='manage', help='run manage')
+    parser.add_argument('-task', '--task', action='store_true', default=False, dest='task', help='run task')
+    parser.add_argument('-auth', '--auth', action='store_true', default=False, dest='auth', help='run auth')
+    parser.add_argument('-acct', '--acct', action='store_true', default=False, dest='acct', help='run acct')
+    parser.add_argument('-worker', '--worker', action='store_true', default=False, dest='worker', help='run worker')
+    parser.add_argument('-standalone', '--standalone', action='store_true', default=False, dest='standalone', help='run standalone')
+    parser.add_argument('-run', '--run', action='store_true', default=False, dest='run', help='run all')
+    parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
+    parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
+    parser.add_argument('-exitwith', '--exitwith', type=float, default=0, dest='exitwith', help='exitwith option')
+    parser.add_argument('-fork', '--fork', type=int, default=4, dest='fork', help='fork num')
+    parser.add_argument('-flag', '--flag', type=int, default=0, dest='flag', help='running flag')
+    parser.add_argument('-v', '--verb', action='store_true', default=False, dest='verb', help='show more logging')
+    parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.json", dest='conf', help='config file')
+    args = parser.parse_args(sys.argv[1:])
+
+    config = iconfig.find_config(args.conf)
+    dbengine = get_engine(config)
+    update_timezone(config)
+    check_env(config)
+
+    if args.debug:
+        config.defaults.debug = True
+
+    if args.manage:
+        setup_logger(config)
+        httpd.run(config,dbengine)
+        reactor_run()
+
+    elif args.auth:
+        setup_logger(config)
+        radiusd.run_auth(config)
+        reactor_run()
+    
+    elif args.acct:
+        setup_logger(config)
+        radiusd.run_acct(config)
+        reactor_run()
+
+    elif args.worker:
+        setup_logger(config)
+        radiusd.run_worker(config,dbengine)
+        reactor_run()
+
+    elif args.task:
+        setup_logger(config)
+        taskd.run(config,dbengine)
+        reactor_run()
+
+    elif args.standalone:
+        log = setup_logger(config)
+        httpd.run(config,dbengine)
+        radiusd.run_auth(config)
+        radiusd.run_acct(config)
+        radiusd.run_worker(config,dbengine)
+        taskd.run(config,dbengine)
+        if args.exitwith > 0:
+            log.msg("testing application running and exit after %s seconds" % args.exitwith) 
+            reactor.callLater(args.exitwith,reactor.stop)
+        reactor_run()
+
+    elif args.run:
+        quitpub = ZmqPubConnection(ZmqFactory(), 
+            ZmqEndpoint('bind', 'ipc:///tmp/radiusd-exit-sub'))
+        mp = mputils.MP(logger.SimpleLogger(config),verb=args.verb)
+        pid = str(os.getpid())
+        cmd = sys.executable
+        path = os.path.abspath(os.path.dirname(__file__))
+        task_args = [cmd,__file__,'--flag',pid,'--task','--conf',args.conf]
+        manage_args = [cmd,__file__,'--flag',pid,'--manage','--conf',args.conf]
+        auth_args = [cmd,__file__,'--flag',pid,'--auth','--conf',args.conf]
+        acct_args = [cmd,__file__,'--flag',pid,'--acct','--conf',args.conf]
+        worker_args = [cmd,__file__,'--flag',pid,'--worker','--conf',args.conf]
+        mp.spawn("manage",cmd,manage_args,path=path, env={})
+        mp.spawn("task",cmd,task_args,path=path, env={})
+        mp.spawn("auth",cmd,auth_args,path=path, env={})
+        mp.spawn("acct",cmd,acct_args,path=path, env={})
+        for i in range(args.fork):
+            mp.spawn("worker",cmd,worker_args,path=path, env={"PROC_ORDER":str(i)})
+
+        def shutdown():
+            for signal in settings.signal_all_exit:
+                quitpub.publish("quit",signal)
+            mp.killall()
+        reactor.addSystemEventTrigger('before', 'shutdown', shutdown)
+        reactor_run()
+
+            
+        
+    elif args.initdb:
+        run_initdb(config)
+    else:
+        parser.print_help()
     
         
+if __name__ == '__main__':
+    main()
+    
+    
+    
 
-    
-    
-    
+
 
 

@@ -5,7 +5,7 @@ import os
 import six
 import msgpack
 import toughradius
-from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
+from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection,ZmqSubConnection
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet.threads import deferToThread
@@ -35,11 +35,18 @@ class RADIUSMaster(protocol.DatagramProtocol):
     def __init__(self, config, service='auth'):
         self.config = config
         self.service = service
+        self.subscriber = ZmqSubConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
+        self.subscriber.subscribe(signal_master_exit)
+        self.subscriber.gotMessage = self.on_quit
         self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-%s-message' % service))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-%s-result' % service))
         self.puller.onPull = self.reply
         logger.info("init %s master pusher : %s " % (self.service, self.pusher))
         logger.info("init %s master puller : %s " % (self.service, self.puller))
+
+    def on_quit(self,*args):
+        logger.info("Termination signal received: %r" % (args, ))
+        reactor.callLater(0.1,reactor.stop)
 
     def datagramReceived(self, datagram, (host, port)):
         message = msgpack.packb([datagram, host, port])
@@ -49,8 +56,20 @@ class RADIUSMaster(protocol.DatagramProtocol):
         data, host, port = msgpack.unpackb(result[0])
         self.transport.write(data, (host, int(port)))
 
+class WorkerSubscriber:
 
-class RADIUSAuthWorker(object):
+    def __init__(self):
+        self.subscriber = ZmqSubConnection(ZmqFactory(), 
+            ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
+        self.subscriber.subscribe(signal_worker_exit)
+        self.subscriber.gotMessage = self.on_quit
+
+    def on_quit(self,*args):
+        logger.info("Termination signal received: %r" % (args, ))
+        reactor.callFromThread(reactor.stop)
+
+
+class RADIUSAuthWorker:
 
     def __init__(self, config, dbengine, radcache=None):
         self.config = config
@@ -188,7 +207,7 @@ class RADIUSAuthWorker(object):
 
 
 
-class RADIUSAcctWorker(object):
+class RADIUSAcctWorker:
 
     def __init__(self, config, dbengine,radcache=None):
         self.config = config
@@ -210,7 +229,6 @@ class RADIUSAcctWorker(object):
             STATUS_TYPE_ACCT_ON: RadiusAcctOnoff,
             STATUS_TYPE_ACCT_OFF: RadiusAcctOnoff
         }
-
 
     def find_nas(self,ip_addr):
         def fetch_result():
@@ -317,6 +335,7 @@ def run_worker(config,dbengine):
         _cache.print_hit_stat(10)
     else:
         _cache = cache.CacheManager(dbengine, cache_name='RadiusWorkerCache-%s'%os.getpid())
+    logger.info('start subscriber worker: %s' % WorkerSubscriber())
     logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
     logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))
 
