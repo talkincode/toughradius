@@ -1,7 +1,7 @@
 #!/bin/sh
 # toughradius docker install script
 # author: jamiesun.net@gmail.com
-# version: 0.0.17
+# version: 0.0.18
 
 set -e
 
