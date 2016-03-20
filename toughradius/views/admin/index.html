@@ -190,6 +190,11 @@ $(document).ready(function () {
 });
 
 </script>
+<style type="text/css">
+    .break-all {
+        word-break: break-all; /*必須*/
+    }
+</style>
 </%def>
 
 
@@ -229,10 +234,10 @@ $(document).ready(function () {
                 </thead>
                 <tbody>
                 <tr>
-                    <td>cpu使用率</td>
-                    <td>${'; '.join([ 'cpu%s: %s/%%'%(cpuuse.index(c),c)  for c in cpuuse])}</td>
-                    <td>内存使用率</td>
-                    <td>${memuse.percent}% ;  ${int((memuse.total-memuse.available)/1024.0/1024.0)}MB / ${int(memuse.total/1024.0/1024.0)}MB</td>                    
+                    <td width=15% >cpu使用率</td>
+                    <td width=35% class="break-all">${'; '.join([ 'cpu%s: %s/%%'%(cpuuse.index(c),c)  for c in cpuuse])}</td>
+                    <td width=15% >内存使用率</td>
+                    <td width=35% >${memuse.percent}% ;  ${int((memuse.total-memuse.available)/1024.0/1024.0)}MB / ${int(memuse.total/1024.0/1024.0)}MB</td>                    
                 </tr>
                 </tbody>
 
@@ -242,6 +247,7 @@ $(document).ready(function () {
             <div id="loading" style="display: none;"><img style="max-height: 90px;width: auto;"
                                                           src="/static/img/loading.gif"></div>
             <div id="inbox" class="text-info" style="height:120px;overflow:auto"></div>
+
 
             
         </div>

@@ -1,4 +1,4 @@
-FROM index.alauda.cn/toughstruct/tough-pypy:kiss
+FROM index.alauda.cn/toughstruct/tough-pypy:trv2
 MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME [ "/var/toughradius" ]

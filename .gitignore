@@ -11,6 +11,7 @@ logs
 *.lok
 *.tmp
 .idea
+dump.rdb
 .ideahippo_shared_libs.xml
 SurelinkRadius.iml
 config.properties
