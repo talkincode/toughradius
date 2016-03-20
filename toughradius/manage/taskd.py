@@ -25,12 +25,9 @@ class TaskDaemon():
     def __init__(self, config=None, dbengine=None, **kwargs):
         self.config = config
         self.db_engine = dbengine or get_engine(config,pool_size=20)
-        redisconf = config.get('redis')
-        if redisconf:
-            self.cache = redis_cache.CacheManager(redisconf,cache_name='RadiusTaskCache-%s'%os.getpid())
-            self.cache.print_hit_stat(10)
-        else:
-            self.cache = cache.CacheManager(self.db_engine,cache_name='RadiusTaskCache-%s'%os.getpid())
+        redisconf = settings.redis_conf(config)
+        self.cache = redis_cache.CacheManager(redisconf,cache_name='RadiusTaskCache-%s'%os.getpid())
+        self.cache.print_hit_stat(10)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         # init task
         self.expire_notify_task = expire_notify.ExpireNotifyTask(self)

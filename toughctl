@@ -39,8 +39,8 @@ def check_env(config):
         import traceback
         traceback.print_exc()
 
-def run_initdb(config):
-    init_db.update(config)
+def run_initdb(config,force=False):
+    init_db.update(config,force=force)
 
 def setup_logger(config):
     log.startLogging(sys.stdout)
@@ -69,6 +69,7 @@ def main():
     parser.add_argument('-exitwith', '--exitwith', type=float, default=0, dest='exitwith', help='exitwith option')
     parser.add_argument('-fork', '--fork', type=int, default=2, dest='fork', help='fork num')
     parser.add_argument('-flag', '--flag', type=int, default=0, dest='flag', help='running flag')
+    parser.add_argument('-f', '--force', action='store_true', default=False, dest='force', help='force option')
     parser.add_argument('-v', '--verb', action='store_true', default=False, dest='verb', help='show more logging')
     parser.add_argument('-c', '--conf', type=str, default="/etc/toughradius.json", dest='conf', help='config file')
     args = parser.parse_args(sys.argv[1:])
@@ -147,7 +148,7 @@ def main():
             
         
     elif args.initdb:
-        run_initdb(config)
+        run_initdb(config,force=args.force)
     else:
         parser.print_help()
     

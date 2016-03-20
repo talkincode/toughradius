@@ -331,12 +331,9 @@ def run_acct(config):
 
 def run_worker(config,dbengine):
     _cache = None
-    redisconf = config.get('redis')
-    if redisconf:
-        _cache = redis_cache.CacheManager(redisconf,cache_name='RadiusWorkerCache-%s'%os.getpid())
-        _cache.print_hit_stat(10)
-    else:
-        _cache = cache.CacheManager(dbengine, cache_name='RadiusWorkerCache-%s'%os.getpid())
+    redisconf = redis_conf(config)
+    _cache = redis_cache.CacheManager(redisconf,cache_name='RadiusWorkerCache-%s'%os.getpid())
+    _cache.print_hit_stat(10)
     logger.info('start subscriber worker: %s' % WorkerSubscriber())
     logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
     logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))

@@ -17,7 +17,7 @@ from toughradius import __version__ as sys_version
 from toughlib.permit import permit
 from toughradius.manage.settings import *
 from toughradius.manage import models
-from toughlib import db_session as session
+from toughlib import redis_session 
 from toughlib import dispatch,logger
 
 class BaseHandler(cyclone.web.RequestHandler):
@@ -29,7 +29,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.aes = self.application.aes
         self.cache = self.application.mcache
         self.db_backup = self.application.db_backup
-        self.session = session.Session(self.application.session_manager, self)
+        self.session = redis_session.Session(self.application.session_manager, self)
 
     def check_xsrf_cookie(self):
         if self.settings.config.system.get('production'):

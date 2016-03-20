@@ -108,10 +108,10 @@ def init_db(db):
     db.close()
 
 
-def update(config):
+def update(config,force=False):
     try:
         db_engine = get_engine(config)
-        if int(os.environ.get("DB_INIT", 1)) == 1:
+        if int(os.environ.get("DB_INIT", 1)) == 1 or force:
             print 'starting update database...'
             metadata = models.get_metadata(db_engine)
             metadata.drop_all(db_engine)

@@ -1,4 +1,4 @@
-coverage report: version:2.0.5   date:Mon Mar 21 01:47:26 2016
+coverage report: version:2.0.5   date:Mon Mar 21 02:34:20 2016
 
 Name                                                Stmts   Miss  Cover
 -----------------------------------------------------------------------
@@ -59,7 +59,7 @@ toughradius/manage/customer/ticket.py                  37     24    35%
 toughradius/manage/events/__init__.py                   0      0   100%
 toughradius/manage/events/radius_events.py             47     30    36%
 toughradius/manage/events/settings.py                  11      0   100%
-toughradius/manage/httpd.py                            53      4    92%
+toughradius/manage/httpd.py                            53      9    83%
 toughradius/manage/models.py                          335     19    94%
 toughradius/manage/radius/__init__.py                   0      0   100%
 toughradius/manage/radius/plugins/__init__.py           0      0   100%
@@ -74,7 +74,7 @@ toughradius/manage/radius/radius_attrs.py               1      0   100%
 toughradius/manage/radius/radius_authorize.py         131    114    13%
 toughradius/manage/radius/radius_basic.py             179    142    21%
 toughradius/manage/radius/radius_billing.py            83     66    20%
-toughradius/manage/radiusd.py                         261    158    39%
+toughradius/manage/radiusd.py                         259    159    39%
 toughradius/manage/resource/__init__.py                 0      0   100%
 toughradius/manage/resource/bas.py                     67     27    60%
 toughradius/manage/resource/bas_forms.py                9      0   100%
@@ -83,7 +83,7 @@ toughradius/manage/resource/node_forms.py               7      0   100%
 toughradius/manage/resource/product.py                 98     46    53%
 toughradius/manage/resource/product_attr.py            63     42    33%
 toughradius/manage/resource/product_forms.py           14      1    93%
-toughradius/manage/settings.py                         44      0   100%
+toughradius/manage/settings.py                         61     17    72%
 toughradius/manage/system/__init__.py                   0      0   100%
 toughradius/manage/system/backup.py                    69     45    35%
 toughradius/manage/system/config.py                    66     43    35%
@@ -98,7 +98,7 @@ toughradius/manage/system/param.py                     41     26    37%
 toughradius/manage/system/param_forms.py               11      0   100%
 toughradius/manage/system/password.py                  26     15    42%
 toughradius/manage/system/password_forms.py             4      0   100%
-toughradius/manage/taskd.py                            64      4    94%
+toughradius/manage/taskd.py                            62     17    73%
 toughradius/manage/tasks/__init__.py                    0      0   100%
 toughradius/manage/tasks/ddns_update.py                29     12    59%
 toughradius/manage/tasks/expire_notify.py              53     34    36%
@@ -107,4 +107,4 @@ toughradius/manage/tasks/online_stat.py                26      3    88%
 toughradius/manage/tasks/radius_stat.py                29      5    83%
 toughradius/manage/tasks/task_base.py                  13      1    92%
 -----------------------------------------------------------------------
-TOTAL                                                4899   2857    42%
+TOTAL                                                4912   2893    41%

@@ -96,7 +96,14 @@ raddb:
     volumes:
         - ${rundir}/$instance/trmysql:/var/lib/mysql
         - ${rundir}/$instance/backup:/var/backup
-
+redis:
+    image: "index.alauda.cn/tutum/redis"
+    expose:
+        - "6379"
+    environment:
+        - REDIS_MAXMEMORY=256mb
+        - REDIS_PASS=wlanredis
+    restart: always   
 radius:
     container_name: radius_${instance}
     image: "index.alauda.cn/toughstruct/toughradius:${tr_release}"
@@ -105,6 +112,7 @@ radius:
         - "${auth_port}:1812/udp"
         - "${acct_port}:1813/udp"
     links:
+        - redis:redis
         - raddb:raddb
     ulimits:
         nproc: 65535
@@ -112,6 +120,9 @@ radius:
           soft: 20000
           hard: 40000
     environment:
+        - REDIS_URL=redis
+        - REDIS_PORT=6379
+        - REDIS_PWD=wlanredis
         - DB_TYPE=mysql
         - DB_URL=mysql://$mysql_user:$mysql_password@raddb:3306/$mysql_database?charset=utf8
     restart: always
@@ -170,6 +181,14 @@ EOF
 
     rm -f ${rundir}/$instance/docker-compose.yml
     cat > ${rundir}/$instance/docker-compose.yml  <<EOF
+redis:
+    image: "index.alauda.cn/tutum/redis"
+    expose:
+        - "6379"
+    environment:
+        - REDIS_MAXMEMORY=256mb
+        - REDIS_PASS=wlanredis
+    restart: always   
 radius:
     container_name: radius_${instance}
     image: "index.alauda.cn/toughstruct/toughradius:${tr_release}"
@@ -177,6 +196,12 @@ radius:
         - "${web_port}:1816"
         - "${auth_port}:1812/udp"
         - "${acct_port}:1813/udp"
+    links:
+        - redis:redis
+    environment:
+        - REDIS_URL=redis
+        - REDIS_PORT=6379
+        - REDIS_PWD=wlanredis
     restart: always
     ulimits:
         nproc: 65535
@@ -259,6 +284,14 @@ EOF
 
     rm -f ${rundir}/$instance/docker-compose.yml
     cat > ${rundir}/$instance/docker-compose.yml  <<EOF
+redis:
+    image: "index.alauda.cn/tutum/redis"
+    expose:
+        - "6379"
+    environment:
+        - REDIS_MAXMEMORY=256mb
+        - REDIS_PASS=wlanredis
+    restart: always   
 radius:
     container_name: radius_${instance}
     image: "index.alauda.cn/toughstruct/toughradius:${tr_release}"
@@ -266,7 +299,12 @@ radius:
         - "${web_port}:1816"
         - "${auth_port}:1812/udp"
         - "${acct_port}:1813/udp"
+    links:
+        - redis:redis        
     environment:
+        - REDIS_URL=redis
+        - REDIS_PORT=6379
+        - REDIS_PWD=wlanredis
         - DB_INIT=$mysql_init
         - DB_TYPE=mysql
         - DB_URL=mysql://$mysql_user:$mysql_password@$mysql_host:$mysql_port/$mysql_database?charset=utf8
@@ -399,9 +437,10 @@ pull()
     docker pull index.alauda.cn/toughstruct/mysql
     docker pull index.alauda.cn/toughstruct/toughradius:stable_v2
     docker pull index.alauda.cn/toughstruct/toughradius:dev
+    docker pull index.alauda.cn/tutum/redis
 }
 
-update_shell()
+upshell()
 {
     wget  https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/scripts/trshell  -O /usr/local/bin/trshell
     chmod +x /usr/local/bin/trshell
@@ -470,8 +509,8 @@ case "$1" in
     uplib $2
   ;;
 
-  update_shell)
-    update_shell
+  upshell)
+    upshell
   ;;
 
 
