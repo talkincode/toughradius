@@ -120,8 +120,8 @@ class RadiusAuth(RadiusBasic):
             input_max_limit = self.get_account_attr('input_max_limit')
             output_max_limit = self.get_account_attr('output_max_limit')
 
-        self.reply['input_limit'] = input_max_limit
-        self.reply['output_limit'] = output_max_limit
+        self.reply['input_rate'] = input_max_limit
+        self.reply['output_rate'] = output_max_limit
         return True
 
     @timecast
