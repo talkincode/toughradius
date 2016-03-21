@@ -3,8 +3,6 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME [ "/var/toughradius" ]
 
-RUN pypy -m pip install evernote
-
 ADD scripts/toughrun /usr/local/bin/toughrun
 RUN chmod +x /usr/local/bin/toughrun
 RUN /usr/local/bin/toughrun install

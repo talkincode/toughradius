@@ -145,6 +145,10 @@ EOF
 
     docker-compose up -d radius
 
+    if [[ $tr_release == "dev" ]]; then
+        update_dev $instance
+    fi
+
     docker-compose ps
 
     exit 0
@@ -217,6 +221,10 @@ EOF
     cat ${rundir}/$instance/docker-compose.yml
 
     docker-compose up -d
+
+    if [[ $tr_release == "dev" ]]; then
+        update_dev $instance
+    fi
 
     docker-compose ps
 
@@ -323,6 +331,10 @@ EOF
     cat ${rundir}/$instance/docker-compose.yml
 
     docker-compose up -d
+
+    if [[ $tr_release == "dev" ]]; then
+        update_dev $instance
+    fi
 
     docker-compose ps
 
