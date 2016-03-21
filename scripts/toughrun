@@ -1,7 +1,7 @@
 #!/bin/sh
 # toughradius docker install script
 # author: jamiesun.net@gmail.com
-# version: 0.0.19
+# version: 0.0.20
 
 set -e
 
@@ -12,8 +12,8 @@ install()
 
     git clone -b stable_v2 https://github.com/talkincode/ToughRADIUS.git /opt/toughradius
 
-    cp /opt/toughradius/etc/toughradius.json /etc/toughradius.json
-    cp /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
+    ln -s /opt/toughradius/etc/toughradius.json /etc/toughradius.json
+    ln -s /opt/toughradius/etc/supervisord.conf /etc/supervisord.conf
 
     chmod +x /opt/toughradius/toughctl
 }
