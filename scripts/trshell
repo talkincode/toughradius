@@ -146,7 +146,7 @@ EOF
     docker-compose up -d radius
 
     if [[ $tr_release == "dev" ]]; then
-        update_dev $instance
+        upgrade_dev $instance
     fi
 
     docker-compose ps
@@ -223,7 +223,7 @@ EOF
     docker-compose up -d
 
     if [[ $tr_release == "dev" ]]; then
-        update_dev $instance
+        upgrade_dev $instance
     fi
 
     docker-compose ps
@@ -333,7 +333,7 @@ EOF
     docker-compose up -d
 
     if [[ $tr_release == "dev" ]]; then
-        update_dev $instance
+        upgrade_dev $instance
     fi
 
     docker-compose ps
