@@ -30,8 +30,9 @@ def parse_zte(req):
     return req
 
 def parse_normal(req):
-    mac_addr = req.get(31)[0]
-    req.client_mac = mac_addr.replace('-', ':')
+    mac_addr = req.get('Calling-Station-Id')
+    if mac_addr:
+        req.client_mac = mac_addr.replace('-', ':')
     return req
 
   
