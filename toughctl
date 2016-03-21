@@ -52,7 +52,7 @@ def reactor_run():
     def ExitHandler(signum, stackframe):
         print "Got signal: %s" % signum
         reactor.callFromThread(reactor.stop)
-    signal.signal(signal.SIGKILL, ExitHandler)
+    signal.signal(signal.SIGTERM, ExitHandler)
     reactor.run()
 
 def main():
