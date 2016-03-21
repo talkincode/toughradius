@@ -29,11 +29,7 @@ class RadiusBasic:
                 return conn.execute(
                     table.select().with_only_columns([table.c.param_value]).where(
                         table.c.param_name==name)).scalar() or defval
-        result = self.cache.get(param_cache_key(name))
-        if not result:
-            self.cache.set(param_cache_key(name),fetch_result(),expire=600)
-        return result
-        # return self.cache.aget(param_cache_key(name),fetch_result, expire=600)
+        return self.cache.aget(param_cache_key(name),fetch_result, expire=600)
 
     @timecast
     def get_account_by_username(self,username):
@@ -43,11 +39,7 @@ class RadiusBasic:
                 val = conn.execute(table.select().where(
                     table.c.account_number==username)).first()
                 return val and Storage(val.items()) or None
-        result = self.cache.get(account_cache_key(username))
-        if not result:
-            self.cache.set(account_cache_key(username),fetch_result(),expire=600)
-        return result
-        # return self.cache.aget(account_cache_key(username),fetch_result, expire=600)
+        return self.cache.aget(account_cache_key(username),fetch_result, expire=600)
 
 
     @timecast
@@ -60,13 +52,8 @@ class RadiusBasic:
                     table.c.attr_name==attr_name).where(
                     table.c.attr_type==(radius and 1 or 0))).first()
                 return val and Storage(val.items()) or ''
-        cache_key = account_attr_cache_key(self.account.account_number,attr_name)
-        result = self.cache.get(cache_key)
-        if result is None:
-            self.cache.set(cache_key,fetch_result(),expire=600)
-        return result
-        # return self.cache.aget(account_attr_cache_key(
-        #     self.account.account_number,attr_name),fetch_result, expire=600)
+        return self.cache.aget(account_attr_cache_key(
+            self.account.account_number,attr_name),fetch_result, expire=600)
 
     @timecast
     def get_product_by_id(self,product_id):
@@ -75,12 +62,7 @@ class RadiusBasic:
             with self.dbengine.begin() as conn:
                 val = conn.execute(table.select().where(table.c.id==product_id)).first()
                 return val and Storage(val.items()) or None
-        cache_key = product_cache_key(product_id)
-        result = self.cache.get(cache_key)
-        if not result:
-            self.cache.set(cache_key,fetch_result(),expire=600)
-        return result
-        # return self.cache.aget(product_cache_key(product_id),fetch_result,expire=600)
+        return self.cache.aget(product_cache_key(product_id),fetch_result,expire=600)
 
     @timecast
     def get_product_attrs(self,product_id):
@@ -91,12 +73,7 @@ class RadiusBasic:
                     table.c.product_id==product_id).where(
                     table.c.attr_type==1))
                 return vals and [Storage(val.items()) for val in vals] or []
-        cache_key = product_attrs_cache_key(product_id)
-        result = self.cache.get(cache_key)
-        if not result:
-            self.cache.set(cache_key,fetch_result(),expire=600)
-        return result
-        # return self.cache.aget(product_attrs_cache_key(product_id),fetch_result,expire=600)
+        return self.cache.aget(product_attrs_cache_key(product_id),fetch_result,expire=600)
 
 
     @timecast

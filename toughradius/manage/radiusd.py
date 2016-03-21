@@ -114,12 +114,12 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
         reply = self.processAuth(datagram, host, port)
         if not reply:
             return
-        self.do_stat(reply.code)
         logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
         if self.config.system.debug:
             logger.debug(reply.format_str())
         # self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
         self.transport.write(reply.ReplyPacket(), (host,port))
+        self.do_stat(reply.code)
 
     def createAuthPacket(self, **kwargs):
         vendor_id = kwargs.pop('vendor_id',0)
