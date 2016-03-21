@@ -29,6 +29,11 @@ def parse_zte(req):
         req.client_mac =  ':'.join(_mac)
     return req
 
+def parse_normal(req):
+    mac_addr = req.get(31)[0]
+    req.client_mac = mac_addr.replace('-', ':')
+    return req
+
   
 def parse_h3c(req):
     mac_addr = req.get('H3C-Ip-Host-Addr')
@@ -41,10 +46,11 @@ def parse_h3c(req):
 
 
 _parses = {
-            '0' : parse_zte,
+            '0' : parse_normal,
             '9' : parse_cisco,
             '2352' : parse_radback,
             '3902' : parse_zte,
+            '14988' : parse_normal,
             '25506' : parse_h3c
         }
 
