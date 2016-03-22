@@ -15,7 +15,7 @@ from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
 from toughradius.manage.settings import *
 
-""" 客户上网账号释放MAC,VLAN绑定
+""" 下线客户上网账号
 """
 
 @permit.route(r"/api/v1/online/unlock")

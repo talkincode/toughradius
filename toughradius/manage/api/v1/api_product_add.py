@@ -1,11 +1,11 @@
 #!/usr/bin/env python
-#coding=utf-8
-import time
-import traceback
+# coding=utf-8
+
 from toughlib.btforms import dataform
 from toughlib.btforms import rules
 from toughlib import utils, apiutils, dispatch
 from toughlib.permit import permit
+import datetime
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius.manage import models
 
@@ -36,24 +36,48 @@ class ProductAddHandler(ApiHandler):
         self.post()
 
     def post(self):
+
+        form = product_add_vform()
         try:
             request = self.parse_form_request()
-            product_id = request.get('product_id')
-            products = self.db.query(models.TrProduct)
-            if product_id:
-                products = products.filter_by(id=product_id)
-
-            product_datas = []
-            excludes = ['fee_period']
-            for product in products:
-                product_data = { c.name : getattr(product, c.name) \
-                        for c in product.__table__.columns if c.name not in excludes}
-                product_datas.append(product_data)
-
-            self.render_success(products=product_datas)
+        except apiutils.SignError, err:
+            return self.render_sign_err(err)
         except Exception as err:
-            self.render_unknow(err)
+            return self.render_parse_err(err)
 
+        try:
+            if not form.validates(**request):
+                return self.render_verify_err(form.errors)
+
+            if self.db.query(models.TrProduct).filter_by(product_name=form.d.product_name).count() > 0:
+                return self.render_verify_err(msg=u"product name already exists")
+        except Exception, err:
+            return self.render_verify_err(err)
+
+        try:
+            product = models.TrProduct()
+            product.product_name = form.d.product_name
+            product.product_policy = form.d.product_policy
+            product.product_status = form.d.product_status
+            product.fee_months = int(form.d.get("fee_months", 0))
+            product.fee_times = utils.hour2sec(form.d.get("fee_times", 0))
+            product.fee_flows = utils.mb2kb(form.d.get("fee_flows", 0))
+            product.bind_mac = form.d.bind_mac
+            product.bind_vlan = form.d.bind_vlan
+            product.concur_number = form.d.concur_number
+            product.fee_price = utils.yuan2fen(form.d.fee_price)
+            product.fee_period = ''  # form.d.fee_period or ''
+            product.input_max_limit = utils.mbps2bps(form.d.input_max_limit)
+            product.output_max_limit = utils.mbps2bps(form.d.output_max_limit)
+            _datetime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            product.create_time = _datetime
+            product.update_time = _datetime
+            self.db.add(product)
+            self.add_oplog(u'API新增资费信息:%s' % utils.safeunicode(product.product_name))
+            self.db.commit()
+            return self.render_success(msg=u'资费添加成功')
+        except Exception as e:
+            return self.render_verify_err(e)
 
 
 

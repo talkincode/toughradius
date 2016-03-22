@@ -17,22 +17,22 @@ class NasFetchHandler(ApiHandler):
     def post(self):
 
         @self.cache.cache(expire=60)   
-        def get_bas_by_addr(nasaddr):
-            return self.db.query(models.TrBas).filter_by(ip_addr=nasaddr).first()
+        def get_bas_by_addr(ip_addr):
+            return self.db.query(models.TrBas).filter_by(ip_addr=ip_addr).first()
 
         try:
-            req_msg = self.parse_request()
-            if 'nasaddr' not in req_msg:
-                raise ValueError(u"nasaddr is empty")
+            req_msg = self.parse_form_request()
+            if 'ip_addr' not in req_msg:
+                raise ValueError(u"ip_addr is empty")
         except Exception as err:
             self.render_result(code=1, msg=utils.safeunicode(err.message))
             return
 
         try:
-            nasaddr = req_msg['nasaddr']
-            nas = get_bas_by_addr(nasaddr)
+            ip_addr = req_msg['ip_addr']
+            nas = get_bas_by_addr(ip_addr)
             if not nas:
-                self.render_result(code=1, msg=u'nas {0} not exists'.format(nasaddr))
+                self.render_result(code=1, msg=u'nas {0} not exists'.format(ip_addr))
                 return
 
             api_addr = "{0}://{1}".format(self.request.protocol, self.request.host)
@@ -40,7 +40,7 @@ class NasFetchHandler(ApiHandler):
             result = {
                 'code'          : 0,
                 'msg'           : 'ok',
-                'ipaddr'        : nasaddr,
+                'ipaddr'        : ip_addr,
                 'secret'        : nas.bas_secret,
                 'vendor_id'     : nas.vendor_id,
                 'coa_port'      : int(nas.coa_port or 3799),
@@ -49,7 +49,7 @@ class NasFetchHandler(ApiHandler):
 
             self.render_result(**result)
         except Exception as err:
-            logger.error(u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
+            self.logger.error(u"api fetch nas error, %s" % utils.safeunicode(traceback.format_exc()))
             self.render_result(code=1, msg=u"api error")
 
 

@@ -101,6 +101,8 @@ class CustomerAddHandler(ApiHandler):
             self.db.flush()
             self.db.refresh(accept_log)
 
+            product = self.db.query(models.TrProduct).get(form.d.product_id)
+
             order_fee = 0
             actual_fee = 0
             balance = 0
@@ -111,8 +113,6 @@ class CustomerAddHandler(ApiHandler):
             user_bind_mac = product.bind_mac
             user_bind_vlan = product.bind_vlan
 
-            product = self.db.query(models.TrProduct).get(form.d.product_id)
-            
             if product.product_policy == BOTimes:
                 # 买断时长
                 time_length = int(form.d.time_length)
