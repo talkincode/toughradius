@@ -128,7 +128,7 @@ class OnlineUnlockHandler(ApiHandler):
 
             self.add_oplog(u'API强制用户下线%s:%s' % (account_number, acct_session_id))
             self.db.commit()
-            self.render_success()
+            self.render_success(msg=u'下线成功')
             return deferd
 
         except Exception as err:
