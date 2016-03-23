@@ -9,5 +9,5 @@ RUN /usr/local/bin/toughrun install
 
 EXPOSE 1816
 
-CMD ["pypy","/opt/toughradius/toughctl","--run"]
+CMD ["/usr/local/bin/supervisord","-c","/etc/supervisord.conf"]
 

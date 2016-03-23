@@ -39,10 +39,6 @@ upgrade()
     pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 }
 
-run()
-{
-    pypy /opt/toughradius/toughctl --run
-}
 
 
 case "$1" in
