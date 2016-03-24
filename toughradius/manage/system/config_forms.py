@@ -19,7 +19,7 @@ system_form = btforms.Form(
     btforms.Dropdown("debug", args=boolean.items(), description=u"开启DEBUG", help=u"开启此项，可以获取更多的系统日志纪录", **input_style),
     btforms.Dropdown("tz", args=timezones.items(), description=u"时区", **input_style),
     btforms.Textarea("license", description=u"用户授权许可号", rows=3, **input_style),
-    btforms.Textbox("secret", description=u"安全密钥", readonly="readonly", **input_style),
+    btforms.Textbox("secret", description=u"安全密钥", **input_style),
     btforms.Button("regen_secret", type="button", onclick="update_secret();", html=u"<b>重新生成安全密钥</b>"),
     btforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"系统配置管理",

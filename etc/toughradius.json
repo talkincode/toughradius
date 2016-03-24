@@ -3,7 +3,7 @@
         "host": "0.0.0.0", 
         "port": 1816
     }, 
-    "conf_file": "toughradius.json", 
+    "conf_file": "etc/toughradius.json", 
     "database": {
         "backup_path": "/var/toughradius/data", 
         "dbtype": "sqlite", 
@@ -19,8 +19,8 @@
     }, 
     "redis": {
         "host": "127.0.0.1", 
-        "port": 6379, 
-        "passwd": ""
+        "passwd": "", 
+        "port": 6379
     }, 
     "syslog": {
         "enable": 0, 
@@ -31,9 +31,9 @@
     }, 
     "system": {
         "debug": 1, 
-        "secret": "0BOTrVO6WRtkRnKTmM52nKfQpvCGY8vD", 
-        "service_url": "http://service.toughstruct.net:9079",
-        "license": "free license",
+        "license": "free license", 
+        "secret": "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng", 
+        "service_url": "http://service.toughstruct.net:9079", 
         "tz": "CST-8"
     }
 }

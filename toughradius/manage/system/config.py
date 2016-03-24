@@ -39,6 +39,7 @@ class DefaultHandler(BaseHandler):
         config['system']['debug'] = int(self.get_argument("debug"))
         config['system']['tz'] = self.get_argument("tz")
         config['system']['license'] = self.get_argument("license")
+        config['system']['secret'] = self.get_argument("secret")
         config.save()
         self.redirect("/admin/config?active=system")
 

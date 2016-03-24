@@ -30,23 +30,30 @@ from toughradius.manage.radius.radius_acct_update import RadiusAcctUpdate
 from toughradius.manage.radius.radius_acct_stop import RadiusAcctStop
 from toughradius.manage.radius.radius_acct_onoff import RadiusAcctOnoff
 
+class SignalSubscriber:
+
+    def __init__(self, signal_str):
+        self.subscriber = ZmqSubConnection(ZmqFactory(), 
+            ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
+        self.subscriber.subscribe(signal_str)
+        self.subscriber.gotMessage = self.on_quit
+
+    def on_quit(self,*args):
+        logger.info("Termination signal received: %r" % (args, ))
+        reactor.callFromThread(reactor.stop)
+
+
 
 class RADIUSMaster(protocol.DatagramProtocol):
     def __init__(self, config, service='auth'):
         self.config = config
         self.service = service
-        self.subscriber = ZmqSubConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
-        self.subscriber.subscribe(signal_master_exit)
-        self.subscriber.gotMessage = self.on_quit
         self.pusher = ZmqPushConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-%s-message' % service))
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-%s-result' % service))
         self.puller.onPull = self.reply
         logger.info("init %s master pusher : %s " % (self.service, self.pusher))
         logger.info("init %s master puller : %s " % (self.service, self.puller))
 
-    def on_quit(self,*args):
-        logger.info("Termination signal received: %r" % (args, ))
-        reactor.callLater(0.1,reactor.stop)
 
     def datagramReceived(self, datagram, (host, port)):
         message = msgpack.packb([datagram, host, port])
@@ -55,19 +62,6 @@ class RADIUSMaster(protocol.DatagramProtocol):
     def reply(self, result):
         data, host, port = msgpack.unpackb(result[0])
         self.transport.write(data, (host, int(port)))
-
-class WorkerSubscriber:
-
-    def __init__(self):
-        self.subscriber = ZmqSubConnection(ZmqFactory(), 
-            ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
-        self.subscriber.subscribe(signal_worker_exit)
-        self.subscriber.gotMessage = self.on_quit
-
-    def on_quit(self,*args):
-        logger.info("Termination signal received: %r" % (args, ))
-        reactor.callFromThread(reactor.stop)
-
 
 class RADIUSAuthWorker(protocol.DatagramProtocol):
 
@@ -322,10 +316,12 @@ class RADIUSAcctWorker:
             traceback.print_exc()
 
 def run_auth(config):
+    logger.info('start signal subscriber: %s' % SignalSubscriber(signal_master_exit))
     auth_protocol = RADIUSMaster(config, service='auth')
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
 def run_acct(config):
+    logger.info('start signal subscriber: %s' % SignalSubscriber(signal_master_exit))
     acct_protocol = RADIUSMaster(config,service='acct')
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
@@ -334,7 +330,7 @@ def run_worker(config,dbengine):
     redisconf = redis_conf(config)
     _cache = redis_cache.CacheManager(redisconf,cache_name='RadiusWorkerCache-%s'%os.getpid())
     _cache.print_hit_stat(10)
-    logger.info('start subscriber worker: %s' % WorkerSubscriber())
+    logger.info('start signal subscriber: %s' % SignalSubscriber(signal_worker_exit))
     logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
     logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))
 
