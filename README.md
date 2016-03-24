@@ -51,42 +51,6 @@ TOUGHRADIUS网站：http://www.toughradius.net
 - 详细的操作日志记录，条件查询。
 
 
-## Linux 快速部署
-
-TOUGHRADIUS 提供了一个Linux 工具脚本，可以实现TOUGHRADIUS的部署与管理
-
-    $ wget  https://raw.githubusercontent.com/talkincode/ToughRADIUS/master/scripts/trshell  -O /usr/local/bin/trshell
-
-    $ chmod +x /usr/local/bin/trshell
-
-
-#### 安装docker环境
-
-    $ trshell docker_setup
-
-
-一键部署 TOUGHRADIUS，默认使用sqlite数据库
-
-
-    $ trshell install t1     # t1表示实例名，可自定义
-
-
-一键部署TOUGHRADIUS, 连接已有的远程MySQL数据库
-
-
-    $ trshell install_with_rmysql t1     ＃ t1表示实例名，可自定义
-
-
-一键部署TOUGHRADIUS, 创建一个本地MySQL实例并连接它。
-
-
-    $ trshell install_with_lmysql t1     ＃ t1表示实例名，可自定义
-
-
-访问 http://server:1816  进入管理系统，默认用户名密码是 admin/root
-
-了解更多的信息，请查阅 TOUGHRADIUS 文档 http://docs.toughradius.net
-
 ## 社区支持
 
 QQ交流群组: 464025428，247860313 (使用交流)，487229323 (开发交流)
@@ -96,6 +60,8 @@ TOUGHRADIUS 文档: http://docs.toughradius.net
 Github 项目地址: https://github.com/talkincode/ToughRADIUS
 
 Github 文档地址: https://github.com/talkincode/ToughRADIUS-GitBook
+
+在线文档阅读：http://docs.toughradius.net
 
 
 ## 商业支持
