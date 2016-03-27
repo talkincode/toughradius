@@ -37,7 +37,7 @@ class NodeAddHandler(BaseHandler):
         node.node_desc = form.d.node_desc
         self.db.add(node)
 
-        self.add_oplog(u'新增区域信息:%s' % form.d.node_name)
+        self.add_oplog(u'新增区域信息:%s' % utils.safeunicode(form.d.node_name))
 
         self.db.commit()
 
@@ -62,7 +62,7 @@ class NodeUpdateHandler(BaseHandler):
         node.node_name = form.d.node_name
         node.node_desc = form.d.node_desc
 
-        self.add_oplog(u'修改区域信息:%s' % form.d.node_name)
+        self.add_oplog(u'修改区域信息:%s' % utils.safeunicode(form.d.node_name))
 
         self.db.commit()
 
