@@ -1,0 +1,14 @@
+[Unit]  
+Description=supervisord  
+After=network.target remote-fs.target nss-lookup.target  
+   
+[Service]  
+Type=forking  
+PIDFile=/tmp/supervisord.pid
+ExecStart=supervisord -c /etc/toughradius
+ExecReload=supervisorctl restart all 
+ExecStop=supervisorctl stop all 
+PrivateTmp=true  
+   
+[Install]  
+WantedBy=multi-user.target  
