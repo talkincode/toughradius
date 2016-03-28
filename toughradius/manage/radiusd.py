@@ -5,7 +5,7 @@ import os
 import six
 import msgpack
 import toughradius
-from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection,ZmqSubConnection
+from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
 from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.internet.threads import deferToThread
@@ -21,6 +21,7 @@ from txradius.radius import packet
 from txradius.radius.packet import PacketError
 from txradius import message
 from toughlib.utils import timecast
+from toughradius.common import signals
 from toughradius.manage import models
 from toughradius.manage.settings import *
 from toughradius.manage.radius.plugins import mac_parse,vlan_parse, rate_process
@@ -29,18 +30,6 @@ from toughradius.manage.radius.radius_acct_start import RadiusAcctStart
 from toughradius.manage.radius.radius_acct_update import RadiusAcctUpdate
 from toughradius.manage.radius.radius_acct_stop import RadiusAcctStop
 from toughradius.manage.radius.radius_acct_onoff import RadiusAcctOnoff
-
-class SignalSubscriber:
-
-    def __init__(self, signal_str):
-        self.subscriber = ZmqSubConnection(ZmqFactory(), 
-            ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
-        self.subscriber.subscribe(signal_str)
-        self.subscriber.gotMessage = self.on_quit
-
-    def on_quit(self,*args):
-        logger.info("Termination signal received: %r" % (args, ))
-        reactor.callFromThread(reactor.stop)
 
 
 
@@ -316,12 +305,12 @@ class RADIUSAcctWorker:
             traceback.print_exc()
 
 def run_auth(config):
-    logger.info('start signal subscriber: %s' % SignalSubscriber(signal_master_exit))
+    logger.info('start term signal subscriber: %s' % signals.TermSignalSubscriber(signal_master_exit))
     auth_protocol = RADIUSMaster(config, service='auth')
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
 def run_acct(config):
-    logger.info('start signal subscriber: %s' % SignalSubscriber(signal_master_exit))
+    logger.info('start term signal subscriber: %s' % signals.TermSignalSubscriber(signal_master_exit))
     acct_protocol = RADIUSMaster(config,service='acct')
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
@@ -329,8 +318,8 @@ def run_worker(config,dbengine):
     _cache = None
     redisconf = redis_conf(config)
     _cache = redis_cache.CacheManager(redisconf,cache_name='RadiusWorkerCache-%s'%os.getpid())
-    _cache.print_hit_stat(10)
-    logger.info('start signal subscriber: %s' % SignalSubscriber(signal_worker_exit))
+    _cache.print_hit_stat(60)
+    logger.info('start signal subscriber: %s' % signals.TermSignalSubscriber(signal_worker_exit))
     logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
     logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))
 

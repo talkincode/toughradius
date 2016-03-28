@@ -5,10 +5,10 @@ import os
 import time
 from twisted.python import log
 from twisted.internet import reactor
-from txzmq import ZmqEndpoint, ZmqFactory, ZmqSubConnection
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils,dispatch
 from toughradius.manage import models
+from toughradius.common import signals
 from toughlib.dbengine import get_engine
 from toughlib import db_cache as cache
 from toughlib import redis_cache
@@ -27,7 +27,7 @@ class TaskDaemon():
         self.db_engine = dbengine or get_engine(config,pool_size=20)
         redisconf = settings.redis_conf(config)
         self.cache = redis_cache.CacheManager(redisconf,cache_name='RadiusTaskCache-%s'%os.getpid())
-        self.cache.print_hit_stat(10)
+        self.cache.print_hit_stat(60)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         # init task
         self.expire_notify_task = expire_notify.ExpireNotifyTask(self)
@@ -36,14 +36,6 @@ class TaskDaemon():
         self.online_stat_task = online_stat.OnlineStatTask(self)
         self.flow_stat_task = flow_stat.FlowStatTask(self)
         dispatch.register(radius_events.__call__(self.db_engine,self.cache))
-
-        self.subscriber = ZmqSubConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
-        self.subscriber.subscribe(settings.signal_task_exit)
-        self.subscriber.gotMessage = self.on_quit
-
-    def on_quit(self,*args):
-        logger.info("Termination signal received: %r" % (args, ))
-        reactor.callLater(0.1,reactor.stop)
 
     def start_expire_notify(self):
         _time = self.expire_notify_task.process()
@@ -78,5 +70,6 @@ class TaskDaemon():
 
 
 def run(config, dbengine=None):
+    logger.info('start signal subscriber: %s' % signals.TermSignalSubscriber(settings.signal_task_exit))
     app = TaskDaemon(config, dbengine)
     app.start()
