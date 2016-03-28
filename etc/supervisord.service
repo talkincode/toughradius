@@ -5,7 +5,7 @@ After=network.target remote-fs.target nss-lookup.target
 [Service]  
 Type=forking  
 PIDFile=/tmp/supervisord.pid
-ExecStart=supervisord -c /etc/toughradius
+ExecStart=supervisord -c /etc/toughradius.json
 ExecReload=supervisorctl restart all 
 ExecStop=supervisorctl stop all 
 PrivateTmp=true  
