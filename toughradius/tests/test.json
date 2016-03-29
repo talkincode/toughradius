@@ -17,6 +17,11 @@
         "auth_port": 18120, 
         "host": "0.0.0.0"
     }, 
+    "redis": {
+        "host": "127.0.0.1", 
+        "passwd": "", 
+        "port": 6379
+    }, 
     "syslog": {
         "enable": 0, 
         "level": "INFO", 

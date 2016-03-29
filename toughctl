@@ -12,6 +12,7 @@ from toughlib import dispatch,logger
 from toughlib.dbengine import get_engine
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqPubConnection
 from toughradius.common import initdb as init_db
+from toughradius.common import inittest
 from toughradius.manage import httpd
 from toughradius.manage import radiusd
 from toughradius.manage import taskd
@@ -42,6 +43,9 @@ def check_env(config):
 def run_initdb(config,force=False):
     init_db.update(config,force=force)
 
+def run_inittest(config):
+    inittest.update(config)
+
 def setup_logger(config):
     log.startLogging(sys.stdout)
     syslog = logger.Logger(config)
@@ -65,6 +69,7 @@ def main():
     parser.add_argument('-standalone', '--standalone', action='store_true', default=False, dest='standalone', help='run standalone')
     parser.add_argument('-run', '--run', action='store_true', default=False, dest='run', help='run all')
     parser.add_argument('-initdb', '--initdb', action='store_true', default=False, dest='initdb', help='run initdb')
+    parser.add_argument('-inittest', '--inittest', action='store_true', default=False, dest='inittest', help='run inittest')
     parser.add_argument('-debug', '--debug', action='store_true', default=False, dest='debug', help='debug option')
     parser.add_argument('-exitwith', '--exitwith', type=float, default=0, dest='exitwith', help='exitwith option')
     parser.add_argument('-fork', '--fork', type=int, default=2, dest='fork', help='fork num')
@@ -148,7 +153,9 @@ def main():
             
         
     elif args.initdb:
-        run_initdb(config,force=args.force)
+        run_initdb(config,force=args.force)        
+    elif args.inittest:
+        run_inittest(config)
     else:
         parser.print_help()
     
