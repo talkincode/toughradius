@@ -165,7 +165,6 @@ class RadiusBilling(RadiusBasic):
         user_flow_length = flow_length - acct_flows
         if user_flow_length < 0 :
             user_flow_length = 0
-            
         self.update_billing(Storage(
             account_number = online.account_number,
             nas_addr = online.nas_addr,

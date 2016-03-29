@@ -48,7 +48,7 @@ class HttpServer(cyclone.web.Application):
             input_encoding='utf-8',
             output_encoding='utf-8',
             encoding_errors='ignore',
-            module_directory="/tmp/admin"
+            module_directory="/tmp/toughradius_admin"
         )
 
         self.db_engine = dbengine or get_engine(config)
