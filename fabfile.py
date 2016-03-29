@@ -76,6 +76,8 @@ def super():
 
 def initdb():
     local("pypy toughctl --initdb -c ~/toughradius_test.json")
+    local("pypy toughctl --inittest -c ~/toughradius_test.json")
+
 
 def uplib():
     local("pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps")

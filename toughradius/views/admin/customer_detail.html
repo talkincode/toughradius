@@ -212,7 +212,7 @@ function do_delete(customer_id)
                     </tr>   
                     <tr>
                         <td>IP地址</td>
-                        <td>${user.ip_address}</td>
+                        <td>${user.ip_address or ''}</td>
                         <td>最近停机时间</td>
                         <td>${user.last_pause or ''}</td>
                         <td>创建时间</td>
@@ -257,8 +257,7 @@ function do_delete(customer_id)
                 <tr class="active">
                     <th>订单号</th>
                     <th>资费</th>
-                    <th>应缴</th>
-                    <th>实缴</th>
+                    <th>缴费金额</th>
                     <th>状态</th>
                     <th>时间</th>
                     <th width=25%>描述</th>
@@ -269,7 +268,6 @@ function do_delete(customer_id)
             <tr>
                 <td>${order.order_id}</td>
                 <td>${order.product_name}</td>
-                <td>${utils.fen2yuan(order.order_fee)}</td>
                 <td>${utils.fen2yuan(order.actual_fee)}</td>
                 <td>${{0:u"未支付",1:u"已支付",2:u"已取消"}[order.pay_status]}</td>
                 <td>${order.create_time}</td>

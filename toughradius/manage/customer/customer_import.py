@@ -34,7 +34,11 @@ class CustomerImportHandler(CustomerHandler):
         node_id = self.get_argument('node_id')
         product_id = self.get_argument('product_id')
         f = self.request.files['import_file'][0]
-        impctx = utils.safeunicode(f['body'])
+        try:
+            impctx = utils.safeunicode(f['body'])
+        except Exception as err:
+            self.render_error(msg=u"File format error： %s" % utils.safeunicode(err))
+            return
         lines = impctx.split("\n")
         _num = 0
         impusers = []

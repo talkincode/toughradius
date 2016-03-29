@@ -12,6 +12,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils, dispatch
 from toughradius.manage import models
 from toughradius.manage import base
+from toughradius.common import signals
 from toughlib.dbengine import get_engine
 from toughlib.permit import permit, load_events, load_handlers
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqSubConnection
@@ -47,7 +48,7 @@ class HttpServer(cyclone.web.Application):
             input_encoding='utf-8',
             output_encoding='utf-8',
             encoding_errors='ignore',
-            module_directory="/tmp/admin"
+            module_directory="/tmp/toughradius_admin"
         )
 
         self.db_engine = dbengine or get_engine(config)
@@ -57,7 +58,7 @@ class HttpServer(cyclone.web.Application):
         redisconf = redis_conf(config)
         self.session_manager = redis_session.SessionManager(redisconf,settings["cookie_secret"], 600)
         self.mcache = redis_cache.CacheManager(redisconf,cache_name='RadiusManageCache-%s'%os.getpid())
-        self.mcache.print_hit_stat(10)
+        self.mcache.print_hit_stat(60)
         
         self.db_backup = DBBackup(models.get_metadata(self.db_engine), excludes=[
             'tr_online','system_session','system_cache','tr_ticket'])
@@ -83,15 +84,8 @@ class HttpServer(cyclone.web.Application):
                             order=5.0005)
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
-        self.subscriber = ZmqSubConnection(ZmqFactory(), ZmqEndpoint('connect', 'ipc:///tmp/radiusd-exit-sub'))
-        self.subscriber.subscribe(signal_manage_exit)
-        self.subscriber.gotMessage = self.on_quit
-
-    def on_quit(self,*args):
-        logger.info("Termination signal received: %r" % (args, ))
-        reactor.callLater(0.1,reactor.stop)
-
 def run(config, dbengine):
+    logger.info('start signal subscriber: %s' % signals.TermSignalSubscriber(signal_manage_exit))
     app = HttpServer(config, dbengine)
     reactor.listenTCP(int(config.admin.port), app, interface=config.admin.host)
 
