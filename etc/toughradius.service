@@ -5,8 +5,8 @@ After=network.target
 [Service]  
 Type=forking  
 ExecStart=/usr/local/bin/supervisord -c /etc/toughradius.conf
-ExecReload=/usr/local/bin/supervisorctl reload
-ExecStop=/usr/local/bin/supervisorctl shutdown
+ExecReload=/usr/local/bin/supervisorctl -c /etc/toughradius.conf reload
+ExecStop=/usr/local/bin/supervisorctl -c /etc/toughradius.conf shutdown
 PrivateTmp=true  
    
 [Install]  
