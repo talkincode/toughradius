@@ -88,11 +88,12 @@ class BasDeleteHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
         bas_id = self.get_argument("bas_id")
-        basip = self.db.query(models.TrBas).get(form.d.id).ip_addr
+        bas = self.db.query(models.TrBas).get(bas_id)
+        ip_addr = bas and bas.ip_addr or ''
         self.db.query(models.TrBas).filter_by(id=bas_id).delete()
 
         self.add_oplog(u'删除接入设备信息:%s' % bas_id)
 
         self.db.commit()
-        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,bas_cache_key(basip), async=True)
+        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,bas_cache_key(ip_addr), async=True)
         self.redirect("/admin/bas",permanent=False)
