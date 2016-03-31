@@ -3,11 +3,12 @@ MAINTAINER jamiesun <jamiesun.net@gmail.com>
 
 VOLUME [ "/var/toughradius" ]
 
+RUN pypy -m pip install Click
 RUN pypy -m pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
 RUN pypy -m pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 RUN git clone -b release-dev https://github.com/talkincode/ToughRADIUS.git /opt/toughradius && \
-    ln -s /opt/toughradius/etc/toughradius.json /etc/toughradius.json && \
-    ln -s /opt/toughradius/etc/toughradius.conf /etc/toughradius.conf && \
+    ln -s /opt/toughradius/build/dev/toughradius.json /etc/toughradius.json && \
+    ln -s /opt/toughradius/build/dev/toughradius.conf /etc/toughradius.conf && \
     chmod +x /opt/toughradius/radiusctl 
 
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
