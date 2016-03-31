@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,os,time
+import sys,os,time,datetime
 sys.path.insert(0,os.path.dirname(__file__))
 from fabric.api import *
 from toughradius import __version__
@@ -8,9 +8,9 @@ env.user = 'root'
 env.hosts = ['121.201.63.77']
 
 def build():
-    releases = {'dev':'release-dev','stable':'release-stable'}
-    release = releases.get(raw_input("Please enter release type [dev,stable](default:dev):"),'dev')
-    build_ver = "linux-{1}-{2}".format(release, datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+    releases = {'test':'master','dev':'release-dev','stable':'release-stable'}
+    release = releases.get(raw_input("Please enter release type [test,dev,stable](default:dev):"),'dev')
+    build_ver = "linux-{0}-{1}".format(release, datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
     gitrepo = "https://github.com/talkincode/ToughRADIUS.git"
     rundir = "/opt/toughradius"
     dist = "toughradius-{0}.tar.bz2".format(build_ver)
@@ -19,7 +19,7 @@ def build():
         run("git checkout {0} && git pull -f origin {0}".format(release,release))
         run("make venv")
     with cd("/opt"):
-        _excludes = ['.git','fabfile.py','pymodules','.travis.yml','.gitignore',
+        _excludes = ['.git','fabfile.py','pymodules','.travis.yml','.gitignore','dist',
         'coverage.txt','.coverage','.coverageerc','build','_trial_temp']
         excludes = ' '.join( '--exclude %s'%_e for _e in _excludes )
         run("tar -jpcv -f /tmp/{0} toughradius {1}".format(dist,excludes))
