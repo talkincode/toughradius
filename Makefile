@@ -25,9 +25,7 @@ venv:
 	venv/bin/pip install -U pip;\
 	venv/bin/pip install -U wheel;\
 	venv/bin/pip install -U coverage;\
-	test -d pymodules || mkdir pymodules;\
-	venv/bin/pip download -d pymodules -r requirements.txt;\
-	venv/bin/pip install -U --no-index --find-links=pymodules -r requirements.txt;\
+	venv/bin/pip install -U -r requirements.txt;\
 	)
 
 upgrade:
@@ -43,8 +41,8 @@ inittest:
 	venv/bin/python toughctl --inittest -c /etc/toughradius.json
 
 clean:
-	rm -fr pymodules  && rm -fr venv
+	rm -fr venv
 
 all:install-deps venv install
 
-.PHONY: all install install-deps initdb inittest
+.PHONY: all install install-deps upgrade test initdb inittest clean
