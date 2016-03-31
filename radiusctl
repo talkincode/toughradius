@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-_path = os.path.abspath(os.path.dirname(__file__))
-execfile('%s/venv/bin/activate_this.py'%_path, dict(__file__='%s/venv/bin/activate_this.py'%_path))
+try:
+    _path = os.path.abspath(os.path.dirname(__file__))
+    execfile('%s/venv/bin/activate_this.py'%_path, dict(__file__='%s/venv/bin/activate_this.py'%_path))
+except:
+    pass
 from toughlib import choosereactor
 choosereactor.install_optimal_reactor(False)
 import sys,signal,click
