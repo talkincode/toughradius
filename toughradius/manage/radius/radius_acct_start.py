@@ -26,7 +26,7 @@ class RadiusAcctStart(RadiusBilling):
             acct_session_id = self.request.acct_session_id,
             acct_start_time = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
             framed_ipaddr = self.request.framed_ipaddr,
-            mac_addr = self.request.mac_addr,
+            mac_addr = self.request.mac_addr or '',
             nas_port_id = self.request.nas_port_id,
             billing_times = 0,
             input_total = 0,

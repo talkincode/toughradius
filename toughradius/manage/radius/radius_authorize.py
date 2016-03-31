@@ -41,8 +41,7 @@ class RadiusAuth(RadiusBasic):
                 return self.reply
 
             for filter_func in self.filters:
-                flag = filter_func()
-                if not flag:
+                if not filter_func():
                     return self.reply
             return self.reply
         except Exception as err:
@@ -51,7 +50,7 @@ class RadiusAuth(RadiusBasic):
             return self.reply
 
 
-    @timecast
+    #@timecast
     def status_filter(self):
         self.reply['username'] = self.request.account_number
         self.reply['bypass'] = int(self.get_param_value("radiusd_bypass", 1))
@@ -65,7 +64,7 @@ class RadiusAuth(RadiusBasic):
 
         return True
 
-    @timecast
+    #@timecast
     def bind_filter(self):
         macaddr = self.request['macaddr']
         if macaddr and  self.account.mac_addr:
@@ -90,7 +89,7 @@ class RadiusAuth(RadiusBasic):
 
         return True
 
-    @timecast
+    #@timecast
     def policy_filter(self):
         acct_policy = self.product.product_policy or PPMonth
         bill_type = self.get_account_attr('bill_type')
@@ -131,14 +130,14 @@ class RadiusAuth(RadiusBasic):
         self.reply['output_rate'] = output_max_limit
         return True
 
-    @timecast
+    #@timecast
     def limit_filter(self):
         if self.account.user_concur_number > 0:
-            if self.count_online(self.account.account_number) > self.account.user_concur_number:
+            if self.count_online() >= self.account.user_concur_number:
                 return self.failure('user session to limit')
         return True
 
-    @timecast
+    #@timecast
     def session_filter(self):
         session_timeout = int(self.get_param_value("max_session_timeout",86400))
         expire_pool = self.get_param_value("expire_addrpool",'')

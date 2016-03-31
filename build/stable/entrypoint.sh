@@ -5,7 +5,7 @@ if [ ! -f "/var/toughradius/data" ];then
 fi
 
 if [ ! -f "/var/toughradius/.install" ];then
-    pypy /opt/toughradius/toughctl --initdb
+    pypy /opt/toughradius/radiusctl initdb -c /etc/toughradius.json
     echo "ok" > /var/toughradius/.install
     echo "init database ok!"
 fi

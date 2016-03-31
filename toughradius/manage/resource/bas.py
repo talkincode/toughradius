@@ -9,7 +9,7 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.resource import bas_forms
 from toughlib.permit import permit
-from toughlib import utils
+from toughlib import utils,dispatch,redis_cache
 from toughradius.manage.settings import * 
 
 @permit.route(r"/admin/bas", u"接入设备管理",MenuRes, order=2.0000, is_menu=True)
@@ -79,6 +79,7 @@ class BasUpdateHandler(BaseHandler):
         self.add_oplog(u'修改接入设备信息:%s' % bas.ip_addr)
 
         self.db.commit()
+        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,bas_cache_key(bas.ip_addr), async=True)
         self.redirect("/admin/bas",permanent=False)
 
 
@@ -87,9 +88,12 @@ class BasDeleteHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
         bas_id = self.get_argument("bas_id")
+        bas = self.db.query(models.TrBas).get(bas_id)
+        ip_addr = bas and bas.ip_addr or ''
         self.db.query(models.TrBas).filter_by(id=bas_id).delete()
 
         self.add_oplog(u'删除接入设备信息:%s' % bas_id)
 
         self.db.commit()
+        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,bas_cache_key(ip_addr), async=True)
         self.redirect("/admin/bas",permanent=False)

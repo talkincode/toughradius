@@ -2,6 +2,7 @@
 #coding=utf-8
 import time
 import traceback
+import decimal
 from toughlib.btforms import dataform
 from toughlib.btforms import rules
 from toughlib import utils, apiutils, dispatch
@@ -28,15 +29,16 @@ customer_add_vform = dataform.Form(
     dataform.Item("begin_date", rules.is_date, description=u"开通日期"),
     dataform.Item("expire_date", rules.is_date, description=u"过期日期"),
     dataform.Item("balance", rules.is_rmb, description=u"用户余额"),
-    dataform.Item("time_length", rules.is_number, default=0, description=u"用户时长"),
-    dataform.Item("flow_length", rules.is_number, default=0, description=u"用户流量"),
-    dataform.Item("bind_mac", rules.is_number, default=0, description=u"用户是否绑定 MAC"),
-    dataform.Item("bind_vlan", rules.is_number, default=0, description=u"用户是否绑定 vlan"),
-    dataform.Item("concur_number", rules.is_number, default=0, description=u"用户并发数"),
-    dataform.Item("ip_address",  default="",description=u"用户IP地址"),
-    dataform.Item("input_max_limit", rules.is_number, description=u"用户上行速度 Mbps"),
-    dataform.Item("output_max_limit", rules.is_number, description=u"用户下行速度 Mbps"),
-    dataform.Item("free_bill_type", rules.is_number, default=9999,description=u"用户下行速度 Mbps"),
+    dataform.Item("fee_value", rules.is_rmb, description=u"用户缴费金额"),
+    dataform.Item("time_length", rules.is_number, default='0', description=u"用户时长"),
+    dataform.Item("flow_length", rules.is_number, default='0', description=u"用户流量"),
+    dataform.Item("bind_mac", description=u"用户是否绑定 MAC"),
+    dataform.Item("bind_vlan", description=u"用户是否绑定 vlan"),
+    dataform.Item("concur_number", description=u"用户并发数"),
+    dataform.Item("ip_address",  description=u"用户IP地址"),
+    dataform.Item("input_max_limit", description=u"用户上行速度 Mbps"),
+    dataform.Item("output_max_limit", description=u"用户下行速度 Mbps"),
+    dataform.Item("free_bill_type", description=u"用户计费类型"),
     title="api customer add"
 )
 
@@ -63,6 +65,7 @@ class CustomerAddHandler(ApiHandler):
 
         try:
             if not form.validates(**request):
+                print form.d
                 raise Exception(form.errors)
             if self.db.query(models.TrAccount).filter_by(account_number=form.d.account_number).count() > 0:
                 raise Exception("account already exists")
@@ -104,7 +107,7 @@ class CustomerAddHandler(ApiHandler):
             product = self.db.query(models.TrProduct).get(form.d.product_id)
 
             order_fee = 0
-            actual_fee = 0
+            actual_fee = utils.yuan2fen(form.d.fee_value or 0)
             balance = 0
             time_length = 0
             flow_length = 0
@@ -125,17 +128,19 @@ class CustomerAddHandler(ApiHandler):
                 expire_date = MAX_EXPIRE_DATE
             elif product.product_policy == FreeFee:
                 # 自由资费
-                if int(form.d.free_bill_type) not in (FreeFeeDate,FreeFeeFlow,FreeFeeTimeLen):
+                if int(form.d.free_bill_type or 9999) not in (FreeFeeDate,FreeFeeFlow,FreeFeeTimeLen):
                     return self.render_verify_err(msg=u"free_bill_type in (0,1,2)")
-                time_length = int(form.d.time_length)
-                flow_length = int(form.d.flow_length)
-                balance = utils.yuan2fen(form.d.balance)
-                user_concur_number = int(form.d.concur_number)
-                user_bind_mac = int(form.d.bind_mac)
-                user_bind_vlan = int(form.d.bind_vlan)
+                time_length = int(form.d.time_length or 0)
+                flow_length = int(form.d.flow_length or 0)
+                balance = utils.yuan2fen(form.d.balance or 0)
+                user_concur_number = int(form.d.concur_number or 0)
+                user_bind_mac = int(form.d.bind_mac or 0)
+                user_bind_vlan = int(form.d.bind_vlan or 0)
+                user_input_max_limit = utils.mbps2bps(form.d.input_max_limit or 0)
+                user_output_max_limit = utils.mbps2bps(form.d.output_max_limit or 0)
                 self.set_account_attr(form.d.account_number,'bill_type',form.d.free_bill_type)
-                self.set_account_attr(form.d.account_number,'input_max_limit',form.d.input_max_limit)
-                self.set_account_attr(form.d.account_number,'output_max_limit',form.d.output_max_limit)
+                self.set_account_attr(form.d.account_number,'input_max_limit',user_input_max_limit)
+                self.set_account_attr(form.d.account_number,'output_max_limit',user_output_max_limit)
 
             order = models.TrCustomerOrder()
             order.order_id = utils.gen_order_id()
