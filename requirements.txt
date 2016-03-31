@@ -1,3 +1,4 @@
+Click
 Mako
 Beaker
 MarkupSafe
@@ -10,14 +11,12 @@ cyclone
 six
 autobahn
 pycrypto
-pyOpenSSL>=0.14
-service_identity
 MySQL-python
 SQLAlchemy
 pyzmq
 txzmq
 msgpack-python
-supervisor
 psutil
 toughlib
 txradius
+redis

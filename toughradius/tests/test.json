@@ -7,7 +7,7 @@
     "database": {
         "backup_path": "/tmp/toughradius/data", 
         "dbtype": "sqlite", 
-        "dburl": "sqlite:////tmp/toughradius/toughradius.sqlite3", 
+        "dburl": "sqlite:////tmp/toughradius.sqlite3", 
         "echo": 0, 
         "pool_recycle": 300, 
         "pool_size": 120

@@ -17,6 +17,8 @@ SurelinkRadius.iml
 config.properties
 bakup
 release
+venv/*
+pymodules/*
 target
 _build
 _build/*

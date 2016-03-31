@@ -1,0 +1,199 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+import os
+try:
+    _path = os.path.abspath(os.path.dirname(__file__))
+    execfile('%s/venv/bin/activate_this.py'%_path, dict(__file__='%s/venv/bin/activate_this.py'%_path))
+except:
+    pass
+from toughlib import choosereactor
+choosereactor.install_optimal_reactor(False)
+import sys,signal,click
+import platform as pf
+sys.path.insert(0,os.path.split(__file__)[0])
+from twisted.internet import reactor
+from twisted.python import log
+from toughlib import config as iconfig
+from toughlib import dispatch,logger
+from toughlib.dbengine import get_engine
+from toughradius.manage import settings
+from toughradius import __version__
+
+reactor.suggestThreadPoolSize(60)
+
+def setup_logger(config):
+    log.startLogging(sys.stdout)
+    syslog = logger.Logger(config)
+    dispatch.register(syslog)
+    return syslog
+
+def update_timezone(config):
+    if 'TZ' not in os.environ:
+        os.environ["TZ"] = config.system.tz
+    try:time.tzset()
+    except:pass
+
+def reactor_run():
+    def ExitHandler(signum, stackframe):
+        print "Got signal: %s" % signum
+        reactor.callFromThread(reactor.stop)
+    signal.signal(signal.SIGTERM, ExitHandler)
+    reactor.run()
+
+def print_version(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo(click.style("ToughRADIUS {0}".format(__version__),fg='cyan'))
+    ctx.exit()
+
+def print_info(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    click.echo(click.style("Linux distribution: {0}".format(','.join(pf.linux_distribution())),fg='cyan'))
+    click.echo(click.style("ToughRadius version: {0}".format(__version__),fg='cyan'))
+    click.echo(click.style("Env_home: {0}".format(os.environ.get("HOME")),fg='cyan'))
+    click.echo(click.style("Env_path: {0}".format(os.environ.get("PATH")),fg='cyan'))
+    click.echo(click.style("Server platform: {0},{1}".format(pf.platform(),pf.machine()),fg='cyan'))
+    click.echo(click.style("Python version: {0},{1}".format(pf.python_implementation(), pf.python_version()),fg='cyan'))
+    ctx.exit()
+
+
+@click.group()
+@click.option('--version', is_flag=True, callback=print_version,expose_value=False, is_eager=True)
+@click.option('--info', is_flag=True, callback=print_info,expose_value=False, is_eager=True, help="server info")
+def cli():
+    pass
+
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+def manage(conf,debug):
+    """ manage option """
+    from toughradius.manage import httpd
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.defaults.debug = True
+    dbengine = get_engine(config)
+    setup_logger(config)
+    httpd.run(config,dbengine)
+    reactor_run()
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+def task(conf,debug):
+    """ task option """
+    from toughradius.manage import taskd
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.defaults.debug = True
+    dbengine = get_engine(config)
+    setup_logger(config)
+    taskd.run(config,dbengine)
+    reactor_run()
+
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+def auth(conf,debug):
+    """ radius authorize option """
+    from toughradius.manage import radiusd
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.defaults.debug = True
+    dbengine = get_engine(config)
+    setup_logger(config)
+    radiusd.run_auth(config)
+    reactor_run()
+
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+def acct(conf,debug):
+    """ radius acctounting option """
+    from toughradius.manage import radiusd
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.defaults.debug = True
+    dbengine = get_engine(config)
+    setup_logger(config)
+    radiusd.run_acct(config)
+    reactor_run()
+
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+@click.option('-n','--num', default=2,type=click.INT)
+def worker(conf,debug,num):
+    """ radius worker option """
+    from toughradius.manage import radiusd
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.defaults.debug = True
+    dbengine = get_engine(config)
+    setup_logger(config)
+    radiusd.run_worker(config,dbengine)
+    reactor_run()
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-f','--force', is_flag=True)
+def initdb(conf,force):
+    """ initdb option """
+    from toughradius.common import initdb as init_db
+    config = iconfig.find_config(conf)
+    init_db.update(config,force=force)
+
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+@click.option('--exitwith', default=0,type=click.INT, help='exit after sec')
+def standalone(conf,debug,exitwith):
+    """ radius worker option """
+    from toughradius.manage import httpd
+    from toughradius.manage import radiusd
+    from toughradius.manage import taskd
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.defaults.debug = True
+    dbengine = get_engine(config)
+    log = setup_logger(config)
+    httpd.run(config,dbengine)
+    radiusd.run_auth(config)
+    radiusd.run_acct(config)
+    radiusd.run_worker(config,dbengine)
+    taskd.run(config,dbengine)
+    if exitwith > 0:
+        print "testing application running and exit after %s seconds" % exitwith
+        reactor.callLater(exitwith,reactor.stop)
+    reactor_run()
+
+
+cli.add_command(manage)
+cli.add_command(task)
+cli.add_command(auth)
+cli.add_command(acct)
+cli.add_command(worker)
+cli.add_command(initdb)
+cli.add_command(standalone)
+
+if __name__ == '__main__':
+    cli()
+
+
+
+
+
+
+

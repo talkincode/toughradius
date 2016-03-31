@@ -4,11 +4,9 @@ python:
 services:
   - redis-server
 install:
-    - pip install -r requirements.txt
+    - make venv
     - pip install coveralls
-    - pip install https://github.com/talkincode/toughlib/archive/master.zip --upgrade --no-deps
-    - pip install https://github.com/talkincode/txradius/archive/master.zip --upgrade --no-deps
 
-script: sh testsrun.sh
+script: sh runtests.sh
 
-after_success: coveralls
+after_success: killall python && coveralls
