@@ -9,4 +9,4 @@ install:
 
 script: sh runtests.sh
 
-after_success: sh -c "ps aux | grep '/test.json' | awk '{print $2}' | xargs  kill" && coveralls
+after_success: killall python && coveralls
