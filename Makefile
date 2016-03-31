@@ -35,10 +35,10 @@ test:
 	sh runtests.sh
 
 initdb:
-	venv/bin/python toughctl --initdb -f -c /etc/toughradius.json
+	venv/bin/python radiusctl initdb -f -c /etc/toughradius.json
 
 inittest:
-	venv/bin/python toughctl --inittest -c /etc/toughradius.json
+	venv/bin/python radiusctl inittest -c /etc/toughradius.json
 
 clean:
 	rm -fr venv
