@@ -31,7 +31,7 @@ venv:
 	)
 
 upgrade:
-	venv/bin/pip install -U toughlib txradius && git pull
+	venv/bin/pip install -U --no-deps toughlib txradius && git pull
 
 test:
 	sh runtests.sh
