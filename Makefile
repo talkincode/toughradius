@@ -30,6 +30,9 @@ venv:
 	venv/bin/pip install -U --no-index --find-links=pymodules -r requirements.txt;\
 	)
 
+upgrade:
+	venv/bin/pip install -U toughlib txradius && git pull
+
 test:
 	sh runtests.sh
 
