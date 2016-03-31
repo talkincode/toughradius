@@ -17,6 +17,7 @@ install-deps:
 	yum install -y wget zip python-devel libffi-devel openssl openssl-devel gcc git;\
 	yum install -y czmq czmq-devel python-virtualenv supervisor;\
 	yum install -y mysql-devel MySQL-python redis;\
+	test -f /usr/local/bin/supervisord || ln -s `which supervisord` /usr/local/bin/supervisord;\
 	)
 
 venv:
