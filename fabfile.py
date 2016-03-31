@@ -9,21 +9,20 @@ env.hosts = ['121.201.63.77']
 
 def build():
     releases = {'dev':'release-dev','stable':'release-stable'}
-    release = releases.get(raw_input("release (dev|stable):"),'dev')
-    linux_dist = 'centos'
-    build_ver = "{0}-{1}-{2}".format(linux_dist,release, datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-    gitrepo = "git@bitbucket.org:talkincode/toughradius-enterprise.git"
-    rundir = "/opt/toughee"
-    dist = "toughee-{0}.tar.bz2".format(build_ver)
+    release = releases.get(raw_input("Please enter release type [dev,stable](default:dev):"),'dev')
+    build_ver = "linux-{1}-{2}".format(release, datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
+    gitrepo = "https://github.com/talkincode/ToughRADIUS.git"
+    rundir = "/opt/toughradius"
+    dist = "toughradius-{0}.tar.bz2".format(build_ver)
     run("test -d {0} || git clone {1} {2}".format(rundir,gitrepo,rundir))
     with cd(rundir):
-        run("git pull -f origin {0}".format(release))
-        run("sh venv.sh")
-        run("\cp installs/{0}.mk Makefile".format(linux_dist))
+        run("git checkout {0} && git pull -f origin {0}".format(release,release))
+        run("make venv")
     with cd("/opt"):
-        excludes = ['.git','.gitignore','fabfile.py','']
-        excludes = "--exclude .git --exclude fabfile.py --exclude pymodules"
-        run("tar -jpcv -f /tmp/{0} toughee {1}".format(dist,excludes))
+        _excludes = ['.git','fabfile.py','pymodules','.travis.yml','.gitignore',
+        'coverage.txt','.coverage','.coverageerc','build','_trial_temp']
+        excludes = ' '.join( '--exclude %s'%_e for _e in _excludes )
+        run("tar -jpcv -f /tmp/{0} toughradius {1}".format(dist,excludes))
     local("scp  root@121.201.63.77:/tmp/{0} {1}".format(dist,dist))
 
 def tag():
