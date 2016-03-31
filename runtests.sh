@@ -12,3 +12,5 @@ echo "starting test.."
 
 venv/bin/trial toughradius.tests
 
+cat /tmp/trtest.log
+
