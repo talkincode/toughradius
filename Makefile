@@ -15,7 +15,7 @@ install-deps:
 	(\
 	yum install -y epel-release;\
 	yum install -y wget zip python-devel libffi-devel openssl openssl-devel gcc git;\
-	yum install -y czmq czmq-devel python-virtualenv;\
+	yum install -y czmq czmq-devel python-virtualenv supervisor;\
 	yum install -y mysql-devel MySQL-python redis;\
 	)
 
