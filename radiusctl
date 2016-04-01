@@ -153,6 +153,14 @@ def initdb(conf,force):
     config = iconfig.find_config(conf)
     init_db.update(config,force=force)
 
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-f','--force', is_flag=True)
+def inittest(conf,force):
+    """ initdb option """
+    from toughradius.common import inittest as init_test
+    config = iconfig.find_config(conf)
+    init_test.update(config)
 
 @click.command()
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
@@ -186,6 +194,7 @@ cli.add_command(auth)
 cli.add_command(acct)
 cli.add_command(worker)
 cli.add_command(initdb)
+cli.add_command(inittest)
 cli.add_command(standalone)
 
 if __name__ == '__main__':
