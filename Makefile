@@ -29,8 +29,17 @@ venv:
 	venv/bin/pip install -U -r requirements.txt;\
 	)
 
+upgrade-libs:
+	(\
+	venv/bin/pip install -U --no-deps https://github.com/talkincode/toughlib/archive/master.zip;\
+	venv/bin/pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip;\
+	)
+
+upgrade-dev:
+	git pull --rebase --stat origin release-dev
+
 upgrade:
-	venv/bin/pip install -U --no-deps toughlib txradius && git pull
+	git pull --rebase --stat origin release-stable
 
 test:
 	sh runtests.sh
@@ -44,6 +53,6 @@ inittest:
 clean:
 	rm -fr venv
 
-all:install-deps venv install
+all:install-deps venv upgrade-libs install
 
-.PHONY: all install install-deps upgrade test initdb inittest clean
+.PHONY: all install install-deps upgrade-libs upgrade-dev upgrade test initdb inittest clean

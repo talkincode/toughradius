@@ -41,6 +41,15 @@ def commit():
     local("git commit -m \"%s\"" % raw_input("type message:"))
     local("git push origin master")
 
+def push_dev():
+    message = raw_input("commit msg:")
+    local("git add .")
+    local("git commit -m '%s'"%message)
+    local("git push origin master")
+    local("git checkout release-dev")
+    local("git merge master --no-ff")
+    local("git push origin release-dev")
+    local("git checkout master")
 
 def all():
     local("venv/bin/python radiusctl standalone -c ~/toughradius_test.json")
