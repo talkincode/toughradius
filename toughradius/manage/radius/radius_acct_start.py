@@ -2,6 +2,7 @@
 # coding=utf-8
 from toughradius.manage.radius.radius_basic import  RadiusBasic
 from toughradius.manage.radius.radius_billing import RadiusBilling
+from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 from toughlib.storage import Storage
 from toughradius.manage import models
 from toughlib import  utils, dispatch, logger
@@ -18,6 +19,8 @@ class RadiusAcctStart(RadiusBilling):
             return logger.error('online %s is exists' % self.request.acct_session_id)
 
         if not self.account:
+            dispatch.pub(UNLOCK_ONLINE_EVENT,
+                self.request.account_number,self.request.nas_addr, self.request.acct_session_id,async=True)
             return logger.error('user %s not exists' % self.request.account_number)
 
         online = Storage(
