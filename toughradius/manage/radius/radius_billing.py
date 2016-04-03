@@ -85,7 +85,8 @@ class RadiusBilling(RadiusBasic):
         ))
         
         if balance == 0 :
-            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,
+                online.account_number,online.nas_addr, online.acct_session_id,async=True)
 
     def bill_botimes(self,online, product):
         #买断时长
@@ -120,7 +121,8 @@ class RadiusBilling(RadiusBasic):
         ))
     
         if user_time_length == 0 :
-            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,
+                online.account_number,online.nas_addr, online.acct_session_id,async=True)
 
     def bill_ppflows(self, online, product):
         #预付费流量
@@ -160,7 +162,8 @@ class RadiusBilling(RadiusBasic):
         ))
         
         if balance == 0:
-            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,
+                online.account_number,online.nas_addr, online.acct_session_id,async=True)
 
     def bill_boflows(self, online, product):
         #买断流量
@@ -194,7 +197,8 @@ class RadiusBilling(RadiusBasic):
         ))
         
         if user_flow_length == 0 :
-            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,
+                online.account_number,online.nas_addr, online.acct_session_id,async=True)
 
 
 

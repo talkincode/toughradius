@@ -24,6 +24,8 @@ class RadiusEvents(BasicEvent):
         os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
 
     def get_request(self, online):
+        if not online:
+            return None
         session_time = (datetime.datetime.now() - datetime.datetime.strptime(
             online.acct_start_time,"%Y-%m-%d %H:%M:%S")).total_seconds()
         return Storage(
@@ -53,7 +55,7 @@ class RadiusEvents(BasicEvent):
         )
 
     def onSendResp(self, resp, disconnect_req):
-        if self.db.query(models.TrOnline).filter_by(
+        if disconnect_req and self.db.query(models.TrOnline).filter_by(
                 nas_addr=disconnect_req.nas_addr,
                 acct_session_id=disconnect_req.acct_session_id).count() > 0:
             radius_acct_stop.RadiusAcctStop(
@@ -61,14 +63,15 @@ class RadiusEvents(BasicEvent):
         logger.info(u"send disconnect ok! coa resp : %s" % resp)
 
     def onSendError(self,err, disconnect_req):
-        if self.db.query(models.TrOnline).filter_by(
+        if disconnect_req and self.db.query(models.TrOnline).filter_by(
                 nas_addr=disconnect_req.nas_addr,
                 acct_session_id=disconnect_req.acct_session_id).count() > 0:
             radius_acct_stop.RadiusAcctStop(
                 self.dbengine,self.mcache,self.aes, disconnect_req).acctounting()
         logger.error(u"send disconnect done! %s" % err.getErrorMessage())
 
-    def event_unlock_online(self, nas_addr, acct_session_id):
+    def event_unlock_online(self, account_number, nas_addr, acct_session_id):
+        logger.info("event unlock online [username:{0}] {1} {2}".format(account_number, nas_addr, acct_session_id))
         nas = self.db.query(models.TrBas).filter_by(ip_addr=nas_addr).first()
         if nas_addr and  not nas:
             self.db.query(models.TrOnline).filter_by(
@@ -78,23 +81,21 @@ class RadiusEvents(BasicEvent):
 
         online = self.db.query(models.TrOnline).filter_by(
                 nas_addr=nas_addr, acct_session_id=acct_session_id).first()
-        if not online:
-            logger.error(u"online (%s,%s) not exists"%(nas_addr,acct_session_id))
-            return
 
-        deferd = authorize.disconnect(
-                int(nas.vendor_id or 0),
-                self.dictionary,
-                nas.bas_secret,
-                nas.ip_addr,
-                coa_port=int(nas.coa_port or 3799),
-                debug=True,
-                User_Name=online.account_number,
-                NAS_IP_Address=nas.ip_addr,
-                Acct_Session_Id=acct_session_id)
+        authorize.disconnect(
+            int(nas.vendor_id or 0),
+            self.dictionary,
+            nas.bas_secret,
+            nas.ip_addr,
+            coa_port=int(nas.coa_port or 3799),
+            debug=True,
+            User_Name=account_number,
+            NAS_IP_Address=nas.ip_addr,
+            Acct_Session_Id=acct_session_id
+        ).addCallback(
+            self.onSendResp, self.get_request(online)).addErrback(
+            self.onSendError, self.get_request(online))
 
-        deferd.addCallback(self.onSendResp, self.get_request(online)).addErrback(
-                           self.onSendError, self.get_request(online))
 
 
 
