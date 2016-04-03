@@ -44,7 +44,7 @@ def commit():
 def push_dev():
     message = raw_input("commit msg:")
     local("git add .")
-    local("git commit -m '%s'"%message)
+    local("git commit -m \'%s\'"%message)
     local("git push origin master")
     local("git checkout release-dev")
     local("git merge master --no-ff")
