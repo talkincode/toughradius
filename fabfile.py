@@ -51,6 +51,19 @@ def push_dev():
     local("git push origin release-dev")
     local("git checkout master")
 
+def push_stable():
+    message = raw_input("commit msg:")
+    local("git add .")
+    local("git commit -m \'%s\'"%message)
+    local("git push origin master")
+    local("git checkout release-dev")
+    local("git merge master --no-ff")
+    local("git push origin release-dev")
+    local("git checkout release-stable")
+    local("git merge release-dev --no-ff")
+    local("git push origin release-stable")
+    local("git checkout master")
+
 def all():
     local("venv/bin/python radiusctl standalone -c ~/toughradius_test.json")
 
