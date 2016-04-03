@@ -166,8 +166,8 @@ class CustomerAddHandler(ApiHandler):
             account.password = self.aes.encrypt(form.d.password)
             account.status = 1
             account.balance = balance
-            account.time_length = time_length
-            account.flow_length = flow_length
+            account.time_length = utils.hour2sec(time_length)
+            account.flow_length = utils.mb2kb(flow_length)
             account.expire_date = expire_date
             account.user_concur_number = user_concur_number
             account.bind_mac = user_bind_mac
