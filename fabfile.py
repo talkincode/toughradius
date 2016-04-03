@@ -55,6 +55,13 @@ def all():
     local("venv/bin/python radiusctl standalone -c ~/toughradius_test.json")
 
 
+def reset():
+    local("venv/bin/python radiusctl initdb -c ~/toughradius_test.json")
+    local("venv/bin/python radiusctl inittest -c ~/toughradius_test.json")  
+    local("venv/bin/python radiusctl standalone -c ~/toughradius_test.json")
+
+
+
 def initdb():
     local("venv/bin/python radiusctl initdb -c ~/toughradius_test.json")
     local("venv/bin/python radiusctl inittest -c ~/toughradius_test.json")

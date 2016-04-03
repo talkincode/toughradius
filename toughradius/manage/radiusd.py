@@ -14,14 +14,13 @@ from toughlib import utils
 from toughlib import mcache
 from toughlib import logger,dispatch
 from toughlib import db_cache as cache
-from toughlib import redis_cache
+from toughlib.redis_cache import CacheManager
 from toughlib.dbengine import get_engine
 from txradius.radius import dictionary
 from txradius.radius import packet
 from txradius.radius.packet import PacketError
 from txradius import message
 from toughlib.utils import timecast
-from toughradius.common import signals
 from toughradius.manage import models
 from toughradius.manage.settings import *
 from toughradius.manage.radius.plugins import mac_parse,vlan_parse, rate_process
@@ -305,21 +304,21 @@ class RADIUSAcctWorker:
             traceback.print_exc()
 
 def run_auth(config):
-    logger.info('start term signal subscriber: %s' % signals.TermSignalSubscriber(signal_master_exit))
     auth_protocol = RADIUSMaster(config, service='auth')
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
 def run_acct(config):
-    logger.info('start term signal subscriber: %s' % signals.TermSignalSubscriber(signal_master_exit))
     acct_protocol = RADIUSMaster(config,service='acct')
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
-def run_worker(config,dbengine):
-    _cache = None
-    redisconf = redis_conf(config)
-    _cache = redis_cache.CacheManager(redisconf,cache_name='RadiusWorkerCache-%s'%os.getpid())
+def run_worker(config,dbengine,**kwargs):
+    _cache = kwargs.pop("cache",CacheManager(redis_conf(config),cache_name='RadiusWorkerCache-%s'%os.getpid()))
     _cache.print_hit_stat(60)
-    logger.info('start signal subscriber: %s' % signals.TermSignalSubscriber(signal_worker_exit))
+    # app event init
+    if not kwargs.get('standalone'):
+        event_params= dict(dbengine=dbengine, mcache=_cache, aes=kwargs.pop('aes',None))
+        event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
+        dispatch.load_events(event_path,"toughradius.manage.events",event_params=event_params)
     logger.info('start radius worker: %s' % RADIUSAuthWorker(config,dbengine,radcache=_cache))
     logger.info('start radius worker: %s' % RADIUSAcctWorker(config,dbengine,radcache=_cache))
 

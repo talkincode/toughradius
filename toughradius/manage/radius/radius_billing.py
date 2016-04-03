@@ -2,6 +2,7 @@
 # coding=utf-8
 import datetime
 from toughradius.manage.radius.radius_basic import  RadiusBasic
+from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 from toughlib.storage import Storage
 from toughradius.manage import models
 from toughlib import  utils, logger, dispatch
@@ -53,6 +54,8 @@ class RadiusBilling(RadiusBasic):
         sessiontime = decimal.Decimal(self.request.acct_session_time)
         billing_times = decimal.Decimal(online.billing_times)
         acct_times = sessiontime - billing_times
+        if acct_times < 0:
+            acct_times = 0
         fee_price = decimal.Decimal(product['fee_price'])
         usedfee = acct_times/decimal.Decimal(3600) * fee_price
         usedfee = actual_fee = int(usedfee.to_integral_value())
@@ -82,7 +85,7 @@ class RadiusBilling(RadiusBasic):
         ))
         
         if balance == 0 :
-            self.disconnect(online)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
 
     def bill_botimes(self,online, product):
         #买断时长
@@ -91,6 +94,8 @@ class RadiusBilling(RadiusBasic):
         sessiontime = self.request.acct_session_time
         billing_times = online.billing_times
         acct_times = sessiontime - billing_times
+        if acct_times < 0:
+            acct_times = 0
         user_time_length = time_length - acct_times
         if user_time_length < 0 :
             user_time_length = 0
@@ -115,7 +120,7 @@ class RadiusBilling(RadiusBasic):
         ))
     
         if user_time_length == 0 :
-            self.disconnect(online)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
 
     def bill_ppflows(self, online, product):
         #预付费流量
@@ -124,6 +129,8 @@ class RadiusBilling(RadiusBasic):
         output_total = decimal.Decimal(self.get_output_total())
         billing_output_total = decimal.Decimal(online.output_total)
         acct_flows = output_total - billing_output_total
+        if acct_flows < 0:
+            acct_flows = 0
         fee_price = decimal.Decimal(product.fee_price)
         usedfee = acct_flows/decimal.Decimal(1024) * fee_price
         usedfee = actual_fee = int(usedfee.to_integral_value())
@@ -153,7 +160,7 @@ class RadiusBilling(RadiusBasic):
         ))
         
         if balance == 0:
-            self.disconnect(online)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
 
     def bill_boflows(self, online, product):
         #买断流量
@@ -162,6 +169,8 @@ class RadiusBilling(RadiusBasic):
         output_total = self.get_output_total()
         billing_output_total = online.output_total
         acct_flows = output_total - billing_output_total
+        if acct_flows < 0:
+            acct_flows = 0
         user_flow_length = flow_length - acct_flows
         if user_flow_length < 0 :
             user_flow_length = 0
@@ -185,7 +194,7 @@ class RadiusBilling(RadiusBasic):
         ))
         
         if user_flow_length == 0 :
-            self.disconnect(online)
+            dispatch.pub(UNLOCK_ONLINE_EVENT,online.nas_addr, online.acct_session_id,async=True)
 
 
 

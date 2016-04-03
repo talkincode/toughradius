@@ -1,67 +1,103 @@
 #!/usr/bin/env python
 # coding=utf-8
 from twisted.internet import reactor
-from toughlib import  utils,dispatch
+from toughlib import  utils,dispatch,logger
 from txradius import statistics
 from toughradius.manage import models
+from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius.manage.settings import *
 from toughlib import db_cache as cache
 from toughlib.storage import Storage
+from txradius.radius import dictionary
+from toughradius.manage.events.event_basic import BasicEvent
+from toughradius.manage.radius import radius_acct_stop
+from txradius import authorize
+import toughradius
 import decimal
 import datetime
+import os
 
 
-class RadiusEvents:
+class RadiusEvents(BasicEvent):
 
-    def __init__(self, dbengine=None,cache=None,**kwargs):
-        self.dbengine = dbengine
-        self.cache = cache
+    dictionary = dictionary.Dictionary(
+        os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary'))
 
-    def event_unlock_online(self, nasaddr, session_id):
-            online_table = models.TrOnline.__table__
-            ticket_table = models.TrTicket.__table__
-            def new_ticket(online):
-                _datetime = datetime.datetime.now()
-                _starttime = datetime.datetime.strptime(online.acct_start_time,"%Y-%m-%d %H:%M:%S")
-                session_time = (_datetime - _starttime).seconds
-                stop_time = _datetime.strftime( "%Y-%m-%d %H:%M:%S")
-                ticket = Storage()
-                ticket.account_number = online.account_number,
-                ticket.acct_session_id = online.acct_session_id,
-                ticket.acct_start_time = online.acct_start_time,
-                ticket.nas_addr = online.nas_addr,
-                ticket.framed_ipaddr = online.framed_ipaddr,
-                ticket.acct_session_time = session_time,
-                ticket.acct_stop_time = stop_time,
-                return ticket
+    def get_request(self, online):
+        session_time = (datetime.datetime.now() - datetime.datetime.strptime(
+            online.acct_start_time,"%Y-%m-%d %H:%M:%S")).total_seconds()
+        return Storage(
+            account_number = online.account_number,
+            mac_addr = online.mac_addr,
+            nas_addr = online.nas_addr,
+            nas_port = 0,
+            service_type = '',
+            framed_ipaddr = online.framed_ipaddr,
+            framed_netmask = '',
+            nas_class = '',
+            session_timeout = 0,
+            calling_station_id = '',
+            acct_status_type = STATUS_TYPE_STOP,
+            acct_input_octets = 0,
+            acct_output_octets = 0,
+            acct_session_id = online.acct_session_id,
+            acct_session_time = session_time,
+            acct_input_packets = online.input_total * 1024,
+            acct_output_packets = online.output_total * 1024,
+            acct_terminate_cause = '',
+            acct_input_gigawords = 0,
+            acct_output_gigawords = 0,
+            event_timestamp = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
+            nas_port_type='',
+            nas_port_id=online.nas_port_id
+        )
 
-            if all((nasaddr,session_id)):
-                with self.dbengine.begin() as conn:
-                    online = conn.execute(online_table.select().where(
-                        online_table.c.nas_addr==nasaddr).where(
-                        acct_session_id==session_id)).first()
+    def onSendResp(self, resp, disconnect_req):
+        if self.db.query(models.TrOnline).filter_by(
+                nas_addr=disconnect_req.nas_addr,
+                acct_session_id=disconnect_req.acct_session_id).count() > 0:
+            radius_acct_stop.RadiusAcctStop(
+                self.dbengine,self.mcache,self.aes,disconnect_req).acctounting()
+        logger.info(u"send disconnect ok! coa resp : %s" % resp)
 
-                    ticket = new_ticket(online)
-                    conn.execute(ticket_table.insert().values(**ticket))
-                    
-                    conn.execute(online_table.delete().where(
-                        online_table.c.nas_addr==nasaddr).where(
-                        acct_session_id==session_id))
+    def onSendError(self,err, disconnect_req):
+        if self.db.query(models.TrOnline).filter_by(
+                nas_addr=disconnect_req.nas_addr,
+                acct_session_id=disconnect_req.acct_session_id).count() > 0:
+            radius_acct_stop.RadiusAcctStop(
+                self.dbengine,self.mcache,self.aes, disconnect_req).acctounting()
+        logger.error(u"send disconnect done! %s" % err.getErrorMessage())
 
-            elif nasaddr and not session_id:
-                with self.dbengine.begin() as conn:
-                    onlines = conn.execute(online_table.select().where(online_table.c.nas_addr==nasaddr))
-                    tickets = (new_ticket(ol) for ol in onlines)
-                    with self.dbengine.begin() as conn:
-                        conn.execute(ticket_table.insert(),tickets)
-                        conn.execute(online_table.delete().where(online_table.c.nas_addr==nasaddr))
+    def event_unlock_online(self, nas_addr, acct_session_id):
+        nas = self.db.query(models.TrBas).filter_by(ip_addr=nas_addr).first()
+        if nas_addr and  not nas:
+            self.db.query(models.TrOnline).filter_by(
+                nas_addr=nas_addr,acct_session_id=acct_session_id).delete()
+            self.db.commit()
+            return
 
+        online = self.db.query(models.TrOnline).filter_by(
+                nas_addr=nas_addr, acct_session_id=acct_session_id).first()
+        if not online:
+            logger.error(u"online (%s,%s) not exists"%(nas_addr,acct_session_id))
+            return
 
-    def event_disconnect(self):
-        pass
+        deferd = authorize.disconnect(
+                int(nas.vendor_id or 0),
+                self.dictionary,
+                nas.bas_secret,
+                nas.ip_addr,
+                coa_port=int(nas.coa_port or 3799),
+                debug=True,
+                User_Name=online.account_number,
+                NAS_IP_Address=nas.ip_addr,
+                Acct_Session_Id=acct_session_id)
+
+        deferd.addCallback(self.onSendResp, self.get_request(online)).addErrback(
+                           self.onSendError, self.get_request(online))
 
 
 
 def __call__(dbengine=None, mcache=None, **kwargs):
-    return RadiusEvents(dbengine=dbengine, cache=mcache, **kwargs)
+    return RadiusEvents(dbengine=dbengine, mcache=mcache, **kwargs)
 
