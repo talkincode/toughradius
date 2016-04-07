@@ -24,6 +24,7 @@ class ApiHandler(BaseHandler):
 
     def parse_form_request(self):
         try:
+            print self.get_params()
             return apiutils.parse_form_request(self.settings.config.system.secret, self.get_params())
         except Exception as err:
             logger.error(u"api authorize parse error, %s" % utils.safeunicode(traceback.format_exc()))
