@@ -151,7 +151,7 @@ class CustomerAddHandler(ApiHandler):
             order.actual_fee = actual_fee
             order.pay_status = 1
             order.accept_id = accept_log.id
-            order.order_source = 'console'
+            order.order_source = 'api'
             order.create_time = customer.update_time
             order.order_desc = u"API开通账号"
             self.db.add(order)
