@@ -127,7 +127,7 @@ def inittest(db):
     product6.product_status = 0
     product6.fee_months = 0
     product6.fee_times = 0
-    product6.fee_flows = 100
+    product6.fee_flows = utils.mb2kb(100)
     product6.bind_mac = 0
     product6.bind_vlan = 0
     product6.concur_number = 10

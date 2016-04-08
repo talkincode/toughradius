@@ -44,7 +44,7 @@ class AccountReleaseHandler(ApiHandler):
             account.vlan_id1 = 0
             account.vlan_id2 = 0
 
-            self.add_oplog(u'API释放用户上网账号%s的MAC地址和VLAN绑定' % account.account_number)
+            self.add_oplog(u'释放用户上网账号%s的MAC地址和VLAN绑定' % account.account_number)
             self.db.commit()
             dispatch.pub(ACCOUNT_CHANGE_EVENT, account.account_number, async=True)
             dispatch.pub(cache.CACHE_UPDATE_EVENT, account_cache_key(account.account_number), async=True)

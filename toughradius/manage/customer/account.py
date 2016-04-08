@@ -87,7 +87,7 @@ class OpencalcHandler(AccountHandler,AccountCalc):
 
     @cyclone.web.authenticated
     def post(self):
-        months = self.get_argument('months',0)
+        months = int(self.get_argument('months',0))
         product_id = self.get_argument("product_id",None)
         old_expire = self.get_argument("old_expire",None)
         giftdays = int(self.get_argument('giftdays',0))
