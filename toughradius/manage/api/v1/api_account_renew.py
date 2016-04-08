@@ -2,7 +2,7 @@
 #coding=utf-8
 import traceback
 import decimal
-from toughlib import utils, apiutils，dispatch
+from toughlib import utils, apiutils,dispatch
 from hashlib import md5
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
@@ -63,14 +63,14 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
         try:
             account_number = request.get('account_number')
             expire_date = request.get('expire_date')
-            months = request.get('months',0)
-            giftdays = request.get('giftdays',0)
-            fee_value = int(request.get("fee_value",0))
+            months = int(request.get('months',0))
+            giftdays = int(request.get('giftdays',0))
+            fee_value = request.get("fee_value",0)
 
             if not account_number:
                 return render_verify_err(msg=u"账号不能为空")
 
-            if fee_value < 0:
+            if utils.yuan2fen(request.get("fee_value",0)) < 0:
                 return render_verify_err(msg=u"无效续费金额 %s"%fee_value)
 
 
@@ -83,7 +83,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             accept_log = models.TrAcceptLog()
             accept_log.accept_type = 'next'
             accept_log.accept_source = 'api'
-            accept_log.accept_desc = u"用户通过API续费：上网账号:%s，续费%s元;%s" % (account_number, fee_value)
+            accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元" % (account_number, fee_value)
             accept_log.account_number = account_number
             accept_log.accept_time = utils.get_currtime()
             accept_log.operator_name = 'api'
@@ -96,7 +96,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
 
             # 预付费包月
             if product.product_policy == PPMonth:
-                order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(form.d.months)
+                order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(months)
                 order_fee = int(order_fee.to_integral_value())
 
             # 买断包月,买断流量,买断时长
@@ -115,8 +115,12 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             order.order_source = 'api'
             order.create_time = utils.get_currtime()
 
-            ### 计算新的到期时间
             old_expire_date = account.expire_date
+            old_time_length = account.time_length
+            old_flow_length = account.flow_length
+
+            ### 计算新的到期时间
+            
             new_expire_date = expire_date
             if not new_expire_date:
                 calc_result = self.calc(months, user.product_id, old_expire_date, giftdays)
@@ -129,8 +133,16 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             elif product.product_policy == BOFlows:
                 account.flow_length += product.fee_flows
 
-            order.order_desc = u"用户通过API续费,续费前到期:%s,续费后到期:%s, 赠送天数: %s" % (
-                old_expire_date, account.expire_date, giftdays)
+            if product.product_policy in (PPMonth,BOMonth):
+                order.order_desc = u"用户续费,续费前到期:%s,续费后到期:%s, 赠送天数: %s" % (
+                    old_expire_date, account.expire_date, giftdays)
+            elif product.product_policy == BOTimes:
+                order.order_desc = u"用户续费,续费前时长:%s小时,续费后时长:%s小时" % (
+                    utils.sec2hour(old_time_length), utils.sec2hour(account.time_length))
+            elif product.product_policy == BOFlows:
+                order.order_desc = u"用户续费,续费前流量:%sMB,续费后流量:%sMB" % (
+                    utils.kb2mb(old_flow_length), utils.kb2mb(account.flow_length))
+
             self.db.add(order)
             self.add_oplog(order.order_desc)
             self.db.commit()

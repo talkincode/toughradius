@@ -47,6 +47,7 @@ def push_dev():
     local("git commit -m \'%s\'"%message)
     local("git push origin master")
     local("git checkout release-dev")
+    local("git pull origin release-dev")
     local("git merge master --no-ff")
     local("git push origin release-dev")
     local("git checkout master")

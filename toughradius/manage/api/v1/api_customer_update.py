@@ -63,7 +63,7 @@ class CustomerUpdateHandler(ApiHandler):
             if address:
                 customer.address = address
 
-            self.add_oplog(u'API修改用户资料 %s' % customer_name)
+            self.add_oplog(u'修改用户资料 %s' % customer_name)
             self.db.commit()
             self.render_success()
         except Exception as err:
