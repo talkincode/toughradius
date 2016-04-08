@@ -21,7 +21,8 @@ def inittest(db):
     db.add(node)
     
     product1 = models.TrProduct()
-    product1.product_name = u"预付费时长每小时2元"
+    product1.id = 2
+    product1.product_name = u"预付费时长每小时10元"
     product1.product_policy = 1
     product1.product_status = 0
     product1.fee_months = 0
@@ -29,8 +30,8 @@ def inittest(db):
     product1.fee_flows = 0
     product1.bind_mac = 0
     product1.bind_vlan = 0
-    product1.concur_number = 1
-    product1.fee_price = 200
+    product1.concur_number = 10
+    product1.fee_price = 1000
     product1.fee_period =  '' 
     product1.input_max_limit = 1048576 * 2
     product1.output_max_limit = 1048576 * 2
@@ -40,6 +41,7 @@ def inittest(db):
 
 
     product2 = models.TrProduct()
+    product2.id=3
     product2.product_name = u"预付费包月30元"
     product2.product_policy = 0
     product2.product_status = 0
@@ -48,7 +50,7 @@ def inittest(db):
     product2.fee_flows = 0
     product2.bind_mac = 0
     product2.bind_vlan = 0
-    product2.concur_number = 1
+    product2.concur_number = 10
     product2.fee_price = 3000
     product2.fee_period =  '' 
     product2.input_max_limit = 1048576 * 2
@@ -59,6 +61,7 @@ def inittest(db):
 
 
     product3 = models.TrProduct()
+    product3.id = 4
     product3.product_name = u"买断包月12个月500元"
     product3.product_policy = 2
     product3.product_status = 0
@@ -67,7 +70,7 @@ def inittest(db):
     product3.fee_flows = 0
     product3.bind_mac = 0
     product3.bind_vlan = 0
-    product3.concur_number = 1
+    product3.concur_number = 10
     product3.fee_price = 50000
     product3.fee_period =  '' 
     product3.input_max_limit = 1048576 * 2
@@ -78,15 +81,16 @@ def inittest(db):
 
 
     product4 = models.TrProduct()
-    product4.product_name = u"买断时长100元50小时"
+    product4.id=5
+    product4.product_name = u"买断时长100元10小时"
     product4.product_policy = 3
     product4.product_status = 0
     product4.fee_months = 0
-    product4.fee_times = 50 * 3600
+    product4.fee_times = 10 * 3600
     product4.fee_flows = 0
     product4.bind_mac = 0
     product4.bind_vlan = 0
-    product4.concur_number = 1
+    product4.concur_number = 10
     product4.fee_price = 10000
     product4.fee_period =  '' 
     product4.input_max_limit = 1048576 * 2
@@ -97,7 +101,8 @@ def inittest(db):
 
 
     product5 = models.TrProduct()
-    product5.product_name = u"预付费流量每MB0.05元"
+    product5.id = 6
+    product5.product_name = u"预付费流量每MB3.00元"
     product5.product_policy = 4
     product5.product_status = 0
     product5.fee_months = 0
@@ -105,8 +110,8 @@ def inittest(db):
     product5.fee_flows = 0
     product5.bind_mac = 0
     product5.bind_vlan = 0
-    product5.concur_number = 1
-    product5.fee_price = 5
+    product5.concur_number = 10
+    product5.fee_price = 300
     product5.fee_period =  '' 
     product5.input_max_limit = 1048576 * 2
     product5.output_max_limit = 1048576 * 2
@@ -116,7 +121,8 @@ def inittest(db):
 
 
     product6 = models.TrProduct()
-    product6.product_name = u"买断流量5元100MB"
+    product6.id = 7
+    product6.product_name = u"买断流量30元100MB"
     product6.product_policy = 5
     product6.product_status = 0
     product6.fee_months = 0
@@ -124,8 +130,8 @@ def inittest(db):
     product6.fee_flows = 100
     product6.bind_mac = 0
     product6.bind_vlan = 0
-    product6.concur_number = 1
-    product6.fee_price = 500
+    product6.concur_number = 10
+    product6.fee_price = 3000
     product6.fee_period =  '' 
     product6.input_max_limit = 1048576 * 2
     product6.output_max_limit = 1048576 * 2

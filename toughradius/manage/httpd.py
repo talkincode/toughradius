@@ -12,7 +12,6 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils, dispatch
 from toughradius.manage import models
 from toughradius.manage import base
-from toughradius.common import signals
 from toughlib.dbengine import get_engine
 from toughlib.permit import permit, load_events, load_handlers
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqSubConnection
@@ -74,8 +73,8 @@ class HttpServer(cyclone.web.Application):
 
         # app event init
         event_params= dict(dbengine=self.db_engine, mcache=self.mcache, aes=self.aes)
-        load_events(os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))),
-            "toughradius.manage.events", excludes=['.DS_Store'],event_params=event_params)
+        dispatch.load_events(os.path.join(os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))),
+            "toughradius.manage.events",event_params=event_params)
 
         permit.add_route(cyclone.web.StaticFileHandler, 
                             r"/admin/backup/download/(.*)",
@@ -84,8 +83,7 @@ class HttpServer(cyclone.web.Application):
                             order=5.0005)
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 
-def run(config, dbengine):
-    logger.info('start signal subscriber: %s' % signals.TermSignalSubscriber(signal_manage_exit))
+def run(config, dbengine,**kwargs):
     app = HttpServer(config, dbengine)
     reactor.listenTCP(int(config.admin.port), app, interface=config.admin.host)
 

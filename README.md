@@ -50,6 +50,9 @@ TOUGHRADIUS网站：http://www.toughradius.net
 - 支持到期提前通知，通过邮件和webhook触发实现。
 - 详细的操作日志记录，条件查询。
 
+## 快速指南
+
+请参考 [ToughRADIUS 快速指南](http://docs.toughradius.net/toughradius_v2/quickstart.html)
 
 ## 社区支持
 

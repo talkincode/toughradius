@@ -86,27 +86,8 @@ def init_db(db):
     free_product.update_time = utils.get_currtime()
     db.add(free_product)
 
-    product = models.TrProduct()
-    product.product_name = u"测试2M包月20元"
-    product.product_policy = 0
-    product.product_status = 0
-    product.fee_months = 0
-    product.fee_times = 0
-    product.fee_flows = 0
-    product.bind_mac = 0
-    product.bind_vlan = 0
-    product.concur_number = 0
-    product.fee_price = 2000
-    product.fee_period =  '' 
-    product.input_max_limit = 1048576
-    product.output_max_limit = 1048576 * 2
-    product.create_time = utils.get_currtime()
-    product.update_time = utils.get_currtime()
-    db.add(product)
-
     db.commit()
     db.close()
-
 
 def update(config,force=False):
     try:

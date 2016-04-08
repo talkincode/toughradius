@@ -17,7 +17,7 @@ CARD_TYPES = (ProductCard, BalanceCard) = (0, 1)
 
 FREE_FEE_BILLS = (FreeFeeDate,FreeFeeFlow,FreeTimeLen) = (0,1,2)
 
-FREE_FEE_PID = 0
+FREE_FEE_PID = 1
 
 STAT_AUTH_ALL = 'STAT_AUTH_ALL'
 STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'

@@ -13,6 +13,8 @@ from toughlib.permit import permit
 from toughlib import utils, dispatch,db_cache
 from toughradius.manage.settings import * 
 from toughradius.manage.events.settings import ACCOUNT_PAUSE_EVENT
+from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
+
 
 @permit.route(r"/admin/account/pause", u"用户停机",MenuUser, order=2.1000)
 class AccountPausetHandler(account.AccountHandler):
@@ -42,6 +44,9 @@ class AccountPausetHandler(account.AccountHandler):
 
         dispatch.pub(ACCOUNT_PAUSE_EVENT, account.account_number, async=True)
         dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+
+        for online in self.db.query(models.TrOnline).filter_by(account_number=account_number):
+            dispatch.pub(UNLOCK_ONLINE_EVENT,account_number,online.nas_addr, online.acct_session_id,async=True)
 
         return self.render_json(msg=u"操作成功")
 

@@ -15,8 +15,9 @@ install-deps:
 	(\
 	yum install -y epel-release;\
 	yum install -y wget zip python-devel libffi-devel openssl openssl-devel gcc git;\
-	yum install -y czmq czmq-devel python-virtualenv;\
+	yum install -y czmq czmq-devel python-virtualenv supervisor;\
 	yum install -y mysql-devel MySQL-python redis;\
+	test -f /usr/local/bin/supervisord || ln -s `which supervisord` /usr/local/bin/supervisord;\
 	)
 
 venv:
@@ -28,21 +29,30 @@ venv:
 	venv/bin/pip install -U -r requirements.txt;\
 	)
 
+upgrade-libs:
+	(\
+	venv/bin/pip install -U --no-deps https://github.com/talkincode/toughlib/archive/master.zip;\
+	venv/bin/pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip;\
+	)
+
+upgrade-dev:
+	git pull --rebase --stat origin release-dev
+
 upgrade:
-	venv/bin/pip install -U --no-deps toughlib txradius && git pull
+	git pull --rebase --stat origin release-stable
 
 test:
 	sh runtests.sh
 
 initdb:
-	venv/bin/python toughctl --initdb -f -c /etc/toughradius.json
+	venv/bin/python radiusctl initdb -f -c /etc/toughradius.json
 
 inittest:
-	venv/bin/python toughctl --inittest -c /etc/toughradius.json
+	venv/bin/python radiusctl inittest -c /etc/toughradius.json
 
 clean:
 	rm -fr venv
 
-all:install-deps venv install
+all:install-deps venv upgrade-libs install
 
-.PHONY: all install install-deps upgrade test initdb inittest clean
+.PHONY: all install install-deps upgrade-libs upgrade-dev upgrade test initdb inittest clean
