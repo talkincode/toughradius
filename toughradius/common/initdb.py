@@ -85,10 +85,9 @@ def init_db(db):
     free_product.create_time = utils.get_currtime()
     free_product.update_time = utils.get_currtime()
     db.add(free_product)
-    
+
     db.commit()
     db.close()
-
 
 def update(config,force=False):
     try:
