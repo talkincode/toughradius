@@ -8,10 +8,9 @@ from twisted.internet import reactor
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils,dispatch
 from toughradius.manage import models
-from toughradius.common import signals
 from toughlib.dbengine import get_engine
-from toughlib import db_cache as cache
-from toughlib import redis_cache
+from toughlib.redis_cache import CacheManager
+from toughradius.manage.settings import redis_conf
 from toughradius.manage.tasks import (
     expire_notify, ddns_update, radius_stat, online_stat,flow_stat
 )
@@ -25,8 +24,8 @@ class TaskDaemon():
     def __init__(self, config=None, dbengine=None, **kwargs):
         self.config = config
         self.db_engine = dbengine or get_engine(config,pool_size=20)
-        redisconf = settings.redis_conf(config)
-        self.cache = redis_cache.CacheManager(redisconf,cache_name='RadiusTaskCache-%s'%os.getpid())
+        self.aes = kwargs.pop("aes",None)
+        self.cache = kwargs.pop("cache",CacheManager(redis_conf(config),cache_name='RadiusTaskCache-%s'%os.getpid()))
         self.cache.print_hit_stat(60)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         # init task
@@ -35,7 +34,10 @@ class TaskDaemon():
         self.radius_stat_task = radius_stat.RadiusStatTask(self)
         self.online_stat_task = online_stat.OnlineStatTask(self)
         self.flow_stat_task = flow_stat.FlowStatTask(self)
-        dispatch.register(radius_events.__call__(self.db_engine,self.cache))
+        if not kwargs.get('standalone'):
+            event_params= dict(dbengine=self.db_engine, mcache=self.cache,aes=self.aes)
+            event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
+            dispatch.load_events(event_path,"toughradius.manage.events",event_params=event_params)
 
     def start_expire_notify(self):
         _time = self.expire_notify_task.process()
@@ -69,7 +71,6 @@ class TaskDaemon():
 
 
 
-def run(config, dbengine=None):
-    logger.info('start signal subscriber: %s' % signals.TermSignalSubscriber(settings.signal_task_exit))
+def run(config, dbengine=None,**kwargs):
     app = TaskDaemon(config, dbengine)
     app.start()

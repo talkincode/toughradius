@@ -1,4 +1,4 @@
-coverage report: version:2.0.5   date:Mon Mar 21 02:34:20 2016
+coverage report: version:2.1.0   date:Fri Apr  1 23:09:14 2016
 
 Name                                                Stmts   Miss  Cover
 -----------------------------------------------------------------------
@@ -14,7 +14,7 @@ toughradius/manage/api/v1/api_account_release.py       38     26    32%
 toughradius/manage/api/v1/api_account_updatepw.py      37     25    32%
 toughradius/manage/api/v1/api_accounting.py            27     14    48%
 toughradius/manage/api/v1/api_authorize.py             15      7    53%
-toughradius/manage/api/v1/api_customer_add.py         134    117    13%
+toughradius/manage/api/v1/api_customer_add.py         138    123    11%
 toughradius/manage/api/v1/api_customer_auth.py         44     31    30%
 toughradius/manage/api/v1/api_customer_delete.py       50     34    32%
 toughradius/manage/api/v1/api_customer_query.py        42     30    29%
@@ -25,7 +25,7 @@ toughradius/manage/api/v1/api_node.py                  31     19    39%
 toughradius/manage/api/v1/api_online_query.py          35     24    31%
 toughradius/manage/api/v1/api_online_unlock.py         62     41    34%
 toughradius/manage/api/v1/api_product.py               27     15    44%
-toughradius/manage/api/v1/api_product_add.py           28     15    46%
+toughradius/manage/api/v1/api_product_add.py           51     39    24%
 toughradius/manage/auth/__init__.py                     0      0   100%
 toughradius/manage/auth/login.py                       26      5    81%
 toughradius/manage/auth/logout.py                      10      5    50%
@@ -49,7 +49,7 @@ toughradius/manage/customer/customer.py                70     49    30%
 toughradius/manage/customer/customer_delete.py         33     18    45%
 toughradius/manage/customer/customer_detail.py         23      8    65%
 toughradius/manage/customer/customer_forms.py          15      3    80%
-toughradius/manage/customer/customer_import.py        129    112    13%
+toughradius/manage/customer/customer_import.py        133    116    13%
 toughradius/manage/customer/customer_open.py          126    104    17%
 toughradius/manage/customer/customer_order.py          51     35    31%
 toughradius/manage/customer/customer_update.py         40     24    40%
@@ -59,11 +59,11 @@ toughradius/manage/customer/ticket.py                  37     24    35%
 toughradius/manage/events/__init__.py                   0      0   100%
 toughradius/manage/events/radius_events.py             47     30    36%
 toughradius/manage/events/settings.py                  11      0   100%
-toughradius/manage/httpd.py                            53      9    83%
+toughradius/manage/httpd.py                            49     10    80%
 toughradius/manage/models.py                          335     19    94%
 toughradius/manage/radius/__init__.py                   0      0   100%
 toughradius/manage/radius/plugins/__init__.py           0      0   100%
-toughradius/manage/radius/plugins/mac_parse.py         34     28    18%
+toughradius/manage/radius/plugins/mac_parse.py         47     40    15%
 toughradius/manage/radius/plugins/rate_process.py      44     34    23%
 toughradius/manage/radius/plugins/vlan_parse.py        68     61    10%
 toughradius/manage/radius/radius_acct_onoff.py         11      3    73%
@@ -71,12 +71,12 @@ toughradius/manage/radius/radius_acct_start.py         18      8    56%
 toughradius/manage/radius/radius_acct_stop.py          32     23    28%
 toughradius/manage/radius/radius_acct_update.py        22     13    41%
 toughradius/manage/radius/radius_attrs.py               1      0   100%
-toughradius/manage/radius/radius_authorize.py         131    114    13%
-toughradius/manage/radius/radius_basic.py             179    142    21%
+toughradius/manage/radius/radius_authorize.py         142    125    12%
+toughradius/manage/radius/radius_basic.py             159    133    16%
 toughradius/manage/radius/radius_billing.py            83     66    20%
-toughradius/manage/radiusd.py                         259    159    39%
+toughradius/manage/radiusd.py                         248    161    35%
 toughradius/manage/resource/__init__.py                 0      0   100%
-toughradius/manage/resource/bas.py                     67     27    60%
+toughradius/manage/resource/bas.py                     71     32    55%
 toughradius/manage/resource/bas_forms.py                9      0   100%
 toughradius/manage/resource/node.py                    58     24    59%
 toughradius/manage/resource/node_forms.py               7      0   100%
@@ -86,7 +86,7 @@ toughradius/manage/resource/product_forms.py           14      1    93%
 toughradius/manage/settings.py                         61     17    72%
 toughradius/manage/system/__init__.py                   0      0   100%
 toughradius/manage/system/backup.py                    69     45    35%
-toughradius/manage/system/config.py                    66     43    35%
+toughradius/manage/system/config.py                    67     48    28%
 toughradius/manage/system/config_forms.py              12      0   100%
 toughradius/manage/system/dashboard.py                133     87    35%
 toughradius/manage/system/index.py                     23      3    87%
@@ -98,7 +98,7 @@ toughradius/manage/system/param.py                     41     26    37%
 toughradius/manage/system/param_forms.py               11      0   100%
 toughradius/manage/system/password.py                  26     15    42%
 toughradius/manage/system/password_forms.py             4      0   100%
-toughradius/manage/taskd.py                            62     17    73%
+toughradius/manage/taskd.py                            57     12    79%
 toughradius/manage/tasks/__init__.py                    0      0   100%
 toughradius/manage/tasks/ddns_update.py                29     12    59%
 toughradius/manage/tasks/expire_notify.py              53     34    36%
@@ -107,4 +107,4 @@ toughradius/manage/tasks/online_stat.py                26      3    88%
 toughradius/manage/tasks/radius_stat.py                29      5    83%
 toughradius/manage/tasks/task_base.py                  13      1    92%
 -----------------------------------------------------------------------
-TOTAL                                                4912   2893    41%
+TOTAL                                                4932   2949    40%

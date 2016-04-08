@@ -37,8 +37,8 @@ class RadiusAcctStop(RadiusBilling):
             ticket.stop_source = STATUS_TYPE_STOP
             self.add_ticket(ticket)
 
-        self.billing(online)
-        logger.info('%s Accounting stop request, remove online'% self.account.account_number)
+            self.billing(online)
+            logger.info('%s Accounting stop request, remove online'% self.account.account_number)
 
 
 
