@@ -170,10 +170,6 @@ class RadiusBasic:
                 table.c.acct_session_id==session_id).values(**kwargs)
             conn.execute(stmt)
 
-    def disconnect(self,nasaddr, session_id):
-        pass
-
-
     def get_input_total(self):
         bl = decimal.Decimal(self.request.acct_input_octets)/decimal.Decimal(1024)
         gl = decimal.Decimal(self.request.acct_input_gigawords)*decimal.Decimal(4*1024*1024)

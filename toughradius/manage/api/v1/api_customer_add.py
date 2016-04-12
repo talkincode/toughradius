@@ -96,7 +96,7 @@ class CustomerAddHandler(ApiHandler):
             accept_log = models.TrAcceptLog()
             accept_log.accept_type = 'open'
             accept_log.accept_source = 'api'
-            accept_log.accept_desc =  u"API开通账号：%s" % form.d.account_number
+            accept_log.accept_desc =  u"开通账号：%s" % form.d.account_number
             accept_log.account_number = form.d.account_number
             accept_log.accept_time = customer.update_time
             accept_log.operator_name = 'api'
@@ -151,9 +151,9 @@ class CustomerAddHandler(ApiHandler):
             order.actual_fee = actual_fee
             order.pay_status = 1
             order.accept_id = accept_log.id
-            order.order_source = 'console'
+            order.order_source = 'api'
             order.create_time = customer.update_time
-            order.order_desc = u"API开通账号"
+            order.order_desc = u"开通账号"
             self.db.add(order)
 
             account = models.TrAccount()
@@ -166,8 +166,8 @@ class CustomerAddHandler(ApiHandler):
             account.password = self.aes.encrypt(form.d.password)
             account.status = 1
             account.balance = balance
-            account.time_length = time_length
-            account.flow_length = flow_length
+            account.time_length = utils.hour2sec(time_length)
+            account.flow_length = utils.mb2kb(flow_length)
             account.expire_date = expire_date
             account.user_concur_number = user_concur_number
             account.bind_mac = user_bind_mac
@@ -177,7 +177,7 @@ class CustomerAddHandler(ApiHandler):
             account.create_time = customer.create_time
             account.update_time = customer.update_time
             self.db.add(account)
-            self.add_oplog(u"API开户，%s" % form.d.account_number)
+            self.add_oplog(u"新用户开户，%s" % form.d.account_number)
 
             self.db.commit()
             self.render_success()

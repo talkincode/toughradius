@@ -27,12 +27,12 @@ class CustomerOnlineUnlockHandler(BaseHandler):
             mac_addr = online.mac_addr,
             nas_addr = online.nas_addr,
             nas_port = 0,
-            service_type = '',
+            service_type = 0,
             framed_ipaddr = online.framed_ipaddr,
             framed_netmask = '',
             nas_class = '',
             session_timeout = 0,
-            calling_station_id = '',
+            calling_station_id = '00:00:00:00:00:00',
             acct_status_type = STATUS_TYPE_STOP,
             acct_input_octets = 0,
             acct_output_octets = 0,
@@ -40,11 +40,11 @@ class CustomerOnlineUnlockHandler(BaseHandler):
             acct_session_time = session_time,
             acct_input_packets = 0,
             acct_output_packets = 0,
-            acct_terminate_cause = '',
+            acct_terminate_cause = 1,
             acct_input_gigawords = 0,
             acct_output_gigawords = 0,
             event_timestamp = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
-            nas_port_type='',
+            nas_port_type=0,
             nas_port_id=online.nas_port_id
         )
 

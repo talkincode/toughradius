@@ -139,7 +139,7 @@ class RadiusAuth(RadiusBasic):
 
     #@timecast
     def session_filter(self):
-        session_timeout = int(self.get_param_value("max_session_timeout",86400))
+        session_timeout = int(self.get_param_value("radius_max_session_timeout",86400))
         expire_pool = self.get_param_value("expire_addrpool",'')
         if "Framed-Pool" in self.reply['attrs']:
             if expire_pool in self.reply['attrs']['Framed-Pool']:
@@ -149,7 +149,7 @@ class RadiusAuth(RadiusBasic):
                 else:
                     return self.failure('User has expired')
 
-        acct_interim_intelval = int(self.get_param_value("acct_interim_intelval",0))
+        acct_interim_intelval = int(self.get_param_value("radius_acct_interim_intelval",0))
         if acct_interim_intelval > 0:
             self.reply['attrs']['Acct-Interim-Interval'] = acct_interim_intelval
 
