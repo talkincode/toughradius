@@ -20,7 +20,7 @@ from toughradius.manage import settings
 from toughradius.manage.settings import redis_conf
 from toughradius import __version__
 
-reactor.suggestThreadPoolSize(60)
+reactor.suggestThreadPoolSize(30)
 
 def setup_logger(config):
     log.startLogging(sys.stdout)
