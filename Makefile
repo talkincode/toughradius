@@ -45,10 +45,10 @@ test:
 	sh runtests.sh
 
 initdb:
-	venv/bin/python radiusctl initdb -f -c /etc/toughradius.json
+	python radiusctl initdb -f -c /etc/toughradius.json
 
 inittest:
-	venv/bin/python radiusctl inittest -c /etc/toughradius.json
+	python radiusctl inittest -c /etc/toughradius.json
 
 clean:
 	rm -fr venv
@@ -56,3 +56,4 @@ clean:
 all:install-deps venv upgrade-libs install
 
 .PHONY: all install install-deps upgrade-libs upgrade-dev upgrade test initdb inittest clean
+
