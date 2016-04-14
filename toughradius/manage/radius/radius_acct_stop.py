@@ -15,7 +15,7 @@ class RadiusAcctStop(RadiusBilling):
     def acctounting(self):
         if not self.account:
             return logger.error(
-                "[Acct] Received an accounting update request but user[%s] not exists"% self.request.account_number)  
+                "[Acct] Received an accounting stop request but user[%s] not exists"% self.request.account_number)  
 
         ticket = Storage(**self.request)
         _datetime = datetime.datetime.now() 
