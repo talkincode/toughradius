@@ -69,7 +69,7 @@ class RadiusAuth(RadiusBasic):
         macaddr = self.request['macaddr']
         if macaddr and  self.account.mac_addr:
             if self.account.bind_mac == 1 and macaddr not in self.account.mac_addr:
-                return failure("macaddr bind not match")
+                return self.failure("macaddr bind not match")
         elif macaddr and not self.account.mac_addr :
             self.update_user_mac(macaddr)
 
