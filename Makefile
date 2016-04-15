@@ -31,7 +31,7 @@ venv:
 
 upgrade-libs:
 	(\
-	venv/bin/pip install -U --no-deps https://github.com/talkincode/toughlib/archive/toughlib_cpe.zip;\
+	venv/bin/pip install -U --no-deps https://github.com/talkincode/toughlib/archive/master.zip;\
 	venv/bin/pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip;\
 	)
 
@@ -39,7 +39,7 @@ upgrade-dev:
 	git pull --rebase --stat origin release-dev
 
 upgrade:
-	git pull --rebase --stat origin release-stable-cpe
+	git pull --rebase --stat origin release-stable
 
 test:
 	sh runtests.sh
