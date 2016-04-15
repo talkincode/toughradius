@@ -13,5 +13,4 @@ class RadiusAcctOnoff(RadiusBasic):
         RadiusBasic.__init__(self, dbengine,cache,aes, request)
 
     def acctounting(self):
-        self.unlock_online(self.request.nas_addr,None)
         logger.info('bas accounting onoff success')

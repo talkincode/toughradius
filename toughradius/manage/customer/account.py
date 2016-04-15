@@ -47,27 +47,18 @@ class AccountHandler(BaseHandler):
         ).first()
 
 
-@permit.route(r"/admin/account/opencalc")
-class OpencalcHandler(AccountHandler):
+class AccountCalc:
 
-    @cyclone.web.authenticated
-    def post(self):
-        months = self.get_argument('months',0)
-        product_id = self.get_argument("product_id",None)
-        old_expire = self.get_argument("old_expire",None)
-        giftdays = int(self.get_argument('giftdays',0))
+    def calc(self, months, product_id, old_expire, giftdays):
         product = self.db.query(models.TrProduct).get(product_id)
-
         # 预付费时长，预付费流量，
         if product.product_policy in (PPTimes,PPFlow):
-            return self.render_json(code=0,
-                data=dict(policy=product.product_policy,fee_value=0,expire_date=MAX_EXPIRE_DATE))
+            return dict(policy=product.product_policy,fee_value=0,expire_date=MAX_EXPIRE_DATE)
 
         # 买断时长 买断流量
         elif product.product_policy in (BOTimes,BOFlows):
             fee_value = utils.fen2yuan(product.fee_price)
-            return self.render_json(code=0,
-                data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=MAX_EXPIRE_DATE))
+            return dict(policy=product.product_policy,fee_value=fee_value,expire_date=MAX_EXPIRE_DATE)
 
         # 预付费包月 
         elif product.product_policy == PPMonth:
@@ -78,8 +69,7 @@ class OpencalcHandler(AccountHandler):
                 start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")
             expire_date = utils.add_months(start_expire,int(months),days=giftdays)
             expire_date = expire_date.strftime( "%Y-%m-%d")
-            return self.render_json(code=0,
-                data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
+            return dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date)
 
         # 买断包月
         elif product.product_policy == BOMonth:
@@ -89,7 +79,20 @@ class OpencalcHandler(AccountHandler):
             fee_value = utils.fen2yuan(product.fee_price)
             expire_date = utils.add_months(start_expire,product.fee_months,days=giftdays)
             expire_date = expire_date.strftime( "%Y-%m-%d")
-            return self.render_json(code=0,data=dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date))
+            return dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date)
+
+
+@permit.route(r"/admin/account/opencalc")
+class OpencalcHandler(AccountHandler,AccountCalc):
+
+    @cyclone.web.authenticated
+    def post(self):
+        months = int(self.get_argument('months',0))
+        product_id = self.get_argument("product_id",None)
+        old_expire = self.get_argument("old_expire",None)
+        giftdays = int(self.get_argument('giftdays',0))
+        return self.render_json(code=0,data=self.calc(months, product_id, old_expire, giftdays))
+
 
 
 
