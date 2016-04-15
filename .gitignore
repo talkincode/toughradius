@@ -11,6 +11,8 @@ logs
 *.lok
 *.tmp
 .idea
+xprofile.py
+xprofile_worker.py
 dump.rdb
 .ideahippo_shared_libs.xml
 SurelinkRadius.iml
