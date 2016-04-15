@@ -121,6 +121,13 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
             req = self.createAuthPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
+            # if 'trbtest' in req.get_user_name():
+            #     reply = req.CreateReply()
+            #     reply.vendor_id = req.vendor_id
+            #     reply['Reply-Message'] = 'trbtest success!'
+            #     reply.code = packet.AccessAccept
+            #     return reply
+
             self.do_stat(req.code)
 
             logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))

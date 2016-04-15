@@ -6,7 +6,6 @@ import traceback
 from toughlib import  utils, logger, dispatch
 from toughradius.manage import models
 from toughradius.manage.settings import *
-from toughlib.utils import timecast
 from toughradius.manage.radius.radius_basic import  RadiusBasic
 
 class RadiusAuth(RadiusBasic):
@@ -28,7 +27,6 @@ class RadiusAuth(RadiusBasic):
         self.reply['msg'] = msg
         return False
 
-    @timecast
     def authorize(self):
         try:
             if not self.account:
@@ -50,7 +48,6 @@ class RadiusAuth(RadiusBasic):
             return self.reply
 
 
-    #@timecast
     def status_filter(self):
         self.reply['username'] = self.request.account_number
         self.reply['bypass'] = int(self.get_param_value("radiusd_bypass", 1))
@@ -64,7 +61,6 @@ class RadiusAuth(RadiusBasic):
 
         return True
 
-    #@timecast
     def bind_filter(self):
         macaddr = self.request['macaddr']
         if macaddr and  self.account.mac_addr:
@@ -89,7 +85,6 @@ class RadiusAuth(RadiusBasic):
 
         return True
 
-    #@timecast
     def policy_filter(self):
         acct_policy = self.product.product_policy or PPMonth
         bill_type = self.get_account_attr('bill_type')
@@ -130,14 +125,12 @@ class RadiusAuth(RadiusBasic):
         self.reply['output_rate'] = output_max_limit
         return True
 
-    #@timecast
     def limit_filter(self):
         if self.account.user_concur_number > 0:
             if self.count_online() >= self.account.user_concur_number:
                 return self.failure('user session to limit')
         return True
 
-    #@timecast
     def session_filter(self):
         session_timeout = int(self.get_param_value("radius_max_session_timeout",86400))
         expire_pool = self.get_param_value("expire_addrpool",'')
@@ -181,7 +174,7 @@ class RadiusAuth(RadiusBasic):
                 return 0
 
         if acct_policy == FreeFee:
-            bill_type = self.get_account_attr('bill_type')
+            bill_type = self.get_account_attr('bill_type') or 9999
             session_timeout = _calc_session_timeout(acct_policy,bill_type) or session_timeout
         else:
             session_timeout = _calc_session_timeout(acct_policy,9999) or session_timeout
@@ -191,7 +184,7 @@ class RadiusAuth(RadiusBasic):
         if self.account.ip_address:
             self.reply['attrs']['Framed-IP-Address'] = self.account.ip_address
 
-        for attr in self.get_product_attrs(self.account.product_id):
+        for attr in (self.get_product_attrs(self.account.product_id) or []):
             self.reply['attrs'][attr.attr_name] = attr.attr_value
 
         return True

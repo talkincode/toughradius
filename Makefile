@@ -53,30 +53,6 @@ inittest:
 clean:
 	rm -fr venv
 
-pypy:
-	(\
-	yum install -y epel-release;\
-	yum install -y wget zip python-devel libffi-devel openssl openssl-devel gcc git pypy;\
-	yum install -y czmq czmq-devel python-virtualenv supervisor;\
-	yum install -y mysql-devel MySQL-python redis;\
-	test -f /usr/local/bin/supervisord || ln -s `which supervisord` /usr/local/bin/supervisord;\
-	curl https://bootstrap.pypa.io/get-pip.py | pypy;\
-	pypy -m pip install -U -r requirements.txt;\
-	pypy -m pip install -U --no-deps https://github.com/talkincode/toughlib/archive/master.zip;\
-	pypy -m pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip;\
-	test -d /var/toughradius/data || mkdir -p /var/toughradius/data;\
-	rm -f /etc/toughradius.conf && cp etc/toughradius-pypy.conf /etc/toughradius.conf;\
-	test -f /etc/toughradius.json || cp etc/toughradius.json /etc/toughradius.json;\
-	rm -f /etc/init.d/toughradius && cp etc/toughradius /etc/init.d/toughradius;\
-	chmod +x /etc/init.d/toughradius && chkconfig toughradius on;\
-	rm -f /usr/lib/systemd/system/toughradius.service && cp etc/toughradius.service /usr/lib/systemd/system/toughradius.service;\
-	chmod 754 /usr/lib/systemd/system/toughradius.service && systemctl enable toughradius;\
-	systemctl daemon-reload;\
-	)
-
-pypy-initdb:
-	pypy radiusctl initdb -f -c /etc/toughradius.json
-
 all:install-deps venv upgrade-libs install
 
 .PHONY: all install install-deps upgrade-libs upgrade-dev upgrade test initdb inittest clean pypy pypy-initdb

@@ -23,9 +23,9 @@ from toughradius import __version__
 reactor.suggestThreadPoolSize(30)
 
 def setup_logger(config):
-    log.startLogging(sys.stdout)
-    syslog = logger.Logger(config)
+    syslog = logger.Logger(config,'radius')
     dispatch.register(syslog)
+    log.startLoggingWithObserver(syslog.emit, setStdout=0)
     return syslog
 
 def update_timezone(config):
