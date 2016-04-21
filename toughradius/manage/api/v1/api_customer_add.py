@@ -30,6 +30,7 @@ customer_add_vform = dataform.Form(
     dataform.Item("expire_date", rules.is_date, description=u"过期日期"),
     dataform.Item("balance", rules.is_rmb, description=u"用户余额"),
     dataform.Item("fee_value", rules.is_rmb, description=u"用户缴费金额"),
+    dataform.Item("pay_status", rules.is_number, description=u"支付状态"),
     dataform.Item("time_length", rules.is_number, default='0', description=u"用户时长"),
     dataform.Item("flow_length", rules.is_number, default='0', description=u"用户流量"),
     dataform.Item("bind_mac", description=u"用户是否绑定 MAC"),
@@ -63,10 +64,14 @@ class CustomerAddHandler(ApiHandler):
         except Exception as err:
             return self.render_parse_err(err)
 
+        pay_status = int(form.d.pay_status)
+        pay_status_desc = pay_status == 0 and u'未支付' or u"已支付"
+
         try:
             if not form.validates(**request):
-                print form.d
                 raise Exception(form.errors)
+            if pay_status not in (0,1):
+                raise Exception("pay_status must 0 or 1")
             if self.db.query(models.TrAccount).filter_by(account_number=form.d.account_number).count() > 0:
                 raise Exception("account already exists")
         except Exception, err:
@@ -96,7 +101,7 @@ class CustomerAddHandler(ApiHandler):
             accept_log = models.TrAcceptLog()
             accept_log.accept_type = 'open'
             accept_log.accept_source = 'api'
-            accept_log.accept_desc =  u"开通账号：%s" % form.d.account_number
+            accept_log.accept_desc =  u"开通账号：%s, %s" % (form.d.account_number,pay_status_desc)
             accept_log.account_number = form.d.account_number
             accept_log.accept_time = customer.update_time
             accept_log.operator_name = 'api'
@@ -149,11 +154,11 @@ class CustomerAddHandler(ApiHandler):
             order.account_number = form.d.account_number
             order.order_fee = order_fee
             order.actual_fee = actual_fee
-            order.pay_status = 1
+            order.pay_status = pay_status
             order.accept_id = accept_log.id
             order.order_source = 'api'
             order.create_time = customer.update_time
-            order.order_desc = u"开通账号"
+            order.order_desc = u"开通账号 %s" % pay_status_desc
             self.db.add(order)
 
             account = models.TrAccount()
@@ -164,7 +169,7 @@ class CustomerAddHandler(ApiHandler):
             account.ip_address = form.d.ip_address
             account.mac_addr = ''
             account.password = self.aes.encrypt(form.d.password)
-            account.status = 1
+            account.status = pay_status
             account.balance = balance
             account.time_length = utils.hour2sec(time_length)
             account.flow_length = utils.mb2kb(flow_length)
@@ -177,7 +182,7 @@ class CustomerAddHandler(ApiHandler):
             account.create_time = customer.create_time
             account.update_time = customer.update_time
             self.db.add(account)
-            self.add_oplog(u"新用户开户，%s" % form.d.account_number)
+            self.add_oplog(u"新用户开户，%s， %s" % form.d.account_number,pay_status_desc)
 
             self.db.commit()
             self.render_success()
