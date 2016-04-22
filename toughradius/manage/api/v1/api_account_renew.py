@@ -68,17 +68,17 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             fee_value = request.get("fee_value",0)
 
             if not account_number:
-                return render_verify_err(msg=u"账号不能为空")
+                return self.render_verify_err(msg=u"账号不能为空")
 
             if utils.yuan2fen(request.get("fee_value",0)) < 0:
-                return render_verify_err(msg=u"无效续费金额 %s"%fee_value)
+                return self.render_verify_err(msg=u"无效续费金额 %s"%fee_value)
 
 
             account = self.db.query(models.TrAccount).get(account_number)
             user = self.query_account(account_number)
 
             if account.status not in (1, 4):
-                return render_verify_err(msg=u"无效用户状态")
+                return self.render_verify_err(msg=u"无效用户状态")
 
             accept_log = models.TrAcceptLog()
             accept_log.accept_type = 'next'
@@ -153,7 +153,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             self.render_unknow(err)
             import traceback
             traceback.print_exc()
-            return
+
 
 
 
