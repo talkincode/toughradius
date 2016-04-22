@@ -60,7 +60,9 @@ class HttpServer(cyclone.web.Application):
         self.mcache.print_hit_stat(60)
         
         self.db_backup = DBBackup(models.get_metadata(self.db_engine), excludes=[
-            'tr_online','system_session','system_cache','tr_ticket'])
+            'tr_online','system_session','system_cache','tr_ticket','tr_billing','tr_online_stat',
+            'tr_flow_stat'
+        ])
 
         self.aes = utils.AESCipher(key=self.config.system.secret)
 
