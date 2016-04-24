@@ -64,13 +64,10 @@ class CustomerAddHandler(ApiHandler):
         except Exception as err:
             return self.render_parse_err(err)
 
-        pay_status = int(form.d.pay_status)
-        pay_status_desc = pay_status == 0 and u'未支付' or u"已支付"
-
         try:
             if not form.validates(**request):
                 raise Exception(form.errors)
-            if pay_status not in (0,1):
+            if  int(form.d.pay_status) not in (0,1):
                 raise Exception("pay_status must 0 or 1")
             if self.db.query(models.TrAccount).filter_by(account_number=form.d.account_number).count() > 0:
                 raise Exception("account already exists")
@@ -78,6 +75,10 @@ class CustomerAddHandler(ApiHandler):
             return self.render_verify_err(err)
 
         try:
+
+            pay_status = int(form.d.pay_status)
+            pay_status_desc = pay_status == 0 and u'未支付' or u"已支付"
+
             customer = models.TrCustomer()
             customer.node_id = form.d.node_id
             customer.realname = form.d.realname
@@ -182,12 +183,12 @@ class CustomerAddHandler(ApiHandler):
             account.create_time = customer.create_time
             account.update_time = customer.update_time
             self.db.add(account)
-            self.add_oplog(u"新用户开户，%s， %s" % form.d.account_number,pay_status_desc)
+            self.add_oplog(u"新用户开户，%s， %s" % (form.d.account_number,pay_status_desc))
 
             self.db.commit()
-            self.render_success()
+            self.render_success(order_id=order.order_id)
         except Exception as e:
-            self.render_unknow(err)
+            self.render_unknow(e)
             import traceback
             traceback.print_exc()
 
