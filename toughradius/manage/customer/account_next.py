@@ -10,7 +10,9 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
 from toughlib import utils, dispatch
+from toughlib import redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 from toughradius.manage.events.settings import ACCOUNT_NEXT_EVENT
 
 @permit.route(r"/admin/account/next", u"用户续费",MenuUser, order=2.3000)
@@ -91,7 +93,7 @@ class AccountNextHandler(account.AccountHandler):
         self.db.commit()
 
         dispatch.pub(ACCOUNT_NEXT_EVENT, order.account_number, async=True)
-        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
 
         self.redirect(self.detail_url_fmt(account_number))
 

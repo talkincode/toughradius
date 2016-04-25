@@ -57,10 +57,6 @@ function do_delete(customer_id)
             <div class="container">
         <div class="pull-right">
            <div class="btn-group" role="group" aria-label="...">
-               
-            % if permit.match(current_user.username,'/admin/account/open'):
-            <a href="/admin/account/open?customer_id=${customer.customer_id}" class="btn btn-sm btn-info">新开子账号</a>
-            % endif
             
             % if user.status == 2:
            
