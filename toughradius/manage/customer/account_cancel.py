@@ -9,8 +9,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils, dispatch,db_cache
+from toughlib import utils, dispatch,redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 from toughradius.manage.events.settings import ACCOUNT_CHANNEL_EVENT
 from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 
@@ -68,7 +69,7 @@ class AccountCanceltHandler(account.AccountHandler):
         self.db.commit()
 
         dispatch.pub(ACCOUNT_CHANNEL_EVENT, account.account_number, async=True)
-        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
         for online in self.db.query(models.TrOnline).filter_by(account_number=account_number):
             dispatch.pub(UNLOCK_ONLINE_EVENT,account_number,online.nas_addr, online.acct_session_id,async=True)
         self.redirect(self.detail_url_fmt(account_number))

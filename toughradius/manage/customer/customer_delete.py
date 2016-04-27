@@ -10,8 +10,9 @@ from toughradius.manage import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughlib.permit import permit
-from toughlib import utils,logger,dispatch,db_cache
+from toughlib import utils,logger,dispatch,redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 from toughradius.manage.events.settings import ACCOUNT_DELETE_EVENT
 
 
@@ -34,7 +35,7 @@ class CustomerDeleteHandler(CustomerHandler):
             self.db.query(models.TrCustomerOrder).filter_by(account_number=account.account_number).delete()
             self.add_oplog(u'删除用户账号%s' % (account.account_number))
             dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
-            dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+            dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
 
         self.db.query(models.TrCustomer).filter_by(customer_id=customer_id).delete()
         self.add_oplog(u'删除用户资料 %s' % (customer_id))    

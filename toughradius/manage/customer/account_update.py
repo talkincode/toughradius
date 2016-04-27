@@ -9,8 +9,9 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils,dispatch,db_cache
+from toughlib import utils,dispatch,redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 
 @permit.route(r"/admin/account/update", u"用户策略修改",MenuUser, order=2.2000)
 class AccountUpdatetHandler(account.AccountHandler):
@@ -41,7 +42,7 @@ class AccountUpdatetHandler(account.AccountHandler):
 
         self.add_oplog(u'修改上网账号信息:%s' % (account.account_number))
         self.db.commit()
-        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
         self.redirect(self.detail_url_fmt(account.account_number))
 
 

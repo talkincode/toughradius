@@ -9,8 +9,10 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils,dispatch,db_cache
+from toughlib import utils,dispatch
+from toughlib import redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 
 @permit.route(r"/admin/account/change/get_policy")
 class AccountChangePolicyGetHandler(account.AccountHandler):
@@ -103,7 +105,7 @@ class AccountChangeHandler(account.AccountHandler):
         self.db.add(order)
         self.add_oplog(accept_log.accept_desc)
         self.db.commit()
-        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
         self.redirect(self.detail_url_fmt(account_number))
 
 
