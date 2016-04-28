@@ -112,8 +112,8 @@ function do_delete(customer_id)
                
             % endif
             
-            % if permit.match(current_user.username,'/admin/account/delete'):
-            <a class="btn btn-sm btn-danger" href="javascript:do_delete('${customer.customer_id}');">删除</a>
+            % if permit.match(current_user.username,'/admin/customer/delete'):
+            <a class="btn btn-sm btn-danger" href="javascript:do_delete('${user.customer_id}');">删除</a>
             % endif
             </div>
         </div>   
