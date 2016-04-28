@@ -46,6 +46,7 @@ class CustomerAuthHandler(ApiHandler):
             account.status = 1
             order.order_desc = order.order_desc + u"paytime:" + utils.get_currtime()
             self.db.commit()
+            self.render_success()
         except Exception as err:
             self.render_unknow(err)
             import traceback

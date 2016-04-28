@@ -62,6 +62,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
 
         try:
             account_number = request.get('account_number')
+            order_id = request.get('order_id')
             expire_date = request.get('expire_date')
             months = int(request.get('months',0))
             giftdays = int(request.get('giftdays',0))
@@ -104,7 +105,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
                 order_fee = int(product.fee_price)
 
             order = models.TrCustomerOrder()
-            order.order_id = utils.gen_order_id()
+            order.order_id = order_id
             order.customer_id = user.customer_id
             order.product_id = user.product_id
             order.account_number = account_number
