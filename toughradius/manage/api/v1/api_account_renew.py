@@ -67,7 +67,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
 
             if pay_status == 0:
                 self.cache.set("renew_order_%s"%order_id, request, 24 * 60 * 60)
-                self.render_success()
+                return self.render_success()
             elif pay_status == 1:
                 request = self.cache.get("renew_order_%s"%order_id)
                 if not request:
