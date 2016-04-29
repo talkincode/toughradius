@@ -61,6 +61,17 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             return self.render_parse_err(err)
 
         try:
+            pay_status = int(request.get('pay_status',0))
+            pay_status_desc = pay_status == 0 and u'未支付' or u"已支付"
+
+            if pay_status == 0:
+                self.cache.set("renew_order_%s"%order_id, request, 24 * 60 * 60)
+                self.render_success()
+            elif pay_status == 1:
+                request = self.cache.get("renew_order_%s"%order_id)
+            else:
+                return self.render_verify_err(msg=u"支付状态不正确")
+
             account_number = request.get('account_number')
             order_id = request.get('order_id')
             expire_date = request.get('expire_date')
