@@ -69,6 +69,8 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
                 self.render_success()
             elif pay_status == 1:
                 request = self.cache.get("renew_order_%s"%order_id)
+                if not request:
+                    return self.render_verify_err(msg=u"订单不存在")
             else:
                 return self.render_verify_err(msg=u"支付状态不正确")
 
@@ -158,6 +160,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             self.db.add(order)
             self.add_oplog(order.order_desc)
             self.db.commit()
+            self.cache.delete("renew_order_%s"%order_id)
             self.render_success()
             dispatch.pub(ACCOUNT_NEXT_EVENT,order.account_number, async=True)
             dispatch.pub(CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
