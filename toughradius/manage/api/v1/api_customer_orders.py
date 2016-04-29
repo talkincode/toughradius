@@ -32,6 +32,14 @@ class CustomerAccountsHandler(ApiHandler):
 
         try:
             customer_name = request.get('customer_name')
+            order_id = request.get('order_id')
+
+            if order_id:
+                order = self.db.query(models.TrCustomerOrder).get(order_id)
+                order_data = {}
+                if order:
+                    order_data = { c.name : getattr(order, c.name) for c in order.__table__.columns }
+                return self.render_success(order=order_data)
 
             if not customer_name:
                 return self.render_verify_err(msg="customer_name requerd")
