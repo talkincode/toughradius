@@ -61,6 +61,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             return self.render_parse_err(err)
 
         try:
+            order_id = request.get('order_id')
             pay_status = int(request.get('pay_status',0))
             pay_status_desc = pay_status == 0 and u'未支付' or u"已支付"
 
