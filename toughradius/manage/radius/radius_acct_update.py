@@ -33,7 +33,7 @@ class RadiusAcctUpdate(RadiusBilling):
                 acct_start_time = _starttime.strftime( "%Y-%m-%d %H:%M:%S"),
                 framed_ipaddr = ticket.framed_ipaddr,
                 mac_addr = ticket.mac_addr or '',
-                nas_port_id = ticket.nas_port_id,
+                nas_port_id = ticket.nas_port_id or '',
                 billing_times = ticket.acct_session_time,
                 input_total = self.get_input_total(),
                 output_total = self.get_output_total(),
