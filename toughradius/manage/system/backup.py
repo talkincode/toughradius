@@ -46,7 +46,10 @@ class RestoreHandler(BaseHandler):
         rebakfs = self.get_argument("bakfs")
         try:
             self.db_backup.dumpdb(os.path.join(backup_path, backup_file))
-            self.db_backup.restoredb(os.path.join(backup_path, rebakfs))
+            if 'trv1' in rebakfs:
+                self.db_backup.restoredbv1(os.path.join(backup_path, rebakfs))
+            else:
+                self.db_backup.restoredb(os.path.join(backup_path, rebakfs))
             return self.render_json(code=0, msg="restore done!")
         except Exception as err:
             dispatch.pub(logger.EVENT_EXCEPTION,err)

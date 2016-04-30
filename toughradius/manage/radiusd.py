@@ -121,6 +121,13 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
             req = self.createAuthPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
+            # if 'trbtest' in req.get_user_name():
+            #     reply = req.CreateReply()
+            #     reply.vendor_id = req.vendor_id
+            #     reply['Reply-Message'] = 'trbtest success!'
+            #     reply.code = packet.AccessAccept
+            #     return reply
+
             self.do_stat(req.code)
 
             logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
@@ -137,7 +144,7 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
                 account_number=req.get_user_name(),
                 domain=req.get_domain(),
                 macaddr=req.client_mac,
-                nasaddr=req.get_nas_addr(),
+                nasaddr=req.get_nas_addr() or host,
                 vlanid1=req.vlanid1,
                 vlanid2=req.vlanid2
             )
@@ -290,8 +297,11 @@ class RADIUSAcctWorker:
 
             status_type = req.get_acct_status_type()
             if status_type in self.acct_class:
+                ticket = req.get_ticket()
+                if not ticket.get('nas_addr'):
+                    ticket['nas_addr'] = host
                 acct_func = self.acct_class[status_type](
-                        self.db_engine,self.mcache,None,req.get_ticket()).acctounting
+                        self.db_engine,self.mcache,None,ticket).acctounting
                 reactor.callLater(0.1,acct_func)
             else:
                 logger.error('status_type <%s> not support' % status_type)

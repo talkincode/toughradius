@@ -17,7 +17,7 @@ def customer_open_form(nodes=[], products=[]):
         btforms.Textbox("realname", rules.len_of(2, 32), description=u"用户姓名", required="required", **input_style),
         btforms.Textbox("idcard", rules.len_of(1, 32), description=u"证件号码", **input_style),
         btforms.Textbox("mobile", rules.len_of(1, 32), description=u"用户手机号码", **input_style),
-        btforms.Textbox("address",rules.len_of(1, 32), description=u"用户地址", hr=True, required="required", **input_style),
+        btforms.Textbox("address",rules.len_of(1, 255), description=u"用户地址", hr=True, required="required", **input_style),
         btforms.Textbox("account_number", description=u"用户账号", required="required", **input_style),
         btforms.Textbox("password", description=u"认证密码", required="required", **input_style),
         btforms.Button("button", type="button", onclick="reBuildAccount();", html=u"<b>重新生成账号密码</b>", **_btn_style),

@@ -3,7 +3,7 @@ install:
 	virtualenv venv --relocatable;\
 	test -d /var/toughradius/data || mkdir -p /var/toughradius/data;\
 	rm -f /etc/toughradius.conf && cp etc/toughradius.conf /etc/toughradius.conf;\
-	rm -f /etc/toughradius.json && cp etc/toughradius.json /etc/toughradius.json;\
+	test -f /etc/toughradius.json || cp etc/toughradius.json /etc/toughradius.json;\
 	rm -f /etc/init.d/toughradius && cp etc/toughradius /etc/init.d/toughradius;\
 	chmod +x /etc/init.d/toughradius && chkconfig toughradius on;\
 	rm -f /usr/lib/systemd/system/toughradius.service && cp etc/toughradius.service /usr/lib/systemd/system/toughradius.service;\
@@ -45,14 +45,15 @@ test:
 	sh runtests.sh
 
 initdb:
-	venv/bin/python radiusctl initdb -f -c /etc/toughradius.json
+	python radiusctl initdb -f -c /etc/toughradius.json
 
 inittest:
-	venv/bin/python radiusctl inittest -c /etc/toughradius.json
+	python radiusctl inittest -c /etc/toughradius.json
 
 clean:
 	rm -fr venv
 
 all:install-deps venv upgrade-libs install
 
-.PHONY: all install install-deps upgrade-libs upgrade-dev upgrade test initdb inittest clean
+.PHONY: all install install-deps upgrade-libs upgrade-dev upgrade test initdb inittest clean pypy pypy-initdb
+

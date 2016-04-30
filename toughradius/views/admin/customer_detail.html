@@ -57,10 +57,6 @@ function do_delete(customer_id)
             <div class="container">
         <div class="pull-right">
            <div class="btn-group" role="group" aria-label="...">
-               
-            % if permit.match(current_user.username,'/admin/account/open'):
-            <a href="/admin/account/open?customer_id=${customer.customer_id}" class="btn btn-sm btn-info">新开子账号</a>
-            % endif
             
             % if user.status == 2:
            
@@ -116,8 +112,8 @@ function do_delete(customer_id)
                
             % endif
             
-            % if permit.match(current_user.username,'/admin/account/delete'):
-            <a class="btn btn-sm btn-danger" href="javascript:do_delete('${customer.customer_id}');">删除</a>
+            % if permit.match(current_user.username,'/admin/customer/delete'):
+            <a class="btn btn-sm btn-danger" href="javascript:do_delete('${user.customer_id}');">删除</a>
             % endif
             </div>
         </div>   

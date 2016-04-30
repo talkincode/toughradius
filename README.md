@@ -64,8 +64,6 @@ Github 项目地址: https://github.com/talkincode/ToughRADIUS
 
 Github 文档地址: https://github.com/talkincode/ToughRADIUS-GitBook
 
-在线文档阅读：http://docs.toughradius.net
-
 
 ## 商业支持
 

@@ -61,24 +61,45 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             return self.render_parse_err(err)
 
         try:
+            order_id = request.get('order_id')
+            pay_status = int(request.get('pay_status',0))
+            pay_status_desc = pay_status == 0 and u'未支付' or u"已支付"
+
+            if pay_status == 0:
+                self.cache.set("renew_order_%s"%order_id, request, 24 * 60 * 60)
+                return self.render_success()
+            elif pay_status == 1:
+                _request = self.cache.get("renew_order_%s"%order_id)
+                if request:
+                    request = _request
+            else:
+                return self.render_verify_err(msg=u"支付状态不正确")
+
             account_number = request.get('account_number')
+            order_id = request.get('order_id')
             expire_date = request.get('expire_date')
             months = int(request.get('months',0))
             giftdays = int(request.get('giftdays',0))
             fee_value = request.get("fee_value",0)
 
             if not account_number:
-                return render_verify_err(msg=u"账号不能为空")
+                return self.render_verify_err(msg=u"账号不能为空")
 
             if utils.yuan2fen(request.get("fee_value",0)) < 0:
-                return render_verify_err(msg=u"无效续费金额 %s"%fee_value)
+                return self.render_verify_err(msg=u"无效续费金额 %s"%fee_value)
+
+            if months == 0:
+                return self.render_verify_err(msg=u"无效的授权月数")
+
+            if not expire_date:
+                return self.render_verify_err(msg=u"到期时间不能为空")
 
 
             account = self.db.query(models.TrAccount).get(account_number)
             user = self.query_account(account_number)
 
             if account.status not in (1, 4):
-                return render_verify_err(msg=u"无效用户状态")
+                return self.render_verify_err(msg=u"无效用户状态")
 
             accept_log = models.TrAcceptLog()
             accept_log.accept_type = 'next'
@@ -104,7 +125,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
                 order_fee = int(product.fee_price)
 
             order = models.TrCustomerOrder()
-            order.order_id = utils.gen_order_id()
+            order.order_id = order_id
             order.customer_id = user.customer_id
             order.product_id = user.product_id
             order.account_number = account_number
@@ -146,6 +167,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             self.db.add(order)
             self.add_oplog(order.order_desc)
             self.db.commit()
+            self.cache.delete("renew_order_%s"%order_id)
             self.render_success()
             dispatch.pub(ACCOUNT_NEXT_EVENT,order.account_number, async=True)
             dispatch.pub(CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
@@ -153,7 +175,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             self.render_unknow(err)
             import traceback
             traceback.print_exc()
-            return
+
 
 
 

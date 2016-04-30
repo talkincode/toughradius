@@ -9,8 +9,10 @@ from toughradius.manage import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
-from toughlib import utils,dispatch,db_cache
+from toughlib import utils,dispatch
+from toughlib import redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 
 @permit.route(r"/admin/account/charge", u"用户充值",MenuUser, order=2.4000)
 class AccountChargeHandler(account.AccountHandler):

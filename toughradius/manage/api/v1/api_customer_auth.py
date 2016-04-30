@@ -55,7 +55,7 @@ class CustomerAuthHandler(ApiHandler):
                 return self.render_success(customer_name=customer.customer_name)
 
             if account and password == self.aes.decrypt(account.password):
-                customer = self.db.query(models.TrCustomer).get(customer_id=account.customer_id)
+                customer = self.db.query(models.TrCustomer).get(account.customer_id)
                 return self.render_success(customer_name=customer.customer_name)
 
             return self.render_verify_err(msg='auth failure, password not match')

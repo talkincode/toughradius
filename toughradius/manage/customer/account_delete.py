@@ -10,7 +10,9 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
 from toughlib import utils, dispatch,logger
+from toughlib import redis_cache
 from toughradius.manage.settings import * 
+from toughradius.manage.events import settings
 from toughradius.manage.events.settings import ACCOUNT_DELETE_EVENT
 from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 
@@ -39,7 +41,7 @@ class AccountDeleteHandler(account.AccountHandler):
         self.add_oplog(u'删除用户账号%s' % (account_number))
         self.db.commit()
         dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
-        dispatch.pub(db_cache.CACHE_DELETE_EVENT,account_cache_key(account_number), async=True)
+        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account_number), async=True)
         
         return self.redirect("/admin/customer")
 
