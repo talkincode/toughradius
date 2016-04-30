@@ -69,9 +69,9 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
                 self.cache.set("renew_order_%s"%order_id, request, 24 * 60 * 60)
                 return self.render_success()
             elif pay_status == 1:
-                request = self.cache.get("renew_order_%s"%order_id)
-                if not request:
-                    return self.render_verify_err(msg=u"订单不存在")
+                _request = self.cache.get("renew_order_%s"%order_id)
+                if request:
+                    request = _request
             else:
                 return self.render_verify_err(msg=u"支付状态不正确")
 
@@ -87,6 +87,12 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
 
             if utils.yuan2fen(request.get("fee_value",0)) < 0:
                 return self.render_verify_err(msg=u"无效续费金额 %s"%fee_value)
+
+            if months == 0:
+                return self.render_verify_err(msg=u"无效的授权月数")
+
+            if not expire_date:
+                return self.render_verify_err(msg=u"到期时间不能为空")
 
 
             account = self.db.query(models.TrAccount).get(account_number)
