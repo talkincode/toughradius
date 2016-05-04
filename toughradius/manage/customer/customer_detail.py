@@ -18,6 +18,12 @@ from toughradius.manage.settings import *
 @permit.route(r"/admin/customer/detail", u"用户详情",MenuUser, order=1.2000)
 class CustomerDetailHandler(CustomerHandler):
 
+    def showpwd(self,password):
+        try:
+            return self.aes.decrypt(password)
+        except:
+            return ''
+
     @cyclone.web.authenticated
     def get(self):
         account_number = self.get_argument('account_number')
@@ -95,6 +101,7 @@ class CustomerDetailHandler(CustomerHandler):
                           orders=orders,
                           accepts=accepts,
                           type_map=type_map,
-                          get_orderid=get_orderid)
+                          get_orderid=get_orderid,
+                          showpwd=self.showpwd)
 
 
