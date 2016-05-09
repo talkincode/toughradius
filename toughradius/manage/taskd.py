@@ -12,7 +12,8 @@ from toughlib.dbengine import get_engine
 from toughlib.redis_cache import CacheManager
 from toughradius.manage.settings import redis_conf
 from toughradius.manage.tasks import (
-    expire_notify, ddns_update, radius_stat, online_stat,flow_stat
+    expire_notify, ddns_update, radius_stat, online_stat,flow_stat,
+    online_check
 )
 from toughradius.manage.events import radius_events
 from toughradius.manage import settings
@@ -34,6 +35,7 @@ class TaskDaemon():
         self.radius_stat_task = radius_stat.RadiusStatTask(self)
         self.online_stat_task = online_stat.OnlineStatTask(self)
         self.flow_stat_task = flow_stat.FlowStatTask(self)
+        self.online_check_task = online_check.OnlineCheckTask(self)
         if not kwargs.get('standalone'):
             event_params= dict(dbengine=self.db_engine, mcache=self.cache,aes=self.aes)
             event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
@@ -60,6 +62,11 @@ class TaskDaemon():
         _time = self.flow_stat_task.process()
         reactor.callLater(_time, self.start_flow_stat_task)
 
+    def start_online_check_task(self):
+        _time = self.online_check_task.process()
+        logger.info("next online_check times: %s" % _time)
+        reactor.callLater(_time, self.start_online_check_task)
+
 
     def start(self):
         self.start_expire_notify()
@@ -67,6 +74,7 @@ class TaskDaemon():
         self.start_radius_stat_update()
         self.start_online_stat_task()
         self.start_flow_stat_task()
+        self.start_online_check_task()
         logger.info('init task done')
 
 

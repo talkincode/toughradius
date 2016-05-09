@@ -33,7 +33,7 @@ class RadiusEvents(BasicEvent):
             mac_addr = online.mac_addr,
             nas_addr = online.nas_addr,
             nas_port = 0,
-            service_type = '',
+            service_type = 2,
             framed_ipaddr = online.framed_ipaddr,
             framed_netmask = '',
             nas_class = '',
@@ -42,15 +42,15 @@ class RadiusEvents(BasicEvent):
             acct_status_type = STATUS_TYPE_STOP,
             acct_input_octets = 0,
             acct_output_octets = 0,
+            acct_terminate_cause=6,
             acct_session_id = online.acct_session_id,
             acct_session_time = session_time,
             acct_input_packets = online.input_total * 1024,
             acct_output_packets = online.output_total * 1024,
-            acct_terminate_cause = '',
             acct_input_gigawords = 0,
             acct_output_gigawords = 0,
             event_timestamp = datetime.datetime.now().strftime( "%Y-%m-%d %H:%M:%S"),
-            nas_port_type='',
+            nas_port_type=16,
             nas_port_id=online.nas_port_id
         )
 
