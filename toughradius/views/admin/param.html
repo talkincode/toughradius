@@ -1,20 +1,22 @@
 <%inherit file="base.html"/>
 <%def name="head()">
 <script>
-    % if not permit.match(current_user.username, '/admin/param/update'):
-        $(document).ready(function (){
-            $("input").each(function() {
-                $(this).attr("readonly", 'readonly');
-            })
-            $("textarea").each(function() {
-                $(this).attr("readonly", 'readonly');
-            })
-            $("#submit").hide();
-        });
-    % endif
-    $(function () {
-        $('[data-toggle="popover"]').popover()
-    })
+% if not permit.match(current_user.username, '/admin/param/update'):
+    $(document).ready(function (){
+        $("input").each(function() {
+            $(this).attr("readonly", 'readonly');
+        })
+        $("textarea").each(function() {
+            $(this).attr("readonly", 'readonly');
+        })
+        $("#submit").hide();
+    });
+% endif
+
+$(function () {
+    $('[data-toggle="popover"]').popover()
+});
+
 </script>
 </%def>
 <%def name="body()">
@@ -33,11 +35,14 @@
                     <li role="presentation" class="${active=='syscfg' and 'active' or '' }">
                         <a href="#syscfg" aria-controls="syscfg" role="tab" data-toggle="tab">管理设置</a>
                     </li>
+                    <li role="presentation" class="${active=='toughcloudcfg' and 'active' or '' }">
+                        <a href="#toughcloudcfg" aria-controls="toughcloudcfg" role="tab" data-toggle="tab">硬派云服务</a>
+                    </li>
                     <li role="presentation" class="${active=='notifycfg' and 'active' or '' }">
-                        <a href="#notifycfg" aria-controls="notifycfg" role="tab" data-toggle="tab">到期提醒</a>
+                        <a href="#notifycfg" aria-controls="notifycfg" role="tab" data-toggle="tab">到期提醒设置</a>
                     </li>
                     <li role="presentation" class="${active=='mailcfg' and 'active' or '' }">
-                        <a href="#mailcfg" aria-controls="mailcfg" role="tab" data-toggle="tab">邮件服务器</a>
+                        <a href="#mailcfg" aria-controls="mailcfg" role="tab" data-toggle="tab">邮件服务设置</a>
                     </li>
                     <li role="presentation" class="${active=='radcfg' and 'active' or '' }">
                         <a href="#radcfg" aria-controls="radcfg" role="tab" data-toggle="tab">Radius设置</a>
@@ -52,7 +57,13 @@
                             ${sys_form.render_css()}
                         </form>
                     </div>
-                    <div role="tabpanel" class="tab-pane ${active=='notifycfg' and 'active' or '' }" id="notifycfg">
+                    <div role="tabpanel" class="tab-pane ${active=='toughcloudcfg' and 'active' or '' }" id="toughcloudcfg">
+                        <form class="form-horizontal form-well" role="form" action="${toughcloud_form.action}" method="post">
+                            ${xsrf_form_html()}
+                            ${toughcloud_form.render_css()}
+                        </form>
+                    </div>
+                     <div role="tabpanel" class="tab-pane ${active=='notifycfg' and 'active' or '' }" id="notifycfg">
                         <form class="form-horizontal form-well" role="form" action="${notify_form.action}" method="post">
                             ${xsrf_form_html()}
                             ${notify_form.render_css()}
