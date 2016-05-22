@@ -57,7 +57,7 @@ class TaskDaemon():
                 self.process_task(task)
             logger.info('init task %s done'%task.__name__)
 
-        
+        logger.info("init task num : %s"%len(taskclss))
 
 
 
