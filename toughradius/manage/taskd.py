@@ -3,6 +3,7 @@
 import sys
 import os
 import time
+import importlib
 from twisted.python import log
 from twisted.internet import reactor,defer
 from sqlalchemy.orm import scoped_session, sessionmaker
@@ -12,7 +13,7 @@ from toughlib.dbengine import get_engine
 from toughlib.redis_cache import CacheManager
 from toughradius.manage.settings import redis_conf
 from toughradius.manage.events import radius_events
-from toughradius.manage import settings
+from toughradius.manage import settings,tasks
 from toughlib import logger
 import toughradius
 import functools
@@ -29,6 +30,7 @@ class TaskDaemon():
         self.cache.print_hit_stat(60)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
         self.taskclss = []
+        self.load_tasks()
         if not kwargs.get('standalone'):
             event_params= dict(dbengine=self.db_engine, mcache=self.cache,aes=self.aes)
             event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
@@ -54,6 +56,16 @@ class TaskDaemon():
             logger.info('init task %s done'%task.__name__)
 
         logger.info("init task num : %s"%len(TaskDaemon.__taskclss__))
+
+
+    def load_tasks(self):
+        evs = set(os.path.splitext(it)[0] for it in os.listdir(os.path.dirname(tasks.__file__)))
+        for ev in evs:
+            try:
+                __import__("toughradius.manage.tasks.%s"% ev)
+            except Exception as err:
+                logger.exception(err)
+                continue
 
 
 def run(config, dbengine=None,**kwargs):
