@@ -9,6 +9,7 @@ from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
 from toughradius.manage.settings import  radius_statcache_key
+from toughradius.manage import taskd
 
 class RadiusStatTask(TaseBasic):
 
@@ -42,5 +43,4 @@ class RadiusStatTask(TaseBasic):
 
         return 10.0
 
-
-initcls = RadiusStatTask
+taskd.TaskDaemon.__taskclss__.append(RadiusStatTask)

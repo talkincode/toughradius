@@ -9,6 +9,7 @@ from sqlalchemy.sql import func
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 class FlowStatTask(TaseBasic):
 
@@ -46,5 +47,4 @@ class FlowStatTask(TaseBasic):
         
         return 120.0
 
-
-initcls = FlowStatTask
+taskd.TaskDaemon.__taskclss__.append(FlowStatTask)

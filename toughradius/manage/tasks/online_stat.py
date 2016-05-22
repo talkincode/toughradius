@@ -8,6 +8,7 @@ from toughradius.manage import models
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 class OnlineStatTask(TaseBasic):
 
@@ -40,5 +41,4 @@ class OnlineStatTask(TaseBasic):
         
         return 120.0
 
-
-initcls = OnlineStatTask
+taskd.TaskDaemon.__taskclss__.append(OnlineStatTask)

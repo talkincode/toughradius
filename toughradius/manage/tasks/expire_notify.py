@@ -7,6 +7,7 @@ from toughradius.manage import models
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 
 class ExpireNotifyTask(TaseBasic):
@@ -79,4 +80,4 @@ class ExpireNotifyTask(TaseBasic):
 
         return next_interval
 
-initcls = ExpireNotifyTask
+taskd.TaskDaemon.__taskclss__.append(ExpireNotifyTask)

@@ -8,6 +8,7 @@ from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer
 from twisted.names import client, dns
+from toughradius.manage import taskd
 
 class DdnsUpdateTask(TaseBasic):
 
@@ -43,7 +44,7 @@ class DdnsUpdateTask(TaseBasic):
         defer.returnValue(60)
 
 
-initcls = DdnsUpdateTask
+taskd.TaskDaemon.__taskclss__.append(DdnsUpdateTask)
 
 
 

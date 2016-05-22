@@ -10,6 +10,7 @@ from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 class OnlineCheckTask(TaseBasic):
 
@@ -42,4 +43,4 @@ class OnlineCheckTask(TaseBasic):
         
         return 3600.0
 
-initcls = OnlineCheckTask
+taskd.TaskDaemon.__taskclss__.append(OnlineCheckTask)

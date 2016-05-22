@@ -4,7 +4,7 @@ from toughlib.dbutils import make_db
 from toughradius.manage import models
 from toughlib import logger
 
-class TaseBasic:
+class TaseBasic(object):
 
     def __init__(self, taskd, **kwargs):
         self.config = taskd.config
@@ -39,3 +39,4 @@ class TaseBasic:
             return u"%s小时%s分钟%s秒" % (int(h), int(m), int(s))
         elif int(d) == 0 and int(h) == 0 and int(m) > 0:
             return u"%s分钟%s秒" % (int(m),int(s))
+
