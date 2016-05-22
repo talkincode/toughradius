@@ -43,7 +43,7 @@ class TaskDaemon():
 
     def start(self):
         taskclss = []
-        for name in dir(tasks):
+        for name in tasks.__dict__:
             _module = getattr(tasks,name)
             if hasattr(_module, 'initcls'):
                 taskclss.append(_module.initcls)
