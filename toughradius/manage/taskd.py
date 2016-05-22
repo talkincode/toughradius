@@ -15,7 +15,7 @@ from toughradius.manage.events import radius_events
 from toughradius.manage import settings
 from toughlib import logger
 import toughradius
-
+import functools
 
 class TaskDaemon():
 
@@ -54,7 +54,6 @@ class TaskDaemon():
             logger.info('init task %s done'%task.__name__)
 
         logger.info("init task num : %s"%len(TaskDaemon.__taskclss__))
-
 
 
 def run(config, dbengine=None,**kwargs):
