@@ -11,7 +11,13 @@ from twisted.internet import reactor
 
 class OnlineStatTask(TaseBasic):
 
+    __name__ = 'online-stat'
+
+    def first_delay(self):
+        return 0
+
     def process(self, *args, **kwargs):
+        self.logtimes()
         with make_db(self.db) as db:
             try:
                 nodes = db.query(models.TrNode)
@@ -33,3 +39,6 @@ class OnlineStatTask(TaseBasic):
                 logger.error('online_stat_job err,%s'%(str(err)))
         
         return 120.0
+
+
+initcls = OnlineStatTask

@@ -11,6 +11,8 @@ from twisted.internet import reactor
 
 class ExpireNotifyTask(TaseBasic):
 
+    __name__ = 'expire-notify'
+
     def get_notify_interval(self):
         try:
             notify_interval = int(self.get_param_value("mail_notify_interval",1440)) * 60.0
@@ -39,6 +41,7 @@ class ExpireNotifyTask(TaseBasic):
             dispatch.pub('webhook_account_expire',userinfo, async=False)
 
     def process(self, *args, **kwargs):
+        self.logtimes()
         next_interval = self.get_notify_interval()
         try:
             logger.info("start process expire notify task")
@@ -76,3 +79,4 @@ class ExpireNotifyTask(TaseBasic):
 
         return next_interval
 
+initcls = ExpireNotifyTask

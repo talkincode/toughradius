@@ -2,6 +2,7 @@
 #coding:utf-8
 from toughlib.dbutils import make_db
 from toughradius.manage import models
+from toughlib import logger
 
 class TaseBasic:
 
@@ -9,6 +10,11 @@ class TaseBasic:
         self.config = taskd.config
         self.db = taskd.db
         self.cache = taskd.cache
+        self.time_count = 1
+
+    def logtimes(self):
+        logger.info(u"%s task execute times : %s"%(self.__name__, self.time_count))
+        self.time_count += 1
 
     def process(self,*args, **kwargs):
         pass

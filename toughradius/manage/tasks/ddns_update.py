@@ -11,8 +11,14 @@ from twisted.names import client, dns
 
 class DdnsUpdateTask(TaseBasic):
 
+    __name__ = 'ddns-update'
+
+    def first_delay(self):
+        return 0
+
     @defer.inlineCallbacks
     def process(self, *args, **kwargs):
+        self.logtimes()
         with make_db(self.db) as db:
             try:
                 nas_list = db.query(models.TrBas)
@@ -35,3 +41,10 @@ class DdnsUpdateTask(TaseBasic):
             except Exception as err:
                 logger.error('ddns process error %s' % utils.safeunicode(err.message))
         defer.returnValue(60)
+
+
+initcls = DdnsUpdateTask
+
+
+
+

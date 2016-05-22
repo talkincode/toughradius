@@ -12,7 +12,13 @@ from twisted.internet import reactor
 
 class FlowStatTask(TaseBasic):
 
+    __name__ = 'flow-stat'
+
+    def first_delay(self):
+        return 0
+
     def process(self, *args, **kwargs):
+        self.logtimes()
         with make_db(self.db) as db:
             try:
                 nodes = db.query(models.TrNode)
@@ -39,3 +45,6 @@ class FlowStatTask(TaseBasic):
                 logger.error('flow_stat_job err,%s'%(str(err)))
         
         return 120.0
+
+
+initcls = FlowStatTask
