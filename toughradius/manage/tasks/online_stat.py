@@ -8,10 +8,20 @@ from toughradius.manage import models
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 class OnlineStatTask(TaseBasic):
 
+    __name__ = 'online-stat'
+
+    def first_delay(self):
+        return 5
+
+    def get_notify_interval(self):
+        return 120                
+
     def process(self, *args, **kwargs):
+        self.logtimes()
         with make_db(self.db) as db:
             try:
                 nodes = db.query(models.TrNode)
@@ -26,10 +36,17 @@ class OnlineStatTask(TaseBasic):
                     stat.stat_time = int(time.time())
                     stat.total = online_count
                     db.add(stat)
+
+                # clean expire data
+                _time = int(time.time()) - (86400 * 2)
+                db.query(models.TrOnlineStat).filter(models.TrOnlineStat.stat_time < _time).delete()
+
                 db.commit()
                 logger.info("online stat task done")
             except Exception as err:
                 db.rollback()
                 logger.error('online_stat_job err,%s'%(str(err)))
         
-        return 120.0
+        return self.get_notify_interval()
+
+taskd.TaskDaemon.__taskclss__.append(OnlineStatTask)

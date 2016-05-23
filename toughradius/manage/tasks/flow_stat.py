@@ -9,10 +9,20 @@ from sqlalchemy.sql import func
 from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 class FlowStatTask(TaseBasic):
 
+    __name__ = 'flow-stat'
+
+    def first_delay(self):
+        return 5
+
+    def get_notify_interval(self):
+        return 120        
+
     def process(self, *args, **kwargs):
+        self.logtimes()
         with make_db(self.db) as db:
             try:
                 nodes = db.query(models.TrNode)
@@ -32,10 +42,17 @@ class FlowStatTask(TaseBasic):
                         stat.input_total = r.input_total
                         stat.output_total = r.output_total
                         db.add(stat)
+
+                # clean expire data
+                _time = int(time.time()) - (86400 * 2)
+                db.query(models.TrFlowStat).filter(models.TrFlowStat.stat_time < _time).delete()
+
                 db.commit()
                 logger.info("flow stat task done")
             except Exception as err:
                 db.rollback()
                 logger.error('flow_stat_job err,%s'%(str(err)))
         
-        return 120.0
+        return self.get_notify_interval()
+
+taskd.TaskDaemon.__taskclss__.append(FlowStatTask)

@@ -10,6 +10,7 @@ import cyclone.escape
 import cyclone.web
 import tempfile
 import traceback
+import functools
 from cyclone.util import ObjectDict
 from toughlib import utils
 from toughlib.paginator import Paginator
@@ -219,4 +220,28 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.write(data.xls)
         self.finish()
 
-
+def authenticated(method):
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        if not self.current_user:
+            if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest': # jQuery 等库会附带这个头
+                self.set_header('Content-Type', 'application/json; charset=UTF-8')
+                self.write(json.dumps({'code': 1, 'msg': '您的会话已过期，请重新登录！'}))
+                return
+            if self.request.method in ("GET", "POST", "HEAD"):
+                url = self.get_login_url()
+                if "?" not in url:
+                    if urlparse.urlsplit(url).scheme:
+                        # if login url is absolute, make next absolute too
+                        next_url = self.request.full_url()
+                    else:
+                        next_url = self.request.uri
+                    url += "?" + urlencode(dict(next=next_url))
+                self.redirect(url)
+                return
+            return self.render_error(msg=u"未授权的访问")
+        else:
+            if not self.current_user.permit.match(self.current_user.username,self.request.path):
+                return self.render_error(msg=u"未授权的访问")
+            return method(self, *args, **kwargs)
+    return wrapper

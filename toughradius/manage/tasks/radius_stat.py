@@ -9,8 +9,17 @@ from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
 from toughradius.manage.settings import  radius_statcache_key
+from toughradius.manage import taskd
 
 class RadiusStatTask(TaseBasic):
+
+    __name__ = 'radius-stat'
+
+    def first_delay(self):
+        return 5
+
+    def get_notify_interval(self):
+        return 10                
 
     def __init__(self,taskd, **kwargs):
         TaseBasic.__init__(self,taskd, **kwargs)
@@ -25,6 +34,7 @@ class RadiusStatTask(TaseBasic):
             self.statdata.incr(statattr,incr=1)
 
     def process(self, *args, **kwargs):
+        self.logtimes()
         try:
             self.statdata.run_stat()
             if self.cache.get(radius_statcache_key):
@@ -34,4 +44,6 @@ class RadiusStatTask(TaseBasic):
         except Exception as err:
             logger.error('radius stat process error %s' % utils.safeunicode(err.message))
 
-        return 10.0
+        return self.get_notify_interval()
+
+taskd.TaskDaemon.__taskclss__.append(RadiusStatTask)

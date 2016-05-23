@@ -10,10 +10,20 @@ from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 from twisted.internet import reactor
+from toughradius.manage import taskd
 
 class OnlineCheckTask(TaseBasic):
 
+    __name__ = 'online-checks'
+
+    def first_delay(self):
+        return 5
+
+    def get_notify_interval(self):
+        return 3600        
+
     def process(self, *args, **kwargs):
+        self.logtimes()
         with make_db(self.db) as db:
             try:
                 onlines = db.query(models.TrOnline)
@@ -34,4 +44,6 @@ class OnlineCheckTask(TaseBasic):
                 db.rollback()
                 logger.error('online overtime check job err,%s'%(str(err)))
         
-        return 3600.0
+        return self.get_notify_interval()
+
+taskd.TaskDaemon.__taskclss__.append(OnlineCheckTask)
