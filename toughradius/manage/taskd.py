@@ -41,9 +41,8 @@ class TaskDaemon():
         if isinstance(r, defer.Deferred):
             cbk = lambda _time,_cbk,_task: reactor.callLater(_time, _cbk,_task)
             r.addCallback(cbk,self.process_task,task).addErrback(logger.exception)
-        else:
-            _time = task.process()
-            reactor.callLater(_time, self.process_task,task)
+        elif isinstance(r,(int,float)):
+            reactor.callLater(r, self.process_task,task)
 
     def start(self):
         for taskcls in TaskDaemon.__taskclss__:

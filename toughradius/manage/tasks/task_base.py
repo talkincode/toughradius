@@ -16,13 +16,16 @@ class TaseBasic(object):
         logger.info(u"%s task execute times : %s"%(self.__name__, self.time_count))
         self.time_count += 1
 
+    def get_notify_interval(self):
+        return 10
+
     def process(self,*args, **kwargs):
         pass
 
     def get_param_value(self, name, defval=None):
         with make_db(self.db) as conn:
             val = self.db.query(models.TrParam.param_value).filter_by(param_name = name).scalar()
-            return val or defval
+            return val if valis is not None else defval
 
     def format_time(self,times):
         if times <= 60:

@@ -15,7 +15,10 @@ class DdnsUpdateTask(TaseBasic):
     __name__ = 'ddns-update'
 
     def first_delay(self):
-        return 0
+        return 5
+
+    def get_notify_interval(self):
+        return 60
 
     @defer.inlineCallbacks
     def process(self, *args, **kwargs):
@@ -41,7 +44,7 @@ class DdnsUpdateTask(TaseBasic):
 
             except Exception as err:
                 logger.error('ddns process error %s' % utils.safeunicode(err.message))
-        defer.returnValue(60)
+        defer.returnValue(self.get_notify_interval())
 
 
 taskd.TaskDaemon.__taskclss__.append(DdnsUpdateTask)

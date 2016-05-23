@@ -16,7 +16,10 @@ class RadiusStatTask(TaseBasic):
     __name__ = 'radius-stat'
 
     def first_delay(self):
-        return 0   
+        return 5
+
+    def get_notify_interval(self):
+        return 10                
 
     def __init__(self,taskd, **kwargs):
         TaseBasic.__init__(self,taskd, **kwargs)
@@ -41,6 +44,6 @@ class RadiusStatTask(TaseBasic):
         except Exception as err:
             logger.error('radius stat process error %s' % utils.safeunicode(err.message))
 
-        return 10.0
+        return self.get_notify_interval()
 
 taskd.TaskDaemon.__taskclss__.append(RadiusStatTask)
