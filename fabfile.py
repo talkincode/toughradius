@@ -4,26 +4,57 @@ sys.path.insert(0,os.path.dirname(__file__))
 from fabric.api import *
 from toughradius import __version__
 
-env.user = 'root'
-env.hosts = ['121.201.63.77']
+# --------------------------- remote deploy--------------------------
 
-def build():
-    releases = {'test':'master','dev':'release-dev','stable':'release-stable'}
-    release = releases.get(raw_input("Please enter release type [test,dev,stable](default:dev):"),'dev')
-    build_ver = "linux-{0}-{1}".format(release, datetime.datetime.now().strftime("%Y%m%d%H%M%S"))
-    gitrepo = "https://github.com/talkincode/ToughRADIUS.git"
+env.user = 'root'
+env.hosts = ['121.201.15.99']
+
+def push():
+    message = raw_input("commit msg:")
+    local("git add .")
+    try:
+        local("git commit -m \'%s:%s\'"%(__version__,message))
+    except:
+        print 'no commit'
+    local("git push origin master")
+    local("git push osc master")
+    
+def deploy():
+    gitrepo = "git@github.com:talkincode/ToughRADIUS.git"
     rundir = "/opt/toughradius"
-    dist = "toughradius-{0}.tar.bz2".format(build_ver)
-    run("test -d {0} || git clone {1} {2}".format(rundir,gitrepo,rundir))
+    run("test -d {rundir} || git clone -b master {gitrepo} {rundir}".format(rundir=rundir,gitrepo=gitrepo))
     with cd(rundir):
-        run("git checkout {0} && git pull -f origin {0}".format(release,release))
-        run("make venv")
-    with cd("/opt"):
-        _excludes = ['.git','fabfile.py','pymodules','.travis.yml','.gitignore','dist',
-        'coverage.txt','.coverage','.coverageerc','build','_trial_temp']
-        excludes = ' '.join( '--exclude %s'%_e for _e in _excludes )
-        run("tar -jpcv -f /tmp/{0} toughradius {1}".format(dist,excludes))
-    local("scp  root@121.201.63.77:/tmp/{0} {1}".format(dist,dist))
+        run("git pull --rebase --stat origin master")
+        run("make all")
+        run("make initdb")
+        run("service toughradius restart")
+        run("service toughradius status")
+
+def upgrade():
+    with cd("/opt/toughradius"):
+        run("git pull --rebase --stat origin master")
+        run("service toughradius restart")
+        run("service toughradius status")
+
+def restart():
+    run("service toughradius restart")
+    run("service toughradius status")
+
+def tail():
+    run("tail -f /var/toughradius/radius-manage.log")
+
+def tail100():
+    run("tail -n 100 /var/toughradius/radius-manage.log")
+
+def status():
+    run("service toughradius status")
+
+def uplib():
+    with cd("/opt/toughradius"):
+        run("make upgrade-libs")
+
+
+# -----------------------------------------------------
 
 def tag():
     local("git tag -a v%s -m 'version %s'"%(__version__,__version__))
