@@ -40,6 +40,11 @@ def restart():
     run("service toughradius restart")
     run("service toughradius status")
 
+def uplog():
+    push()
+    upgrade()
+    tail()
+
 def tail():
     run("tail -f /var/toughradius/radius-manage.log")
 
