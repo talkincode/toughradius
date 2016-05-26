@@ -12,6 +12,7 @@ from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils, dispatch
 from toughradius.manage import models
 from toughradius.manage import base
+from toughradius.common import log_trace
 from toughlib.dbengine import get_engine
 from toughlib.permit import permit, load_events, load_handlers
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqSubConnection
@@ -57,7 +58,7 @@ class HttpServer(cyclone.web.Application):
         redisconf = redis_conf(config)
         self.session_manager = redis_session.SessionManager(redisconf,settings["cookie_secret"], 600)
         self.mcache = redis_cache.CacheManager(redisconf,cache_name='RadiusManageCache-%s'%os.getpid())
-        self.mcache.print_hit_stat(60)
+        self.mcache.print_hit_stat(180)
         
         self.db_backup = DBBackup(models.get_metadata(self.db_engine), excludes=[
             'tr_online','system_session','system_cache','tr_ticket','tr_billing','tr_online_stat',
@@ -65,9 +66,12 @@ class HttpServer(cyclone.web.Application):
         ])
 
         self.aes = utils.AESCipher(key=self.config.system.secret)
+        self.logtrace = log_trace.LogTrace(redisconf)
 
         # cache event init
         dispatch.register(self.mcache)
+        # logtrace event init
+        dispatch.register(self.logtrace,check_exists=True)
 
         # app init_route
         load_handlers(handler_path=os.path.join(os.path.abspath(os.path.dirname(__file__))),

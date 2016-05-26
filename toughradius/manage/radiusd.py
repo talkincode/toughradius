@@ -21,6 +21,7 @@ from txradius.radius import packet
 from txradius.radius.packet import PacketError
 from txradius import message
 from toughlib.utils import timecast
+from toughradius.common import log_trace
 from toughradius.manage import models
 from toughradius.manage.settings import *
 from toughradius.manage.radius.plugins import mac_parse,vlan_parse, rate_process
@@ -323,9 +324,10 @@ def run_acct(config):
 
 def run_worker(config,dbengine,**kwargs):
     _cache = kwargs.pop("cache",CacheManager(redis_conf(config),cache_name='RadiusWorkerCache-%s'%os.getpid()))
-    _cache.print_hit_stat(60)
+    _cache.print_hit_stat(120)
     # app event init
     if not kwargs.get('standalone'):
+        dispatch.register(log_trace.LogTrace(redis_conf(config)),check_exists=True)
         event_params= dict(dbengine=dbengine, mcache=_cache, aes=kwargs.pop('aes',None))
         event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
         dispatch.load_events(event_path,"toughradius.manage.events",event_params=event_params)

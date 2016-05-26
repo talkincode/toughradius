@@ -22,7 +22,7 @@ class AccountExpireNotifyEvent(BasicEvent):
     SMS_APIURL = "%s/sendsms"%toughcloud.apiurl
 
     def event_webhook_account_expire(self, userinfo):
-        """ web钩子触发通知，参数通过url传递 """
+        """webhook notify event """
         notify_url = self.get_param_value("expire_notify_url")
         if not notify_url:
             return
@@ -37,7 +37,7 @@ class AccountExpireNotifyEvent(BasicEvent):
         return httpclient.fetch(url).addCallbacks(lambda r: logger.info(r.body),logger.exception)
 
     def event_toughcloud_sms_account_expire(self, userinfo):
-        """ 硬派云短信API通知 """
+        """ toughcloud sms api notify event"""
         api_secret = self.get_param_value("toughcloud_api_secret","")
         if not userinfo:
             return
@@ -58,7 +58,7 @@ class AccountExpireNotifyEvent(BasicEvent):
         return d
 
     def event_toughcloud_mail_account_expire(self, userinfo):
-        """ 硬派云邮件API通知 """
+        """ toughcloud mail api notify event """
         api_secret = self.get_param_value("toughcloud_api_secret","")
         if not userinfo:
             return
