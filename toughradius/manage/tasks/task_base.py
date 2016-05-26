@@ -25,7 +25,7 @@ class TaseBasic(object):
     def get_param_value(self, name, defval=None):
         with make_db(self.db) as conn:
             val = self.db.query(models.TrParam.param_value).filter_by(param_name = name).scalar()
-            return val if valis is not None else defval
+            return val if val is not None else defval
 
     def format_time(self,times):
         if times <= 60:
