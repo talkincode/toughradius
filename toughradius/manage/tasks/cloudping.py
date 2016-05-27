@@ -23,7 +23,7 @@ class ToughCloudPingTask(TaseBasic):
         TaseBasic.__init__(self,taskd, **kwargs)      
 
     def get_notify_interval(self):
-        return 5
+        return 180
 
     def first_delay(self):
         return self.get_notify_interval()
