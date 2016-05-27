@@ -3,17 +3,19 @@ import sys,os,time,datetime
 sys.path.insert(0,os.path.dirname(__file__))
 from fabric.api import *
 from toughradius import __version__
+import datetime 
 
 # --------------------------- remote deploy--------------------------
 
 env.user = 'root'
 env.hosts = ['121.201.15.99']
+currtime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def push():
     message = raw_input("commit msg:")
     local("git add .")
     try:
-        local("git commit -m \'%s:%s\'"%(__version__,message))
+        local("git commit -m \'%s %s: %s\'"%(__version__, currtime, message))
     except:
         print 'no commit'
     local("git push origin master")

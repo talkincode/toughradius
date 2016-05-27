@@ -76,7 +76,7 @@ QQ交流群组: 464025428，247860313 (使用交流)，487229323 (开发交流)
 
 通常按照 TOUGHRADIUS 遵循的 AGPL 协议 使用 TOUGHRADIUS，无需为此支付费用，TOUGHRADIUS 同时提供了一份 [《商业授权》](https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
 
-官方支持网站：http://www.toughstruct.com
+官方支持网站：https://www.toughstruct.com
 
 
 
