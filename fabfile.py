@@ -15,7 +15,7 @@ def push():
     message = raw_input("commit msg:")
     local("git add .")
     try:
-        local("git commit -m \'%s %s: %s\'"%(__version__, currtime, message))
+        local("git commit -m \'%s - %s: %s\'"%(__version__, currtime, message))
     except:
         print 'no commit'
     local("git push origin master")
