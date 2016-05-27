@@ -39,7 +39,7 @@ class ToughCloudPingTask(TaseBasic):
             resp = yield httpclient.fetch(api_url+"?"+param_str,followRedirect=True)
             logger.info("toughcloud ping resp code: %s"%resp.code)
             if resp.code == 200:
-                self.cache.set(toughcloud_ping_key,resp.body.expire=3600)
+                self.cache.set(toughcloud_ping_key,resp.body,expire=3600)
         except Exception as err:
             logger.error(err)
         defer.returnValue(next_interval)

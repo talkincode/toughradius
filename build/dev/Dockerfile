@@ -11,7 +11,7 @@ RUN git clone -b release-dev https://github.com/talkincode/ToughRADIUS.git /opt/
     ln -s /opt/toughradius/build/dev/supervisord.conf /etc/supervisord.conf && \
     chmod +x /opt/toughradius/radiusctl 
     
-RUN wget http://qnstatic.toughcloud.net/toughkey_linux_x86_64 -O /usr/local/bin/toughkey && \
+RUN wget http://qnstatic.toughcloud.net/toughkey_linux64 -O /usr/local/bin/toughkey && \
     chmod +x /usr/local/bin/toughkey
 
 ADD entrypoint.sh /usr/local/bin/entrypoint.sh
