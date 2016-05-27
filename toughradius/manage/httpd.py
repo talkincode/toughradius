@@ -68,6 +68,7 @@ class HttpServer(cyclone.web.Application):
         self.aes = utils.AESCipher(key=self.config.system.secret)
         self.logtrace = log_trace.LogTrace(redisconf)
 
+        logger.info("start register httpd events")
         # cache event init
         dispatch.register(self.mcache)
         # logtrace event init

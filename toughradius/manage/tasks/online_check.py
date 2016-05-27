@@ -39,10 +39,10 @@ class OnlineCheckTask(TaseBasic):
                             online.account_number,
                             online.nas_addr, 
                             online.acct_session_id,async=True)
-                logger.info("online overtime check task done")
+                logger.info("在线用户过期清理任务完成，下次执行还需等待一小时",trace="task")
             except Exception as err:
                 db.rollback()
-                logger.error('online overtime check job err,%s'%(str(err)))
+                logger.exception(err)
         
         return self.get_notify_interval()
 

@@ -180,7 +180,6 @@ def standalone(conf,debug,exitwith):
         config.defaults.debug = True
     dbengine = get_engine(config)
     cache = CacheManager(redis_conf(config),cache_name='RadiusCache')
-    dispatch.register(log_trace.LogTrace(redis_conf(config)),check_exists=True)
     aes = utils.AESCipher(key=config.system.secret)
     log = setup_logger(config)
     httpd.run(config,dbengine,cache=cache,aes=aes)

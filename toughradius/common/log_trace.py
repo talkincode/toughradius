@@ -3,6 +3,7 @@
 
 from toughlib import utils
 from toughlib import logger
+import logging
 try:
     import redis
 except:
@@ -11,8 +12,8 @@ except:
 
 class LogTrace(object):
 
-    radius_key = "toughradius.syslog.trace.radius.{0}".format,
-    trace_key = "toughradius.syslog.trace.{0}".format,
+    radius_key = "toughradius.syslog.trace.radius.{0}".format
+    trace_key = "toughradius.syslog.trace.{0}".format
 
     def __init__(self, cache_config,db=2):
         self.cache_config = cache_config
@@ -57,10 +58,12 @@ class LogTrace(object):
 
     def event_syslog_trace(self, name, message,**kwargs):
         """ syslog trace event """
+        message = u"%s - %s" % (utils.get_currtime(), message) 
         if name == 'radius' and 'username' in kwargs:
             self.trace_radius(kwargs['username'], message)
         else:
             self.trace_log(name, message)
+
 
 if __name__ == '__main__':
     pass

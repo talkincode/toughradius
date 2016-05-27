@@ -72,11 +72,12 @@ class ExpireNotifyTask(TaseBasic):
                     self.trigger_notify(userinfo)
 
                 logger.info(u"到期通知任务已执行(%s个已通知)。下次执行还需等待 %s"% (
-                    expire_query.count(),self.format_time(next_interval)) )
+                    expire_query.count(),self.format_time(next_interval)),trace="task")
                 
         except Exception as err:
-            logger.error(u"到期通知任务执行失败，%s。下次执行还需等待 %s"%(
-                        repr(err),self.format_time(next_interval)))
+            logger.info(u"到期通知任务执行失败，%s。下次执行还需等待 %s"%(
+                        repr(err),self.format_time(next_interval)),trace="task")
+            logger.exception(err)
 
         return next_interval
 

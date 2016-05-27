@@ -34,9 +34,9 @@ class BackupDataTask(TaseBasic):
         backup_file = "trdb_cron_backup_%s.json.gz" % utils.gen_backep_id()
         try:
             self.db_backup.dumpdb(os.path.join(backup_path, backup_file))
-            logger.info(u"数据备份完成,下次执行还需等待 %s"%(self.format_time(next_interval)) )
+            logger.info(u"数据备份完成,下次执行还需等待 %s"%(self.format_time(next_interval)),trace="task")
         except Exception as err:
-            logger.error(u"数据备份失败,%s, 下次执行还需等待 %s"%( repr(err), self.format_time(next_interval)) )
+            logger.info(u"数据备份失败,%s, 下次执行还需等待 %s"%( repr(err), self.format_time(next_interval)),trace="task")
             logger.exception(err)
 
         try:
@@ -50,7 +50,7 @@ class BackupDataTask(TaseBasic):
                         os.remove(fpath)
                         _count += 1
                         logger.info("remove expire backup file %s"%fpath)
-                logger.info("remove expire backup file total %s"%_count)
+                logger.info("remove expire backup file total %s"%_count,trace="task")
         except Exception as err:
             logger.exception(err)
             

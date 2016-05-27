@@ -66,6 +66,7 @@ rad_form = btforms.Form(
     btforms.Textbox("radius_acct_interim_intelval", rules.is_number, description=u"Radius记账间隔(秒)",help=u"radius向bas设备下发的全局记账间隔，bas不支持则不生效", **input_style),
     btforms.Textbox("radius_max_session_timeout", rules.is_number, description=u"Radius最大会话时长(秒)",help=u"用户在线达到最大会话时长时会自动断开", **input_style),
     btforms.Dropdown("radius_auth_auto_unlock", args=booleans.items(), description=u"并发自动解锁", help=u"如果账号被挂死，认证时自动踢下线",**input_style),
+    btforms.Dropdown("radius_user_trace", args=booleans.items(), description=u"开启用户消息跟踪", help=u"开启此项会记录用户最近认证消息，可用于跟踪用户故障，参考用户管理-用户账号诊断",**input_style),
     btforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
     title=u"参数配置管理",
     action="/admin/param/update?active=radcfg"

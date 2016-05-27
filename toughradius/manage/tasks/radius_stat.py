@@ -26,7 +26,7 @@ class RadiusStatTask(TaseBasic):
         self.statdata = statistics.MessageStat()
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-stat-task'))
         self.puller.onPull = self.update_stat
-        logger.info("init Radius stat puller : %s " % ( self.puller))
+        logger.info("init Radius stat task puller : %s " % ( self.puller))
 
     def update_stat(self, message):
         statattrs = msgpack.unpackb(message[0])
@@ -42,7 +42,7 @@ class RadiusStatTask(TaseBasic):
             else:
                 self.cache.set(radius_statcache_key,self.statdata)
         except Exception as err:
-            logger.error('radius stat process error %s' % utils.safeunicode(err.message))
+            logger.exception(err)
 
         return self.get_notify_interval()
 

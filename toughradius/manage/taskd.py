@@ -33,6 +33,7 @@ class TaskDaemon():
         self.taskclss = []
         self.load_tasks()
         if not kwargs.get('standalone'):
+            logger.info("start register taskd events")
             dispatch.register(log_trace.LogTrace(redis_conf(config)),check_exists=True)
             event_params= dict(dbengine=self.db_engine, mcache=self.cache,aes=self.aes)
             event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
@@ -70,5 +71,5 @@ class TaskDaemon():
 
 
 def run(config, dbengine=None,**kwargs):
-    app = TaskDaemon(config, dbengine)
+    app = TaskDaemon(config, dbengine,**kwargs)
     app.start()

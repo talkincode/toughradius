@@ -104,6 +104,7 @@ def push_stable():
     local("git checkout master")
 
 def all():
+    os.environ['XDEBUG'] = 'true'
     local("venv/bin/python radiusctl standalone -c ~/toughradius_test.json")
 
 
