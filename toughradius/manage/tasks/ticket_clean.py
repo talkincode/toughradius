@@ -38,7 +38,7 @@ class ClearTicketTask(TaseBasic):
                 db.commit()
                 logger.info(u"上网数据清理完成,下次执行还需等待 %s"%(self.format_time(next_interval)),trace="task")
             except:
-                logger.error(u"上网数据清理失败,%s, 下次执行还需等待 %s"%(
+                logger.info(u"上网数据清理失败,%s, 下次执行还需等待 %s"%(
                     repr(err), self.format_time(next_interval)) ,trace="task")
                 logger.exception(err)
 

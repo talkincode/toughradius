@@ -13,8 +13,9 @@ class TaseBasic(object):
         self.time_count = 1
 
     def logtimes(self):
-        logger.info(u"%s task execute times : %s"%(self.__name__, self.time_count))
-        self.time_count += 1
+        if self.config.system.debug:
+            logger.debug(u"%s task execute times : %s"%(self.__name__, self.time_count))
+            self.time_count += 1
 
     def get_notify_interval(self):
         return 10
