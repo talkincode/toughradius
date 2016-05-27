@@ -45,7 +45,7 @@ class OnlineStatTask(TaseBasic):
                 logger.info("online stat task done")
             except Exception as err:
                 db.rollback()
-                logger.error('online_stat_job err,%s'%(str(err)))
+                logger.exception(err)
         
         return self.get_notify_interval()
 

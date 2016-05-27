@@ -49,7 +49,7 @@ class BackupDataTask(TaseBasic):
                     if (time.time() - os.path.getctime(fpath))/(3600*24)  > 14:
                         os.remove(fpath)
                         _count += 1
-                        logger.info("remove expire backup file %s"%fpath)
+                        logger.debug("remove expire backup file %s"%fpath)
                 logger.info("remove expire backup file total %s"%_count,trace="task")
         except Exception as err:
             logger.exception(err)
