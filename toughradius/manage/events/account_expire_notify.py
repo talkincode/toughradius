@@ -48,7 +48,7 @@ class AccountExpireNotifyEvent(BasicEvent):
         api_secret = self.get_param_value("toughcloud_license")
         api_token = yield tools.get_sys_token()
         params = dict(
-            token=api_token,
+            token=api_token.strip(),
             tplname=self.SMS_TPLNAME,
             customer=utils.safestr(userinfo.realname),
             username=userinfo.account_number,
@@ -58,7 +58,7 @@ class AccountExpireNotifyEvent(BasicEvent):
             service_mail=self.get_param_value("service_mail",''),
             nonce = str(int(time.time()))
         )
-        params['sign'] = apiutils.make_sign(api_secret, params.values())
+        params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())
         try:
             resp = yield httpclient.fetch(self.SMS_APIURL, postdata=urlencode(params))
             logger.info(resp.body)
@@ -75,7 +75,7 @@ class AccountExpireNotifyEvent(BasicEvent):
         api_secret = self.get_param_value("toughcloud_license")
         api_token = yield tools.get_sys_token()
         params = dict(
-            token=api_token,
+            token=api_token.strip(),
             mailto=userinfo.email,
             tplname=self.MAIL_TPLNAME,
             customer=utils.safestr(userinfo.realname),
@@ -86,7 +86,7 @@ class AccountExpireNotifyEvent(BasicEvent):
             service_mail=self.get_param_value("service_mail",''),
             nonce = str(int(time.time()))
         )
-        params['sign'] = apiutils.make_sign(api_secret, params.values())
+        params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())
         try:
             resp = yield httpclient.fetch(self.MAIL_APIURL, postdata=urlencode(params))
             logger.info(resp.body)
