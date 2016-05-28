@@ -30,7 +30,7 @@ class AccountExpireNotifyEvent(BasicEvent):
         if not notify_url:
             return
         url = notify_url.replace('{account}',userinfo.account_number)
-        url = url.replace('{customer}',utils.safestr(userinfo.customer))
+        url = url.replace('{customer}',utils.safestr(userinfo.realname))
         url = url.replace('{expire}',userinfo.expire_date)
         url = url.replace('{email}',userinfo.email)
         url = url.replace('{mobile}',userinfo.mobile)
