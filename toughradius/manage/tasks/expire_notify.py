@@ -59,6 +59,7 @@ class ExpireNotifyTask(TaseBasic):
                     models.TrCustomer.mobile,
                     models.TrCustomer.realname,
                     models.TrProduct.product_name,
+                    models.TrProduct.email,
                     models.TrAccount.account_number,
                     models.TrAccount.install_address,
                     models.TrAccount.expire_date,
