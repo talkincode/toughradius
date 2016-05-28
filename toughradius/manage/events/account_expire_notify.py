@@ -82,8 +82,8 @@ class AccountExpireNotifyEvent(BasicEvent):
             username=userinfo.account_number,
             product=utils.safestr(userinfo.product_name),
             expire=userinfo.expire_date,
-            service_call=self.get_param_value("service_call",''),
-            service_mail=self.get_param_value("service_mail",''),
+            service_call=self.get_param_value("smtp_from",''),
+            service_mail=self.get_param_value("smtp_from",''),
             nonce = str(int(time.time()))
         )
         params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())

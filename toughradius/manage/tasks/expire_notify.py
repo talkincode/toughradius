@@ -15,15 +15,14 @@ class ExpireNotifyTask(TaseBasic):
     __name__ = 'expire-notify'
 
     def get_notify_interval(self):
-        return 10
-        # try:
-        #     notify_interval = int(self.get_param_value("mail_notify_interval",1440)) * 60.0
-        #     notify_time = self.get_param_value("mail_notify_time", None)
-        #     if notify_time:
-        #         notify_interval = utils.get_cron_interval(notify_time)
-        #     return notify_interval
-        # except:
-        #     return 120
+        try:
+            notify_interval = int(self.get_param_value("mail_notify_interval",1440)) * 60.0
+            notify_time = self.get_param_value("mail_notify_time", None)
+            if notify_time:
+                notify_interval = utils.get_cron_interval(notify_time)
+            return notify_interval
+        except:
+            return 120
 
     def first_delay(self):
         return self.get_notify_interval()
