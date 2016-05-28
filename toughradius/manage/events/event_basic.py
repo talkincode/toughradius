@@ -28,6 +28,7 @@ class BasicEvent:
             return db.query(
                 models.TrCustomer.mobile,
                 models.TrCustomer.realname,
+                models.TrCustomer.email,
                 models.TrProduct.product_name,
                 models.TrAccount.account_number,
                 models.TrAccount.install_address,

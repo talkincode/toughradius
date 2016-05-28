@@ -6,7 +6,6 @@ import time
 import datetime
 from urllib import urlencode
 from toughlib import utils
-from twisted.internet import utils as txutils
 from twisted.internet import defer
 from cyclone import httpclient
 from toughlib import dispatch,logger
@@ -33,9 +32,8 @@ class ToughCloudPingTask(TaseBasic):
         next_interval = self.get_notify_interval()
         try:
             api_url = "https://www.toughcloud.net/api/v1/ping"
-            api_token = yield txutils.getProcessOutput("/usr/local/bin/toughkey")
-            sid = tools.get_sys_uuid()
-            param_str = urlencode({'token':api_token,'sid':sid})
+            api_token = yield tools.get_sys_token()
+            param_str = urlencode({'token':api_token})
             resp = yield httpclient.fetch(api_url+"?"+param_str,followRedirect=True)
             logger.info("toughcloud ping resp code: %s"%resp.code)
             if resp.code == 200:

@@ -10,7 +10,7 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 # ToughCloud 定义
 
 TOUGHCLOUD = Storage(
-    apiurl = "http://www.toughcloud.net/api/v1"
+    apiurl = "https://www.toughcloud.net/api/v1"
 )
 
 

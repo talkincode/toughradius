@@ -15,31 +15,34 @@ class ExpireNotifyTask(TaseBasic):
     __name__ = 'expire-notify'
 
     def get_notify_interval(self):
-        try:
-            notify_interval = int(self.get_param_value("mail_notify_interval",1440)) * 60.0
-            notify_time = self.get_param_value("mail_notify_time", None)
-            if notify_time:
-                notify_interval = utils.get_cron_interval(notify_time)
-            return notify_interval
-        except:
-            return 120
+        return 10
+        # try:
+        #     notify_interval = int(self.get_param_value("mail_notify_interval",1440)) * 60.0
+        #     notify_time = self.get_param_value("mail_notify_time", None)
+        #     if notify_time:
+        #         notify_interval = utils.get_cron_interval(notify_time)
+        #     return notify_interval
+        # except:
+        #     return 120
 
     def first_delay(self):
         return self.get_notify_interval()
 
     def trigger_notify(self,userinfo):
+        if int(self.get_param_value("webhook_notify_enable",0)) > 0:
+            dispatch.pub('webhook_account_expire',userinfo, async=False)
+
         if int(self.get_param_value("mail_notify_enable",0)) > 0:
             if self.get_param_value("mail_mode",'smtp') == 'toughcloud' and \
-                self.get_param_value("toughcloud_api_token",None):
+                self.get_param_value("toughcloud_license",None):
                 dispatch.pub('toughcloud_mail_account_expire',userinfo, async=False)
             else:
                 dispatch.pub('smtp_account_expire',userinfo, async=False)
 
-        if int(self.get_param_value("sms_notify_enable",0)) > 0:
+        if int(self.get_param_value("sms_notify_enable",0)) > 0 and \
+                self.get_param_value("toughcloud_license",None):
             dispatch.pub('toughcloud_sms_account_expire',userinfo, async=False)
 
-        if int(self.get_param_value("webhook_notify_enable",0)) > 0:
-            dispatch.pub('webhook_account_expire',userinfo, async=False)
 
     def process(self, *args, **kwargs):
         self.logtimes()
