@@ -73,6 +73,9 @@ class AccountExpireNotifyEvent(BasicEvent):
             return
 
         api_secret = self.get_param_value("toughcloud_license")
+        service_mail=self.get_param_value("toughcloud_service_mail")
+        if not service_mail:
+            return
         api_token = yield tools.get_sys_token()
         params = dict(
             token=api_token.strip(),
@@ -82,8 +85,8 @@ class AccountExpireNotifyEvent(BasicEvent):
             username=userinfo.account_number,
             product=utils.safestr(userinfo.product_name),
             expire=userinfo.expire_date,
-            service_call=self.get_param_value("smtp_from",''),
-            service_mail=self.get_param_value("smtp_from",''),
+            service_call=self.get_param_value("toughcloud_service_call",''),
+            service_mail=service_mail,
             nonce = str(int(time.time()))
         )
         params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())

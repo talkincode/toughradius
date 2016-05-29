@@ -236,10 +236,8 @@ $(document).ready(function () {
                     <td>${current_user.login_time}</td>
                 </tr>
                 <tr>
-                    <td>登录IP地址</td>
+                    <td colspan="2">登录IP地址</td>
                     <td>${current_user.ipaddr or ''}</td>
-                    <td>系统版本</td>
-                    <td>${sys_version or '1.0'}</td>
                 </tr>
                 </tbody>
                 <thead>
@@ -248,6 +246,12 @@ $(document).ready(function () {
                 </tr>
                 </thead>
                 <tbody>
+                <tr>
+                    <td>系统版本</td>
+                    <td>${sys_version or '1.0'}</td>
+                    <td>SID</td>
+                    <td>${sys_uuid}</td>
+                </tr>
                 <tr>
                     <td width=15% >cpu使用率</td>
                     <td width=35% class="break-all">${'; '.join([ 'cpu%s: %s/%%'%(cpuuse.index(c),c)  for c in cpuuse])}</td>
