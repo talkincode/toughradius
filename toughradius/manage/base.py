@@ -31,6 +31,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.cache = self.application.mcache
         self.db_backup = self.application.db_backup
         self.session = redis_session.Session(self.application.session_manager, self)
+        self.logtrace = self.application.logtrace
 
     def check_xsrf_cookie(self):
         if self.settings.config.system.get('production'):
@@ -45,7 +46,13 @@ class BaseHandler(cyclone.web.RequestHandler):
         
     def get_error_html(self, status_code=500, **kwargs):
         try:
-            # logger.error("HTTPError : [status_code:{0}], {1}".format(status_code, repr(kwargs)))
+            if 'exception' in kwargs:
+                failure = kwargs.get("exception")
+                logger.exception(failure.getTraceback())
+                if os.environ.get("XDEBUG"):
+                    from mako import exceptions
+                    return  exceptions.html_error_template().render(traceback=failure.getTracebackObject())
+                    
             if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
@@ -58,8 +65,7 @@ class BaseHandler(cyclone.web.RequestHandler):
             else:
                 return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
         except:
-            import traceback
-            traceback.print_exc()
+            logger.exception(err)
             return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
     def render(self, template_name, **template_vars):
@@ -236,7 +242,7 @@ def authenticated(method):
                         next_url = self.request.full_url()
                     else:
                         next_url = self.request.uri
-                    url += "?" + urlencode(dict(next=next_url))
+                    url += "?" + urllib.urlencode(dict(next=next_url))
                 self.redirect(url)
                 return
             return self.render_error(msg=u"未授权的访问")

@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 #coding:utf-8
+import os
 import time
 import datetime
+from urllib import urlencode
 from cyclone import httpclient
 from toughlib import utils,dispatch,logger
 from toughlib import apiutils
+from twisted.internet import reactor,defer
 from toughradius.manage.events.event_basic import BasicEvent
 from toughradius.manage.settings import TOUGHCLOUD as toughcloud
 from toughradius.common import tools
@@ -22,12 +25,12 @@ class AccountExpireNotifyEvent(BasicEvent):
     SMS_APIURL = "%s/sendsms"%toughcloud.apiurl
 
     def event_webhook_account_expire(self, userinfo):
-        """ web钩子触发通知，参数通过url传递 """
+        """webhook notify event """
         notify_url = self.get_param_value("expire_notify_url")
         if not notify_url:
             return
         url = notify_url.replace('{account}',userinfo.account_number)
-        url = url.replace('{customer}',utils.safestr(userinfo.customer))
+        url = url.replace('{customer}',utils.safestr(userinfo.realname))
         url = url.replace('{expire}',userinfo.expire_date)
         url = url.replace('{email}',userinfo.email)
         url = url.replace('{mobile}',userinfo.mobile)
@@ -36,13 +39,16 @@ class AccountExpireNotifyEvent(BasicEvent):
         url = quote(url,":?=/&")
         return httpclient.fetch(url).addCallbacks(lambda r: logger.info(r.body),logger.exception)
 
+    @defer.inlineCallbacks
     def event_toughcloud_sms_account_expire(self, userinfo):
-        """ 硬派云短信API通知 """
-        api_secret = self.get_param_value("toughcloud_api_secret","")
+        """ toughcloud sms api notify event """
         if not userinfo:
             return
+
+        api_secret = self.get_param_value("toughcloud_license")
+        api_token = yield tools.get_sys_token()
         params = dict(
-            sid=tools.get_sys_uuid(),
+            token=api_token.strip(),
             tplname=self.SMS_TPLNAME,
             customer=utils.safestr(userinfo.realname),
             username=userinfo.account_number,
@@ -52,34 +58,47 @@ class AccountExpireNotifyEvent(BasicEvent):
             service_mail=self.get_param_value("service_mail",''),
             nonce = str(int(time.time()))
         )
-        params['sign'] = apiutils.make_sign(api_secret, params.values())
-        d = httpclient.fetch(self.SMS_APIURL, postdata=urlencode(params))
-        d.addCallback(lambda r:logger.info(r.body)).addErrback(logger.exception)
-        return d
+        params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())
+        try:
+            resp = yield httpclient.fetch(self.SMS_APIURL, postdata=urlencode(params))
+            logger.info(resp.body)
+        except Exception as err:
+            logger.exception(err)
 
+
+    @defer.inlineCallbacks
     def event_toughcloud_mail_account_expire(self, userinfo):
-        """ 硬派云邮件API通知 """
-        api_secret = self.get_param_value("toughcloud_api_secret","")
+        """ toughcloud mail api notify event """
         if not userinfo:
             return
+
+        api_secret = self.get_param_value("toughcloud_license")
+        service_mail=self.get_param_value("toughcloud_service_mail")
+        if not service_mail:
+            return
+        api_token = yield tools.get_sys_token()
         params = dict(
-            sid=tools.get_sys_uuid(),
+            token=api_token.strip(),
+            mailto=userinfo.email,
             tplname=self.MAIL_TPLNAME,
             customer=utils.safestr(userinfo.realname),
             username=userinfo.account_number,
             product=utils.safestr(userinfo.product_name),
             expire=userinfo.expire_date,
-            service_call=self.get_param_value("service_call",''),
-            service_mail=self.get_param_value("service_mail",''),
+            service_call=self.get_param_value("toughcloud_service_call",''),
+            service_mail=service_mail,
             nonce = str(int(time.time()))
         )
-        params['sign'] = apiutils.make_sign(api_secret, params.values())
-        d = httpclient.fetch(self.MAIL_APIURL, postdata=urlencode(params))
-        d.addCallback(lambda r:logger.info(r.body)).addErrback(logger.exception)
-        return d
+        params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())
+        try:
+            resp = yield httpclient.fetch(self.MAIL_APIURL, postdata=urlencode(params))
+            logger.info(resp.body)
+        except Exception as err:
+            logger.exception(err)
+
 
     def event_smtp_account_expire(self, userinfo):
-        self.get_param_value("smtp_notify_tpl")
+        notify_tpl = self.get_param_value("smtp_notify_tpl")
         ctx = notify_tpl.replace('#account#',userinfo.account_number)
         ctx = ctx.replace('#expire#',userinfo.expire_date)
         topic = ctx[:ctx.find('\n')]
@@ -94,7 +113,7 @@ class AccountExpireNotifyEvent(BasicEvent):
                 port=smtp_port,
                 user=smtp_user, 
                 password=smtp_pwd, 
-                from_addr=from_addr, mailto=mailto, 
+                from_addr=from_addr, mailto=userinfo.email, 
                 topic=utils.safeunicode(topic), 
                 content=utils.safeunicode(ctx),
                 tls=False)

@@ -10,7 +10,7 @@ decimal.getcontext().rounding = decimal.ROUND_UP
 # ToughCloud 定义
 
 TOUGHCLOUD = Storage(
-    apiurl = "http://www.toughcloud.net/api/v1"
+    apiurl = "https://www.toughcloud.net/api/v1"
 )
 
 
@@ -83,6 +83,7 @@ product_cache_key = 'toughradius.cache.product.{0}'.format
 product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
 bas_cache_key = 'toughradius.cache.bas.{0}'.format
 radius_statcache_key = 'toughradius.cache.radius.stat'
+toughcloud_ping_key = 'toughradius.cache.toughcloud.ping'
 
 # exit_signal defined
 signal_worker_exit = "signal_tr_rad_worker_exit"

@@ -13,8 +13,9 @@ class TaseBasic(object):
         self.time_count = 1
 
     def logtimes(self):
-        logger.info(u"%s task execute times : %s"%(self.__name__, self.time_count))
-        self.time_count += 1
+        if self.config.system.debug:
+            logger.debug(u"%s task execute times : %s"%(self.__name__, self.time_count))
+            self.time_count += 1
 
     def get_notify_interval(self):
         return 10
@@ -25,7 +26,7 @@ class TaseBasic(object):
     def get_param_value(self, name, defval=None):
         with make_db(self.db) as conn:
             val = self.db.query(models.TrParam.param_value).filter_by(param_name = name).scalar()
-            return val if valis is not None else defval
+            return val if val is not None else defval
 
     def format_time(self,times):
         if times <= 60:

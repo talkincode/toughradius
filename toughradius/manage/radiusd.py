@@ -21,6 +21,7 @@ from txradius.radius import packet
 from txradius.radius.packet import PacketError
 from txradius import message
 from toughlib.utils import timecast
+from toughradius.common import log_trace
 from toughradius.manage import models
 from toughradius.manage.settings import *
 from toughradius.manage.radius.plugins import mac_parse,vlan_parse, rate_process
@@ -30,6 +31,14 @@ from toughradius.manage.radius.radius_acct_update import RadiusAcctUpdate
 from toughradius.manage.radius.radius_acct_stop import RadiusAcctStop
 from toughradius.manage.radius.radius_acct_onoff import RadiusAcctOnoff
 
+class RadiusError(BaseException):
+    
+    def __init__(self,error,message,*args,**kwargs):
+        self.error = error 
+        self.message = message
+
+    def __str__(self):
+        return "<RadiusError> %s %s" % (repr(self.error),repr(self.message))
 
 
 class RADIUSMaster(protocol.DatagramProtocol):
@@ -51,7 +60,43 @@ class RADIUSMaster(protocol.DatagramProtocol):
         data, host, port = msgpack.unpackb(result[0])
         self.transport.write(data, (host, int(port)))
 
-class RADIUSAuthWorker(protocol.DatagramProtocol):
+class TraceMix:
+
+    def is_trace_on(self):
+        def fetch_result():
+            table = models.TrParam.__table__
+            with self.db_engine.begin() as conn:
+                r = conn.execute(table.select().where(table.c.param_name=="radius_user_trace")).first()
+                return r and r.param_value or None
+        return int(self.mcache.aget(param_cache_key("radius_user_trace"),fetch_result, expire=3600))
+
+    def user_exists(self,username):
+        def fetch_result():
+            table = models.TrAccount.__table__
+            with self.db_engine.begin() as conn:
+                val = conn.execute(table.select().where(
+                    table.c.account_number==username)).first()
+                return val and Storage(val.items()) or None
+        return self.mcache.aget(account_cache_key(username),fetch_result, expire=3600) is not None
+
+    def log_trace(self,host,port,req,reply=None):
+        if not self.is_trace_on():
+            return
+        if not self.user_exists(req.get_user_name()):
+            return
+        try:
+            if reply is None:
+                msg = message.format_packet_log(req)
+                logger.info(u"Radius请求来自 Nas(%s:%s)  %s"%(host,port,utils.safeunicode(msg)),
+                trace="radius",username=req.get_user_name())
+            else:
+                msg = message.format_packet_log(reply)
+                logger.info(u"Radius响应至 Nas(%s:%s)  %s"%(host,port,utils.safeunicode(msg)),
+                trace="radius",username=req.get_user_name())
+        except Exception as err:
+            logger.exception(err)
+
+class RADIUSAuthWorker(protocol.DatagramProtocol,TraceMix):
 
     def __init__(self, config, dbengine, radcache=None):
         self.config = config
@@ -121,12 +166,7 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
             req = self.createAuthPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
-            # if 'trbtest' in req.get_user_name():
-            #     reply = req.CreateReply()
-            #     reply.vendor_id = req.vendor_id
-            #     reply['Reply-Message'] = 'trbtest success!'
-            #     reply.code = packet.AccessAccept
-            #     return reply
+            self.log_trace(host,port,req)
 
             self.do_stat(req.code)
 
@@ -154,6 +194,7 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
             if auth_resp['code'] > 0:
                 reply['Reply-Message'] = auth_resp['msg']
                 reply.code = packet.AccessReject
+                self.log_trace(host,port,req,reply)
                 return reply
 
             if 'bypass' in auth_resp and int(auth_resp['bypass']) == 0:
@@ -164,6 +205,7 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
             if not is_pwd_ok:
                 reply['Reply-Message'] =  "password not match"
                 reply.code = packet.AccessReject
+                self.log_trace(host,port,req,reply)
                 return reply
             else:
                 if u"input_rate" in auth_resp and u"output_rate" in auth_resp:
@@ -178,7 +220,7 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
                     except Exception as err:
                         errstr = "RadiusError:current radius cannot support attribute {0},{1}".format(
                             attr_name,utils.safestr(err.message))
-                        logger.error(errstr)
+                        logger.error(RadiusError(err,errstr))
 
                 for attr, attr_val in req.resp_attrs.iteritems():
                     reply[attr] = attr_val
@@ -187,18 +229,15 @@ class RADIUSAuthWorker(protocol.DatagramProtocol):
             reply.code = packet.AccessAccept
             if not req.VerifyReply(reply):
                 raise PacketError('VerifyReply error')
+            self.log_trace(host,port,req,reply)
             return reply
         except Exception as err:
             self.do_stat(0)
-            errstr = 'RadiusError:Dropping invalid auth packet from {0} {1},{2}'.format(
-                host, port, utils.safeunicode(err))
-            logger.error(errstr)
-            import traceback
-            traceback.print_exc()
+            logger.exception(err)
 
 
 
-class RADIUSAcctWorker:
+class RADIUSAcctWorker(TraceMix):
 
     def __init__(self, config, dbengine,radcache=None):
         self.config = config
@@ -276,6 +315,7 @@ class RADIUSAcctWorker:
             req = self.createAcctPacket(packet=datagram, 
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
+            self.log_trace(host,port,req)
             self.do_stat(req.code, req.get_acct_status_type())
 
             logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
@@ -289,6 +329,7 @@ class RADIUSAcctWorker:
                 raise PacketError('VerifyAcctRequest error')
 
             reply = req.CreateReply()
+            self.log_trace(host,port,req,reply)
             self.pusher.push(msgpack.packb([reply.ReplyPacket(),host,port]))
             self.do_stat(reply.code)
             logger.info("[Radiusd] :: Send radius response: %s" % repr(reply))
@@ -307,11 +348,8 @@ class RADIUSAcctWorker:
                 logger.error('status_type <%s> not support' % status_type)
         except Exception as err:
             self.do_stat(0)
-            errstr = 'RadiusError:Dropping invalid acct packet from {0} {1},{2}'.format(
-                host, port, utils.safeunicode(err))
-            logger.error(errstr)
-            import traceback
-            traceback.print_exc()
+            logger.exception(error)
+
 
 def run_auth(config):
     auth_protocol = RADIUSMaster(config, service='auth')
@@ -323,9 +361,11 @@ def run_acct(config):
 
 def run_worker(config,dbengine,**kwargs):
     _cache = kwargs.pop("cache",CacheManager(redis_conf(config),cache_name='RadiusWorkerCache-%s'%os.getpid()))
-    _cache.print_hit_stat(60)
+    _cache.print_hit_stat(120)
     # app event init
     if not kwargs.get('standalone'):
+        logger.info("start register radiusd events")
+        dispatch.register(log_trace.LogTrace(redis_conf(config)),check_exists=True)
         event_params= dict(dbengine=dbengine, mcache=_cache, aes=kwargs.pop('aes',None))
         event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
         dispatch.load_events(event_path,"toughradius.manage.events",event_params=event_params)

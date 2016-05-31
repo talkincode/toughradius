@@ -43,7 +43,7 @@ class DdnsUpdateTask(TaseBasic):
                         logger.info("domain {0} no ip address,{1}".format(nas.dns_name, repr(results)))
 
             except Exception as err:
-                logger.error('ddns process error %s' % utils.safeunicode(err.message))
+                logger.exception(err)
         defer.returnValue(self.get_notify_interval())
 
 

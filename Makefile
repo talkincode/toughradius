@@ -19,6 +19,8 @@ install-deps:
 	yum install -y mysql-devel MySQL-python redis;\
 	test -f /usr/local/bin/supervisord || ln -s `which supervisord` /usr/local/bin/supervisord;\
 	test -f /usr/local/bin/supervisorctl || ln -s `which supervisorctl` /usr/local/bin/supervisorctl;\
+	test -f /usr/local/bin/toughkey || wget http://qnstatic.toughcloud.net/toughkey_linux64 -O /usr/local/bin/toughkey;\
+	chmod +x /usr/local/bin/toughkey;\
 	)
 
 venv:

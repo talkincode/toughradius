@@ -28,18 +28,20 @@ class ExpireNotifyTask(TaseBasic):
         return self.get_notify_interval()
 
     def trigger_notify(self,userinfo):
+        if int(self.get_param_value("webhook_notify_enable",0)) > 0:
+            dispatch.pub('webhook_account_expire',userinfo, async=False)
+
         if int(self.get_param_value("mail_notify_enable",0)) > 0:
             if self.get_param_value("mail_mode",'smtp') == 'toughcloud' and \
-                self.get_param_value("toughcloud_api_token",None):
+                self.get_param_value("toughcloud_license",None):
                 dispatch.pub('toughcloud_mail_account_expire',userinfo, async=False)
             else:
                 dispatch.pub('smtp_account_expire',userinfo, async=False)
 
-        if int(self.get_param_value("sms_notify_enable",0)) > 0:
+        if int(self.get_param_value("sms_notify_enable",0)) > 0 and \
+                self.get_param_value("toughcloud_license",None):
             dispatch.pub('toughcloud_sms_account_expire',userinfo, async=False)
 
-        if int(self.get_param_value("webhook_notify_enable",0)) > 0:
-            dispatch.pub('webhook_account_expire',userinfo, async=False)
 
     def process(self, *args, **kwargs):
         self.logtimes()
@@ -55,6 +57,7 @@ class ExpireNotifyTask(TaseBasic):
                 expire_query =  db.query(
                     models.TrCustomer.mobile,
                     models.TrCustomer.realname,
+                    models.TrCustomer.email,
                     models.TrProduct.product_name,
                     models.TrAccount.account_number,
                     models.TrAccount.install_address,
@@ -72,11 +75,12 @@ class ExpireNotifyTask(TaseBasic):
                     self.trigger_notify(userinfo)
 
                 logger.info(u"到期通知任务已执行(%s个已通知)。下次执行还需等待 %s"% (
-                    expire_query.count(),self.format_time(next_interval)) )
+                    expire_query.count(),self.format_time(next_interval)),trace="task")
                 
         except Exception as err:
-            logger.error(u"到期通知任务执行失败，%s。下次执行还需等待 %s"%(
-                        repr(err),self.format_time(next_interval)))
+            logger.info(u"到期通知任务执行失败，%s。下次执行还需等待 %s"%(
+                        repr(err),self.format_time(next_interval)),trace="task")
+            logger.exception(err)
 
         return next_interval
 
