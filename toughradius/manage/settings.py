@@ -2,23 +2,30 @@
 #coding=utf-8
 
 import decimal,os
+from toughlib.storage import Storage
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP
 
+# ToughCloud 定义
 
+TOUGHCLOUD = Storage(
+    apiurl = "https://www.toughcloud.net/api/v1"
+)
+
+
+# 资费类型定义 预付费包月，预付费时长，买断包月，买断时长，预付费流量，买断流量，自由资费
 FEES = (PPMonth, PPTimes, BOMonth, BOTimes, PPFlow, BOFlows, FreeFee) = (0, 1, 2, 3, 4, 5, 6)
 
+# 账号状态 预授权，正常，停机，销户，过期
 ACCOUNT_STATUS = (UsrPreAuth, UsrNormal, UsrPause, UsrCancel, UsrExpire) = (0, 1, 2, 3, 4)
 
-CARD_STATUS = (CardInActive, CardActive, CardUsed, CardRecover) = (0, 1, 2, 3)
-
-CARD_TYPES = (ProductCard, BalanceCard) = (0, 1)
-
+# 自由资费类型 自由日期，自由流量，自由时长
 FREE_FEE_BILLS = (FreeFeeDate,FreeFeeFlow,FreeTimeLen) = (0,1,2)
-
+#自由资费ID
 FREE_FEE_PID = 1
 
+# Radius记账类型
 STAT_AUTH_ALL = 'STAT_AUTH_ALL'
 STAT_AUTH_ACCEPT = 'STAT_AUTH_ACCEPT'
 STAT_AUTH_REJECT = 'STAT_AUTH_REJECT'
@@ -32,6 +39,7 @@ STAT_ACCT_OFF = 'STAT_ACCT_OFF'
 STAT_ACCT_DROP = 'STAT_ACCT_DROP'
 STAT_ACCT_RETRY = 'STAT_ACCT_RETRY'
 
+# Radius 记账类型
 STATUS_TYPE_START   = 1
 STATUS_TYPE_STOP    = 2
 STATUS_TYPE_UPDATE  = 3
@@ -40,6 +48,8 @@ STATUS_TYPE_CHECK_ONLINE = 5
 STATUS_TYPE_ACCT_ON  = 7
 STATUS_TYPE_ACCT_OFF = 8
 
+
+# 业务受理类型
 ACCEPT_TYPES = {
     'open'  : u'开户',
     'pause' : u'停机',
@@ -50,6 +60,7 @@ ACCEPT_TYPES = {
     'change': u'变更'
 }
 
+# 管理菜单定义
 ADMIN_MENUS = (MenuSys, MenuRes, MenuUser, MenuOpt, MenuStat) = (
     u"系统管理", u"资源管理", u"用户管理", u"维护管理", u"统计分析")
 
@@ -61,8 +72,10 @@ MENU_ICONS = {
     u"统计分析": "fa fa-bar-chart"
 }
 
+# 用户最大过期时间定义
 MAX_EXPIRE_DATE = '3000-12-30'
 
+# 系统缓存名称定义
 param_cache_key = 'toughradius.cache.param.{0}'.format
 account_cache_key = 'toughradius.cache.account.{0}'.format
 account_attr_cache_key = 'toughradius.cache.account.attr.{0}.{1}'.format
@@ -70,9 +83,9 @@ product_cache_key = 'toughradius.cache.product.{0}'.format
 product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
 bas_cache_key = 'toughradius.cache.bas.{0}'.format
 radius_statcache_key = 'toughradius.cache.radius.stat'
+toughcloud_ping_key = 'toughradius.cache.toughcloud.ping'
 
 # exit_signal defined
-
 signal_worker_exit = "signal_tr_rad_worker_exit"
 signal_master_exit = "signal_tr_rad_master_exit"
 signal_manage_exit = "signal_tr_manage_exit"
@@ -80,6 +93,7 @@ signal_task_exit = "signal_tr_task_exit"
 
 signal_all_exit = (signal_worker_exit,signal_master_exit,signal_manage_exit,signal_task_exit)
 
+# redis配置定义
 def redis_conf(config):
     eredis_url = os.environ.get("REDIS_URL")
     eredis_port = os.environ.get("REDIS_PORT")
@@ -100,4 +114,9 @@ def redis_conf(config):
         config.save()
 
     return config['redis']
+
+
+
+
+
 

@@ -4,6 +4,21 @@
 <script src="/static/js/charttheme.js"></script>
 <script src="/static/js/exporting.js"></script>
 <script>
+
+function clean_cache() {
+    $.get("/admin/cache/clean", {}, function (data) {
+        alert(data.msg)
+        window.location.reload();
+    }, "json");
+}
+
+function clean_trace() {
+    $.get("/admin/trace/clean", {}, function (data) {
+        alert(data.msg)
+        window.location.reload();
+    }, "json");
+}
+
 function busy(flag) {
     if (flag) {
         $("#loading").show();
@@ -221,10 +236,8 @@ $(document).ready(function () {
                     <td>${current_user.login_time}</td>
                 </tr>
                 <tr>
-                    <td>登录IP地址</td>
+                    <td colspan="2">登录IP地址</td>
                     <td>${current_user.ipaddr or ''}</td>
-                    <td>系统版本</td>
-                    <td>${sys_version or '1.0'}</td>
                 </tr>
                 </tbody>
                 <thead>
@@ -234,13 +247,49 @@ $(document).ready(function () {
                 </thead>
                 <tbody>
                 <tr>
+                    <td>系统版本</td>
+                    <td>${sys_version or '1.0'}</td>
+                    <td>SID</td>
+                    <td>${sys_uuid}</td>
+                </tr>
+                <tr>
                     <td width=15% >cpu使用率</td>
                     <td width=35% class="break-all">${'; '.join([ 'cpu%s: %s/%%'%(cpuuse.index(c),c)  for c in cpuuse])}</td>
                     <td width=15% >内存使用率</td>
                     <td width=35% >${memuse.percent}% ;  ${int((memuse.total-memuse.available)/1024.0/1024.0)}MB / ${int(memuse.total/1024.0/1024.0)}MB</td>                    
                 </tr>
+                <tr>
+                    <td>磁盘使用率</td>
+                    <td colspan="3">${diskuse}</td>
+                </tr>
                 </tbody>
-
+                <thead>
+                <tr>
+                    <th colspan="4"> <i class="fa fa-hdd-o"></i>  缓存信息 </th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>缓存总数</td>
+                    <td>${handler.cache.count()} </td>
+                    <td>缓存命中率</td>
+                    <td>${cache_rate()} %  </td>
+                </tr>      
+                <tr>
+                    <td>系统消息缓存列表数</td>
+                    <td>${handler.logtrace.count()} </td>
+                    <td></td>
+                    <td></td>
+                </tr>     
+                % if current_user.opr_type == 0:           
+                <tr>
+                    <td colspan="4">
+                    <a href="javascript:clean_cache();" class="btn btn-sm btn-default"><i class="fa fa-refresh"></i> 刷新系统缓存</a> 
+                    <a href="javascript:clean_trace();" class="btn btn-sm btn-default"><i class="fa fa-refresh"></i> 刷新系统消息缓存</a>
+                    </td>
+                </tr>
+                % endif
+                </tbody>
             </table>
 
             <hr>
