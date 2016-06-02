@@ -54,4 +54,3 @@ radiusd_cnf.conf
 .tags_sorted_by_file
 toughradius_test.json
 .vscode
-fabfile.py
