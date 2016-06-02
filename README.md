@@ -71,7 +71,7 @@ Github 项目源码: https://github.com/talkincode/ToughRADIUS
 
 Github 文档源码: https://github.com/talkincode/ToughRADIUS-GitBook
 
-QQ交流群组: 464025428，247860313 (使用交流)，487229323 (开发交流)
+QQ交流群组: 247860313 (使用交流)，487229323 (开发交流)
 
 ## 商业支持
 
