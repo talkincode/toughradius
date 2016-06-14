@@ -10,6 +10,7 @@ from twisted.internet import defer
 from toughradius.manage.events.event_basic import BasicEvent
 from toughradius.manage.settings import TOUGHCLOUD as toughcloud
 from toughradius.common import tools
+from toughlib.mail import send_mail as sendmail
 
 
 class AccountOpenNotifyEvent(BasicEvent):
@@ -33,6 +34,7 @@ class AccountOpenNotifyEvent(BasicEvent):
         api_token = yield tools.get_sys_token()
         params = dict(
             token=api_token.strip(),
+            action='sms',
             tplname=self.SMS_TPLNAME,
             phone=userinfo.get('phone'),
             customer=utils.safestr(userinfo.get('realname')),
@@ -63,6 +65,7 @@ class AccountOpenNotifyEvent(BasicEvent):
             api_token = yield tools.get_sys_token()
             params = dict(
                 token=api_token.strip(),
+                action='email',
                 mailto=userinfo.get('email'),
                 tplname=self.MAIL_TPLNAME,
                 customer=utils.safestr(userinfo.get('realname')),
@@ -96,8 +99,9 @@ class AccountOpenNotifyEvent(BasicEvent):
         api_token = yield tools.get_sys_token()
         params = dict(
             token=api_token.strip(),
+            action='email',
             mailto=userinfo.get('email'),
-            tplname=self.MAIL_TPLNAME,
+            tplname=self.MAIL_TPLNAME_WITH_PASSWD,
             customer=utils.safestr(userinfo.get('realname')),
             username=userinfo.get('account_number'),
             product=utils.safestr(userinfo.get('product_name')),
@@ -114,6 +118,31 @@ class AccountOpenNotifyEvent(BasicEvent):
             logger.info('open account send email with password success')
         except Exception as err:
             logger.exception(err)
+
+    def event_smtp_account_open(self, userinfo):
+
+        tr_open_notify = u"""尊敬的 %customer% 您好：
+        欢迎使用产品 %product%, 您的账号已经开通，账号名是 %username%, 服务截止 %expire%。
+        如有疑问，请联系我们: %service_call%, %service_mail%"""
+        notify_tpl = self.get_param_value("smtp_notify_tpl")
+        ctx = notify_tpl.replace('#account#',userinfo.account_number)
+        ctx = ctx.replace('#expire#',userinfo.expire_date)
+        topic = ctx[:ctx.find('\n')]
+        smtp_server = self.get_param_value("smtp_server",'127.0.0.1')
+        from_addr = self.get_param_value("smtp_from")
+        smtp_port = int(self.get_param_value("smtp_port",25))
+        smtp_sender = self.get_param_value("smtp_sender",None)
+        smtp_user = self.get_param_value("smtp_user",None)
+        smtp_pwd = self.get_param_value("smtp_pwd",None)
+        return sendmail(
+                server=smtp_server,
+                port=smtp_port,
+                user=smtp_user,
+                password=smtp_pwd,
+                from_addr=from_addr, mailto=userinfo.email,
+                topic=utils.safeunicode(topic),
+                content=utils.safeunicode(ctx),
+                tls=False)
 
 
 def __call__(dbengine=None, mcache=None, **kwargs):
