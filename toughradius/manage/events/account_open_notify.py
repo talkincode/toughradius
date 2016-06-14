@@ -46,6 +46,7 @@ class AccountOpenNotifyEvent(BasicEvent):
         try:
             resp = yield httpclient.fetch(self.SMS_APIURL, postdata=urlencode(params))
             logger.info(resp.body)
+            logger.info('open account send short message success')
         except Exception as err:
             logger.exception(err)
 
@@ -75,6 +76,7 @@ class AccountOpenNotifyEvent(BasicEvent):
             params['sign'] = apiutils.make_sign(api_secret.strip(), params.values())
             resp = yield httpclient.fetch(self.MAIL_APIURL, postdata=urlencode(params))
             logger.info(resp.body)
+            logger.info('open account send email without password success')
         except Exception as err:
             logger.exception(err)
 
@@ -109,6 +111,7 @@ class AccountOpenNotifyEvent(BasicEvent):
         try:
             resp = yield httpclient.fetch(self.MAIL_APIURL, postdata=urlencode(params))
             logger.info(resp.body)
+            logger.info('open account send email with password success')
         except Exception as err:
             logger.exception(err)
 
