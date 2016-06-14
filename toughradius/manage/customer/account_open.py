@@ -14,9 +14,9 @@ from toughradius.manage.settings import *
 from toughradius.manage.events import settings
 from toughradius.manage.events.settings import ACCOUNT_OPEN_EVENT
 
-#@permit.route(r"/admin/account/open", u"用户开户",MenuUser, order=2.0000)
-class AccountOpentHandler(account.AccountHandler):
 
+# @permit.route(r"/admin/account/open", u"用户开户", MenuUser, order=2.0000)
+class AccountOpentHandler(account.AccountHandler):
     @cyclone.web.authenticated
     def get(self):
         customer_id = self.get_argument('customer_id')

@@ -13,10 +13,13 @@ from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughlib.permit import permit
 from toughlib import utils, dispatch
+from toughlib.btforms import rules
 from toughlib import redis_cache
+from toughradius.common.event_common import trigger_notify
 from toughradius.manage.settings import * 
 from toughradius.manage.events import settings
 from toughradius.manage.events.settings import ACCOUNT_OPEN_EVENT
+
 
 @permit.route(r"/admin/customer/open", u"用户快速开户",MenuUser, order=1.1000, is_menu=True)
 class CustomerOpenHandler(CustomerHandler):
@@ -54,7 +57,10 @@ class CustomerOpenHandler(CustomerHandler):
         customer.idcard = form.d.idcard
         customer.sex = '1'
         customer.age = '0'
-        customer.email = ''
+        if form.d.email and rules.is_email.valid(form.d.email):
+            customer.email = form.d.email
+        else:
+            customer.email = ''
         customer.mobile = form.d.mobile
         customer.address = form.d.address
         customer.create_time = utils.get_currtime()
@@ -137,8 +143,20 @@ class CustomerOpenHandler(CustomerHandler):
         self.add_oplog(u"用户新开账号 %s, 赠送天数：%s " % (account.account_number,form.d.giftdays))
         self.db.commit()
 
+        user_info = dict(
+            email=form.d.email,
+            phone=form.d.mobile,
+            realname=form.d.realname,
+            product_name=product.product_name,
+            account_number=form.d.account_number,
+            password=form.d.password,
+            expire_date=expire_date
+        )
+        notifys = dict(toughcloud_sms='toughcloud_sms_account_open')
+        notifys['toughcloud_mail'] = 'toughcloud_mail_account_open_wp' if self.get_param_value('send_mail_wp', False) == 'yes' else 'toughcloud_mail_account_open'
+        trigger_notify(self, user_info, **notifys)
         dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(settings.ACCOUNT_OPEN_EVENT, account_cache_key(account.account_number), async=True)
 
         self.redirect(self.detail_url_fmt(account.account_number))
 
