@@ -36,8 +36,8 @@ toughcloud_form = btforms.Form(
 )
 
 notify_form = btforms.Form(
-    btforms.Dropdown("mail_notify_enable", args=booleans.items(), description=u"启动邮件到期提醒", **input_style),
-    btforms.Dropdown("sms_notify_enable", args=booleans.items(), description=u"启动短信到期提醒", **input_style),
+    btforms.Dropdown("mail_notify_enable", args=booleans.items(), description=u"启动邮件提醒", **input_style),
+    btforms.Dropdown("sms_notify_enable", args=booleans.items(), description=u"启动短信提醒", **input_style),
     btforms.Dropdown("webhook_notify_enable", args=booleans.items(), description=u"启动URL触发到期提醒", **input_style),
     btforms.Textbox("expire_notify_days", rules.is_number, description=u"到期提醒提前天数", **input_style),
     btforms.Textbox("expire_notify_interval", rules.is_number, description=u"到期提醒间隔(分钟)", **input_style),
