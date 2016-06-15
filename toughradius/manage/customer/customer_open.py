@@ -153,6 +153,7 @@ class CustomerOpenHandler(CustomerHandler):
             expire_date=expire_date
         )
         notifys = dict(toughcloud_sms='toughcloud_sms_account_open')
+        notifys['smtp_mail'] = 'smtp_account_open'
         notifys['toughcloud_mail'] = 'toughcloud_mail_account_open_wp' if self.get_param_value('send_mail_wp', False) == 'yes' else 'toughcloud_mail_account_open'
         trigger_notify(self, user_info, **notifys)
         dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
