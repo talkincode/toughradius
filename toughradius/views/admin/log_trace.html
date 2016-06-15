@@ -1,0 +1,62 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<style type="text/css">
+    .break-all {
+        word-break: break-all; 
+    }
+</style>
+</%def>
+
+<%def name="body()">
+<section class="content">
+    <div class="box box-primary">
+        <div class="box-header">
+        <i class="fa fa-hdd-o"></i> <h3 class="box-title">系统消息跟踪</h3></div>
+        <div class="box-body">
+            <div class="container">
+        <form id="query_form" class="form-horizontal form-well" role="form" action="/admin/system/trace" method="post">
+                ${xsrf_form_html()}
+            <div class="form-group">
+                <label for="msg_type" class="col-sm-2 control-label">消息类型</label>
+                <div class="col-sm-3">
+                    <select id="msg_type" name="msg_type" class="form-control">
+                          <option value="radius" ${msg_type==u'radius' and "selected" or ""}>用户Radius消息</option>
+                          <option value="event" ${msg_type==u'event' and "selected" or ""}>系统事件消息</option>
+                          <option value="task" ${msg_type==u'task' and "selected" or ""}>系统任务消息</option>
+                          <option value="exception" ${msg_type==u'exception' and "selected" or ""}>系统异常消息</option>
+                          <option value="error" ${msg_type==u'error' and "selected" or ""}>系统错误消息</option>
+                          <option value="debug" ${msg_type==u'debug' and "selected" or ""}>系统调试消息</option>
+                          <option value="warn" ${msg_type==u'warn' and "selected" or ""}>系统警告消息</option>
+                          <option value="info" ${msg_type==u'info' and "selected" or ""}>系统日志消息</option>
+                    </select>
+                </div>
+                <label for="keyword" class="col-sm-2 control-label">用户账号/关键字</label>
+                <div class="col-sm-3">
+                    <input type="text" id="keyword" name="keyword" class="form-control" value="${keyword or ''}">
+                </div>
+                <div class="col-sm-2">
+                    <button type="submit" class="btn btn-primary">查询</button>
+                </div>
+            </div>
+        </form>
+         % if int(handler.get_param_value("radius_user_trace",0)) == 0:
+        <div class="well form-well">
+        <p>要跟踪用户Radius消息，必须在系统参数管理Radius项启动用户消息跟踪，当前状态未开启。</p>
+        </div>
+         % endif
+        
+        <hr>
+
+            % for msg in messages:
+            <div class="msg-box break-all">
+                <td>${msg.replace(r'\n','<br>')}</td>
+            </div>
+            % endfor
+
+    </div>
+</div>
+        </div>
+</section>
+
+</%def>

@@ -14,13 +14,13 @@ class BasicEvent:
         self.db = scoped_session(sessionmaker(bind=self.dbengine, autocommit=False, autoflush=False))
         self.aes = aes
         
-    def get_param_value(self, name):
+    def get_param_value(self, name, defval=None):
         def fetch_result():
             table = models.TrParam.__table__
             with self.dbengine.begin() as conn:
                 return conn.execute(table.select().with_only_columns([table.c.param_value]).where(
                         table.c.param_name==name)).scalar()
-        return self.mcache.aget(param_cache_key(name),fetch_result, expire=300)
+        return self.mcache.aget(param_cache_key(name),fetch_result, expire=300) or defval
 
 
     def get_customer_info(self, account_number):
@@ -28,6 +28,7 @@ class BasicEvent:
             return db.query(
                 models.TrCustomer.mobile,
                 models.TrCustomer.realname,
+                models.TrCustomer.email,
                 models.TrProduct.product_name,
                 models.TrAccount.account_number,
                 models.TrAccount.install_address,

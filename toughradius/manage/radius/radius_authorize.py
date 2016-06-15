@@ -6,6 +6,7 @@ import traceback
 from toughlib import  utils, logger, dispatch
 from toughradius.manage import models
 from toughradius.manage.settings import *
+from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
 from toughradius.manage.radius.radius_basic import  RadiusBasic
 
 class RadiusAuth(RadiusBasic):
@@ -126,10 +127,29 @@ class RadiusAuth(RadiusBasic):
         return True
 
     def limit_filter(self):
+        online_count  = self.count_online()
         if self.account.user_concur_number > 0:
-            if self.count_online() >= self.account.user_concur_number:
-                return self.failure('user session to limit')
+            try:
+                if online_count == self.account.user_concur_number:
+                    auto_unlock = int(self.get_param_value("radius_auth_auto_unlock",0)) == 1
+                    if not auto_unlock:
+                        return self.failure('user session to limit')
+                    else:
+                        online = self.get_first_online(self.request.account_number)
+                        dispatch.pub(UNLOCK_ONLINE_EVENT,
+                            online.account_number,
+                            online.nas_addr, 
+                            online.acct_session_id,async=True)
+                        return True
+            except Exception, e:
+                import traceback
+                traceback.print_exc()
+                return self.failure('user session to limit & send dm error')
+        
+        elif online_count > self.account.user_concur_number: 
+            return self.failure('user session to limit')
         return True
+
 
     def session_filter(self):
         session_timeout = int(self.get_param_value("radius_max_session_timeout",86400))

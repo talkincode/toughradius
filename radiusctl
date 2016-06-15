@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import time
 try:
     _path = os.path.abspath(os.path.dirname(__file__))
     execfile('%s/venv/bin/activate_this.py'%_path, dict(__file__='%s/venv/bin/activate_this.py'%_path))
@@ -18,6 +19,7 @@ from toughlib import dispatch,logger,utils
 from toughlib.dbengine import get_engine
 from toughradius.manage import settings
 from toughradius.manage.settings import redis_conf
+from toughradius.common import log_trace
 from toughradius import __version__
 
 reactor.suggestThreadPoolSize(30)

@@ -119,6 +119,14 @@ class RadiusBasic:
                 table.c.nas_addr==nasaddr).where(
                 table.c.acct_session_id==session_id)).first()
 
+    def get_first_online(self, account_number):
+        table = models.TrOnline.__table__
+        with self.dbengine.begin() as conn:
+            return conn.execute(table.select().where(
+                        table.c.account_number==account_number).order_by(
+                        table.c.acct_start_time.asc())
+                    ).first()
+
     def add_online(self,online):
         table = models.TrOnline.__table__
         with self.dbengine.begin() as conn:
