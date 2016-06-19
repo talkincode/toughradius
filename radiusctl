@@ -71,28 +71,62 @@ def cli():
 @click.command()
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
 @click.option('-d','--debug', is_flag=True)
-def manage(conf,debug):
-    """ manage option """
+@click.option('-t','--start-taskd', is_flag=True, help="start taskd process")
+def manage(conf,debug,start_taskd):
+    """ 启动管理控制台 """
     from toughradius.manage import httpd
+    from toughradius.manage import taskd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
-        config.defaults.debug = True
+        config.system.debug = True
     dbengine = get_engine(config)
     setup_logger(config)
     httpd.run(config,dbengine)
+    if start_taskd:
+        taskd.run(config,dbengine)
     reactor_run()
+
+
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-d','--debug', is_flag=True)
+@click.option('-auth','--start-auth', is_flag=True, help="start radisu auth listen process")
+@click.option('-acct','--start-acct', is_flag=True, help="start radius acct listen process")
+@click.option('-worker','--start-worker', is_flag=True, help="start radius worker process")
+def radiusd(conf,debug,start_auth,start_acct,start_worker):
+    """ 启动 Radiusd 服务 """
+    from toughradius.manage import radiusd
+    from toughradius.manage import taskd
+    from toughlib.redis_cache import CacheManager
+    config = iconfig.find_config(conf)
+    update_timezone(config)
+    if debug:
+        config.system.debug = True
+    dbengine = get_engine(config)
+    cache = CacheManager(redis_conf(config),cache_name='RadiusCache')
+    aes = utils.AESCipher(key=config.system.secret)
+    log = setup_logger(config)
+    if start_auth:
+        radiusd.run_auth(config)
+    if start_acct:
+        radiusd.run_acct(config)
+    if start_worker:
+        radiusd.run_worker(config,dbengine,cache=cache,aes=aes,standalone=True)
+    reactor_run()
+
+
 
 @click.command()
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
 @click.option('-d','--debug', is_flag=True)
 def task(conf,debug):
-    """ task option """
+    """ 启动定时任务 """
     from toughradius.manage import taskd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
-        config.defaults.debug = True
+        config.system.debug = True
     dbengine = get_engine(config)
     setup_logger(config)
     taskd.run(config,dbengine)
@@ -103,12 +137,12 @@ def task(conf,debug):
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
 @click.option('-d','--debug', is_flag=True)
 def auth(conf,debug):
-    """ radius authorize option """
+    """ 启动 Radius 认证监听 """
     from toughradius.manage import radiusd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
-        config.defaults.debug = True
+        config.system.debug = True
     dbengine = get_engine(config)
     setup_logger(config)
     radiusd.run_auth(config)
@@ -119,12 +153,12 @@ def auth(conf,debug):
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
 @click.option('-d','--debug', is_flag=True)
 def acct(conf,debug):
-    """ radius acctounting option """
+    """ 启动 Radius 记账监听 """
     from toughradius.manage import radiusd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
-        config.defaults.debug = True
+        config.system.debug = True
     dbengine = get_engine(config)
     setup_logger(config)
     radiusd.run_acct(config)
@@ -136,12 +170,12 @@ def acct(conf,debug):
 @click.option('-d','--debug', is_flag=True)
 @click.option('-n','--num', default=2,type=click.INT)
 def worker(conf,debug,num):
-    """ radius worker option """
+    """ 启动 Radius 消息处理器 """
     from toughradius.manage import radiusd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
-        config.defaults.debug = True
+        config.system.debug = True
     dbengine = get_engine(config)
     setup_logger(config)
     radiusd.run_worker(config,dbengine)
@@ -151,7 +185,7 @@ def worker(conf,debug,num):
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
 @click.option('-f','--force', is_flag=True)
 def initdb(conf,force):
-    """ initdb option """
+    """ 初始化数据库 """
     from toughradius.common import initdb as init_db
     config = iconfig.find_config(conf)
     init_db.update(config,force=force)
@@ -160,7 +194,7 @@ def initdb(conf,force):
 @click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
 @click.option('-f','--force', is_flag=True)
 def inittest(conf,force):
-    """ initdb option """
+    """ 初始化测试数据 """
     from toughradius.common import inittest as init_test
     config = iconfig.find_config(conf)
     init_test.update(config)
@@ -170,7 +204,7 @@ def inittest(conf,force):
 @click.option('-d','--debug', is_flag=True)
 @click.option('--exitwith', default=0,type=click.INT, help='exit after sec')
 def standalone(conf,debug,exitwith):
-    """ radius worker option """
+    """ 启动单进程模式 """
     from toughradius.manage import httpd
     from toughradius.manage import radiusd
     from toughradius.manage import taskd
@@ -178,7 +212,7 @@ def standalone(conf,debug,exitwith):
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
-        config.defaults.debug = True
+        config.system.debug = True
     dbengine = get_engine(config)
     cache = CacheManager(redis_conf(config),cache_name='RadiusCache')
     aes = utils.AESCipher(key=config.system.secret)
@@ -195,6 +229,7 @@ def standalone(conf,debug,exitwith):
 
 
 cli.add_command(manage)
+cli.add_command(radiusd)
 cli.add_command(task)
 cli.add_command(auth)
 cli.add_command(acct)
