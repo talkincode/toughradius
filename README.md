@@ -6,7 +6,7 @@
 
 ## TOUGHRADIUS 简介
 
-TOUGHRADIUS是一个开源的Radius服务软件，采用于AGPL许可协议发布。
+TOUGHRADIUS是一个开源的Radius服务软件，采用 Apache License 2.0 许可协议发布。
 
 TOUGHRADIUS支持标准RADIUS协议，提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
@@ -75,9 +75,7 @@ QQ交流群组: 247860313 (使用交流)，487229323 (开发交流)
 
 ## 商业支持
 
-通常按照 TOUGHRADIUS 遵循的 AGPL 协议 使用 TOUGHRADIUS，无需为此支付费用，TOUGHRADIUS 同时提供了一份 [《商业授权》](https://github.com/talkincode/ToughRADIUS/blob/master/Commerical-license.rst)
-
-官方支持网站：https://www.toughstruct.com
+请访问网站：https://www.toughstruct.com
 
 
 
