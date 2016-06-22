@@ -45,6 +45,7 @@ def init_db(db):
         ('radius_acct_interim_intelval', u'Radius记账间隔(秒)', u'300'),
         ('radius_max_session_timeout', u'Radius最大会话时长(秒)', u'86400'),
         ('radius_auth_auto_unlock', u'并发自动解锁', '0'),
+        ('radius_user_trace', u'跟踪用户 Radius 消息', '0'),
     ]
 
     for p in params:

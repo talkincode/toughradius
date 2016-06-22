@@ -55,3 +55,4 @@ radiusd_cnf.conf
 toughradius_test.json
 .vscode
 tr/
+*.pid
