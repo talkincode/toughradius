@@ -16,7 +16,6 @@ from toughlib import utils
 from collections import deque
 from toughradius.manage import models
 from toughradius.manage.settings import * 
-from toughradius.common import tools
 import psutil
 
 ##############################################################################
@@ -74,52 +73,17 @@ def execute(cmd):
 # web handler
 ##############################################################################
 
-
-@permit.route(r"/admin/cache/clean")
-class CacheClearHandler(BaseHandler):
-
-    def get(self):
-        self.cache.clean()
-        self.render_json(msg=u"刷新缓存完成")
-
-@permit.route(r"/admin/trace/clean")
-class TraceClearHandler(BaseHandler):
-
-    def get(self):
-        self.logtrace.clean()
-        self.render_json(msg=u"刷新系统消息缓存完成")
-
-
 @permit.route(r"/admin/dashboard", u"控制面板", MenuSys, order=1.0000, is_menu=True, is_open=False)
 class DashboardHandler(BaseHandler):
 
-    def cache_rate(self):
-        rate = decimal.Decimal(self.cache.hit_total * 100.0 /(self.cache.get_total+0.0001))
-        return str(rate.quantize(decimal.Decimal('1.00')))
-
-    def get_disk_use(self):
-        def bb2gb(ik):
-            _kb = decimal.Decimal(ik or 0)
-            _mb = _kb / decimal.Decimal(1000*1000*1000)
-            return str(_mb.quantize(decimal.Decimal('1.00')))
-        disks = [ (p,psutil.disk_usage(p)) for p in [a.mountpoint for a in psutil.disk_partitions()] ]
-        dstrs = [ "%s %sG/%sG, used %s%%"%(p,bb2gb(d.used),bb2gb(d.total),d.percent) for p,d in disks]
-        return '； '.join(dstrs)
-
     @cyclone.web.authenticated
     def get(self):
-        sys_uuid = tools.get_sys_uuid()
         cpuuse = psutil.cpu_percent(interval=None, percpu=True)
         memuse = psutil.virtual_memory()
-        diskuse = self.get_disk_use()
         online_count = self.db.query(models.TrOnline.id).count()
         user_total = self.db.query(models.TrAccount.account_number).filter_by(status=1).count()
         self.render("index.html",config=self.settings.config,
-            cpuuse=cpuuse,memuse=memuse,diskuse=diskuse,
-            online_count=online_count,
-            user_total=user_total,
-            sys_uuid=sys_uuid,
-            cache_rate=self.cache_rate)
+            cpuuse=cpuuse,memuse=memuse,online_count=online_count,user_total=user_total)
 
 
 class ComplexEncoder(json.JSONEncoder):

@@ -1,6 +1,27 @@
 <%inherit file="base.html"/>
 <%def name="head()">
 <script>
+
+$(document).ready(function (){
+    $("#send_feedback").click(function(){
+        alertinfo = "提交反馈操作将会提交当前ToughRADIUS的版本信息以及部分日志信息到 toughstruct，如果你填写了有效的电子邮件地址，toughstruct可能会就您的反馈报告与您联系，您提交的日志信息都将按照 toughstruct 的隐私政策受到保护，提交该反馈表示您同意toughstruct使用您提交的信息来改进 ToughRADIUS 的产品与服务。";
+        if(!confirm(alertinfo))
+        {
+            return false;
+        }
+
+        param = {
+            'email': $("#email").val(),
+            'topic': $("#topic").val(),
+            '_xsrf': '${handler.xsrf_token}'
+        }
+        $.post("/admin/feedback", param, function (ev) {
+            console.log(ev);
+            alert(ev.msg);
+        }, "json");
+    });
+
+});
 </script>
 </%def>
 <%def name="body()">
@@ -18,23 +39,39 @@
                     <label class="col-sm-3 control-label" id="lab_log_name_name" for="log_name">日志类型</label>
                     <div class="col-sm-6">
                     <select required="required" class="form-control" id="log_name" placeholder="日志类型" name="log_name">
-                     <option value="radius-manage" ${"selected" if log_name=='radius-manage' else ''}>管理系统日志</option>
-                     <option value="radius-worker" ${"selected" if log_name=='radius-worker' else ''}>认证计费日志</option>
-                     <option value="radius-task" ${"selected" if log_name=='radius-task' else ''}>任务执行日志</option>
+                     <option value="radius-manage">管理系统日志</option>
+                     <option value="radius-worker">认证计费日志</option>
+                     <option value="radius-task">任务执行日志</option>
                     </select>
                     </div>
                     <div class="col-sm-3">
                     <button type="submit" class="btn btn-primary" id="submit" placeholder="submit" name="submit"><b>查询</b></button>
                     </div>
                 </form>
+                <br>
+                <hr>
+                
+                    <form class="form-horizontal form-well well" role="form" action="/admin/feedback" method="post" >
+                    ${xsrf_form_html()}
+                   <div class="form-group">
+                    
+                    <label class="col-sm-3 control-label" id="lab_topic_name" for="topic">附加描述</label>
+                    <div class="col-sm-6">
+                    <input type="text" required="required" class="form-control" id="topic" placeholder="问题描述" name="topic"></textarea>
+                    </div>
+                    </div>
+                    <div class="form-group">
+                    <label class="col-sm-3 control-label" id="lab_email_name" for="email">联系邮箱</label>
+                    <div class="col-sm-6">
+                    <input type="email" id="email" name="email" class="form-control" value="${email or ''}">
+                    </div>
 
-                 % if current_user.opr_type == 0:
-                <div class="pull-left bottom10">
-                     <a href="/admin/logger/download?log_name=${log_name}">下载当前日志</a>
-                </div>
-                % endif
-                <br>
-                <br>
+                    <div class="col-sm-2">
+                    <button type="button" class="btn btn-default" id="send_feedback" name="button"><b>发送反馈</b></button>
+                    </div>
+                    </div>
+                </form>
+
                 % if msg:
                 <div class="well">
                 ${msg}</div>

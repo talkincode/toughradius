@@ -85,10 +85,10 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             if not account_number:
                 return self.render_verify_err(msg=u"账号不能为空")
 
-            if utils.yuan2fen(request.get("fee_value",0)) < 0:
+            if utils.yuan2fen(request.get("fee_value",0)) == 0:
                 return self.render_verify_err(msg=u"无效续费金额 %s"%fee_value)
 
-            if months == 0:
+            if months == 0 and fee_value == 0:
                 return self.render_verify_err(msg=u"无效的授权月数")
 
             if not expire_date:
@@ -104,7 +104,10 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             accept_log = models.TrAcceptLog()
             accept_log.accept_type = 'next'
             accept_log.accept_source = 'api'
-            accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元" % (account_number, fee_value)
+            if utils.yuan2fen(request.get("fee_value",0)) < 0:
+                accept_log.accept_desc = u"用户扣费：上网账号:%s，余下%s元" % (account_number, abs(fee_value))
+            else:
+                accept_log.accept_desc = u"用户续费：上网账号:%s，续费%s元" % (account_number, fee_value)
             accept_log.account_number = account_number
             accept_log.accept_time = utils.get_currtime()
             accept_log.operator_name = 'api'
@@ -119,7 +122,8 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             if product.product_policy == PPMonth:
                 order_fee = decimal.Decimal(product.fee_price) * decimal.Decimal(months)
                 order_fee = int(order_fee.to_integral_value())
-
+            elif product.product_policy == PPTimes:
+                order_fee = utils.yuan2fen(fee_value)
             # 买断包月,买断流量,买断时长
             elif product.product_policy in (BOMonth, BOTimes, BOFlows):
                 order_fee = int(product.fee_price)
@@ -151,6 +155,11 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             account.expire_date = new_expire_date
             if product.product_policy == BOTimes:
                 account.time_length += product.fee_times
+            elif product.product_policy == PPTimes:
+                if fee_value < 0:
+                    account.balance += abs(fee_value)
+                else:
+                    account.balance += order.actual_fee
             elif product.product_policy == BOFlows:
                 account.flow_length += product.fee_flows
 

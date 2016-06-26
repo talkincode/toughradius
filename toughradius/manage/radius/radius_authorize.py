@@ -95,6 +95,7 @@ class RadiusAuth(RadiusBasic):
              # 预付费包月/买断包月/自由时段
             if utils.is_expire(self.account.expire_date):
                 self.reply['attrs']['Framed-Pool'] = self.get_param_value("expire_addrpool")
+                return self.failure('overdue')
                 
         elif acct_policy in (PPTimes,PPFlow) :
             # 预付费时长预付费流量

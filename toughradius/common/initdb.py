@@ -22,30 +22,24 @@ def init_db(db):
 
     params = [
         ('system_name', u'管理系统名称', u'ToughRADIUS管理控制台'),
-        ('system_ticket_expire_days', u'上网日志保留天数', '30'),
+        ('system_ticket_expire_days', u'上网日志保留天数', '90'),
         ('is_debug', u'DEBUG模式', u'0'),
         ('expire_notify_days', '到期提醒提前天数', u'7'),
         ('expire_notify_interval', '到期提醒提前间隔(分钟)', u'1440'),
-        ('smtp_notify_tpl', '到期提醒邮件模板', u'账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
-        ('expire_notify_url', u'到期通知url', u'http://127.0.0.1:1816?account={account}&expire={expire}&email={email}&mobile={mobile}'),
-        ('expire_notify_time', u'到期通知时间', '09:00'),
+        ('expire_notify_tpl', '到期提醒邮件模板', u'账号到期通知\n尊敬的会员您好:\n您的账号#account#即将在#expire#到期，请及时续费！'),
+        ('expire_notify_url', u'到期通知url', u'http://your_notify_url?account={account}&expire={expire}&email={email}&mobile={mobile}'),
         ('expire_addrpool', u'到期提醒下发地址池', u'expire'),
         ('expire_session_timeout', u'到期用户下发最大会话时长(秒)', u'120'),
-        ('mail_notify_enable', u'启动邮件到期提醒', u'0'),
-        ('sms_notify_enable', u'启动短信到期提醒', u'0'),
-        ('webhook_notify_enable', u'启动URL触发到期提醒', u'0'),
-        ('mail_mode', u'邮件通知服务类型', u'toughcloud'),
         ('smtp_server', u'SMTP服务器地址', u'smtp.mailgun.org'),
         ('smtp_port', u'SMTP服务器端口', u'25'),
         ('smtp_user', u'SMTP用户名', u'service@toughradius.org'),
         ('smtp_pwd', u'SMTP密码', u'service2015'),
         ('smtp_sender', u'SMTP发送人名称', u'运营中心'),
         ('smtp_from', u'SMTP邮件发送地址', u'service@toughradius.org'),
-        ('radius_bypass', u'Radius认证密码模式', u'1'),
-        ('radius_acct_interim_intelval', u'Radius记账间隔(秒)', u'300'),
+        ('radius_bypass', u'Radius认证密码模式', u'0'),
+        ('radius_acct_interim_intelval', u'Radius记账间隔(秒)', u'120'),
         ('radius_max_session_timeout', u'Radius最大会话时长(秒)', u'86400'),
-        ('radius_auth_auto_unlock', u'并发自动解锁', '0'),
-        ('radius_user_trace', u'跟踪用户 Radius 消息', '0'),
+        ('radius_auth_auto_unlock', u'并发自动解锁', '0')
     ]
 
     for p in params:

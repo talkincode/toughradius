@@ -10,11 +10,12 @@ from toughlib.permit import permit
 class LoginHandler(BaseHandler):
 
     def get(self):
-        self.render("login.html")
+        self.render("login.html",next=self.get_argument("next",""))
 
     def post(self):
         uname = self.get_argument("username")
         upass = self.get_argument("password")
+         
         if not uname:
             return self.render_json(code=1, msg=u"请填写用户名")
         if not upass:
@@ -37,6 +38,5 @@ class LoginHandler(BaseHandler):
 
         self.add_oplog(u'操作员(%s)登陆' % (uname))
         self.db.commit()
-
         self.render_json(code=0, msg="ok")
 

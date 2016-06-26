@@ -8,21 +8,11 @@ from toughlib.dbutils import make_db
 from toughradius.manage.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer
 from twisted.names import client, dns
-from toughradius.manage import taskd
 
 class DdnsUpdateTask(TaseBasic):
 
-    __name__ = 'ddns-update'
-
-    def first_delay(self):
-        return 5
-
-    def get_notify_interval(self):
-        return 60
-
     @defer.inlineCallbacks
     def process(self, *args, **kwargs):
-        self.logtimes()
         with make_db(self.db) as db:
             try:
                 nas_list = db.query(models.TrBas)
@@ -43,12 +33,5 @@ class DdnsUpdateTask(TaseBasic):
                         logger.info("domain {0} no ip address,{1}".format(nas.dns_name, repr(results)))
 
             except Exception as err:
-                logger.exception(err)
-        defer.returnValue(self.get_notify_interval())
-
-
-taskd.TaskDaemon.__taskclss__.append(DdnsUpdateTask)
-
-
-
-
+                logger.error('ddns process error %s' % utils.safeunicode(err.message))
+        defer.returnValue(60)
