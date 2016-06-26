@@ -18,19 +18,13 @@ from toughradius.manage.events.settings import ACCOUNT_NEXT_EVENT
 @permit.route(r"/admin/account/next", u"用户续费",MenuUser, order=2.3000)
 class AccountNextHandler(account.AccountHandler):
 
-    def get_expire_date(self,expire):
-        if utils.is_expire(expire):
-            return utils.get_currdate()
-        else:
-            return expire
-
     @cyclone.web.authenticated
     def get(self):
         account_number = self.get_argument("account_number")
         user = self.query_account(account_number)
         form = account_forms.account_next_form()
         form.account_number.set_value(account_number)
-        form.old_expire.set_value(self.get_expire_date(user.expire_date))
+        form.old_expire.set_value(user.expire_date)
         form.product_id.set_value(user.product_id)
         return self.render("account_next_form.html", user=user, form=form)
 

@@ -43,7 +43,7 @@ class AccountChangeHandler(account.AccountHandler):
         account = self.db.query(models.TrAccount).get(account_number)
         user = self.query_account(account_number)
         if account.status not in (1, 4):
-            return self.render("account_change_form.html", user=user, form=form, msg=u"无效用户状态")
+            self.render_sign_err('无效用户状态')
         if not form.validates(source=self.get_params()):
             return self.render("account_change_form.html", user=user, form=form)
 

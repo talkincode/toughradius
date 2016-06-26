@@ -10,7 +10,6 @@ import cyclone.escape
 import cyclone.web
 import tempfile
 import traceback
-import functools
 from cyclone.util import ObjectDict
 from toughlib import utils
 from toughlib.paginator import Paginator
@@ -31,7 +30,6 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.cache = self.application.mcache
         self.db_backup = self.application.db_backup
         self.session = redis_session.Session(self.application.session_manager, self)
-        self.logtrace = self.application.logtrace
 
     def check_xsrf_cookie(self):
         if self.settings.config.system.get('production'):
@@ -46,13 +44,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         
     def get_error_html(self, status_code=500, **kwargs):
         try:
-            if 'exception' in kwargs:
-                failure = kwargs.get("exception")
-                logger.exception(failure.getTraceback())
-                if os.environ.get("XDEBUG"):
-                    from mako import exceptions
-                    return  exceptions.html_error_template().render(traceback=failure.getTracebackObject())
-                    
+            # logger.error("HTTPError : [status_code:{0}], {1}".format(status_code, repr(kwargs)))
             if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
@@ -65,7 +57,8 @@ class BaseHandler(cyclone.web.RequestHandler):
             else:
                 return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
         except:
-            logger.exception(err)
+            import traceback
+            traceback.print_exc()
             return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
     def render(self, template_name, **template_vars):
@@ -226,28 +219,4 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.write(data.xls)
         self.finish()
 
-def authenticated(method):
-    @functools.wraps(method)
-    def wrapper(self, *args, **kwargs):
-        if not self.current_user:
-            if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest': # jQuery 等库会附带这个头
-                self.set_header('Content-Type', 'application/json; charset=UTF-8')
-                self.write(json.dumps({'code': 1, 'msg': '您的会话已过期，请重新登录！'}))
-                return
-            if self.request.method in ("GET", "POST", "HEAD"):
-                url = self.get_login_url()
-                if "?" not in url:
-                    if urlparse.urlsplit(url).scheme:
-                        # if login url is absolute, make next absolute too
-                        next_url = self.request.full_url()
-                    else:
-                        next_url = self.request.uri
-                    url += "?" + urllib.urlencode(dict(next=next_url))
-                self.redirect(url)
-                return
-            return self.render_error(msg=u"未授权的访问")
-        else:
-            if not self.current_user.permit.match(self.current_user.username,self.request.path):
-                return self.render_error(msg=u"未授权的访问")
-            return method(self, *args, **kwargs)
-    return wrapper
+

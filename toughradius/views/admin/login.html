@@ -32,6 +32,7 @@
         function doLogin() {
             var username = $("#username").val();
             var password = $("#password").val();
+            var next_url = $("#next").val();
             params = {username: username, password: password, _xsrf: '${handler.xsrf_token}'};
             $.post("/admin/login", params, function (data) {
                 if (data.code > 0) {
@@ -39,7 +40,7 @@
                     return false;
                 }
                 else {
-                    window.location.href = "/admin";
+                    window.location.href = next_url;
                 }
             }, "json");
         }
@@ -62,6 +63,9 @@
             <div class="form-group has-feedback">
                 <input type="password" id="password" class="form-control" placeholder="Password" autocomplete="off"/>
                 <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+            </div>
+            <div class="form-group has-feedback">
+                <input type="hidden" value="${next}" id="next" class="form-control"/>
             </div>
             <div class="row">
                 <!-- /.col -->

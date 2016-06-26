@@ -3,73 +3,82 @@
 import sys
 import os
 import time
-import importlib
 from twisted.python import log
-from twisted.internet import reactor,defer
+from twisted.internet import reactor
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughlib import logger, utils,dispatch
 from toughradius.manage import models
 from toughlib.dbengine import get_engine
 from toughlib.redis_cache import CacheManager
 from toughradius.manage.settings import redis_conf
+from toughradius.manage.tasks import (
+    expire_notify, ddns_update, radius_stat, online_stat,flow_stat,
+    online_check
+)
 from toughradius.manage.events import radius_events
-from toughradius.manage import settings,tasks
-from toughradius.common import log_trace
-from toughlib import logger
+from toughradius.manage import settings
 import toughradius
-import functools
+
 
 class TaskDaemon():
-
-    __taskclss__ = []
 
     def __init__(self, config=None, dbengine=None, **kwargs):
         self.config = config
         self.db_engine = dbengine or get_engine(config,pool_size=20)
         self.aes = kwargs.pop("aes",None)
         self.cache = kwargs.pop("cache",CacheManager(redis_conf(config),cache_name='RadiusTaskCache-%s'%os.getpid()))
-        self.cache.print_hit_stat(300)
+        self.cache.print_hit_stat(60)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
-        self.taskclss = []
-        self.load_tasks()
+        # init task
+        self.expire_notify_task = expire_notify.ExpireNotifyTask(self)
+        self.ddns_update_task = ddns_update.DdnsUpdateTask(self)
+        self.radius_stat_task = radius_stat.RadiusStatTask(self)
+        self.online_stat_task = online_stat.OnlineStatTask(self)
+        self.flow_stat_task = flow_stat.FlowStatTask(self)
+        self.online_check_task = online_check.OnlineCheckTask(self)
         if not kwargs.get('standalone'):
-            logger.info("start register taskd events")
-            dispatch.register(log_trace.LogTrace(redis_conf(config)),check_exists=True)
             event_params= dict(dbengine=self.db_engine, mcache=self.cache,aes=self.aes)
             event_path = os.path.abspath(os.path.dirname(toughradius.manage.events.__file__))
             dispatch.load_events(event_path,"toughradius.manage.events",event_params=event_params)
 
-    def process_task(self,task):
-        r = task.process()
-        if isinstance(r, defer.Deferred):
-            cbk = lambda _time,_cbk,_task: reactor.callLater(_time, _cbk,_task)
-            r.addCallback(cbk,self.process_task,task).addErrback(logger.exception)
-        elif isinstance(r,(int,float)):
-            reactor.callLater(r, self.process_task,task)
+    def start_expire_notify(self):
+        _time = self.expire_notify_task.process()
+        logger.info("next expire_notify times: %s" % _time)
+        reactor.callLater(_time, self.start_expire_notify)
+
+    def start_ddns_update(self):
+        d = self.ddns_update_task.process()
+        d.addCallback(reactor.callLater,self.start_ddns_update)
+
+    def start_radius_stat_update(self):
+        _time = self.radius_stat_task.process()
+        reactor.callLater(_time, self.start_radius_stat_update)
+
+    def start_online_stat_task(self):
+        _time = self.online_stat_task.process()
+        reactor.callLater(_time, self.start_online_stat_task)
+
+    def start_flow_stat_task(self):
+        _time = self.flow_stat_task.process()
+        reactor.callLater(_time, self.start_flow_stat_task)
+
+    def start_online_check_task(self):
+        _time = self.online_check_task.process()
+        logger.info("next online_check times: %s" % _time)
+        reactor.callLater(_time, self.start_online_check_task)
+
 
     def start(self):
-        for taskcls in TaskDaemon.__taskclss__:
-            task = taskcls(self)
-            first_delay = task.first_delay()
-            if first_delay:
-                reactor.callLater(first_delay,self.process_task,task)
-            else:
-                self.process_task(task)
-            logger.info('init task %s done'%task.__name__)
+        self.start_expire_notify()
+        self.start_ddns_update()
+        self.start_radius_stat_update()
+        self.start_online_stat_task()
+        self.start_flow_stat_task()
+        self.start_online_check_task()
+        logger.info('init task done')
 
-        logger.info("init task num : %s"%len(TaskDaemon.__taskclss__))
-
-
-    def load_tasks(self):
-        evs = set(os.path.splitext(it)[0] for it in os.listdir(os.path.dirname(tasks.__file__)))
-        for ev in evs:
-            try:
-                __import__("toughradius.manage.tasks.%s"% ev)
-            except Exception as err:
-                logger.exception(err)
-                continue
 
 
 def run(config, dbengine=None,**kwargs):
-    app = TaskDaemon(config, dbengine,**kwargs)
+    app = TaskDaemon(config, dbengine)
     app.start()
