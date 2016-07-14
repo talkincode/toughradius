@@ -83,6 +83,8 @@ product_cache_key = 'toughradius.cache.product.{0}'.format
 product_attrs_cache_key = 'toughradius.cache.product.attrs.{0}'.format
 bas_cache_key = 'toughradius.cache.bas.{0}'.format
 radius_statcache_key = 'toughradius.cache.radius.stat'
+online_statcache_key = 'toughradius.cache.online.stat'
+flow_statcache_key = 'toughradius.cache.flow.stat'
 toughcloud_ping_key = 'toughradius.cache.toughcloud.ping'
 
 # exit_signal defined
