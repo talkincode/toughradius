@@ -20,6 +20,7 @@ from toughradius.manage.settings import *
 from toughradius.manage import models
 from toughlib import redis_session 
 from toughlib import dispatch,logger
+from twisted.python.failure import Failure
 
 class BaseHandler(cyclone.web.RequestHandler):
 
@@ -48,11 +49,11 @@ class BaseHandler(cyclone.web.RequestHandler):
         try:
             if 'exception' in kwargs:
                 failure = kwargs.get("exception")
-                logger.exception(failure.getTraceback())
-                if os.environ.get("XDEBUG"):
-                    from mako import exceptions
-                    return  exceptions.html_error_template().render(traceback=failure.getTracebackObject())
-                    
+                if isinstance(failure, Failure):
+                    logger.exception(failure.getTraceback())
+                else:
+                    logger.exception(failure)
+
             if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return self.render_json(code=1, msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 
@@ -64,7 +65,7 @@ class BaseHandler(cyclone.web.RequestHandler):
                 return self.render_string("error.html", msg=u"500:服务器处理失败，请联系管理员")
             else:
                 return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
-        except:
+        except Exception as err:
             logger.exception(err)
             return self.render_string("error.html", msg=u"%s:服务器处理失败，请联系管理员" % status_code)
 

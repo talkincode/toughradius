@@ -105,7 +105,7 @@ var online_options = {
     chart: {type: 'areaspline',renderTo: 'online-chart',height:300},
     title: {text: '在线用户统计'},
     subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(utils.get_currdate(),utils.get_currdate())}'},
-    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    xAxis: {type: 'datetime',tickInterval : 7200*1000},
     yAxis: {
         title: {text: '在线数'},
         labels: {formatter: function() {return this.value + '人';}}            
@@ -134,9 +134,9 @@ function update_online()
 var flow_options = {
     credits : {enabled:false},
     chart: {type: 'areaspline',renderTo: 'flow-chart',height:300},
-    title: {text: '流量统计'},
-    subtitle: {text: '${"%s 00:00:00 -- %s 23:59:59"%(utils.get_currdate(),utils.get_currdate())}'},
-    xAxis: {type: 'datetime',tickInterval : 3600*1000},
+    title: {text: '在线流量统计'},
+    subtitle: {text: '10分钟内流量统计数据'},
+    xAxis: {type: 'datetime',tickInterval : 60*1000},
     yAxis: {title: {text: '使用流量'},
         labels: {format:'{value:.2f}',formatter: function() {return this.value + 'MB';}}            
     },
@@ -186,6 +186,7 @@ function restart() {
     });
     setTimeout("update()", 9000);
 }
+
 
 $(document).ready(function () {
     Highcharts.setOptions({global: {useUTC: false}});

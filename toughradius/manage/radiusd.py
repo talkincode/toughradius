@@ -123,15 +123,15 @@ class RADIUSAuthWorker(protocol.DatagramProtocol,TraceMix):
 
     def do_stat(self,code):
         try:
-            stat_msg = []
+            stat_msg = {'statattrs':[],'raddata':{}}
             if code == packet.AccessRequest:
-                stat_msg.append('auth_req')
+                stat_msg['statattrs'].append('auth_req')
             elif code == packet.AccessAccept:
-                stat_msg.append('auth_accept')
+                stat_msg['statattrs'].append('auth_accept')
             elif  code == packet.AccessReject:
-                stat_msg.append('auth_reject')
+                stat_msg['statattrs'].append('auth_reject')
             else:
-                stat_msg = ['auth_drop']
+                stat_msg['statattrs'] = ['auth_drop']
             self.stat_pusher.push(msgpack.packb(stat_msg))
         except:
             pass
@@ -267,26 +267,29 @@ class RADIUSAcctWorker(TraceMix):
                 return conn.execute(table.select().where(table.c.ip_addr==ip_addr)).first()
         return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
 
-    def do_stat(self,code, status_type=0):
+    def do_stat(self,code, status_type=0,req=None):
         try:
-            stat_msg = ['acct_drop']
+            stat_msg = {'statattrs':['acct_drop'],'raddata':{}}
             if code  in (4,5):
-                stat_msg = []
+                stat_msg['statattrs'] = []
                 if code == packet.AccountingRequest:
-                    stat_msg.append('acct_req')
+                    stat_msg['statattrs'].append('acct_req')
                 elif code == packet.AccountingResponse:
-                    stat_msg.append('acct_resp')
+                    stat_msg['statattrs'].append('acct_resp')
 
                 if status_type == 1:
-                    stat_msg.append('acct_start')
+                    stat_msg['statattrs'].append('acct_start')
                 elif status_type == 2:
-                    stat_msg.append('acct_stop')        
+                    stat_msg['statattrs'].append('acct_stop')        
                 elif status_type == 3:
-                    stat_msg.append('acct_update')        
+                    stat_msg['statattrs'].append('acct_update')   
+                    stat_msg['raddata']['input_total'] = req.get_input_total()     
+                    stat_msg['raddata']['output_total'] = req.get_output_total()     
                 elif status_type == 7:
-                    stat_msg.append('acct_on')        
+                    stat_msg['statattrs'].append('acct_on')        
                 elif status_type == 8:
-                    stat_msg.append('acct_off')
+                    stat_msg['statattrs'].append('acct_off')
+
             self.stat_pusher.push(msgpack.packb(stat_msg))
         except:
             pass
@@ -316,7 +319,7 @@ class RADIUSAcctWorker(TraceMix):
                 dict=self.dict, secret=six.b(str(secret)),vendor_id=vendor_id)
 
             self.log_trace(host,port,req)
-            self.do_stat(req.code, req.get_acct_status_type())
+            self.do_stat(req.code, req.get_acct_status_type(),req=req)
 
             logger.info("[Radiusd] :: Received radius request: %s" % (repr(req)))
             if self.config.system.debug:
