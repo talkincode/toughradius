@@ -6,7 +6,7 @@ from toughradius import __version__
 import datetime
 
 env.user = 'root'
-env.hosts = ['qingyun.cloud']
+env.hosts = ['www.toughstruct.net']
 currtime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 def push():
