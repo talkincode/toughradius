@@ -166,68 +166,32 @@ def default_start_end():
     end = datetime.datetime.strptime("%s 23:59:59" % day_code, "%Y-%m-%d %H:%M:%S")
     return time.mktime(begin.timetuple()), time.mktime(end.timetuple())
 
+
 @permit.route(r"/admin/dashboard/onlinestat", u"在线用户统计", MenuSys, order=1.0004, is_menu=False)
 class OnlineStatHandler(BaseHandler):
 
     @cyclone.web.authenticated
     def get(self):
-        node_id = self.get_argument('node_id',None)
-        day_code = self.get_argument('day_code',None)
-        opr_nodes = self.get_opr_nodes()
-        if not day_code:
-            day_code = utils.get_currdate()
-        begin = datetime.datetime.strptime("%s 00:00:00" % day_code, "%Y-%m-%d %H:%M:%S")
-        end = datetime.datetime.strptime("%s 23:59:59" % day_code, "%Y-%m-%d %H:%M:%S")
-        begin_time, end_time = time.mktime(begin.timetuple()), time.mktime(end.timetuple())
-        _query = self.db.query(models.TrOnlineStat)
-
-        if node_id:
-            _query = _query.filter(models.TrOnlineStat.node_id == node_id)
-        else:
-            _query = _query.filter(models.TrOnlineStat.node_id.in_([i.id for i in opr_nodes]))
-
-        _query = _query.filter(
-            models.TrOnlineStat.stat_time >= begin_time,
-            models.TrOnlineStat.stat_time <= end_time,
-        )
-        _data = [(q.stat_time * 1000, q.total) for q in _query]
-        self.render_json(code=0, data=[{'data': _data}])
+        olstat = self.cache.get(online_statcache_key) or []
+        self.render_json(code=0, data=[{'name':u"所有区域",'data': olstat}])
 
 
 @permit.route(r"/admin/dashboard/flowstat", u"在线用户统计", MenuSys, order=1.0005, is_menu=False)
 class FlowStatHandler(BaseHandler):
 
+
+    def sizedesc(self,ik):
+        _kb = decimal.Decimal(ik or 0)
+        _mb = _kb / decimal.Decimal(1024)
+        return str(_mb.quantize(decimal.Decimal('1.000')))
+
     @cyclone.web.authenticated
     def get(self):
-        node_id = self.get_argument('node_id',None)
-        day_code = self.get_argument('day_code',None)
-        opr_nodes = self.get_opr_nodes()
-        if not day_code:
-            day_code = utils.get_currdate()
-        begin = datetime.datetime.strptime("%s 00:00:00" % day_code, "%Y-%m-%d %H:%M:%S")
-        end = datetime.datetime.strptime("%s 23:59:59" % day_code, "%Y-%m-%d %H:%M:%S")
-        begin_time, end_time = time.mktime(begin.timetuple()), time.mktime(end.timetuple())
-        _query = self.db.query(models.TrFlowStat)
-
-        if node_id:
-            _query = _query.filter(models.TrFlowStat.node_id == node_id)
-        else:
-            _query = _query.filter(models.TrFlowStat.node_id.in_([i.id for i in opr_nodes]))
-
-        _query = _query.filter(
-            models.TrFlowStat.stat_time >= begin_time,
-            models.TrFlowStat.stat_time <= end_time,
-        )
-
-        in_data = {"name": u"上行流量", "data": []}
-        out_data = {"name": u"下行流量", "data": []}
-
-        for q in _query:
-            _stat_time = q.stat_time * 1000
-            in_data['data'].append([_stat_time, float(utils.kb2mb(q.input_total))])
-            out_data['data'].append([_stat_time, float(utils.kb2mb(q.output_total))])
+        flow_stat = self.cache.get(flow_statcache_key) or {}
+        _idata = [(_time,float(self.sizedesc(bb))) for _time,bb in flow_stat.get('input_stat',[]) if bb > 0][-512:]
+        _odata = [(_time,float(self.sizedesc(bb))) for _time,bb in flow_stat.get('output_stat',[]) if bb > 0][-512:]
+        in_data = {"name": u"上行流量", "data": _idata}
+        out_data = {"name": u"下行流量", "data": _odata}
 
         self.render_json(code=0, data=[in_data, out_data])
-
-
 
