@@ -1,5 +1,7 @@
 <%inherit file="base.html"/>
 <%def name="head()">
+<link href="/static/css/bootstrap-multiselect.css" rel="stylesheet" type="text/css"/>
+<script src="/static/js/bootstrap-multiselect.js"></script>
 <script>
 $(document).ready(function (){
     $("#checkAll").click(function() {  
@@ -15,6 +17,12 @@ $(document).ready(function (){
             $(".sloop").prop("checked", false);
         })  
     });
+    $("select[multiple='multiple']").multiselect({
+      buttonWidth: "100%",
+      includeSelectAllOption: true,
+      enableCaseInsensitiveFiltering: true,
+      maxHeight: 320
+    });    
 });
 
 function doSelect(sid){

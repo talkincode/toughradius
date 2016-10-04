@@ -137,6 +137,9 @@ def uplib():
     local("venv/bin/pip install -U --no-deps https://github.com/talkincode/toughlib/archive/master.zip")
     # local("venv/bin/pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip")
 
+def startup():
+    os.environ['XDEBUG'] = 'true'
+    local("supervisord -n -c etc/toughradius_test.conf")
 
 
 

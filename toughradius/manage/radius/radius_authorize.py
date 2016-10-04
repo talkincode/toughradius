@@ -19,7 +19,8 @@ class RadiusAuth(RadiusBasic):
             self.bind_filter,
             self.policy_filter,
             self.limit_filter,
-            self.session_filter
+            self.session_filter,
+            self.set_radius_attr
         ]
 
     def failure(self, msg):
@@ -52,8 +53,8 @@ class RadiusAuth(RadiusBasic):
     def status_filter(self):
         self.reply['username'] = self.request.account_number
         self.reply['bypass'] = int(self.get_param_value("radiusd_bypass", 1))
-        if self.reply['bypass'] == 1:
-            self.reply['passwd'] = self.aes.decrypt(self.account.password)
+        self.reply['passwd'] = self.aes.decrypt(self.account.password)
+        
         if self.account.status == UsrExpire:
             self.reply['Framed-Pool'] = self.get_param_value("expire_addrpool",'')
 
@@ -173,9 +174,10 @@ class RadiusAuth(RadiusBasic):
                 # 预付费包月/买断包月/自由时段
                 expire_date = self.account.expire_date
                 _datetime = datetime.datetime.now()
-                if _datetime.strftime("%Y-%m-%d") == expire_date:
-                    _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
-                    return (_expire_datetime - _datetime).seconds 
+                _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
+                _sec = (_expire_datetime - _datetime).total_seconds() 
+                _sec = 86400 if _sec < 0 else _sec
+                return _sec if _sec < 31536000 else 31536000                    
             elif acct_policy  == BOTimes or \
                      (acct_policy == FreeFee and bill_type == FreeTimeLen):
                 # 买断时长 / 自由买断时长
@@ -200,17 +202,17 @@ class RadiusAuth(RadiusBasic):
             session_timeout = _calc_session_timeout(acct_policy,9999) or session_timeout
 
         self.reply['attrs']['Session-Timeout'] = session_timeout
-
-        if self.account.ip_address:
-            self.reply['attrs']['Framed-IP-Address'] = self.account.ip_address
-
-        for attr in (self.get_product_attrs(self.account.product_id) or []):
-            self.reply['attrs'][attr.attr_name] = attr.attr_value
-
         return True
 
     
+    def set_radius_attr(self):
+        if self.account.ip_address:
+            self.reply['attrs']['Framed-IP-Address'] = self.account.ip_address
 
+        for attr in self.get_product_attrs(self.account.product_id) or [] :
+            self.reply['attrs'][attr.attr_name] = attr.attr_value
+
+        return True
 
 
 

@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 #coding=utf-8
 
+from toughlib import logger
+
 #  vlan parse          
 def parse_cisco(req):
     '''phy_slot/phy_subslot/phy_port:XPI.XCI'''
-    nasportid = req.get('NAS-Port-Id')
+    nasportid = req.get_nas_portid()
     if not nasportid:return
     nasportid = nasportid.lower()
     def parse_vlanid():
@@ -31,7 +33,7 @@ def parse_cisco(req):
 
 def parse_std(req):
     ''''''
-    nasportid = req.get('NAS-Port-Id')
+    nasportid = req.get_nas_portid()
     if not nasportid:return
     nasportid = nasportid.lower()
     def parse_vlanid():
@@ -58,7 +60,7 @@ def parse_std(req):
 
 def parse_ros(req):
     ''''''
-    nasportid = req.get('NAS-Port-Id')
+    nasportid = req.get_nas_portid()
     if not nasportid:return
     nasportid = nasportid.lower()
     def parse_vlanid():
@@ -88,12 +90,19 @@ _parses = {
     '2352' : parse_radback,
     '2011' : parse_std,
     '25506' : parse_std,
+    '39999' : parse_std,
     '3902' : parse_zte,
     '14988' : parse_ros
 }
 
-def process(req):
-    if req.vendor_id in _parses:
-        _parses[req.vendor_id](req)
-    return req
 
+def process(req):
+    try:
+        vendorid = str(req.vendor_id)
+        if vendorid in _parses:
+            _parses[vendorid](req)
+        else:
+            parse_normal(req)
+    except Exception as err:
+        logger.exception(err,trace="radius")
+    return req
