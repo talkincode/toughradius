@@ -1,0 +1,113 @@
+<%inherit file="base.html"/>
+
+<%def name="head()">
+<script src="/static/plugins/datatables/jquery.dataTables.js" type="text/javascript"></script>
+<script src="/static/plugins/datatables/dataTables.bootstrap.js" type="text/javascript"></script>
+<link href="/static/plugins/datatables/dataTables.bootstrap.css" rel="stylesheet" type="text/css" />
+<link href="/static/js/toastr.min.css" rel="stylesheet" type="text/css"/>
+<script src="/static/js/toastr.min.js"></script>
+<script src="/static/js/jquery.upload.min.js" type="text/javascript"></script>
+<link href="/static/js/jquery.upload.css" rel="stylesheet" type="text/css" />
+<script>
+var bar_opts =  {
+  "closeButton": true,
+  "debug": false,
+  "newestOnTop": false,
+  "progressBar": true,
+  "positionClass": "toast-top-right",
+  "preventDuplicates": false,
+  "onclick": null,
+  "showDuration": "300",
+  "hideDuration": "500",
+  "timeOut": "15000",
+  "extendedTimeOut": "15000",
+  "showEasing": "swing",
+  "hideEasing": "linear",
+  "showMethod": "fadeIn",
+  "hideMethod": "fadeOut"
+}
+
+function upgrade(uid){
+    if (!confirm("确认升级吗？")) {
+        return false;
+    }  
+    toastr.info("正在执行升级，请等待升级完成",'',bar_opts);
+    $.get("/admin/upgrade/perform", {uid:uid}, function (ev) {
+        ev.code==0 ? toastr.success(ev.msg) : toastr.error(ev.msg);
+        setTimeout("window.location.reload()",900);
+    }, "json");
+}
+
+function restartall(){
+    if (!confirm("确认此操作吗？")) {
+        return false;
+    }
+    $.get("/admin/superrpc/restartall", {}, function (ev) {
+        toastr.info(ev.msg,'',bar_opts);
+        setTimeout("window.location.reload()",10000);
+    }, "json");
+}
+
+</script>
+<script>
+    $(function () {
+        $('#upgrade_upload').uploadifive({
+            'buttonText': '上传升级服务包',
+            'buttonClass': 'btn btn-sm bg-navy',
+            'width': 120,
+            'lightheight': 18,
+            'height':30,
+            'queueID': 'queue',
+            'formData': {'_xsrf': '${handler.xsrf_token}'},
+            'fileSizeLimit': '100MB',
+            'uploadScript': '/admin/upgrade/upload',
+            'onUploadComplete': function (file, data, response) {
+                  toastr.info(data);
+            }
+        });      
+    });
+</script>
+
+</%def>
+
+<%def name="body()">
+<section class="content">
+    <div class="box box-default">
+        <div class="box-header">
+            <i class="fa fa-archive"></i>
+            <h3 class="box-title">系统升级管理</h3>
+            <div class="bar pull-right">
+             <a href="javascript:window.location.reload();"><i class="fa fa-refresh"></i> 刷新</a>
+            </div>              
+        </div>
+        <div class="box-body">
+            <div class="container">     
+                % if current_user.opr_type == 0:
+                <div class="pull-left bottom10">
+                     <a id="upgrade_upload" class="btn btn-sm bg-navy"><i class="fa fa-upload"></i>  上传版本升级</a>
+                     <a href="javascript:restartall();" class="btn btn-sm bg-navy"><i class="fa fa-play-circle"></i>  重启系统服务</a>
+                </div>
+                % endif   
+                <div class="clearfix"></div>
+                <div id="queue"></div>            
+               <div class="form-well">
+                 <h4>ToughRADIUS 升级说明</h4>
+                 <hr>
+                 <p>ToughRADIUS 升级服务由开源社区提供，以及第三方开发者提供。</p>
+                 <p>ToughRADIUS 是一个开源软件，遵循ToughRADIUS 开源许可协议的前提下，任何开发者都能提供 ToughRADIUS 的升级服务包。</p>
+                 <p>请确信您获取升级服务包的来源的可信性，自行鉴别升级服务包的可靠性，以避免不安全的升级服务包(比如携带木马)给您带来损失。
+                 </p>
+               </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+</%def>
+
+
+
+
+
+
+

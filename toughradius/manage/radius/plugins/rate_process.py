@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #coding=utf-8
 
+from toughlib import logger
 
 def std_rate(resp, _in, _out):
     # input_limit = str(_in)
@@ -15,6 +16,15 @@ def ros_rate(resp, _in, _out):
     _orate = _out / 1024
     resp['Mikrotik-Rate-Limit'] = '%sk/%sk' % (_irate, _orate)
     return resp
+
+
+def panabit_rate(resp, _in, _out):
+    _irate = _in / 1024
+    _orate = _out / 1024
+    resp['Mikrotik-Rate-Limit'] = '%sk/%sk' % (_irate, _orate)
+    return resp
+
+
 
 
 def aikuai_rate(resp, _in, _out):
@@ -68,13 +78,20 @@ rate_funcs = {
     '3902': zte_rate,
     '25506': h3c_rate,
     '14988': ros_rate,
+    '39999': panabit_rate,
     '10055': aikuai_rate
 }
 
-
 def process(resp=None, input_rate=0, output_rate=0):
-    if input_rate == 0 and output_rate == 0:
-        return std_rate(resp, 0, 0)
+    try:
+        if input_rate == 0 and output_rate == 0:
+            return std_rate(resp, 0, 0)
 
-    _vendor = resp.vendor_id or '0'
-    return rate_funcs[_vendor](resp, input_rate, output_rate)
+        _vendor = str(resp.vendor_id)
+        if _vendor in rate_funcs:
+            return rate_funcs[_vendor](resp, int(input_rate), int(output_rate))
+        else:
+            return std_rate(resp, int(input_rate), int(output_rate))
+    except Exception as err:
+        logger.exception(err,trace="radius")
+        return resp

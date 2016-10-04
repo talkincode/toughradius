@@ -1,6 +1,7 @@
 html,
 body {
     font-size: 12px;
+    font-family: "Helvetica Neue",Helvetica,"微软雅黑", Arial,sans-serif;
 }
 
 .container{
@@ -10,6 +11,14 @@ body {
     padding-top: 15px;
     min-height: 100vh;
     background-color: #E5E5E5;
+}
+
+.box{
+    box-shadow:none;
+}
+
+.box.box-default {
+    border-top-color: #DEE7EA;
 }
 
 .main-bg{
@@ -57,6 +66,10 @@ body {
 }
 
 .bottom10{
+    margin-bottom: 10px;
+}
+
+.bottom20{
     margin-bottom: 10px;
 }
 
@@ -128,26 +141,18 @@ form .footbotron {
 }
 
 
-.opt-btn{
-    display: inline-block;
-    margin: 0 3px;
-    font-weight: 300;
+.opt-btn {
+    color: #3075BA;
+    display: inline;
     text-align: center;
-    vertical-align: middle;
     cursor: pointer;
     background-image: none;
-    background-color: rgba(193, 194, 202, 0.07);
-    border: 1px solid rgba(0, 0, 0, 0.11);
     white-space: nowrap;
-    padding: 3px 6px;
+    padding: 3px 5px 3px 5px;
     font-size: 12px;
     line-height: 1.1;
     border-radius: 4px;
     -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-
 }
 
 
@@ -170,11 +175,11 @@ form .footbotron {
 
 .form-well{
     min-height: 20px;
-    padding: 19px;
+    padding: 9px;
     /*background-color: rgba(247, 247, 247, 0.66);*/
     /*border: 1px solid rgba(240, 240, 240, 0.42);*/
-    border-radius: 9px;
-    margin-bottom:20px;
+    /*border-radius: 9px;*/
+    /*margin-bottom:20px;*/
 }
 
 .top10 {
@@ -232,12 +237,58 @@ form .footbotron {
     font-weight: 600;
 }
 
+.skin-blue .main-header .navbar > li > a, 
+.skin-blue .main-header .navbar .navbar-nav > li > a {
+    border-right: 1px solid rgba(194, 194, 194, 0.2);
+    border-left: 1px solid rgba(216, 216, 216, 0.1);
+}
+
 .skin-blue .main-header .navbar {
-    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.38);
+    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.28);
+    background: linear-gradient(0deg,rgb(254, 254, 254) 0,#FFFFFF 70%);
 }
 
 .skin-blue .main-header .logo {
-    box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.18);
+    /* box-shadow: 3px 4px 3px rgba(174, 173, 173, 0.08); */
+    background: linear-gradient(0deg,rgb(45, 54, 59) 0,#1A2226 90%);
+    color: #fff;
+    border-bottom: 0 solid transparent;    
+}
+
+.skin-blue .main-header .logo:hover {
+  background: linear-gradient(0deg,rgb(45, 54, 59) 0,#1A2226 60%);
+}
+
+.skin-blue .main-header .navbar .sidebar-toggle {
+    color: #1B1B1B;
+    margin-top: 3px;
+}
+
+.skin-blue .main-header .navbar .sidebar-toggle:hover {
+  color: #1B1B1B;
+  background: linear-gradient(0deg,rgb(228, 228, 228) 0,#FFFFFF 90%);
+}
+
+.skin-blue .main-header .navbar .nav>li>a {
+    color: #737373;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.skin-blue .main-header .navbar .nav > li > a:hover,
+.skin-blue .main-header .navbar .nav > li > a:active,
+.skin-blue .main-header .navbar .nav > li > a:focus,
+.skin-blue .main-header .navbar .nav .open > a,
+.skin-blue .main-header .navbar .nav .open > a:hover,
+.skin-blue .main-header .navbar .nav .open > a:focus {
+  background: linear-gradient(0deg,rgb(235, 235, 235) 0,F7F7F7 50%);
+  color: #404040;
+}
+
+.skin-blue .sidebar-menu>li>a {
+    text-decoration: none;
+    border-left: 0px solid transparent; 
+    margin-right: 1px;
 }
 
 input{
@@ -250,7 +301,7 @@ input{
 }
 
 .box-header > .fa, .box-header > .glyphicon, .box-header > .ion{
-    color: #3c8dbc;
+    color: #6E7E86;
 }
 
 .form-group {
@@ -259,6 +310,8 @@ input{
 
 .form-control {
     height: 32px;
+    border: 1px solid #d2d6de;    
+    border-radius: 5px !important;
 }
 
 #error_box .jumbotron {
@@ -273,3 +326,54 @@ input{
     padding-left: 70px;
 }
 
+.wrong{
+    color: red;
+}
+
+.msg-box {
+    min-height: 20px;
+    padding: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-bottom: 5px;
+    background-color: rgb(244, 244, 244);
+    border: 1px solid rgba(227, 227, 227, 0.41);
+    border-radius: 7px;
+}
+
+/*.table {
+    border-collapse: separate;  
+    border: 1px solid rgb(237, 237, 237);;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+
+.table>thead{
+    font-size: 13px;
+    background-color: #e4eaec;
+    border: none;
+}
+
+.table>thead>tr>th{
+    border: none;
+}*/
+
+.btn-group-vertical>.btn, .btn-group>.btn {
+    border-radius: 7px;
+}
+
+.btn{
+    margin-left: 2px;
+    font-weight: 500;
+}
+
+.bg-navy {
+    background-color: #51595D !important;
+}
+
+.dropdown-menu .divider {
+    height: 1px;
+    margin: 4.5px 0;
+    overflow: hidden;
+    background-color: rgb(224, 224, 224);
+}

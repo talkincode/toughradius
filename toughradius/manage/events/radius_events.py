@@ -3,6 +3,7 @@
 from twisted.internet import reactor
 from toughlib import  utils,dispatch,logger
 from txradius import statistics
+from toughlib.dbutils import make_db
 from toughradius.manage import models
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius.manage.settings import *
@@ -15,6 +16,7 @@ from txradius import authorize
 import toughradius
 import decimal
 import datetime
+import json
 import os
 
 
@@ -91,12 +93,32 @@ class RadiusEvents(BasicEvent):
             debug=True,
             User_Name=account_number,
             NAS_IP_Address=nas.ip_addr,
-            Acct_Session_Id=acct_session_id
+            Acct_Session_Id=acct_session_id,
+            Framed_IP_Address=online.framed_ipaddr,
         ).addCallback(
             self.onSendResp, self.get_request(online)).addErrback(
             self.onSendError, self.get_request(online))
 
 
+
+    def event_clear_online(self, account_number,nas_addr, acct_session_id):
+        try:
+            with make_db(self.db) as db:
+                logger.info("event clear expire online [username:{0}] {1} {2}".format(account_number, nas_addr, acct_session_id))
+                nas = db.query(models.TrBas).filter_by(ip_addr=nas_addr).first()
+                if nas_addr and  not nas:
+                    db.query(models.TrOnline).filter_by(
+                        nas_addr=nas_addr,acct_session_id=acct_session_id).delete()
+                    db.commit()                
+                    return
+
+                online = db.query(models.TrOnline).filter_by(
+                        nas_addr=nas_addr, acct_session_id=acct_session_id).first()            
+                clear_req = self.get_request(online)
+                radius_acct_stop.RadiusAcctStop(self.dbengine,self.mcache,self.aes,clear_req).acctounting()
+                logger.info(u"系统触发用户过期清理成功: [username:%s] OnlineInfo: %s "%(str(account_number), json.dumps(clear_req)),trace="event" )
+        except Exception as err:
+            logger.exception(err)    
 
 
 def __call__(dbengine=None, mcache=None, **kwargs):

@@ -38,9 +38,9 @@ class AddHandler(BaseHandler):
         products = [(p.id,p.product_name) for p in self.db.query(models.TrProduct)]
         form = operator_form.operator_add_form(nodes,products)
         if not form.validates(source=self.get_params()):
-            return self.render("base_form.html", form=form)
+            return self.render("opr_form.html", form=form,rules=self.get_arguments("rule_item"))
         if self.db.query(models.TrOperator.id).filter_by(operator_name=form.d.operator_name).count() > 0:
-            return self.render("base_form.html", form=form, msg=u"操作员已经存在")
+            return self.render("opr_form.html", form=form, msg=u"操作员已经存在",rules=self.get_arguments("rule_item"))
         operator = models.TrOperator()
         operator.operator_name = form.d.operator_name
         operator.operator_pass = md5(form.d.operator_pass.encode()).hexdigest()
@@ -110,7 +110,7 @@ class UpdateHandler(BaseHandler):
         if not form.validates(source=self.get_params()):
             rules = self.db.query(models.TrOperatorRule.rule_path).filter_by(operator_name=form.d.operator_name)
             rules = [r[0] for r in rules]
-            return self.render("base_form.html", form=form,rules=rules)
+            return self.render("opr_form.html", form=form,rules=rules)
         operator = self.db.query(models.TrOperator).get(form.d.id)
         if form.d.operator_pass:
             operator.operator_pass = md5(form.d.operator_pass.encode()).hexdigest()

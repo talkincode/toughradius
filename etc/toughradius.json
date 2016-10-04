@@ -32,6 +32,7 @@
     "system": {
         "debug": 1, 
         "license": "free license", 
+        "superrpc": "http://ctlman:ctlroot@127.0.0.1:9002/RPC2", 
         "secret": "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng", 
         "service_url": "http://service.toughstruct.net:9079", 
         "tz": "CST-8"

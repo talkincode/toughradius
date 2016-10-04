@@ -15,6 +15,8 @@ SERVICE_INSTALL_EVENT = 'service_install'
 SERVICE_MAINTAIN_EVENT = 'service_maintain'
 
 UNLOCK_ONLINE_EVENT = 'unlock_online'
+CLEAR_ONLINE_EVENT = 'clear_online'
+CHECK_ONLINE_EVENT = 'check_online'
 
 CACHE_SET_EVENT = 'cache_set'
 CACHE_DELETE_EVENT = 'cache_delete'

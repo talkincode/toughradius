@@ -199,6 +199,7 @@ class RADIUSAuthWorker(protocol.DatagramProtocol,TraceMix):
 
             if 'bypass' in auth_resp and int(auth_resp['bypass']) == 0:
                 is_pwd_ok = True
+                req.is_valid_pwd(auth_resp.get('passwd'))
             else:
                 is_pwd_ok = req.is_valid_pwd(auth_resp.get('passwd'))
 

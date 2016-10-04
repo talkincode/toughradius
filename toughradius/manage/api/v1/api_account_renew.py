@@ -91,9 +91,6 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             if months == 0:
                 return self.render_verify_err(msg=u"无效的授权月数")
 
-            if not expire_date:
-                return self.render_verify_err(msg=u"到期时间不能为空")
-
 
             account = self.db.query(models.TrAccount).get(account_number)
             user = self.query_account(account_number)

@@ -2,8 +2,6 @@
 
 [![Build Status](https://travis-ci.org/talkincode/ToughRADIUS.svg?branch=master)](https://travis-ci.org/talkincode/ToughRADIUS)
 
-[![](https://badge.imagelayers.io/talkincode/toughradius:v2.svg)](https://imagelayers.io/?images=talkincode/toughradius:v2 'Get your own badge on imagelayers.io')
-
 ## TOUGHRADIUS 简介
 
 TOUGHRADIUS是一个开源的Radius服务软件，采用 Apache License 2.0 许可协议发布。
@@ -61,7 +59,7 @@ TOUGHRADIUS网站：http://www.toughradius.net
 
 TOUGHRADIUS 网站：http://www.toughradius.org
 
-TOUGHRADIUS 社区：http://forum.toughcloud.net
+TOUGHRADIUS 社区：https://forum.toughcloud.net
 
 TOUGHRADIUS 博客：http://blog.toughradius.org
 

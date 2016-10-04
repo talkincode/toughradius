@@ -5,7 +5,7 @@ from toughlib import btforms
 from toughlib.btforms import dataform
 from toughlib.btforms import rules
 from toughlib.btforms.rules import button_style, input_style
-
+button_style ={"class":"btn btn-md bg-navy"}
 boolean = {0: u"否", 1: u"是"}
 
 node_add_form = btforms.Form(

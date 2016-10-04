@@ -22,7 +22,7 @@
 
 <%def name="body()">
 <section class="content">
-    <div class="box box-primary">
+    <div class="box box-default">
         <div class="box-header">
             <i class="fa fa-rmb"></i>
             <h3 class="box-title">用户计费查询</h3>
@@ -59,7 +59,7 @@
             </div>
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" onclick="do_submit();" class="btn btn-primary">查询</button>
+                    <button type="submit" onclick="do_submit();" class="btn btn-md bg-navy">查询</button>
                     % if permit.match(current_user.username, '/admin/customer/billing/export'):
                     <a href="javascript:do_export();" class="btn btn-md btn-default"><span class="glyphicon glyphicon-arrow-down"></span>导出计费信息</a>
                     % endif
