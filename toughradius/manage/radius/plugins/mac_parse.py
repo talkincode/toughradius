@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 #coding=utf-8
 
+from toughlib import logger
+
 def get_radius_attr(req,key):
     try:
         attr = req[key]
@@ -62,16 +64,23 @@ _parses = {
             '2352' : parse_radback,
             '3902' : parse_zte,
             '14988' : parse_normal,
-            '25506' : parse_h3c
+            '25506' : parse_h3c,
+            '39999' : parse_normal,
         }
 
 
 
 def process(req):
-    if req.vendor_id in _parses:
-        _parses[req.vendor_id](req)
-    return req
+    try:
+        vendorid = str(req.vendor_id)
+        if vendorid in _parses:
+            _parses[vendorid](req)
+        else:
+            parse_normal(req)
+    except Exception as err:
+        logger.exception(err,trace="radius")
 
+    return req
 
 
 

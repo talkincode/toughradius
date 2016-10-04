@@ -47,7 +47,7 @@ function do_delete(customer_id)
 </%def>
 <%def name="body()">
 <section class="content">
-    <div class="box box-primary">
+    <div class="box box-default">
         <div class="box-header">
             <i class="fa fa-user"></i>
             <h3 class="box-title">用户受理</h3>
@@ -55,47 +55,47 @@ function do_delete(customer_id)
         </div>
         <div class="box-body">
             <div class="container">
-        <div class="pull-right">
+        <div class="pull-left">
            <div class="btn-group" role="group" aria-label="...">
             
             % if user.status == 2:
            
                 % if permit.match(current_user.username,'/admin/account/resume'):
-                <a class="btn btn-sm btn-info" href="javascript:do_resume('${user.account_number}');">复机</a>
+                <a class="btn btn-sm bg-navy" href="javascript:do_resume('${user.account_number}');">复机</a>
                 % endif
                
             % elif user.status == 1:
             
                 % if permit.match(current_user.username,'/admin/customer/update'):
-                <a href="/admin/customer/update?customer_id=${customer.customer_id}&account_number=${user.account_number}" class="btn btn-sm btn-info">修改基本资料</a>
+                <a href="/admin/customer/update?customer_id=${customer.customer_id}&account_number=${user.account_number}" class="btn btn-sm bg-navy">修改基本资料</a>
                 % endif
 
                 % if permit.match(current_user.username,'/admin/account/update'):
-                <a class="btn btn-sm btn-info" href="/admin/account/update?account_number=${user.account_number}">修改策略</a>
+                <a class="btn btn-sm bg-navy" href="/admin/account/update?account_number=${user.account_number}">修改策略</a>
                 % endif
 
                 % if permit.match(current_user.username,'/admin/account/release'):
-                <a class="btn btn-sm btn-info" href="javascript:release('${user.account_number}');">释放绑定</a>
+                <a class="btn btn-sm bg-navy" href="javascript:release('${user.account_number}');">释放绑定</a>
                 % endif
             
                 % if permit.match(current_user.username,'/admin/account/change'):
-                <a class="btn btn-sm btn-info" href="/admin/account/change?account_number=${user.account_number}">资费变更</a>
+                <a class="btn btn-sm bg-navy" href="/admin/account/change?account_number=${user.account_number}">资费变更</a>
                 % endif
                
                 % if permit.match(current_user.username,'/admin/account/pause'):
-                <a class="btn btn-sm btn-info" href="javascript:do_pause('${user.account_number}');">停机</a>
+                <a class="btn btn-sm bg-navy" href="javascript:do_pause('${user.account_number}');">停机</a>
                 % endif
                
                 % if user.product_policy in (0,2,3,5):
                
                     % if permit.match(current_user.username,'/admin/account/next'):
-                    <a class="btn btn-sm btn-info" href="/admin/account/next?account_number=${user.account_number}">续费</a>
+                    <a class="btn btn-sm bg-navy" href="/admin/account/next?account_number=${user.account_number}">续费</a>
                     % endif
                    
                 % elif user.product_policy in (1,4): 
                    
                     % if permit.match(current_user.username,'/admin/account/charge'):
-                    <a class="btn btn-sm btn-info" href="/admin/account/charge?account_number=${user.account_number}">充值</a>
+                    <a class="btn btn-sm bg-navy" href="/admin/account/charge?account_number=${user.account_number}">充值</a>
                     % endif
                    
                 % endif
@@ -107,7 +107,7 @@ function do_delete(customer_id)
             % elif user.status == 4:
            
                 % if permit.match(current_user.username,'/admin/account/next'):
-                <a class="btn btn-sm btn-info" href="/admin/account/next?account_number=${user.account_number}">续费</a>
+                <a class="btn btn-sm bg-navy" href="/admin/account/next?account_number=${user.account_number}">续费</a>
                 % endif
                
             % endif

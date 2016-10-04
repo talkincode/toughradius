@@ -2,7 +2,7 @@
 from toughlib import btforms
 from toughlib.btforms import rules
 from toughlib.btforms.rules import button_style,input_style
-
+button_style ={"class":"btn btn-md bg-navy"}
 boolean = {0:u"否", 1:u"是"}
 booleans = {'0': u"否", '1': u"是"}
 mailmodes = {'toughcloud': u"硬派云邮件服务", 'smtp': u"SMTP服务"}

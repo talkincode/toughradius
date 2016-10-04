@@ -4,7 +4,7 @@
 from toughlib import btforms
 from toughlib.btforms import rules
 from toughlib.btforms.rules import button_style, input_style
-
+button_style ={"class":"btn btn-md bg-navy"}
 
 password_update_form = btforms.Form(
     btforms.Textbox("tr_user", description=u"管理员名", size=32, readonly="readonly", **input_style),

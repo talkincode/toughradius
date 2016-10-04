@@ -68,6 +68,15 @@ class HttpServer(cyclone.web.Application):
         self.aes = utils.AESCipher(key=self.config.system.secret)
         self.logtrace = log_trace.LogTrace(redisconf)
 
+        self.superrpc = None
+        if self.config.system.get("superrpc"):
+            try:
+                import xmlrpclib
+                self.superrpc = xmlrpclib.Server(self.config.system.superrpc)
+                os.environ['TOUGHEE_SUPER_RPC'] = 'true'
+            except:
+                logger.error(traceback.format_exc())        
+
         logger.info("start register httpd events")
         # cache event init
         dispatch.register(self.mcache)

@@ -31,6 +31,7 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.aes = self.application.aes
         self.cache = self.application.mcache
         self.db_backup = self.application.db_backup
+        self.superrpc = self.application.superrpc
         self.session = redis_session.Session(self.application.session_manager, self)
         self.logtrace = self.application.logtrace
 

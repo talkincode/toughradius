@@ -13,16 +13,16 @@
 
 <%def name="body()">
 <section class="content">
-    <div class="box box-primary">
+    <div class="box box-default">
         <div class="box-header">
             <i class="fa fa-map-marker"></i>
             <h3 class="box-title">区域管理</h3>
         </div>
     <div class="box-body">
      <div class="container">
-        <div class="pull-right bottom10">
+        <div class="pull-left bottom10">
             % if permit.match(current_user.username,'/admin/node/add'):
-             <a href="/admin/node/add" class="btn btn-sm btn-default">
+             <a href="/admin/node/add" class="btn btn-sm bg-navy">
                   增加区域</a>
             % endif
         </div>

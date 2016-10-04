@@ -60,7 +60,7 @@ $(document).ready(function (){
 
 <%def name="body()">
 <section class="content">
-    <div class="box box-primary">
+    <div class="box box-default">
         <div class="box-header">
             <i class="fa fa-users"></i>
             <h3 class="box-title">在线用户管理</h3>
@@ -115,7 +115,7 @@ $(document).ready(function (){
 
             <div class="form-group">
                 <div class="col-md-offset-5 col-md-7">
-                    <button type="submit" id="query_action" class="btn btn-primary">查询</button>&nbsp;&nbsp;
+                    <button type="submit" id="query_action" class="btn btn-md bg-navy">查询</button>&nbsp;&nbsp;
                     % if int(current_user.opr_type) == 0 :
                     <button type="button" id="realse_all" class="btn btn-default" >BAS用户下线</button>
                     % endif
