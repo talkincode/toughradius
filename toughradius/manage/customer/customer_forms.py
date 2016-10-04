@@ -9,7 +9,8 @@ from toughlib.btforms.rules import button_style, input_style
 boolean = {0: u"否", 1: u"是"}
 user_state = {1: u"正常", 2: u"停机", 3: u"销户", 4: u"到期"}
 bind_state = {0: u"不绑定", 1: u"绑定"}
-_btn_style = {"class":"opt-btn btn-default"}
+_btn_style = {"class":"btn btn-sm bg-navy"}
+button_style ={"class":"btn btn-md bg-navy"}
 
 def customer_open_form(nodes=[], products=[]):
     return btforms.Form(

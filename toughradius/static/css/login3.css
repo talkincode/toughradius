@@ -12,3 +12,7 @@ body {
     background: url(/static/img/textured_paper.png) repeat top;
 
 }
+
+.has-feedback .form-control-feedback {
+    top:0px;
+}

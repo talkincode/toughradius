@@ -14,7 +14,7 @@
 
 <%def name="body()">
 <section class="content">
-    <div class="box box-primary">
+    <div class="box box-default">
         <div class="box-header">
             <i class="fa fa-users"></i>
             <h3 class="box-title">操作员信息列表</h3>
@@ -22,8 +22,8 @@
         <div class="box-body">
             <div class="container">
                 % if current_user.opr_type == 0:
-                <div class="pull-right bottom10">
-                     <a href="/admin/operator/add" class="btn btn-sm btn-info">增加操作员信息</a>
+                <div class="pull-left bottom10">
+                     <a href="/admin/operator/add" class="btn btn-sm bg-navy">增加操作员信息</a>
                 </div>
                 % endif
 

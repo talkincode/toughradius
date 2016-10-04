@@ -5,7 +5,7 @@
 </%def>
 <%def name="body()">
 <section class="content">
-    <div class="box box-primary">
+    <div class="box box-default">
         <div class="box-header">
             <i class="fa fa-hdd-o"></i>
             <h3 class="box-title">日志查询</h3>
@@ -24,7 +24,7 @@
                     </select>
                     </div>
                     <div class="col-sm-3">
-                    <button type="submit" class="btn btn-primary" id="submit" placeholder="submit" name="submit"><b>查询</b></button>
+                    <button type="submit" class="btn btn-md bg-navy" id="submit" placeholder="submit" name="submit"><b>查询</b></button>
                     </div>
                 </form>
 
@@ -33,8 +33,7 @@
                      <a href="/admin/logger/download?log_name=${log_name}">下载当前日志</a>
                 </div>
                 % endif
-                <br>
-                <br>
+                <div class="clearfix"></div>
                 % if msg:
                 <div class="well">
                 ${msg}</div>
