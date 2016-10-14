@@ -6,7 +6,7 @@ import time
 sys.path.insert(0,os.path.split(__file__)[0])
 sys.path.insert(0,os.path.abspath(os.path.pardir))
 from toughlib import utils
-from toughradius.manage import models
+from toughradius import models
 from toughlib.dbengine import get_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius.manage.settings import FREE_FEE_PID, FreeFee

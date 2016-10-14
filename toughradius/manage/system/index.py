@@ -9,7 +9,7 @@ import os
 from beaker.cache import cache_managers
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.settings import * 
 from toughradius.common import tools
 import psutil

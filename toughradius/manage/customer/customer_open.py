@@ -8,17 +8,16 @@ import decimal
 import datetime
 import random
 from hashlib import md5
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughlib.permit import permit
 from toughlib import utils, dispatch
 from toughlib.btforms import rules
 from toughlib import redis_cache
-from toughradius.common.event_common import trigger_notify
 from toughradius.manage.settings import * 
-from toughradius.manage.events import settings
-from toughradius.manage.events.settings import ACCOUNT_OPEN_EVENT
+from toughradius.events import settings
+from toughradius.events.settings import ACCOUNT_OPEN_EVENT
 
 
 @permit.route(r"/admin/customer/open", u"用户快速开户",MenuUser, order=1.1000, is_menu=True)
@@ -152,12 +151,7 @@ class CustomerOpenHandler(CustomerHandler):
             password=form.d.password,
             expire_date=expire_date
         )
-        notifys = dict(toughcloud_sms='toughcloud_sms_account_open')
-        notifys['smtp_mail'] = 'smtp_account_open'
-        notifys['toughcloud_mail'] = 'toughcloud_mail_account_open_wp' if self.get_param_value('send_mail_wp', False) == 'yes' else 'toughcloud_mail_account_open'
-        trigger_notify(self, user_info, **notifys)
         dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
-        dispatch.pub(settings.ACCOUNT_OPEN_EVENT, account_cache_key(account.account_number), async=True)
 
         self.redirect(self.detail_url_fmt(account.account_number))
 

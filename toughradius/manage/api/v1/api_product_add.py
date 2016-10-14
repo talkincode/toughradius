@@ -7,7 +7,7 @@ from toughlib import utils, apiutils, dispatch
 from toughlib.permit import permit
 import datetime
 from toughradius.manage.api.apibase import ApiHandler
-from toughradius.manage import models
+from toughradius import models
 
 """ 添加产品套餐
 """

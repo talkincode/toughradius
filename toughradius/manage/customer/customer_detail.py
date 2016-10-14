@@ -7,7 +7,7 @@ import cyclone.web
 import decimal
 import datetime
 from tablib import Dataset
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughlib.permit import permit

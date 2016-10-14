@@ -5,7 +5,7 @@ import cyclone.escape
 import cyclone.web
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.system import param_forms
-from toughradius.manage import models
+from toughradius import models
 from toughlib.permit import permit
 from toughlib import dispatch,redis_cache
 from toughradius.manage.settings import * 

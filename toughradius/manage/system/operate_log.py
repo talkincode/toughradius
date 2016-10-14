@@ -5,7 +5,7 @@ import cyclone.auth
 import cyclone.escape
 import cyclone.web
 
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler, MenuSys
 from toughlib.permit import permit
 from toughradius.manage.settings import * 

@@ -10,7 +10,7 @@ import cyclone.web
 from toughlib import utils
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.system import operator_form
 from toughradius.manage.system.operator_form import opr_status_dict
 from toughradius.manage.settings import * 

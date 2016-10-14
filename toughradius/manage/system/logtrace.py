@@ -3,7 +3,7 @@
 
 import cyclone.web
 import decimal
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler,authenticated
 from toughradius.manage.customer import account
 from toughlib.permit import permit

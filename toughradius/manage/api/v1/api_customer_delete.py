@@ -8,8 +8,8 @@ from toughlib import utils, apiutils, dispatch
 from toughlib import db_cache as cache
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
-from toughradius.manage import models
-from toughradius.manage.events.settings import ACCOUNT_DELETE_EVENT
+from toughradius import models
+from toughradius.events.settings import ACCOUNT_DELETE_EVENT
 from toughradius.manage.settings import * 
 from hashlib import md5
 

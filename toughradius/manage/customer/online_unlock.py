@@ -3,12 +3,12 @@
 import os
 import cyclone.web
 import datetime
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
 from toughlib import utils
 from toughlib.storage import Storage
-from toughradius.manage.radius import radius_acct_stop
+from toughradius.radius import radius_acct_stop
 from toughradius.manage.settings import * 
 from txradius import authorize
 from txradius.radius import dictionary

@@ -6,14 +6,14 @@ import cyclone.escape
 import cyclone.web
 import decimal
 import datetime
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughlib.permit import permit
 from toughlib import utils,logger,dispatch,redis_cache
 from toughradius.manage.settings import * 
-from toughradius.manage.events import settings
-from toughradius.manage.events.settings import ACCOUNT_DELETE_EVENT
+from toughradius.events import settings
+from toughradius.events.settings import ACCOUNT_DELETE_EVENT
 
 
 @permit.route(r"/admin/customer/delete", u"用户资料删除",MenuUser, order=1.5000)

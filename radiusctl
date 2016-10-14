@@ -1,17 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import sys
+sys.path.insert(0,os.path.dirname(__file__))
+import re
 import time
-try:
-    _path = os.path.abspath(os.path.dirname(__file__))
-    execfile('%s/venv/bin/activate_this.py'%_path, dict(__file__='%s/venv/bin/activate_this.py'%_path))
-except:
-    pass
 from toughlib import choosereactor
 choosereactor.install_optimal_reactor(False)
 import sys,signal,click
 import platform as pf
-sys.path.insert(0,os.path.split(__file__)[0])
 from twisted.internet import reactor
 from twisted.python import log
 from toughlib import config as iconfig
@@ -21,8 +18,14 @@ from toughradius.manage import settings
 from toughradius.manage.settings import redis_conf
 from toughradius.common import log_trace
 from toughradius import __version__
+from supervisor.supervisord import main as superd
+from supervisor.supervisorctl import main as superctl
 
 reactor.suggestThreadPoolSize(30)
+
+RUNDIR=os.path.dirname(__file__)
+radius_conf = '%s/etc/toughradius.conf'%RUNDIR
+radius_json = '%s/etc/toughradius.json'%RUNDIR
 
 def setup_logger(config):
     syslog = logger.Logger(config,'radius')
@@ -69,13 +72,13 @@ def cli():
 
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 @click.option('-t','--start-taskd', is_flag=True, help="start taskd process")
 def manage(conf,debug,start_taskd):
-    """ 启动管理控制台 """
-    from toughradius.manage import httpd
-    from toughradius.manage import taskd
+    """ start manage console """
+    from toughradius import httpd
+    from toughradius import taskd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
@@ -89,15 +92,15 @@ def manage(conf,debug,start_taskd):
 
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 @click.option('-auth','--start-auth', is_flag=True, help="start radisu auth listen process")
 @click.option('-acct','--start-acct', is_flag=True, help="start radius acct listen process")
 @click.option('-worker','--start-worker', is_flag=True, help="start radius worker process")
 def radiusd(conf,debug,start_auth,start_acct,start_worker):
-    """ 启动 Radiusd 服务 """
-    from toughradius.manage import radiusd
-    from toughradius.manage import taskd
+    """ start radius service """
+    from toughradius import radiusd
+    from toughradius import taskd
     from toughlib.redis_cache import CacheManager
     config = iconfig.find_config(conf)
     update_timezone(config)
@@ -118,11 +121,11 @@ def radiusd(conf,debug,start_auth,start_acct,start_worker):
 
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 def task(conf,debug):
-    """ 启动定时任务 """
-    from toughradius.manage import taskd
+    """ start tasks """
+    from toughradius import taskd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
@@ -134,11 +137,11 @@ def task(conf,debug):
 
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 def auth(conf,debug):
-    """ 启动 Radius 认证监听 """
-    from toughradius.manage import radiusd
+    """ start auth listen """
+    from toughradius import radiusd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
@@ -150,11 +153,11 @@ def auth(conf,debug):
 
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 def acct(conf,debug):
-    """ 启动 Radius 记账监听 """
-    from toughradius.manage import radiusd
+    """ start acct listen """
+    from toughradius import radiusd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
@@ -166,12 +169,12 @@ def acct(conf,debug):
 
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 @click.option('-n','--num', default=2,type=click.INT)
 def worker(conf,debug,num):
-    """ 启动 Radius 消息处理器 """
-    from toughradius.manage import radiusd
+    """ start radius worker """
+    from toughradius import radiusd
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
@@ -182,32 +185,24 @@ def worker(conf,debug,num):
     reactor_run()
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-f','--force', is_flag=True)
 def initdb(conf,force):
-    """ 初始化数据库 """
+    """ init database """
     from toughradius.common import initdb as init_db
     config = iconfig.find_config(conf)
     init_db.update(config,force=force)
 
-@click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
-@click.option('-f','--force', is_flag=True)
-def inittest(conf,force):
-    """ 初始化测试数据 """
-    from toughradius.common import inittest as init_test
-    config = iconfig.find_config(conf)
-    init_test.update(config)
 
 @click.command()
-@click.option('-c','--conf', default='/etc/toughradius.json', help='config file')
+@click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
 @click.option('--exitwith', default=0,type=click.INT, help='exit after sec')
 def standalone(conf,debug,exitwith):
-    """ 启动单进程模式 """
-    from toughradius.manage import httpd
-    from toughradius.manage import radiusd
-    from toughradius.manage import taskd
+    """ start standalone mode """
+    from toughradius import httpd
+    from toughradius import radiusd
+    from toughradius import taskd
     from toughlib.redis_cache import CacheManager
     config = iconfig.find_config(conf)
     update_timezone(config)
@@ -228,6 +223,30 @@ def standalone(conf,debug,exitwith):
     reactor_run()
 
 
+
+@click.command()
+@click.option('-c','--conf', default=radius_conf, help='daemon config file')
+@click.option('-s','--signal', default='status', 
+    help='daemon signal:'
+    '[ start all(procname) '
+    '| stop all(procname) '
+    '| restart all(procname) '
+    '| status '
+    '| reload '
+    '| shutdown ]')
+@click.option('-n','--nodaemon', is_flag=True)
+@click.option('-d','--debug', is_flag=True)
+def daemon(conf,signal,nodaemon,debug):
+    """ start daemon """
+    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
+    if signal == "startup":
+        _args = ['-n',"-c",conf] if nodaemon else ["-c",conf]
+        sys.exit(superd(args=_args))
+    else:
+        sys.exit(superctl(args=["-c",conf,signal]))
+
+
+
 cli.add_command(manage)
 cli.add_command(radiusd)
 cli.add_command(task)
@@ -237,6 +256,7 @@ cli.add_command(worker)
 cli.add_command(initdb)
 cli.add_command(inittest)
 cli.add_command(standalone)
+cli.add_command(daemon)
 
 if __name__ == '__main__':
     cli()

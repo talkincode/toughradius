@@ -6,15 +6,15 @@ import cyclone.escape
 import cyclone.web
 import decimal
 import datetime
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
 from toughlib import utils, dispatch
 from toughradius.manage.settings import * 
-from toughradius.manage.events import settings
-from toughradius.manage.events.settings import ACCOUNT_PAUSE_EVENT
-from toughradius.manage.events.settings import UNLOCK_ONLINE_EVENT
+from toughradius.events import settings
+from toughradius.events.settings import ACCOUNT_PAUSE_EVENT
+from toughradius.events.settings import UNLOCK_ONLINE_EVENT
 
 
 @permit.route(r"/admin/account/pause", u"用户停机",MenuUser, order=2.1000)

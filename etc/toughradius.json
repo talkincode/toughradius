@@ -20,7 +20,7 @@
     "redis": {
         "host": "127.0.0.1", 
         "passwd": "", 
-        "port": 16370
+        "port": 6379
     }, 
     "syslog": {
         "enable": 0, 

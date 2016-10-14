@@ -10,9 +10,9 @@ import os
 from txradius import authorize
 from toughlib.permit import permit
 from toughlib.storage import Storage
-from toughradius.manage.radius import radius_acct_stop
+from toughradius.radius import radius_acct_stop
 from toughradius.manage.api.apibase import ApiHandler
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.settings import *
 
 """ 下线客户上网账号

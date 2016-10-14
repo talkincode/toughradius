@@ -17,7 +17,7 @@ from toughlib.paginator import Paginator
 from toughradius import __version__ as sys_version
 from toughlib.permit import permit
 from toughradius.manage.settings import *
-from toughradius.manage import models
+from toughradius import models
 from toughlib import redis_session 
 from toughlib import dispatch,logger
 from twisted.python.failure import Failure

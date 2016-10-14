@@ -2,7 +2,7 @@
 #coding=utf-8
 import cyclone.web
 from tablib import Dataset
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
 from toughlib import utils

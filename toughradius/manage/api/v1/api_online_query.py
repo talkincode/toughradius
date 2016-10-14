@@ -6,7 +6,7 @@ from toughlib import utils, apiutils
 from toughlib import logger
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
-from toughradius.manage import models
+from toughradius import models
 
 
 @permit.route(r"/api/v1/online/query")

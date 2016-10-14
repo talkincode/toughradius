@@ -7,7 +7,7 @@ from toughlib.btforms import rules
 from toughlib import utils, apiutils, dispatch
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
-from toughradius.manage import models
+from toughradius import models
 from hashlib import md5
 
 """ 客户交易确认

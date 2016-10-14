@@ -20,3 +20,4 @@ psutil
 toughlib
 txradius
 redis
+supervisor

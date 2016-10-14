@@ -6,7 +6,7 @@ import cyclone.escape
 import cyclone.web
 import decimal
 import datetime
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account_forms
 from toughlib.permit import permit

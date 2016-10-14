@@ -11,7 +11,7 @@ from toughlib import utils,dispatch,logger
 from twisted.internet import defer
 from toughradius.manage.base import BaseHandler,authenticated
 from toughlib.permit import permit
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.settings import * 
 from toughradius.common import tools
 from cyclone import httpclient

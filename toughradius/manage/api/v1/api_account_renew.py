@@ -6,10 +6,10 @@ from toughlib import utils, apiutils,dispatch
 from hashlib import md5
 from toughlib.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.customer.account import AccountCalc
 from toughradius.manage.settings import * 
-from toughradius.manage.events.settings import *
+from toughradius.events.settings import *
 
 """ 客户续费
 """

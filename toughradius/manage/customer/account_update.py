@@ -5,13 +5,13 @@ import cyclone.auth
 import cyclone.escape
 import cyclone.web
 import decimal
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughlib.permit import permit
 from toughlib import utils,dispatch,redis_cache
 from toughradius.manage.settings import * 
-from toughradius.manage.events import settings
+from toughradius.events import settings
 
 @permit.route(r"/admin/account/update", u"用户策略修改",MenuUser, order=2.2000)
 class AccountUpdatetHandler(account.AccountHandler):

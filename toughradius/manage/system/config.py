@@ -6,7 +6,7 @@ from toughlib import utils, logger, dispatch
 from toughradius.manage.base import BaseHandler
 from toughlib.permit import permit
 from toughradius.manage.system import config_forms
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.settings import * 
 
 @permit.route(r"/admin/config", u"系统配置管理", MenuSys, order=2.0000, is_menu=True)

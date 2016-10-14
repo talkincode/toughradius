@@ -6,7 +6,7 @@ from hashlib import md5
 from toughlib import utils
 from toughradius.manage.base import BaseHandler, MenuSys
 from toughlib.permit import permit
-from toughradius.manage import models
+from toughradius import models
 from toughradius.manage.system import password_forms
 from toughradius.manage.settings import * 
 

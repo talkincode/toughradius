@@ -3,7 +3,7 @@
 from hashlib import md5
 from toughlib import utils
 from toughradius.manage.base import BaseHandler
-from toughradius.manage import models
+from toughradius import models
 from toughlib.permit import permit
 
 @permit.route(r"/admin/login")
