@@ -8,7 +8,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
 from sqlalchemy.orm import scoped_session, sessionmaker
 from hashlib import md5
-from toughlib import utils
+from toughradius.common import utils
 import functools
 
 DeclarativeBase = declarative_base()

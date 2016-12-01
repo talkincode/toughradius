@@ -6,8 +6,8 @@ import cyclone.web
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.system import param_forms
 from toughradius import models
-from toughlib.permit import permit
-from toughlib import dispatch,redis_cache
+from toughradius.common.permit import permit
+from toughradius.common import dispatch,redis_cache
 from toughradius.manage.settings import * 
 
 @permit.route("/admin/param", u"系统参数管理", MenuSys, is_menu=True, order=2.0005)

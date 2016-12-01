@@ -4,8 +4,8 @@ import sys, struct
 import msgpack
 import time
 import datetime
-from toughlib import utils
-from toughlib import logger
+from toughradius.common import utils
+from toughradius.common import logger
 from txradius import statistics
 from toughradius.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer

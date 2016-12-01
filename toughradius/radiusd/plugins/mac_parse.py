@@ -4,14 +4,12 @@
 from toughlib import logger
 
 def get_radius_attr(req,key):
-    try:
-        attr = req[key]
-        if isinstance(attr,list) and len(attr) > 0:
-            return attr[0]
-        else:
-            return attr
-    except:
-        return None
+    attr = req[key]
+    if isinstance(attr,list) and len(attr) > 0:
+        return attr[0]
+    else:
+        return attr
+
 
 def parse_cisco(req):
     for attr in req:
@@ -47,7 +45,6 @@ def parse_normal(req):
         req.client_mac = mac_addr.replace('-', ':')
     return req
 
-  
 def parse_h3c(req):
     mac_addr = get_radius_attr(req,'H3C-Ip-Host-Addr')
     if mac_addr and len(mac_addr) > 17:
@@ -59,18 +56,16 @@ def parse_h3c(req):
 
 
 _parses = {
-            '0' : parse_normal,
-            '9' : parse_cisco,
-            '2352' : parse_radback,
-            '3902' : parse_zte,
-            '14988' : parse_normal,
-            '25506' : parse_h3c,
-            '39999' : parse_normal,
-        }
+    '0' : parse_normal,
+    '9' : parse_cisco,
+    '2352' : parse_radback,
+    '3902' : parse_zte,
+    '14988' : parse_normal,
+    '25506' : parse_h3c,
+    '39999' : parse_normal,
+}
 
-
-
-def process(req):
+def radius_parse(req):
     try:
         vendorid = str(req.vendor_id)
         if vendorid in _parses:
@@ -78,11 +73,14 @@ def process(req):
         else:
             parse_normal(req)
     except Exception as err:
-        logger.exception(err,trace="radius")
+        logger.exception(err,trace="radius",tag="radius_mac_parse_error")
 
     return req
 
 
-
+plugin_name = 'radius mac parse'
+plugin_types = ['radius_auth_req','radius_acct_req']
+plugin_priority = 100
+plugin_func = radius_parse
 
 

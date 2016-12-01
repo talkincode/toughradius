@@ -8,8 +8,8 @@ import cyclone.web
 from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.resource import node_forms
-from toughlib.permit import permit
-from toughlib import utils
+from toughradius.common.permit import permit
+from toughradius.common import utils
 from toughradius.manage.settings import * 
 
 @permit.route(r"/admin/node", u"区域节点管理",MenuRes, order=1.0000, is_menu=True)

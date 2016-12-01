@@ -2,15 +2,15 @@
 #coding=utf-8
 
 import traceback
-from toughlib import apiutils
+from toughradius.common import apiutils
 from txradius.radius import dictionary
 import datetime
 import toughradius
 import os
 from txradius import authorize
-from toughlib.permit import permit
-from toughlib.storage import Storage
-from toughradius.radius import radius_acct_stop
+from toughradius.common.permit import permit
+from toughradius.common.storage import Storage
+from toughradius.radiusd import radius_acct_stop
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.manage.settings import *

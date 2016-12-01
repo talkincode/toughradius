@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-from toughlib import utils, apiutils
-from toughlib.permit import permit
+from toughradius.common import utils, apiutils
+from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
-from toughradius.radius.radius_authorize import RadiusAuth
+from toughradius.radiusd.radius_authorize import RadiusAuth
 
 @permit.route(r"/api/v1/authorize")
 class AuthorizeHandler(ApiHandler):

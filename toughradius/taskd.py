@@ -7,16 +7,16 @@ import importlib
 from twisted.python import log
 from twisted.internet import reactor,defer
 from sqlalchemy.orm import scoped_session, sessionmaker
-from toughlib import logger, utils,dispatch
+from toughradius.common import logger, utils,dispatch
 from toughradius import models
-from toughlib.dbengine import get_engine
-from toughlib.redis_cache import CacheManager
+from toughradius.common.dbengine import get_engine
+from toughradius.common.redis_cache import CacheManager
 from toughradius.manage.settings import redis_conf
 from toughradius.events import radius_events
 from toughradius.manage import settings
 from toughradius import tasks
 from toughradius.common import log_trace
-from toughlib import logger
+from toughradius.common import logger
 import toughradius
 import functools
 

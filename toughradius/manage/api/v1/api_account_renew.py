@@ -2,9 +2,9 @@
 #coding=utf-8
 import traceback
 import decimal
-from toughlib import utils, apiutils,dispatch
+from toughradius.common import utils, apiutils,dispatch
 from hashlib import md5
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.manage.customer.account import AccountCalc

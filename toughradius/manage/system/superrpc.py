@@ -6,9 +6,9 @@ import cyclone.auth
 import cyclone.escape
 import cyclone.web
 import traceback
-from toughlib import utils,dispatch,logger
+from toughradius.common import utils,dispatch,logger
 from toughradius.manage.base import BaseHandler,authenticated
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 from toughradius import models
 from toughradius.manage.settings import * 
 from toughradius.common import tools

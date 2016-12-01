@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from toughlib import utils
-from toughlib import logger
+from toughradius.common import utils
+from toughradius.common import logger
 import logging
 try:
     import redis

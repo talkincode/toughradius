@@ -6,9 +6,9 @@ import time
 import traceback
 from hashlib import md5
 from cyclone.util import ObjectDict
-from toughlib import utils, apiutils, dispatch, logger
+from toughradius.common import utils, apiutils, dispatch, logger
 from toughradius.manage.base import BaseHandler
-from toughlib.apiutils import apistatus
+from toughradius.common.apiutils import apistatus
 
 
 class ApiHandler(BaseHandler):

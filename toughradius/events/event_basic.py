@@ -3,7 +3,7 @@
 
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius import models
-from toughlib.dbutils import make_db
+from toughradius.common.dbutils import make_db
 from toughradius.manage.settings import param_cache_key
 
 class BasicEvent:

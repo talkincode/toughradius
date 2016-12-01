@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #coding:utf-8
 from hashlib import md5
-from toughlib import utils
+from toughradius.common import utils
 from toughradius.manage.base import BaseHandler
 from toughradius import models
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 
 @permit.route(r"/admin/login")
 class LoginHandler(BaseHandler):

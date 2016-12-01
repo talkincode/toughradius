@@ -9,8 +9,8 @@ import datetime
 from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
-from toughlib.permit import permit
-from toughlib import utils, dispatch
+from toughradius.common.permit import permit
+from toughradius.common import utils, dispatch
 from toughradius.manage.settings import * 
 from toughradius.events import settings
 from toughradius.events.settings import ACCOUNT_PAUSE_EVENT

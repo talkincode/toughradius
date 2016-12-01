@@ -8,8 +8,8 @@ import datetime
 from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.resource import product_forms
-from toughlib.permit import permit
-from toughlib import utils
+from toughradius.common.permit import permit
+from toughradius.common import utils
 from toughradius.manage.settings import * 
 
 

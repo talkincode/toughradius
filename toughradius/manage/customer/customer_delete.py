@@ -9,8 +9,8 @@ import datetime
 from toughradius import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
-from toughlib.permit import permit
-from toughlib import utils,logger,dispatch,redis_cache
+from toughradius.common.permit import permit
+from toughradius.common import utils,logger,dispatch,redis_cache
 from toughradius.manage.settings import * 
 from toughradius.events import settings
 from toughradius.events.settings import ACCOUNT_DELETE_EVENT

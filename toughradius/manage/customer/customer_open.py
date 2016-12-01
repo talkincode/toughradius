@@ -11,10 +11,10 @@ from hashlib import md5
 from toughradius import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
-from toughlib.permit import permit
-from toughlib import utils, dispatch
-from toughlib.btforms import rules
-from toughlib import redis_cache
+from toughradius.common.permit import permit
+from toughradius.common import utils, dispatch
+from toughradius.common.btforms import rules
+from toughradius.common import redis_cache
 from toughradius.manage.settings import * 
 from toughradius.events import settings
 from toughradius.events.settings import ACCOUNT_OPEN_EVENT

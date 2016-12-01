@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from toughlib import  utils
+from toughradius.common import  utils
 from toughradius import models
 from toughradius.manage.settings import *
-from toughlib.storage import Storage
+from toughradius.common.storage import Storage
 import decimal
 import datetime
 import copy

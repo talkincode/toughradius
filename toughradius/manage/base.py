@@ -12,14 +12,14 @@ import tempfile
 import traceback
 import functools
 from cyclone.util import ObjectDict
-from toughlib import utils
-from toughlib.paginator import Paginator
+from toughradius.common import utils
+from toughradius.common.paginator import Paginator
 from toughradius import __version__ as sys_version
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 from toughradius.manage.settings import *
 from toughradius import models
-from toughlib import redis_session 
-from toughlib import dispatch,logger
+from toughradius.common import redis_session 
+from toughradius.common import dispatch,logger
 from twisted.python.failure import Failure
 
 class BaseHandler(cyclone.web.RequestHandler):

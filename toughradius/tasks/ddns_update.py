@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #coding:utf-8
 import sys, struct
-from toughlib import utils,httpclient
-from toughlib import dispatch,logger
+from toughradius.common import utils
+from toughradius.common import dispatch,logger
 from toughradius import models
-from toughlib.dbutils import make_db
+from toughradius.common.dbutils import make_db
 from toughradius.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer
 from twisted.names import client, dns

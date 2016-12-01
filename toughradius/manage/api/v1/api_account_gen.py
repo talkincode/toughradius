@@ -4,9 +4,9 @@
 import traceback
 import datetime
 import random
-from toughlib import apiutils, dispatch
-from toughlib import db_cache as cache
-from toughlib.permit import permit
+from toughradius.common import apiutils, dispatch
+from toughradius.common import db_cache as cache
+from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.manage.settings import * 

@@ -10,8 +10,8 @@ from tablib import Dataset
 from toughradius import models
 from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
-from toughlib.permit import permit
-from toughlib import utils
+from toughradius.common.permit import permit
+from toughradius.common import utils
 from toughradius.manage.settings import * 
 
 

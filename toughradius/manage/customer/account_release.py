@@ -8,8 +8,8 @@ import decimal
 from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
-from toughlib.permit import permit
-from toughlib import utils,dispatch
+from toughradius.common.permit import permit
+from toughradius.common import utils,dispatch
 from toughradius.events import settings
 from toughradius.manage.settings import * 
 

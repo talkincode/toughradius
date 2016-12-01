@@ -2,12 +2,12 @@
 #coding=utf-8
 import time
 import traceback
-from toughlib import utils, apiutils, dispatch
-from toughlib.permit import permit
+from toughradius.common import utils, apiutils, dispatch
+from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
-from toughlib.btforms import dataform
-from toughlib.btforms import rules
+from toughradius.common.btforms import dataform
+from toughradius.common.btforms import rules
 
 nas_update_vform = dataform.Form(
     dataform.Item("dns_name", rules.len_of(0, 128), description=u"DNS域名"),

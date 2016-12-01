@@ -2,7 +2,7 @@
 #coding=utf-8
 
 import decimal,os
-from toughlib.storage import Storage
+from toughradius.common.storage import Storage
 
 decimal.getcontext().prec = 11
 decimal.getcontext().rounding = decimal.ROUND_UP

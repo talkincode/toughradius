@@ -12,9 +12,6 @@ def get_sys_uuid():
     mac=uuid.UUID(int = uuid.getnode()).hex[-12:] 
     return md5(":".join([mac[e:e+2] for e in range(0,11,2)])).hexdigest()
 
-def get_sys_token():
-    return txutils.getProcessOutput("/usr/local/bin/toughkey")
-
 def copydir(src, dst, excludes=[]):
     try:
         names = os.walk(src)

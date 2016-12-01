@@ -1,33 +1,20 @@
 #!/usr/bin/env python
 #coding=utf-8
-
+import re
 from toughlib import logger
+
+#cisco,ros,radback
+cisco_fmt =  re.compile(r'\w+\s\d+/\d+/\d+:(\d+).(\d+)\s')
 
 #  vlan parse          
 def parse_cisco(req):
     '''phy_slot/phy_subslot/phy_port:XPI.XCI'''
     nasportid = req.get_nas_portid()
     if not nasportid:return
-    nasportid = nasportid.lower()
-    def parse_vlanid():
-        ind = nasportid.find(':')
-        if ind == -1:return
-        ind2 = nasportid.find('.',ind)
-        if ind2 == -1:
-            req.vlanid = int(nasportid[ind+1])
-        else:
-            req.vlanid = int(nasportid[ind+1:ind2])
-    def parse_vlanid2():
-        ind = nasportid.find('.')
-        if ind == -1:return
-        ind2 = nasportid.find(' ',ind)
-        if ind2 == -1:
-            req.vlanid2 = int(nasportid[ind+1])
-        else:
-            req.vlanid2 = int(nasportid[ind+1:ind2])
-            
-    parse_vlanid()
-    parse_vlanid2()
+    matchs = cisco_fmt.search(nasportid.lower())
+    if matchs:
+        req.vlanid1 = matchs.group(1)
+        req.vlanid2 = matchs.group(2)
     return req
 
 
@@ -58,30 +45,11 @@ def parse_std(req):
     parse_vlanid2() 
     return req
 
-def parse_ros(req):
-    ''''''
-    nasportid = req.get_nas_portid()
-    if not nasportid:return
-    nasportid = nasportid.lower()
-    def parse_vlanid():
-        ind = nasportid.find(':')
-        if ind == -1:return        
-        ind2 = nasportid.find(' ',ind)
-        if ind2 == -1:return
-        req.vlanid = int(nasportid[ind+1:ind2])
         
-    def parse_vlanid2():
-        ind = nasportid.find(':')
-        if ind == -1:return
-        ind2 = nasportid.find('.',ind)
-        if ind2 == -1:return
-        req.vlanid2 = int(nasportid[ind+1:ind2])   
-    parse_vlanid()
-    parse_vlanid2()  
-    return req             
   
-parse_radback = parse_ros
-parse_zte = parse_ros
+parse_radback = parse_cisco
+parse_zte = parse_cisco
+parse_ros = parse_cisco
 
 _parses = {
     '0' : parse_std,
@@ -96,7 +64,7 @@ _parses = {
 }
 
 
-def process(req):
+def radius_parse(req):
     try:
         vendorid = str(req.vendor_id)
         if vendorid in _parses:
@@ -104,5 +72,15 @@ def process(req):
         else:
             parse_normal(req)
     except Exception as err:
-        logger.exception(err,trace="radius")
+        logger.exception(err,trace="radius",tag="radius_vlan_parse_error")
     return req
+
+
+plugin_name = 'radius vlan parse'
+plugin_types = ['radius_auth_req','radius_acct_req']
+plugin_priority = 110
+plugin_func = radius_parse
+
+
+
+

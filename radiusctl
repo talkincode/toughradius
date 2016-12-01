@@ -5,21 +5,22 @@ import sys
 sys.path.insert(0,os.path.dirname(__file__))
 import re
 import time
-from toughlib import choosereactor
+from toughradius.common import choosereactor
 choosereactor.install_optimal_reactor(False)
 import sys,signal,click
 import platform as pf
 from twisted.internet import reactor
 from twisted.python import log
-from toughlib import config as iconfig
-from toughlib import dispatch,logger,utils
-from toughlib.dbengine import get_engine
+from toughradius.common import config as iconfig
+from toughradius.common import dispatch,logger,utils
+from toughradius.common.dbengine import get_engine
 from toughradius.manage import settings
 from toughradius.manage.settings import redis_conf
 from toughradius.common import log_trace
 from toughradius import __version__
 from supervisor.supervisord import main as superd
 from supervisor.supervisorctl import main as superctl
+import traceback
 
 reactor.suggestThreadPoolSize(30)
 
@@ -101,7 +102,7 @@ def radiusd(conf,debug,start_auth,start_acct,start_worker):
     """ start radius service """
     from toughradius import radiusd
     from toughradius import taskd
-    from toughlib.redis_cache import CacheManager
+    from toughradius.common.redis_cache import CacheManager
     config = iconfig.find_config(conf)
     update_timezone(config)
     if debug:
@@ -197,30 +198,30 @@ def initdb(conf,force):
 @click.command()
 @click.option('-c','--conf', default=radius_json, help='config file')
 @click.option('-d','--debug', is_flag=True)
-@click.option('--exitwith', default=0,type=click.INT, help='exit after sec')
-def standalone(conf,debug,exitwith):
+def standalone(conf,debug):
     """ start standalone mode """
-    from toughradius import httpd
-    from toughradius import radiusd
-    from toughradius import taskd
-    from toughlib.redis_cache import CacheManager
-    config = iconfig.find_config(conf)
-    update_timezone(config)
-    if debug:
-        config.system.debug = True
-    dbengine = get_engine(config)
-    cache = CacheManager(redis_conf(config),cache_name='RadiusCache')
-    aes = utils.AESCipher(key=config.system.secret)
-    log = setup_logger(config)
-    httpd.run(config,dbengine,cache=cache,aes=aes)
-    radiusd.run_auth(config)
-    radiusd.run_acct(config)
-    radiusd.run_worker(config,dbengine,cache=cache,aes=aes,standalone=True)
-    taskd.run(config,dbengine,cache=cache,aes=aes,standalone=True)
-    if exitwith > 0:
-        print "testing application running and exit after %s seconds" % exitwith
-        reactor.callLater(exitwith,reactor.stop)
-    reactor_run()
+    try:
+        from toughradius import httpd
+        from toughradius import radiusd
+        from toughradius import taskd
+        from toughradius.common.redis_cache import CacheManager
+        config = iconfig.find_config(conf)
+        update_timezone(config)
+        if debug:
+            config.system.debug = True
+        dbengine = get_engine(config)
+        cache = CacheManager(redis_conf(config),cache_name='RadiusCache')
+        aes = utils.AESCipher(key=config.system.secret)
+        log = setup_logger(config)
+        httpd.run(config,dbengine,cache=cache,aes=aes)
+        radiusd.run_auth(config)
+        radiusd.run_acct(config)
+        radiusd.run_worker(config,dbengine,cache=cache,aes=aes,standalone=True)
+        taskd.run(config,dbengine,cache=cache,aes=aes,standalone=True)
+        reactor_run()        
+    except:
+        traceback.print_exc()
+        
 
 
 

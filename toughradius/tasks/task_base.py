@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 #coding:utf-8
-from toughlib.dbutils import make_db
+from toughradius.common.dbutils import make_db
 from toughradius import models
-from toughlib import logger
+from toughradius.common import logger
 
 class TaseBasic(object):
 

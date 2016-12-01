@@ -2,9 +2,9 @@
 #coding=utf-8
 import time
 import traceback
-from toughlib import utils, apiutils
-from toughlib import logger
-from toughlib.permit import permit
+from toughradius.common import utils, apiutils
+from toughradius.common import logger
+from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 

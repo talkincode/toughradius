@@ -5,11 +5,6 @@ venv:
 	venv/bin/pip install -U wheel;\
 	venv/bin/pip install -U coverage;\
 	venv/bin/pip install -U -r requirements.txt;\
-	)
-
-uplibs:
-	(\
-	venv/bin/pip install -U --no-deps https://github.com/talkincode/toughlib/archive/master.zip;\
 	venv/bin/pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip;\
 	)
 

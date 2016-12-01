@@ -6,8 +6,8 @@ import decimal
 from toughradius import models
 from toughradius.manage.base import BaseHandler,authenticated
 from toughradius.manage.customer import account
-from toughlib.permit import permit
-from toughlib import utils, dispatch
+from toughradius.common.permit import permit
+from toughradius.common import utils, dispatch
 from toughradius.manage.settings import * 
 import functools
 

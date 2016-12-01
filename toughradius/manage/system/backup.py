@@ -5,9 +5,9 @@ import os.path
 import cyclone.auth
 import cyclone.escape
 import cyclone.web
-from toughlib import utils,dispatch,logger
+from toughradius.common import utils,dispatch,logger
 from toughradius.manage.base import BaseHandler
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 from toughradius.manage.settings import * 
 
 @permit.route(r"/admin/backup", u"数据备份管理", MenuSys, order=5.0001, is_menu=True)

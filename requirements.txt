@@ -5,11 +5,9 @@ MarkupSafe
 requests
 PyYAML
 Twisted>=15.0.0
-treq
 tablib
 cyclone
 six
-autobahn
 pycrypto
 MySQL-python
 SQLAlchemy
@@ -17,7 +15,6 @@ pyzmq
 txzmq
 msgpack-python
 psutil
-toughlib
 txradius
 redis
 supervisor

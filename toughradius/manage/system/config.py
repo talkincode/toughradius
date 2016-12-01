@@ -2,9 +2,9 @@
 # coding:utf-8
 import os
 import cyclone.web
-from toughlib import utils, logger, dispatch
+from toughradius.common import utils, logger, dispatch
 from toughradius.manage.base import BaseHandler
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 from toughradius.manage.system import config_forms
 from toughradius import models
 from toughradius.manage.settings import * 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
 from toughradius.manage.base import BaseHandler
-from toughlib.permit import permit
+from toughradius.common.permit import permit
 
 @permit.route(r"/admin/logout")
 class LogoutHandler(BaseHandler):

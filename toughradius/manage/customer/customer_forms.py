@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-from toughlib import btforms
-from toughlib.btforms import dataform
-from toughlib.btforms import rules
-from toughlib.btforms.rules import button_style, input_style
+from toughradius.common import btforms
+from toughradius.common.btforms import dataform
+from toughradius.common.btforms import rules
+from toughradius.common.btforms.rules import button_style, input_style
 
 boolean = {0: u"否", 1: u"是"}
 user_state = {1: u"正常", 2: u"停机", 3: u"销户", 4: u"到期"}
