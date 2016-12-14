@@ -1,10 +1,15 @@
 #!/usr/bin/env python
 # coding=utf-8
-
+import os
+import toughradius
 from toughradius import models
 from txradius import message
 from toughradius.common import logger
 from toughradius.radiusd import plugins
+
+STATUS_TYPE_START   = 1
+STATUS_TYPE_STOP    = 2
+STATUS_TYPE_UPDATE  = 3
 
 DICTIONARY = os.path.join(os.path.dirname(toughradius.__file__), 'dictionarys/dictionary')
 
@@ -62,7 +67,7 @@ class WorkerBasic:
                     table.select().with_only_columns([table.c.param_value]).where(
                         table.c.param_name==name)).scalar() or defval
         try:
-            return self.mcache.aget(param_cache_key(name),fetch_result, expire=600)
+            return self.mcache.aget(PARAM_CACHE_KEY(name),fetch_result, expire=600)
         except Exception as err:
             logger.exception(err,trace="radius")
             return defval
@@ -77,7 +82,7 @@ class WorkerBasic:
                 val = conn.execute(table.select().where(
                     table.c.account_number==username)).first()
                 return val and Storage(val.items()) or None
-        return self.mcache.aget(account_cache_key(username),fetch_result, expire=600) is not None
+        return self.mcache.aget(ACCOUNT_CACHE_KEY(username),fetch_result, expire=600) is not None
 
     def log_trace(self,host,port,req,reply=None):
         """ Tracking logging, need to set the global config
@@ -133,7 +138,7 @@ class WorkerBasic:
             table = models.TrBas.__table__
             with self.db_engine.begin() as conn:
                 return conn.execute(table.select().where(table.c.ip_addr==ip_addr)).first()
-        return self.mcache.aget(bas_cache_key(ip_addr),fetch_result, expire=600)
+        return self.mcache.aget(BAS_CACHE_KEY(ip_addr),fetch_result, expire=600)
 
 
     def get_account_bind_nas(self,account_number):

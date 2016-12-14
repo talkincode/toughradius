@@ -10,10 +10,10 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils,dispatch,redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
+from toughradius import settings 
+from toughradius import events
 
-@permit.route(r"/admin/account/update", u"用户策略修改",MenuUser, order=2.2000)
+@permit.route(r"/admin/account/update", u"用户策略修改",settings.MenuUser, order=2.2000)
 class AccountUpdatetHandler(account.AccountHandler):
 
     @cyclone.web.authenticated
@@ -42,7 +42,8 @@ class AccountUpdatetHandler(account.AccountHandler):
 
         self.add_oplog(u'修改上网账号信息:%s' % (account.account_number))
         self.db.commit()
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(events.CACHE_DELETE_EVENT,
+            settings.ACCOUNT_CACHE_KEY(account.account_number), async=True)
         self.redirect(self.detail_url_fmt(account.account_number))
 
 

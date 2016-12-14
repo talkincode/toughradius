@@ -8,16 +8,15 @@ from toughradius.manage.system import param_forms
 from toughradius import models
 from toughradius.common.permit import permit
 from toughradius.common import dispatch,redis_cache
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
-@permit.route("/admin/param", u"系统参数管理", MenuSys, is_menu=True, order=2.0005)
+@permit.route("/admin/param", u"系统参数管理", settings.MenuSys, is_menu=True, order=2.0005)
 class ParamHandler(BaseHandler):
 
     @cyclone.web.authenticated
     def get(self):
         active = self.get_argument("active","syscfg")
         sys_form = param_forms.sys_form()
-        toughcloud_form = param_forms.toughcloud_form()
         notify_form = param_forms.notify_form()
         mail_form = param_forms.mail_form()
         rad_form = param_forms.rad_form()
@@ -25,19 +24,18 @@ class ParamHandler(BaseHandler):
         for p in self.db.query(models.TrParam):
             fparam[p.param_name] = p.param_value
 
-        for form in (sys_form, toughcloud_form, notify_form, mail_form, rad_form):
+        for form in (sys_form, notify_form, mail_form, rad_form):
             form.fill(fparam)
 
         return self.render("param.html",
                       active=active,
                       sys_form=sys_form,
-                      toughcloud_form=toughcloud_form,
                       mail_form=mail_form,
                       notify_form=notify_form,
                       rad_form=rad_form)
 
 
-@permit.route("/admin/param/update", u"系统参数更新", MenuSys, order=2.0006)
+@permit.route("/admin/param/update", u"系统参数更新", settings.MenuSys, order=2.0006)
 class ParamUpdateHandler(BaseHandler):
 
     @cyclone.web.authenticated

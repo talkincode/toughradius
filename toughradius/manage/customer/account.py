@@ -11,7 +11,7 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 
 class AccountHandler(BaseHandler):
@@ -52,16 +52,16 @@ class AccountCalc:
     def calc(self, months, product_id, old_expire, giftdays):
         product = self.db.query(models.TrProduct).get(product_id)
         # 预付费时长，预付费流量，
-        if product.product_policy in (PPTimes,PPFlow):
+        if product.product_policy in (settings.PPTimes,settings.PPFlow):
             return dict(policy=product.product_policy,fee_value=0,expire_date=MAX_EXPIRE_DATE)
 
         # 买断时长 买断流量
-        elif product.product_policy in (BOTimes,BOFlows):
+        elif product.product_policy in (settings.BOTimes,settings.BOFlows):
             fee_value = utils.fen2yuan(product.fee_price)
             return dict(policy=product.product_policy,fee_value=fee_value,expire_date=MAX_EXPIRE_DATE)
 
         # 预付费包月 
-        elif product.product_policy == PPMonth:
+        elif product.product_policy == settings.PPMonth:
             fee = decimal.Decimal(months) * decimal.Decimal(product.fee_price)
             fee_value = utils.fen2yuan(int(fee.to_integral_value()))
             start_expire = datetime.datetime.now()
@@ -72,7 +72,7 @@ class AccountCalc:
             return dict(policy=product.product_policy,fee_value=fee_value,expire_date=expire_date)
 
         # 买断包月
-        elif product.product_policy == BOMonth:
+        elif product.product_policy == settings.BOMonth:
             start_expire = datetime.datetime.now()
             if old_expire:
                 start_expire = datetime.datetime.strptime(old_expire,"%Y-%m-%d")

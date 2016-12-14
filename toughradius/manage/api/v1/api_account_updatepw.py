@@ -8,7 +8,7 @@ from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.events.settings import ACCOUNT_CHANGE_EVENT
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 """ 客户上网账号密码修改
 """
@@ -47,7 +47,7 @@ class AccountPwUpdateHandler(ApiHandler):
             self.add_oplog(u'修改用户上网账号%s密码' % account.account_number)
             self.db.commit()
             dispatch.pub(ACCOUNT_CHANGE_EVENT, account.account_number, async=True)
-            dispatch.pub(cache.CACHE_UPDATE_EVENT, account_cache_key(account.account_number), async=True)
+            dispatch.pub(cache.CACHE_UPDATE_EVENT, ACCOUNT_CACHE_KEY(account.account_number), async=True)
             self.render_success()
         except Exception as err:
             self.render_unknow(err)

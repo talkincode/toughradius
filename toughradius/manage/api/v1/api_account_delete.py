@@ -10,7 +10,7 @@ from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.events.settings import ACCOUNT_DELETE_EVENT
-from toughradius.manage.settings import * 
+from toughradius import settings 
 from hashlib import md5
 
 """ 客户账号删除，删除客户账号资料及相关数据，但不删除客户信息
@@ -53,7 +53,7 @@ class AccountDeleteHandler(ApiHandler):
             self.add_oplog(u'删除用户账号%s' % (account.account_number))
             self.db.commit()
             dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
-            dispatch.pub(cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True) 
+            dispatch.pub(cache.CACHE_DELETE_EVENT,ACCOUNT_CACHE_KEY(account.account_number), async=True) 
             self.render_success()
         except Exception as err:
             self.render_unknow(err)

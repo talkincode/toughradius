@@ -4,17 +4,17 @@
 from hashlib import md5
 
 from toughradius.common import utils
-from toughradius.manage.base import BaseHandler, MenuSys
+from toughradius.manage.base import BaseHandler, settings.MenuSys
 from toughradius.common.permit import permit
 from toughradius import models
 from toughradius.manage.system import password_forms
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 
 ###############################################################################
 # password update
 ###############################################################################
-@permit.route(r"/admin/password", u"密码修改", MenuSys, order=1.0100, is_menu=False)
+@permit.route(r"/admin/password", u"密码修改", settings.MenuSys, order=1.0100, is_menu=False)
 class PasswordUpdateHandler(BaseHandler):
     def get(self):
         form = password_forms.password_update_form()

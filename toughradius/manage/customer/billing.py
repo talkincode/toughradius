@@ -6,10 +6,10 @@ from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 import datetime
 
-@permit.route(r"/admin/customer/billing", u"用户计费日志",MenuUser, order=6.0000, is_menu=True)
+@permit.route(r"/admin/customer/billing", u"用户计费日志",settings.MenuUser, order=6.0000, is_menu=True)
 class CustomerBillingHandler(BaseHandler):
 
     @cyclone.web.authenticated
@@ -71,6 +71,6 @@ class CustomerBillingHandler(BaseHandler):
             name = u"RADIUS-BILLING-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
             return self.export_file(name, data)
 
-@permit.route(r"/admin/customer/billing/export", u"用户计费日志导出",MenuUser, order=3.0001)
+@permit.route(r"/admin/customer/billing/export", u"用户计费日志导出",settings.MenuUser, order=3.0001)
 class CustomerBillingExportHandler(CustomerBillingHandler):
     pass

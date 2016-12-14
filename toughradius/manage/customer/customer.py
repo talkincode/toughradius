@@ -12,14 +12,14 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import customer_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 class CustomerHandler(BaseHandler):
 
     detail_url_fmt = "/admin/customer/detail?account_number={0}".format
 
 
-@permit.route(r"/admin/customer", u"用户信息管理",MenuUser, order=1.0000, is_menu=True)
+@permit.route(r"/admin/customer", u"用户信息管理",settings.MenuUser, order=1.0000, is_menu=True)
 class CustomerListHandler(CustomerHandler):
 
     @cyclone.web.authenticated
@@ -111,7 +111,7 @@ class CustomerListHandler(CustomerHandler):
             name = u"RADIUS-USER-" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S") + ".xls"
             self.export_file(name, data)
 
-@permit.route(r"/admin/customer/export", u"用户导出",MenuUser, order=1.0001)
+@permit.route(r"/admin/customer/export", u"用户导出",settings.MenuUser, order=1.0001)
 class CustomerExportHandler(CustomerListHandler):
     pass
 

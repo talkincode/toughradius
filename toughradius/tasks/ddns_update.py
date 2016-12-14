@@ -16,7 +16,7 @@ class DdnsUpdateTask(TaseBasic):
     def first_delay(self):
         return 5
 
-    def get_notify_interval(self):
+    def get_next_interval(self):
         return 60
 
     @defer.inlineCallbacks
@@ -43,7 +43,7 @@ class DdnsUpdateTask(TaseBasic):
 
             except Exception as err:
                 logger.exception(err)
-        defer.returnValue(self.get_notify_interval())
+        defer.returnValue(self.get_next_interval())
 
 
 taskcls = DdnsUpdateTask

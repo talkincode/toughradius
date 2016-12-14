@@ -10,10 +10,10 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.resource import product_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 
-@permit.route(r"/admin/product", u"资费套餐管理",MenuRes, order=3.0000, is_menu=True)
+@permit.route(r"/admin/product", u"资费套餐管理",settings.MenuRes, order=3.0000, is_menu=True)
 class ProductListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -25,7 +25,7 @@ class ProductListHandler(BaseHandler):
             page_data=self.get_page_data(query)
         )
 
-@permit.route(r"/admin/product/add", u"新增资费套餐",MenuRes, order=3.0001)
+@permit.route(r"/admin/product/add", u"新增资费套餐",settings.MenuRes, order=3.0001)
 class ProductAddListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -59,7 +59,7 @@ class ProductAddListHandler(BaseHandler):
         self.db.commit()
         self.redirect("/admin/product", permanent=False)
 
-@permit.route(r"/admin/product/update", u"修改资费套餐",MenuRes, order=3.0002)
+@permit.route(r"/admin/product/update", u"修改资费套餐",settings.MenuRes, order=3.0002)
 class ProductUpdateListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -100,7 +100,7 @@ class ProductUpdateListHandler(BaseHandler):
         self.redirect("/admin/product", permanent=False)
 
 
-@permit.route(r"/admin/product/delete", u"删除资费套餐",MenuRes, order=3.0003)
+@permit.route(r"/admin/product/delete", u"删除资费套餐",settings.MenuRes, order=3.0003)
 class ProductDeleteListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -113,7 +113,7 @@ class ProductDeleteListHandler(BaseHandler):
         self.db.commit()
         self.redirect("/admin/product", permanent=False)
 
-@permit.route(r"/admin/product/detail", u"资费详情",MenuRes, order=3.0004)
+@permit.route(r"/admin/product/detail", u"资费详情",settings.MenuRes, order=3.0004)
 class ProductDeleteListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):

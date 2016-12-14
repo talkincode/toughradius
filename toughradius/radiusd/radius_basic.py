@@ -3,7 +3,7 @@
 
 from toughradius.common import  utils
 from toughradius import models
-from toughradius.manage.settings import *
+from toughradius import settings
 from toughradius.common.storage import Storage
 import decimal
 import datetime
@@ -27,7 +27,7 @@ class RadiusBasic:
                 return conn.execute(
                     table.select().with_only_columns([table.c.param_value]).where(
                         table.c.param_name==name)).scalar() or defval
-        return self.cache.aget(param_cache_key(name),fetch_result, expire=600)
+        return self.cache.aget(PARAM_CACHE_KEY(name),fetch_result, expire=600)
 
     def get_account_by_username(self,username):
         def fetch_result():
@@ -36,7 +36,7 @@ class RadiusBasic:
                 val = conn.execute(table.select().where(
                     table.c.account_number==username)).first()
                 return val and Storage(val.items()) or None
-        return self.cache.aget(account_cache_key(username),fetch_result, expire=600)
+        return self.cache.aget(ACCOUNT_CACHE_KEY(username),fetch_result, expire=600)
 
 
     def get_account_attr(self,attr_name, radius=False):
@@ -48,7 +48,7 @@ class RadiusBasic:
                     table.c.attr_name==attr_name).where(
                     table.c.attr_type==(radius and 1 or 0))).first()
                 return val and Storage(val.items()) or ''
-        return self.cache.aget(account_attr_cache_key(
+        return self.cache.aget(ACCOUNT_ATTR_CACHE_KEY(
             self.account.account_number,attr_name),fetch_result, expire=600)
 
     def get_product_by_id(self,product_id):
@@ -57,7 +57,7 @@ class RadiusBasic:
             with self.dbengine.begin() as conn:
                 val = conn.execute(table.select().where(table.c.id==product_id)).first()
                 return val and Storage(val.items()) or None
-        return self.cache.aget(product_cache_key(product_id),fetch_result,expire=600)
+        return self.cache.aget(PRODUCT_CACHE_KEY(product_id),fetch_result,expire=600)
 
     def get_product_attrs(self,product_id):
         def fetch_result():
@@ -67,7 +67,7 @@ class RadiusBasic:
                     table.c.product_id==product_id).where(
                     table.c.attr_type==1))
                 return vals and [Storage(val.items()) for val in vals] or []
-        return self.cache.aget(product_attrs_cache_key(product_id),fetch_result,expire=600)
+        return self.cache.aget(PRODUCT_ATTRS_CACHE_KEY(product_id),fetch_result,expire=600)
 
 
     def get_user_balance(self):

@@ -10,12 +10,10 @@ from twisted.internet import reactor
 from mako.lookup import TemplateLookup
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius.common import logger, utils, dispatch
-from toughradius import models
-from toughradius.manage import base
 from toughradius.common import log_trace
+from toughradius.common.config import redis_conf
 from toughradius.common.dbengine import get_engine
 from toughradius.common.permit import permit, load_events, load_handlers
-from toughradius.manage import settings as sysconfig
 from toughradius.common import db_session as session
 from toughradius.common import db_cache as cache
 from toughradius.common import redis_cache
@@ -23,9 +21,12 @@ from toughradius.common import redis_session
 from toughradius.common import dispatch
 from toughradius.common.dbutils import make_db
 from toughradius.common.db_backup import DBBackup
+from toughradius import settings as sysconfig
+from toughradius import models
 import toughradius
 
 class HttpServer(cyclone.web.Application):
+
     def __init__(self, config=None, dbengine=None, **kwargs):
 
         self.config = config
@@ -43,24 +44,22 @@ class HttpServer(cyclone.web.Application):
 
         self.tp_lookup = TemplateLookup(
             directories=[settings['template_path']],
-            default_filters=['decode.utf8'],
+            default_filters=['decode.utf8','h'],
             input_encoding='utf-8',
             output_encoding='utf-8',
             encoding_errors='ignore',
-            module_directory="/tmp/toughradius_admin"
+            module_directory="/tmp/toughradius.{}".format(int(time.time()))
         )
 
         self.db_engine = dbengine or get_engine(config)
         self.db = scoped_session(sessionmaker(bind=self.db_engine, autocommit=False, autoflush=False))
-        self.session_manager = session.SessionManager(settings["cookie_secret"], self.db_engine, 3600)
-
-        redisconf = sysconfig.redis_conf(config)
+        redisconf = redis_conf(config)
         self.session_manager = redis_session.SessionManager(redisconf,settings["cookie_secret"], 600)
         self.mcache = redis_cache.CacheManager(redisconf,cache_name='RadiusManageCache-%s'%os.getpid())
         
         self.db_backup = DBBackup(models.get_metadata(self.db_engine), excludes=[
-            'tr_online','system_session','system_cache','tr_ticket','tr_billing','tr_online_stat',
-            'tr_flow_stat'
+            'tr_online','system_session','system_cache','tr_ticket',
+            'tr_billing','tr_online_stat','tr_flow_stat'
         ])
 
         self.aes = utils.AESCipher(key=self.config.system.secret)
@@ -86,9 +85,8 @@ class HttpServer(cyclone.web.Application):
         load_handlers(handler_path=handler_path, pkg_prefix="toughradius.manage")
 
         # app event init
-        event_params= dict(dbengine=self.db_engine, mcache=self.mcache, aes=self.aes)
         event_path = os.path.join(os.path.abspath(os.path.dirname(__file__)),"events")
-        dispatch.load_events(event_path,"toughradius.events",event_params=event_params)
+        dispatch.load_events(event_path,"toughradius.events",app=self)
 
         cyclone.web.Application.__init__(self, permit.all_handlers, **settings)
 

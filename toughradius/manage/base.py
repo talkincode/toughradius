@@ -16,7 +16,7 @@ from toughradius.common import utils
 from toughradius.common.paginator import Paginator
 from toughradius import __version__ as sys_version
 from toughradius.common.permit import permit
-from toughradius.manage.settings import *
+from toughradius import settings
 from toughradius import models
 from toughradius.common import redis_session 
 from toughradius.common import dispatch,logger
@@ -228,9 +228,14 @@ class BaseHandler(cyclone.web.RequestHandler):
         self.write(data.xls)
         self.finish()
 
+
 def authenticated(method):
     @functools.wraps(method)
     def wrapper(self, *args, **kwargs):
+        allows =  os.environ.get("AllowIps") 
+        if allows and self.request.remote_ip not in allows:
+            return self.render_error(msg=u"未授权的访问IP来源")
+
         if not self.current_user:
             if self.request.headers.get('X-Requested-With') == 'XMLHttpRequest': # jQuery 等库会附带这个头
                 self.set_header('Content-Type', 'application/json; charset=UTF-8')
@@ -244,7 +249,7 @@ def authenticated(method):
                         next_url = self.request.full_url()
                     else:
                         next_url = self.request.uri
-                    url += "?" + urllib.urlencode(dict(next=next_url))
+                    url += "?" + urlencode(dict(next=next_url))
                 self.redirect(url)
                 return
             return self.render_error(msg=u"未授权的访问")

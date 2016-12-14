@@ -10,8 +10,8 @@ from txradius import statistics
 from toughradius.tasks.task_base import TaseBasic
 from twisted.internet import reactor,defer
 from txzmq import ZmqEndpoint, ZmqFactory, ZmqPushConnection, ZmqPullConnection
-from toughradius.manage.settings import  radius_statcache_key
-from toughradius.manage.settings import  flow_statcache_key
+from toughradius.manage.settings import  RADIUS_STATCACHE_KEY
+from toughradius.manage.settings import  FLOW_STATCACHE_KEY
 
 
 class RadiusStatTask(TaseBasic):
@@ -24,7 +24,7 @@ class RadiusStatTask(TaseBasic):
     def __init__(self,taskd, **kwargs):
         TaseBasic.__init__(self,taskd, **kwargs)
         self.flow_stat = {}
-        self.statdata =  self.cache.get(radius_statcache_key) or statistics.MessageStat()
+        self.statdata =  self.cache.get(RADIUS_STATCACHE_KEY) or statistics.MessageStat()
         self.puller = ZmqPullConnection(ZmqFactory(), ZmqEndpoint('bind', 'ipc:///tmp/radiusd-stat-task'))
         self.puller.onPull = self.update_stat
 
@@ -41,7 +41,7 @@ class RadiusStatTask(TaseBasic):
     def update_flow_stat(self,raddata):
         if not raddata:
             return
-        self.flow_stat = self.cache.get(flow_statcache_key) 
+        self.flow_stat = self.cache.get(FLOW_STATCACHE_KEY) 
         if not self.flow_stat:
             self.flow_stat = {
                 'last_input_total' : raddata['input_total'],
@@ -49,7 +49,7 @@ class RadiusStatTask(TaseBasic):
                 'input_stat' : [(int(time.time()*1000),0)],
                 'output_stat' : [(int(time.time()*1000),0)]
             }
-            self.cache.set(flow_statcache_key,self.flow_stat)
+            self.cache.set(FLOW_STATCACHE_KEY,self.flow_stat)
         else:
             _insize = raddata['input_total']-self.flow_stat['last_input_total']
             if _insize > 0:
@@ -72,9 +72,9 @@ class RadiusStatTask(TaseBasic):
         # self.logtimes()
         try:
             self.statdata.run_stat()
-            self.cache.update(radius_statcache_key,self.statdata)
+            self.cache.update(RADIUS_STATCACHE_KEY,self.statdata)
             if self.flow_stat:
-                self.cache.set(flow_statcache_key,self.flow_stat)
+                self.cache.set(FLOW_STATCACHE_KEY,self.flow_stat)
         except Exception as err:
             logger.error('radius stat process error %s' % utils.safeunicode(err.message))
 

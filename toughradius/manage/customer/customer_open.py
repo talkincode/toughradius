@@ -15,12 +15,11 @@ from toughradius.common.permit import permit
 from toughradius.common import utils, dispatch
 from toughradius.common.btforms import rules
 from toughradius.common import redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
-from toughradius.events.settings import ACCOUNT_OPEN_EVENT
+from toughradius import settings 
+from toughradius import events
 
 
-@permit.route(r"/admin/customer/open", u"用户快速开户",MenuUser, order=1.1000, is_menu=True)
+@permit.route(r"/admin/customer/open", u"用户快速开户",settings.MenuUser, order=1.1000, is_menu=True)
 class CustomerOpenHandler(CustomerHandler):
 
     @cyclone.web.authenticated
@@ -72,17 +71,6 @@ class CustomerOpenHandler(CustomerHandler):
         self.db.flush()
         self.db.refresh(customer)
 
-        accept_log = models.TrAcceptLog()
-        accept_log.accept_type = 'open'
-        accept_log.accept_source = 'console'
-        accept_log.account_number = form.d.account_number
-        accept_log.accept_time = customer.create_time
-        accept_log.operator_name = self.current_user.username
-        accept_log.accept_desc = u"用户新开户：(%s)%s" % (customer.customer_name, customer.realname)
-        self.db.add(accept_log)
-        self.db.flush()
-        self.db.refresh(accept_log)
-
         order_fee = 0
         balance = 0
         expire_date = form.d.expire_date
@@ -100,7 +88,7 @@ class CustomerOpenHandler(CustomerHandler):
         # 预付费时长,预付费流量
         elif product.product_policy in (PPTimes, PPFlow):
             balance = utils.yuan2fen(form.d.fee_value)
-            expire_date = MAX_EXPIRE_DATE
+            expire_date = settings.MAX_EXPIRE_DATE
 
         order = models.TrCustomerOrder()
         order.order_id = utils.gen_order_id()
@@ -151,12 +139,12 @@ class CustomerOpenHandler(CustomerHandler):
             password=form.d.password,
             expire_date=expire_date
         )
-        dispatch.pub(ACCOUNT_OPEN_EVENT, account.account_number, async=True)
+        dispatch.pub(events.ACCOUNT_OPEN_EVENT, account.account_number, async=True)
 
         self.redirect(self.detail_url_fmt(account.account_number))
 
 
-@permit.route(r"/admin/customer/account/build", u"生成用户规则",MenuUser, order=1.1001, is_menu=False)
+@permit.route(r"/admin/customer/account/build", u"生成用户规则",settings.MenuUser, order=1.1001, is_menu=False)
 class CustomerBuildAccountHandler(CustomerHandler):
 
     def next_account_number(self):

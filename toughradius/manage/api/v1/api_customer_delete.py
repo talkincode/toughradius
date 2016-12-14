@@ -10,7 +10,7 @@ from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.events.settings import ACCOUNT_DELETE_EVENT
-from toughradius.manage.settings import * 
+from toughradius import settings 
 from hashlib import md5
 
 """ 客户删除，删除客户资料及相关数据
@@ -53,7 +53,7 @@ class CustomerDeleteHandler(ApiHandler):
                 self.db.query(models.TrCustomerOrder).filter_by(account_number=account.account_number).delete()
                 self.add_oplog(u'删除用户账号%s' % (account.account_number))
                 dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
-                dispatch.pub(cache.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+                dispatch.pub(cache.CACHE_DELETE_EVENT,ACCOUNT_CACHE_KEY(account.account_number), async=True)
 
             self.db.query(models.TrCustomer).filter_by(customer_name=customer_name).delete()
             self.add_oplog(u'删除用户资料 %s' % (customer_name))    

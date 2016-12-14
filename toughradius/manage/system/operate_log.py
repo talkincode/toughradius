@@ -6,11 +6,11 @@ import cyclone.escape
 import cyclone.web
 
 from toughradius import models
-from toughradius.manage.base import BaseHandler, MenuSys
+from toughradius.manage.base import BaseHandler, settings.MenuSys
 from toughradius.common.permit import permit
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
-@permit.route(r"/admin/operate/log", u'操作日志查询', MenuSys, order=4.0000, is_menu=True)
+@permit.route(r"/admin/operate/log", u'操作日志查询', settings.MenuSys, order=4.0000, is_menu=True)
 class OpsListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):

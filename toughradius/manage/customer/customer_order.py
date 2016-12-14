@@ -12,10 +12,10 @@ from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 
-@permit.route(r"/admin/customer/order", u"用户交易管理",MenuUser, order=1.5000, is_menu=True)
+@permit.route(r"/admin/customer/order", u"用户交易管理",settings.MenuUser, order=1.5000, is_menu=True)
 class CustomerOrderHandler(CustomerHandler):
 
     @cyclone.web.authenticated

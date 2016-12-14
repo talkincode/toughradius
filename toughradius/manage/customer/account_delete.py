@@ -11,12 +11,10 @@ from toughradius.manage.customer import account, account_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils, dispatch,logger
 from toughradius.common import redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
-from toughradius.events.settings import ACCOUNT_DELETE_EVENT
-from toughradius.events.settings import UNLOCK_ONLINE_EVENT
+from toughradius import settings 
+from toughradius import events
 
-@permit.route(r"/admin/account/delete", u"用户账号删除",MenuUser, order=2.6000)
+@permit.route(r"/admin/account/delete", u"用户账号删除",settings.MenuUser, order=2.6000)
 class AccountDeleteHandler(account.AccountHandler):
 
     @cyclone.web.authenticated
@@ -40,8 +38,12 @@ class AccountDeleteHandler(account.AccountHandler):
         self.db.query(models.TrCustomerOrder).filter_by(account_number=account.account_number).delete()
         self.add_oplog(u'删除用户账号%s' % (account_number))
         self.db.commit()
-        dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account_number), async=True)
+        
+        dispatch.pub(event.ACCOUNT_DELETE_EVENT, 
+            account.account_number, async=True)
+
+        dispatch.pub(event.CACHE_DELETE_EVENT,
+            settings.ACCOUNT_CACHE_KEY(account_number), async=True)
         
         return self.redirect("/admin/customer")
 

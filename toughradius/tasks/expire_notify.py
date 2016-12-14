@@ -13,7 +13,7 @@ class ExpireNotifyTask(TaseBasic):
 
     __name__ = 'expire-notify'
 
-    def get_notify_interval(self):
+    def get_next_interval(self):
         try:
             notify_interval = int(self.get_param_value("mail_notify_interval",1440)) * 60.0
             notify_time = self.get_param_value("mail_notify_time", None)
@@ -24,7 +24,7 @@ class ExpireNotifyTask(TaseBasic):
             return 120
 
     def first_delay(self):
-        return self.get_notify_interval()
+        return self.get_next_interval()
 
     def trigger_notify(self,userinfo):
         if int(self.get_param_value("webhook_notify_enable",0)) > 0:
@@ -36,7 +36,7 @@ class ExpireNotifyTask(TaseBasic):
 
     def process(self, *args, **kwargs):
         self.logtimes()
-        next_interval = self.get_notify_interval()
+        next_interval = self.get_next_interval()
         try:
             logger.info("start process expire notify task")
             _ndays = self.get_param_value("expire_notify_days")

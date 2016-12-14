@@ -5,7 +5,7 @@ from toughradius.common import btforms
 from toughradius.common.btforms import dataform
 from toughradius.common.btforms import rules
 from toughradius.common.btforms.rules import button_style, input_style
-from toughradius.manage.settings import * 
+from toughradius import settings 
 button_style ={"class":"btn btn-md bg-navy"}
 boolean = {0: u"否", 1: u"是"}
 

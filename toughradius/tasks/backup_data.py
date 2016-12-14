@@ -20,15 +20,15 @@ class BackupDataTask(TaseBasic):
             'tr_online','system_session','system_cache','tr_ticket','tr_billing','tr_online_stat','tr_flow_stat'
         ])
 
-    def get_notify_interval(self):
+    def get_next_interval(self):
         return utils.get_cron_interval('02:00')
 
     def first_delay(self):
-        return self.get_notify_interval()
+        return self.get_next_interval()
 
     def process(self, *args, **kwargs):
         self.logtimes()
-        next_interval = self.get_notify_interval()
+        next_interval = self.get_next_interval()
         backup_path = self.config.database.backup_path
         backup_file = "trdb_cron_backup_%s.json.gz" % utils.gen_backep_id()
         try:

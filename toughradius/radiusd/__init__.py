@@ -3,20 +3,21 @@
 
 def run_auth(config):
     from twisted.internet import reactor
-    from toughradius.radiusdd.server.master import RADIUSMaster
+    from toughradius.radiusd.server.master import RADIUSMaster
     auth_protocol = RADIUSMaster(config, service='auth')
     reactor.listenUDP(int(config.radiusd.auth_port), auth_protocol, interface=config.radiusd.host)
 
 def run_acct(config):
     from twisted.internet import reactor
-    from toughradius.radiusdd.server.master import RADIUSMaster
+    from toughradius.radiusd.server.master import RADIUSMaster
     acct_protocol = RADIUSMaster(config,service='acct')
     reactor.listenUDP(int(config.radiusd.acct_port), acct_protocol, interface=config.radiusd.host)
 
 def run_worker(config,dbengine,**kwargs):
     from twisted.internet import reactor
     from toughradius.manage import settings
-    from toughradius.radiusdd.server.master import RADIUSAuthWorker,RADIUSAcctWorker
+    from toughradius.radiusd.server.auth_worker import RADIUSAuthWorker
+    from toughradius.radiusd.server.acct_worker import RADIUSAcctWorker
     _cache = kwargs.pop("cache",CacheManager(settings.redis_conf(config),cache_name='WorkerCache-%s'%os.getpid()))
     # app event init
     if not kwargs.get('standalone'):

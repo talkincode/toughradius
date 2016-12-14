@@ -7,9 +7,9 @@ from toughradius.manage.base import BaseHandler
 from toughradius.common.permit import permit
 from toughradius.manage.system import config_forms
 from toughradius import models
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
-@permit.route(r"/admin/config", u"系统配置管理", MenuSys, order=2.0000, is_menu=True)
+@permit.route(r"/admin/config", u"系统配置管理", settings.MenuSys, order=2.0000, is_menu=True)
 class ConfigHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):

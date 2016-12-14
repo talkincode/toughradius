@@ -11,12 +11,11 @@ from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughradius.common.permit import permit
 from toughradius.common import utils,logger,dispatch,redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
-from toughradius.events.settings import ACCOUNT_DELETE_EVENT
+from toughradius import settings 
+from toughradius import events
 
 
-@permit.route(r"/admin/customer/delete", u"用户资料删除",MenuUser, order=1.5000)
+@permit.route(r"/admin/customer/delete", u"用户资料删除",settings.MenuUser, order=1.5000)
 class CustomerDeleteHandler(CustomerHandler):
 
     @cyclone.web.authenticated
@@ -34,8 +33,11 @@ class CustomerDeleteHandler(CustomerHandler):
             self.db.query(models.TrAccount).filter_by(account_number=account.account_number).delete()
             self.db.query(models.TrCustomerOrder).filter_by(account_number=account.account_number).delete()
             self.add_oplog(u'删除用户账号%s' % (account.account_number))
-            dispatch.pub(ACCOUNT_DELETE_EVENT, account.account_number, async=True)
-            dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+
+            dispatch.pub(events.ACCOUNT_DELETE_EVENT, account.account_number, async=True)
+
+            dispatch.pub(events.CACHE_DELETE_EVENT,
+                settings.ACCOUNT_CACHE_KEY(account.account_number), async=True)
 
         self.db.query(models.TrCustomer).filter_by(customer_id=customer_id).delete()
         self.add_oplog(u'删除用户资料 %s' % (customer_id))    

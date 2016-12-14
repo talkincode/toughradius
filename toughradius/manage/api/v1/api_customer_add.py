@@ -9,7 +9,7 @@ from toughradius.common import utils, apiutils, dispatch
 from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
-from toughradius.manage.settings import *
+from toughradius import settings
 from hashlib import md5
 
 """ 客户新开户

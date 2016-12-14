@@ -17,7 +17,7 @@ class TaseBasic(object):
             logger.debug(u"%s task execute times : %s"%(self.__name__, self.time_count))
             self.time_count += 1
 
-    def get_notify_interval(self):
+    def get_next_interval(self):
         return 10
 
     def process(self,*args, **kwargs):

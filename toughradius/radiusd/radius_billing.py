@@ -6,7 +6,7 @@ from toughradius.events.settings import UNLOCK_ONLINE_EVENT
 from toughradius.common.storage import Storage
 from toughradius import models
 from toughradius.common import  utils, logger, dispatch
-from toughradius.manage.settings import *
+from toughradius import settings
 import decimal
 
 decimal.getcontext().prec = 16

@@ -11,9 +11,9 @@ from toughradius.common import logger, utils,dispatch
 from toughradius import models
 from toughradius.common.dbengine import get_engine
 from toughradius.common.redis_cache import CacheManager
-from toughradius.manage.settings import redis_conf
+from toughradius.common.config import redis_conf
 from toughradius.events import radius_events
-from toughradius.manage import settings
+from toughradius import settings
 from toughradius import tasks
 from toughradius.common import log_trace
 from toughradius.common import logger
@@ -36,9 +36,8 @@ class TaskDaemon():
         if not kwargs.get('standalone'):
             logger.info("start register taskd events")
             dispatch.register(log_trace.LogTrace(redis_conf(config)),check_exists=True)
-            event_params= dict(dbengine=self.db_engine, mcache=self.cache,aes=self.aes)
             event_path = os.path.abspath(os.path.dirname(toughradius.events.__file__))
-            dispatch.load_events(event_path,"toughradius.events",event_params=event_params)
+            dispatch.load_events(event_path,"toughradius.events",app=self)
 
     def process_task(self,task):
         r = task.process()

@@ -4,7 +4,7 @@
 from sqlalchemy.orm import scoped_session, sessionmaker
 from toughradius import models
 from toughradius.common.dbutils import make_db
-from toughradius.manage.settings import param_cache_key
+from toughradius import settings 
 
 class BasicEvent:
 
@@ -20,7 +20,7 @@ class BasicEvent:
             with self.dbengine.begin() as conn:
                 return conn.execute(table.select().with_only_columns([table.c.param_value]).where(
                         table.c.param_name==name)).scalar()
-        return self.mcache.aget(param_cache_key(name),fetch_result, expire=300) or defval
+        return self.mcache.aget(settings.PARAM_CACHE_KEY(name),fetch_result, expire=300) or defval
 
 
     def get_customer_info(self, account_number):

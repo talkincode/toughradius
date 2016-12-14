@@ -8,7 +8,7 @@ from toughradius.common.permit import permit
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
 from toughradius.manage.customer.account import AccountCalc
-from toughradius.manage.settings import * 
+from toughradius import settings 
 from toughradius.events.settings import *
 
 """ 客户续费
@@ -167,7 +167,7 @@ class AccountRenewHandler(ApiHandler,AccountCalc):
             self.cache.delete("renew_order_%s"%order_id)
             self.render_success()
             dispatch.pub(ACCOUNT_NEXT_EVENT,order.account_number, async=True)
-            dispatch.pub(CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+            dispatch.pub(CACHE_DELETE_EVENT,ACCOUNT_CACHE_KEY(account.account_number), async=True)
         except Exception as err:
             self.render_unknow(err)
             import traceback

@@ -6,7 +6,7 @@ from toughradius.events.settings import UNLOCK_ONLINE_EVENT
 from toughradius.common.storage import Storage
 from toughradius import models
 from toughradius.common import  utils, dispatch, logger
-from toughradius.manage.settings import *
+from toughradius import settings
 import datetime
 
 class RadiusAcctStart(RadiusBilling):
@@ -17,11 +17,6 @@ class RadiusAcctStart(RadiusBilling):
     def acctounting(self):
         if self.is_online(self.request.nas_addr,self.request.acct_session_id):
             return logger.error('online %s is exists' % self.request.acct_session_id)
-
-        if not self.account:
-            dispatch.pub(UNLOCK_ONLINE_EVENT,
-                self.request.account_number,self.request.nas_addr, self.request.acct_session_id,async=True)
-            return logger.error('user %s not exists' % self.request.account_number)
 
         online = Storage(
             account_number = self.request.account_number,
@@ -34,7 +29,7 @@ class RadiusAcctStart(RadiusBilling):
             billing_times = 0,
             input_total = 0,
             output_total = 0,
-            start_source = STATUS_TYPE_START
+            start_source = settings.STATUS_TYPE_START
         )
         self.add_online(online)
         logger.info('%s Accounting start request, add new online'%online.account_number)

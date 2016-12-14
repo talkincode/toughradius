@@ -18,15 +18,15 @@ class ClearTicketTask(TaseBasic):
     def __init__(self,taskd, **kwargs):
         TaseBasic.__init__(self,taskd, **kwargs)      
 
-    def get_notify_interval(self):
+    def get_next_interval(self):
         return utils.get_cron_interval('04:00')
 
     def first_delay(self):
-        return self.get_notify_interval()
+        return self.get_next_interval()
 
     def process(self, *args, **kwargs):
         self.logtimes()
-        next_interval = self.get_notify_interval()
+        next_interval = self.get_next_interval()
         with make_db(self.db) as db:
             try:
                 _days = int(self.get_param_value("system_ticket_expire_days",30))

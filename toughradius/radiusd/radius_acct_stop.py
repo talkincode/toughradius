@@ -4,7 +4,7 @@ import datetime
 from toughradius.common.storage import Storage
 from toughradius import models
 from toughradius.common import  utils, logger, dispatch
-from toughradius.manage.settings import *
+from toughradius import settings
 from toughradius.radiusd.radius_billing import RadiusBilling
 
 class RadiusAcctStop(RadiusBilling):
@@ -26,15 +26,15 @@ class RadiusAcctStop(RadiusBilling):
             start_time = (_datetime - datetime.timedelta(seconds=int(session_time))).strftime( "%Y-%m-%d %H:%M:%S")
             ticket.acct_start_time = start_time
             ticket.acct_stop_time = stop_time
-            ticket.start_source= STATUS_TYPE_STOP
-            ticket.stop_source = STATUS_TYPE_STOP
+            ticket.start_source= settings.STATUS_TYPE_STOP
+            ticket.stop_source = settings.STATUS_TYPE_STOP
             self.add_ticket(ticket)
         else:
             self.del_online(ticket.nas_addr,ticket.acct_session_id)
             ticket.acct_start_time = online.acct_start_time
             ticket.acct_stop_time= _datetime.strftime( "%Y-%m-%d %H:%M:%S")
             ticket.start_source = online.start_source
-            ticket.stop_source = STATUS_TYPE_STOP
+            ticket.stop_source = settings.STATUS_TYPE_STOP
             self.add_ticket(ticket)
 
             self.billing(online)

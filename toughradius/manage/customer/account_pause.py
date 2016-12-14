@@ -11,13 +11,11 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account, account_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils, dispatch
-from toughradius.manage.settings import * 
-from toughradius.events import settings
-from toughradius.events.settings import ACCOUNT_PAUSE_EVENT
-from toughradius.events.settings import UNLOCK_ONLINE_EVENT
+from toughradius import settings 
+from toughradius import events
 
 
-@permit.route(r"/admin/account/pause", u"用户停机",MenuUser, order=2.1000)
+@permit.route(r"/admin/account/pause", u"用户停机",settings.MenuUser, order=2.1000)
 class AccountPausetHandler(account.AccountHandler):
 
     @cyclone.web.authenticated
@@ -44,7 +42,7 @@ class AccountPausetHandler(account.AccountHandler):
         self.db.commit()
 
         dispatch.pub(ACCOUNT_PAUSE_EVENT, account.account_number, async=True)
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(settings.CACHE_DELETE_EVENT,ACCOUNT_CACHE_KEY(account.account_number), async=True)
 
         for online in self.db.query(models.TrOnline).filter_by(account_number=account_number):
             dispatch.pub(UNLOCK_ONLINE_EVENT,account_number,online.nas_addr, online.acct_session_id,async=True)

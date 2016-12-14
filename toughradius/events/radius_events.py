@@ -6,7 +6,7 @@ from txradius import statistics
 from toughradius.common.dbutils import make_db
 from toughradius import models
 from sqlalchemy.orm import scoped_session, sessionmaker
-from toughradius.manage.settings import *
+from toughradius import settings
 from toughradius.common import db_cache as cache
 from toughradius.common.storage import Storage
 from txradius.radius import dictionary

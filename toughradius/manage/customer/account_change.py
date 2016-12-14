@@ -11,8 +11,8 @@ from toughradius.manage.customer import account, account_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils,dispatch
 from toughradius.common import redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
+from toughradius import settings 
+from toughradius import events
 
 @permit.route(r"/admin/account/change/get_policy")
 class AccountChangePolicyGetHandler(account.AccountHandler):
@@ -23,7 +23,7 @@ class AccountChangePolicyGetHandler(account.AccountHandler):
         product_policy = self.db.query(models.TrProduct.product_policy).filter_by(id=product_id).scalar()
         return self.render_json(data={'id': product_id, 'policy': product_policy})
 
-@permit.route(r"/admin/account/change", u"用户变更资费",MenuUser, order=2.5000)
+@permit.route(r"/admin/account/change", u"用户变更资费",settings.MenuUser, order=2.5000)
 class AccountChangeHandler(account.AccountHandler):
 
     @cyclone.web.authenticated
@@ -65,23 +65,23 @@ class AccountChangeHandler(account.AccountHandler):
 
         account.product_id = product.id
         # (PPMonth,PPTimes,BOMonth,BOTimes,PPFlow,BOFlows)
-        if product.product_policy in (PPMonth, BOMonth):
+        if product.product_policy in (settings.PPMonth, settings.BOMonth):
             account.expire_date = form.d.expire_date
             account.balance = 0
             account.time_length = 0
             account.flow_length = 0
-        elif product.product_policy in (PPTimes, PPFlow):
-            account.expire_date = MAX_EXPIRE_DATE
+        elif product.product_policy in (settings.PPTimes, settings.PPFlow):
+            account.expire_date = settings.MAX_EXPIRE_DATE
             account.balance = utils.yuan2fen(form.d.balance)
             account.time_length = 0
             account.flow_length = 0
-        elif product.product_policy == BOTimes:
-            account.expire_date = MAX_EXPIRE_DATE
+        elif product.product_policy == settings.BOTimes:
+            account.expire_date = settings.MAX_EXPIRE_DATE
             account.balance = 0
             account.time_length = utils.hour2sec(form.d.time_length)
             account.flow_length = 0
-        elif product.product_policy == BOFlows:
-            account.expire_date = MAX_EXPIRE_DATE
+        elif product.product_policy == settings.BOFlows:
+            account.expire_date = settings.MAX_EXPIRE_DATE
             account.balance = 0
             account.time_length = 0
             account.flow_length = utils.mb2kb(form.d.flow_length)
@@ -105,7 +105,9 @@ class AccountChangeHandler(account.AccountHandler):
         self.db.add(order)
         self.add_oplog(accept_log.accept_desc)
         self.db.commit()
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(events.CACHE_DELETE_EVENT,
+            settings.ACCOUNT_CACHE_KEY(account.account_number), async=True)
+
         self.redirect(self.detail_url_fmt(account_number))
 
 

@@ -12,10 +12,10 @@ from toughradius.manage.customer import customer_forms
 from toughradius.manage.customer.customer import CustomerHandler
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
 
-@permit.route(r"/admin/customer/detail", u"用户详情",MenuUser, order=1.2000)
+@permit.route(r"/admin/customer/detail", u"用户详情",settings.MenuUser, order=1.2000)
 class CustomerDetailHandler(CustomerHandler):
 
     def showpwd(self,password):
@@ -93,7 +93,7 @@ class CustomerDetailHandler(CustomerHandler):
 
         get_orderid = lambda aid: self.db.query(models.TrCustomerOrder.order_id).filter_by(accept_id=aid).scalar()
 
-        type_map = ACCEPT_TYPES
+        type_map = settings.ACCEPT_TYPES
 
         return self.render("customer_detail.html",
                           customer=customer,

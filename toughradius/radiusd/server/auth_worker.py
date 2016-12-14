@@ -17,8 +17,6 @@ from txradius.radius import dictionary
 from txradius.radius import packet
 from txradius.radius.packet import PacketError
 from txradius import message
-from toughradius.manage import models
-from toughradius.manage import settings
 from toughradius.radiusd.radius_authorize import RadiusAuth
 from toughradius.radiusd.server import DICTIONARY
 from toughradius.common import log_trace

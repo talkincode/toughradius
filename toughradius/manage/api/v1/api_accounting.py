@@ -9,7 +9,7 @@ from toughradius.radiusd.radius_acct_start import RadiusAcctStart
 from toughradius.radiusd.radius_acct_update import RadiusAcctUpdate
 from toughradius.radiusd.radius_acct_stop import RadiusAcctStop
 from toughradius.radiusd.radius_acct_onoff import RadiusAcctOnoff
-from toughradius.manage.settings import *
+from toughradius import settings
 
 
 @permit.route(r"/api/v1/acctounting")

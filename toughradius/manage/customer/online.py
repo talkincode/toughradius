@@ -9,9 +9,9 @@ from toughradius import models
 from toughradius.manage.base import BaseHandler
 from toughradius.common.permit import permit
 from toughradius.common import utils
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
-@permit.route(r"/admin/customer/online", u"用户在线查询",MenuUser, order=4.0000, is_menu=True)
+@permit.route(r"/admin/customer/online", u"用户在线查询",settings.MenuUser, order=4.0000, is_menu=True)
 class CustomerOnlineHandler(BaseHandler):
 
     @cyclone.web.authenticated

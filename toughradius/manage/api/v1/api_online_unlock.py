@@ -13,7 +13,7 @@ from toughradius.common.storage import Storage
 from toughradius.radiusd import radius_acct_stop
 from toughradius.manage.api.apibase import ApiHandler
 from toughradius import models
-from toughradius.manage.settings import *
+from toughradius import settings
 
 """ 下线客户上网账号
 """

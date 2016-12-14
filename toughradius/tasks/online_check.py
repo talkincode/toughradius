@@ -18,7 +18,7 @@ class OnlineCheckTask(TaseBasic):
     def first_delay(self):
         return 5
 
-    def get_notify_interval(self):
+    def get_next_interval(self):
         return 30        
 
     def process(self, *args, **kwargs):
@@ -43,6 +43,6 @@ class OnlineCheckTask(TaseBasic):
                 db.rollback()
                 logger.exception(err)
         
-        return self.get_notify_interval()
+        return self.get_next_interval()
 
 taskcls = OnlineCheckTask

@@ -10,9 +10,9 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.resource import bas_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils,dispatch,redis_cache
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
-@permit.route(r"/admin/bas", u"接入设备管理",MenuRes, order=2.0000, is_menu=True)
+@permit.route(r"/admin/bas", u"接入设备管理",settings.MenuRes, order=2.0000, is_menu=True)
 class BasListHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -20,7 +20,7 @@ class BasListHandler(BaseHandler):
                   bastype=bas_forms.bastype,
                   bas_list=self.db.query(models.TrBas))
 
-@permit.route(r"/admin/bas/add", u"新增接入设备", MenuRes, order=2.0001)
+@permit.route(r"/admin/bas/add", u"新增接入设备", settings.MenuRes, order=2.0001)
 class BasAddHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -54,7 +54,7 @@ class BasAddHandler(BaseHandler):
         self.db.commit()
         self.redirect("/admin/bas",permanent=False)
 
-@permit.route(r"/admin/bas/update", u"修改接入设备", MenuRes, order=2.0002)
+@permit.route(r"/admin/bas/update", u"修改接入设备", settings.MenuRes, order=2.0002)
 class BasUpdateHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -79,11 +79,11 @@ class BasUpdateHandler(BaseHandler):
         self.add_oplog(u'修改接入设备信息:%s' % bas.ip_addr)
 
         self.db.commit()
-        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,bas_cache_key(bas.ip_addr), async=True)
+        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,BAS_CACHE_KEY(bas.ip_addr), async=True)
         self.redirect("/admin/bas",permanent=False)
 
 
-@permit.route(r"/admin/bas/delete", u"删除接入设备", MenuRes, order=2.0003)
+@permit.route(r"/admin/bas/delete", u"删除接入设备", settings.MenuRes, order=2.0003)
 class BasDeleteHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -95,5 +95,5 @@ class BasDeleteHandler(BaseHandler):
         self.add_oplog(u'删除接入设备信息:%s' % bas_id)
 
         self.db.commit()
-        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,bas_cache_key(ip_addr), async=True)
+        dispatch.pub(redis_cache.CACHE_DELETE_EVENT,BAS_CACHE_KEY(ip_addr), async=True)
         self.redirect("/admin/bas",permanent=False)

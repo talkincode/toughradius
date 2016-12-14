@@ -17,7 +17,6 @@ from txradius.radius import dictionary
 from txradius.radius import packet
 from txradius.radius.packet import PacketError
 from txradius import message
-from toughradius.manage import models
 from toughradius.manage import settings
 from toughradius.radiusd.radius_acct_start import RadiusAcctStart
 from toughradius.radiusd.radius_acct_update import RadiusAcctUpdate

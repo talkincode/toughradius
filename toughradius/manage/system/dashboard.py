@@ -15,7 +15,7 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from collections import deque
 from toughradius import models
-from toughradius.manage.settings import * 
+from toughradius import settings 
 from toughradius.common import tools
 import psutil
 
@@ -90,7 +90,7 @@ class TraceClearHandler(BaseHandler):
         self.render_json(msg=u"刷新系统消息缓存完成")
 
 
-@permit.route(r"/admin/dashboard", u"控制面板", MenuSys, order=1.0000, is_menu=True, is_open=False)
+@permit.route(r"/admin/dashboard", u"控制面板", settings.MenuSys, order=1.0000, is_menu=True, is_open=False)
 class DashboardHandler(BaseHandler):
 
     def cache_rate(self):
@@ -128,29 +128,29 @@ class ComplexEncoder(json.JSONEncoder):
             return [i for i in obj]
         return json.JSONEncoder.default(self, obj)
 
-@permit.route(r"/admin/dashboard/msgstat", u"消息统计", MenuSys, order=1.0001, is_menu=False)
+@permit.route(r"/admin/dashboard/msgstat", u"消息统计", settings.MenuSys, order=1.0001, is_menu=False)
 class MsgStatHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
-        resp = json.dumps(self.cache.get(radius_statcache_key), cls=ComplexEncoder,ensure_ascii=False)
+        resp = json.dumps(self.cache.get(RADIUS_STATCACHE_KEY), cls=ComplexEncoder,ensure_ascii=False)
         self.write(resp)
 
 
-@permit.route(r"/admin/dashboard/restart", u"重启服务", MenuSys, order=1.0004, is_menu=False)
+@permit.route(r"/admin/dashboard/restart", u"重启服务", settings.MenuSys, order=1.0004, is_menu=False)
 class RestartHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
         return self.render_json(**execute("supervisorctl restart all && supervisorctl status all"))
 
 
-@permit.route(r"/admin/dashboard/update", u"更新系统状态", MenuSys, order=1.0002, is_menu=False)
+@permit.route(r"/admin/dashboard/update", u"更新系统状态", settings.MenuSys, order=1.0002, is_menu=False)
 class UpdateHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
         return self.render_json(**execute("supervisorctl status all"))
 
 
-@permit.route(r"/admin/dashboard/upgrade", u"升级系统版本", MenuSys, order=1.0003, is_menu=False)
+@permit.route(r"/admin/dashboard/upgrade", u"升级系统版本", settings.MenuSys, order=1.0003, is_menu=False)
 class UpgradeHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
@@ -167,16 +167,16 @@ def default_start_end():
     return time.mktime(begin.timetuple()), time.mktime(end.timetuple())
 
 
-@permit.route(r"/admin/dashboard/onlinestat", u"在线用户统计", MenuSys, order=1.0004, is_menu=False)
+@permit.route(r"/admin/dashboard/onlinestat", u"在线用户统计", settings.MenuSys, order=1.0004, is_menu=False)
 class OnlineStatHandler(BaseHandler):
 
     @cyclone.web.authenticated
     def get(self):
-        olstat = self.cache.get(online_statcache_key) or []
+        olstat = self.cache.get(ONLINE_STATCACHE_KEY) or []
         self.render_json(code=0, data=[{'name':u"所有区域",'data': olstat}])
 
 
-@permit.route(r"/admin/dashboard/flowstat", u"在线用户统计", MenuSys, order=1.0005, is_menu=False)
+@permit.route(r"/admin/dashboard/flowstat", u"在线用户统计", settings.MenuSys, order=1.0005, is_menu=False)
 class FlowStatHandler(BaseHandler):
 
 
@@ -187,7 +187,7 @@ class FlowStatHandler(BaseHandler):
 
     @cyclone.web.authenticated
     def get(self):
-        flow_stat = self.cache.get(flow_statcache_key) or {}
+        flow_stat = self.cache.get(FLOW_STATCACHE_KEY) or {}
         _idata = [(_time,float(self.sizedesc(bb))) for _time,bb in flow_stat.get('input_stat',[]) if bb > 0][-512:]
         _odata = [(_time,float(self.sizedesc(bb))) for _time,bb in flow_stat.get('output_stat',[]) if bb > 0][-512:]
         in_data = {"name": u"上行流量", "data": _idata}

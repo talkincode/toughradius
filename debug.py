@@ -1,23 +1,26 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import os
-import sys
-sys.path.insert(0,os.path.dirname(__file__))
-import re
-import time
-from toughradius.common import choosereactor
-choosereactor.install_optimal_reactor(False)
-import sys,signal,click
-import platform as pf
-from twisted.internet import reactor
-from twisted.python import log
-from toughradius.common import config as iconfig
-from toughradius.common import dispatch,logger,utils
-from toughradius.common.dbengine import get_engine
-from toughradius.manage import settings
-from toughradius.manage.settings import redis_conf
-from toughradius.common import log_trace
 import traceback
+try:
+    import os
+    import sys
+    sys.path.insert(0,os.path.dirname(__file__))
+    import re
+    import time
+    from toughradius.common import choosereactor
+    choosereactor.install_optimal_reactor(False)
+    import sys,signal,click
+    import platform as pf
+    from twisted.internet import reactor
+    from twisted.python import log
+    from toughradius.common import config as iconfig
+    from toughradius.common import dispatch,logger,utils
+    from toughradius.common.dbengine import get_engine
+    from toughradius import settings
+    from toughradius.common.config import redis_conf
+    from toughradius.common import log_trace
+except:
+    traceback.print_exc()
 
 def setup_logger(config):
     syslog = logger.Logger(config,'radius')

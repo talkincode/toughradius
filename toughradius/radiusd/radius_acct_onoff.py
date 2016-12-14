@@ -5,7 +5,7 @@ from toughradius.radiusd.radius_basic import  RadiusBasic
 from toughradius.common.storage import Storage
 from toughradius import models
 from toughradius.common import  utils, dispatch, logger
-from toughradius.manage.settings import *
+from toughradius import settings
 
 class RadiusAcctOnoff(RadiusBasic):
 

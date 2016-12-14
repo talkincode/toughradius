@@ -18,23 +18,6 @@ sys_form = btforms.Form(
     action="/admin/param/update?active=syscfg"
 )
 
-toughcloud_form = btforms.Form(
-    btforms.Textarea("toughcloud_license", description=u"硬派云服务授权码", 
-        help=u"硬派云服务授权码是用来接入硬派云的凭证，请妥善保管，泄露授权码会给您带来安全隐患。如果授权码泄露，请尽快申请新的授权码。",
-        rows=3,**input_style),
-    btforms.Textbox("toughcloud_service_mail", description=u"服务联系邮件", 
-        help=u"如果启用硬派云邮件服务，该邮件可以作为发送地址和用户回复地址",
-        **input_style),
-    btforms.Textbox("toughcloud_service_call", description=u"服务联系电话", 
-        help=u"如果启用硬派云邮件服务，该电话会出现在通知用户的邮件内容里",
-        **input_style),
-    btforms.Button("fetch_toughcloud_service", type="button", 
-        html=u'<a href="https://www.toughcloud.net" target="_blank">申请硬派云服务</a>',**button_style_link),
-    btforms.Button("submit", type="submit", html=u"<b>更新</b>", **button_style),
-    title=u"参数配置管理",
-    action="/admin/param/update?active=toughcloudcfg"
-)
-
 notify_form = btforms.Form(
     btforms.Dropdown("mail_notify_enable", args=booleans.items(), description=u"启动邮件提醒", **input_style),
     btforms.Dropdown("sms_notify_enable", args=booleans.items(), description=u"启动短信提醒", **input_style),

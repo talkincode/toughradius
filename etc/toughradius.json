@@ -12,6 +12,16 @@
         "pool_recycle": 300, 
         "pool_size": 120
     }, 
+    "mqproxy": {
+        "acct_bind": "tcp://127.0.0.1:18130", 
+        "acct_connect": "tcp://127.0.0.1:18130", 
+        "auth_bind": "tcp://127.0.0.1:18120", 
+        "auth_connect": "tcp://127.0.0.1:18120", 
+        "task_bind": "tcp://127.0.0.1:18000", 
+        "task_connect": "tcp://127.0.0.1:18000",
+        "dbsync": "tcp://127.0.0.1:19000",
+        "dbsync_remote": "tcp://127.0.0.1:29000"
+    },     
     "radiusd": {
         "acct_port": 1813, 
         "auth_port": 1812, 

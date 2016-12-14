@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 #coding=utf-8
 
-import cyclone.auth
-import cyclone.escape
 import cyclone.web
 import decimal
 from toughradius import models
@@ -11,11 +9,10 @@ from toughradius.manage.customer import account, account_forms
 from toughradius.common.permit import permit
 from toughradius.common import utils, dispatch
 from toughradius.common import redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
-from toughradius.events.settings import ACCOUNT_NEXT_EVENT
+from toughradius import settings 
+from toughradius import events
 
-@permit.route(r"/admin/account/next", u"用户续费",MenuUser, order=2.3000)
+@permit.route(r"/admin/account/next", u"用户续费",settings.MenuUser, order=2.3000)
 class AccountNextHandler(account.AccountHandler):
 
     def get_expire_date(self,expire):
@@ -86,9 +83,9 @@ class AccountNextHandler(account.AccountHandler):
 
         account.status = 1
         account.expire_date = form.d.expire_date
-        if product.product_policy == BOTimes:
+        if product.product_policy == settings.BOTimes:
             account.time_length += product.fee_times
-        elif product.product_policy == BOFlows:
+        elif product.product_policy == settings.BOFlows:
             account.flow_length += product.fee_flows
 
         order.order_desc = u"用户续费,续费前到期:%s,续费后到期:%s, 赠送天数: %s" % (
@@ -98,8 +95,11 @@ class AccountNextHandler(account.AccountHandler):
 
         self.db.commit()
 
-        dispatch.pub(ACCOUNT_NEXT_EVENT, order.account_number, async=True)
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(events.ACCOUNT_NEXT_EVENT, 
+            order.account_number, async=True)
+
+        dispatch.pub(events.CACHE_DELETE_EVENT,
+            settings.ACCOUNT_CACHE_KEY(account.account_number), async=True)
 
         self.redirect(self.detail_url_fmt(account_number))
 

@@ -4,7 +4,7 @@ import datetime
 from toughradius.common.storage import Storage
 from toughradius import models
 from toughradius.common import  utils, logger, dispatch
-from toughradius.manage.settings import *
+from toughradius import settings
 from toughradius.radiusd.radius_billing import RadiusBilling
 from toughradius.events.settings import UNLOCK_ONLINE_EVENT
 
@@ -37,7 +37,7 @@ class RadiusAcctUpdate(RadiusBilling):
                 billing_times = ticket.acct_session_time,
                 input_total = self.get_input_total(),
                 output_total = self.get_output_total(),
-                start_source = STATUS_TYPE_UPDATE
+                start_source = settings.STATUS_TYPE_UPDATE
             )
             self.add_online(online)
 

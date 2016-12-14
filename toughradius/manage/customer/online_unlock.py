@@ -9,12 +9,12 @@ from toughradius.common.permit import permit
 from toughradius.common import utils
 from toughradius.common.storage import Storage
 from toughradius.radiusd import radius_acct_stop
-from toughradius.manage.settings import * 
+from toughradius import settings 
 from txradius import authorize
 from txradius.radius import dictionary
 import toughradius
 
-@permit.route(r"/admin/customer/online/unlock", u"用户在线解锁",MenuUser, order=4.0001)
+@permit.route(r"/admin/customer/online/unlock", u"用户在线解锁",settings.MenuUser, order=4.0001)
 class CustomerOnlineUnlockHandler(BaseHandler):
 
     dictionary = None

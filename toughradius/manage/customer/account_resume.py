@@ -11,10 +11,10 @@ from toughradius.manage.base import BaseHandler
 from toughradius.manage.customer import account
 from toughradius.common.permit import permit
 from toughradius.common import utils,dispatch,redis_cache
-from toughradius.manage.settings import * 
-from toughradius.events import settings
+from toughradius import settings 
+from toughradius import events
 
-@permit.route(r"/admin/account/resume", u"用户复机",MenuUser, order=2.1000)
+@permit.route(r"/admin/account/resume", u"用户复机",settings.MenuUser, order=2.1000)
 class AccountResumetHandler(account.AccountHandler):
 
     @cyclone.web.authenticated
@@ -42,7 +42,9 @@ class AccountResumetHandler(account.AccountHandler):
         self.db.add(accept_log)
 
         self.db.commit()
-        dispatch.pub(settings.CACHE_DELETE_EVENT,account_cache_key(account.account_number), async=True)
+        dispatch.pub(events.CACHE_DELETE_EVENT,
+            settings.ACCOUNT_CACHE_KEY(account.account_number), async=True)
+        
         return self.render_json(msg=u"操作成功")
 
 

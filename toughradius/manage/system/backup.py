@@ -8,9 +8,9 @@ import cyclone.web
 from toughradius.common import utils,dispatch,logger
 from toughradius.manage.base import BaseHandler
 from toughradius.common.permit import permit
-from toughradius.manage.settings import * 
+from toughradius import settings 
 
-@permit.route(r"/admin/backup", u"数据备份管理", MenuSys, order=5.0001, is_menu=True)
+@permit.route(r"/admin/backup", u"数据备份管理", settings.MenuSys, order=5.0001, is_menu=True)
 class BackupHandler(BaseHandler):
     @cyclone.web.authenticated
     def get(self):
@@ -24,7 +24,7 @@ class BackupHandler(BaseHandler):
         flist.sort(reverse=True)
         return self.render("backup_db.html", backups=flist[:30], backup_path=backup_path)
 
-@permit.route(r"/admin/backup/dump", u"备份数据", MenuSys, order=5.0002)
+@permit.route(r"/admin/backup/dump", u"备份数据", settings.MenuSys, order=5.0002)
 class DumpHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
@@ -37,7 +37,7 @@ class DumpHandler(BaseHandler):
             dispatch.pub(logger.EVENT_EXCEPTION,err)
             return self.render_json(code=1, msg="backup fail! %s" % (err))
 
-@permit.route(r"/admin/backup/restore", u"恢复数据", MenuSys, order=5.0003)
+@permit.route(r"/admin/backup/restore", u"恢复数据", settings.MenuSys, order=5.0003)
 class RestoreHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
@@ -56,7 +56,7 @@ class RestoreHandler(BaseHandler):
             return self.render_json(code=1, msg="restore fail! %s" % (err))
 
 
-@permit.route(r"/admin/backup/delete", u"删除数据", MenuSys, order=5.0004)
+@permit.route(r"/admin/backup/delete", u"删除数据", settings.MenuSys, order=5.0004)
 class DeleteHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
@@ -70,7 +70,7 @@ class DeleteHandler(BaseHandler):
             return self.render_json(code=1, msg="delete fail! %s" % (err))
 
 
-@permit.route(r"/admin/backup/upload", u"上传数据", MenuSys, order=5.0004)
+@permit.route(r"/admin/backup/upload", u"上传数据", settings.MenuSys, order=5.0004)
 class UploadHandler(BaseHandler):
     @cyclone.web.authenticated
     def post(self):
