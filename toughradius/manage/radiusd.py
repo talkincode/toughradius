@@ -345,14 +345,12 @@ class RADIUSAcctWorker(TraceMix):
                 ticket = req.get_ticket()
                 if not ticket.get('nas_addr'):
                     ticket['nas_addr'] = host
-                acct_func = self.acct_class[status_type](
-                        self.db_engine,self.mcache,None,ticket).acctounting
-                reactor.callLater(0.1,acct_func)
+                self.acct_class[status_type](self.db_engine,self.mcache,None,ticket).acctounting()
             else:
                 logger.error('status_type <%s> not support' % status_type)
         except Exception as err:
             self.do_stat(0)
-            logger.exception(error)
+            logger.exception(err)
 
 
 def run_auth(config):
