@@ -3,13 +3,9 @@ venv:
 	test -d venv || virtualenv venv;\
 	venv/bin/pip install -U pip;\
 	venv/bin/pip install -U wheel;\
-	venv/bin/pip install -U coverage;\
 	venv/bin/pip install -U -r requirements.txt;\
-	venv/bin/pip install -U --no-deps https://github.com/talkincode/txradius/archive/master.zip;\
 	)
 
-test:
-	venv/bin/trial toughradius.tests
 
 initdb:
 	venv/bin/python radiusctl initdb -f -c etc/toughradius.json

@@ -5,3 +5,5 @@ msgpack-python
 psutil
 redis
 supervisor
+django
+django-guardian

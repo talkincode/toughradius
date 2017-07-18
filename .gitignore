@@ -55,4 +55,5 @@ radiusd_cnf.conf
 toughradius_test.json
 .vscode
 tr/
+db.sqlite3
 *.pid
