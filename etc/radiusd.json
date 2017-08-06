@@ -1,0 +1,31 @@
+{
+    "system" : {
+        "tz": "CST-8"
+    },
+    "radiusd": {
+        "debug": true,
+        "acct_port": 1813, 
+        "auth_port": 1812, 
+        "host": "0.0.0.0",
+        "dictionary": "{CONFDIR}/dictionarys/dictionary",
+        "pool_size": 2,
+        "request_timeout":5,
+        "pass_pwd" : false,
+        "pass_userpwd" : false,
+        "max_session_timeout": 86400,
+        // free auth params
+        "free_auth_input_limit": 1048576,
+        "free_auth_output_limit": 1048576,
+        "free_auth_limit_code": "",
+        "free_auth_limit_code": ""
+    }, 
+    "api": {
+        "debug": true, 
+        "secret": "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng",
+        "listen": 1815,
+        "host": "0.0.0.0"
+    },
+    "logger" : "!include:{CONFDIR}/etc/logger.json",
+    "clients" : "!include:{CONFDIR}/etc/clients.json",
+    "modules" : "!include:{CONFDIR}/etc/modules.json"
+}

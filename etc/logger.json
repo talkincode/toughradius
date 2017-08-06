@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "disable_existing_loggers": true,
+    "formatters": {
+        "verbose": {
+            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        },
+        "simple": {
+            "format": "%(asctime)s %(levelname)s %(message)s"
+        }
+    },
+    "handlers": {
+        "null": {
+            "level": "DEBUG",
+            "class": "logging.NullHandler"
+        },
+        "debug": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "verbose"
+        },
+        "info": {
+            "level": "DEBUG",
+            "class": "cloghandler.ConcurrentRotatingFileHandler",
+            "maxBytes": 10485760,
+            "backupCount": 50,
+            "delay": true,
+            "filename": "/var/log/toughradius.log",
+            "formatter": "verbose"
+        },
+        "error": {
+            "level": "ERROR",
+            "class": "cloghandler.ConcurrentRotatingFileHandler",
+            "maxBytes": 10485760,
+            "backupCount": 50,
+            "delay": true,
+            "filename": "/var/log/toughradius.error.log",
+            "formatter": "verbose"
+        }
+    },
+    "loggers": {
+        "": {
+            "handlers": ["info","error"],
+            "level": "info"
+        }
+    }
+}

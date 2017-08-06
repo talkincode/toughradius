@@ -1,9 +1,4 @@
 Click
-Twisted>=16.0.0
 six
-msgpack-python
-psutil
-redis
-supervisor
-django
-django-guardian
+bottle
+gevent==1.1.2

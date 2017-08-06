@@ -1,0 +1,36 @@
+{
+    "authentication":[
+
+    ],
+
+    "authorization": [
+
+    ],
+
+    "acctounting":{
+
+        "parse" : [
+
+        ],
+
+        "start" : [
+
+        ],
+
+        "update" : [
+
+        ],
+
+        "stop": [
+
+        ],
+
+        "on":[
+
+        ],
+
+        "off": [
+
+        ]
+    }
+}
