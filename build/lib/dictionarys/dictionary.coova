@@ -1,0 +1,14 @@
+#
+# Coova dictionary.
+#
+#               Enable by putting the line "$INCLUDE dictionary.coova" 
+#               into the main dictionary file.
+#
+
+VENDOR          Coova                        31515
+ATTRIBUTE       Coova-Request                1       string  Coova
+ATTRIBUTE       Coova-Response               2       string  Coova
+ATTRIBUTE       Coova-Config                 3       string  Coova
+ATTRIBUTE       Coova-AP-Config              4       string  Coova
+ATTRIBUTE       Coova-Session-Id             5       string  Coova
+ATTRIBUTE       Coova-Parent-Session-Id      6       string  Coova

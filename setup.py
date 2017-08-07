@@ -3,27 +3,27 @@
 
 from setuptools import setup, find_packages
 import toughradius
+import os
 
 version = toughradius.__version__
+proj_home = os.path.dirname(__file__)
+configs = os.listdir(os.path.join(proj_home,'etc'))
+dictionarys = os.listdir(os.path.join(proj_home,'dictionarys'))
 
 install_requires = [
     'six>=1.8.0',
     'gevent==1.1.2',
     'Click',
-    'bottle'
+    'bottle',
+    #'ConcurrentLogHandler'
 ]
 install_requires_empty = []
 
 package_data={}
 
 data_files=[
-    ('/etc/toughradius', [
-        'etc/radiusd.json', 
-        'etc/logger.json'
-        'etc/clients.json'
-        'etc/modules.json'
-    ]),
-    ('/etc/toughradius/dictionarys',['dictionarys/directory','dictionarys/directory.*'])
+    ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs ]),
+    ('/etc/toughradius/dictionarys',['dictionarys/%s'%d for d in dictionarys])
 ]
 
 
@@ -44,6 +44,7 @@ setup(name='toughradius',
        ],
       packages=find_packages(),
       package_data=package_data,
+      data_files=data_files,
       keywords=['radius', 'AAA','authentication','accounting','authorization','toughradius'],
       zip_safe=True,
       include_package_data=True,
@@ -51,8 +52,9 @@ setup(name='toughradius',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'gtr-auth = toughradius.radiusd.server:auth',
-              'gtr-acct = toughradius.radiusd.server:acct',
+              'gtr-chkcfg = toughradius.common.config:chk_cfg',
+              'gtr-radiusd-auth = toughradius.radiusd.server:auth',
+              'gtr-radiusd-acct = toughradius.radiusd.server:acct',
           ]
       }
 )

@@ -7,18 +7,18 @@ venv:
 	)
 
 
-initdb:
-	venv/bin/python radiusctl initdb -f -c etc/toughradius.json
+install:
+	python setup.py install
 
 clean:
+	rm -fr toughradius.egg-info
+	rm -fr dist
+	rm -fr build/*
 	rm -fr venv
 
-run:
-	venv/bin/python radiusctl standalone -c etc/toughradius.json
-
-suprun:
-	venv/bin/python radiusctl daemon -s startup -n -c etc/toughradius_test.conf
+test:
+	python gtrctl.py auth -p 10
 
 
-.PHONY:  venv uplibs test initdb clean run suprun
+.PHONY:  venv test  clean 
 

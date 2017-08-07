@@ -1,16 +1,21 @@
 {
     "authentication":[
-
+        "toughradius.radiusd.modules.request_logger",
+        "toughradius.radiusd.modules.request_mac_parse",
+        "toughradius.radiusd.modules.request_vlan_parse"
     ],
 
     "authorization": [
-
+        "toughradius.radiusd.modules.accept_rate_process",
+        "toughradius.radiusd.modules.response_logger"
     ],
 
     "acctounting":{
 
         "parse" : [
-
+            "toughradius.radiusd.modules.request_logger",
+            "toughradius.radiusd.modules.request_mac_parse",
+            "toughradius.radiusd.modules.request_vlan_parse"
         ],
 
         "start" : [
@@ -31,6 +36,10 @@
 
         "off": [
 
+        ],
+
+        "acct_post" :[
+            "toughradius.radiusd.modules.response_logger"
         ]
     }
 }

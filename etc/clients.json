@@ -2,12 +2,9 @@
     "vendors" :{
         "std" : 0
     },
-    // router that identifies  for the authentication
     "ids": {
-        // "nas id" : {attrname:attrvalue...}
         "toughac" : {"secret" : "secret", "coaport" : 3799, "vendor": "std"}
     },
-    // router that ipaddr for the authentication 
     "ips": {
         "127.0.0.1": {"secret" : "secret", "coaport" : 3799, "vendor": "std"}
     }

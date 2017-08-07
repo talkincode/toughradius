@@ -3,7 +3,7 @@
     "disable_existing_loggers": true,
     "formatters": {
         "verbose": {
-            "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            "format": "[%(asctime)s %(name)s-%(process)d] [%(levelname)s] %(message)s",
             "datefmt": "%Y-%m-%d %H:%M:%S"
         },
         "simple": {
@@ -22,27 +22,29 @@
         },
         "info": {
             "level": "DEBUG",
-            "class": "cloghandler.ConcurrentRotatingFileHandler",
-            "maxBytes": 10485760,
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "d",
+            "interval": 1,
             "backupCount": 50,
             "delay": true,
-            "filename": "/var/log/toughradius.log",
+            "filename": "/var/log/toughradius/info.log",
             "formatter": "verbose"
         },
         "error": {
             "level": "ERROR",
-            "class": "cloghandler.ConcurrentRotatingFileHandler",
-            "maxBytes": 10485760,
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "d",
+            "interval": 1,
             "backupCount": 50,
             "delay": true,
-            "filename": "/var/log/toughradius.error.log",
+            "filename": "/var/log/toughradius/error.log",
             "formatter": "verbose"
         }
     },
     "loggers": {
         "": {
-            "handlers": ["info","error"],
-            "level": "info"
+            "handlers": ["info","error","debug"],
+            "level": "DEBUG"
         }
     }
 }
