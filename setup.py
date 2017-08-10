@@ -52,9 +52,7 @@ setup(name='toughradius',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'gtr-chkcfg = toughradius.common.config:chk_cfg',
-              'gtr-radiusd-auth = toughradius.radiusd.server:auth',
-              'gtr-radiusd-acct = toughradius.radiusd.server:acct',
+              'gtrad = toughradius.common.commands:cli',
           ]
       }
 )

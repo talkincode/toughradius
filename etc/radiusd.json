@@ -9,7 +9,6 @@
         "secret": "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng"
     }, 
     "clients": "!include:{CONFDIR}/clients.json", 
-    "conf_file": "/Users/wangjuntao/toughstruct/ToughRADIUS/etc/radiusd.json", 
     "logger": "!include:{CONFDIR}/logger.json", 
     "modules": "!include:{CONFDIR}/modules.json", 
     "radiusd": {

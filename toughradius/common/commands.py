@@ -1,7 +1,9 @@
-import os,sys
-RUNDIR = os.path.dirname(__file__)
-sys.path.insert(0,RUNDIR)
+import gevent.monkey
+gevent.monkey.patch_all()
+import os
+import sys
 import click
+import json
 import logging
 import logging.config
 
@@ -9,6 +11,26 @@ import logging.config
 def cli():
     pass
 
+@click.command()
+@click.option('-c','--conf', default='/etc/toughradius/radiusd.json', help='toughradius config file')
+def chkcfg(conf):
+    try:
+        os.environ['CONFDIR'] = os.path.dirname(conf)
+        from toughradius.common import config as iconfig
+        from pprint import pprint as pp
+        config = iconfig.find_config(conf)
+        print '%s %s %s' % ('-'*50,conf,'-'*50)
+        print json.dumps(config,ensure_ascii=True,indent=4,sort_keys=False)
+        print '%s logger %s' % ('-'*50,'-'*50)
+        print json.dumps(config.logger,ensure_ascii=True,indent=4,sort_keys=False)
+        print '%s clients %s' % ('-'*50,'-'*50)
+        print json.dumps(config.clients,ensure_ascii=True,indent=4,sort_keys=False)
+        print '%s modules %s' % ('-'*50,'-'*50)
+        print json.dumps(config.modules,ensure_ascii=True,indent=4,sort_keys=False)
+        print '-' * 110
+    except:
+        import traceback
+        traceback.print_exc()
 
 @click.command()
 @click.option('-c','--conf', default='/etc/toughradius/radiusd.json', help='toughradius config file')
@@ -68,6 +90,7 @@ def acct(conf,debug,acct_port,pool_size):
         traceback.print_exc()
 
 
+cli.add_command(chkcfg)
 cli.add_command(auth)
 cli.add_command(acct)
 

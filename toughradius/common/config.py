@@ -2,7 +2,6 @@
 #coding=utf-8
 
 import json
-import click
 import os
 
 ENVKEYS = [
@@ -52,11 +51,11 @@ class Config(ConfigDict):
         with open(conf_file) as cf:
             self.update(json.loads(cf.read(),"utf-8"))
         self.update(**kwargs)
-        self.conf_file = conf_file
+        self.config_file = conf_file
 
     def save(self):
-        print "update config {0}".format(self.conf_file)
-        with open(self.conf_file,"w") as cf:
+        print "update config {0}".format(self.config_file)
+        with open(self.config_file,"w") as cf:
             cf.write(json.dumps(self,ensure_ascii=True,indent=4,sort_keys=False))
 
 
@@ -68,27 +67,6 @@ class Config(ConfigDict):
 def find_config(conf_file=None):
     return Config(conf_file)
 
-
-@click.command()
-@click.option('-c','--conf', default='/etc/toughradius/radiusd.json', help='toughradius config file')
-def chk_cfg(conf):
-    try:
-        os.environ['CONFDIR'] = os.path.dirname(conf)
-        from toughradius.common import config as iconfig
-        from pprint import pprint as pp
-        config = iconfig.find_config(conf)
-        print '%s %s %s' % ('-'*50,conf,'-'*50)
-        print json.dumps(config,ensure_ascii=True,indent=4,sort_keys=False)
-        print '%s logger %s' % ('-'*50,'-'*50)
-        print json.dumps(config.logger,ensure_ascii=True,indent=4,sort_keys=False)
-        print '%s clients %s' % ('-'*50,'-'*50)
-        print json.dumps(config.clients,ensure_ascii=True,indent=4,sort_keys=False)
-        print '%s modules %s' % ('-'*50,'-'*50)
-        print json.dumps(config.modules,ensure_ascii=True,indent=4,sort_keys=False)
-        print '-' * 110
-    except:
-        import traceback
-        traceback.print_exc()
 
 
 if __name__ == "__main__":

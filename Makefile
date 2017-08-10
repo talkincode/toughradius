@@ -16,8 +16,8 @@ clean:
 	rm -fr build/*
 	rm -fr venv
 
-test:
-	python gtrctl.py auth -p 10
+run:
+	python toughradius/common/commands.py auth -p 10
 
 
 .PHONY:  venv test  clean 
