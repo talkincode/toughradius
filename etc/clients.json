@@ -2,11 +2,12 @@
     "vendors" :{
         "std" : 0
     },
-    "ids": {
-        "toughac" : {"secret" : "secret", "coaport" : 3799, "vendor": "std"}
-    },
-    "ips": {
-        "127.0.0.1": {"secret" : "secret", "coaport" : 3799, "vendor": "std"}
+    "defaults" : {
+        "127.0.0.1": {
+            "nasid" :"toughac",
+            "secret" : "secret", 
+            "coaport" : 3799, 
+            "vendor": "std"
+        }
     }
-
 }

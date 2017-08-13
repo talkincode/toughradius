@@ -2,10 +2,7 @@
 #coding:utf-8
 import os
 from gevent.server import DatagramServer
-from gevent.threadpool import ThreadPool
-from gevent import socket
 import gevent
-import click
 import logging
 
 
@@ -15,9 +12,13 @@ class RudiusServer(DatagramServer):
         DatagramServer.__init__(self,address)
         self.logger = logging.getLogger(__name__)
         self.config = config
-        self.address = address
-        self.pool = ThreadPool(self.config.radiusd.pool_size)
+        self.init_adapter()
         self.start()
+
+    def init_adapters(self):
+        if self.config.radiusd.adapter == 'rest':
+            from toughradius.radiusd.adapters import rest
+            self.adapter =  rest
 
 
 class RudiusAuthServer(RudiusServer):
@@ -26,7 +27,8 @@ class RudiusAuthServer(RudiusServer):
         RudiusServer.__init__(self,address,config)
 
     def handle(self,data, address):
-        pass
+        reply = self.adapter.handleAuth(data,address)
+        gevent.spawn(sendReply,self.socket,reply,address)
 
 
 class RudiusAcctServer(RudiusServer):
@@ -35,7 +37,8 @@ class RudiusAcctServer(RudiusServer):
         RudiusServer.__init__(self,address,config)
 
     def handle(self,data, address):
-        pass
+        reply = self.adapter.handleAcct(data,address)
+        gevent.spawn(sendReply,self.socket,reply,address)
 
 
 

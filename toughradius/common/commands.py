@@ -25,8 +25,6 @@ def chkcfg(conf):
         print json.dumps(config.logger,ensure_ascii=True,indent=4,sort_keys=False)
         print '%s clients %s' % ('-'*50,'-'*50)
         print json.dumps(config.clients,ensure_ascii=True,indent=4,sort_keys=False)
-        print '%s modules %s' % ('-'*50,'-'*50)
-        print json.dumps(config.modules,ensure_ascii=True,indent=4,sort_keys=False)
         print '-' * 110
     except:
         import traceback

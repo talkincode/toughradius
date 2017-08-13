@@ -1,4 +1,3 @@
-
 #!/usr/bin/python
 
 from setuptools import setup, find_packages
@@ -8,7 +7,7 @@ import os
 version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
 configs = os.listdir(os.path.join(proj_home,'etc'))
-dictionarys = os.listdir(os.path.join(proj_home,'dictionarys'))
+dictionarys = os.listdir(os.path.join(proj_home,'etc/dictionarys'))
 
 install_requires = [
     'six>=1.8.0',
@@ -22,10 +21,9 @@ install_requires_empty = []
 package_data={}
 
 data_files=[
-    ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs ]),
+    ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
     ('/etc/toughradius/dictionarys',['dictionarys/%s'%d for d in dictionarys])
 ]
-
 
 setup(name='toughradius',
       version=version,

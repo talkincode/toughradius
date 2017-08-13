@@ -13,7 +13,7 @@ install:
 clean:
 	rm -fr toughradius.egg-info
 	rm -fr dist
-	rm -fr build/*
+	rm -fr build
 	rm -fr venv
 
 run:
