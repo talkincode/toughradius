@@ -210,17 +210,19 @@ class AuthMessage(AuthPacket,ExtAttrMixin):
     def get_nas_portid(self):
         try:return tools.DecodeString(self.get(87)[0])
         except:return ''           
-           
+
+    def get_nas_port_type(self):
+        try:return tools.DecodeInteger(self.get(61)[0]) or 0
+        except:return 0
+
     def get_nas_addr(self):
         try:
             return tools.DecodeAddress(self.get(4)[0])
         except:pass
 
-    def get_nas_portid(self):
-        try:
-            return tools.DecodeString(self.get(87)[0])
-        except:return ''    
-
+    def get_nas_class(self):
+        try:return tools.DecodeString(self.get(25)[0])
+        except:return ''
         
     def get_mac_addr(self):
         try:
@@ -236,7 +238,11 @@ class AuthMessage(AuthPacket,ExtAttrMixin):
 
     def get_framed_ipaddr(self):
         try:return tools.DecodeAddress(self.get(8)[0])
-        except:return ''            
+        except:return ''
+
+    def get_framed_netmask(self):
+        try:return tools.DecodeAddress(self.get(9)[0])
+        except:return ''
 
     def get_session_timeout(self):
         try:return tools.DecodeInteger(self.get(27)[0]) or 0
@@ -401,7 +407,23 @@ class AuthMessage(AuthPacket,ExtAttrMixin):
 
         return result
 
-
+    @property
+    def dict_message(self):
+        return dict(
+            nas_id = self.get_nas_id(),
+            nas_addr = self.get_nas_addr(),
+            username = self.get_user_name(),
+            password = self.get_passwd(),
+            mac_addr = self.get_mac_addr(),
+            vlanid1 = self.vlanid1,
+            vlanid2 = self.vlanid2,
+            nas_port_id = self.get_nas_portid(),
+            nas_port_type = self.get_nas_port_type(),
+            nas_class = self.get_nas_class(),
+            framed_ipaddr = self.get_framed_ipaddr(),
+            framed_netmask = self.get_framed_netmask(),
+            session_timeout = self.get_session_timeout(),
+        )
 
 
 
@@ -567,7 +589,7 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
 
     def get_ticket(self):
         return dict(
-            account_number = self.get_user_name(),
+            username = self.get_user_name(),
             mac_addr = self.get_mac_addr(),
             nas_addr = self.get_nas_addr(),
             nas_port = self.get_nas_port(),

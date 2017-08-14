@@ -26,7 +26,14 @@
         "pass_userpwd": 0, 
         "pool_size": 2, 
         "request_timeout": 5
-    }, 
+    },
+    "adapters":{
+        "rest" :{
+            "url" : "http://127.0.0.1:8080",
+            "format" : "json",
+            "secret" : ""
+        }
+    },
     "system": {
         "tz": "CST-8"
     }
