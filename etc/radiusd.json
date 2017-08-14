@@ -1,11 +1,8 @@
 {
-    "admin": {
-        "host": "192.1.1.1"
-    }, 
     "api": {
         "debug": 1, 
         "host": "0.0.0.0", 
-        "listen": 1815, 
+        "port": 1815,
         "secret": "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng"
     }, 
     "clients": "!include:{CONFDIR}/clients.json", 
@@ -29,7 +26,7 @@
     },
     "adapters":{
         "rest" :{
-            "url" : "http://127.0.0.1:8080",
+            "url" : "http://127.0.0.1:1815/api/v1/radtest",
             "format" : "json",
             "secret" : ""
         }

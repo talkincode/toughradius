@@ -19,21 +19,19 @@ class BasicAdapter(object):
 
     def handleAuth(self,socket, data, address):
         try:
-            req = parse_auth_packet(data,address,self.clients,dictionary)
+            req = parse_auth_packet(data,address,self.clients,self.dictionary)
             prereply = self.send(req)
-            gevent.sleep(0)
             reply = process_auth_reply(req, prereply)
-            socket.sendto(reply.ReplyPacket(), address )
+            gevent.spawn(socket.sendto,reply.ReplyPacket(),address)
         except:
             self.logger.exception( "Handle Radius Auth error" )
 
     def handleAcct(self,socket, data, address):
         try:
-            req = parse_acct_packet(data,address,self.clients,dictionary)
+            req = parse_acct_packet(data,address,self.clients,self.dictionary)
             prereply = self.send(req)
-            gevent.sleep(0)
             reply = process_acct_reply(req, prereply)
-            socket.sendto(reply.ReplyPacket(), address )
+            gevent.spawn(socket.sendto, reply.ReplyPacket(), address)
         except:
             self.logger.exception("Handle Radius Acct error")
 

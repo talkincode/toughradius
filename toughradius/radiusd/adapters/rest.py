@@ -4,7 +4,7 @@
 from .base import BasicAdapter
 from toughradius.common import tools
 from hashlib import md5
-import grequests
+import urllib2
 import json
 
 class RestError(BaseException):pass
@@ -21,11 +21,10 @@ class RestAdapter(BasicAdapter):
         msg = json.dumps(req.dict_message)
         sign = self.makeSign(msg)
         try:
-            resp = grequests.post('%s?sign=%s'%(url,sign),data=msg)
+            req = urllib2.Request('%s?sign=%s'%(url,sign),msg)
+            resp = urllib2.urlopen(req)
+            return json.loads(resp.read())
         except:
-            resp = grequests.post('%s?sign=%s'%(url,sign),data=msg,verify=False)
+            self.logger.exception("send rest request error")
+            raise RestError("rest request error")
 
-        if resp.status_code == 200:
-            return resp.json()
-        else:
-            raise  RestError("rest request error")

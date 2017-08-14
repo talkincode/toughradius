@@ -12,7 +12,7 @@ class RudiusServer(DatagramServer):
             from toughradius.radiusd.adapters.rest import RestAdapter
             self.adapter =  RestAdapter(self.config)
         self.start()
-
+        
 
 class RudiusAuthServer(RudiusServer):
 

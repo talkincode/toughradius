@@ -5,7 +5,13 @@ import logging
 import six
 from toughradius.txradius.radius import packet
 from toughradius.txradius import message
-# from toughradius.modules import *
+from toughradius.radiusd.modules import (
+    request_logger,
+    request_mac_parse,
+    request_vlan_parse,
+    response_logger,
+    accept_rate_process
+)
 
 Acct_Status_Start = 1
 Acct_Status_Stop = 2
@@ -37,9 +43,9 @@ def parse_auth_packet(datagram,(host,port),client_config,dictionary=None):
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)"%(nas_id,host,port))
 
     authreq.source = (host,port)
-    # authreq = request_logger.handle_radius(authreq)
-    # authreq = request_mac_parse.handle_radius(authreq)
-    # authreq = request_vlan_parse.handle_radius(authreq)
+    authreq = request_logger.handle_radius(authreq)
+    authreq = request_mac_parse.handle_radius(authreq)
+    authreq = request_vlan_parse.handle_radius(authreq)
 
     return authreq
 
@@ -53,7 +59,7 @@ def parse_acct_packet(datagram,(host,port),client_config,dictionary=None):
     """
     if host in client_config.defaults:
         client = client_config.defaults[host]
-        acctreq = message.AcctMessage(packet=datagram, dict=dictionary, secret=six.b(client['secret']))
+        acctreq = message.AcctMessage(packet=datagram, dict=dictionary, secret=str(client['secret']))
         acctreq.vendor_id=client_config.vendors.get(client['vendor'])
     else:
         acctreq = message.AcctMessage(packet=datagram,dict=dictionary, secret=six.b(''))
@@ -68,9 +74,9 @@ def parse_acct_packet(datagram,(host,port),client_config,dictionary=None):
 
 
     acctreq.source = (host,port)
-    # acctreq = request_logger.handle_radius(acctreq)
-    # acctreq = request_mac_parse.handle_radius(acctreq)
-    # acctreq = request_vlan_parse.handle_radius(acctreq)
+    acctreq = request_logger.handle_radius(acctreq)
+    acctreq = request_mac_parse.handle_radius(acctreq)
+    acctreq = request_vlan_parse.handle_radius(acctreq)
     return acctreq
 
 
@@ -88,16 +94,15 @@ def process_auth_reply(req, prereply):
     reply.resp_attrs = prereply
 
     try:
-        # for module in (response_logger,accept_rate_process):
-        #     reply = module.handle_radius(req,reply)
-        #     if reply is None:
-        #         raise packet.PacketError("radius authentication message discarded")
-        #
-        #     if not req.VerifyReply(reply):
-        #         errstr = u'The authentication message failed to check. \
-        #         Check that the shared key is consistent'
-        #         raise packet.PacketError(errstr)
-        pass
+        for module in (response_logger,accept_rate_process):
+            reply = module.handle_radius(req,reply)
+            if reply is None:
+                raise packet.PacketError("radius authentication message discarded")
+        
+            if not req.VerifyReply(reply):
+                errstr = u'The authentication message failed to check. \
+                Check that the shared key is consistent'
+                raise packet.PacketError(errstr)
     except:
         errmsg="handle radius response error"
         logging.exception(errmsg)
@@ -114,16 +119,15 @@ def process_acct_reply(req, prereply):
     """
     reply = req.CreateReply()
     try:
-        # for module in (response_logger,)
-        #     reply = module.handle_radius(req,reply)
-        #     if reply is None:
-        #         raise packet.PacketError("radius accounting message discarded")
-        #
-        #     if not req.VerifyReply(reply):
-        #         errstr = '[User:%s] The accounting message failed to check. \
-        #         Check that the shared key is consistent'
-        #         raise packet.PacketError(errstr)
-        pass
+        for module in (response_logger,):
+            reply = module.handle_radius(req,reply)
+            if reply is None:
+                raise packet.PacketError("radius accounting message discarded")
+        
+            if not req.VerifyReply(reply):
+                errstr = '[User:%s] The accounting message failed to check. \
+                Check that the shared key is consistent'
+                raise packet.PacketError(errstr)
     except:
         raise packet.PacketError("handle radius accounting response error")
     return reply

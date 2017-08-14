@@ -636,3 +636,7 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
             acct_output_packets = self.get_acct_output_packets(),
             acct_terminate_cause = self.get_acct_terminate_cause(),
         )
+
+    @property
+    def dict_message(self):
+        return self.get_billing()
