@@ -1,37 +1,38 @@
 {
-    "api": {
-        "debug": 1, 
-        "host": "0.0.0.0", 
-        "port": 1815,
-        "secret": "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng"
-    }, 
-    "clients": "!include:{CONFDIR}/clients.json", 
-    "logger": "!include:{CONFDIR}/logger.json", 
-    "radiusd": {
-        "acct_port": 1813, 
-        "auth_port": 1812, 
-        "adapter" : "rest",
-        "debug": 1, 
-        "dictionary": "{CONFDIR}/dictionarys/dictionary", 
-        "free_auth_input_limit": 1048576, 
-        "free_auth_output_limit": 1048576, 
-        "free_auth_limit_code": "", 
-        "free_auth_domain": "", 
-        "host": "0.0.0.0", 
-        "max_session_timeout": 86400, 
-        "pass_pwd": 0, 
-        "pass_userpwd": 0, 
-        "pool_size": 2, 
-        "request_timeout": 5
+    "api" : {
+        "debug" : 1,
+        "host" : "0.0.0.0",
+        "port" : 1815,
+        "secret" : "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng"
     },
-    "adapters":{
-        "rest" :{
+    "clients" : "!include:{CONFDIR}/clients.json",
+    "logger" : "!include:{CONFDIR}/logger.json",
+    "radiusd" : {
+        "acct_port" : 1813,
+        "auth_port" : 1812,
+        "adapter" : "rest",
+        "debug" : 1,
+        "dictionary" : "{CONFDIR}/dictionarys/dictionary",
+        "free_auth_input_limit" : 1048576,
+        "free_auth_output_limit" : 1048576,
+        "free_auth_limit_code" : "",
+        "free_auth_domain" : "",
+        "host" : "0.0.0.0",
+        "max_session_timeout" : 86400,
+        "pass_pwd" : 0,
+        "pass_userpwd" : 0,
+        "pool_size" : 2,
+        "request_timeout" : 5
+    },
+    "adapters" : {
+        "rest" : {
             "url" : "http://127.0.0.1:1815/api/v1/radtest",
             "format" : "json",
-            "secret" : ""
+            "secret" : "",
+            "radattrs" : []
         }
     },
-    "system": {
-        "tz": "CST-8"
+    "system" : {
+        "tz" : "CST-8"
     }
 }

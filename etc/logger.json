@@ -1,50 +1,54 @@
 {
-    "version": 1,
-    "disable_existing_loggers": true,
-    "formatters": {
-        "verbose": {
-            "format": "[%(asctime)s %(name)s-%(process)d] [%(levelname)s] %(message)s",
-            "datefmt": "%Y-%m-%d %H:%M:%S"
+    "version" : 1,
+    "disable_existing_loggers" : true,
+    "formatters" : {
+        "verbose" : {
+            "format" : "[%(asctime)s %(name)s-%(process)d] [%(levelname)s] %(message)s",
+            "datefmt" : "%Y-%m-%d %H:%M:%S"
         },
-        "simple": {
-            "format": "%(asctime)s %(levelname)s %(message)s"
+        "simple" : {
+            "format" : "%(asctime)s %(levelname)s %(message)s"
         }
     },
-    "handlers": {
-        "null": {
-            "level": "DEBUG",
-            "class": "logging.NullHandler"
+    "handlers" : {
+        "null" : {
+            "level" : "DEBUG",
+            "class" : "logging.NullHandler"
         },
-        "debug": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "verbose"
+        "debug" : {
+            "level" : "DEBUG",
+            "class" : "logging.StreamHandler",
+            "formatter" : "verbose"
         },
-        "info": {
-            "level": "DEBUG",
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "when": "d",
-            "interval": 1,
-            "backupCount": 50,
-            "delay": true,
-            "filename": "/var/log/toughradius/info.log",
-            "formatter": "verbose"
+        "info" : {
+            "level" : "DEBUG",
+            "class" : "logging.handlers.TimedRotatingFileHandler",
+            "when" : "d",
+            "interval" : 1,
+            "backupCount" : 50,
+            "delay" : true,
+            "filename" : "/var/log/toughradius/info.log",
+            "formatter" : "verbose"
         },
-        "error": {
-            "level": "ERROR",
-            "class": "logging.handlers.TimedRotatingFileHandler",
-            "when": "d",
-            "interval": 1,
-            "backupCount": 50,
-            "delay": true,
-            "filename": "/var/log/toughradius/error.log",
-            "formatter": "verbose"
+        "error" : {
+            "level" : "ERROR",
+            "class" : "logging.handlers.TimedRotatingFileHandler",
+            "when" : "d",
+            "interval" : 1,
+            "backupCount" : 50,
+            "delay" : true,
+            "filename" : "/var/log/toughradius/error.log",
+            "formatter" : "verbose"
         }
     },
-    "loggers": {
-        "": {
-            "handlers": ["info","error","debug"],
-            "level": "DEBUG"
+    "loggers" : {
+        "" : {
+            "handlers" : [
+                "info",
+                "error",
+                "debug"
+            ],
+            "level" : "DEBUG"
         }
     }
 }
