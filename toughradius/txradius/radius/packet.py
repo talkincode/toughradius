@@ -14,7 +14,7 @@ except ImportError:
     # BBB for python 2.4
     import md5
     md5_constructor = md5.new
-import six
+from toughradius.common import six
 import tools
 
 # Packet codes

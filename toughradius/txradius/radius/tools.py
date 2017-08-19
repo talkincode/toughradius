@@ -2,7 +2,7 @@
 #
 # Utility functions
 import struct
-import six
+from toughradius.common import six
 import json
 
 def DecodeAnyAttr(val):

@@ -14,7 +14,7 @@ import time
 import binascii
 import datetime
 import hashlib
-import six
+from toughradius.common import six
 import decimal
 
 decimal.getcontext().prec = 16

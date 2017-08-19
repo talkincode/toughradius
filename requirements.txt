@@ -1,4 +1,3 @@
 Click
 six
-bottle
 gevent==1.1.2

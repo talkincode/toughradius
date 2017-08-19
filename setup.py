@@ -14,7 +14,6 @@ install_requires = [
     'six>=1.8.0',
     'gevent==1.1.2',
     'Click',
-    'bottle',
     #'ConcurrentLogHandler'
 ]
 install_requires_empty = []
@@ -51,7 +50,7 @@ setup(name='toughradius',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'gtrad = toughradius.common.commands:cli',
+              'gtrcli = toughradius.common.commands:cli',
           ]
       }
 )

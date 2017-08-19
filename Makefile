@@ -10,6 +10,18 @@ venv:
 install:
 	python setup.py install
 
+bdist:
+	python setup.py bdist
+
+wheel:
+	python setup.py bdist_wheel
+
+upload-bdist:
+	python setup.py bdist upload
+
+upload-all:
+	python setup.py bdist bdist_wheel upload
+
 clean:
 	rm -fr toughradius.egg-info
 	rm -fr dist

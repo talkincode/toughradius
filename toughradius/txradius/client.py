@@ -6,7 +6,7 @@ from twisted.internet import protocol
 from twisted.internet import reactor, defer
 from toughradius.txradius.radius import packet
 from toughradius.txradius import message
-import six
+from toughradius.common import six
 import time
 
 class RadiusClient(protocol.DatagramProtocol):
