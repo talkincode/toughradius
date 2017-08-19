@@ -28,6 +28,9 @@ doc:
 	echo "docs.toughradius.net" > docs/CNAME
 	python documents/rename.py
 
+test:
+	echo 'test'
+
 clean:
 	rm -fr toughradius.egg-info
 	rm -fr dist

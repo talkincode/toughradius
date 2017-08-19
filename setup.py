@@ -7,22 +7,21 @@ import os
 
 version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
-configs = os.listdir(os.path.join(proj_home,'etc'))
+config_dir = os.path.join(proj_home,'etc')
+configs = os.listdir(config_dir)
 dictionarys = os.listdir(os.path.join(proj_home,'etc/dictionarys'))
 
 install_requires = [
-    'six>=1.8.0',
     'gevent==1.1.2',
     'Click',
-    #'ConcurrentLogHandler'
 ]
 install_requires_empty = []
 
 package_data={}
 
 data_files=[
-    ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys])
+    ('/etc/toughradius', [ os.path.join(config_dir,cfg) for cfg in configs if cfg not in ('dictionarys',) ]),
+    ('/etc/toughradius/dictionarys',[ os.path.join(config_dir,'dictionarys/%s'%d ) for d in dictionarys])
 ]
 
 setup(name='toughradius',
@@ -31,7 +30,7 @@ setup(name='toughradius',
       author_email='jamiesun.net@gmail.com',
       url='https://github.com/talkincode/toughradius',
       license='Apache License 2.0',
-      description='OpenSource RadiusServer',
+      description='Beautiful open source RadiusServer',
       long_description=open('README.md').read(),
       classifiers=[
        'Development Status :: 6 - Mature',
