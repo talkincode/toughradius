@@ -24,6 +24,7 @@ doc:
 	cd documents && sphinx-intl build && make -e SPHINXOPTS="-D language='zh_CN'" html
 	rsync -av documents/build/html/ docs/
 	rm -fr documents/build/html
+	python documents/rename.py
 
 clean:
 	rm -fr toughradius.egg-info
