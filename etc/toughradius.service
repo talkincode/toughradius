@@ -1,0 +1,13 @@
+[Unit]
+Description=toughradius
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=supervisord -c /etc/toughradius/radiusd.conf
+ExecReload=supervisorctl reload -c /etc/toughradius/radiusd.conf
+ExecStop=supervisorctl shutdown -c /etc/toughradius/radiusd.conf
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

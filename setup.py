@@ -31,7 +31,7 @@ setup(name='toughradius',
       author_email='jamiesun.net@gmail.com',
       url='https://github.com/talkincode/toughradius',
       license='Apache License 2.0',
-      description='RADIUS Server',
+      description='OpenSource RadiusServer',
       long_description=open('README.md').read(),
       classifiers=[
        'Development Status :: 6 - Mature',

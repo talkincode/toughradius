@@ -16,11 +16,15 @@ bdist:
 wheel:
 	python setup.py bdist_wheel
 
-upload-bdist:
-	python setup.py bdist upload
-
-upload-all:
+upload:
 	python setup.py bdist bdist_wheel upload
+
+doc:
+	cd docs && make html
+
+updoc:
+	cd docs && sphinx-intl update -p build/locale -l zh_CN
+	cd docs && sphinx-intl build && make -e SPHINXOPTS="-D language='zh_CN'" html
 
 clean:
 	rm -fr toughradius.egg-info
