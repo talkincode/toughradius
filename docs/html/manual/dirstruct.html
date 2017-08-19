@@ -1,0 +1,128 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Development directory structure &mdash; toughradius 5.0 文档</title>
+    
+    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/translations.js"></script>
+    <link rel="top" title="toughradius 5.0 文档" href="../index.html" />
+    <link rel="next" title="Deployment" href="deploy.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="deploy.html" title="Deployment"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="../index.html">toughradius 5.0 文档</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="development-directory-structure">
+<h1>Development directory structure<a class="headerlink" href="#development-directory-structure" title="永久链接至标题">¶</a></h1>
+<p>Understanding the development directory structure helps to quickly understand the system and facilitate further expansion of development.</p>
+<div class="highlight-bash"><div class="highlight"><pre>├── docs   <span class="c"># User manual documentation</span>
+├── etc <span class="c"># Configuration directory</span>
+│   ├── clients.json
+│   ├── dictionarys  <span class="c"># Radius protocol dictionary file directory</span>
+│   ├── logger.json
+│   ├── radiusd.conf
+│   └── radiusd.json
+└── toughradius  <span class="c"># Main source code package</span>
+├── setup.py  <span class="c"># Package script</span>
+├── debug.py <span class="c"># Local development, debugging, running scripts</span>
+├── requirements.txt  <span class="c"># A list of Python modules used in the development environment</span>
+├── Changelog.md  <span class="c"># Change logs</span>
+├── LICENSE  <span class="c"># Software license agreement file</span>
+├── Makefile <span class="c"># Software system description</span>
+├── README.md
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="configuration.html"
+                        title="上一章">Configuration</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="deploy.html"
+                        title="下一章">Deployment</a></p>
+  <h3>本页</h3>
+  <ul class="this-page-menu">
+    <li><a href="../_sources/manual/dirstruct.txt"
+           rel="nofollow">显示源代码</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="deploy.html" title="Deployment"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             >上一页</a> |</li>
+        <li><a href="../index.html">toughradius 5.0 文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2017, jamiesun.
+    </div>
+  </body>
+</html>

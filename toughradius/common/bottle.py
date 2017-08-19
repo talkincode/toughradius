@@ -286,7 +286,7 @@ class Router(object):
 
         The path-rule is either a static path (e.g. `/contact`) or a dynamic
         path that contains wildcards (e.g. `/wiki/<page>`). The wildcard syntax
-        and details on the matching order are described in docs:`routing`.
+        and details on the matching order are described in documents:`routing`.
     '''
 
     default_pattern = '[^/]+'

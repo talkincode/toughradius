@@ -20,11 +20,10 @@ upload:
 	python setup.py bdist bdist_wheel upload
 
 doc:
-	cd docs && make html
-
-updoc:
-	cd docs && sphinx-intl update -p build/locale -l zh_CN
-	cd docs && sphinx-intl build && make -e SPHINXOPTS="-D language='zh_CN'" html
+	cd documents && sphinx-intl update -p build/locale -l zh_CN
+	cd documents && sphinx-intl build && make -e SPHINXOPTS="-D language='zh_CN'" html
+	rsync -av documents/build/html docs/
+	rm -fr documents/build/html
 
 clean:
 	rm -fr toughradius.egg-info

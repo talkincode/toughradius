@@ -1,0 +1,38 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2017, jamiesun
+# This file is distributed under the same license as the toughradius package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: toughradius 5.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2017-08-19 23:32+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ../../manual/configuration.rst:2
+# 19a9c34ae36b4c2bb8d95ddd680a3043
+msgid "Configuration"
+msgstr ""
+
+#: ../../manual/configuration.rst:5
+# 1a610b17cbad43bab384b4cbad85d1bf
+msgid "Main configuration file"
+msgstr ""
+
+#: ../../manual/configuration.rst:49
+# 1673741b2afe485ab731f773a5f11a94
+msgid "Logging configuration file"
+msgstr ""
+
+#: ../../manual/configuration.rst:110
+# fb445603074c40448061b767fa5e67f3
+msgid "Nas Client configuration file"
+msgstr ""
+
