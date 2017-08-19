@@ -6,10 +6,10 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Development directory structure &mdash; toughradius 5.0 文档</title>
+    <title>Dependents &mdash; toughradius 5.0 文档</title>
     
-    <link rel="stylesheet" href="../_static/default.css" type="text/css" />
-    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
     
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
@@ -20,12 +20,12 @@
         HAS_SOURCE:  true
       };
     </script>
-    <script type="text/javascript" src="../_static/jquery.js"></script>
-    <script type="text/javascript" src="../_static/underscore.js"></script>
-    <script type="text/javascript" src="../_static/doctools.js"></script>
-    <script type="text/javascript" src="../_static/translations.js"></script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../static/translations.js"></script>
     <link rel="top" title="toughradius 5.0 文档" href="../index.html" />
-    <link rel="next" title="Deployment" href="deploy.html" />
+    <link rel="next" title="Development directory structure" href="dirstruct.html" />
     <link rel="prev" title="Configuration" href="configuration.html" /> 
   </head>
   <body>
@@ -36,7 +36,7 @@
           <a href="../genindex.html" title="总目录"
              accesskey="I">索引</a></li>
         <li class="right" >
-          <a href="deploy.html" title="Deployment"
+          <a href="dirstruct.html" title="Development directory structure"
              accesskey="N">下一页</a> |</li>
         <li class="right" >
           <a href="configuration.html" title="Configuration"
@@ -50,25 +50,31 @@
         <div class="bodywrapper">
           <div class="body">
             
-  <div class="section" id="development-directory-structure">
-<h1>Development directory structure<a class="headerlink" href="#development-directory-structure" title="永久链接至标题">¶</a></h1>
-<p>Understanding the development directory structure helps to quickly understand the system and facilitate further expansion of development.</p>
-<div class="highlight-bash"><div class="highlight"><pre>├── docs   <span class="c"># User manual documentation</span>
-├── etc <span class="c"># Configuration directory</span>
-│   ├── clients.json
-│   ├── dictionarys  <span class="c"># Radius protocol dictionary file directory</span>
-│   ├── logger.json
-│   ├── radiusd.conf
-│   └── radiusd.json
-└── toughradius  <span class="c"># Main source code package</span>
-├── setup.py  <span class="c"># Package script</span>
-├── debug.py <span class="c"># Local development, debugging, running scripts</span>
-├── requirements.txt  <span class="c"># A list of Python modules used in the development environment</span>
-├── Changelog.md  <span class="c"># Change logs</span>
-├── LICENSE  <span class="c"># Software license agreement file</span>
-├── Makefile <span class="c"># Software system description</span>
-├── README.md
-</pre></div>
+  <div class="section" id="dependents">
+<h1>Dependents<a class="headerlink" href="#dependents" title="永久链接至标题">¶</a></h1>
+<div class="section" id="click">
+<h2>Click<a class="headerlink" href="#click" title="永久链接至标题">¶</a></h2>
+<dl class="docutils">
+<dt>Click is a Python package for creating beautiful command line interfaces</dt>
+<dd>in a composable way with as little code as necessary.  It&#8217;s the &#8220;Command
+Line Interface Creation Kit&#8221;.  It&#8217;s highly configurable but comes with
+sensible defaults out of the box.</dd>
+</dl>
+<p>github : <a class="reference external" href="https://github.com/pallets/click">https://github.com/pallets/click</a></p>
+</div>
+<div class="section" id="gevent-v1-1-2">
+<h2>gevent [v1.1.2]<a class="headerlink" href="#gevent-v1-1-2" title="永久链接至标题">¶</a></h2>
+<p>gevent is a coroutine-based Python networking library.</p>
+<p>Features include:</p>
+<ul class="simple">
+<li>Fast event loop based on libev.</li>
+<li>Lightweight execution units based on greenlet.</li>
+<li>Familiar API that re-uses concepts from the Python standard library.</li>
+<li>Cooperative sockets with SSL support.</li>
+<li>DNS queries performed through c-ares or a threadpool.</li>
+<li>Ability to use standard library and 3rd party modules written for standard blocking sockets</li>
+</ul>
+<p>github : <a class="reference external" href="https://github.com/gevent/gevent">https://github.com/gevent/gevent</a></p>
 </div>
 </div>
 
@@ -78,15 +84,24 @@
       </div>
       <div class="sphinxsidebar">
         <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dependents</a><ul>
+<li><a class="reference internal" href="#click">Click</a></li>
+<li><a class="reference internal" href="#gevent-v1-1-2">gevent [v1.1.2]</a></li>
+</ul>
+</li>
+</ul>
+
   <h4>上一个主题</h4>
   <p class="topless"><a href="configuration.html"
                         title="上一章">Configuration</a></p>
   <h4>下一个主题</h4>
-  <p class="topless"><a href="deploy.html"
-                        title="下一章">Deployment</a></p>
+  <p class="topless"><a href="dirstruct.html"
+                        title="下一章">Development directory structure</a></p>
   <h3>本页</h3>
   <ul class="this-page-menu">
-    <li><a href="../_sources/manual/dirstruct.txt"
+    <li><a href="../sources/manual/dependents.txt"
            rel="nofollow">显示源代码</a></li>
   </ul>
 <div id="searchbox" style="display: none">
@@ -113,7 +128,7 @@
           <a href="../genindex.html" title="总目录"
              >索引</a></li>
         <li class="right" >
-          <a href="deploy.html" title="Deployment"
+          <a href="dirstruct.html" title="Development directory structure"
              >下一页</a> |</li>
         <li class="right" >
           <a href="configuration.html" title="Configuration"

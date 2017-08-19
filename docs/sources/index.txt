@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-TOUGHRADIUS User Manual
-=======================================
+TOUGHRADIUS - Beautiful open source RadiusServer
+=================================================================
 
 TOUGHRADIUS is a Radius server software developed based on Python, which implements the standard Radius protocol and supports the extension of Radius protocol.
 
@@ -22,7 +22,7 @@ About this manual
 
 
 
-User guide:
+Manual:
 ---------------
 
 .. toctree::
@@ -30,6 +30,7 @@ User guide:
 
    manual/quickstart
    manual/configuration
+   manual/dependents
    manual/dirstruct
    manual/deploy
 
