@@ -45,8 +45,58 @@ Main configuration file
         }
     }
 
+
+api configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- debug: enable debug mode
+- host: api server listen host
+- port: api server listen port
+- secret: http message sign secret
+- adapter: current adapter mode
+
+
+
+radiusd configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- debug: enable debug mode
+- host: radiusd listen host
+- auth_port: radius auth listen port
+- acct_port: radius acct listen port
+- dictionary: include an additional  Radius protocol dictionary file directory path
+- max_session_timeout: Radius Accept Attr Session-Timeout
+- pass_pwd: Radius Auth ignore password
+- pass_userpwd: Radius Auth ignore username and password
+- request_timeout: max radius request timeout
+
+
+rest adapters
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+- url: backend server api url
+- format: http message format
+- secret: http message sign secret
+- radattrs: Radius attrs send to  backend server
+
+
+clients configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+include an additional clients configuration file
+
+logger configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+include an additional logger configuration file
+
+
+
+
 Logging configuration file
 --------------------------------
+
+This is a standard logging configuration for Python
 
 .. code-block:: javascript
 
@@ -109,6 +159,8 @@ Logging configuration file
 Nas Client configuration file
 ------------------------------------
 
+Define nas access devices
+
 .. code-block:: javascript
 
     {
@@ -132,3 +184,11 @@ Nas Client configuration file
             }
         }
     }
+
+
+- vendors: Radius vendors define
+- defaults: nas client group
+    - nasid: nas attr NAS-Identifier
+    - secret: share secret
+    - coaport: coa service port
+    - vendor: nas vendor type

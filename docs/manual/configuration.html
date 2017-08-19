@@ -94,9 +94,51 @@
 <span class="p">}</span>
 </pre></div>
 </div>
+<div class="section" id="api-configuration">
+<h3>api configuration<a class="headerlink" href="#api-configuration" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>debug: enable debug mode</li>
+<li>host: api server listen host</li>
+<li>port: api server listen port</li>
+<li>secret: http message sign secret</li>
+<li>adapter: current adapter mode</li>
+</ul>
+</div>
+<div class="section" id="radiusd-configuration">
+<h3>radiusd configuration<a class="headerlink" href="#radiusd-configuration" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>debug: enable debug mode</li>
+<li>host: radiusd listen host</li>
+<li>auth_port: radius auth listen port</li>
+<li>acct_port: radius acct listen port</li>
+<li>dictionary: include an additional  Radius protocol dictionary file directory path</li>
+<li>max_session_timeout: Radius Accept Attr Session-Timeout</li>
+<li>pass_pwd: Radius Auth ignore password</li>
+<li>pass_userpwd: Radius Auth ignore username and password</li>
+<li>request_timeout: max radius request timeout</li>
+</ul>
+</div>
+<div class="section" id="rest-adapters">
+<h3>rest adapters<a class="headerlink" href="#rest-adapters" title="永久链接至标题">¶</a></h3>
+<ul class="simple">
+<li>url: backend server api url</li>
+<li>format: http message format</li>
+<li>secret: http message sign secret</li>
+<li>radattrs: Radius attrs send to  backend server</li>
+</ul>
+</div>
+<div class="section" id="clients-configuration">
+<h3>clients configuration<a class="headerlink" href="#clients-configuration" title="永久链接至标题">¶</a></h3>
+<p>include an additional clients configuration file</p>
+</div>
+<div class="section" id="logger-configuration">
+<h3>logger configuration<a class="headerlink" href="#logger-configuration" title="永久链接至标题">¶</a></h3>
+<p>include an additional logger configuration file</p>
+</div>
 </div>
 <div class="section" id="logging-configuration-file">
 <h2>Logging configuration file<a class="headerlink" href="#logging-configuration-file" title="永久链接至标题">¶</a></h2>
+<p>This is a standard logging configuration for Python</p>
 <div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
     <span class="s2">&quot;version&quot;</span> <span class="o">:</span> <span class="mi">1</span><span class="p">,</span>
     <span class="s2">&quot;disable_existing_loggers&quot;</span> <span class="o">:</span> <span class="kc">true</span><span class="p">,</span>
@@ -156,6 +198,7 @@
 </div>
 <div class="section" id="nas-client-configuration-file">
 <h2>Nas Client configuration file<a class="headerlink" href="#nas-client-configuration-file" title="永久链接至标题">¶</a></h2>
+<p>Define nas access devices</p>
 <div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
     <span class="s2">&quot;vendors&quot;</span> <span class="o">:</span> <span class="p">{</span>
         <span class="s2">&quot;std&quot;</span> <span class="o">:</span> <span class="mi">0</span><span class="p">,</span>
@@ -179,6 +222,21 @@
 <span class="p">}</span>
 </pre></div>
 </div>
+<ul>
+<li><p class="first">vendors: Radius vendors define</p>
+</li>
+<li><dl class="first docutils">
+<dt>defaults: nas client group</dt>
+<dd><ul class="first last simple">
+<li>nasid: nas attr NAS-Identifier</li>
+<li>secret: share secret</li>
+<li>coaport: coa service port</li>
+<li>vendor: nas vendor type</li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
 </div>
 </div>
 
@@ -191,7 +249,14 @@
   <h3><a href="../index.html">內容目录</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Configuration</a><ul>
-<li><a class="reference internal" href="#main-configuration-file">Main configuration file</a></li>
+<li><a class="reference internal" href="#main-configuration-file">Main configuration file</a><ul>
+<li><a class="reference internal" href="#api-configuration">api configuration</a></li>
+<li><a class="reference internal" href="#radiusd-configuration">radiusd configuration</a></li>
+<li><a class="reference internal" href="#rest-adapters">rest adapters</a></li>
+<li><a class="reference internal" href="#clients-configuration">clients configuration</a></li>
+<li><a class="reference internal" href="#logger-configuration">logger configuration</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#logging-configuration-file">Logging configuration file</a></li>
 <li><a class="reference internal" href="#nas-client-configuration-file">Nas Client configuration file</a></li>
 </ul>
