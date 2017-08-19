@@ -22,7 +22,7 @@ upload:
 doc:
 	cd documents && sphinx-intl update -p build/locale -l zh_CN
 	cd documents && sphinx-intl build && make -e SPHINXOPTS="-D language='zh_CN'" html
-	rsync -av documents/build/html docs/
+	rsync -av documents/build/html/ docs/
 	rm -fr documents/build/html
 
 clean:
