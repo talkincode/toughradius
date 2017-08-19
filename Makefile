@@ -25,6 +25,7 @@ doc:
 	rm -fr /docs/*
 	rsync -av documents/build/html/ docs/
 	rm -fr documents/build/html
+	echo "docs.toughradius.net" > docs/CNAME
 	python documents/rename.py
 
 clean:
