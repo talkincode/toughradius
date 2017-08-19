@@ -7,6 +7,8 @@ import logging
 import logging.config
 import gevent
 import signal
+import sys
+print sys.prefix
 
 def run(conf):
     try:
