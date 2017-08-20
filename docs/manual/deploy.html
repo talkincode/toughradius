@@ -1,0 +1,200 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Deployment &mdash; toughradius 5.0 文档</title>
+    
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../static/translations.js"></script>
+    <link rel="top" title="toughradius 5.0 文档" href="../index.html" />
+    <link rel="prev" title="Development directory structure" href="dirstruct.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="dirstruct.html" title="Development directory structure"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="../index.html">toughradius 5.0 文档</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="deployment">
+<h1>Deployment<a class="headerlink" href="#deployment" title="永久链接至标题">¶</a></h1>
+<div class="section" id="supervisor">
+<h2>Supervisor<a class="headerlink" href="#supervisor" title="永久链接至标题">¶</a></h2>
+<p>Supervisor deployment is recommended</p>
+<p>To install supervisor</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install supervisor
+</pre></div>
+</div>
+<p>The supervisor configuration file</p>
+<div class="highlight-python"><div class="highlight"><pre>[unix_http_server]
+file=/tmp/toughradius.sock
+
+[inet_http_server]
+port=127.0.0.1:19001
+username=ctlman
+password=ctlroot
+
+[supervisord]
+nodaemon=false
+logfile=/etc/toughradius/toughradius.log
+logfile_maxbytes=1MB
+logfile_backups=8
+loglevel=debug
+pidfile=/etc/toughradius/toughradius.pid
+;user=root
+
+[rpcinterface:supervisor]
+supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
+
+[supervisorctl]
+serverurl=unix:///tmp/toughradius.sock
+
+[program:api]
+command=gtrad apiserv -c /etc/toughradius/radiusd.json
+dictionary=/etc/toughradius
+startretries = 5
+autorestart = true
+redirect_stderr=true
+stdout_logfile=/etc/toughradius/gtrad-api.log
+
+
+[program:auth]
+command=gtrad auth -c /etc/toughradius/radiusd.json
+dictionary=/etc/toughradius
+startretries = 5
+autorestart = true
+redirect_stderr=true
+stdout_logfile=/etc/toughradius/gtrad-auth.log
+
+[program:acct]
+command=gtrad acct -c /etc/toughradius/radiusd.json
+dictionary=/etc/toughradius
+startretries = 5
+autorestart = true
+redirect_stderr=true
+stdout_logfile=/etc/toughradius/gtrad-acct.log
+</pre></div>
+</div>
+<div class="section" id="startup">
+<h3>Startup<a class="headerlink" href="#startup" title="永久链接至标题">¶</a></h3>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">supervisord</span> <span class="o">-</span><span class="n">c</span> <span class="o">/</span><span class="n">etc</span><span class="o">/</span><span class="n">toughradius</span><span class="o">/</span><span class="n">radiusd</span><span class="o">.</span><span class="n">conf</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="systemd">
+<h2>Systemd<a class="headerlink" href="#systemd" title="永久链接至标题">¶</a></h2>
+<p>Systemd configuration file</p>
+<div class="highlight-python"><div class="highlight"><pre>[Unit]
+Description=toughradius
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=supervisord -c /etc/toughradius/radiusd.conf
+ExecReload=supervisorctl reload -c /etc/toughradius/radiusd.conf
+ExecStop=supervisorctl shutdown -c /etc/toughradius/radiusd.conf
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
+</pre></div>
+</div>
+<p>install service</p>
+<div class="highlight-python"><div class="highlight"><pre>ln -s /etc/toughradius/toughradius.service /usr/lib/systemd/system/toughradius.service
+systemctl daemon-reload
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Deployment</a><ul>
+<li><a class="reference internal" href="#supervisor">Supervisor</a><ul>
+<li><a class="reference internal" href="#startup">Startup</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#systemd">Systemd</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="dirstruct.html"
+                        title="上一章">Development directory structure</a></p>
+  <h3>本页</h3>
+  <ul class="this-page-menu">
+    <li><a href="../sources/manual/deploy.txt"
+           rel="nofollow">显示源代码</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="dirstruct.html" title="Development directory structure"
+             >上一页</a> |</li>
+        <li><a href="../index.html">toughradius 5.0 文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2017, jamiesun.
+    </div>
+  </body>
+</html>
