@@ -175,7 +175,7 @@ def apiserv(conf, debug, port):
 @click.command()
 @click.option('-dev', '--develop', is_flag=False)
 @click.option('-stable', '--stable', is_flag=True)
-def upgrade(dev,stable):
+def upgrade(develop,stable):
     if dev:
         os.system("pip install -U https://github.com/talkincode/ToughRADIUS/archive/master.zip")
     elif stable:
