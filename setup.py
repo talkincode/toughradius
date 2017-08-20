@@ -22,6 +22,8 @@ package_data={}
 data_files=[
     ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
     ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
+    ('etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
+    ('etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
 ]
 
 
