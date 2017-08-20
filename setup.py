@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 import toughradius
-import os
+import os,sys
 
 version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
@@ -19,10 +19,8 @@ install_requires_empty = []
 package_data={}
 
 data_files=[
-    ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
-    ('etc/', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('etc/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys])
+    ('/etc/', [ os.path.join(sys.prefix,'etc/%s'%cfg) for cfg in configs if cfg not in ('dictionarys',) ]),
+    ('/etc/dictionarys',[os.path.join(sys.prefix,'etc/dictionarys/%s'%d) for d in dictionarys]),
 ]
 
 setup(name='toughradius',
