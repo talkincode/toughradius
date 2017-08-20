@@ -23,7 +23,7 @@ bdist:
 	python setup.py bdist
 
 upload:
-	python setup.py bdist_rpm bdist_wheel bdist_dumb upload
+	python setup.py bdist_rpm bdist_wheel upload
 
 doc:
 	cd documents && sphinx-intl update -p build/locale -l zh_CN
