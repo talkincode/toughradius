@@ -1,7 +1,7 @@
 Quick start
 =======================
 
-1. Install
+Install
 ------------
 
 First of all, you need a Python runtime environment and install the pip package manage tool
@@ -11,7 +11,7 @@ First of all, you need a Python runtime environment and install the pip package 
 
     pip install toughradius
 
-2. Configuration
+Configuration
 ---------------------
 
 The default configuration directory is /etc/toughradius
@@ -21,7 +21,7 @@ The default configuration directory is /etc/toughradius
 - Nas Client configuration file: /etc/toughradius/clients.json
 - Radius protocol dictionary file directory: /etc/toughradius/dictionarys
 
-3. Startup
+Startup
 ----------------
 
 Start authentication, accounting, and API Server on one process
@@ -47,3 +47,19 @@ Launching API Server  only
 ::
 
     gtrcli apiserv
+
+Upgrade
+-----------------
+
+develop version
+
+::
+
+    gtrcli upgrade --develop
+
+
+stable version
+
+::
+
+    gtrcli upgrade --stable

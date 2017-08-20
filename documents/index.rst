@@ -30,6 +30,7 @@ Manual:
 
    manual/quickstart
    manual/configuration
+   manual/installation
    manual/dependents
    manual/dirstruct
    manual/deploy

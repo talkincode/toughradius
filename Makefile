@@ -16,8 +16,14 @@ bdist:
 wheel:
 	python setup.py bdist_wheel
 
+rpm:
+	python setup.py bdist_rpm
+
+bdist:
+	python setup.py bdist
+
 upload:
-	python setup.py bdist bdist_wheel upload
+	python setup.py bdist_rpm bdist_wheel upload
 
 doc:
 	cd documents && sphinx-intl update -p build/locale -l zh_CN
@@ -27,6 +33,9 @@ doc:
 	rm -fr documents/build/html
 	echo "docs.toughradius.net" > docs/CNAME
 	python documents/rename.py
+
+test:
+	echo 'test'
 
 clean:
 	rm -fr toughradius.egg-info

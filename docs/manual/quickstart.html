@@ -53,14 +53,14 @@
   <div class="section" id="quick-start">
 <h1>Quick start<a class="headerlink" href="#quick-start" title="永久链接至标题">¶</a></h1>
 <div class="section" id="install">
-<h2>1. Install<a class="headerlink" href="#install" title="永久链接至标题">¶</a></h2>
+<h2>Install<a class="headerlink" href="#install" title="永久链接至标题">¶</a></h2>
 <p>First of all, you need a Python runtime environment and install the pip package manage tool</p>
 <div class="highlight-python"><div class="highlight"><pre>pip install toughradius
 </pre></div>
 </div>
 </div>
 <div class="section" id="configuration">
-<h2>2. Configuration<a class="headerlink" href="#configuration" title="永久链接至标题">¶</a></h2>
+<h2>Configuration<a class="headerlink" href="#configuration" title="永久链接至标题">¶</a></h2>
 <p>The default configuration directory is /etc/toughradius</p>
 <ul class="simple">
 <li>Main configuration file: /etc/toughradius/radiusd.json</li>
@@ -70,7 +70,7 @@
 </ul>
 </div>
 <div class="section" id="startup">
-<h2>3. Startup<a class="headerlink" href="#startup" title="永久链接至标题">¶</a></h2>
+<h2>Startup<a class="headerlink" href="#startup" title="永久链接至标题">¶</a></h2>
 <p>Start authentication, accounting, and API Server on one process</p>
 <div class="highlight-python"><div class="highlight"><pre>gtrcli radiusd
 </pre></div>
@@ -88,6 +88,17 @@
 </pre></div>
 </div>
 </div>
+<div class="section" id="upgrade">
+<h2>Upgrade<a class="headerlink" href="#upgrade" title="永久链接至标题">¶</a></h2>
+<p>develop version</p>
+<div class="highlight-python"><div class="highlight"><pre>gtrcli upgrade --develop
+</pre></div>
+</div>
+<p>stable version</p>
+<div class="highlight-python"><div class="highlight"><pre>gtrcli upgrade --stable
+</pre></div>
+</div>
+</div>
 </div>
 
 
@@ -99,9 +110,10 @@
   <h3><a href="../index.html">內容目录</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Quick start</a><ul>
-<li><a class="reference internal" href="#install">1. Install</a></li>
-<li><a class="reference internal" href="#configuration">2. Configuration</a></li>
-<li><a class="reference internal" href="#startup">3. Startup</a></li>
+<li><a class="reference internal" href="#install">Install</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#startup">Startup</a></li>
+<li><a class="reference internal" href="#upgrade">Upgrade</a></li>
 </ul>
 </li>
 </ul>

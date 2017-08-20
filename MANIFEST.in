@@ -1,5 +1,6 @@
-recursive-include dictionarys *
+recursive-include etc *
 include LICENSE
 include README.md
 include Makefile
+include debug.py
 include requirements.txt
