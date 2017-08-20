@@ -172,6 +172,23 @@ def apiserv(conf, debug, port):
         import traceback
         traceback.print_exc()
 
+@click.command()
+@click.option('-d', '--config-dir', default='/etc/toughradius', help='toughradius config dir')
+def init(config_dir):
+    from toughradius.common import tools
+    try:
+        if not os.path.exists(config_dir):
+            os.makedirs(config_dir)
+
+        etcdir = os.path.join(sys.prefix,"etc/toughradius")
+        if not os.path.exists(etcdir):
+            print "%s not exists" % etcdir
+        else:
+            tools.copydir(etcdir,config_dir)
+            print "init config dir %s" % config_dir
+    except:
+        import traceback
+        traceback.print_exc()
 
 
 cli.add_command(chkcfg)
@@ -179,6 +196,7 @@ cli.add_command(auth)
 cli.add_command(acct)
 cli.add_command(radiusd)
 cli.add_command(apiserv)
+cli.add_command(init)
 
 if __name__ == '__main__':
     cli()

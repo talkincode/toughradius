@@ -2,6 +2,27 @@
 #coding:utf-8
 from __future__ import unicode_literals
 import json
+import shutil
+import os
+import traceback
+
+def copydir(src, dst, excludes=[]):
+    try:
+        names = os.walk(src)
+        for root, dirs, files in names:
+            for i in files:
+                srcname = os.path.join(root, i)
+                dir = root.replace(src, '')
+                dirname = dst + dir
+                if os.path.exists(dirname):
+                    pass
+                else:
+                    os.makedirs(dirname)
+                dirfname = os.path.join(dirname, i)
+                if dirfname not in excludes:
+                    shutil.copy2(srcname, dirfname)
+    except Exception as e:
+        traceback.print_exc()
 
 def safestr(val):
     if val is None:
