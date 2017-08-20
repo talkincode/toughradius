@@ -16,6 +16,12 @@ bdist:
 wheel:
 	python setup.py bdist_wheel
 
+rpm:
+	python setup.py bdist_rpm
+
+bdist:
+	python setup.py bdist
+
 upload:
 	python setup.py bdist bdist_rpm bdist_wheel upload
 

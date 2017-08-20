@@ -18,12 +18,19 @@ install_requires_empty = []
 
 package_data={}
 
+
 data_files=[
     ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
     ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
-    ('/etc/', [ os.path.join(sys.prefix,'etc/%s'%cfg) for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('/etc/dictionarys',[os.path.join(sys.prefix,'etc/dictionarys/%s'%d) for d in dictionarys]),
 ]
+
+datadir = os.path.join(sys.prefix,"lib/python2.7/site-packages/toughradius")
+if os.path.exists(datadir):
+    data_files += [
+        ('/etc/toughradius', [ os.path.join(datadir,'etc/%s'%cfg) for cfg in configs if cfg not in ('dictionarys',) ]),
+        ('/etc/toughradius/dictionarys',[os.path.join(datadir,'etc/dictionarys/%s'%d) for d in dictionarys]),
+    ]
+
 
 setup(name='toughradius',
       version=version,
