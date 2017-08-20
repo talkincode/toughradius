@@ -173,13 +173,13 @@ def apiserv(conf, debug, port):
         traceback.print_exc()
 
 @click.command()
-@click.option('-dev', '--develop', is_flag=False)
+@click.option('-dev', '--develop', is_flag=True)
 @click.option('-stable', '--stable', is_flag=True)
 def upgrade(develop,stable):
-    if dev:
-        os.system("pip install -U https://github.com/talkincode/ToughRADIUS/archive/master.zip")
-    elif stable:
+    if develop:
         os.system("pip install -U https://github.com/talkincode/ToughRADIUS/archive/develop.zip")
+    elif stable:
+        os.system("pip install -U https://github.com/talkincode/ToughRADIUS/archive/master.zip")
 
 cli.add_command(chkcfg)
 cli.add_command(auth)
