@@ -11,7 +11,7 @@ import logging
 
 class BasicAdapter(object):
 
-    def __init__(self,config):
+    def __init__(self, config):
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(config.radiusd.dictionary)
@@ -20,7 +20,7 @@ class BasicAdapter(object):
     def handleAuth(self,socket, data, address):
         try:
             req = parse_auth_packet(data,address,self.clients,self.dictionary)
-            prereply = self.send(req)
+            prereply = self.auth(req)
             reply = process_auth_reply(req, prereply)
             gevent.spawn(socket.sendto,reply.ReplyPacket(),address)
         except:
@@ -29,7 +29,7 @@ class BasicAdapter(object):
     def handleAcct(self,socket, data, address):
         try:
             req = parse_acct_packet(data,address,self.clients,self.dictionary)
-            prereply = self.send(req)
+            prereply = self.acct(req)
             reply = process_acct_reply(req, prereply)
             gevent.spawn(socket.sendto, reply.ReplyPacket(), address)
         except:

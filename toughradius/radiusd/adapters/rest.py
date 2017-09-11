@@ -16,8 +16,21 @@ class RestAdapter(BasicAdapter):
         emsg = tools.safestr(message)
         return md5( emsg + secret ).hexdigest()
 
-    def send(self,req):
-        url = self.config.adapters.rest.url
+    def auth(self,req):
+        url = self.config.adapters.rest.authurl
+        msg = json.dumps(req.dict_message)
+        sign = self.makeSign(msg)
+        try:
+            req = urllib2.Request('%s?sign=%s'%(url,sign),msg)
+            resp = urllib2.urlopen(req)
+            return json.loads(resp.read())
+        except:
+            self.logger.exception("send rest request error")
+            raise RestError("rest request error")
+
+
+    def acct(self,req):
+        url = self.config.adapters.rest.accturl
         msg = json.dumps(req.dict_message)
         sign = self.makeSign(msg)
         try:

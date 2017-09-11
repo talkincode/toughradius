@@ -26,10 +26,14 @@
     },
     "adapters" : {
         "rest" : {
-            "url" : "http://127.0.0.1:1815/api/v1/radtest",
+            "authurl" : "http://127.0.0.1:1815/api/v1/radtest",
+            "accturl" : "http://127.0.0.1:1815/api/v1/radtest",
             "format" : "json",
             "secret" : "",
             "radattrs" : []
+        },
+        "shelve" : {
+            "datadir" : "{CONFDIR}/data"
         }
     },
     "system" : {
