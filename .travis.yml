@@ -1,9 +1,7 @@
 language: python
 python:
     - "2.7"
-services:
-    - redis-server
 install:
-    - make venv
+    - make install
 
-script: make initdb && make test
+script: make test

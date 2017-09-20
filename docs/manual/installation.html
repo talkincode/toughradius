@@ -1,0 +1,160 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Installation and Upgrade &mdash; toughradius 5.0 文档</title>
+    
+    <link rel="stylesheet" href="../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../static/jquery.js"></script>
+    <script type="text/javascript" src="../static/underscore.js"></script>
+    <script type="text/javascript" src="../static/doctools.js"></script>
+    <script type="text/javascript" src="../static/translations.js"></script>
+    <link rel="top" title="toughradius 5.0 文档" href="../index.html" />
+    <link rel="next" title="Dependents" href="dependents.html" />
+    <link rel="prev" title="Configuration" href="configuration.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="dependents.html" title="Dependents"
+             accesskey="N">下一页</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             accesskey="P">上一页</a> |</li>
+        <li><a href="../index.html">toughradius 5.0 文档</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="installation-and-upgrade">
+<h1>Installation and Upgrade<a class="headerlink" href="#installation-and-upgrade" title="永久链接至标题">¶</a></h1>
+<div class="section" id="pip-install">
+<h2>pip install<a class="headerlink" href="#pip-install" title="永久链接至标题">¶</a></h2>
+<div class="highlight-python"><div class="highlight"><pre>pip install toughradius
+</pre></div>
+</div>
+</div>
+<div class="section" id="source-install">
+<h2>Source install<a class="headerlink" href="#source-install" title="永久链接至标题">¶</a></h2>
+<p>develop version</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install -U https://github.com/talkincode/ToughRADIUS/archive/develop.zip
+</pre></div>
+</div>
+<p>master version</p>
+<div class="highlight-python"><div class="highlight"><pre>pip install -U https://github.com/talkincode/ToughRADIUS/archive/master.zip
+</pre></div>
+</div>
+</div>
+<div class="section" id="rpm-install">
+<h2>rpm install<a class="headerlink" href="#rpm-install" title="永久链接至标题">¶</a></h2>
+<p>open link <a class="reference external" href="https://pypi.python.org/pypi/toughradius">https://pypi.python.org/pypi/toughradius</a>, copy rpm package link</p>
+<div class="highlight-python"><div class="highlight"><pre>rpm Uvh {rpm package url}
+</pre></div>
+</div>
+<p>for example:</p>
+<div class="highlight-python"><div class="highlight"><pre>rpm Uvh https://pypi.python.org/packages/f9/c0/e2f61b4329239ca2489dc61517086a8c0cabaa0bb59ebcab27b37ae8a05e/toughradius-5.0.0.5-1.noarch.rpm#md5=1b89a6645c5909dbac2ab0fffbc016e5
+</pre></div>
+</div>
+</div>
+<div class="section" id="upgrade">
+<h2>Upgrade<a class="headerlink" href="#upgrade" title="永久链接至标题">¶</a></h2>
+<p>develop version</p>
+<div class="highlight-python"><div class="highlight"><pre>gtrcli upgrade --develop
+</pre></div>
+</div>
+<p>stable version</p>
+<div class="highlight-python"><div class="highlight"><pre>gtrcli upgrade --stable
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">內容目录</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Installation and Upgrade</a><ul>
+<li><a class="reference internal" href="#pip-install">pip install</a></li>
+<li><a class="reference internal" href="#source-install">Source install</a></li>
+<li><a class="reference internal" href="#rpm-install">rpm install</a></li>
+<li><a class="reference internal" href="#upgrade">Upgrade</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>上一个主题</h4>
+  <p class="topless"><a href="configuration.html"
+                        title="上一章">Configuration</a></p>
+  <h4>下一个主题</h4>
+  <p class="topless"><a href="dependents.html"
+                        title="下一章">Dependents</a></p>
+  <h3>本页</h3>
+  <ul class="this-page-menu">
+    <li><a href="../sources/manual/installation.txt"
+           rel="nofollow">显示源代码</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="dependents.html" title="Dependents"
+             >下一页</a> |</li>
+        <li class="right" >
+          <a href="configuration.html" title="Configuration"
+             >上一页</a> |</li>
+        <li><a href="../index.html">toughradius 5.0 文档</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2017, jamiesun.
+    </div>
+  </body>
+</html>

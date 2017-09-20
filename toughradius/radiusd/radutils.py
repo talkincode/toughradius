@@ -2,7 +2,7 @@
 #coding:utf-8
 from __future__ import unicode_literals
 import logging
-import six
+from toughradius.common import six
 from toughradius.txradius.radius import packet
 from toughradius.txradius import message
 from toughradius.radiusd.modules import (
@@ -79,9 +79,7 @@ def parse_acct_packet(datagram,(host,port),client_config,dictionary=None):
     acctreq = request_vlan_parse.handle_radius(acctreq)
     return acctreq
 
-
-
-def process_auth_reply(req, prereply):
+def process_auth_reply(req, prereply={}):
     """
     process radius auth response
     :rtype: object
@@ -89,26 +87,32 @@ def process_auth_reply(req, prereply):
     :param prereply:
     :return:
     """
-    reply = req.CreateReply()
-    reply.vendor_id = req.vendor_id
-    reply.resp_attrs = prereply
-
     try:
+        if 'code' not in prereply:
+            raise packet.PacketError("Invalid response, no code attr")
+
+        if prereply['code'] > 0:
+            raise packet.PacketError("radius authentication failure, %s" % prereply.get("msg",""))
+
+        reply = req.CreateReply()
+        reply.vendor_id = req.vendor_id
+        reply.resp_attrs = prereply
         for module in (response_logger,accept_rate_process):
             reply = module.handle_radius(req,reply)
             if reply is None:
                 raise packet.PacketError("radius authentication message discarded")
-        
+
             if not req.VerifyReply(reply):
                 errstr = u'The authentication message failed to check. \
                 Check that the shared key is consistent'
                 raise packet.PacketError(errstr)
+        return reply
     except:
         errmsg="handle radius response error"
         logging.exception(errmsg)
         return reject_reply(req,errmsg)
 
-    return reply
+
 
 def process_acct_reply(req, prereply):
     """
@@ -117,20 +121,26 @@ def process_acct_reply(req, prereply):
     :param prereply:
     :return:
     """
-    reply = req.CreateReply()
     try:
+        if 'code' not in prereply:
+            raise packet.PacketError("Invalid response, no code attr")
+
+        if prereply['code'] > 0:
+            raise packet.PacketError("radius accounting failure, %s" % prereply.get("msg",""))
+
+        reply = req.CreateReply()
         for module in (response_logger,):
             reply = module.handle_radius(req,reply)
             if reply is None:
                 raise packet.PacketError("radius accounting message discarded")
-        
+
             if not req.VerifyReply(reply):
                 errstr = '[User:%s] The accounting message failed to check. \
                 Check that the shared key is consistent'
                 raise packet.PacketError(errstr)
+        return reply
     except:
         raise packet.PacketError("handle radius accounting response error")
-    return reply
 
 
 

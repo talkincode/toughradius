@@ -9,7 +9,7 @@ RADIUS $INCLUDE directives behind the scene.
 """
 
 import os
-import six
+from toughradius.common import six
 
 
 class _Node(object):

@@ -10,6 +10,33 @@ venv:
 install:
 	python setup.py install
 
+bdist:
+	python setup.py bdist
+
+wheel:
+	python setup.py bdist_wheel
+
+rpm:
+	python setup.py bdist_rpm
+
+bdist:
+	python setup.py bdist
+
+upload:
+	python setup.py bdist_rpm bdist_wheel upload
+
+doc:
+	cd documents && sphinx-intl update -p build/locale -l zh_CN
+	cd documents && sphinx-intl build && make -e SPHINXOPTS="-D language='zh_CN'" html
+	rm -fr /docs/*
+	rsync -av documents/build/html/ docs/
+	rm -fr documents/build/html
+	echo "docs.toughradius.net" > docs/CNAME
+	python documents/rename.py
+
+test:
+	echo 'test'
+
 clean:
 	rm -fr toughradius.egg-info
 	rm -fr dist

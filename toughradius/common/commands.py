@@ -98,25 +98,33 @@ def acct(conf, debug, acct_port, pool_size):
 @click.command()
 @click.option('-c', '--conf', default='/etc/toughradius/radiusd.json', help='toughradius config file')
 @click.option('-d', '--debug', is_flag=True)
-@click.option('-auth-port', '--auth-port', default=0, type=click.INT, help='auth port')
-@click.option('-acct-port', '--acct-port', default=0, type=click.INT, help='acct port')
+@click.option('-auth-port', '--auth-port', default=1812, type=click.INT, help='auth port')
+@click.option('-acct-port', '--acct-port', default=1813, type=click.INT, help='acct port')
+@click.option('-api-port', '--api-port', default=1815, type=click.INT, help='api port')
 @click.option('-p', '--pool-size', default=0, type=click.INT)
-def radiusd(conf, debug, auth_port,acct_port, pool_size):
+def radiusd(conf, debug, auth_port,acct_port,api_port, pool_size):
     try:
         os.environ['CONFDIR'] = os.path.dirname(conf)
         from toughradius.common import config as iconfig
         from toughradius.radiusd.master import RudiusAuthServer
         from toughradius.radiusd.master import RudiusAcctServer
+        from toughradius.radiusd import apiserver
         config = iconfig.find_config(conf)
 
         logging.config.dictConfig(config.logger)
 
         if debug:
             config.radiusd['debug'] = True
+
         if auth_port > 0:
             config.radiusd['auth_port'] = auth_port
+
         if acct_port > 0:
             config.radiusd['acct_port'] = acct_port
+
+        if api_port > 0:
+            config.api['port'] = api_port
+
         if pool_size > 0:
             config.radiusd['pool_size'] = pool_size
 
@@ -124,15 +132,17 @@ def radiusd(conf, debug, auth_port,acct_port, pool_size):
         acct_address = (config.radiusd.host, int(config.radiusd.acct_port))
         auth_server = RudiusAuthServer(auth_address, config)
         acct_server = RudiusAcctServer(acct_address, config)
+        # gevent.signal(signal.SIGTERM, auth_server.close)
+        # gevent.signal(signal.SIGINT, auth_server.close)
+        # gevent.signal(signal.SIGTERM, acct_server.close)
+        # gevent.signal(signal.SIGINT, acct_server.close)
         auth_server.start()
+        gevent.sleep(0.1)
         acct_server.start()
-        gevent.signal(signal.SIGTERM, auth_server.close)
-        gevent.signal(signal.SIGINT, auth_server.close)
-        gevent.signal(signal.SIGTERM, acct_server.close)
-        gevent.signal(signal.SIGINT, acct_server.close)
+        gevent.sleep(0.1)
         logging.info(auth_server)
         logging.info(acct_server)
-
+        apiserver.start(host=config.api['host'], port=int(config.api['port']), forever=False)
         gevent.wait()
     except:
         import traceback
@@ -162,13 +172,21 @@ def apiserv(conf, debug, port):
         import traceback
         traceback.print_exc()
 
-
+@click.command()
+@click.option('-dev', '--develop', is_flag=True)
+@click.option('-stable', '--stable', is_flag=True)
+def upgrade(develop,stable):
+    if develop:
+        os.system("pip install -U https://github.com/talkincode/ToughRADIUS/archive/develop.zip")
+    elif stable:
+        os.system("pip install -U https://github.com/talkincode/ToughRADIUS/archive/master.zip")
 
 cli.add_command(chkcfg)
 cli.add_command(auth)
 cli.add_command(acct)
 cli.add_command(radiusd)
 cli.add_command(apiserv)
+cli.add_command(upgrade)
 
 if __name__ == '__main__':
     cli()

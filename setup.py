@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 import toughradius
-import os
+import os,sys
 
 version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
@@ -11,20 +11,21 @@ configs = os.listdir(os.path.join(proj_home,'etc'))
 dictionarys = os.listdir(os.path.join(proj_home,'etc/dictionarys'))
 
 install_requires = [
-    'six>=1.8.0',
     'gevent==1.1.2',
     'Click',
-    'bottle',
-    #'ConcurrentLogHandler'
 ]
 install_requires_empty = []
 
 package_data={}
 
+
 data_files=[
     ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys])
+    ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
+    ('etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
+    ('etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
 ]
+
 
 setup(name='toughradius',
       version=version,
@@ -32,7 +33,7 @@ setup(name='toughradius',
       author_email='jamiesun.net@gmail.com',
       url='https://github.com/talkincode/toughradius',
       license='Apache License 2.0',
-      description='RADIUS Server',
+      description='Beautiful open source RadiusServer',
       long_description=open('README.md').read(),
       classifiers=[
        'Development Status :: 6 - Mature',
@@ -51,7 +52,7 @@ setup(name='toughradius',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'gtrad = toughradius.common.commands:cli',
+              'gtrcli = toughradius.common.commands:cli',
           ]
       }
 )
