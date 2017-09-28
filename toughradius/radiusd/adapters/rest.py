@@ -25,7 +25,6 @@ class RestAdapter(BasicAdapter):
             resp = urllib2.urlopen(req)
             return json.loads(resp.read())
         except:
-            self.logger.exception("send rest request error")
             raise RestError("rest request error")
 
 
@@ -38,6 +37,5 @@ class RestAdapter(BasicAdapter):
             resp = urllib2.urlopen(req)
             return json.loads(resp.read())
         except:
-            self.logger.exception("send rest request error")
             raise RestError("rest request error")
 

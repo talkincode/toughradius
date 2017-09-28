@@ -2,6 +2,7 @@
 #coding:utf-8
 from __future__ import unicode_literals
 import logging
+import datetime
 from toughradius.common import six
 from toughradius.txradius.radius import packet
 from toughradius.txradius import message
@@ -71,7 +72,6 @@ def parse_acct_packet(datagram,(host,port),client_config,dictionary=None):
             acctreq.secret = six.b(client['secret'])
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)"%(nas_id,host,port))
-
 
     acctreq.source = (host,port)
     acctreq = request_logger.handle_radius(acctreq)
@@ -143,8 +143,6 @@ def process_acct_reply(req, prereply):
         raise packet.PacketError("handle radius accounting response error")
 
 
-
-
 def verify_acct_request(req):
     """
     verify radius accounting request
@@ -191,4 +189,29 @@ def reject_reply(req,errmsg=''):
     reply['Reply-Message'] = errmsg
     reply.code = packet.AccessReject
     return reply
+
+
+def calc_session_time(expire_date):
+    """
+    calc user Session-Timeout by expire_date
+    :param expire_date 
+    """
+    _datetime = datetime.datetime.now()
+    if len(expire_date) == 10:
+        _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
+    elif len(expire_date) == 19:
+        _expire_datetime = datetime.datetime.strptime(expire_date,"%Y-%m-%d %H:%M:%S")
+    return (_expire_datetime - _datetime).total_seconds() 
+
+
+
+
+
+
+
+
+
+
+
+
 
