@@ -5,8 +5,17 @@
         "port" : 1815,
         "secret" : "CRTCcMB7tfnXU8aXIyfavfuqruvXkNng"
     },
-    "clients" : "!include:{CONFDIR}/clients.json",
-    "logger" : "!include:{CONFDIR}/logger.json",
+    "vendors" : {
+        "std" : 0,
+        "alcatel" : 3041,
+        "cisco" : 9,
+        "h3c" : 25506,
+        "huawei" : 2011,
+        "juniper" : 2636,
+        "microsoft" : 311,
+        "mikrotik" : 14988,
+        "openvpn" : 19797
+    },
     "radiusd" : {
         "acct_port" : 1813,
         "auth_port" : 1812,
@@ -18,9 +27,8 @@
         "free_auth_limit_code" : "",
         "free_auth_domain" : "",
         "host" : "0.0.0.0",
-        "max_session_timeout" : 86400,
-        "pass_pwd" : 0,
-        "pass_userpwd" : 0,
+        "bypass_pwd" : 0,
+        "bypass_userpwd" : 0,
         "pool_size" : 2,
         "request_timeout" : 5
     },
@@ -32,11 +40,65 @@
             "secret" : "",
             "radattrs" : []
         },
-        "shelve" : {
-            "datadir" : "{CONFDIR}/data"
+        "redis" : {
+            "host": "127.0.0.1", 
+            "passwd": "", 
+            "port": 6379,
+            "pool_size":100
         }
     },
-    "system" : {
-        "tz" : "CST-8"
+    "logger" : {
+        "version" : 1,
+        "disable_existing_loggers" : true,
+        "formatters" : {
+            "verbose" : {
+                "format" : "[%(asctime)s %(name)s-%(process)d] [%(levelname)s] %(message)s",
+                "datefmt" : "%Y-%m-%d %H:%M:%S"
+            },
+            "simple" : {
+                "format" : "%(asctime)s %(levelname)s %(message)s"
+            }
+        },
+        "handlers" : {
+            "null" : {
+                "level" : "DEBUG",
+                "class" : "logging.NullHandler"
+            },
+            "debug" : {
+                "level" : "DEBUG",
+                "class" : "logging.StreamHandler",
+                "formatter" : "verbose"
+            },
+            "info" : {
+                "level" : "DEBUG",
+                "class" : "logging.handlers.TimedRotatingFileHandler",
+                "when" : "d",
+                "interval" : 1,
+                "backupCount" : 30,
+                "delay" : true,
+                "filename" : "/var/log/toughradius/info.log",
+                "formatter" : "verbose"
+            },
+            "error" : {
+                "level" : "ERROR",
+                "class" : "logging.handlers.TimedRotatingFileHandler",
+                "when" : "d",
+                "interval" : 1,
+                "backupCount" : 30,
+                "delay" : true,
+                "filename" : "/var/log/toughradius/error.log",
+                "formatter" : "verbose"
+            }
+        },
+        "loggers" : {
+            "" : {
+                "handlers" : [
+                    "info",
+                    "error",
+                    "debug"
+                ],
+                "level" : "DEBUG"
+            }
+        }
     }
 }

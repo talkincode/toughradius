@@ -37,7 +37,13 @@ PacketStatusTypeMap = {
     45 : 'CoANAK',
 }
 
-
+STATUS_TYPE_START   = 1
+STATUS_TYPE_STOP    = 2
+STATUS_TYPE_UPDATE  = 3
+STATUS_TYPE_UNLOCK = 4
+STATUS_TYPE_CHECK_ONLINE = 5
+STATUS_TYPE_ACCT_ON  = 7
+STATUS_TYPE_ACCT_OFF = 8
 
 def format_packet_str(pkt):
     attr_keys = pkt.keys()
@@ -603,6 +609,8 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
             acct_input_octets = self.get_acct_input_octets(),
             acct_output_octets = self.get_acct_output_octets(),
             acct_session_id = self.get_acct_sessionid(),
+            acct_start_time = self.get_acct_start_time(),
+            acct_stop_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
             acct_session_time = self.get_acct_sessiontime(),
             acct_input_packets = self.get_acct_input_packets(),
             acct_output_packets = self.get_acct_output_packets(),

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #coding:utf-8
-from __future__ import unicode_literals
+# from __future__ import unicode_literals
 import logging
 import datetime
 from toughradius.common import six
@@ -20,64 +20,70 @@ Acct_Status_Update = 3
 Acct_Status_On = 7
 Acct_Status_Off = 8
 
-def parse_auth_packet(datagram,(host,port),client_config,dictionary=None):
+def parse_auth_packet(datagram,(host,port),vendors,clients,dictionary=None,plugins=[]):
     """
     parse radius auth request
     :param datagram:
-    :param client_config:
+    :param vendors:
+    :param clients:
     :param dictionary:
+    :param plugins:
     :return:
     """
-    if host in client_config.defaults:
-        client = client_config.defaults[host]
-        authreq = message.AuthMessage(packet=datagram, dict=dictionary,secret=str(client['secret']))
-        authreq.vendor_id=client_config.vendors.get(client['vendor'])
+    if host in clients:
+        client = clients[host]
+        request = message.AuthMessage(packet=datagram, dict=dictionary,secret=str(client['secret']))
+        request.vendor_id=vendors.get(client['vendor'])
     else:
-        authreq = message.AuthMessage(packet=datagram,dict=dictionary, secret=six.b(''))
-        nas_id = authreq.get_nas_id()
-        _client = [c for c in client_config.defaults.itervalues() if c['nasid'] == nas_id]
-        if _client:
-            client = _client[0]
-            authreq.vendor_id = client_config.vendors.get(client['vendor'])
-            authreq.secret = six.b(client['secret'])
+        request = message.AuthMessage(packet=datagram,dict=dictionary, secret=six.b(''))
+        nas_id = request.get_nas_id()
+        if nas_id in clients:
+            client = clients[nas_id]
+            request.vendor_id = vendors.get(client['vendor'])
+            request.secret = six.b(client['secret'])
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)"%(nas_id,host,port))
 
-    authreq.source = (host,port)
-    authreq = request_logger.handle_radius(authreq)
-    authreq = request_mac_parse.handle_radius(authreq)
-    authreq = request_vlan_parse.handle_radius(authreq)
+    request.source = (host,port)
+    request = request_logger.handle_radius(request)
+    request = request_mac_parse.handle_radius(request)
+    request = request_vlan_parse.handle_radius(request)
+    for pg in plugins:
+        try:
+            request = pg.handle_radius(request)
+        except:
+            pass
+    return request
 
-    return authreq
-
-def parse_acct_packet(datagram,(host,port),client_config,dictionary=None):
+def parse_acct_packet(datagram,(host,port),vendors,clients,dictionary=None,plugins=[]):
     """
     parse radius accounting request
     :param datagram:
-    :param client_config:
+    :param vendors:
+    :param clients:
     :param dictionary:
+    :param plugins:
     :return: txradius.message
     """
-    if host in client_config.defaults:
-        client = client_config.defaults[host]
-        acctreq = message.AcctMessage(packet=datagram, dict=dictionary, secret=str(client['secret']))
-        acctreq.vendor_id=client_config.vendors.get(client['vendor'])
+    if host in clients:
+        client = clients[host]
+        request = message.AcctMessage(packet=datagram, dict=dictionary,secret=str(client['secret']))
+        request.vendor_id=vendors.get(client['vendor'])
     else:
-        acctreq = message.AcctMessage(packet=datagram,dict=dictionary, secret=six.b(''))
-        nas_id = acctreq.get_nas_id()
-        _client = [c for c in client_config.defaults.itervalues() if c['nasid'] == nas_id]
-        if _client:
-            client = _client[0]
-            acctreq.vendor_id = client_config.vendors.get(client['vendor'])
-            acctreq.secret = six.b(client['secret'])
+        request = message.AcctMessage(packet=datagram,dict=dictionary, secret=six.b(''))
+        nas_id = request.get_nas_id()
+        if nas_id in clients:
+            client = clients[nas_id]
+            request.vendor_id = vendors.get(client['vendor'])
+            request.secret = six.b(client['secret'])
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)"%(nas_id,host,port))
 
-    acctreq.source = (host,port)
-    acctreq = request_logger.handle_radius(acctreq)
-    acctreq = request_mac_parse.handle_radius(acctreq)
-    acctreq = request_vlan_parse.handle_radius(acctreq)
-    return acctreq
+    request.source = (host,port)
+    request = request_logger.handle_radius(request)
+    request = request_mac_parse.handle_radius(request)
+    request = request_vlan_parse.handle_radius(request)
+    return request
 
 def process_auth_reply(req, prereply={}):
     """
@@ -191,17 +197,7 @@ def reject_reply(req,errmsg=''):
     return reply
 
 
-def calc_session_time(expire_date):
-    """
-    calc user Session-Timeout by expire_date
-    :param expire_date 
-    """
-    _datetime = datetime.datetime.now()
-    if len(expire_date) == 10:
-        _expire_datetime = datetime.datetime.strptime(expire_date+' 23:59:59',"%Y-%m-%d %H:%M:%S")
-    elif len(expire_date) == 19:
-        _expire_datetime = datetime.datetime.strptime(expire_date,"%Y-%m-%d %H:%M:%S")
-    return (_expire_datetime - _datetime).total_seconds() 
+
 
 
 

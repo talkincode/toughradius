@@ -11,6 +11,9 @@ class RudiusServer(DatagramServer):
         if self.config.radiusd.adapter == 'rest':
             from toughradius.radiusd.adapters.rest import RestAdapter
             self.adapter =  RestAdapter(self.config)
+        elif self.config.radiusd.adapter == 'redis':
+            from toughradius.radiusd.adapters.tredis import RedisAdapter
+            self.adapter =  RedisAdapter(self.config)
         self.start()
         
 
