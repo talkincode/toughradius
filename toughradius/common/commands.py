@@ -2,6 +2,10 @@
 #coding:utf-8
 import gevent.monkey
 gevent.monkey.patch_all()
+import redis
+from gevent import socket
+import redis.connection
+redis.connection.socket = socket
 import os
 import re
 import sys
@@ -58,6 +62,7 @@ def auth(conf, debug, auth_port, pool_size):
         if pool_size > 0:
             config.radiusd['pool_size'] = pool_size
 
+        os.environ['TOUGHRADIUS_DEBUG_ENABLE'] = str(int(config.radiusd['debug']))
         address = (config.radiusd.host, int(config.radiusd.auth_port))
         server = RudiusAuthServer(address, config)
         logging.info(server)
@@ -87,6 +92,7 @@ def acct(conf, debug, acct_port, pool_size):
         if pool_size > 0:
             config.radiusd['pool_size'] = pool_size
 
+        os.environ['TOUGHRADIUS_DEBUG_ENABLE'] = str(int(config.radiusd['debug']))
         address = (config.radiusd.host, int(config.radiusd.acct_port))
         server = RudiusAcctServer(address, config)
         logging.info(server)
@@ -108,7 +114,7 @@ def radiusd(conf, debug, auth_port,acct_port,api_port, pool_size):
         from toughradius.common import config as iconfig
         from toughradius.radiusd.master import RudiusAuthServer
         from toughradius.radiusd.master import RudiusAcctServer
-        from toughradius.radiusd import apiserver
+        from toughradius.radiusd.apiserver import ApiServer
         config = iconfig.find_config(conf)
 
         logging.config.dictConfig(config.logger)
@@ -128,6 +134,7 @@ def radiusd(conf, debug, auth_port,acct_port,api_port, pool_size):
         if pool_size > 0:
             config.radiusd['pool_size'] = pool_size
 
+        os.environ['TOUGHRADIUS_DEBUG_ENABLE'] = str(int(config.radiusd['debug']))
         auth_address = (config.radiusd.host, int(config.radiusd.auth_port))
         acct_address = (config.radiusd.host, int(config.radiusd.acct_port))
         auth_server = RudiusAuthServer(auth_address, config)
@@ -142,7 +149,8 @@ def radiusd(conf, debug, auth_port,acct_port,api_port, pool_size):
         gevent.sleep(0.1)
         logging.info(auth_server)
         logging.info(acct_server)
-        apiserver.start(host=config.api['host'], port=int(config.api['port']), forever=False)
+        apiserver = ApiServer(config)
+        apiserver.start(forever=False)
         gevent.wait()
     except:
         import traceback
@@ -160,14 +168,15 @@ def apiserv(conf, debug, port):
         from toughradius.common import config as iconfig
         config = iconfig.find_config(conf)
         logging.config.dictConfig(config.logger)
-        from toughradius.radiusd import apiserver
+        from toughradius.radiusd.apiserver import ApiServer
 
         if debug:
             config.api['debug'] = True
         if port > 0:
             config.api['port'] = port
 
-        apiserver.start(host=config.api['host'], port=int(config.api['port']))
+        apiserver = ApiServer(config)
+        apiserver.start(forever=True)
     except:
         import traceback
         traceback.print_exc()

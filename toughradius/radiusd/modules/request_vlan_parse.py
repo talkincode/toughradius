@@ -70,7 +70,7 @@ def handle_radius(req):
         if vendorid in _parses:
             _parses[vendorid](req)
         else:
-            parse_normal(req)
+            parse_std(req)
     except Exception as err:
         logging.exception("vlan parse error")
     return req

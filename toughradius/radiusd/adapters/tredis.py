@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 #coding:utf-8
-from gevent import socket
-from gevent import spawn_later
 import redis
+from gevent import socket
 redis.connection.socket = socket
 from .base import BasicAdapter
-from toughradius.common import tools
 from toughradius.common import rediskeys
+from toughradius.common.rediskeys import UserAttrs, NasAttrs
+from toughradius.common.rediskeys import UserStates, NasStates
 from toughradius.txradius import message
-from hashlib import md5
 import datetime
 import logging
-
+import time
 
 
 class RedisAdapterError(BaseException):pass
@@ -29,19 +28,20 @@ class RedisAdapter(BasicAdapter):
         )
         self.redis = redis.StrictRedis(connection_pool=_pool)
 
-    def get_clients(self):
-        naslist = self.redis.smembers(rediskeys.NasSetKey) or set()
+    def getClients(self):
+        naslist = self.redis.zrange(rediskeys.NasSetKey,0,-1) or set()
         clients = {}
-        for nas in naslist:
-            ipaddr = nas.get('ipaddr')
-            nasid = nas.get('nasid')
+        for naskey in naslist:
+            nas = self.redis.hgetall(naskey)
+            ipaddr = nas.get(NasAttrs.ipaddr.name)
+            nasid = nas.get(NasAttrs.nasid.name)
             if nasid:
                 clients[nasid] = nas
             if ipaddr:
                 clients[ipaddr] = nas
         return clients
 
-    def auth(self,req):
+    def processAuth(self,req):
         # check exists
         username = req.get_user_name()
         user = self.redis.hgetall(rediskeys.UserHKey(username))
@@ -49,36 +49,36 @@ class RedisAdapter(BasicAdapter):
             raise RedisAdapterError('user {0} not exists'.format(username))
 
         #check pause
-        if user.get('status') == 0:
+        if user.get(UserAttrs.status.name) == 0:
             raise RedisAdapterError('user is pause')
 
         # check  expire
-        expire_date = user.get('expire_date')
-        expire_time = user.get('expire_time')
+        expire_date = user.get(UserAttrs.expire_date.name)
+        expire_time = user.get(UserAttrs.expire_time.name)
         if self.is_expire(expire_date,expire_time):
             raise RedisAdapterError('user is expire at {0} {1}'.format(expire_date,expire_time))
 
         # check password
-        password = user.get('password')
+        password = user.get(UserAttrs.password.name)
         if self.config.radiusd.bypass_pwd == 0 and  self.config.radiusd.bypass_userpwd == 0:
-            if user.get('bypass_pwd', 1) == 1:
+            if user.get(UserAttrs.bypass_pwd.name, 1) == 1:
                 if not req.is_valid_pwd(password):
                     raise RedisAdapterError('user password error')
 
         # check mac bind
-        req_mac_addr = self.get_mac_addr()
+        req_mac_addr = req.get_mac_addr()
         if not self.check_mac_bind(user,req_mac_addr):
             raise RedisAdapterError('user mac bind error req={0}, bind={1}'.format(
-                req_mac_addr,user.get('mac_addr')))
+                req_mac_addr,user.get(UserAttrs.mac_addr.name)))
 
         pre_reply = dict(code=0,msg='ok')
-        pre_reply['input_rate'] = user.get('input_rate',0)
-        pre_reply['output_rate'] = user.get('output_rate',0)
-        pre_reply['attrs']['Session-Timeout'] = self.calc_session_time(
-            user.get('bill_type','day'),
+        pre_reply['input_rate'] = user.get(UserAttrs.input_rate.name,0)
+        pre_reply['output_rate'] = user.get(UserAttrs.output_rate.name,0)
+        pre_reply.setdefault('attrs',{})['Session-Timeout'] = self.calc_session_time(
+            user.get(UserAttrs.bill_type.name,'day'),
             expire_date,
             expire_time,
-            user.get('time_amount',0)
+            user.get(UserAttrs.time_amount.name,0)
         )
 
         for attrname, attrvalue in (self.redis.hgetall(rediskeys.UserRadAttrsHKey(username)) or {}):
@@ -86,7 +86,7 @@ class RedisAdapter(BasicAdapter):
 
         return pre_reply
 
-    def acct(self,req):
+    def processAcct(self, req):
         status_type = req.get_acct_status_type()
         if status_type == message.STATUS_TYPE_START:
             return self.acct_start(req)
@@ -104,11 +104,24 @@ class RedisAdapter(BasicAdapter):
         sessionid = req.get_acct_sessionid()
         online_key = rediskeys.OnlineHKey(nasid,sessionid)
         if self.redis.exists(online_key):
-            raise RedisAdapterError('user {0} is online'.format(username))
+            raise RedisAdapterError('user {0} session duplicate'.format(username))
+
+        # check online limit 
+        online_limit = int(self.redis.hget(online_key,UserAttrs.online_limit.name) or 0)
+        if online_limit > 0:
+            online_count = int(self.redis.scard(rediskeys.UserOnlineSetKey(username)) or 0)
+            if online_count > online_limit:
+                raise RedisAdapterError('user {0} online limit {1}'.format(username,online_limit))
 
         billing = req.get_billing()
         billing['pub_nas_addr'] = req.source[0]
-        self.redis.hmset(online_key,billing)
+        score =int(time.time())
+        with self.redis.pipeline() as pipe:
+            pipe.hmset(online_key,billing)
+            pipe.zadd(rediskeys.OnlineSetKey,score,online_key)
+            pipe.zadd(rediskeys.UserOnlineSetKey(username),score,online_key)
+            pipe.zadd(rediskeys.NasOnlineSetKey(nasid,sessionid),score,online_key)
+            pipe.execute()
         logging.info(u'user {0} start billing'.format(username))
         return dict(code=0, msg='ok')
 
@@ -118,14 +131,22 @@ class RedisAdapter(BasicAdapter):
         if not self.redis.exists(rediskeys.UserHKey(username)):
             raise RedisAdapterError('user {0} not exists'.format(username))
 
-        online_key = rediskeys.OnlineHKey(req.get_nas_id(), req.get_acct_sessionid())
+        nasid = req.get_nas_id()
+        sessionid = req.get_acct_sessionid()
+        online_key = rediskeys.OnlineHKey(nasid,sessionid)
         if not self.redis.exists(online_key):
             billing = req.get_billing()
             billing['pub_nas_addr'] = req.source[0]
-            self.redis.hmset(online_key,billing)
+            score = int(time.time())
+            with self.redis.pipeline() as pipe:
+                pipe.hmset(online_key,billing)
+                pipe.zadd(rediskeys.OnlineSetKey,score, online_key)
+                pipe.zadd(rediskeys.UserOnlineSetKey(username),score, online_key)
+                pipe.zadd(rediskeys.NasOnlineSetKey(nasid,sessionid),score, online_key)
+                pipe.execute()
             logging.info(u'add user {0} billing data on update'.format(username))
         else:
-            self.billing(req, online_key)
+            self.billing(req)
             self.redis.hmset(online_key,dict(
                 acct_session_time=req.get_acct_sessiontime(),
                 acct_input_total=req.get_input_total(),
@@ -141,9 +162,17 @@ class RedisAdapter(BasicAdapter):
         username = req.get_user_name()
         if not self.redis.exists(rediskeys.UserHKey(username)):
             raise RedisAdapterError('user {0} not exists'.format(username))
-        online_key = rediskeys.OnlineHKey(req.get_nas_id(), req.get_acct_sessionid())
+
+        nasid = req.get_nas_id()
+        session_id = req.get_acct_sessionid()
+        online_key = rediskeys.OnlineHKey(nasid,session_id)
         self.billing(req)
-        self.redis.hdel(online_key)
+        with self.redis.pipeline() as pipe:
+            pipe.delete(online_key)
+            pipe.zrem(rediskeys.OnlineSetKey,online_key)
+            pipe.zrem(rediskeys.UserOnlineSetKey(username),online_key)
+            pipe.zrem(rediskeys.NasOnlineSetKey(nasid,session_id),online_key)
+            pipe.execute()
         logging.info(u'delete online user {0}'.format(username))
         return dict(code=0, msg='ok')
 
@@ -152,7 +181,7 @@ class RedisAdapter(BasicAdapter):
         try:
             user_key = rediskeys.UserHKey(username)
             online_key = rediskeys.OnlineHKey(req.get_nas_id(), req.get_acct_sessionid())
-            if self.redis.hget(user_key,'bill_type') not in ('second',):
+            if self.redis.hget(user_key,UserAttrs.bill_type.name) not in ('second',):
                 return
 
             if not self.redis.exists(online_key):
@@ -164,17 +193,17 @@ class RedisAdapter(BasicAdapter):
 
             use_time = req.get_acct_sessiontime() - oldsession_time
             assert use_time > 0
-            if (self.redis.hget(user_key,'time_amount') or 0) < 0:
-                self.redis.hset(user_key,'time_amount',0)
+            if (self.redis.hget(user_key,UserAttrs.time_amount.name) or 0) < 0:
+                self.redis.hset(user_key,UserAttrs.time_amount.name,0)
             else:
-                self.redis.hincrby(user_key,'time_amount',-use_time)
+                self.redis.hincrby(user_key,UserAttrs.time_amount.name,-use_time)
         except:
             logging.error('billing error for user {}'.format(username),exc_info=True)
 
 
     def check_mac_bind(self, user, req_mac_addr):
-        if int(user.get('bind_mac',0)) == 1:
-            mac_addr = user.get('mac_addr')
+        if int(user.get(UserAttrs.bind_mac.name,0)) == 1:
+            mac_addr = user.get(UserAttrs.mac_addr.name)
             if mac_addr and mac_addr != req_mac_addr:
                 return False
         return True
@@ -195,6 +224,7 @@ class RedisAdapter(BasicAdapter):
 
 
     def calc_session_time(self,bill_type, expire_date,expire_time, time_amount):
+        session_timeout = 0
         if bill_type == 'day':
             if not expire_time:
                 expire_time = '23:59:59'

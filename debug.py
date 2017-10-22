@@ -2,6 +2,10 @@
 #coding:utf-8
 import gevent.monkey
 gevent.monkey.patch_all()
+import redis
+from gevent import socket
+import redis.connection
+redis.connection.socket = socket
 import os
 import logging
 import logging.config
@@ -34,12 +38,16 @@ def run(conf):
         # gevent.signal(signal.SIGTERM, acct_server.close)
         # gevent.signal(signal.SIGINT, acct_server.close)
         auth_server.start()
+        gevent.sleep(0.1)
         acct_server.start()
+        gevent.sleep(0.1)
         logging.info(auth_server)
         logging.info(acct_server)
 
-        from toughradius.radiusd import  apiserver
-        apiserver.start(host=config.api['host'], port=int(config.api['port']), forever=False)
+        from toughradius.radiusd.apiserver import  ApiServer
+        apiserver = ApiServer(config)
+        apiserver.start(forever=False)
+        gevent.wait()
     except:
         import traceback
         traceback.print_exc()
@@ -49,4 +57,3 @@ def run(conf):
 
 if __name__ == "__main__":
     run("etc/radiusd.json")
-    gevent.wait()

@@ -19,8 +19,8 @@
     "radiusd" : {
         "acct_port" : 1813,
         "auth_port" : 1812,
-        "adapter" : "rest",
-        "debug" : 1,
+        "adapter" : "redis",
+        "debug" : 0,
         "dictionary" : "{CONFDIR}/dictionarys/dictionary",
         "free_auth_input_limit" : 1048576,
         "free_auth_output_limit" : 1048576,

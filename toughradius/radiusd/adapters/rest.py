@@ -16,7 +16,7 @@ class RestAdapter(BasicAdapter):
         emsg = tools.safestr(message)
         return md5( emsg + secret ).hexdigest()
 
-    def auth(self,req):
+    def processAuth(self,req):
         url = self.config.adapters.rest.authurl
         msg = json.dumps(req.dict_message)
         sign = self.makeSign(msg)
@@ -28,7 +28,7 @@ class RestAdapter(BasicAdapter):
             raise RestError("rest request error")
 
 
-    def acct(self,req):
+    def processAcct(self,req):
         url = self.config.adapters.rest.accturl
         msg = json.dumps(req.dict_message)
         sign = self.makeSign(msg)
