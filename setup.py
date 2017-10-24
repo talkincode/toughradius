@@ -12,6 +12,7 @@ dictionarys = os.listdir(os.path.join(proj_home,'etc/dictionarys'))
 
 install_requires = [
     'gevent==1.1.2',
+    'redis',
     'Click',
 ]
 install_requires_empty = []

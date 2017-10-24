@@ -101,8 +101,9 @@ class RedisAdapter(BasicAdapter):
             raise RedisAdapterError('user {0} not exists'.format(username))
 
         nasid = req.get_nas_id()
+        nasaddr = req.get_nas_addr()
         sessionid = req.get_acct_sessionid()
-        online_key = rediskeys.OnlineHKey(nasid,sessionid)
+        online_key = rediskeys.OnlineHKey(nasid,nasaddr,sessionid)
         if self.redis.exists(online_key):
             raise RedisAdapterError('user {0} session duplicate'.format(username))
 
@@ -132,8 +133,9 @@ class RedisAdapter(BasicAdapter):
             raise RedisAdapterError('user {0} not exists'.format(username))
 
         nasid = req.get_nas_id()
+        nasaddr = req.get_nas_addr()
         sessionid = req.get_acct_sessionid()
-        online_key = rediskeys.OnlineHKey(nasid,sessionid)
+        online_key = rediskeys.OnlineHKey(nasid,nasaddr,sessionid)
         if not self.redis.exists(online_key):
             billing = req.get_billing()
             billing['pub_nas_addr'] = req.source[0]
@@ -164,14 +166,15 @@ class RedisAdapter(BasicAdapter):
             raise RedisAdapterError('user {0} not exists'.format(username))
 
         nasid = req.get_nas_id()
-        session_id = req.get_acct_sessionid()
-        online_key = rediskeys.OnlineHKey(nasid,session_id)
+        nasaddr = req.get_nas_addr()
+        sessionid = req.get_acct_sessionid()
+        online_key = rediskeys.OnlineHKey(nasid,nasaddr,sessionid)
         self.billing(req)
         with self.redis.pipeline() as pipe:
             pipe.delete(online_key)
             pipe.zrem(rediskeys.OnlineSetKey,online_key)
             pipe.zrem(rediskeys.UserOnlineSetKey(username),online_key)
-            pipe.zrem(rediskeys.NasOnlineSetKey(nasid,session_id),online_key)
+            pipe.zrem(rediskeys.NasOnlineSetKey(nasid,sessionid),online_key)
             pipe.execute()
         logging.info(u'delete online user {0}'.format(username))
         return dict(code=0, msg='ok')
@@ -180,7 +183,10 @@ class RedisAdapter(BasicAdapter):
         username = req.get_user_name()
         try:
             user_key = rediskeys.UserHKey(username)
-            online_key = rediskeys.OnlineHKey(req.get_nas_id(), req.get_acct_sessionid())
+            nasid = req.get_nas_id()
+            nasaddr = req.get_nas_addr()
+            sessionid = req.get_acct_sessionid()
+            online_key = rediskeys.OnlineHKey(nasid, nasaddr, sessionid)
             if self.redis.hget(user_key,UserAttrs.bill_type.name) not in ('second',):
                 return
 

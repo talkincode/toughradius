@@ -25,8 +25,8 @@ UserHKey = "toughradius:user_hkey:{0}".format
 # 0:username
 UserRadAttrsHKey = "toughradius:user_radattrs_hkey:{0}".format
 
-# 0:nasid 1:sessionid
-OnlineHKey = "toughradius:online_hkey:{0}:{1}".format
+# 0:nasid, 1:nasip 1:sessionid
+OnlineHKey = "toughradius:online_hkey:{0}:{1}:{2}".format
 OnlineSetKey = "toughradius:online_set_key"
 # 0:username
 UserOnlineSetKey = "toughradius:user_online_set_key:{0}".format
