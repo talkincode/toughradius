@@ -11,6 +11,49 @@ from toughradius.common import rediskeys
 import logging
 import time
 
+class ApiUser(object):
+
+    def listUser(self, rdb):
+        return dict(code=0,msg="success")
+
+    def addUser(self, rdb):
+        return dict(code=0,msg="success")
+
+    def updateUser(self, rdb):
+        return dict(code=0,msg="success")
+
+    def deleteUser(self, rdb):
+        return dict(code=0,msg="success")
+
+    def setUserAttr(self, rdb):
+        return dict(code=0,msg="success")
+
+    def deleteUserAttr(self, rdb):
+        return dict(code=0,msg="success")
+
+
+class ApiOnline(object):
+
+    def unlockOnline(self, rdb):
+        return dict(code=0,msg="success")
+
+    def listOnline(self, rdb):
+        return dict(code=0,msg="success")
+
+class ApiNas(object):
+
+    def addNas(self, rdb):
+        return dict(code=0,msg="success")
+
+    def updateNas(self, rdb):
+        return dict(code=0,msg="success")
+
+    def deleteNas(self, rdb):
+        return dict(code=0,msg="success")
+
+    def listNas(self, rdb):
+        return dict(code=0,msg="success")
+
 class ApiRoutes(object):
 
     def radtest(self, rdb):
@@ -58,7 +101,7 @@ class ApiRoutes(object):
 
 
 
-class ApiServer(ApiRoutes):
+class ApiServer(ApiRoutes,ApiUser,ApiOnline,ApiNas):
 
     def __init__(self, config):
         self.config = config
@@ -72,6 +115,19 @@ class ApiServer(ApiRoutes):
     def setup_routing(self):
         self.app.route('/api/v1/radtest', ['GET', 'POST'], self.radtest)
         self.app.route('/api/v1/inittest', ['GET', 'POST'], self.inittest)
+        self.app.route('/api/v1/user/list', ['GET', 'POST'], self.listUser)
+        self.app.route('/api/v1/user/add', ['GET', 'POST'], self.addUser)
+        self.app.route('/api/v1/user/update', ['GET', 'POST'], self.updateUser)
+        self.app.route('/api/v1/user/delete', ['GET', 'POST'], self.deleteUser)
+        self.app.route('/api/v1/user/attr/set', ['GET', 'POST'], self.setUserAttr)
+        self.app.route('/api/v1/user/attr/delete', ['GET', 'POST'], self.deleteUserAttr)
+        self.app.route('/api/v1/nas/list', ['GET', 'POST'], self.listNas)
+        self.app.route('/api/v1/nas/add', ['GET', 'POST'], self.listNas)
+        self.app.route('/api/v1/nas/update', ['GET', 'POST'], self.updateNas)
+        self.app.route('/api/v1/nas/delete', ['GET', 'POST'], self.deleteNas)
+        self.app.route('/api/v1/online/list', ['GET', 'POST'], self.listOnline)
+        self.app.route('/api/v1/online/unlock', ['GET', 'POST'], self.unlockOnline)
+
 
     def start(self, forever=True):
         return run(self.app, server=GeventServer, host=self.host, port=self.port,forever=forever)

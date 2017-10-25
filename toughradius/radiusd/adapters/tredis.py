@@ -81,8 +81,9 @@ class RedisAdapter(BasicAdapter):
             user.get(UserAttrs.time_amount.name,0)
         )
 
-        for attrname, attrvalue in (self.redis.hgetall(rediskeys.UserRadAttrsHKey(username)) or {}):
-            pre_reply['attrs'][attrname] = attrvalue
+        user_attrs = self.redis.hgetall(rediskeys.UserRadAttrsHKey(username)) or {}
+        for _name, _value in user_attrs.iteritems():
+            pre_reply['attrs'][_name] = _value
 
         return pre_reply
 
@@ -144,7 +145,7 @@ class RedisAdapter(BasicAdapter):
                 pipe.hmset(online_key,billing)
                 pipe.zadd(rediskeys.OnlineSetKey,score, online_key)
                 pipe.zadd(rediskeys.UserOnlineSetKey(username),score, online_key)
-                pipe.zadd(rediskeys.NasOnlineSetKey(nasid,sessionid),score, online_key)
+                pipe.zadd(rediskeys.NasOnlineSetKey(nasid,nasaddr),score, online_key)
                 pipe.execute()
             logging.info(u'add user {0} billing data on update'.format(username))
         else:
@@ -174,7 +175,7 @@ class RedisAdapter(BasicAdapter):
             pipe.delete(online_key)
             pipe.zrem(rediskeys.OnlineSetKey,online_key)
             pipe.zrem(rediskeys.UserOnlineSetKey(username),online_key)
-            pipe.zrem(rediskeys.NasOnlineSetKey(nasid,sessionid),online_key)
+            pipe.zrem(rediskeys.NasOnlineSetKey(nasid,nasaddr),online_key)
             pipe.execute()
         logging.info(u'delete online user {0}'.format(username))
         return dict(code=0, msg='ok')
