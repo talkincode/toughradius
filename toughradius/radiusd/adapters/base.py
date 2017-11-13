@@ -6,6 +6,7 @@ from toughradius.txradius.radius import dictionary
 from toughradius.txradius import message
 from toughradius.common import six
 from toughradius.txradius.radius import packet
+from gevent.pool import Pool
 from toughradius.radiusd.modules import (
     request_logger,
     request_mac_parse,
@@ -19,6 +20,7 @@ class BasicAdapter(object):
 
     def __init__(self, config):
         self.config = config
+        self.pool = Pool(self.config.pool_size)
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(config.radiusd.dictionary)
         self.plugins = []
@@ -28,7 +30,7 @@ class BasicAdapter(object):
             req = self.parseAuthPacket(data,address)
             prereply = self.processAuth(req)
             reply = self.authReply(req, prereply)
-            gevent.spawn(socket.sendto,reply.ReplyPacket(),address)
+            self.pool.spawn(socket.sendto,reply.ReplyPacket(),address)
         except:
             self.logger.error( "Handle Radius Auth error",exc_info=True)
 
@@ -37,7 +39,7 @@ class BasicAdapter(object):
             req = self.parseAcctPacket(data,address)
             prereply = self.processAcct(req)
             reply = self.acctReply(req, prereply)
-            gevent.spawn(socket.sendto, reply.ReplyPacket(), address)
+            self.pool.spawn(socket.sendto, reply.ReplyPacket(), address)
         except:
             self.logger.error("Handle Radius Acct error",exc_info=True)
 
