@@ -7,24 +7,19 @@ import os,sys
 
 version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
-configs = os.listdir(os.path.join(proj_home,'etc'))
-dictionarys = os.listdir(os.path.join(proj_home,'etc/dictionarys'))
 
 install_requires = [
-    'gevent==1.1.2',
-    'redis',
-    'Click',
+    'gevent==1.1.2'
 ]
 install_requires_empty = []
 
-package_data={}
+package_data={
+    "toughradius" : ["dictionarys/dictionary","dictionarys/dictionary.*"]
+}
 
 
 data_files=[
-    ('/etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('/etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
-    ('etc/toughradius', [ 'etc/%s'%cfg for cfg in configs if cfg not in ('dictionarys',) ]),
-    ('etc/toughradius/dictionarys',['etc/dictionarys/%s'%d for d in dictionarys]),
+
 ]
 
 
@@ -53,7 +48,7 @@ setup(name='toughradius',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'gtrcli = toughradius.common.commands:cli',
+              'radiusd = toughradius.common.radiusd:run',
           ]
       }
 )

@@ -1,3 +1,1 @@
-Click
-redis
 gevent==1.1.2

@@ -3,6 +3,7 @@
 
 from .base import BasicAdapter
 from toughradius.common import tools
+from toughradius import settings
 from hashlib import md5
 import urllib2
 import json
@@ -12,12 +13,12 @@ class RestError(BaseException):pass
 class RestAdapter(BasicAdapter):
 
     def makeSign(self,message):
-        secret = tools.safestr(self.config.adapters.rest.secret)
+        secret = tools.safestr(settings.adapters['rest']['secret'])
         emsg = tools.safestr(message)
         return md5( emsg + secret ).hexdigest()
 
     def processAuth(self,req):
-        url = self.config.adapters.rest.authurl
+        url = settings.adapters['rest']['authurl']
         msg = json.dumps(req.dict_message)
         sign = self.makeSign(msg)
         try:
@@ -29,7 +30,7 @@ class RestAdapter(BasicAdapter):
 
 
     def processAcct(self,req):
-        url = self.config.adapters.rest.accturl
+        url = settings.adapters['rest']['accturl']
         msg = json.dumps(req.dict_message)
         sign = self.makeSign(msg)
         try:

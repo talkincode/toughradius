@@ -6,6 +6,7 @@ from toughradius.txradius.radius import dictionary
 from toughradius.txradius import message
 from toughradius.common import six
 from toughradius.txradius.radius import packet
+from toughradius import settings
 from gevent.pool import Pool
 from toughradius.radiusd.modules import (
     request_logger,
@@ -18,11 +19,10 @@ from toughradius.radiusd.modules import (
 
 class BasicAdapter(object):
 
-    def __init__(self, config):
-        self.config = config
-        self.pool = Pool(self.config.pool_size)
+    def __init__(self):
+        self.pool = Pool(settings.radiusd['pool_size'])
         self.logger = logging.getLogger(__name__)
-        self.dictionary = dictionary.Dictionary(config.radiusd.dictionary)
+        self.dictionary = dictionary.Dictionary(settings.radiusd['dictionary'])
         self.plugins = []
 
     def handleAuth(self,socket, data, address):
@@ -105,7 +105,7 @@ class BasicAdapter(object):
         :return:
         """
         clients = self.getClients()
-        vendors = self.config.vendors
+        vendors = settings.vendors
         if host in clients:
             client = clients[host]
             request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=str(client['secret']))
@@ -140,7 +140,7 @@ class BasicAdapter(object):
         :return: txradius.message
         """
         clients = self.getClients()
-        vendors = self.config.vendors
+        vendors = settings.vendors
         if host in clients:
             client = clients[host]
             request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=str(client['secret']))

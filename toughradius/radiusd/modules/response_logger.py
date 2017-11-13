@@ -4,24 +4,24 @@ import os
 import logging
 from toughradius.txradius.radius import packet
 from toughradius.txradius import message
+from toughradius import settings
 
-TOUGHRADIUS_DEBUG_ENABLE = int(os.environ.get('TOUGHRADIUS_DEBUG_ENABLE','0'))
 
 def log_accept(req,reply):
     logging.info('RadiusAccessAccept send to the access device %s:%s'%req.source)
-    if TOUGHRADIUS_DEBUG_ENABLE == 1:
+    if settings.radiusd['debug']:
         logging.debug(message.format_packet_str(reply))
 
 
 def log_reject(req,reply):
     logging.info('RadiusAccessReject send to the access device %s:%s'%req.source)
-    if TOUGHRADIUS_DEBUG_ENABLE == 1:
+    if settings.radiusd['debug']:
         logging.debug(message.format_packet_str(reply))
 
 
 def log_acct(req,reply):
     logging.info('RadiusAccountingResponse send to the access device %s:%s'%req.source)
-    if TOUGHRADIUS_DEBUG_ENABLE == 1:
+    if settings.radiusd['debug']:
         logging.debug(message.format_packet_str(reply))
 
 
