@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 import toughradius
-import os,sys
+import os
 
 version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
@@ -49,6 +49,8 @@ setup(name='toughradius',
       entry_points={
           'console_scripts': [
               'radiusd = toughradius.common.radiusd:run',
+              'authtest = toughradius.common.radtest:test_auth',
+              'accttest = toughradius.common.radtest:test_acct',
           ]
       }
 )

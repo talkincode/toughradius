@@ -2,44 +2,36 @@
 #coding:utf-8
 from gevent.server import DatagramServer
 from gevent.pool import Pool
-from toughradius import settings
-from gevent.queue import Queue, Empty, Full
-import gevent
 import logging
 
-def get_adapter():
-    adapter = settings.radiusd['adapter']
-    if adapter == 'free':
-        from toughradius.radiusd.adapters.free import FreeAdapter
-        return FreeAdapter()
-    if adapter == 'rest':
-        from toughradius.radiusd.adapters.rest import RestAdapter
-        return RestAdapter()
+logger = logging.getLogger(__name__)
 
 class RudiusAuthServer(DatagramServer):
 
-    def __init__(self,):
-        DatagramServer.__init__(self,(settings.radiusd['host'], int(settings.radiusd['auth_port'])))
-        self.pool = Pool(settings.radiusd['pool_size'])
-        self.adapter = get_adapter()
-        self.start()
-
+    def __init__(self,adapter, host="0.0.0.0", port=1812, pool_size=32):
+        DatagramServer.__init__(self,(host,port))
+        self.pool = Pool(pool_size)
+        self.adapter = adapter
 
     def handle(self, data, address):
-        self.pool.spawn(self.adapter.handleAuth, self.socket, data, address)
-
+        if not self.pool.full():
+            self.pool.spawn(self.adapter.handleAuth, self.socket, data, address)
+        else:
+            logger.error("radius auth workpool full")
 
 
 class RudiusAcctServer(DatagramServer):
 
-    def __init__(self,):
-        DatagramServer.__init__(self,(settings.radiusd['host'], int(settings.radiusd['acct_port'])))
-        self.pool = Pool(settings.radiusd['pool_size'])
-        self.adapter = get_adapter()
-        self.start()
+    def __init__(self,adapter, host="0.0.0.0", port=1813, pool_size=32):
+        DatagramServer.__init__(self,(host,port))
+        self.pool = Pool(pool_size)
+        self.adapter = adapter
 
     def handle(self, data, address):
-        self.pool.spawn(self.adapter.handleAcct, self.socket, data, address)
+        if not self.pool.full():
+            self.pool.spawn(self.adapter.handleAcct, self.socket, data, address)
+        else:
+            logger.error("radius accounting workpool full")
 
 
 

@@ -2,9 +2,10 @@
 
 import os
 
-__basedir__ = os.path.abspath(os.path.dirname(__file__))
+ENVIRONMENT_VARIABLE = "TOUGHRADIUS_SETTINGS_MODULE"
+BASICDIR = os.path.abspath(os.path.dirname(__file__))
 
-vendors = {
+VENDORS = {
     "std" : 0,
     "alcatel" : 3041,
     "cisco" : 9,
@@ -16,17 +17,18 @@ vendors = {
     "openvpn" : 19797
 }
 
-radiusd = {
+RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
     "acct_port": 1813,
-    "adapter": "rest",
-    "debug": 0,
-    "dictionary": os.path.join(__basedir__,'dictionarys/dictionary'),
+    # "adapter": "toughradius.radiusd.adapters.rest",
+    "adapter": "toughradius.radiusd.adapters.free",
+    "debug": 1,
+    "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary'),
     "pool_size": 128
 }
 
-adapters = {
+ADAPTERS = {
     "rest" : {
         "authurl" : "http://127.0.0.1:1815/api/v1/radtest",
         "accturl" : "http://127.0.0.1:1815/api/v1/radtest",
@@ -35,7 +37,30 @@ adapters = {
     }
 }
 
-logger = {
+MODULES = {
+    "auth_pre" : [
+        "toughradius.radiusd.modules.request_logger",
+        "toughradius.radiusd.modules.request_mac_parse",
+        "toughradius.radiusd.modules.request_vlan_parse"
+    ],
+
+    "acct_pre" : [
+        "toughradius.radiusd.modules.request_logger",
+        "toughradius.radiusd.modules.request_mac_parse",
+        "toughradius.radiusd.modules.request_vlan_parse"
+    ],
+
+    "auth_post" : [
+        "toughradius.radiusd.modules.response_logger",
+        "toughradius.radiusd.modules.accept_rate_process"
+    ],
+
+    "acct_post" : [
+        "toughradius.radiusd.modules.response_logger",
+    ],
+}
+
+LOGGER = {
     "version" : 1,
     "disable_existing_loggers" : True,
     "formatters" : {
@@ -45,6 +70,9 @@ logger = {
         },
         "simple" : {
             "format" : "%(asctime)s %(levelname)s %(message)s"
+        },
+        "json": {
+            '()': 'toughradius.common.json_log_formater.JSONFormatter'
         }
     },
     "handlers" : {
@@ -76,6 +104,26 @@ logger = {
             "delay" : True,
             "filename" : "/var/log/toughradius/error.log",
             "formatter" : "verbose"
+        },
+        "accounting": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "d",
+            "interval": 1,
+            "backupCount": 30,
+            "delay": True,
+            "filename": "/var/log/toughradius/accounting.log",
+            "formatter": "json"
+        },
+        "ticket": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "d",
+            "interval": 1,
+            "backupCount": 30,
+            "delay": True,
+            "filename": "/var/log/toughradius/ticket.log",
+            "formatter": "json"
         }
     },
     "loggers" : {
@@ -86,6 +134,14 @@ logger = {
                 "debug"
             ],
             "level" : "DEBUG"
-        }
+        },
+        "accounting" : {
+            'handlers': ['accounting'],
+            'level': 'INFO',
+        },
+        "ticket" : {
+            'handlers': ['ticket'],
+            'level': 'INFO',
+        },
     }
 }

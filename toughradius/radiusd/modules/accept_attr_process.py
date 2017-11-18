@@ -2,6 +2,8 @@
 #coding=utf-8
 import logging
 
+logger = logging.getLogger(__name__)
+
 def handle_radius(req,reply):
     try:
         if not 'attrs' in reply:
@@ -17,5 +19,5 @@ def handle_radius(req,reply):
 
         return reply
     except Exception:
-        logging.error("radius_attrs_process_error",exc_info=True)
+        logger.error("radius_attrs_process_error",exc_info=True)
         return reply

@@ -243,8 +243,8 @@ class Packet(dict):
         :return: raw packet
         :rtype:  string
         """
-        assert(self.authenticator)
-        assert(self.secret is not None)
+        # assert(self.authenticator)
+        # assert(self.secret is not None)
 
         attr = self._PktEncodeAttributes()
         header = struct.pack('!BBH', self.code, self.id, (20 + len(attr)))
@@ -370,6 +370,8 @@ class AuthPacket(Packet):
         :type packet:  string
         """
         Packet.__init__(self, code, id, secret, authenticator, **attributes)
+        if 'packet' in attributes:
+            self.raw_packet = attributes['packet']
 
     def CreateReply(self, **attributes):
         """Create a new packet as a reply to this one. This method
@@ -513,7 +515,7 @@ class AcctPacket(Packet):
         :return: True if verification failed else False
         :rtype: boolean
         """
-        assert(self.raw_packet)
+        # assert(self.raw_packet)
         hash = md5_constructor(self.raw_packet[0:4] + 16 * six.b('\x00') +
                 self.raw_packet[20:] + self.secret).digest()
         return hash == self.authenticator
@@ -575,7 +577,7 @@ class CoAPacket(Packet):
         :return: True if verification failed else False
         :rtype: boolean
         """
-        assert(self.raw_packet)
+        # assert(self.raw_packet)
         hash = md5_constructor(self.raw_packet[0:4] + 16 * six.b('\x00') +
                 self.raw_packet[20:] + self.secret).digest()
         return hash == self.authenticator

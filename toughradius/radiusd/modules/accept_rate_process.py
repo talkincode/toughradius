@@ -3,6 +3,8 @@
 
 import logging
 
+logger = logging.getLogger(__name__)
+
 def std_rate(resp, _in, _out, rate_code=None):
     return resp
 
@@ -58,7 +60,7 @@ def huawei_rate(resp, _in, _out, rate_code=None):
     resp['Huawei-Output-Peak-Rate'] = _out
     return resp
 
-def huawei_e1_rate(resp, _in, _out, rate_code=None): 
+def huawei_e1_rate(resp, _in, _out, rate_code=None):
     resp['Huawei-Input-Average-Rate'] = _in / 1024
     resp['Huawei-Input-Peak-Rate'] = _in / 1024
     resp['Huawei-Output-Average-Rate'] = _out / 1024    
@@ -80,7 +82,7 @@ rate_funcs = {
 
 def handle_radius(req, reply):
     try:
-        logging.debug("accept_rate_process")
+        logger.debug("accept_rate_process")
         input_rate=int(reply.resp_attrs.get('input_rate',0))
         output_rate=int(reply.resp_attrs.get('output_rate',0))
         rate_code=reply.resp_attrs.get('rate_code')

@@ -354,7 +354,6 @@ class AuthMessage(AuthPacket,ExtAttrMixin):
 
     def is_valid_pwd(self,userpwd):
         pwd_type = self.get_pwd_type()
-        print "radius password type %s" % pwd_type
         try:
             if pwd_type == 'pap':
                 return userpwd == self.get_passwd()
@@ -554,14 +553,14 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
         except:return 0    
 
     def get_input_total(self):
-        bl = decimal.Decimal(self.get_acct_input_octets())/decimal.Decimal(1024)
-        gl = decimal.Decimal(self.get_acct_input_gigawords())*decimal.Decimal(4*1024*1024)
+        bl = decimal.Decimal(self.get_acct_input_octets())
+        gl = decimal.Decimal(self.get_acct_input_gigawords())*decimal.Decimal(4*1024*1024*1024)
         tl = bl + gl
         return int(tl.to_integral_value())   
         
     def get_output_total(self):
-        bl = decimal.Decimal(self.get_acct_output_octets())/decimal.Decimal(1024)
-        gl = decimal.Decimal(self.get_acct_output_gigawords())*decimal.Decimal(4*1024*1024)
+        bl = decimal.Decimal(self.get_acct_output_octets())
+        gl = decimal.Decimal(self.get_acct_output_gigawords())*decimal.Decimal(4*1024*1024*1024)
         tl = bl + gl
         return int(tl.to_integral_value())                                                            
 
