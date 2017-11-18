@@ -10,6 +10,7 @@ import json
 class RestError(BaseException):pass
 
 class RestAdapter(BasicAdapter):
+    """Http rest mode adapter"""
 
     def getClients(self):
         nas = dict(status=1, nasid='toughac', name='toughac', vendor=0, ipaddr='127.0.0.1', secret='testing123', coaport=3799)

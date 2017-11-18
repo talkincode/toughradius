@@ -1,0 +1,10 @@
+#
+# WiFiDog dictionary.
+#
+#               Enable by putting the line "$INCLUDE dictionary.wifidog" 
+#               into the main dictionary file.
+#
+
+VENDOR          WiFiDog                      18721
+ATTRIBUTE       WiFiDog-Version              1       string  WiFiDog
+ATTRIBUTE       WiFiDog-Config               2       string  WiFiDog

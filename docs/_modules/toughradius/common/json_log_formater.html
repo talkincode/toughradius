@@ -1,0 +1,218 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>toughradius.common.json_log_formater &mdash; toughradius 5.0 文档</title>
+    
+    <link rel="stylesheet" href="../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../static/doctools.js"></script>
+    <script type="text/javascript" src="../../../static/translations.js"></script>
+    <link rel="top" title="toughradius 5.0 文档" href="../../../index.html" />
+    <link rel="up" title="模块代码" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li><a href="../../../index.html">toughradius 5.0 文档</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">模块代码</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>toughradius.common.json_log_formater 源代码</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="n">BUILTIN_ATTRS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;args&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;asctime&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;exc_info&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;exc_text&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;filename&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;funcName&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;levelname&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;levelno&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;lineno&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;module&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;msecs&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;message&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;msg&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;name&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;pathname&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;process&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;processName&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;relativeCreated&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;stack_info&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;thread&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;threadName&#39;</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="JSONFormatter"><a class="viewcode-back" href="../../../manual/modules.html#toughradius.common.json_log_formater.JSONFormatter">[文档]</a><span class="k">class</span> <span class="nc">JSONFormatter</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;JSON log formatter.</span>
+
+<span class="sd">    Usage example::</span>
+
+<span class="sd">        import logging</span>
+
+<span class="sd">        import json_log_formatter</span>
+
+<span class="sd">        json_handler = logging.FileHandler(filename=&#39;/var/log/my-log.json&#39;)</span>
+<span class="sd">        json_handler.setFormatter(json_log_formatter.JSONFormatter())</span>
+
+<span class="sd">        logger = logging.getLogger(&#39;my_json&#39;)</span>
+<span class="sd">        logger.addHandler(json_handler)</span>
+
+<span class="sd">        logger.info(&#39;Sign up&#39;, extra={&#39;referral_code&#39;: &#39;52d6ce&#39;})</span>
+
+<span class="sd">    The log file will contain the following log record (inline)::</span>
+
+<span class="sd">        {</span>
+<span class="sd">            &quot;message&quot;: &quot;Sign up&quot;,</span>
+<span class="sd">            &quot;time&quot;: &quot;2015-09-01T06:06:26.524448&quot;,</span>
+<span class="sd">            &quot;referral_code&quot;: &quot;52d6ce&quot;</span>
+<span class="sd">        }</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">json_lib</span> <span class="o">=</span> <span class="n">json</span>
+
+<div class="viewcode-block" id="JSONFormatter.format"><a class="viewcode-back" href="../../../manual/modules.html#toughradius.common.json_log_formater.JSONFormatter.format">[文档]</a>    <span class="k">def</span> <span class="nf">format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">record</span><span class="o">.</span><span class="n">getMessage</span><span class="p">()</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extra_from_record</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+        <span class="n">json_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_record</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="n">extra</span><span class="p">,</span> <span class="n">record</span><span class="p">)</span>
+        <span class="n">mutated_record</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mutate_json_record</span><span class="p">(</span><span class="n">json_record</span><span class="p">)</span>
+        <span class="c1"># Backwards compatibility: Functions that overwrite this but don&#39;t</span>
+        <span class="c1"># return a new value will return None because they modified the</span>
+        <span class="c1"># argument passed in.</span>
+        <span class="k">if</span> <span class="n">mutated_record</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">mutated_record</span> <span class="o">=</span> <span class="n">json_record</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_json</span><span class="p">(</span><span class="n">mutated_record</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="JSONFormatter.to_json"><a class="viewcode-back" href="../../../manual/modules.html#toughradius.common.json_log_formater.JSONFormatter.to_json">[文档]</a>    <span class="k">def</span> <span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Converts record dict to a JSON string.</span>
+
+<span class="sd">        Override this method to change the way dict is converted to JSON.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json_lib</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">record</span><span class="p">,</span><span class="n">default</span><span class="o">=</span><span class="nb">repr</span><span class="p">,</span><span class="n">ensure_ascii</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="JSONFormatter.extra_from_record"><a class="viewcode-back" href="../../../manual/modules.html#toughradius.common.json_log_formater.JSONFormatter.extra_from_record">[文档]</a>    <span class="k">def</span> <span class="nf">extra_from_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns `extra` dict you passed to logger.</span>
+
+<span class="sd">        The `extra` keyword argument is used to populate the `__dict__` of</span>
+<span class="sd">        the `LogRecord`.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">attr_name</span><span class="p">:</span> <span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">record</span><span class="o">.</span><span class="vm">__dict__</span>
+            <span class="k">if</span> <span class="n">attr_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BUILTIN_ATTRS</span>
+        <span class="p">}</span>
+</div>
+<div class="viewcode-block" id="JSONFormatter.json_record"><a class="viewcode-back" href="../../../manual/modules.html#toughradius.common.json_log_formater.JSONFormatter.json_record">[文档]</a>    <span class="k">def</span> <span class="nf">json_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">extra</span><span class="p">,</span> <span class="n">record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Prepares a JSON payload which will be logged.</span>
+
+<span class="sd">        Override this method to change JSON log format.</span>
+
+<span class="sd">        :param message: Log message, e.g., `logger.info(msg=&#39;Sign up&#39;)`.</span>
+<span class="sd">        :param extra: Dictionary that was passed as `extra` param</span>
+<span class="sd">            `logger.info(&#39;Sign up&#39;, extra={&#39;referral_code&#39;: &#39;52d6ce&#39;})`.</span>
+<span class="sd">        :param record: `LogRecord` we got from `JSONFormatter.format()`.</span>
+<span class="sd">        :return: Dictionary which will be passed to JSON lib.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">extra</span><span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">message</span>
+        <span class="k">if</span> <span class="s1">&#39;time&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">extra</span><span class="p">:</span>
+            <span class="n">extra</span><span class="p">[</span><span class="s1">&#39;time&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">record</span><span class="o">.</span><span class="n">exc_info</span><span class="p">:</span>
+            <span class="n">extra</span><span class="p">[</span><span class="s1">&#39;exc_info&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">formatException</span><span class="p">(</span><span class="n">record</span><span class="o">.</span><span class="n">exc_info</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">extra</span>
+</div>
+<div class="viewcode-block" id="JSONFormatter.mutate_json_record"><a class="viewcode-back" href="../../../manual/modules.html#toughradius.common.json_log_formater.JSONFormatter.mutate_json_record">[文档]</a>    <span class="k">def</span> <span class="nf">mutate_json_record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">json_record</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Override it to convert fields of `json_record` to needed types.</span>
+
+<span class="sd">        Default implementation converts `datetime` to string in ISO8601 format.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">attr_name</span> <span class="ow">in</span> <span class="n">json_record</span><span class="p">:</span>
+            <span class="n">attr</span> <span class="o">=</span> <span class="n">json_record</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="n">datetime</span><span class="p">):</span>
+                <span class="n">json_record</span><span class="p">[</span><span class="n">attr_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">json_record</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li><a href="../../../index.html">toughradius 5.0 文档</a> &raquo;</li>
+          <li><a href="../../index.html" >模块代码</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2017, jamiesun.
+      最后更新于 Nov 19, 2017.
+    </div>
+  </body>
+</html>

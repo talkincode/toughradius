@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 #coding:utf-8
 import logging
-from toughradius.txradius.radius import dictionary
-from toughradius.txradius import message
+from toughradius.pyrad.radius import dictionary
+from toughradius.pyrad import message
 from toughradius.common import six
-from toughradius.txradius.radius import packet
+from toughradius.pyrad.radius import packet
 from gevent.pool import Pool
 import importlib
 
@@ -21,6 +21,15 @@ class BasicAdapter(object):
         self.acct_post = [importlib.import_module(m) for m in self.settings.MODULES["acct_post"]]
 
     def handleAuth(self,socket, data, address):
+        """
+        auth request handle
+
+        :param socket:
+        :param data:
+        :param address:
+
+        :return:
+        """
         try:
             req = self.parseAuthPacket(data,address)
             prereply = self.processAuth(req)
@@ -30,6 +39,15 @@ class BasicAdapter(object):
             self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=True)
 
     def handleAcct(self,socket, data, address):
+        """
+        acct request handle
+
+        :param socket:
+        :param data:
+        :param address:
+
+        :return:
+        """
         try:
             req = self.parseAcctPacket(data,address)
             prereply = self.processAcct(req)
@@ -39,6 +57,25 @@ class BasicAdapter(object):
             self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=True)
 
     def getClients(self):
+        """
+        fetch nas clients
+
+        Usage example::
+
+            def getClients(self):
+                nas = dict(
+                    status=1,
+                    nasid='toughac',
+                    name='toughac',
+                    vendor=0,
+                    ipaddr='127.0.0.1',
+                    secret='testing123',
+                    coaport=3799
+                )
+                return { 'toughac' : nas, '127.0.0.1' : nas}
+
+        :return: nas dict
+        """
         raise NotImplementedError('Attempted to use a pure base class')
 
 
@@ -46,6 +83,7 @@ class BasicAdapter(object):
     def verifyAcctRequest(req):
         """
         verify radius accounting request
+
         :param req:
         """
         if req.code != packet.AccountingRequest:
@@ -60,8 +98,10 @@ class BasicAdapter(object):
     def freeReply(req, **params):
         """
         gen free auth response
+
         :param req:
         :param params:
+
         :return:
         """
         reply = req.CreateReply()
@@ -81,8 +121,10 @@ class BasicAdapter(object):
     def rejectReply(req, errmsg=''):
         """
         gen reject radius auth response
+
         :param req:
         :param errmsg:
+
         :return:
         """
         reply = req.CreateReply()
@@ -94,8 +136,10 @@ class BasicAdapter(object):
     def parseAuthPacket(self, datagram, (host, port)):
         """
         parse radius auth request
+
         :param datagram:
-        :return:  txradius.message
+
+        :return:  pyrad.message
         """
         clients = self.getClients()
         vendors = self.settings.VENDORS
@@ -123,8 +167,10 @@ class BasicAdapter(object):
     def parseAcctPacket(self, datagram, (host, port)):
         """
         parse radius accounting request
+
         :param datagram:
-        :return: txradius.message
+
+        :return: pyrad.message
         """
         clients = self.getClients()
         vendors = self.settings.VENDORS
@@ -150,8 +196,10 @@ class BasicAdapter(object):
     def authReply(self, req, prereply):
         """
         process radius auth response
+
         :rtype: object
         :param req:
+
         :param prereply: dict
         :return: radius reply
         """
@@ -189,8 +237,10 @@ class BasicAdapter(object):
     def acctReply(self, req, prereply):
         """
         process radius accounting response
+
         :param req:
         :param prereply:
+
         :return:
         """
         try:
@@ -219,8 +269,22 @@ class BasicAdapter(object):
 
 
     def processAuth(self, req):
+        """
+        Function delivery to subclass implementation
+
+        :param req:
+
+        :return:
+        """
         raise NotImplementedError('Attempted to use a pure base class')
 
     def processAcct(self, req):
+        """
+        Function delivery to subclass implementation
+
+        :param req:
+
+        :return:
+        """
         raise NotImplementedError('Attempted to use a pure base class')
 

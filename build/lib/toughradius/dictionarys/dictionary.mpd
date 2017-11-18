@@ -1,0 +1,32 @@
+#
+# dictionary.mpd
+
+VENDOR		mpd		12341
+
+BEGIN-VENDOR	mpd
+
+ATTRIBUTE	mpd-rule	1	string
+ATTRIBUTE	mpd-pipe	2	string
+ATTRIBUTE	mpd-queue	3	string
+ATTRIBUTE	mpd-table	4	string
+ATTRIBUTE	mpd-table-static	5	string
+ATTRIBUTE	mpd-filter	6	string
+ATTRIBUTE	mpd-limit	7	string
+ATTRIBUTE	mpd-input-octets	8	string
+ATTRIBUTE	mpd-input-packets	9	string
+ATTRIBUTE	mpd-output-octets	10	string
+ATTRIBUTE	mpd-output-packets	11	string
+ATTRIBUTE	mpd-link	12	string
+ATTRIBUTE	mpd-bundle	13	string
+ATTRIBUTE	mpd-iface	14	string
+ATTRIBUTE	mpd-iface-index	15	integer
+ATTRIBUTE	mpd-input-acct	16	string
+ATTRIBUTE	mpd-output-acct	17	string
+ATTRIBUTE	mpd-action	18	string
+ATTRIBUTE	mpd-peer-ident	19	string
+ATTRIBUTE	mpd-iface-name	20	string
+ATTRIBUTE	mpd-iface-descr	21	string
+ATTRIBUTE	mpd-iface-group	22	string
+ATTRIBUTE	mpd-drop-user	154	integer
+
+END-VENDOR	mpd

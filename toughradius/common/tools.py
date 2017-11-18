@@ -3,6 +3,13 @@
 import json
 
 def safestr(val):
+    '''
+    Convert to string
+
+    :param val: source str
+
+    :return:
+    '''
     if val is None:
         return ''
 
@@ -26,6 +33,13 @@ def safestr(val):
             return val
 
 def safeunicode(val):
+    '''
+    Convert to unicode
+
+    :param val:
+
+    :return:
+    '''
     if val is None:
         return u''
 

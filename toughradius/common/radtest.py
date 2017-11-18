@@ -14,6 +14,7 @@ logging.config.dictConfig(settings.LOGGER)
 logger = logging.getLogger(__name__)
 
 def test_auth():
+    """send test auth request"""
     import radclient
     parser = argparse.ArgumentParser()
     parser.add_argument('-H','--server', default='127.0.0.1', dest="server",type=str)
@@ -40,6 +41,7 @@ def test_auth():
     radclient.send_auth(args.server,port=args.port,secret=six.b(args.secret),debug=args.debug,timeout=int(args.timeout),**auth_req)
 
 def test_acct():
+    """send test acct request, include start,update,stop"""
     import radclient
     parser = argparse.ArgumentParser()
     parser.add_argument('-H','--server', default='127.0.0.1', dest="server",type=str)

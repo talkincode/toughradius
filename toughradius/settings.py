@@ -5,6 +5,10 @@ import os
 ENVIRONMENT_VARIABLE = "TOUGHRADIUS_SETTINGS_MODULE"
 BASICDIR = os.path.abspath(os.path.dirname(__file__))
 
+'''
+define nas access devices vendor ids
+'''
+
 VENDORS = {
     "std" : 0,
     "alcatel" : 3041,
@@ -17,6 +21,17 @@ VENDORS = {
     "openvpn" : 19797
 }
 
+'''
+- debug: enable debug mode
+- host: radius server listen host
+- auth_port: radius auth listen port
+- acct_port: radius acct listen port
+- adapter: radius handle adapter module
+- dictionary: include an additional  Radius protocol dictionary file directory path
+- debug: debug model setting
+- pool_size: radius server worker pool size
+'''
+
 RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
@@ -28,6 +43,14 @@ RADIUSD = {
     "pool_size": 128
 }
 
+'''
+default rest adapter module config
+- authurl: backend server authentication api url
+- accturl: backend server accounting api url
+- secret: http message sign secret
+- radattrs: Radius attrs send to  backend server
+'''
+
 ADAPTERS = {
     "rest" : {
         "authurl" : "http://127.0.0.1:1815/api/v1/radtest",
@@ -36,6 +59,10 @@ ADAPTERS = {
         "radattrs" : []
     }
 }
+
+'''
+radius ext modules 
+'''
 
 MODULES = {
     "auth_pre" : [
@@ -59,6 +86,10 @@ MODULES = {
         "toughradius.radiusd.modules.response_logger",
     ],
 }
+
+'''
+- radius server logging config
+'''
 
 LOGGER = {
     "version" : 1,

@@ -7,6 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 class RudiusAuthServer(DatagramServer):
+    """Radius auth server"""
 
     def __init__(self,adapter, host="0.0.0.0", port=1812, pool_size=32):
         DatagramServer.__init__(self,(host,port))
@@ -21,6 +22,7 @@ class RudiusAuthServer(DatagramServer):
 
 
 class RudiusAcctServer(DatagramServer):
+    """Radius acct server"""
 
     def __init__(self,adapter, host="0.0.0.0", port=1813, pool_size=32):
         DatagramServer.__init__(self,(host,port))

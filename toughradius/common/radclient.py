@@ -3,23 +3,44 @@
 import os
 import sys
 from gevent import socket
-from toughradius.txradius.radius import packet
-from toughradius.txradius.radius import dictionary
-from toughradius.txradius import message
+from toughradius.pyrad.radius import packet
+from toughradius.pyrad.radius import dictionary
+from toughradius.pyrad import message
 from toughradius.common import six
-from toughradius.txradius.ext import ikuai
+from toughradius.pyrad.ext import ikuai
 import toughradius
 import logging
 
 logger = logging.getLogger(__name__)
 
 def get_dictionary(dictfile=None):
+    '''
+    Instantiated radius dictionary, if dictfile not exists, use default dictionary file path
+
+    :param dictfile:
+
+    :return:
+    '''
     if dictfile and os.path.exists(dictfile):
         return dictionary.Dictionary(dictfile)
     else:
         return dictionary.Dictionary(os.path.join(os.path.dirname(toughradius.__file__),'dictionarys/dictionary'))
 
 def send_auth(server, port=1812, secret=six.b("testing123"), debug=False, dictfile=None, **kwargs):
+    """
+    send auth request
+
+    :param server: radius server ipaddr
+    :param port: auth port, default 1812
+
+    :param secret: nas share secret
+    :param debug: logging level
+
+    :param dictfile: dictionary file path
+    :param kwargs: request params
+
+    :return: auth response
+    """
     try:
         radius_dictionary = get_dictionary(dictfile=dictfile)
         timeout_sec = kwargs.pop('timeout', 5)
@@ -56,6 +77,20 @@ def send_auth(server, port=1812, secret=six.b("testing123"), debug=False, dictfi
 
 
 def send_acct(server, port=1813, secret=six.b("testing123"), debug=False, dictfile=None, **kwargs):
+    """
+    send accounting request
+
+    :param server: radius server ipaddr
+    :param port: acct port, default 1813
+
+    :param secret: nas share secret
+    :param debug: logging level
+
+    :param dictfile: dictionary file path
+    :param kwargs: request params
+
+    :return: acct response
+    """
     try:
         radius_dictionary = get_dictionary(dictfile=dictfile)
         timeout_sec = kwargs.pop('timeout', 5)
@@ -79,6 +114,20 @@ def send_acct(server, port=1813, secret=six.b("testing123"), debug=False, dictfi
 
 
 def send_coadm(server, port=3799, secret=six.b("testing123"), debug=False, dictfile=None, **kwargs):
+    """
+    send coa disconnect request to nas
+
+    :param server: nas server ipaddr
+    :param port: coa port, default 3799
+
+    :param secret: nas share secret
+    :param debug: logging level
+
+    :param dictfile: dictionary file path
+    :param kwargs: request params
+
+    :return: coa response
+    """
     try:
         radius_dictionary = get_dictionary(dictfile=dictfile)
         timeout_sec = kwargs.pop('timeout', 5)

@@ -2,8 +2,8 @@
 #coding=utf-8
 import os
 import logging
-from toughradius.txradius.radius import packet
-from toughradius.txradius import message
+from toughradius.pyrad.radius import packet
+from toughradius.pyrad import message
 
 logger = logging.getLogger(__name__)
 

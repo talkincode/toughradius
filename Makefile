@@ -19,9 +19,6 @@ wheel:
 rpm:
 	python setup.py bdist_rpm
 
-bdist:
-	python setup.py bdist
-
 upload:
 	python setup.py bdist_rpm bdist_wheel upload
 
@@ -44,7 +41,7 @@ clean:
 	rm -fr venv
 
 run:
-	python toughradius/common/commands.py auth -p 10
+	python radiusd.py -x
 
 
 .PHONY:  venv test  clean 
