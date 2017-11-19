@@ -134,7 +134,7 @@ class ExtAttrMixin:
         self._client_mac = macaddr
 
     def get_vlanids(self):
-        return self.get_vlanid1(),self.get_vlanid2()  
+        return self.vlanid1,self.vlanid2
 
     @property
     def created(self):
@@ -297,7 +297,7 @@ class AuthMessage(AuthPacket,ExtAttrMixin):
         
 
     def verifyMsChapV2(self,userpwd):
-        from mschap import mschap, mppe
+        from pymschap import mschap, mppe
         ms_chap_response = self['MS-CHAP2-Response'][0]
         authenticator_challenge = self['MS-CHAP-Challenge'][0]
         if len(ms_chap_response)!=50:
