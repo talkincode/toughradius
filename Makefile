@@ -29,6 +29,7 @@ doc:
 	rsync -av documents/build/html/ docs/
 	rm -fr documents/build/html
 	echo "docs.toughradius.net" > docs/CNAME
+	echo "" > docs/.nojekyll
 	python documents/rename.py
 
 test:
