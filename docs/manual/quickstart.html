@@ -36,6 +36,9 @@
           <a href="../genindex.html" title="总目录"
              accesskey="I">索引</a></li>
         <li class="right" >
+          <a href="../py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li class="right" >
           <a href="configuration.html" title="Configuration"
              accesskey="N">下一页</a> |</li>
         <li class="right" >
@@ -55,47 +58,18 @@
 <div class="section" id="install">
 <h2>Install<a class="headerlink" href="#install" title="永久链接至标题">¶</a></h2>
 <p>First of all, you need a Python runtime environment and install the pip package manage tool</p>
-<div class="highlight-python"><div class="highlight"><pre>pip install toughradius
+<div class="highlight-python"><div class="highlight"><pre><span></span>pip install toughradius
 </pre></div>
 </div>
-</div>
-<div class="section" id="configuration">
-<h2>Configuration<a class="headerlink" href="#configuration" title="永久链接至标题">¶</a></h2>
-<p>The default configuration directory is /etc/toughradius</p>
-<ul class="simple">
-<li>Main configuration file: /etc/toughradius/radiusd.json</li>
-<li>Logging configuration file: /etc/toughradius/radiusd.json</li>
-<li>Nas Client configuration file: /etc/toughradius/clients.json</li>
-<li>Radius protocol dictionary file directory: /etc/toughradius/dictionarys</li>
-</ul>
 </div>
 <div class="section" id="startup">
 <h2>Startup<a class="headerlink" href="#startup" title="永久链接至标题">¶</a></h2>
-<p>Start authentication, accounting, and API Server on one process</p>
-<div class="highlight-python"><div class="highlight"><pre>gtrcli radiusd
+<p>Start authentication, accounting listen service</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">radiusd</span>
 </pre></div>
 </div>
-<p>Launching authentication services only</p>
-<div class="highlight-python"><div class="highlight"><pre>gtrcli auth
-</pre></div>
-</div>
-<p>Launching accounting services only</p>
-<div class="highlight-python"><div class="highlight"><pre>gtrcli acct
-</pre></div>
-</div>
-<p>Launching API Server  only</p>
-<div class="highlight-python"><div class="highlight"><pre>gtrcli apiserv
-</pre></div>
-</div>
-</div>
-<div class="section" id="upgrade">
-<h2>Upgrade<a class="headerlink" href="#upgrade" title="永久链接至标题">¶</a></h2>
-<p>develop version</p>
-<div class="highlight-python"><div class="highlight"><pre>gtrcli upgrade --develop
-</pre></div>
-</div>
-<p>stable version</p>
-<div class="highlight-python"><div class="highlight"><pre>gtrcli upgrade --stable
+<p>debug mode</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="n">radiusd</span> <span class="o">-</span><span class="n">x</span>
 </pre></div>
 </div>
 </div>
@@ -111,9 +85,7 @@
   <ul>
 <li><a class="reference internal" href="#">Quick start</a><ul>
 <li><a class="reference internal" href="#install">Install</a></li>
-<li><a class="reference internal" href="#configuration">Configuration</a></li>
 <li><a class="reference internal" href="#startup">Startup</a></li>
-<li><a class="reference internal" href="#upgrade">Upgrade</a></li>
 </ul>
 </li>
 </ul>
@@ -153,6 +125,9 @@
           <a href="../genindex.html" title="总目录"
              >索引</a></li>
         <li class="right" >
+          <a href="../py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li class="right" >
           <a href="configuration.html" title="Configuration"
              >下一页</a> |</li>
         <li class="right" >
@@ -163,6 +138,7 @@
     </div>
     <div class="footer">
         &copy; 版权所有 2017, jamiesun.
+      最后更新于 Nov 19, 2017.
     </div>
   </body>
 </html>

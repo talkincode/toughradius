@@ -1,30 +1,15 @@
 #!/usr/bin/env python
 #coding:utf-8
-from __future__ import unicode_literals
 import json
-import shutil
-import os
-import traceback
-
-def copydir(src, dst, excludes=[]):
-    try:
-        names = os.walk(src)
-        for root, dirs, files in names:
-            for i in files:
-                srcname = os.path.join(root, i)
-                dir = root.replace(src, '')
-                dirname = dst + dir
-                if os.path.exists(dirname):
-                    pass
-                else:
-                    os.makedirs(dirname)
-                dirfname = os.path.join(dirname, i)
-                if dirfname not in excludes:
-                    shutil.copy2(srcname, dirfname)
-    except Exception as e:
-        traceback.print_exc()
 
 def safestr(val):
+    '''
+    Convert to string
+
+    :param val: source str
+
+    :return:
+    '''
     if val is None:
         return ''
 
@@ -46,9 +31,15 @@ def safestr(val):
             return str(val)
         except:
             return val
-    return val
 
 def safeunicode(val):
+    '''
+    Convert to unicode
+
+    :param val:
+
+    :return:
+    '''
     if val is None:
         return u''
 
@@ -73,4 +64,3 @@ def safeunicode(val):
             return str(val).decode('utf-8')
         except:
             return val
-    return val

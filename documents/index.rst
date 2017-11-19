@@ -8,10 +8,9 @@ TOUGHRADIUS - Beautiful open source RadiusServer
 
 TOUGHRADIUS is a Radius server software developed based on Python, which implements the standard Radius protocol and supports the extension of Radius protocol.
 
-TOUGHRADIUS can be understood as a Radius middleware, and it does not implement all of the business functions. It needs access to the back-end business system.
+TOUGHRADIUS can be understood as a Radius middleware, and it does not implement all of the business functions. But it's easy to Easier to extended development.
 
-TOUGHRADIUS provides complete back end interface support, such as supporting HTTP protocol access capabilities, and the back-end business system must provide additional HTTP API interfaces,
-
+TOUGHRADIUS is similar to FreeRADIUS, But it's simpler to use, Easier to extended development.
 
 About this manual
 ----------------------
@@ -32,8 +31,8 @@ Manual:
    manual/configuration
    manual/installation
    manual/dependents
-   manual/dirstruct
-   manual/deploy
+   manual/modules
+
 
 
 Indices and tables

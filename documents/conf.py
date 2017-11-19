@@ -14,11 +14,13 @@
 
 import sys
 import os
-
+# import sphinx_rtd_theme
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
+
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,7 +33,7 @@ import os
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.viewcode',
-    # 'sphinx.ext.intersphinx',
+    'sphinx.ext.intersphinx',
 ]
 
 
@@ -106,7 +108,8 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'default'
+html_theme = "default"
+# html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -144,7 +147,7 @@ html_static_path = ['static']
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
-#html_last_updated_fmt = '%b %d, %Y'
+html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -167,7 +170,7 @@ html_static_path = ['static']
 #html_split_index = False
 
 # If true, links to the reST sources are added to the pages.
-#html_show_sourcelink = True
+html_show_sourcelink = True
 
 # If true, "Created using Sphinx" is shown in the HTML footer. Default is True.
 html_show_sphinx = False
@@ -189,17 +192,39 @@ htmlhelp_basename = 'toughradiusdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
+
+# -- Options for LaTeX output ---------------------------------------------
 latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
 #'papersize': 'letterpaper',
-
+'papersize': 'a4paper',
 # The font size ('10pt', '11pt' or '12pt').
 #'pointsize': '10pt',
-
+'pointsize': '11pt',
+'label': '\\usepackage[english]{babel}',
 # Additional stuff for the LaTeX preamble.
 #'preamble': '',
-}
 
+# The paper size ('letterpaper' or 'a4paper').
+#'papersize': 'letterpaper',
+# The font size ('10pt', '11pt' or '12pt').
+#'pointsize': '10pt',
+# Additional stuff for the LaTeX preamble.#'preamble': '',
+#'classoptions': ',english',
+'classoptions': ',english,oneside',
+'inputenc': '',
+'utf8extra': '',
+
+'preamble': '''
+\linespread{1.2}
+\usepackage{xeCJK}
+\usepackage{indentfirst}
+\setCJKmainfont[BoldFont=Hiragino Sans GB, ItalicFont=Hiragino Sans GB]{Hiragino Sans GB}
+\setCJKmonofont[Scale=0.9]{Hiragino Sans GB}
+\setCJKfamilyfont{Hiragino Sans GB}[BoldFont=Hiragino Sans GB]{Hiragino Sans GB}
+\setCJKfamilyfont{Hiragino Sans GB}[BoldFont=Hiragino Sans GB]{Hiragino Sans GB}
+''',
+}
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).

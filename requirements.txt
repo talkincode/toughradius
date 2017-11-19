@@ -1,2 +1,0 @@
-Click
-gevent==1.1.2

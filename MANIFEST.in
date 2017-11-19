@@ -1,6 +1,5 @@
-recursive-include etc *
+recursive-include toughradius *
+include toughradius/dictionarys/*
 include LICENSE
 include README.md
 include Makefile
-include debug.py
-include requirements.txt

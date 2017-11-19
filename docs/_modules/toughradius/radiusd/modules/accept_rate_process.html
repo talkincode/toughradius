@@ -1,0 +1,192 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>toughradius.radiusd.modules.accept_rate_process &mdash; toughradius 5.0 文档</title>
+    
+    <link rel="stylesheet" href="../../../../static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '5.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../../static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../static/translations.js"></script>
+    <link rel="top" title="toughradius 5.0 文档" href="../../../../index.html" />
+    <link rel="up" title="模块代码" href="../../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="总目录"
+             accesskey="I">索引</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li><a href="../../../../index.html">toughradius 5.0 文档</a> &raquo;</li>
+          <li><a href="../../../index.html" accesskey="U">模块代码</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>toughradius.radiusd.modules.accept_rate_process 源代码</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1">#coding=utf-8</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="std_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.std_rate">[文档]</a><span class="k">def</span> <span class="nf">std_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="ros_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.ros_rate">[文档]</a><span class="k">def</span> <span class="nf">ros_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">_irate</span> <span class="o">=</span> <span class="n">_in</span> <span class="o">/</span> <span class="mi">1024</span>
+    <span class="n">_orate</span> <span class="o">=</span> <span class="n">_out</span> <span class="o">/</span> <span class="mi">1024</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Mikrotik-Rate-Limit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">k/</span><span class="si">%s</span><span class="s1">k&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">_irate</span><span class="p">,</span> <span class="n">_orate</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="aikuai_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.aikuai_rate">[文档]</a><span class="k">def</span> <span class="nf">aikuai_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">_irate</span> <span class="o">=</span> <span class="n">_in</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">8</span>
+    <span class="n">_orate</span> <span class="o">=</span> <span class="n">_out</span> <span class="o">/</span> <span class="mi">1024</span> <span class="o">/</span> <span class="mi">8</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;RP-Upstream-Speed-Limit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_irate</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;RP-Downstream-Speed-Limit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_orate</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="cisco_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.cisco_rate">[文档]</a><span class="k">def</span> <span class="nf">cisco_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="radback_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.radback_rate">[文档]</a><span class="k">def</span> <span class="nf">radback_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">rate_code</span><span class="p">:</span>
+        <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Sub-Profile-Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">rate_code</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="h3c_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.h3c_rate">[文档]</a><span class="k">def</span> <span class="nf">h3c_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">resp</span> <span class="o">=</span> <span class="n">std_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">)</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;H3C-Input-Average-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;H3C-Input-Peak-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;H3C-Output-Average-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;H3C-Output-Peak-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span>
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="zte_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.zte_rate">[文档]</a><span class="k">def</span> <span class="nf">zte_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;ZTE-Rate-Ctrl-Scr-Up&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span> 
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;ZTE-Rate-Ctrl-Scr-Down&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span> 
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<div class="viewcode-block" id="huawei_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.huawei_rate">[文档]</a><span class="k">def</span> <span class="nf">huawei_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">input_limit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_in</span><span class="p">)</span>
+    <span class="n">output_limit</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">_out</span><span class="p">)</span>
+    <span class="n">_class</span> <span class="o">=</span> <span class="n">input_limit</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="n">input_limit</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="n">output_limit</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span> <span class="o">+</span> <span class="n">output_limit</span><span class="o">.</span><span class="n">zfill</span><span class="p">(</span><span class="mi">8</span><span class="p">)</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_class</span>      
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Input-Average-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Input-Peak-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Output-Average-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Output-Peak-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span>
+    <span class="k">return</span> <span class="n">resp</span>
+</div>
+<div class="viewcode-block" id="huawei_e1_rate"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.huawei_e1_rate">[文档]</a><span class="k">def</span> <span class="nf">huawei_e1_rate</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="n">_in</span><span class="p">,</span> <span class="n">_out</span><span class="p">,</span> <span class="n">rate_code</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Input-Average-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span> <span class="o">/</span> <span class="mi">1024</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Input-Peak-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_in</span> <span class="o">/</span> <span class="mi">1024</span>
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Output-Average-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span> <span class="o">/</span> <span class="mi">1024</span>    
+    <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;Huawei-Output-Peak-Rate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_out</span> <span class="o">/</span> <span class="mi">1024</span>    
+    <span class="k">return</span> <span class="n">resp</span>
+
+</div>
+<span class="n">rate_funcs</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;0&#39;</span><span class="p">:</span> <span class="n">std_rate</span><span class="p">,</span>
+    <span class="s1">&#39;9&#39;</span><span class="p">:</span> <span class="n">cisco_rate</span><span class="p">,</span>
+    <span class="s1">&#39;2011&#39;</span><span class="p">:</span> <span class="n">huawei_rate</span><span class="p">,</span>
+    <span class="s1">&#39;2352&#39;</span><span class="p">:</span> <span class="n">radback_rate</span><span class="p">,</span>
+    <span class="s1">&#39;3902&#39;</span><span class="p">:</span> <span class="n">zte_rate</span><span class="p">,</span>
+    <span class="s1">&#39;25506&#39;</span><span class="p">:</span> <span class="n">h3c_rate</span><span class="p">,</span>
+    <span class="s1">&#39;14988&#39;</span><span class="p">:</span> <span class="n">ros_rate</span><span class="p">,</span>
+    <span class="s1">&#39;10055&#39;</span><span class="p">:</span> <span class="n">aikuai_rate</span><span class="p">,</span>
+    <span class="s1">&#39;30001&#39;</span><span class="p">:</span> <span class="n">huawei_e1_rate</span>
+<span class="p">}</span>
+
+<div class="viewcode-block" id="handle_radius"><a class="viewcode-back" href="../../../../manual/modules.html#toughradius.radiusd.modules.accept_rate_process.handle_radius">[文档]</a><span class="k">def</span> <span class="nf">handle_radius</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">reply</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;accept_rate_process&quot;</span><span class="p">)</span>
+        <span class="n">input_rate</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">reply</span><span class="o">.</span><span class="n">resp_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;input_rate&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">output_rate</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">reply</span><span class="o">.</span><span class="n">resp_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;output_rate&#39;</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+        <span class="n">rate_code</span><span class="o">=</span><span class="n">reply</span><span class="o">.</span><span class="n">resp_attrs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;rate_code&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">input_rate</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">output_rate</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">rate_code</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">reply</span>
+
+        <span class="n">_vendor</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">reply</span><span class="o">.</span><span class="n">vendor_id</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_vendor</span> <span class="ow">in</span> <span class="n">rate_funcs</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">rate_funcs</span><span class="p">[</span><span class="n">_vendor</span><span class="p">](</span><span class="n">reply</span><span class="p">,</span> <span class="n">input_rate</span><span class="p">,</span> <span class="n">output_rate</span><span class="p">,</span> <span class="n">rate_code</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">std_rate</span><span class="p">(</span><span class="n">reply</span><span class="p">,</span> <span class="n">input_rate</span><span class="p">,</span> <span class="n">output_rate</span><span class="p">,</span> <span class="n">rate_code</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">err</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">reply</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>快速搜索</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="转向" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    输入相关的术语，模块，类或者函数名称进行搜索
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>导航</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="总目录"
+             >索引</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python 模块索引"
+             >模块</a> |</li>
+        <li><a href="../../../../index.html">toughradius 5.0 文档</a> &raquo;</li>
+          <li><a href="../../../index.html" >模块代码</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; 版权所有 2017, jamiesun.
+      最后更新于 Nov 19, 2017.
+    </div>
+  </body>
+</html>

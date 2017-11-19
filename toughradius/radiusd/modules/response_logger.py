@@ -1,24 +1,28 @@
 #!/usr/bin/env python
 #coding=utf-8
-
+import os
 import logging
-from toughradius.txradius.radius import packet
-from toughradius.txradius import message
+from toughradius.pyrad.radius import packet
+from toughradius.pyrad import message
 
+logger = logging.getLogger(__name__)
 
 def log_accept(req,reply):
-    logging.debug('RadiusAccessAccept send to the access device %s:%s'%req.source)
-    logging.debug(message.format_packet_str(reply))
+    logger.info('RadiusAccessAccept send to the access device %s:%s'%req.source)
+    if os.environ.get('TOUGHRADIUS_DEBUG_ENABLED', "0") == "1":
+        logger.debug(message.format_packet_str(reply))
 
 
 def log_reject(req,reply):
-    logging.debug('RadiusAccessReject send to the access device %s:%s'%req.source)
-    logging.debug(message.format_packet_str(reply))
+    logger.info('RadiusAccessReject send to the access device %s:%s'%req.source)
+    if os.environ.get('TOUGHRADIUS_DEBUG_ENABLED', "0") == "1":
+        logger.debug(message.format_packet_str(reply))
 
 
 def log_acct(req,reply):
-    logging.debug('RadiusAccountingResponse send to the access device %s:%s'%req.source)
-    logging.debug(message.format_packet_str(reply))
+    logger.info('RadiusAccountingResponse send to the access device %s:%s'%req.source)
+    if os.environ.get('TOUGHRADIUS_DEBUG_ENABLED', "0") == "1":
+        logger.debug(message.format_packet_str(reply))
 
 
 def handle_radius(req,reply):
@@ -30,6 +34,6 @@ def handle_radius(req,reply):
         elif reply.code == packet.AccountingResponse:
             log_acct(req,reply)
     except:
-        logging.exception("response log error")
+        logger.exception("response log error")
 
     return reply

@@ -3,6 +3,8 @@
 import re
 import logging
 
+logger = logging.getLogger(__name__)
+
 #cisco,ros,radback
 cisco_fmt =  re.compile(r'\w+\s\d+/\d+/\d+:(\d+).(\d+)\s')
 
@@ -10,7 +12,8 @@ cisco_fmt =  re.compile(r'\w+\s\d+/\d+/\d+:(\d+).(\d+)\s')
 def parse_cisco(req):
     '''phy_slot/phy_subslot/phy_port:XPI.XCI'''
     nasportid = req.get_nas_portid()
-    if not nasportid:return
+    if not nasportid:
+        return req
     matchs = cisco_fmt.search(nasportid.lower())
     if matchs:
         req.vlanid1 = matchs.group(1)
@@ -21,7 +24,8 @@ def parse_cisco(req):
 def parse_std(req):
     ''''''
     nasportid = req.get_nas_portid()
-    if not nasportid:return
+    if not nasportid:
+        return req
     nasportid = nasportid.lower()
     def parse_vlanid():
         ind = nasportid.find('vlanid=')
@@ -70,9 +74,9 @@ def handle_radius(req):
         if vendorid in _parses:
             _parses[vendorid](req)
         else:
-            parse_normal(req)
+            parse_std(req)
     except Exception as err:
-        logging.exception("vlan parse error")
+        logger.exception("vlan parse error")
     return req
 
 

@@ -1,5 +1,15 @@
-# 版本变更日志
+# Release Changelog
 
+## v5.0.0.6
+
+- release date: 2017-11-19
+
+#### Release notes
+
+- brand-new release
+- redesign all
+- reducing dependency requires only gevent
+- easier to develop extensions
 
 ## v2.1.10
 
