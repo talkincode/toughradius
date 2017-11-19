@@ -1,7 +1,5 @@
 recursive-include toughradius *
-include LICENSE
 include toughradius/dictionarys/*
+include LICENSE
 include README.md
 include Makefile
-include debug.py
-include requirements.txt

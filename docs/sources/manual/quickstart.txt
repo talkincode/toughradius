@@ -14,7 +14,7 @@ First of all, you need a Python runtime environment and install the pip package 
 Startup
 ----------------
 
-Start authentication, accounting, and API Server on one process
+Start authentication, accounting listen service
 
 ::
 

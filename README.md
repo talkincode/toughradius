@@ -2,12 +2,11 @@
 
 [![Build Status](https://travis-ci.org/talkincode/ToughRADIUS.svg?branch=master)](https://travis-ci.org/talkincode/ToughRADIUS)
 
-TOUGHRADIUS is a Radius server software developed based on Python, which implements the standard Radius protocol and supports the extension of Radius protocol.
+ToughRADIUS is a Radius server software developed based on Python, which implements the standard Radius protocol and supports the extension of Radius protocol.
 
-TOUGHRADIUS can be understood as a Radius middleware, and it does not implement all of the business functions. It needs access to the back-end business system.
+ToughRADIUS can be understood as a Radius middleware, and it does not implement all of the business functions. But it's easy to Easier to extended development.
 
-TOUGHRADIUS provides complete back end interface support, such as supporting HTTP protocol access capabilities, and the back-end business system must provide additional HTTP API interfaces,
-
+ToughRADIUS is similar to freeRADIUS, But it's simpler to use, Easier to extended development.
 
 # Quick start
 
@@ -17,30 +16,16 @@ First of all, you need a Python runtime environment and install the pip package 
 
     > pip install toughradius
 
-## Configuration
-
-The default configuration directory is /etc/toughradius
-
-- Main configuration file: /etc/toughradius/radiusd.json
-- Logging configuration file: /etc/toughradius/radiusd.json
-- Nas Client configuration file: /etc/toughradius/clients.json
-- Radius protocol dictionary file directory: /etc/toughradius/dictionarys
-
 ## Startup
 
-Start authentication, accounting, and API Server on one process
+Start authentication, accounting listen service
 
-    > gtrcli radiusd
+    >> radiusd
 
-Launching authentication services only
+debug mode
 
-    > gtrcli auth
-
-Launching accounting services only
-
-    > gtrcli acct
-
-Launching API Server  only
-
-    > gtrcli apiserv
+    >> radiusd -x
     
+for help 
+
+    >> radiusd --help
