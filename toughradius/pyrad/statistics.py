@@ -2,7 +2,16 @@
 # coding=utf-8
 import time
 import datetime
+import json
 from collections import deque
+
+
+class ComplexEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if type(obj) == deque:
+            return [i for i in obj]
+        return json.JSONEncoder.default(self, obj)
+
 
 class MessageStat(dict):
 
@@ -33,6 +42,9 @@ class MessageStat(dict):
         self.last_max_req_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.last_max_resp = 0
         self.last_max_resp_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+    def to_json(self, cls=ComplexEncoder, ensure_ascii=False, **kwargs):
+        return json.dumps(self, cls=cls, ensure_ascii=ensure_ascii, **kwargs)
 
     def incr(self, attr_name, incr=1):
         if hasattr(self, attr_name):

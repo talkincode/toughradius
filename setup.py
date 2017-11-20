@@ -51,6 +51,7 @@ setup(name='toughradius',
               'radiusd = toughradius.common.radiusd:run',
               'authtest = toughradius.common.radtest:test_auth',
               'accttest = toughradius.common.radtest:test_acct',
+              'radius-benchmark = toughradius.common.benchmark:start',
           ]
       }
 )
