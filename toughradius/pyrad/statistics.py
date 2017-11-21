@@ -34,6 +34,12 @@ class MessageStat(dict):
         self.acct_resp = 0
         self.acct_retry = 0
         self.acct_drop = 0
+        self.req_bytes = 0
+        self.resp_bytes = 0
+        self.req_bytes_old = 0
+        self.resp_bytes_old = 0
+        self.req_bytes_stat = deque([],quemax)
+        self.resp_bytes_stat = deque([],quemax)
         self.auth_req_stat = deque([],quemax)
         self.auth_resp_stat = deque([],quemax)
         self.acct_req_stat = deque([],quemax)
@@ -42,6 +48,10 @@ class MessageStat(dict):
         self.last_max_req_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         self.last_max_resp = 0
         self.last_max_resp_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.last_max_req_bytes = 0
+        self.last_max_req_bytes_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        self.last_max_resp_bytes = 0
+        self.last_max_resp_bytes_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     def to_json(self, cls=ComplexEncoder, ensure_ascii=False, **kwargs):
         return json.dumps(self, cls=cls, ensure_ascii=ensure_ascii, **kwargs)
@@ -52,22 +62,46 @@ class MessageStat(dict):
         
     def run_stat(self,delay=10.0):
         _time = time.time()*1000
+
+        # stat bytes
+        _req_bytes_stat = self.req_bytes - self.req_bytes_old
+        self.req_bytes_old = self.req_bytes
+
+        _resp_bytes_stat = self.resp_bytes - self.resp_bytes_old
+        self.resp_bytes_old = self.resp_bytes
+
+        self.req_bytes_stat.append((_time,_req_bytes_stat))
+        self.resp_bytes_stat.append((_time,_resp_bytes_stat))
+
+        #stat auth
         _auth_req_stat = self.auth_req - self.auth_req_old
         self.auth_req_old = self.auth_req
 
         _auth_resp_stat = (self.auth_accept+self.auth_reject) - self.auth_resp_old
-        self.auth_resp_old =  (self.auth_accept+self.auth_reject) 
+        self.auth_resp_old =  (self.auth_accept+self.auth_reject)
 
+        self.auth_req_stat.append((_time,_auth_req_stat))
+        self.auth_resp_stat.append((_time,_auth_resp_stat))
+
+        #stat acct
         _acct_req_stat = self.acct_req - self.acct_req_old
         self.acct_req_old = self.acct_req
 
         _acct_resp_stat = self.acct_resp - self.acct_resp_old
         self.acct_resp_old = self.acct_resp
 
-        self.auth_req_stat.append((_time,_auth_req_stat))
-        self.auth_resp_stat.append((_time,_auth_resp_stat))
         self.acct_req_stat.append((_time,_acct_req_stat))
         self.acct_resp_stat.append((_time,_acct_resp_stat))
+
+        reqbytes_percount = int(_req_bytes_stat/delay)
+        if self.last_max_req_bytes < reqbytes_percount:
+            self.last_max_req_bytes = reqbytes_percount
+            self.last_max_req_bytes_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        respbytes_percount = int(_resp_bytes_stat/delay)
+        if self.last_max_resp_bytes < respbytes_percount:
+            self.last_max_resp_bytes = respbytes_percount
+            self.last_max_resp_bytes_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         req_percount = int((_auth_req_stat+_acct_req_stat)/delay)
         if self.last_max_req < req_percount:
