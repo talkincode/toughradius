@@ -56,14 +56,14 @@ class BasicAdapter(object):
         except Exception as e:
             self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=True)
 
-    def getClients(self):
+    def getClient(self, nasip=None, nasid=None):
         """
         fetch nas clients
 
         Usage example::
 
-            def getClients(self):
-                nas = dict(
+            def getClient(self,nasip=None,nasid=None):
+                return dict(
                     status=1,
                     nasid='toughac',
                     name='toughac',
@@ -72,7 +72,6 @@ class BasicAdapter(object):
                     secret='testing123',
                     coaport=3799
                 )
-                return { 'toughac' : nas, '127.0.0.1' : nas}
 
         :return: nas dict
         """
@@ -141,21 +140,21 @@ class BasicAdapter(object):
 
         :return:  pyrad.message
         """
-        clients = self.getClients()
         vendors = self.settings.VENDORS
-        if host in clients:
-            client = clients[host]
+        client = self.getClient(nasip=host)
+        if client:
             request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=str(client['secret']))
             request.vendor_id = vendors.get(client['vendor'])
         else:
             request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
             nas_id = request.get_nas_id()
-            if nas_id in clients:
-                client = clients[nas_id]
+            client = self.getClient(nasid=nas_id)
+            if client:
                 request.vendor_id = vendors.get(client['vendor'])
                 request.secret = six.b(client['secret'])
             else:
                 raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
+
         if request.code != packet.AccessRequest:
             errstr = u'Invalid authenticator request code=%s' % request.code
             raise packet.PacketError(errstr)
@@ -172,17 +171,16 @@ class BasicAdapter(object):
 
         :return: pyrad.message
         """
-        clients = self.getClients()
         vendors = self.settings.VENDORS
-        if host in clients:
-            client = clients[host]
+        client = self.getClient(nasip=host)
+        if client:
             request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=str(client['secret']))
             request.vendor_id = vendors.get(client['vendor'])
         else:
             request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
             nas_id = request.get_nas_id()
-            if nas_id in clients:
-                client = clients[nas_id]
+            client = self.getClient(nasid=nas_id)
+            if client:
                 request.vendor_id = vendors.get(client['vendor'])
                 request.secret = six.b(client['secret'])
             else:
