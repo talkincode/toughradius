@@ -6,11 +6,11 @@ logger = logging.getLogger(__name__)
 
 def handle_radius(req,reply):
     try:
-        if not 'attrs' in reply:
+        if 'radius_attrs' not in reply:
             return reply
 
-        attrs = reply.get("attrs",{})
-        for attr_name, attr_value in attrs.iteritems():
+        radius_attrs = reply.get("radius_attrs",{})
+        for attr_name, attr_value in radius_attrs.iteritems():
             try:
                 # todo: May have a type matching problem
                 reply.AddAttribute(str(attr_name), attr_value)

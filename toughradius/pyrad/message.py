@@ -623,7 +623,6 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
     def get_billing(self):
         return dict(
             nas_id = self.get_nas_id(),
-            acct_session_id = self.get_acct_sessionid(),
             username = self.get_user_name(),
             mac_addr = self.get_mac_addr(),
             nas_addr = self.get_nas_addr(),
@@ -633,6 +632,8 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
             nas_class = self.get_nas_class(),
             framed_ipaddr = self.get_framed_ipaddr(),
             framed_netmask = self.get_framed_netmask(),
+            acct_status_type=self.get_acct_status_type(),
+            acct_session_id = self.get_acct_sessionid(),
             session_timeout = self.get_session_timeout(),
             acct_input_total = self.get_input_total(),
             acct_output_total = self.get_output_total(),
@@ -643,6 +644,17 @@ class AcctMessage(AcctPacket,ExtAttrMixin):
             acct_terminate_cause = self.get_acct_terminate_cause(),
         )
 
-    @property
-    def dict_message(self):
+    def auth_message(self):
+        return dict(
+            nas_id=self.get_nas_id(),
+            username=self.get_user_name(),
+            mac_addr=self.get_mac_addr(),
+            nas_addr=self.get_nas_addr(),
+            nas_port=self.get_nas_port(),
+            nas_port_id=self.get_nas_portid(),
+            nas_port_type=self.get_nas_port_type(),
+            nas_class=self.get_nas_class()
+        )
+
+    def acct_message(self):
         return self.get_billing()

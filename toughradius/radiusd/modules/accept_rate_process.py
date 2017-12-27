@@ -82,6 +82,9 @@ rate_funcs = {
 
 def handle_radius(req, reply):
     try:
+        if 'resp_attrs' not in reply:
+            return reply
+
         logger.debug("accept_rate_process")
         input_rate=int(reply.resp_attrs.get('input_rate',0))
         output_rate=int(reply.resp_attrs.get('output_rate',0))
