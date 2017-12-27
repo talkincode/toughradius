@@ -37,7 +37,7 @@ RADIUSD = {
     "auth_port": 1812,
     "acct_port": 1813,
     # "adapter": "toughradius.radiusd.adapters.rest",
-    "adapter": "toughradius.radiusd.adapters.free",
+    "adapter": "toughradius.radiusd.adapters.rest",
     "debug": 1,
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary'),
     "pool_size": 128
@@ -53,10 +53,11 @@ default rest adapter module config
 
 ADAPTERS = {
     "rest" : {
-        "authurl" : "http://127.0.0.1:1815/api/v1/radtest",
-        "accturl" : "http://127.0.0.1:1815/api/v1/radtest",
-        "secret" : "",
-        "radattrs" : []
+        "nasurl" : "http://127.0.0.1:1879/api/nas/get",
+        "authurl" : "http://127.0.0.1:1879/api/radius/auth",
+        "accturl" : "http://127.0.0.1:1879/api/radius/acct",
+        "appid" : "IhFkbPG4lcNoTYXF",
+        "secret" : "ASTRGZkFD4Ri94I3JNvKYmIL0GadxfBK",
     }
 }
 
