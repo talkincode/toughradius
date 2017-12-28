@@ -14,6 +14,7 @@ class RestError(BaseException):pass
 class RestAdapter(BasicAdapter):
     """Http rest mode adapter"""
 
+    @tools.timecast
     def getClient(self, nasip=None, nasid=None):
         def fetch_result():
             url = self.settings.ADAPTERS['rest']['nasurl']
@@ -48,7 +49,7 @@ class RestAdapter(BasicAdapter):
         mds = md5(strs.encode('utf-8')).hexdigest()
         return mds.upper()
 
-
+    @tools.timecast
     def processAuth(self,req):
         url = self.settings.ADAPTERS['rest']['authurl']
         appid = self.settings.ADAPTERS['rest']['appid']
@@ -63,7 +64,7 @@ class RestAdapter(BasicAdapter):
         except:
             raise RestError("rest request error")
 
-
+    @tools.timecast
     def processAcct(self,req):
         url = self.settings.ADAPTERS['rest']['accturl']
         appid = self.settings.ADAPTERS['rest']['appid']

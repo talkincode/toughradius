@@ -40,7 +40,7 @@ RADIUSD = {
     "adapter": "toughradius.radiusd.adapters.rest",
     "debug": 1,
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary'),
-    "pool_size": 128
+    "pool_size": 64
 }
 
 '''
@@ -53,11 +53,11 @@ default rest adapter module config
 
 ADAPTERS = {
     "rest" : {
-        "nasurl" : "http://127.0.0.1:1879/api/nas/get",
-        "authurl" : "http://127.0.0.1:1879/api/radius/auth",
-        "accturl" : "http://127.0.0.1:1879/api/radius/acct",
-        "appid" : "IhFkbPG4lcNoTYXF",
-        "secret" : "ASTRGZkFD4Ri94I3JNvKYmIL0GadxfBK",
+        "nasurl" : "http://custom.toughcloud.net/api/nas/get",
+        "authurl" : "http://custom.toughcloud.net/api/radius/auth",
+        "accturl" : "http://custom.toughcloud.net/api/radius/acct",
+        "appid" : "fGXMKpXy9ZKg8VFS",
+        "secret" : "Fy9FSjb76MNaJ7kjUwH1pbD62lx45eXh",
     }
 }
 

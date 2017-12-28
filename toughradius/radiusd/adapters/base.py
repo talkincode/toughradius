@@ -3,10 +3,11 @@
 import logging
 from toughradius.pyrad.radius import dictionary
 from toughradius.pyrad import message
-from toughradius.common import six
+from toughradius.common import six, tools
 from toughradius.pyrad.radius import packet
 from gevent.pool import Pool
 import importlib
+import gevent
 
 class BasicAdapter(object):
 
@@ -35,6 +36,7 @@ class BasicAdapter(object):
             prereply = self.processAuth(req)
             reply = self.authReply(req, prereply)
             self.pool.spawn(socket.sendto, reply.ReplyPacket(), address)
+            gevent.sleep(0)
         except Exception as e:
             self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=True)
 
@@ -53,6 +55,7 @@ class BasicAdapter(object):
             prereply = self.processAcct(req)
             reply = self.acctReply(req, prereply)
             self.pool.spawn(socket.sendto, reply.ReplyPacket(), address)
+            gevent.sleep(0)
         except Exception as e:
             self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=True)
 
@@ -132,6 +135,7 @@ class BasicAdapter(object):
         reply.code = packet.AccessReject
         return reply
 
+    @tools.timecast
     def parseAuthPacket(self, datagram, (host, port)):
         """
         parse radius auth request
@@ -163,6 +167,7 @@ class BasicAdapter(object):
             request = _module.handle_radius(request)
         return request
 
+    @tools.timecast
     def parseAcctPacket(self, datagram, (host, port)):
         """
         parse radius accounting request
@@ -191,6 +196,7 @@ class BasicAdapter(object):
             request = _module.handle_radius(request)
         return request
 
+    @tools.timecast
     def authReply(self, req, prereply):
         """
         process radius auth response
@@ -232,6 +238,7 @@ class BasicAdapter(object):
             logging.error(errmsg, exc_info=True)
             return self.rejectReply(req, errmsg)
 
+    @tools.timecast
     def acctReply(self, req, prereply):
         """
         process radius accounting response

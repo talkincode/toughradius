@@ -6,6 +6,12 @@ venv:
 	venv/bin/pip install -U -r requirements.txt;\
 	)
 
+venv2:
+	(\
+	test -d venv || virtualenv-pypy venv;\
+	venv/bin/pip install gevent;\
+	)
+
 
 install:
 	python setup.py install

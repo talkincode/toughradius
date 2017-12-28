@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 #coding:utf-8
 import json
+import functools
+import os
+import time
+import logging
+
+logger = logging.getLogger(__name__)
+
+TOUGHRADIUS_TIMECAST_LOG = int(os.environ.get('TOUGHRADIUS_TIMECAST_LOG','0'))
 
 def safestr(val):
     '''
@@ -64,3 +72,16 @@ def safeunicode(val):
             return str(val).decode('utf-8')
         except:
             return val
+
+
+def timecast(func):
+    @functools.wraps(func)
+    def warp(*args, **kargs):
+        if TOUGHRADIUS_TIMECAST_LOG == 1:
+            _start = time.clock()
+            result = func(*args, **kargs)
+            logger.info("%s.%s cast %.6f second"%(func.__module__, func.__name__, time.clock()-_start))
+            return result
+        else:
+            return func(*args,**kargs)
+    return warp
