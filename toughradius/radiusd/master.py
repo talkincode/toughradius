@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #coding:utf-8
+from gevent import monkey; monkey.patch_all(thread=False)
 from gevent.server import DatagramServer
-from gevent.pool import Pool
 import socket
 import gevent
 import logging
@@ -15,41 +15,55 @@ def setsockopt(_socket):
     except:
         pass
 
-class RudiusAuthServer(DatagramServer):
+class RadiusServer(DatagramServer):
     """Radius auth server"""
 
-    def __init__(self,adapter, host="0.0.0.0", port=1812, pool_size=32):
+    def __init__(self, req_q=None, rep_q=None, host="0.0.0.0", port=1812, pool_size=10):
         DatagramServer.__init__(self,(host,port))
-        self.pool = Pool(pool_size)
-        self.adapter = adapter
+        self.req_q = req_q
+        self.rep_q = rep_q
         self.init_socket()
         setsockopt(self.socket)
+        self.start()
+        logger.info(self)
+        jobs = [gevent.spawn(self.handle_result) for x in range(pool_size)]
+        gevent.joinall(jobs)
+
+
+    def handle_result(self):
+        while 1:
+            if not self.rep_q.empty():
+                data, address = self.rep_q.get()
+                gevent.spawn(self.socket.sendto, data, address)
+                gevent.sleep(0)
+            else:
+                gevent.sleep(0.01)
 
 
     def handle(self, data, address):
-        if not self.pool.full():
-            self.pool.spawn(self.adapter.handleAuth, self.socket, data, address)
-            gevent.sleep(0)
-        else:
-            logger.error("radius auth workpool full")
+        self.req_q.put((data, address))
+        gevent.sleep(0)
 
 
-class RudiusAcctServer(DatagramServer):
-    """Radius acct server"""
+class RudiusWorker(object):
 
-    def __init__(self,adapter, host="0.0.0.0", port=1813, pool_size=32):
-        DatagramServer.__init__(self,(host,port))
-        self.pool = Pool(pool_size)
-        self.adapter = adapter
-        self.init_socket()
-        setsockopt(self.socket)
+    def __init__(self, req_q=None, rep_q=None,adapter_handle=None, pool_size=10):
+        self.req_q = req_q
+        self.rep_q = rep_q
+        self.adapter_handle = adapter_handle
+        jobs = [gevent.spawn(self.handle) for x in range(pool_size)]
+        gevent.joinall(jobs)
 
-    def handle(self, data, address):
-        if not self.pool.full():
-            self.pool.spawn(self.adapter.handleAcct, self.socket, data, address)
-            gevent.sleep(0)
-        else:
-            logger.error("radius accounting workpool full")
+    def handle(self):
+        while 1:
+            if not self.req_q.empty():
+                data, address = self.req_q.get()
+                gevent.spawn(self.adapter_handle, data, address, self.rep_q)
+                gevent.sleep(0)
+            else:
+                gevent.sleep(0.01)
+
+
 
 
 

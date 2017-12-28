@@ -167,7 +167,7 @@ def start():
     parser.add_argument('-H', '--server', default='127.0.0.1', dest="server",type=str, help="radius server ipaddr")
     parser.add_argument('--auth-port', default='1812', dest="auth_port", type=int)
     parser.add_argument('--acct-port', default='1813', dest="acct_port", type=int)
-    parser.add_argument('-s', '--secret', default='testing123', dest="secret", type=str, help="radius share key")
+    parser.add_argument('-s', '--secret', default='secret', dest="secret", type=str, help="radius share key")
     parser.add_argument('-u', '--user', default='test01', dest="user",type=str, help="auth user")
     parser.add_argument('-p', '--passwd', default='888888', dest="passwd",type=str)
     parser.add_argument('-t', '--timeout', default='5', dest="timeout",type=int, help="radius request timeout")

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
+from gevent import monkey; monkey.patch_all(thread=False)
+from multiprocessing import Process, Queue, cpu_count
 import os
 import sys
 import gevent
@@ -8,6 +10,7 @@ import logging
 import logging.config
 import importlib
 
+
 def run():
     """ startup default radius server
     """
@@ -15,7 +18,8 @@ def run():
     parser.add_argument('--settings', default='toughradius.settings', dest="settings",type=str, help="settings module")
     parser.add_argument('--auth-port', default='1812', dest="auth_port",type=int, help="radiusd auth port")
     parser.add_argument('--acct-port', default='1813', dest="acct_port",type=int, help="radiusd acct port")
-    parser.add_argument('--pool', default='1024', dest="pool",type=int, help="work pool size")
+    parser.add_argument('--pool', default='10', dest="pool",type=int, help="pool size")
+    parser.add_argument('--worker', default=cpu_count(), dest="worker",type=int, help="worker num")
     parser.add_argument('--adapter', default=None, dest="adapter",type=str, help="radius handle adapter module")
     parser.add_argument('--auth', action='store_true',default=True, dest='auth',help='run auth listen')
     parser.add_argument('--acct', action='store_true',default=True, dest='acct',help='run acct listen')
@@ -43,24 +47,33 @@ def run():
     host = settings.RADIUSD['host']
     auth_port = settings.RADIUSD['auth_port']
     acct_port = settings.RADIUSD['acct_port']
-    pool_size = settings.RADIUSD['pool_size']
     adapter_class = settings.RADIUSD['adapter']
     adapter = importlib.import_module(adapter_class).adapter(settings)
 
+    from toughradius.radiusd.master import RadiusServer, RudiusWorker
+
+    auth_req_queue = Queue(8192)
+    auth_rep_queue = Queue(8192)
+    acct_req_queue = Queue(8192)
+    acct_rep_queue = Queue(8192)
+
+    jobs = []
     if args.auth:
-        from toughradius.radiusd.master import RudiusAuthServer
-        auth_server = RudiusAuthServer(adapter, host=host, port=auth_port, pool_size=pool_size)
-        auth_server.start()
-        logger.info(auth_server)
+        jobs.append(Process(target=RadiusServer, args=(auth_req_queue, auth_rep_queue, host, auth_port ,args.pool)))
+        for x in range(args.worker):
+            jobs.append(Process(target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool)))
 
     if args.acct:
-        from toughradius.radiusd.master import RudiusAcctServer
-        acct_server = RudiusAcctServer(adapter, host=host, port=acct_port, pool_size=pool_size)
-        acct_server.start()
-        logger.info(acct_server)
+        jobs.append(Process(target=RadiusServer, args=(acct_req_queue, acct_rep_queue, host, acct_port ,args.pool)))
+        for x in range(args.worker):
+            jobs.append(Process(target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool)))
 
-    if args.auth or args.acct:
-        gevent.wait()
+    for job in jobs:
+        job.start()
+        logger.info('start process %s' % job)
+
+    for job in jobs:
+        job.join()
 
 if __name__ == "__main__":
     run()

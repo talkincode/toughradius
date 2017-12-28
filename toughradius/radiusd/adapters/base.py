@@ -21,10 +21,11 @@ class BasicAdapter(object):
         self.auth_post = [importlib.import_module(m) for m in self.settings.MODULES["auth_post"]]
         self.acct_post = [importlib.import_module(m) for m in self.settings.MODULES["acct_post"]]
 
-    def handleAuth(self,socket, data, address):
+    def handleAuth(self, data, address, resp_que):
         """
         auth request handle
 
+        :param resp_que:
         :param socket:
         :param data:
         :param address:
@@ -35,15 +36,16 @@ class BasicAdapter(object):
             req = self.parseAuthPacket(data,address)
             prereply = self.processAuth(req)
             reply = self.authReply(req, prereply)
-            self.pool.spawn(socket.sendto, reply.ReplyPacket(), address)
+            resp_que.put((reply.ReplyPacket(), address))
             gevent.sleep(0)
         except Exception as e:
             self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=True)
 
-    def handleAcct(self,socket, data, address):
+    def handleAcct(self, data, address, resp_que):
         """
         acct request handle
 
+        :param resp_que:
         :param socket:
         :param data:
         :param address:
@@ -54,7 +56,7 @@ class BasicAdapter(object):
             req = self.parseAcctPacket(data,address)
             prereply = self.processAcct(req)
             reply = self.acctReply(req, prereply)
-            self.pool.spawn(socket.sendto, reply.ReplyPacket(), address)
+            resp_que.put((reply.ReplyPacket(), address))
             gevent.sleep(0)
         except Exception as e:
             self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=True)

@@ -8,6 +8,9 @@ from hashlib import md5
 import urllib2
 import urllib
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RestError(BaseException):pass
 
@@ -31,11 +34,13 @@ class RestAdapter(BasicAdapter):
                 resp = urllib2.urlopen(req,timeout=5)
                 result = json.loads(resp.read())
                 if result['code'] > 0:
-                    raise RestError("rest request error %s" % result.get('msg',''))
+                    logger.error("rest request error %s" % result.get('msg',''))
+                    return None
                 else:
                     return result['data']
             except:
-                raise RestError("rest request error")
+                logger.error("rest request error", exc_info=True)
+                return None
         return cache.aget('toughradius.nas.cache.{0}.{1}'.format(nasid,nasip),fetch_result,expire=60)
 
 
@@ -61,8 +66,9 @@ class RestAdapter(BasicAdapter):
             req = urllib2.Request(url, urllib.urlencode(msg))
             resp = urllib2.urlopen(req,timeout=5)
             return json.loads(resp.read())
-        except:
-            raise RestError("rest request error")
+        except Exception as err:
+            logger.error("radius rest auth error", exc_info=True)
+            return dict(code=1, msg=err.message)
 
     @tools.timecast
     def processAcct(self,req):
@@ -77,8 +83,9 @@ class RestAdapter(BasicAdapter):
             req = urllib2.Request(url, urllib.urlencode(msg))
             resp = urllib2.urlopen(req,timeout=5)
             return json.loads(resp.read())
-        except:
-            raise RestError("rest request error")
+        except Exception as err:
+            logger.error("radius rest acct error", exc_info=True)
+            return dict(code=1, msg=err.message)
 
 
 adapter = RestAdapter
