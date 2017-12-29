@@ -51,7 +51,7 @@ default rest adapter module config
 ADAPTERS = {
     "rest" : {
         "timeout" : 10,
-        "concurrency": 64,
+        "concurrency": 128,
         "nasurl" : "http://custom.toughcloud.net/api/nas/get",
         "authurl" : "http://custom.toughcloud.net/api/radius/auth",
         "accturl" : "http://custom.toughcloud.net/api/radius/acct",
