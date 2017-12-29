@@ -9,7 +9,8 @@ version = toughradius.__version__
 proj_home = os.path.dirname(__file__)
 
 install_requires = [
-    'gevent==1.1.2'
+    'gevent==1.1.2',
+    'geventhttpclient',
 ]
 install_requires_empty = []
 
