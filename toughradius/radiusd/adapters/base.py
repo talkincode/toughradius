@@ -145,19 +145,14 @@ class BasicAdapter(object):
         :return:  pyrad.message
         """
         vendors = self.settings.VENDORS
-        client = self.getClient(nasip=host)
+        request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
+        nas_id = request.get_nas_id()
+        client = self.getClient(nasip=host, nasid=nas_id)
         if client:
-            request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=str(client['secret']))
             request.vendor_id = vendors.get(client['vendor'])
+            request.secret = six.b(client['secret'])
         else:
-            request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
-            nas_id = request.get_nas_id()
-            client = self.getClient(nasid=nas_id)
-            if client:
-                request.vendor_id = vendors.get(client['vendor'])
-                request.secret = six.b(client['secret'])
-            else:
-                raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
+            raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
 
         if request.code != packet.AccessRequest:
             errstr = u'Invalid authenticator request code=%s' % request.code
@@ -177,19 +172,14 @@ class BasicAdapter(object):
         :return: pyrad.message
         """
         vendors = self.settings.VENDORS
-        client = self.getClient(nasip=host)
+        request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
+        nas_id = request.get_nas_id()
+        client = self.getClient(nasip=host, nasid=nas_id)
         if client:
-            request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=str(client['secret']))
             request.vendor_id = vendors.get(client['vendor'])
+            request.secret = six.b(client['secret'])
         else:
-            request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
-            nas_id = request.get_nas_id()
-            client = self.getClient(nasid=nas_id)
-            if client:
-                request.vendor_id = vendors.get(client['vendor'])
-                request.secret = six.b(client['secret'])
-            else:
-                raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
+            raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
         self.verifyAcctRequest(request)
         request.source = (host, port)
         for _module in self.acct_pre:
