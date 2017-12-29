@@ -88,6 +88,7 @@ class RestAdapter(BasicAdapter):
         secret = self.settings.ADAPTERS['rest']['secret']
         msg = req.dict_message
         msg['appid'] = appid
+        msg = {k: ('' if v is None else v) for k,v in msg.iteritems()}
         msg['sign'] = self.makeSign(secret, msg.values())
         try:
             return self.request(url, msg)
@@ -103,6 +104,7 @@ class RestAdapter(BasicAdapter):
         msg = req.dict_message
         msg['appid'] = appid
         msg['nas_paddr'] = req.source[0]
+        msg = {k: ('' if v is None else v) for k, v in msg.iteritems()}
         msg['sign'] = self.makeSign(secret, msg.values())
         try:
             return self.request(url, msg)
