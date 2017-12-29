@@ -150,7 +150,7 @@ class BasicAdapter(object):
         client = self.getClient(nasip=host, nasid=nas_id)
         if client:
             request.vendor_id = vendors.get(client['vendor'])
-            request.secret = six.b(client['secret'])
+            request.secret = six.b(tools.safestr(client['secret']))
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
 
