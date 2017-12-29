@@ -9,7 +9,7 @@ import argparse
 import logging
 import logging.config
 import importlib
-
+import time
 
 def run():
     """ startup default radius server
@@ -71,18 +71,24 @@ def run():
 
     jobs = []
     if args.auth:
-        jobs.append(Process(name="AuthServer", target=RadiusServer, args=(auth_req_queue, auth_rep_queue, host, auth_port ,args.pool)))
+        auth_server = Process(name="auth-server", target=RadiusServer, args=(auth_req_queue, auth_rep_queue, host, auth_port ,args.pool))
+        auth_server.start()
+        jobs.append(auth_server)
         for x in range(args.worker):
-            jobs.append(Process(name="AuthWorker", target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool, os.environ)))
+            worker = Process(name="auth-worker", target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool, os.environ))
+            worker.start()
+            jobs.append(worker)
+
+    time.sleep(0.01)
 
     if args.acct:
-        jobs.append(Process(name="AcctServer", target=RadiusServer, args=(acct_req_queue, acct_rep_queue, host, acct_port ,args.pool)))
+        acct_server = Process(name="acct-server", target=RadiusServer, args=(acct_req_queue, acct_rep_queue, host, acct_port ,args.pool))
+        acct_server.start()
+        jobs.append(acct_server)
         for x in range(args.worker):
-            jobs.append(Process(name="AcctWorker", target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool, os.environ)))
-
-    for job in jobs:
-        job.start()
-        logger.info('start %s' % job)
+            worker = Process(name="acct-worker", target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool, os.environ))
+            worker.start()
+            jobs.append(worker)
 
     for job in jobs:
         job.join()

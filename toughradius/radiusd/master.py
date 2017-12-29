@@ -26,7 +26,7 @@ class RadiusServer(DatagramServer):
         self.init_socket()
         setsockopt(self.socket)
         self.start()
-        logger.info(self)
+        logger.info('%s started' % self)
         jobs = [gevent.spawn(self.handle_result) for x in range(pool_size)]
         # jobs.append(self.print_que())
         gevent.joinall(jobs)
@@ -60,6 +60,7 @@ class RudiusWorker(object):
         self.adapter_handle = adapter_handle
         if env:
             os.environ.update(**env)
+        logger.info('<RudiusWorker pid=%s> started' % os.getpid())
         jobs = [gevent.spawn(self.handle) for x in range(pool_size)]
         gevent.joinall(jobs)
 

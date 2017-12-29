@@ -9,6 +9,7 @@ import urllib2
 import urllib
 import json
 import logging
+import os
 
 _geventhttpclient = False
 try:
@@ -21,7 +22,7 @@ except:
 
 
 logger = logging.getLogger(__name__)
-
+trace = logging.getLogger("trace")
 
 
 class RestError(BaseException):pass
@@ -31,22 +32,30 @@ class RestAdapter(BasicAdapter):
 
     def __init__(self, settings):
         BasicAdapter.__init__(self, settings)
-        self.timeout = int(self.settings.RADIUSD.get('timeout', 10))
-        self.concurrency = int(self.settings.RADIUSD.get('concurrency', 100))
+        self.timeout = int(self.settings.ADAPTERS['rest'].get('timeout', 10))
+        self.concurrency = int(self.settings.ADAPTERS['rest'].get('concurrency', 100))
         if _geventhttpclient:
             self.http_pool = HTTPClientPool(concurrency=self.concurrency, network_timeout=self.timeout)
 
     def request(self, url, msg):
+        if os.environ.get('TOUGHRADIUS_TRACE_ENABLED', "0") == "1":
+            trace.info("Send rest request: %s" % msg)
         if _geventhttpclient:
             url = URL(url)
             http = self.http_pool.get_client(url)
-            response = http.get(url.request_uri + "?" + urllib.urlencode(msg))
-            if response.status_code == 200:
-                return json.loads(response.read())
+            resp = http.get(url.request_uri + "?" + urllib.urlencode(msg))
+            resp_body = resp.read()
+            if os.environ.get('TOUGHRADIUS_TRACE_ENABLED', "0") == "1":
+                trace.info("Received rest response: %s" % resp_body)
+            if resp.status_code == 200:
+                return json.loads(resp_body)
         else:
             req = urllib2.Request(url, urllib.urlencode(msg))
             resp = urllib2.urlopen(req, timeout=self.timeout)
-            return json.loads(resp.read())
+            resp_body = resp.read()
+            if os.environ.get('TOUGHRADIUS_TRACE_ENABLED', "0") == "1":
+                trace.info("Received rest response: %s" % resp_body)
+            return json.loads(resp_body)
 
 
     @tools.timecast
