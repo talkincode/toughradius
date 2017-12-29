@@ -31,8 +31,10 @@ class RestAdapter(BasicAdapter):
 
     def __init__(self, settings):
         BasicAdapter.__init__(self, settings)
+        self.timeout = int(self.settings.RADIUSD.get('timeout', 10))
+        self.concurrency = int(self.settings.RADIUSD.get('concurrency', 100))
         if _geventhttpclient:
-            self.http_pool = HTTPClientPool(concurrency=200, network_timeout=self.timeout)
+            self.http_pool = HTTPClientPool(concurrency=self.concurrency, network_timeout=self.timeout)
 
     def request(self, url, msg):
         if _geventhttpclient:

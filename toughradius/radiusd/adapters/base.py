@@ -11,7 +11,6 @@ class BasicAdapter(object):
 
     def __init__(self, settings):
         self.settings = settings
-        self.timeout = int(self.settings.RADIUSD.get('timeout', 10))
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(self.settings.RADIUSD['dictionary'])
         self.auth_pre = [self.load_module(m) for m in self.settings.MODULES["auth_pre"] if m is not None]
