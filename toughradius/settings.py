@@ -36,11 +36,11 @@ RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
     "acct_port": 1813,
-    # "adapter": "toughradius.radiusd.adapters.rest",
     "adapter": "toughradius.radiusd.adapters.rest",
-    "debug": 1,
+    # "adapter": "toughradius.radiusd.adapters.free",
+    "debug": 0,
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary'),
-    "pool_size": 64
+    "queue": 8192
 }
 
 '''
@@ -165,7 +165,7 @@ LOGGER = {
                 "error",
                 "debug"
             ],
-            "level" : "DEBUG"
+            "level" : "INFO"
         },
         "accounting" : {
             'handlers': ['accounting'],

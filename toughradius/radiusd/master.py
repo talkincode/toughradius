@@ -27,7 +27,13 @@ class RadiusServer(DatagramServer):
         self.start()
         logger.info(self)
         jobs = [gevent.spawn(self.handle_result) for x in range(pool_size)]
+        # jobs.append(self.print_que())
         gevent.joinall(jobs)
+
+    def print_que(self):
+        while 1:
+            logger.info("rquest queue: %s; response queue: %s;" % (self.req_q.qsize(), self.rep_q.qsize()))
+            gevent.sleep(1)
 
 
     def handle_result(self):

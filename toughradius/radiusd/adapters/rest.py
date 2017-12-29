@@ -10,12 +10,42 @@ import urllib
 import json
 import logging
 
+_geventhttpclient = False
+try:
+    from geventhttpclient.client import HTTPClientPool
+    from geventhttpclient.url import URL
+    _geventhttpclient = True
+except:
+    import traceback
+    traceback.print_exc()
+
+
 logger = logging.getLogger(__name__)
+
+
 
 class RestError(BaseException):pass
 
 class RestAdapter(BasicAdapter):
     """Http rest mode adapter"""
+
+    def __init__(self, settings):
+        BasicAdapter.__init__(self, settings)
+        if _geventhttpclient:
+            self.http_pool = HTTPClientPool(concurrency=200, network_timeout=self.timeout)
+
+    def request(self, url, msg):
+        if _geventhttpclient:
+            url = URL(url)
+            http = self.http_pool.get_client(url)
+            response = http.get(url.request_uri + "?" + urllib.urlencode(msg))
+            if response.status_code == 200:
+                return json.loads(response.read())
+        else:
+            req = urllib2.Request(url, urllib.urlencode(msg))
+            resp = urllib2.urlopen(req, timeout=self.timeout)
+            return json.loads(resp.read())
+
 
     @tools.timecast
     def getClient(self, nasip=None, nasid=None):
@@ -30,18 +60,15 @@ class RestAdapter(BasicAdapter):
             )
             msg['sign'] = self.makeSign(secret, msg.values())
             try:
-                req = urllib2.Request(url, urllib.urlencode(msg) )
-                resp = urllib2.urlopen(req,timeout=5)
-                result = json.loads(resp.read())
-                if result['code'] > 0:
-                    logger.error("rest request error %s" % result.get('msg',''))
-                    return None
-                else:
-                    return result['data']
+                result = self.request(url, msg)
+                if result:
+                    if result['code'] > 0:
+                        logger.error("rest request error %s" % result.get('msg',''))
+                    else:
+                        return result['data']
             except:
                 logger.error("rest request error", exc_info=True)
-                return None
-        return cache.aget('toughradius.nas.cache.{0}.{1}'.format(nasid,nasip),fetch_result,expire=60)
+        return cache.aget('toughradius.nas.cache.{0}.{1}'.format(nasid,nasip),fetch_result,expire=30)
 
 
     def makeSign(self,api_secret,params):
@@ -63,9 +90,7 @@ class RestAdapter(BasicAdapter):
         msg['appid'] = appid
         msg['sign'] = self.makeSign(secret, msg.values())
         try:
-            req = urllib2.Request(url, urllib.urlencode(msg))
-            resp = urllib2.urlopen(req,timeout=5)
-            return json.loads(resp.read())
+            return self.request(url, msg)
         except Exception as err:
             logger.error("radius rest auth error", exc_info=True)
             return dict(code=1, msg=err.message)
@@ -80,9 +105,7 @@ class RestAdapter(BasicAdapter):
         msg['nas_paddr'] = req.source[0]
         msg['sign'] = self.makeSign(secret, msg.values())
         try:
-            req = urllib2.Request(url, urllib.urlencode(msg))
-            resp = urllib2.urlopen(req,timeout=5)
-            return json.loads(resp.read())
+            return self.request(url, msg)
         except Exception as err:
             logger.error("radius rest acct error", exc_info=True)
             return dict(code=1, msg=err.message)

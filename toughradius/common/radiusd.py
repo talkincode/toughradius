@@ -52,21 +52,21 @@ def run():
 
     from toughradius.radiusd.master import RadiusServer, RudiusWorker
 
-    auth_req_queue = Queue(8192)
-    auth_rep_queue = Queue(8192)
-    acct_req_queue = Queue(8192)
-    acct_rep_queue = Queue(8192)
+    auth_req_queue = Queue()
+    auth_rep_queue = Queue()
+    acct_req_queue = Queue()
+    acct_rep_queue = Queue()
 
     jobs = []
     if args.auth:
-        jobs.append(Process(target=RadiusServer, args=(auth_req_queue, auth_rep_queue, host, auth_port ,args.pool)))
+        jobs.append(Process(name="AuthServer", target=RadiusServer, args=(auth_req_queue, auth_rep_queue, host, auth_port ,args.pool)))
         for x in range(args.worker):
-            jobs.append(Process(target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool)))
+            jobs.append(Process(name="AuthWorker", target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool)))
 
     if args.acct:
-        jobs.append(Process(target=RadiusServer, args=(acct_req_queue, acct_rep_queue, host, acct_port ,args.pool)))
+        jobs.append(Process(name="AcctServer", target=RadiusServer, args=(acct_req_queue, acct_rep_queue, host, acct_port ,args.pool)))
         for x in range(args.worker):
-            jobs.append(Process(target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool)))
+            jobs.append(Process(name="AcctWorker", target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool)))
 
     for job in jobs:
         job.start()

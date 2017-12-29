@@ -5,15 +5,13 @@ from toughradius.pyrad.radius import dictionary
 from toughradius.pyrad import message
 from toughradius.common import six, tools
 from toughradius.pyrad.radius import packet
-from gevent.pool import Pool
 import importlib
-import gevent
 
 class BasicAdapter(object):
 
     def __init__(self, settings):
         self.settings = settings
-        self.pool = Pool(self.settings.RADIUSD['pool_size'])
+        self.timeout = int(self.settings.RADIUSD.get('timeout', 10))
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(self.settings.RADIUSD['dictionary'])
         self.auth_pre = [importlib.import_module(m) for m in self.settings.MODULES["auth_pre"]]
@@ -21,6 +19,7 @@ class BasicAdapter(object):
         self.auth_post = [importlib.import_module(m) for m in self.settings.MODULES["auth_post"]]
         self.acct_post = [importlib.import_module(m) for m in self.settings.MODULES["acct_post"]]
 
+    @tools.timecast
     def handleAuth(self, data, address, resp_que):
         """
         auth request handle
@@ -37,10 +36,10 @@ class BasicAdapter(object):
             prereply = self.processAuth(req)
             reply = self.authReply(req, prereply)
             resp_que.put((reply.ReplyPacket(), address))
-            gevent.sleep(0)
         except Exception as e:
             self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=True)
 
+    @tools.timecast
     def handleAcct(self, data, address, resp_que):
         """
         acct request handle
@@ -57,7 +56,6 @@ class BasicAdapter(object):
             prereply = self.processAcct(req)
             reply = self.acctReply(req, prereply)
             resp_que.put((reply.ReplyPacket(), address))
-            gevent.sleep(0)
         except Exception as e:
             self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=True)
 
@@ -137,7 +135,7 @@ class BasicAdapter(object):
         reply.code = packet.AccessReject
         return reply
 
-    @tools.timecast
+    # @tools.timecast
     def parseAuthPacket(self, datagram, (host, port)):
         """
         parse radius auth request
@@ -169,7 +167,7 @@ class BasicAdapter(object):
             request = _module.handle_radius(request)
         return request
 
-    @tools.timecast
+    # @tools.timecast
     def parseAcctPacket(self, datagram, (host, port)):
         """
         parse radius accounting request
@@ -198,7 +196,7 @@ class BasicAdapter(object):
             request = _module.handle_radius(request)
         return request
 
-    @tools.timecast
+    # @tools.timecast
     def authReply(self, req, prereply):
         """
         process radius auth response
@@ -240,7 +238,7 @@ class BasicAdapter(object):
             logging.error(errmsg, exc_info=True)
             return self.rejectReply(req, errmsg)
 
-    @tools.timecast
+    # @tools.timecast
     def acctReply(self, req, prereply):
         """
         process radius accounting response

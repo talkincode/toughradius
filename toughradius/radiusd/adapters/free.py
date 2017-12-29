@@ -12,7 +12,7 @@ class RestError(BaseException):pass
 class FreeAdapter(BasicAdapter):
     """Free auth mode"""
 
-    def getClient(self):
+    def getClient(self, nasip=None, nasid=None):
         return dict(status=1, nasid='toughac', name='toughac', vendor=0, ipaddr='127.0.0.1', secret='testing123', coaport=3799)
 
     def processAuth(self,req):
