@@ -15,24 +15,33 @@ def run():
     """ startup default radius server
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--settings', default='toughradius.settings', dest="settings",type=str, help="settings module")
+    parser.add_argument('--settings', default=None, dest="settings",type=str, help="settings module")
+    parser.add_argument('--listen', default='0.0.0.0', dest="listen",type=str, help="listen address")
     parser.add_argument('--auth-port', default='1812', dest="auth_port",type=int, help="radiusd auth port")
     parser.add_argument('--acct-port', default='1813', dest="acct_port",type=int, help="radiusd acct port")
     parser.add_argument('--pool', default='10', dest="pool",type=int, help="pool size")
     parser.add_argument('--worker', default=cpu_count(), dest="worker",type=int, help="worker num")
     parser.add_argument('--adapter', default=None, dest="adapter",type=str, help="radius handle adapter module")
+    parser.add_argument('--dictionary', default=None, dest="dictionary",type=str, help="radius dictionary dir")
     parser.add_argument('--auth', action='store_true',default=True, dest='auth',help='run auth listen')
     parser.add_argument('--acct', action='store_true',default=True, dest='acct',help='run acct listen')
-    parser.add_argument('-x','--debug', action='store_true',default=False,dest='debug',help='debug option')
-    args =  parser.parse_args(sys.argv[1:])
+    parser.add_argument('-x', '--trace', action='store_true',default=False,dest='trace', help='radius trace option')
+    args = parser.parse_args(sys.argv[1:])
 
-    settings = importlib.import_module(args.settings)
+    env_settings = os.environ.get("TOUGHRADIUS_SETTINGS_MODULE", "toughradius.settings")
+    if args.settings:
+        settings = importlib.import_module(args.settings)
+    else:
+        settings = importlib.import_module(env_settings)
+
     logging.config.dictConfig(settings.LOGGER)
     logger = logging.getLogger(__name__)
 
-    if args.debug:
-        settings.RADIUSD.update(debug=1)
-        os.environ['TOUGHRADIUS_DEBUG_ENABLED'] = "1"
+    if args.trace:
+        os.environ['TOUGHRADIUS_TRACE_ENABLED'] = "1"
+
+    if args.listen != '0.0.0.0':
+        settings.RADIUSD.update(host=args.listen)
 
     if args.auth_port > 0:
         settings.RADIUSD.update(auth_port=args.auth_port)
@@ -42,6 +51,9 @@ def run():
 
     if args.adapter:
         settings.RADIUSD.update(adapter=args.adapter)
+
+    if args.dictionary:
+        settings.RADIUSD.update(dictionary=args.dictionary)
 
 
     host = settings.RADIUSD['host']
@@ -61,16 +73,16 @@ def run():
     if args.auth:
         jobs.append(Process(name="AuthServer", target=RadiusServer, args=(auth_req_queue, auth_rep_queue, host, auth_port ,args.pool)))
         for x in range(args.worker):
-            jobs.append(Process(name="AuthWorker", target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool)))
+            jobs.append(Process(name="AuthWorker", target=RudiusWorker, args=(auth_req_queue, auth_rep_queue, adapter.handleAuth, args.pool, os.environ)))
 
     if args.acct:
         jobs.append(Process(name="AcctServer", target=RadiusServer, args=(acct_req_queue, acct_rep_queue, host, acct_port ,args.pool)))
         for x in range(args.worker):
-            jobs.append(Process(name="AcctWorker", target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool)))
+            jobs.append(Process(name="AcctWorker", target=RudiusWorker, args=(acct_req_queue, acct_rep_queue, adapter.handleAcct, args.pool, os.environ)))
 
     for job in jobs:
         job.start()
-        logger.info('start process %s' % job)
+        logger.info('start %s' % job)
 
     for job in jobs:
         job.join()

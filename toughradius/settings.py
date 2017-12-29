@@ -2,7 +2,6 @@
 
 import os
 
-ENVIRONMENT_VARIABLE = "TOUGHRADIUS_SETTINGS_MODULE"
 BASICDIR = os.path.abspath(os.path.dirname(__file__))
 
 '''
@@ -38,9 +37,7 @@ RADIUSD = {
     "acct_port": 1813,
     "adapter": "toughradius.radiusd.adapters.rest",
     # "adapter": "toughradius.radiusd.adapters.free",
-    "debug": 0,
-    "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary'),
-    "queue": 8192
+    "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary')
 }
 
 '''
@@ -137,6 +134,16 @@ LOGGER = {
             "filename" : "/var/log/toughradius/error.log",
             "formatter" : "verbose"
         },
+        "trace": {
+            "level": "INFO",
+            "class": "logging.handlers.TimedRotatingFileHandler",
+            "when": "d",
+            "interval": 1,
+            "backupCount": 3,
+            "delay": True,
+            "filename": "/var/log/toughradius/trace.log",
+            "formatter": "verbose"
+        },
         "accounting": {
             "level": "INFO",
             "class": "logging.handlers.TimedRotatingFileHandler",
@@ -159,11 +166,20 @@ LOGGER = {
         }
     },
     "loggers" : {
-        "" : {
+        "": {
             "handlers" : [
                 "info",
                 "error",
                 "debug"
+            ],
+            "level" : "INFO"
+        },
+        "trace": {
+            "handlers" : [
+                "info",
+                "error",
+                "debug",
+                "trace"
             ],
             "level" : "INFO"
         },

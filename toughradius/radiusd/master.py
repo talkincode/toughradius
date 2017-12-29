@@ -5,6 +5,7 @@ from gevent.server import DatagramServer
 import socket
 import gevent
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -53,10 +54,12 @@ class RadiusServer(DatagramServer):
 
 class RudiusWorker(object):
 
-    def __init__(self, req_q=None, rep_q=None,adapter_handle=None, pool_size=10):
+    def __init__(self, req_q=None, rep_q=None,adapter_handle=None, pool_size=10, env=None):
         self.req_q = req_q
         self.rep_q = rep_q
         self.adapter_handle = adapter_handle
+        if env:
+            os.environ.update(**env)
         jobs = [gevent.spawn(self.handle) for x in range(pool_size)]
         gevent.joinall(jobs)
 

@@ -14,10 +14,18 @@ class BasicAdapter(object):
         self.timeout = int(self.settings.RADIUSD.get('timeout', 10))
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(self.settings.RADIUSD['dictionary'])
-        self.auth_pre = [importlib.import_module(m) for m in self.settings.MODULES["auth_pre"]]
-        self.acct_pre = [importlib.import_module(m) for m in self.settings.MODULES["acct_pre"]]
-        self.auth_post = [importlib.import_module(m) for m in self.settings.MODULES["auth_post"]]
-        self.acct_post = [importlib.import_module(m) for m in self.settings.MODULES["acct_post"]]
+        self.auth_pre = [self.load_module(m) for m in self.settings.MODULES["auth_pre"] if m is not None]
+        self.acct_pre = [self.load_module(m) for m in self.settings.MODULES["acct_pre"] if m is not None]
+        self.auth_post = [self.load_module(m) for m in self.settings.MODULES["auth_post"] if m is not None]
+        self.acct_post = [self.load_module(m) for m in self.settings.MODULES["acct_post"] if m is not None]
+
+    def load_module(self, mdl):
+        try:
+            self.logger.info('load module %s' % mdl)
+            return importlib.import_module(mdl)
+        except:
+            self.logger.info('load module error, %s' % mdl)
+
 
     @tools.timecast
     def handleAuth(self, data, address, resp_que):
