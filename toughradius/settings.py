@@ -35,7 +35,7 @@ RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
     "acct_port": 1813,
-    "adapter": "toughradius.radiusd.adapters.rest",
+    "adapter": "toughradius.radiusd.adapters.tredis",
     # "adapter": "toughradius.radiusd.adapters.free",
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary')
 }
@@ -57,7 +57,14 @@ ADAPTERS = {
         "accturl" : "http://custom.toughcloud.net/api/radius/acct",
         "appid" : "fGXMKpXy9ZKg8VFS",
         "secret" : "Fy9FSjb76MNaJ7kjUwH1pbD62lx45eXh",
-    }
+    },
+    "redis": {
+        "host": "127.0.0.1",
+        "passwd": "",
+        "port": 16370,
+        "pool_size": 200,
+        "db": 1,
+    },
 }
 
 '''
