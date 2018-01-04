@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-from toughradius.common import radiusd
+from toughradius.server import gradiusd
+
 if __name__ == "__main__":
-    radiusd.run()
+    gradiusd.run()

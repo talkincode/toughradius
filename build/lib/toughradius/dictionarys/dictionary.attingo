@@ -1,0 +1,11 @@
+# Attingo dictionary
+# 
+
+VENDOR		Attingo			14896
+
+ATTRIBUTE	Attingo-Account-Type	1			integer	Attingo
+
+VALUE		Attingo-Account-Type	OpenAccount		0
+VALUE		Attingo-Account-Type	PrepaidAccount		1
+VALUE		Attingo-Account-Type	RoamingAccount		2
+VALUE		Attingo-Account-Type	SubscriberAccount	3
