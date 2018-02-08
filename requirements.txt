@@ -1,0 +1,3 @@
+gevent==1.1.2
+geventhttpclient
+redis
