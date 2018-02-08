@@ -36,7 +36,7 @@ RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
     "acct_port": 1813,
-    "adapter": "toughradius.adapters.gredis",
+    "adapter": "toughradius.adapters.grest",
     # "adapter": "toughradius.adapters.free",
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary')
 }
@@ -62,7 +62,7 @@ ADAPTERS = {
     "redis": {
         "host": "127.0.0.1",
         "passwd": "",
-        "port": 16370,
+        "port": 6379,
         "pool_size": 200,
         "db": 1,
     },

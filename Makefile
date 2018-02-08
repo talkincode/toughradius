@@ -14,19 +14,19 @@ venv2:
 
 
 install:
-	python setup.py install
+	venv/bin/python setup.py install
 
 bdist:
-	python setup.py bdist
+	venv/bin/python setup.py bdist
 
 wheel:
-	python setup.py bdist_wheel
+	venv/bin/python setup.py bdist_wheel
 
 rpm:
-	python setup.py bdist_rpm
+	venv/bin/python setup.py bdist_rpm
 
 upload:
-	python setup.py bdist_rpm bdist_wheel upload
+	venv/bin/python setup.py bdist_rpm bdist_wheel upload
 
 doc:
 	cd documents && sphinx-intl update -p build/locale -l zh_CN
@@ -36,7 +36,7 @@ doc:
 	rm -fr documents/build/html
 	echo "docs.toughradius.net" > docs/CNAME
 	echo "" > docs/.nojekyll
-	python documents/rename.py
+	venv/bin/python documents/rename.py
 
 test:
 	echo 'test'
@@ -48,7 +48,7 @@ clean:
 	rm -fr venv
 
 run:
-	python radiusd.py -x
+	venv/bin/python radiusd.py -x
 
 
 .PHONY:  venv test  clean 

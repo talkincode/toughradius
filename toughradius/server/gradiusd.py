@@ -62,7 +62,7 @@ class RudiusWorker(object):
         gevent.joinall(jobs)
 
     def handle_radius(self, data, address):
-        reply = self.adapter_handle(data, address)
+        reply = self.adapter_handle(data, address,self.rep_q)
         self.rep_q.put((reply, address))
 
     def handle(self):
