@@ -18,6 +18,7 @@ VENDORS = {
     "juniper" : 2636,
     "microsoft" : 311,
     "mikrotik" : 14988,
+    "xspeeder" : 26732,
     "openvpn" : 19797
 }
 
@@ -36,7 +37,8 @@ RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
     "acct_port": 1813,
-    "adapter": "toughradius.adapters.grest",
+    "adapter": "toughradius.adapters.gzerorpc",
+    'ignore_password':0,
     # "adapter": "toughradius.adapters.free",
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary')
 }
@@ -66,6 +68,9 @@ ADAPTERS = {
         "pool_size": 200,
         "db": 1,
     },
+   'zerorpc':{
+        'connect':"tcp://127.0.0.1:1815"
+    }
 }
 
 '''
