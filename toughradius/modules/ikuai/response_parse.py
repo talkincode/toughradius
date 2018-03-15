@@ -14,7 +14,7 @@ def handle_radius(req, reply, debug=False):
             reply['RP-Upstream-Speed-Limit'] = input_rate
             reply['RP-Downstream-Speed-Limit'] = output_rate
     except Exception as err:
-        logger.error("rate limit error {}".format(err.message), exc_info=debug)
+        logger.error("response parse error {}".format(err.message), exc_info=debug)
 
     return reply
 

@@ -11,6 +11,6 @@ def handle_radius(req, reply, debug=False):
             output_rate = int(reply.resp_attrs.get('output_rate', 0)) / 1024
             reply['Mikrotik-Rate-Limit'] = '%sk/%sk' % (input_rate, output_rate)
     except Exception as err:
-        logger.error("rate limit error {}".format(err.message), exc_info=debug)
+        logger.error("response parse error {}".format(err.message), exc_info=debug)
 
     return reply

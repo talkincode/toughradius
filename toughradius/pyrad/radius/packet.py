@@ -517,7 +517,7 @@ class AcctPacket(Packet):
         """
         # assert(self.raw_packet)
         hash = md5_constructor(self.raw_packet[0:4] + 16 * six.b('\x00') +
-                self.raw_packet[20:] + self.secret).digest()
+                self.raw_packet[20:] + str(self.secret)).digest()
         return hash == self.authenticator
 
     def RequestPacket(self):

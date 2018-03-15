@@ -61,15 +61,8 @@ ADAPTERS = {
         "appid" : "fGXMKpXy9ZKg8VFS",
         "secret" : "Fy9FSjb76MNaJ7kjUwH1pbD62lx45eXh",
     },
-    "redis": {
-        "host": "127.0.0.1",
-        "passwd": "",
-        "port": 6379,
-        "pool_size": 200,
-        "db": 1,
-    },
    'zerorpc':{
-        'connect':"tcp://127.0.0.1:1815"
+        'connect':["tcp://127.0.0.1:1814","tcp://127.0.0.1:1815","tcp://127.0.0.1:1817","tcp://127.0.0.1:1818"]
     }
 }
 
@@ -80,36 +73,40 @@ radius ext modules
 MODULES = {
     "auth_pre" : [
         "toughradius.modules.common.request_logger",
+        "toughradius.modules.xspeeder.request_parse",
         "toughradius.modules.mikrotik.request_parse",
-        # "toughradius.modules.h3c.request_parse",
-        # "toughradius.modules.huawei.request_parse",
-        # "toughradius.modules.cisco.request_parse",
-        # "toughradius.modules.juniper.request_parse",
-        # "toughradius.modules.radback.request_parse",
-        # "toughradius.modules.zte.request_parse",
-        # "toughradius.modules.stdandard.request_parse",
+        "toughradius.modules.h3c.request_parse",
+        "toughradius.modules.huawei.request_parse",
+        "toughradius.modules.cisco.request_parse",
+        "toughradius.modules.juniper.request_parse",
+        "toughradius.modules.radback.request_parse",
+        "toughradius.modules.zte.request_parse",
+        "toughradius.modules.stdandard.request_parse",
     ],
 
     "acct_pre" : [
         "toughradius.modules.common.request_logger",
         "toughradius.modules.mikrotik.request_parse",
-        # "toughradius.modules.h3c.request_parse",
-        # "toughradius.modules.huawei.request_parse",
-        # "toughradius.modules.cisco.request_parse",
-        # "toughradius.modules.juniper.request_parse",
-        # "toughradius.modules.radback.request_parse",
-        # "toughradius.modules.zte.request_parse",
-        # "toughradius.modules.stdandard.request_parse",
+        "toughradius.modules.xspeeder.request_parse",
+        "toughradius.modules.h3c.request_parse",
+        "toughradius.modules.huawei.request_parse",
+        "toughradius.modules.cisco.request_parse",
+        "toughradius.modules.juniper.request_parse",
+        "toughradius.modules.radback.request_parse",
+        "toughradius.modules.zte.request_parse",
+        "toughradius.modules.stdandard.request_parse",
     ],
 
     "auth_post" : [
         "toughradius.modules.common.response_logger",
-        # "toughradius.modules.mikrotik.rate_limit",
-        # "toughradius.modules.h3c.rate_limit",
-        # "toughradius.modules.huawei.rate_limit",
-        # "toughradius.modules.radback.rate_limit",
-        # "toughradius.modules.zte.rate_limit",
-        # "toughradius.modules.ikuai.rate_limit",
+        "toughradius.modules.mikrotik.response_parse",
+        "toughradius.modules.xspeeder.response_parse",
+        "toughradius.modules.h3c.response_parse",
+        "toughradius.modules.huawei.response_parse",
+        "toughradius.modules.radback.response_parse",
+        "toughradius.modules.zte.response_parse",
+        "toughradius.modules.ikuai.response_parse",
+        "toughradius.modules.stdandard.response_parse",
     ],
 
     "acct_post" : [

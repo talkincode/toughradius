@@ -1,0 +1,14 @@
+# -*- text -*-
+
+VENDOR		XSpeeder				26732
+
+BEGIN-VENDOR	XSpeeder
+
+ATTRIBUTE	XSpeeder_UpLoad_Speed           2   integer
+ATTRIBUTE	XSpeeder_DownLoad_Speed         3   integer
+ATTRIBUTE	XSpeeder_Proxy_Identifier       4   integer
+ATTRIBUTE	XSpeeder_Primary_DNS            5   ipaddr
+ATTRIBUTE	XSpeeder_Secondary_DNS          6   ipaddr
+ATTRIBUTE	XSpeeder_AVPair                 1   string
+
+END-VENDOR	XSpeeder

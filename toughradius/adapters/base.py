@@ -6,6 +6,7 @@ from toughradius.pyrad import message
 from toughradius.common import six, tools
 from toughradius.pyrad.radius import packet
 import importlib
+import os
 
 class BasicAdapter(object):
 
@@ -13,21 +14,23 @@ class BasicAdapter(object):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(self.settings.RADIUSD['dictionary'])
+        self.xdebug = os.environ.get('TOUGHRADIUS_TRACE_ENABLED',"0")  == '1'
         self.auth_pre = [self.load_module(m) for m in self.settings.MODULES["auth_pre"] if m is not None]
         self.acct_pre = [self.load_module(m) for m in self.settings.MODULES["acct_pre"] if m is not None]
         self.auth_post = [self.load_module(m) for m in self.settings.MODULES["auth_post"] if m is not None]
         self.acct_post = [self.load_module(m) for m in self.settings.MODULES["acct_post"] if m is not None]
+
 
     def load_module(self, mdl):
         try:
             self.logger.info('load module %s' % mdl)
             return importlib.import_module(mdl)
         except:
-            self.logger.info('load module error, %s' % mdl, exc_info=True)
+            self.logger.info('load module error, %s' % mdl, exc_info=self.xdebug)
 
 
     @tools.timecast
-    def handleAuth(self, data, address, resp_que):
+    def handleAuth(self, data, address):
         """
         auth request handle
 
@@ -44,10 +47,10 @@ class BasicAdapter(object):
             reply = self.authReply(req, prereply)
             return reply.ReplyPacket()
         except Exception as e:
-            self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=True)
+            self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=self.xdebug)
 
     @tools.timecast
-    def handleAcct(self, data, address, resp_que):
+    def handleAcct(self, data, address):
         """
         acct request handle
 
@@ -64,7 +67,7 @@ class BasicAdapter(object):
             reply = self.acctReply(req, prereply)
             return reply.ReplyPacket()
         except Exception as e:
-            self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=True)
+            self.logger.error("Handle Radius Acct error {}".format(e.message),exc_info=self.xdebug)
 
     def getClient(self, nasip=None, nasid=None):
         """
@@ -151,12 +154,11 @@ class BasicAdapter(object):
 
         :return:  pyrad.message
         """
-        vendors = self.settings.VENDORS
         request = message.AuthMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
         nas_id = request.get_nas_id()
         client = self.getClient(nasip=host, nasid=nas_id)
         if client:
-            request.vendor_id = vendors.get(client['vendor'])
+            request.vendor_id = client['vendor']
             request.secret = six.b(tools.safestr(client['secret']))
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
@@ -184,7 +186,7 @@ class BasicAdapter(object):
         client = self.getClient(nasip=host, nasid=nas_id)
         if client:
             request.vendor_id = vendors.get(client['vendor'])
-            request.secret = six.b(client['secret'])
+            request.secret = tools.safestr(client['secret'])
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
         self.verifyAcctRequest(request)
@@ -232,7 +234,7 @@ class BasicAdapter(object):
             return reply
         except Exception as e:
             errmsg = "handle radius response error {}".format(e.message)
-            logging.error(errmsg, exc_info=True)
+            logging.error(errmsg, exc_info=self.xdebug)
             return self.rejectReply(req, errmsg)
 
     # @tools.timecast
@@ -266,7 +268,7 @@ class BasicAdapter(object):
                     Check that the shared key is consistent'
                     raise packet.PacketError(errstr)
             return reply
-        except:
+        except Exception as err:
             raise packet.PacketError("handle radius accounting response error")
 
 
