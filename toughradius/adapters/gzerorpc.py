@@ -58,7 +58,7 @@ class RadiusUtils(object):
         return session_timeout
 
 
-class RedisAdapterError(BaseException): pass
+class RedisAdapterError(Exception): pass
 
 class RadiusUser(object):
 
@@ -92,12 +92,19 @@ class RedisAdapter(BasicAdapter):
     def getClient(self, nasip=None, nasid=None):
         def fetch_result():
             return self.zrpc.radius_find_nas(nasip,nasid)
-        return cache.aget('toughradius.nas.cache.{0}.{1}'.format(nasid, nasip), fetch_result, expire=30)
+        return cache.aget('toughradius.nas.cache.{0}.{1}'.format(nasid, nasip), fetch_result, expire=60)
+
+    def getUserAttr(self, username, attrname,default_val=None):
+        def fetch_result():
+            result =  self.zrpc.radius_get_userattr(username,attrname.get(timeout=3))
+            if result is None:
+                return default_val
+        return cache.aget('toughradius.user.attr.cache.{0}.{1}'.format(username, attrname), fetch_result, expire=60)
 
     def processAuth(self, req):
         # check exists
         username = req.get_user_name()
-        _user = self.zrpc.radius_find_user(username, async=True).get()
+        _user = self.zrpc.radius_find_user(username, async=True).get(timeout=3)
         if not _user:
             raise RedisAdapterError('user {0} not exists or user status not enabled'.format(username))
 
@@ -108,8 +115,8 @@ class RedisAdapter(BasicAdapter):
             raise RedisAdapterError('user is expire at {0}'.format(user.expire_time))
 
         # check password
-        if int(self.settings.RADIUSD.get('ignore_password', 0)) == 1:
-            if user.ignore_password == 1:
+        if int(self.settings.RADIUSD.get('ignore_password', 0)) == 0:
+            if user.ignore_password == 0:
                 if not req.is_valid_pwd(user.password):
                     raise RedisAdapterError('user password error')
 
@@ -130,7 +137,7 @@ class RedisAdapter(BasicAdapter):
                 req.vlanid2, user.out_vlan))
 
         # check online limit
-        cur_count = self.zrpc.radius_count_online(username,async=True).get()
+        cur_count = self.zrpc.radius_count_online(username,async=True).get(timeout=3)
         if cur_count >= user.online_limit:
             raise RedisAdapterError('current user online count %s > limit(%s) ' % (cur_count,user.online_limit))
 

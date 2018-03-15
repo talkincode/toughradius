@@ -43,11 +43,20 @@ class BasicAdapter(object):
         """
         try:
             req = self.parseAuthPacket(data,address)
-            prereply = self.processAuth(req)
-            reply = self.authReply(req, prereply)
-            return reply.ReplyPacket()
+            try:
+                prereply = self.processAuth(req)
+                reply = self.authReply(req, prereply)
+                return reply.ReplyPacket()
+            except Exception as e:
+                # import pdb;pdb.set_trace()
+                errstr = "Handle Radius Auth error {}".format(e.message)
+                self.logger.error( errstr,exc_info=self.xdebug)
+                reply = self.rejectReply(req,errmsg=errstr)
+                return reply.ReplyPacket()
         except Exception as e:
-            self.logger.error( "Handle Radius Auth error {}".format(e.message),exc_info=self.xdebug)
+            self.logger.error( "Parse Radius Auth Message error {}".format(e.message),exc_info=self.xdebug)
+
+
 
     @tools.timecast
     def handleAcct(self, data, address):
