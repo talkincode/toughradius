@@ -85,9 +85,15 @@ class RedisAdapter(BasicAdapter):
     def __init__(self, config):
         BasicAdapter.__init__(self, config)
         gevent.spawn(self.init_rpc)
+        gevent.spawn(self.init_coarpc)
 
     def init_rpc(self):
         self.zrpc = zerorpc.Client(connect_to=self.settings.ADAPTERS['zerorpc']['connect'])
+
+    def init_coarpc(self):
+        self.coazrpc = zerorpc.Server(self.coaservice)
+        self.coazrpc.connect(self.settings.ADAPTERS['zerorpc']['coa_bind_connect'])
+        self.coazrpc.run()
 
     def getClient(self, nasip=None, nasid=None):
         def fetch_result():

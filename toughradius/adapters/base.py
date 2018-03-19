@@ -1,12 +1,52 @@
 #!/usr/bin/env python
 # coding:utf-8
 import logging
+from gevent import socket
 from toughradius.pyrad.radius import dictionary
 from toughradius.pyrad import message
-from toughradius.common import six, tools
+from toughradius.common import six, tools, radclient
 from toughradius.pyrad.radius import packet
 import importlib
 import os
+import gevent
+
+class CoaService(object):
+
+    def __init__(self, adapter):
+        self.adapter = adapter
+        self.logger = adapter.logger
+
+    def send_disconnect(self, server, port, secret, username, sessionid, nasid=None, nasip=None, timeout=5, debug=False, retry=3):
+        for i in range(retry):
+            try:
+                radius_dictionary = self.adapter.dictionary
+                request = message.CoAMessage(code=packet.DisconnectRequest, dict=radius_dictionary, secret=str(secret))
+                request['User-Name'] = username
+                request['Acct-Session-Id'] = sessionid
+                if nasid:
+                    request['NAS-Identifier'] = nasid
+                if nasip:
+                    request['NAS-IP-Address'] = nasip
+
+                pkg = request.RequestPacket()
+                if debug:
+                    self.logger.debug("Send radius CoaDmRequest to (%s:%s) [username:%s]: %s" % (server, port, username, request.format_str()))
+
+                sock = socket.socket(type=socket.SOCK_DGRAM)
+                sock.settimeout(timeout)
+                sock.connect((server, port))
+                sock.send(pkg)
+                data, address = sock.recvfrom(8192)
+                reply = request.CreateReply(packet=data)
+                if debug:
+                    self.logger.debug("Recv radius coa dm response from (%s:%s): %s" % (server, port, reply.format_str()))
+                return reply
+
+            except Exception as e:
+                self.logger.error("coa proc error {}".format(e.message), exc_info=True)
+                if i < retry - 1:
+                    gevent.sleep((i + 1) * 3)
+
 
 class BasicAdapter(object):
 
@@ -14,6 +54,7 @@ class BasicAdapter(object):
         self.settings = settings
         self.logger = logging.getLogger(__name__)
         self.dictionary = dictionary.Dictionary(self.settings.RADIUSD['dictionary'])
+        self.coaservice = CoaService(self)
         self.xdebug = os.environ.get('TOUGHRADIUS_TRACE_ENABLED',"0")  == '1'
         self.auth_pre = [self.load_module(m) for m in self.settings.MODULES["auth_pre"] if m is not None]
         self.acct_pre = [self.load_module(m) for m in self.settings.MODULES["acct_pre"] if m is not None]

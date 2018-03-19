@@ -62,7 +62,8 @@ ADAPTERS = {
         "secret" : "Fy9FSjb76MNaJ7kjUwH1pbD62lx45eXh",
     },
    'zerorpc':{
-        'connect':["tcp://127.0.0.1:1814","tcp://127.0.0.1:1815","tcp://127.0.0.1:1816","tcp://127.0.0.1:1817"]
+        'connect':["tcp://127.0.0.1:1814","tcp://127.0.0.1:1815"],
+        'coa_bind_connect': ["tcp://127.0.0.1:3899"]
     }
 }
 
