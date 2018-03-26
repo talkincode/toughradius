@@ -49,7 +49,7 @@ setup(name='toughradius',
       install_requires=install_requires,
       entry_points={
           'console_scripts': [
-              'radiusd = toughradius.common.radiusd:run',
+              'radiusd = toughradius.server.stradiusd:run',
               'authtest = toughradius.common.radtest:test_auth',
               'accttest = toughradius.common.radtest:test_acct',
               'radius-benchmark = toughradius.common.benchmark:start',
