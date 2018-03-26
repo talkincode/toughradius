@@ -37,6 +37,7 @@ RADIUSD = {
     "host": "0.0.0.0",
     "auth_port": 1812,
     "acct_port": 1813,
+    "pool" : 100,
     "adapter": "toughradius.adapters.gzerorpc",
     'ignore_password':0,
     # "adapter": "toughradius.adapters.free",

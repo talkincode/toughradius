@@ -81,6 +81,7 @@ def run():
     """ startup default radius server
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('--rundir', default='.', dest="rundir", type=str, help="run path")
     parser.add_argument('--settings', default=None, dest="settings",type=str, help="settings module")
     parser.add_argument('--listen', default='0.0.0.0', dest="listen",type=str, help="listen address")
     parser.add_argument('--auth-port', default='1812', dest="auth_port",type=int, help="radiusd auth port")
@@ -95,6 +96,9 @@ def run():
     args = parser.parse_args(sys.argv[1:])
 
     env_settings = os.environ.get("TOUGHRADIUS_SETTINGS_MODULE", "toughradius.settings")
+    if args.rundir and os.path.exists(args.rundir):
+        sys.path.insert(0,args.rundir)
+
     if args.settings:
         settings = importlib.import_module(args.settings)
     else:
