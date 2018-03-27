@@ -414,19 +414,15 @@ class AuthMessage(AuthPacket,ExtAttrMixin):
     @property
     def dict_message(self):
         return dict(
-            nas_id = self.get_nas_id(),
-            nas_addr = self.get_nas_addr(),
+            nasid = self.get_nas_id(),
+            nasip = self.get_nas_addr(),
             username = self.get_user_name(),
-            password = self.get_passwd(),
             mac_addr = self.get_mac_addr(),
             vlanid1 = self.vlanid1,
             vlanid2 = self.vlanid2,
             nas_port_id = self.get_nas_portid(),
             nas_port_type = self.get_nas_port_type(),
-            nas_class = self.get_nas_class(),
-            framed_ipaddr = self.get_framed_ipaddr(),
-            framed_netmask = self.get_framed_netmask(),
-            session_timeout = self.get_session_timeout(),
+            nas_class = self.get_nas_class()
         )
 
 

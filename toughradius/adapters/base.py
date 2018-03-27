@@ -230,13 +230,12 @@ class BasicAdapter(object):
 
         :return: pyrad.message
         """
-        vendors = self.settings.VENDORS
         request = message.AcctMessage(packet=datagram, dict=self.dictionary, secret=six.b(''))
         nas_id = request.get_nas_id()
         client = self.getClient(nasip=host, nasid=nas_id)
         if client:
-            request.vendor_id = vendors.get(client['vendor'])
-            request.secret = tools.safestr(client['secret'])
+            request.vendor_id = client['vendor']
+            request.secret = six.b(tools.safestr(client['secret']))
         else:
             raise packet.PacketError("Unauthorized Radius Access Device [%s] (%s:%s)" % (nas_id, host, port))
         self.verifyAcctRequest(request)
