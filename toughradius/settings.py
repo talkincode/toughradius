@@ -35,10 +35,11 @@ VENDORS = {
 
 RADIUSD = {
     "host": "0.0.0.0",
+    "hostname": "radiusd-master",
     "auth_port": 1812,
     "acct_port": 1813,
     "pool" : 100,
-    "adapter": "toughradius.adapters.gzerorpc",
+    "adapter": "toughradius.adapters.gthrift",
     'ignore_password':0,
     # "adapter": "toughradius.adapters.free",
     "dictionary": os.path.join(BASICDIR,'dictionarys/dictionary')
@@ -65,6 +66,10 @@ ADAPTERS = {
    'zerorpc':{
         'connect':["tcp://127.0.0.1:1815"],
         'coa_bind_connect': ["tcp://127.0.0.1:3899"]
+    },
+   'thrift':{
+        'host':"172.20.1.183",
+        'port': 1815
     }
 }
 

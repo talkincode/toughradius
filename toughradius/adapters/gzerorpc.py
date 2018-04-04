@@ -9,10 +9,10 @@ from .base import BasicAdapter
 from toughradius.pyrad import message
 from toughradius.common import tools
 
-class RedisAdapterError(Exception):
+class ZerorpcAdapterError(Exception):
     pass
 
-class RedisAdapter(BasicAdapter):
+class ZerorpcAdapter(BasicAdapter):
     def __init__(self, config):
         BasicAdapter.__init__(self, config)
         gevent.spawn(self.init_rpc)
@@ -39,7 +39,7 @@ class RedisAdapter(BasicAdapter):
             if not req.is_valid_pwd(password):
                 errstr = 'user password error'
                 self.zrpc.send_radius_userlog(username,errstr, async=True)
-                raise RedisAdapterError(errstr)
+                raise ZerorpcAdapterError(errstr)
         return resp
 
     def processAcct(self, req):
@@ -67,7 +67,7 @@ class RedisAdapter(BasicAdapter):
             return dict(code=0, msg='ok')
 
 
-adapter = RedisAdapter
+adapter = ZerorpcAdapter
 
 
 
