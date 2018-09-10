@@ -1,3 +1,0 @@
-gevent
-geventhttpclient
-redis
