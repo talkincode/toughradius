@@ -1,0 +1,12 @@
+bin
+dist
+build
+doc/apidoc
+target
+.settings
+.classpath
+.project
+
+# IntelliJ IDEA
+*.iml
+.idea/*
