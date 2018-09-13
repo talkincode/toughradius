@@ -10,3 +10,4 @@ target
 # IntelliJ IDEA
 *.iml
 .idea/*
+logs

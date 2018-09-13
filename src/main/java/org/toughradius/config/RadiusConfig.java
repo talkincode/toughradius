@@ -142,13 +142,13 @@ public class RadiusConfig {
     public DefaultIoFilterChainBuilder acctIoFilterChainBuilder(ExecutorFilter acctExecutorFilter,
                                                                 MdcInjectionFilter acctMdcInjectionFilter,
                                                                 LoggingFilter acctLoggingFilter) {
-        DefaultIoFilterChainBuilder radiusIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
+        DefaultIoFilterChainBuilder acctIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
         Map<String, IoFilter> filters = new LinkedHashMap<>();
         filters.put("executor", acctExecutorFilter);
 //        filters.put("mdcInjectionFilter", acctMdcInjectionFilter);
 //        filters.put("loggingFilter", acctLoggingFilter);
-        radiusIoFilterChainBuilder.setFilters(filters);
-        return radiusIoFilterChainBuilder;
+        acctIoFilterChainBuilder.setFilters(filters);
+        return acctIoFilterChainBuilder;
     }
 
     @Bean

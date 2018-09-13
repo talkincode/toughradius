@@ -1,25 +1,6 @@
-/**
- * $Id: RadiusPacket.java,v 1.12 2008/06/16 22:20:34 wuttke Exp $
- * Created on 07.04.2005
- * Released under the LGPL
- * 
- * @author Matthias Wuttke
- * @version $Revision: 1.12 $
- */
 package org.tinyradius.packet;
 
-import java.io.ByteArrayOutputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import org.toughradius.common.DateTimeUtil;
 import org.tinyradius.attribute.RadiusAttribute;
 import org.tinyradius.attribute.VendorSpecificAttribute;
 import org.tinyradius.dictionary.AttributeType;
@@ -27,6 +8,16 @@ import org.tinyradius.dictionary.DefaultDictionary;
 import org.tinyradius.dictionary.Dictionary;
 import org.tinyradius.util.RadiusException;
 import org.tinyradius.util.RadiusUtil;
+
+import java.io.*;
+import java.net.InetSocketAddress;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * This class represents a Radius packet. Subclasses provide convenience methods
@@ -75,7 +66,7 @@ public class RadiusPacket {
 	/**
 	 * Builds a Radius packet without attributes. Retrieves
 	 * the next packet identifier.
-	 * 
+	 *
 	 * @param type
 	 *            packet type
 	 */
@@ -86,7 +77,7 @@ public class RadiusPacket {
 	/**
 	 * Builds a Radius packet with the given type and identifier
 	 * and without attributes.
-	 * 
+	 *
 	 * @param type
 	 *            packet type
 	 * @param identifier
@@ -99,7 +90,7 @@ public class RadiusPacket {
 	/**
 	 * Builds a Radius packet with the given type, identifier and
 	 * attributes.
-	 * 
+	 *
 	 * @param type
 	 *            packet type
 	 * @param identifier
@@ -121,7 +112,7 @@ public class RadiusPacket {
 
 	/**
 	 * Returns the packet identifier for this Radius packet.
-	 * 
+	 *
 	 * @return packet identifier
 	 */
 	public int getPacketIdentifier() {
@@ -130,7 +121,7 @@ public class RadiusPacket {
 
 	/**
 	 * Sets the packet identifier for this Radius packet.
-	 * 
+	 *
 	 * @param identifier
 	 *            packet identifier, 0-255
 	 */
@@ -142,7 +133,7 @@ public class RadiusPacket {
 
 	/**
 	 * Returns the type of this Radius packet.
-	 * 
+	 *
 	 * @return packet type
 	 */
 	public int getPacketType() {
@@ -151,7 +142,7 @@ public class RadiusPacket {
 
 	/**
 	 * Returns the type name of this Radius packet.
-	 * 
+	 *
 	 * @return name
 	 */
 	public String getPacketTypeName() {
@@ -182,7 +173,7 @@ public class RadiusPacket {
 				return "Status-Server";
 			case STATUS_CLIENT:
 				return "Status-Client";
-				// RFC 2882
+			// RFC 2882
 			case DISCONNECT_REQUEST:
 				return "Disconnect-Request";
 			case DISCONNECT_ACK:
@@ -210,7 +201,7 @@ public class RadiusPacket {
 
 	/**
 	 * Sets the type of this Radius packet.
-	 * 
+	 *
 	 * @param type
 	 *            packet type, 0-255
 	 */
@@ -222,7 +213,7 @@ public class RadiusPacket {
 
 	/**
 	 * Sets the list of attributes for this Radius packet.
-	 * 
+	 *
 	 * @param attributes
 	 *            list of RadiusAttribute objects
 	 */
@@ -244,7 +235,7 @@ public class RadiusPacket {
 	 * to add Vendor-Specific sub-attributes. If a attribute with
 	 * a vendor code != -1 is passed in, a VendorSpecificAttribute
 	 * is created for the sub-attribute.
-	 * 
+	 *
 	 * @param attribute
 	 *            RadiusAttribute object
 	 */
@@ -266,7 +257,7 @@ public class RadiusPacket {
 	 * Uses AttributeTypes to lookup the type code and converts
 	 * the value.
 	 * Can also be used to add sub-attributes.
-	 * 
+	 *
 	 * @param typeName
 	 *            name of the attribute, for example "NAS-Ip-Address"
 	 * @param value
@@ -291,7 +282,7 @@ public class RadiusPacket {
 
 	/**
 	 * Removes the specified attribute from this packet.
-	 * 
+	 *
 	 * @param attribute
 	 *            RadiusAttribute to remove
 	 */
@@ -320,7 +311,7 @@ public class RadiusPacket {
 	/**
 	 * Removes all attributes from this packet which have got
 	 * the specified type.
-	 * 
+	 *
 	 * @param type
 	 *            attribute type to remove
 	 */
@@ -339,7 +330,7 @@ public class RadiusPacket {
 	/**
 	 * Removes the last occurence of the attribute of the given
 	 * type from the packet.
-	 * 
+	 *
 	 * @param type
 	 *            attribute type code
 	 */
@@ -355,7 +346,7 @@ public class RadiusPacket {
 	/**
 	 * Removes all sub-attributes of the given vendor and
 	 * type.
-	 * 
+	 *
 	 * @param vendorId
 	 *            vendor ID
 	 * @param typeCode
@@ -387,7 +378,7 @@ public class RadiusPacket {
 	/**
 	 * Returns all attributes of this packet of the given type.
 	 * Returns an empty list if there are no such attributes.
-	 * 
+	 *
 	 * @param attributeType
 	 *            type of attributes to get
 	 * @return list of RadiusAttribute objects, does not return null
@@ -409,7 +400,7 @@ public class RadiusPacket {
 	 * Returns all attributes of this packet that have got the
 	 * given type and belong to the given vendor ID.
 	 * Returns an empty list if there are no such attributes.
-	 * 
+	 *
 	 * @param vendorId
 	 *            vendor ID
 	 * @param attributeType
@@ -438,7 +429,7 @@ public class RadiusPacket {
 	/**
 	 * Returns a list of all attributes belonging to this Radius
 	 * packet.
-	 * 
+	 *
 	 * @return List of RadiusAttribute objects
 	 */
 	public List getAttributes() {
@@ -448,7 +439,7 @@ public class RadiusPacket {
 	/**
 	 * Returns a Radius attribute of the given type which may only occur once
 	 * in the Radius packet.
-	 * 
+	 *
 	 * @param type
 	 *            attribute type
 	 * @return RadiusAttribute object or null if there is no such attribute
@@ -469,7 +460,7 @@ public class RadiusPacket {
 	/**
 	 * Returns a Radius attribute of the given type and vendor ID
 	 * which may only occur once in the Radius packet.
-	 * 
+	 *
 	 * @param vendorId
 	 *            vendor ID
 	 * @param type
@@ -495,7 +486,7 @@ public class RadiusPacket {
 	/**
 	 * Returns a single Radius attribute of the given type name.
 	 * Also returns sub-attributes.
-	 * 
+	 *
 	 * @param type
 	 *            attribute type name
 	 * @return RadiusAttribute object or null if there is no such attribute
@@ -517,7 +508,7 @@ public class RadiusPacket {
 	 * Returns the value of the Radius attribute of the given type or
 	 * null if there is no such attribute.
 	 * Also returns sub-attributes.
-	 * 
+	 *
 	 * @param type
 	 *            attribute type name
 	 * @return value of the attribute as a string or null if there
@@ -537,7 +528,7 @@ public class RadiusPacket {
 
 	/**
 	 * Returns the Vendor-Specific attribute(s) for the given vendor ID.
-	 * 
+	 *
 	 * @param vendorId
 	 *            vendor ID of the attribute(s)
 	 * @return List with VendorSpecificAttribute objects, never null
@@ -560,7 +551,7 @@ public class RadiusPacket {
 	 * If there is more than one Vendor-Specific
 	 * attribute with the given vendor ID, the first attribute found is
 	 * returned. If there is no such attribute, null is returned.
-	 * 
+	 *
 	 * @param vendorId
 	 *            vendor ID of the attribute
 	 * @return the attribute or null if there is no such attribute
@@ -579,7 +570,7 @@ public class RadiusPacket {
 	/**
 	 * Encodes this Radius packet and sends it to the specified output
 	 * stream.
-	 * 
+	 *
 	 * @param out
 	 *            output stream to use
 	 * @param sharedSecret
@@ -594,7 +585,7 @@ public class RadiusPacket {
 	/**
 	 * Encodes this Radius response packet and sends it to the specified output
 	 * stream.
-	 * 
+	 *
 	 * @param out
 	 *            output stream to use
 	 * @param sharedSecret
@@ -615,7 +606,7 @@ public class RadiusPacket {
 	 * creates an appropiate RadiusPacket descendant object.
 	 * Reads in all attributes and returns the object.
 	 * Decodes the encrypted fields and attributes of the packet.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret to be used to decode this packet
 	 * @return new RadiusPacket object
@@ -637,7 +628,7 @@ public class RadiusPacket {
 	 * creates an appropiate RadiusPacket descendant object.
 	 * Reads in all attributes and returns the object.
 	 * Checks the packet authenticator.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret to be used to decode this packet
 	 * @param request
@@ -659,7 +650,7 @@ public class RadiusPacket {
 	 * creates an appropiate RadiusPacket descendant object.
 	 * Reads in all attributes and returns the object.
 	 * Decodes the encrypted fields and attributes of the packet.
-	 * 
+	 *
 	 * @param dictionary
 	 *            dictionary to use for attributes
 	 * @param in
@@ -681,7 +672,7 @@ public class RadiusPacket {
 	 * creates an appropiate RadiusPacket descendant object.
 	 * Reads in all attributes and returns the object.
 	 * Checks the packet authenticator.
-	 * 
+	 *
 	 * @param dictionary
 	 *            dictionary to use for attributes
 	 * @param in
@@ -697,7 +688,7 @@ public class RadiusPacket {
 	 *                malformed packet
 	 */
 	public static RadiusPacket decodeResponsePacket(Dictionary dictionary, InputStream in, String sharedSecret, RadiusPacket request)
-	        throws IOException, RadiusException {
+			throws IOException, RadiusException {
 		if (request == null)
 			throw new NullPointerException("request may not be null");
 		return decodePacket(dictionary, in, sharedSecret, request);
@@ -706,7 +697,7 @@ public class RadiusPacket {
 	/**
 	 * Retrieves the next packet identifier to use and increments the static
 	 * storage.
-	 * 
+	 *
 	 * @return the next packet identifier to use
 	 */
 	public static synchronized int getNextPacketIdentifier() {
@@ -720,7 +711,7 @@ public class RadiusPacket {
 	 * Creates a RadiusPacket object. Depending on the passed type, an
 	 * appropriate packet is created. Also sets the type, and the
 	 * the packet identifier.
-	 * 
+	 *
 	 * @param type
 	 *            packet type
 	 * @return RadiusPacket object
@@ -749,8 +740,8 @@ public class RadiusPacket {
 
 	/**
 	 * String representation of this packet, for debugging purposes.
-	 * 
-	 * @see java.lang.Object#toString()
+	 *
+	 * @see Object#toString()
 	 */
 	public String toString() {
 		StringBuffer s = new StringBuffer();
@@ -760,8 +751,32 @@ public class RadiusPacket {
 		for (Iterator i = attributes.iterator(); i.hasNext();) {
 			RadiusAttribute attr = (RadiusAttribute) i.next();
 			s.append("\n");
+			s.append(String.format("\t%s", attr.toString()));
+		}
+		return s.toString();
+	}
+
+	public String toLineString() {
+		StringBuffer s = new StringBuffer();
+		s.append(getPacketTypeName());
+		s.append(", ID ");
+		s.append(packetIdentifier);
+		for (Iterator i = attributes.iterator(); i.hasNext();) {
+			RadiusAttribute attr = (RadiusAttribute) i.next();
+			s.append(", ");
 			s.append(attr.toString());
 		}
+		return s.toString();
+	}
+
+	public String toSimpleString() {
+		StringBuffer s = new StringBuffer();
+		s.append(getPacketTypeName()).append(":");
+		s.append(String.format("username=%s, ", getUsername()));
+		s.append(String.format("macAddr=%s, ", getMacAddr()));
+		s.append(String.format("nasPortId=%s, ", getNasPortId()));
+		s.append(String.format("userIp=%s, ", getFramedIpaddr()));
+		s.append(String.format("nasAddr=%s ", getNasAddr()));
 		return s.toString();
 	}
 
@@ -772,7 +787,7 @@ public class RadiusPacket {
 	 * this will return the authenticator created by the method
 	 * createAuthenticator() and will return null if no authenticator
 	 * has been created yet.
-	 * 
+	 *
 	 * @return authenticator, 16 bytes
 	 */
 	public byte[] getAuthenticator() {
@@ -783,7 +798,7 @@ public class RadiusPacket {
 	 * Sets the authenticator to be used for this Radius packet.
 	 * This method should seldomly be used.
 	 * Authenticators are created and managed by this class internally.
-	 * 
+	 *
 	 * @param authenticator
 	 *            authenticator
 	 */
@@ -793,7 +808,7 @@ public class RadiusPacket {
 
 	/**
 	 * Returns the dictionary this Radius packet uses.
-	 * 
+	 *
 	 * @return Dictionary instance
 	 */
 	public Dictionary getDictionary() {
@@ -804,7 +819,7 @@ public class RadiusPacket {
 	 * Sets a custom dictionary to use. If no dictionary is set,
 	 * the default dictionary is used.
 	 * Also copies the dictionary to the attributes.
-	 * 
+	 *
 	 * @param dictionary
 	 *            Dictionary class to use
 	 * @see DefaultDictionary
@@ -820,7 +835,7 @@ public class RadiusPacket {
 	/**
 	 * Encodes this Radius packet and sends it to the specified output
 	 * stream.
-	 * 
+	 *
 	 * @param out
 	 *            output stream to use
 	 * @param sharedSecret
@@ -845,7 +860,7 @@ public class RadiusPacket {
 		// request packet authenticator
 		if (request == null) {
 			// first create authenticator, then encode attributes
-			// (User-Password attribute needs the authenticator)
+			// (RadUser-Password attribute needs the authenticator)
 			authenticator = createRequestAuthenticator(sharedSecret);
 			encodeRequestAttributes(sharedSecret);
 		}
@@ -876,10 +891,10 @@ public class RadiusPacket {
 
 	/**
 	 * This method exists for subclasses to be overridden in order to
-	 * encode packet attributes like the User-Password attribute.
+	 * encode packet attributes like the RadUser-Password attribute.
 	 * The method may use getAuthenticator() to get the request
 	 * authenticator.
-	 * 
+	 *
 	 * @param sharedSecret
 	 */
 	protected void encodeRequestAttributes(String sharedSecret) {
@@ -888,7 +903,7 @@ public class RadiusPacket {
 	/**
 	 * Creates a request authenticator for this packet. This request authenticator
 	 * is constructed as described in RFC 2865.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret that secures the communication
 	 *            with the other Radius server/client
@@ -909,7 +924,7 @@ public class RadiusPacket {
 	/**
 	 * AccountingRequest overrides this
 	 * method to create a request authenticator as specified by RFC 2866.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret
 	 * @param packetLength
@@ -924,7 +939,7 @@ public class RadiusPacket {
 
 	/**
 	 * Creates an authenticator for a Radius response packet.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret
 	 * @param packetLength
@@ -953,7 +968,7 @@ public class RadiusPacket {
 	 * creates an appropiate RadiusPacket descendant object.
 	 * Reads in all attributes and returns the object.
 	 * Decodes the encrypted fields and attributes of the packet.
-	 * 
+	 *
 	 * @param dictionary
 	 *            dictionary to use for attributes
 	 * @param sharedSecret
@@ -968,13 +983,13 @@ public class RadiusPacket {
 	 *                if the Radius packet is malformed
 	 */
 	protected static RadiusPacket decodePacket(Dictionary dictionary, InputStream in, String sharedSecret, RadiusPacket request) throws IOException,
-		RadiusException {
+			RadiusException {
 		return decodePacket(dictionary, in, sharedSecret, request, UNDEFINED);
 	}
-	
-	public static RadiusPacket decodePacket(Dictionary dictionary, InputStream in, 
-		String sharedSecret, RadiusPacket request, int forceType) throws IOException,
-	        RadiusException {
+
+	public static RadiusPacket decodePacket(Dictionary dictionary, InputStream in,
+											String sharedSecret, RadiusPacket request, int forceType) throws IOException,
+			RadiusException {
 		// check shared secret
 		if (sharedSecret == null || sharedSecret.length() == 0)
 			throw new RuntimeException("no shared secret has been set");
@@ -990,7 +1005,7 @@ public class RadiusPacket {
 
 		if (request != null && request.getPacketIdentifier() != identifier)
 			throw new RadiusException("bad packet: invalid packet identifier (request: " + request.getPacketIdentifier() + ", response: "
-			        + identifier);
+					+ identifier);
 		if (length < RADIUS_HEADER_LENGTH)
 			throw new RadiusException("bad packet: packet too short (" + length + " bytes)");
 		if (length > MAX_PACKET_LENGTH)
@@ -1054,7 +1069,7 @@ public class RadiusPacket {
 	 * Overriden by AccountingRequest to handle special accounting request
 	 * authenticators. There is no way to check request authenticators for
 	 * authentication requests as they contain secret bytes.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret
 	 * @param packetLength
@@ -1068,9 +1083,9 @@ public class RadiusPacket {
 
 	/**
 	 * Can be overriden to decode encoded request attributes such as
-	 * User-Password. This method may use getAuthenticator() to get the
+	 * RadUser-Password. This method may use getAuthenticator() to get the
 	 * request authenticator.
-	 * 
+	 *
 	 * @param sharedSecret
 	 * @throws RadiusException
 	 */
@@ -1080,7 +1095,7 @@ public class RadiusPacket {
 	/**
 	 * This method checks the authenticator of this Radius packet. This method
 	 * may be overriden to include special attributes in the authenticator check.
-	 * 
+	 *
 	 * @param sharedSecret
 	 *            shared secret to be used to encrypt the authenticator
 	 * @param packetLength
@@ -1092,7 +1107,7 @@ public class RadiusPacket {
 	 *            to this response packet
 	 */
 	protected void checkResponseAuthenticator(String sharedSecret, int packetLength, byte[] attributes, byte[] requestAuthenticator)
-	        throws RadiusException {
+			throws RadiusException {
 		byte[] authenticator = createResponseAuthenticator(sharedSecret, packetLength, attributes, requestAuthenticator);
 		byte[] receivedAuth = getAuthenticator();
 		for (int i = 0; i < 16; i++)
@@ -1102,7 +1117,7 @@ public class RadiusPacket {
 
 	/**
 	 * Returns a MD5 digest.
-	 * 
+	 *
 	 * @return MessageDigest object
 	 */
 	protected MessageDigest getMd5Digest() {
@@ -1116,9 +1131,188 @@ public class RadiusPacket {
 		return md5Digest;
 	}
 
+	public String getIdentifier(){
+		try{
+			return getAttribute(32).getStringValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public String getUsername(){
+		try{
+			return getAttribute(1).getStringValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public String getNasAddr(){
+		try{
+			return getAttribute(4).getIpValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public int getSessionTimeout(){
+		try{
+			return getAttribute(27).getIntValue();
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public String getFramedIpaddr(){
+		try{
+			return getAttribute(8).getIpValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public String getFramedNetmask(){
+		try{
+			return getAttribute(9).getIpValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public String getCallingStationId(){
+		try{
+			return getAttribute(31).getStringValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+
+	public int getNasPort(){
+		try{
+			return getAttribute(5).getIntValue();
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public String getNasClass(){
+		try{
+			return getAttribute(25).getStringValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public String getNasPortId(){
+		try{
+			return getAttribute(87).getStringValue();
+		} catch(Exception e){
+			return null;
+		}
+	}
+
+	public int getServiceType(){
+		try{
+			return getAttribute(6).getIntValue();
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+
+	public String getAcctSessionId(){
+		return getAttribute(44).getStringValue();
+	}
+
+	public int getAcctSessionTime(){
+		try{
+			return getAttribute(46).getIntValue();
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public long getAcctInputTotal(){
+		try{
+			int bl = getAttribute(42).getIntValue();
+			int gl = getAttribute(52).getIntValue();
+			long gb = (long)gl * (4*1024*1024*1024);
+			return bl + gb;
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public long getAcctOutputTotal(){
+		try{
+			int bl = getAttribute(43).getIntValue();
+			int gl = getAttribute(53).getIntValue();
+			long gb = (long)gl * (4*1024*1024*1024);
+			return bl + gb;
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public int getAcctInputPackets(){
+		try{
+			return getAttribute(47).getIntValue();
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public int getAcctOutputPackets(){
+		try{
+			return getAttribute(48).getIntValue();
+		} catch(Exception e){
+			return 0;
+		}
+	}
+
+	public String getAcctStartTime(){
+		try{
+			int stime = getAttribute(46).getIntValue();
+			return DateTimeUtil.getPreviousDateTimeBySecondString(stime);
+		} catch(Exception e){
+			return DateTimeUtil.getDateTimeString();
+		}
+	}
+
+	public String getMacAddr() {
+		if(macAddr!=null){
+			return macAddr.replaceAll("-",":");
+		}else{
+			return getCallingStationId();
+		}
+	}
+
+	public void setMacAddr(String macAddr) {
+		this.macAddr = macAddr;
+	}
+
+	public int getInVlanId() {
+		return inVlanId;
+	}
+
+	public void setInVlanId(int inVlanId) {
+		this.inVlanId = inVlanId;
+	}
+
+	public int getOutVlanId() {
+		return OutVlanId;
+	}
+
+	public void setOutVlanId(int outVlanId) {
+		OutVlanId = outVlanId;
+	}
+
+
+
 	/**
 	 * Encodes the attributes of this Radius packet to a byte array.
-	 * 
+	 *
 	 * @return byte array with encoded attributes
 	 * @throws IOException
 	 *             error writing data
@@ -1132,6 +1326,22 @@ public class RadiusPacket {
 		bos.flush();
 		return bos.toByteArray();
 	}
+
+	public InetSocketAddress getRemoteAddr() {
+		return remoteAddr;
+	}
+
+	public void setRemoteAddr(InetSocketAddress remoteAddr) {
+		this.remoteAddr = remoteAddr;
+	}
+
+	private InetSocketAddress remoteAddr;
+
+	private String macAddr;
+
+	private int inVlanId;
+	private int OutVlanId;
+
 
 	/**
 	 * Type of this Radius packet.

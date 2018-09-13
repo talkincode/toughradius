@@ -7,7 +7,7 @@ import java.util.Date;
 public class Ticket {
     private Integer id;
 
-    private Integer nodeId;
+    private Integer groupId;
 
     private String username;
 
@@ -59,12 +59,12 @@ public class Ticket {
         this.id = id;
     }
 
-    public Integer getNodeId() {
-        return nodeId;
+    public Integer getGroupId() {
+        return groupId;
     }
 
-    public void setNodeId(Integer nodeId) {
-        this.nodeId = nodeId;
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
     }
 
     public String getUsername() {
@@ -238,7 +238,7 @@ public class Ticket {
 
     public static String getHeaderString(){
         StringBuilder buff = new StringBuilder();
-        buff.append("nodeId").append(",");
+        buff.append("groupId").append(",");
         buff.append("username").append(",");
         buff.append("nasId").append(",");
         buff.append("nasAddr").append(",");
@@ -265,7 +265,7 @@ public class Ticket {
 
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        buff.append(nodeId).append(",");
+        buff.append(groupId).append(",");
         buff.append(username).append(",");
         buff.append(nasId).append(",");
         buff.append(nasAddr).append(",");
@@ -297,7 +297,7 @@ public class Ticket {
                 return null;
             }
             Ticket log = new Ticket();
-            log.setNodeId(Integer.valueOf(strs[0]));
+            log.setGroupId(Integer.valueOf(strs[0]));
             log.setUsername(strs[1]);
             log.setNasId(strs[2]);
             log.setNasAddr(strs[3]);

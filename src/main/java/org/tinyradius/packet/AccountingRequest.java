@@ -90,7 +90,7 @@ public class AccountingRequest extends RadiusPacket {
 	 * @return user name
 	 * @throws RadiusException
 	 */
-	public String getUserName() throws RadiusException {
+	public String getUserName() throws RuntimeException {
 		List attrs = getAttributes(USER_NAME);
 		if (attrs.size() < 1 || attrs.size() > 1)
 			throw new RuntimeException("exactly one User-Name attribute required");

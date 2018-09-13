@@ -4,12 +4,19 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 
-public class Subscribe {
+public class User {
+
     private Integer id;
 
-    private Integer nodeId;
+    private Integer groupId;
 
-    private String subscriber;
+    private String fullname;
+
+    private String email;
+
+    private String mobile;
+
+    private String username;
 
     private String password;
 
@@ -21,13 +28,13 @@ public class Subscribe {
 
     private String policy;
 
-    private Integer activeNum;
+    private Integer onlineNum;
 
     private BigInteger flowAmount;
 
-    private Boolean bindMac;
+    private Integer bindMac;
 
-    private Boolean bindVlan;
+    private Integer bindVlan;
 
     private String ipAddr;
 
@@ -37,18 +44,17 @@ public class Subscribe {
 
     private Integer outVlan;
 
-    private BigDecimal upRate;
+    private BigInteger upRate;
 
-    private BigDecimal downRate;
+    private BigInteger downRate;
 
-    private BigDecimal upPeakRate;
+    private BigInteger upPeakRate;
 
-    private BigDecimal downPeakRate;
+    private BigInteger downPeakRate;
 
     private String status;
 
     private String remark;
-
 
     private Date expireTime;
 
@@ -64,12 +70,44 @@ public class Subscribe {
         this.id = id;
     }
 
-    public String getSubscriber() {
-        return subscriber;
+    public Integer getGroupId() {
+        return groupId;
     }
 
-    public void setSubscriber(String subscriber) {
-        this.subscriber = subscriber == null ? null : subscriber.trim();
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
+    }
+
+    public String getFullname() {
+        return fullname;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getMobile() {
+        return mobile;
+    }
+
+    public void setMobile(String mobile) {
+        this.mobile = mobile;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 
     public String getPassword() {
@@ -77,7 +115,7 @@ public class Subscribe {
     }
 
     public void setPassword(String password) {
-        this.password = password == null ? null : password.trim();
+        this.password = password;
     }
 
     public String getBillType() {
@@ -85,7 +123,7 @@ public class Subscribe {
     }
 
     public void setBillType(String billType) {
-        this.billType = billType == null ? null : billType.trim();
+        this.billType = billType;
     }
 
     public String getDomain() {
@@ -93,7 +131,7 @@ public class Subscribe {
     }
 
     public void setDomain(String domain) {
-        this.domain = domain == null ? null : domain.trim();
+        this.domain = domain;
     }
 
     public String getAddrPool() {
@@ -101,7 +139,7 @@ public class Subscribe {
     }
 
     public void setAddrPool(String addrPool) {
-        this.addrPool = addrPool == null ? null : addrPool.trim();
+        this.addrPool = addrPool;
     }
 
     public String getPolicy() {
@@ -109,15 +147,15 @@ public class Subscribe {
     }
 
     public void setPolicy(String policy) {
-        this.policy = policy == null ? null : policy.trim();
+        this.policy = policy;
     }
 
-    public Integer getActiveNum() {
-        return activeNum;
+    public Integer getOnlineNum() {
+        return onlineNum;
     }
 
-    public void setActiveNum(Integer activeNum) {
-        this.activeNum = activeNum;
+    public void setOnlineNum(Integer onlineNum) {
+        this.onlineNum = onlineNum;
     }
 
     public BigInteger getFlowAmount() {
@@ -128,19 +166,19 @@ public class Subscribe {
         this.flowAmount = flowAmount;
     }
 
-    public Boolean getBindMac() {
+    public Integer getBindMac() {
         return bindMac;
     }
 
-    public void setBindMac(Boolean bindMac) {
+    public void setBindMac(Integer bindMac) {
         this.bindMac = bindMac;
     }
 
-    public Boolean getBindVlan() {
+    public Integer getBindVlan() {
         return bindVlan;
     }
 
-    public void setBindVlan(Boolean bindVlan) {
+    public void setBindVlan(Integer bindVlan) {
         this.bindVlan = bindVlan;
     }
 
@@ -149,7 +187,7 @@ public class Subscribe {
     }
 
     public void setIpAddr(String ipAddr) {
-        this.ipAddr = ipAddr == null ? null : ipAddr.trim();
+        this.ipAddr = ipAddr;
     }
 
     public String getMacAddr() {
@@ -157,7 +195,7 @@ public class Subscribe {
     }
 
     public void setMacAddr(String macAddr) {
-        this.macAddr = macAddr == null ? null : macAddr.trim();
+        this.macAddr = macAddr;
     }
 
     public Integer getInVlan() {
@@ -176,29 +214,44 @@ public class Subscribe {
         this.outVlan = outVlan;
     }
 
-    public BigDecimal getUpRate() {
+    public BigInteger getUpRate() {
         return upRate;
     }
 
-    public void setUpRate(BigDecimal upRate) {
+    public void setUpRate(BigInteger upRate) {
         this.upRate = upRate;
     }
 
-    public BigDecimal getDownRate() {
+    public BigInteger getDownRate() {
         return downRate;
     }
 
-    public void setDownRate(BigDecimal downRate) {
+    public void setDownRate(BigInteger downRate) {
         this.downRate = downRate;
     }
 
+    public BigInteger getUpPeakRate() {
+        return upPeakRate;
+    }
+
+    public void setUpPeakRate(BigInteger upPeakRate) {
+        this.upPeakRate = upPeakRate;
+    }
+
+    public BigInteger getDownPeakRate() {
+        return downPeakRate;
+    }
+
+    public void setDownPeakRate(BigInteger downPeakRate) {
+        this.downPeakRate = downPeakRate;
+    }
 
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
-        this.status = status == null ? null : status.trim();
+        this.status = status;
     }
 
     public String getRemark() {
@@ -206,9 +259,8 @@ public class Subscribe {
     }
 
     public void setRemark(String remark) {
-        this.remark = remark == null ? null : remark.trim();
+        this.remark = remark;
     }
-
 
     public Date getExpireTime() {
         return expireTime;
@@ -232,30 +284,5 @@ public class Subscribe {
 
     public void setUpdateTime(Date updateTime) {
         this.updateTime = updateTime;
-    }
-
-
-    public Integer getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(Integer nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public BigDecimal getUpPeakRate() {
-        return upPeakRate;
-    }
-
-    public void setUpPeakRate(BigDecimal upPeakRate) {
-        this.upPeakRate = upPeakRate;
-    }
-
-    public BigDecimal getDownPeakRate() {
-        return downPeakRate;
-    }
-
-    public void setDownPeakRate(BigDecimal downPeakRate) {
-        this.downPeakRate = downPeakRate;
     }
 }

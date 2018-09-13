@@ -7,7 +7,7 @@ public class Online implements Cloneable{
 
     private Integer id;
 
-    private Integer nodeId;
+    private Integer groupId;
 
     private String username;
 
@@ -67,14 +67,13 @@ public class Online implements Cloneable{
         this.id = id;
     }
 
-    public Integer getNodeId() {
-        return nodeId;
+    public Integer getGroupId() {
+        return groupId;
     }
 
-    public void setNodeId(Integer nodeId) {
-        this.nodeId = nodeId;
+    public void setGroupId(Integer groupId) {
+        this.groupId = groupId;
     }
-
 
     public String getUsername() {
         return username;
