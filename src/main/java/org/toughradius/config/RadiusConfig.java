@@ -4,8 +4,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.filterchain.IoFilter;
 import org.apache.mina.filter.executor.ExecutorFilter;
-import org.apache.mina.filter.logging.LoggingFilter;
-import org.apache.mina.filter.logging.MdcInjectionFilter;
 import org.apache.mina.transport.socket.DatagramSessionConfig;
 import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -45,12 +43,11 @@ public class RadiusConfig {
     /**
      * Radius 认证服务配置
      * @param radiusAuthHandler
-     * @param authIoFilterChainBuilder
      * @return
      * @throws IOException
      */
     @Bean( destroyMethod = "unbind")
-    public NioDatagramAcceptor nioAuthAcceptor(RadiusAuthHandler radiusAuthHandler, DefaultIoFilterChainBuilder authIoFilterChainBuilder) throws IOException {
+    public NioDatagramAcceptor nioAuthAcceptor(RadiusAuthHandler radiusAuthHandler) throws IOException {
         if(!running){
             logger.info("====== RadiusAuthServer not running =======");
             return null;
@@ -58,10 +55,14 @@ public class RadiusConfig {
         NioDatagramAcceptor nioAuthAcceptor = new NioDatagramAcceptor();
         nioAuthAcceptor.setDefaultLocalAddress(new InetSocketAddress(authport));
         DatagramSessionConfig dcfg = nioAuthAcceptor.getSessionConfig();
-        dcfg.setReceiveBufferSize(8192);
+        dcfg.setReceiveBufferSize(1048576);
         dcfg.setReadBufferSize(8192);
         dcfg.setSendBufferSize(4096);
         dcfg.setReuseAddress(true);
+        DefaultIoFilterChainBuilder authIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
+        Map<String, IoFilter> filters = new LinkedHashMap<>();
+        filters.put("executor", new ExecutorFilter(getAuthPool()));
+        authIoFilterChainBuilder.setFilters(filters);
         nioAuthAcceptor.setFilterChainBuilder(authIoFilterChainBuilder);
         nioAuthAcceptor.setHandler(radiusAuthHandler);
         nioAuthAcceptor.bind();
@@ -69,56 +70,14 @@ public class RadiusConfig {
         return nioAuthAcceptor;
     }
 
-
-    @Bean
-    public DefaultIoFilterChainBuilder authIoFilterChainBuilder(ExecutorFilter authExecutorFilter,
-                                                                  MdcInjectionFilter authMdcInjectionFilter,
-                                                                  LoggingFilter authLoggingFilter) {
-        DefaultIoFilterChainBuilder authIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
-        Map<String, IoFilter> filters = new LinkedHashMap<>();
-        filters.put("executor", authExecutorFilter);
-//        filters.put("mdcInjectionFilter", authMdcInjectionFilter);
-//        filters.put("loggingFilter", authLoggingFilter);
-        authIoFilterChainBuilder.setFilters(filters);
-        return authIoFilterChainBuilder;
-    }
-
-
-    @Bean
-    public ExecutorFilter authExecutorFilter() {
-        return new ExecutorFilter(getAuthPool());
-    }
-
-    @Bean
-    public MdcInjectionFilter authMdcInjectionFilter() {
-        return new MdcInjectionFilter(MdcInjectionFilter.MdcKey.remoteAddress);
-    }
-
-    @Bean
-    public LoggingFilter authLoggingFilter() {
-        return new LoggingFilter();
-    }
-
-
-
-    public int getAuthport() {
-        return authport;
-    }
-
-    public void setAuthport(int authport) {
-        this.authport = authport;
-    }
-
-
     /**
      * Radius 记账服务配置
      * @param radiusAcctHandler
-     * @param acctIoFilterChainBuilder
      * @return
      * @throws IOException
      */
     @Bean(destroyMethod = "unbind")
-    public NioDatagramAcceptor nioAcctAcceptor(RadiusAcctHandler radiusAcctHandler, DefaultIoFilterChainBuilder acctIoFilterChainBuilder) throws IOException {
+    public NioDatagramAcceptor nioAcctAcceptor(RadiusAcctHandler radiusAcctHandler) throws IOException {
         if(!running){
             logger.info("====== RadiusAcctServer not running ======");
             return null;
@@ -126,10 +85,14 @@ public class RadiusConfig {
         NioDatagramAcceptor nioAcctAcceptor = new NioDatagramAcceptor();
         nioAcctAcceptor.setDefaultLocalAddress(new InetSocketAddress(acctport));
         DatagramSessionConfig dcfg = nioAcctAcceptor.getSessionConfig();
-        dcfg.setReceiveBufferSize(8192);
+        dcfg.setReceiveBufferSize(1048576);
         dcfg.setReadBufferSize(8192);
         dcfg.setSendBufferSize(4096);
         dcfg.setReuseAddress(true);
+        DefaultIoFilterChainBuilder acctIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
+        Map<String, IoFilter> filters = new LinkedHashMap<>();
+        filters.put("executor", new ExecutorFilter(getAcctPool()));
+        acctIoFilterChainBuilder.setFilters(filters);
         nioAcctAcceptor.setFilterChainBuilder(acctIoFilterChainBuilder);
         nioAcctAcceptor.setHandler(radiusAcctHandler);
         nioAcctAcceptor.bind();
@@ -137,34 +100,12 @@ public class RadiusConfig {
         return nioAcctAcceptor;
     }
 
-
-    @Bean
-    public DefaultIoFilterChainBuilder acctIoFilterChainBuilder(ExecutorFilter acctExecutorFilter,
-                                                                MdcInjectionFilter acctMdcInjectionFilter,
-                                                                LoggingFilter acctLoggingFilter) {
-        DefaultIoFilterChainBuilder acctIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
-        Map<String, IoFilter> filters = new LinkedHashMap<>();
-        filters.put("executor", acctExecutorFilter);
-//        filters.put("mdcInjectionFilter", acctMdcInjectionFilter);
-//        filters.put("loggingFilter", acctLoggingFilter);
-        acctIoFilterChainBuilder.setFilters(filters);
-        return acctIoFilterChainBuilder;
+    public int getAuthport() {
+        return authport;
     }
 
-    @Bean
-    public ExecutorFilter acctExecutorFilter() {
-        return new ExecutorFilter(getAcctPool());
-    }
-
-    @Bean
-    public MdcInjectionFilter acctMdcInjectionFilter() {
-        return new MdcInjectionFilter(MdcInjectionFilter.MdcKey.remoteAddress);
-    }
-
-
-    @Bean
-    public LoggingFilter acctLoggingFilter() {
-        return new LoggingFilter();
+    public void setAuthport(int authport) {
+        this.authport = authport;
     }
 
     public int getAcctport() {

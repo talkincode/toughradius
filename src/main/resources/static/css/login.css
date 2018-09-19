@@ -1,0 +1,38 @@
+body {
+    background-color: #2a323c;
+    background-size: 100% 100%;
+}
+.login-page{
+
+}
+.login-win{
+    border-radius: 3px;
+    background-color: #323e4d !important;
+}
+.login-win .webix_form {
+
+}
+.login-logo{
+    width:117;height:56;
+    background-image: url(../images/login-logo.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+.login-title{
+    color: #fff;
+}
+.login-win .webix_view{
+    background-color: #323e4d !important;
+    border: none;
+    font-size: 16px !important;
+}
+
+.login-win .webix_form input{
+    border-radius: 3px;
+    background-color: #2a323c;
+    border-color: #6a7077;
+    color:#fff;
+}
+.login-win #login_btn button{
+    font-size: 16px;
+}
