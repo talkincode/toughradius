@@ -18,12 +18,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Configuration
-@ConfigurationProperties(prefix = "org.toughradius")
+@ConfigurationProperties(prefix = "org.toughradius.radiusd")
 public class RadiusConfig {
 
     private Log logger = LogFactory.getLog(RadiusConfig.class);
 
-    private String version;
     private int authport;
     private int acctport;
     private int trace;
@@ -225,11 +224,4 @@ public class RadiusConfig {
         this.statfile = statfile;
     }
 
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
-    }
 }

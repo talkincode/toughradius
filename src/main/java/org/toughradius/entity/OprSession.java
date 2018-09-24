@@ -7,6 +7,7 @@ public class OprSession {
     private String username;
     private Date lastLogin;
     private String loginIp;
+    private String sysVersion;
     private String mobile;
     private String email;
     private Map<String,String> sysConfig = new HashMap<String,String>();
@@ -15,10 +16,11 @@ public class OprSession {
     public OprSession() {
     }
 
-    public OprSession(String username, String loginIp) {
+    public OprSession(String username, String loginIp, String version) {
         setUsername(username);
         setLoginIp(loginIp);
         setLastLogin(new Date());
+        setSysVersion(version);
     }
 
     public void setSysConfig(String name,String value){
@@ -71,5 +73,13 @@ public class OprSession {
 
     public void setMenus(List<MenuItem> menus) {
         this.menus = menus;
+    }
+
+    public String getSysVersion() {
+        return sysVersion;
+    }
+
+    public void setSysVersion(String sysVersion) {
+        this.sysVersion = sysVersion;
     }
 }

@@ -1,11 +1,13 @@
 /* SideBar*/
 .webix_sidebar{
-    border-color: #eaeaea;
-    background: #f6f6f6;
+    border-color: #eaeaea!important;
+    background: #ffffff;
 }
 .webix_sidebar .webix_tree_item {
     border: none;
     color: #5d5c5c;
+    font-size: 14px;
+    font-weight: 600;
     height: 35px;
     line-height: 35px;
     outline: none;
@@ -23,6 +25,8 @@
 .webix_sidebar .webix_tree_item.webix_selected,
 .webix_sidebar .webix_tree_item.webix_selected span{
     color: #1f1f1f;
+    font-size: 14px;
+    font-weight: 600;
     background-color: #e6e6e6;
     padding-right:0;
 }
@@ -44,6 +48,8 @@
 .webix_sidebar .webix_tree_item span{
     margin:0;
     padding:0px;
+    font-size: 14px;
+    font-weight: 600;
 }
 .webix_sidebar_icon{
     width: 40px;

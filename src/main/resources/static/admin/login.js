@@ -39,8 +39,8 @@ webix.ready(function() {
                             autoHeight: true,
                             paddingX: 30,
                             elements: [
-                                {view: "text",name:"username", value: '', placeholder: "帐 号", height:35},
-                                {view: "text", name:"password",type: 'password', value: '', placeholder: "密 码",height:35},
+                                {view: "text",name:"username", value: '', placeholder: "帐 号", height:40},
+                                {view: "text", name:"password",type: 'password', value: '', placeholder: "密 码",height:40},
                                 {
                                     margin: 3, cols: [
                                         {

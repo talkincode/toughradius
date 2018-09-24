@@ -23,8 +23,11 @@ public class BasicController {
 
     private Log logger = LogFactory.getLog(BasicController.class);
 
+    @Autowired
+    private SystemConfig systemConfig;
+
     public OprSession getOprSession(String username, String loginIp) {
-        OprSession oss =  new OprSession(username, loginIp );
+        OprSession oss =  new OprSession(username, loginIp,systemConfig.getVersion());
         oss.setMenus(getMenus());
         return oss;
     }
@@ -39,14 +42,20 @@ public class BasicController {
         MenuItem option= new MenuItem("option","cogs","配置管理");
         menus.add(option);
 
-        MenuItem nas = new MenuItem("nas","server","NAS 设备管理");
+        MenuItem nas = new MenuItem("nas","server","NAS 设备");
         menus.add(nas);
 
-        MenuItem group = new MenuItem("group","users","用户组管理");
+        MenuItem group = new MenuItem("group","users","用户组");
         menus.add(group);
 
-        MenuItem user = new MenuItem("user","user","用户管理");
+        MenuItem user = new MenuItem("user","user","用户信息");
         menus.add(user);
+
+        MenuItem online = new MenuItem("online","user-circle","在线用户");
+        menus.add(online);
+
+        MenuItem ticket = new MenuItem("ticket","hdd-o","上网日志");
+        menus.add(ticket);
 
         return menus;
     }

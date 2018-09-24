@@ -1,13 +1,13 @@
 body {
-    background-color: #2a323c;
+    background-color: #1c2729;
     background-size: 100% 100%;
 }
 .login-page{
 
 }
 .login-win{
-    border-radius: 3px;
-    background-color: #323e4d !important;
+    border-radius: 9px;
+    background-color:#345969 !important;
 }
 .login-win .webix_form {
 
@@ -22,17 +22,17 @@ body {
     color: #fff;
 }
 .login-win .webix_view{
-    background-color: #323e4d !important;
+    background-color: #345969 !important;
     border: none;
     font-size: 16px !important;
 }
 
 .login-win .webix_form input{
-    border-radius: 3px;
-    background-color: #2a323c;
-    border-color: #6a7077;
+    border-radius: 5px!important;
+    /*background-color: #2a323c;*/
     color:#fff;
 }
 .login-win #login_btn button{
-    font-size: 16px;
+    font-size: 18px!important;
 }
+

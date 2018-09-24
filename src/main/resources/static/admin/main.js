@@ -10,6 +10,7 @@ webix.i18n.setLocale(currentLang);
 toughradius.admin = {};
 toughradius.admin.pageId = "toughradius.admin-main-page";
 toughradius.admin.panelId = "toughradius.admin-main-panel";
+toughradius.admin.toolbarId = "toughsms.admin-main-toolbar";
 toughradius.admin.actions = {};
 toughradius.admin.methods = {};
 
@@ -37,6 +38,14 @@ toughradius.admin.methods.showBusyBar = function (viewid,delay, callback){
         callback();
         $$(viewid).enable();
     }, delay);
+};
+
+
+toughradius.admin.methods.setToolbar = function(icon, title, help){
+    $$(toughradius.admin.toolbarId+"_icon").define("icon",icon);
+    $$(toughradius.admin.toolbarId+"_icon").refresh();
+    $$(toughradius.admin.toolbarId+"_title").define("label",title);
+    $$(toughradius.admin.toolbarId+"_title").refresh();
 };
 
 
@@ -93,9 +102,9 @@ webix.ready(function() {
                                     // { view: "template", css: "nav-logo", template: "<a href='/admin'><img src='"+session.uidata.LOGO_URL+"' width='156' height='25'/></a>", height:40},
                                     {
                                         rows: [
-//                                             {
-//                                                 view:"search", height:40, css:"sideber-box", align:"center", placeholder:"通过账号/手机/地址查找用户", id:"search"
-//                                             },
+                                            {
+                                                view:"search", height:40, css:"sideber-box", align:"center", placeholder:"快速查找用户", id:"search"
+                                            },
                                             // { view: "label", css: "sideber-label", label: "<img src='/static/images/logo.png' width='160' height='32' style='margin-top: 7px;'/>", width: 165 },
                                             { view: "label", css: "sideber-label", label: " 功能导航" },
                                             {
@@ -116,9 +125,9 @@ webix.ready(function() {
                                                     }
                                                 },
                                                 ready: function () {
-                                                    // webix.require("admin/dashboard.js?rand="+new Date().getTime(), function () {
-                                                    //     toughradius.admin.dashboard.loadPage(session);
-                                                    // });
+                                                    webix.require("admin/dashboard.js?rand="+new Date().getTime(), function () {
+                                                        toughradius.admin.dashboard.loadPage(session);
+                                                    });
                                                 }
                                             }
                                         ]
@@ -126,11 +135,43 @@ webix.ready(function() {
                                 ]
                             },
                             {
-                                id: toughradius.admin.pageId,
                                 rows:[
                                     {
-                                        id: toughradius.admin.panelId,
-                                        template: ""
+                                        height:40,
+                                        css:"main-toolbar",
+                                        cols:[
+                                            { id:toughradius.admin.toolbarId+"_icon",view:"icon", icon:"home", width:45},
+                                            { id:toughradius.admin.toolbarId+"_title", view: "label", label: ""},
+                                            { },
+                                            {
+                                                view: "button", type: "icon", width: 100, icon: "book", label: "在线文档",  click: function () {
+                                                    window.open("http://www.toughradius.net","在线文档","resizable,scrollbars,status");
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {height:5},
+                                    {
+                                        id: toughradius.admin.pageId,
+                                        css:"main-page",
+                                        paddingX:15,
+                                        // paddingY:3,
+                                        rows:[
+                                            {height:9},
+                                            {
+                                                id: toughradius.admin.panelId,
+                                                template: ""
+                                            },
+                                            {height:9},
+                                            {
+                                                css:"page-footer",
+                                                height:36,
+                                                borderless:true,
+                                                cols:[
+                                                    {},{view:"label", css:"Copyright", label:"© 2018 The ToughRADIUS Project and Contributors"}, {}
+                                                ]
+                                            }
+                                        ]
                                     }
                                 ]
                             }
