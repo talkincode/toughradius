@@ -23,8 +23,8 @@ class RadiusServer(DatagramServer):
         DatagramServer.__init__(self,(host,port))
         self.req_q = req_q
         self.rep_q = rep_q
-        self.init_socket()
-        setsockopt(self.socket)
+        # self.init_socket()
+        # setsockopt(self.socket)
         self.start()
         logger.info('%s started' % self)
         jobs = [gevent.spawn(self.handle_result) for x in range(pool_size)]
