@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.toughradius.mapper.UserMapper">
+
+	<resultMap id="UserMap" type="org.toughradius.entity.User">
+		<id column="code" jdbcType="VARCHAR" property="code" />
+		<result column="group_code" jdbcType="INTEGER" property="groupCode" />
+		<result column="fullname" jdbcType="VARCHAR" property="fullname" />
+		<result column="email" jdbcType="VARCHAR" property="email" />
+		<result column="mobile" jdbcType="VARCHAR" property="mobile" />
+		<result column="username" jdbcType="VARCHAR" property="username" />
+		<result column="password" jdbcType="VARCHAR" property="password" />
+		<result column="bill_type" jdbcType="VARCHAR" property="billType" />
+		<result column="domain" jdbcType="VARCHAR" property="domain" />
+		<result column="addr_pool" jdbcType="VARCHAR" property="addrPool" />
+		<result column="online_num" jdbcType="INTEGER" property="onlineNum" />
+		<result column="flow_amount" jdbcType="BIGINT" property="flowAmount" />
+		<result column="bind_mac" jdbcType="INTEGER" property="bindMac" />
+		<result column="bind_vlan" jdbcType="INTEGER" property="bindVlan" />
+		<result column="ip_addr" jdbcType="VARCHAR" property="ipAddr" />
+		<result column="mac_addr" jdbcType="VARCHAR" property="macAddr" />
+		<result column="in_vlan" jdbcType="INTEGER" property="inVlan" />
+		<result column="out_vlan" jdbcType="INTEGER" property="outVlan" />
+		<result column="up_rate" jdbcType="DECIMAL" property="upRate" />
+		<result column="down_rate" jdbcType="DECIMAL" property="downRate" />
+		<result column="rate_code" jdbcType="VARCHAR" property="rateCode" />
+		<result column="up_rate_code" jdbcType="VARCHAR" property="upRateCode" />
+		<result column="down_rate_code" jdbcType="VARCHAR" property="downRateCode" />
+		<result column="status" jdbcType="VARCHAR" property="status" />
+		<result column="remark" jdbcType="VARCHAR" property="remark" />
+		<result column="is_online" jdbcType="INTEGER" property="isOnline" />
+		<result column="last_online" jdbcType="TIMESTAMP" property="lastOnline" />
+		<result column="last_offline" jdbcType="TIMESTAMP" property="lastOffline" />
+		<result column="expire_time" jdbcType="TIMESTAMP" property="expireTime" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+	</resultMap>
+
+	<select id="getFlowAmount" parameterType="java.lang.String" resultType="java.math.BigInteger" useCache="false">
+		select flow_amount from tr_user where username = #{username} and status = 'enabled'
+	</select>
+
+	<select id="findLastUpdateUser" parameterType="java.lang.String"  resultMap="UserMap" useCache="false">
+		<![CDATA[
+		SELECT username, update_time FROM tr_user
+		WHERE status = 'enabled'
+		AND update_time >= #{lastUpdate}
+		]]>
+	</select>
+
+	<select id="findUser" resultMap="UserMap" useCache="false">
+		SELECT * FROM tr_user WHERE  username =#{username} AND status = 'enabled'
+	</select>
+
+	<update id="updateFlowAmountByUsername">
+		update tr_user
+		set flow_amount=#{flowAmount}
+		where username=#{username} and status='enabled'
+	</update>
+
+	<update id="updateMacAddr">
+		update tr_user
+		set mac_addr=#{macAddr}
+		where username=#{username} and status='enabled'
+	</update>
+	
+	<update id="updateInValn">
+		update tr_user
+		set in_vlan=#{inValn}
+		where username=#{username} and status='enabled'
+	</update>
+	
+	<update id="updateOutValn" >
+		update tr_user
+		set out_vlan=#{outValn}
+		where username=#{username} and status='enabled'
+	</update>
+
+</mapper>

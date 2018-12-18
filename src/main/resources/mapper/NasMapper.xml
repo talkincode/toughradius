@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.toughradius.mapper.NasMapper">
+
+	<resultMap id="NasMap" type="org.toughradius.entity.Nas">
+		<id column="code" jdbcType="VARCHAR" property="code" />
+		<result column="identifier" jdbcType="VARCHAR" property="identifier" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="ipaddr" jdbcType="VARCHAR" property="ipaddr" />
+		<result column="vendorid" jdbcType="VARCHAR" property="vendorid" />
+		<result column="secret" jdbcType="VARCHAR" property="secret" />
+		<result column="coa_port" jdbcType="INTEGER" property="coaPort" />
+		<result column="status" jdbcType="CHAR" property="status" />
+		<result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+	</resultMap>
+	
+	<cache  type="org.mybatis.caches.ehcache.EhcacheCache" readOnly="true"  >
+		<property name="maxElementsInMemory" value="10000"/>
+		<property name="eternal" value="false"/>
+		<property name="timeToIdleSeconds" value="60"/>
+		<property name="timeToLiveSeconds" value="60"/>
+		<property name="memoryStoreEvictionPolicy" value="LRU"/>
+		<property name="logging" value="true"/>
+		<property name="overflowToDisk" value="false"/>
+		<property name="diskPersistent" value="false"/>
+	</cache>
+
+	<sql id="Base_Column_List">
+		id, identifier, name, ipaddr, vendorid, secret, coaport, status, update_time
+	</sql>
+
+	<select id="selectByIPAddr" parameterType="java.lang.String" resultMap="NasMap" useCache="true">
+		select
+		<include refid="Base_Column_List" />
+		from tr_nas
+		where ipaddr = #{ipaddr}
+	</select>
+
+	<select id="selectByIdentifier" parameterType="java.lang.String" resultMap="NasMap" useCache="true">
+		select
+		<include refid="Base_Column_List" />
+		from tr_nas
+		where identifier = #{identifier}
+	</select>
+
+
+</mapper>
