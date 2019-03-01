@@ -1,8 +1,8 @@
 package org.tinyradius.packet;
 
-import java.security.MessageDigest;
-
 import org.tinyradius.util.RadiusUtil;
+
+import java.security.MessageDigest;
 
 /**
  * CoA packet. Thanks to Michael Krastev.

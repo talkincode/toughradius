@@ -6,11 +6,11 @@
  */
 package org.toughradius.common;
 
-
+import org.toughradius.common.bits.NetBits;
 import org.toughradius.common.coder.Base64;
 import org.toughradius.common.coder.DES;
 import org.toughradius.common.coder.UUID;
-import org.toughradius.common.bits.NetBits;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -536,6 +536,26 @@ public class CoderUtil
 	    String s = new String(ob);
 	    return s;
     }
+	/**
+	 * s随机生成一个6位数的账号
+	 */
+	public static String randomName(){
+		String val = "";
+		Random random = new Random();
+		//参数length，表示生成几位随机数
+		for(int i = 0; i < 6; i++) {
+			String charOrNum = random.nextInt(2) % 2 == 0 ? "char" : "num";
+			//输出字母还是数字
+			if( "char".equalsIgnoreCase(charOrNum) ) {
+				//输出小写字母
+				val += (char)(random.nextInt(26) + 97);
+			} else if( "num".equalsIgnoreCase(charOrNum) ) {
+				//输出数字
+				val += String.valueOf(random.nextInt(10));
+			}
+		}
+		return val;
+	}
 
 	/**
 	 * 达到 四位随机 验证码

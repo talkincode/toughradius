@@ -1,9 +1,3 @@
-/*
- * 版权所有 (C) 2001-2010 深圳市凌亚科技有限公司。保留所有权利。
- * 版本：
- * 修改记录：
- *		1、2010-1-6，zouzhigang创建。 
- */
 package org.toughradius.common.coder;
 
 

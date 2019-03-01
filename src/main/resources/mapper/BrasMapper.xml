@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.toughradius.mapper.BrasMapper">
+
+	<resultMap id="BaseResultMap" type="org.toughradius.entity.Bras">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="identifier" jdbcType="VARCHAR" property="identifier" />
+		<result column="name" jdbcType="VARCHAR" property="name" />
+		<result column="ipaddr" jdbcType="VARCHAR" property="ipaddr" />
+		<result column="vendor_id" jdbcType="VARCHAR" property="vendorId" />
+		<result column="secret" jdbcType="VARCHAR" property="secret" />
+		<result column="coa_port" jdbcType="INTEGER" property="coaPort" />
+		<result column="auth_limit" jdbcType="INTEGER" property="authLimit" />
+		<result column="acct_limit" jdbcType="INTEGER" property="acctLimit" />
+		<result column="status" jdbcType="CHAR" property="status" />
+		<result column="remark" jdbcType="VARCHAR" property="remark" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+	</resultMap>
+	
+	<cache  type="org.mybatis.caches.ehcache.EhcacheCache" readOnly="true"  >
+		<property name="maxElementsInMemory" value="10000"/>
+		<property name="eternal" value="false"/>
+		<property name="timeToIdleSeconds" value="60"/>
+		<property name="timeToLiveSeconds" value="60"/>
+		<property name="memoryStoreEvictionPolicy" value="LRU"/>
+		<property name="logging" value="true"/>
+		<property name="overflowToDisk" value="false"/>
+		<property name="diskPersistent" value="false"/>
+	</cache>
+
+	<sql id="Base_Column_List">
+		id, identifier, `name`, ipaddr, vendor_id, secret, coa_port,auth_limit,acct_limit, status,remark, create_time
+	</sql>
+
+	<select id="selectByIPAddr" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
+		select
+		<include refid="Base_Column_List" />
+		from tr_bras
+		where ipaddr = #{ipaddr}
+	</select>
+
+	<select id="selectByidentifier" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
+		select
+		<include refid="Base_Column_List" />
+		from tr_bras
+		where identifier = #{identifier}
+	</select>
+
+
+	<update id="flushCache" flushCache="true" >
+		select 1;
+	</update>
+
+</mapper>

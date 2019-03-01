@@ -1,9 +1,3 @@
-/**
- * $Id: RadiusEndpoint.java,v 1.1 2005/09/07 22:19:01 wuttke Exp $
- * Created on 07.09.2005
- * @author glanz, Matthias Wuttke
- * @version $Revision: 1.1 $
- */
 package org.tinyradius.util;
 
 import java.net.InetSocketAddress;

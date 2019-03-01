@@ -1,9 +1,3 @@
-/**
- * $Id: WritableDictionary.java,v 1.1 2005/09/04 22:11:00 wuttke Exp $
- * Created on 28.08.2005
- * @author mw
- * @version $Revision: 1.1 $
- */
 package org.tinyradius.dictionary;
 
 /**

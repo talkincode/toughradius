@@ -1,8 +1,7 @@
 package org.toughradius.component;
 
-import org.springframework.stereotype.Component;
 import org.toughradius.common.DateTimeUtil;
-
+import org.springframework.stereotype.Component;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,6 +11,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class RadiusStat {
 
+    private Object lock = new Object();
     private ConcurrentLinkedDeque<long[]> reqBytesStat = new ConcurrentLinkedDeque<long[]>();
     private ConcurrentLinkedDeque<long[]> respBytesStat = new ConcurrentLinkedDeque<long[]>();
     private ConcurrentLinkedDeque<long[]> authReqStat = new ConcurrentLinkedDeque<long[]>();
@@ -25,6 +25,7 @@ public class RadiusStat {
     private AtomicInteger authReq = new AtomicInteger(0);
     private AtomicInteger authAccept = new AtomicInteger(0);
     private AtomicInteger authReject = new AtomicInteger(0);
+    private AtomicInteger authRejectdelay = new AtomicInteger(0);
     private AtomicInteger authDrop = new AtomicInteger(0);
     private AtomicInteger acctStart = new AtomicInteger(0);
     private AtomicInteger acctStop = new AtomicInteger(0);
@@ -52,111 +53,132 @@ public class RadiusStat {
     private Date lastMaxRespBytesDate = new Date();
 
     public Map getData(){
-        Map data = new HashMap();
-        data.put("reqBytesStat",reqBytesStat.toArray());
-        data.put("respBytesStat",respBytesStat.toArray());
-        data.put("authReqStat",authReqStat.toArray());
-        data.put("authRespStat",authRespStat.toArray());
-        data.put("acctReqStat",acctReqStat.toArray());
-        data.put("acctRespStat",acctRespStat.toArray());
-        data.put("online",online.intValue());
-        data.put("authReqOld",authReqOld.intValue());
-        data.put("authRespOld",authRespOld.intValue());
-        data.put("authReq", authReq.intValue());
-        data.put("authAccept", authAccept.intValue());
-        data.put("authReject", authReject.intValue());
-        data.put("authDrop", authDrop.intValue());
-        data.put("acctStart", acctStart.intValue());
-        data.put("acctStop", acctStop.intValue());
-        data.put("acctUpdate", acctUpdate.intValue());
-        data.put("acctOn", acctOn.intValue());
-        data.put("acctOff", acctOff.intValue());
-        data.put("acctReqOld", acctReqOld.intValue());
-        data.put("acctRespOld", acctRespOld.intValue());
-        data.put("acctReq", acctReq.intValue());
-        data.put("acctResp", acctResp.intValue());
-        data.put("acctRetry", acctRetry.intValue());
-        data.put("acctDrop", acctDrop.intValue());
-        data.put("reqBytes", reqBytes.intValue());
-        data.put("respBytes", respBytes.intValue());
-        data.put("reqBytesOld", reqBytesOld.intValue());
-        data.put("respBytesOld", respBytesOld.intValue());
+        synchronized (lock) {
+            Map data = new HashMap();
+            data.put("reqBytesStat", reqBytesStat.toArray());
+            data.put("respBytesStat", respBytesStat.toArray());
+            data.put("authReqStat", authReqStat.toArray());
+            data.put("authRespStat", authRespStat.toArray());
+            data.put("acctReqStat", acctReqStat.toArray());
+            data.put("acctRespStat", acctRespStat.toArray());
+            data.put("online", online.intValue());
+            data.put("authReqOld", authReqOld.intValue());
+            data.put("authRespOld", authRespOld.intValue());
+            data.put("authReq", authReq.intValue());
+            data.put("authAccept", authAccept.intValue());
+            data.put("authReject", authReject.intValue());
+            data.put("authRejectdelay", authRejectdelay.intValue());
+            data.put("authDrop", authDrop.intValue());
+            data.put("acctStart", acctStart.intValue());
+            data.put("acctStop", acctStop.intValue());
+            data.put("acctUpdate", acctUpdate.intValue());
+            data.put("acctOn", acctOn.intValue());
+            data.put("acctOff", acctOff.intValue());
+            data.put("acctReqOld", acctReqOld.intValue());
+            data.put("acctRespOld", acctRespOld.intValue());
+            data.put("acctReq", acctReq.intValue());
+            data.put("acctResp", acctResp.intValue());
+            data.put("acctRetry", acctRetry.intValue());
+            data.put("acctDrop", acctDrop.intValue());
+            data.put("reqBytes", reqBytes.intValue());
+            data.put("respBytes", respBytes.intValue());
+            data.put("reqBytesOld", reqBytesOld.intValue());
+            data.put("respBytesOld", respBytesOld.intValue());
 
-        data.put("lastMaxReq", lastMaxReq);
-        data.put("lastMaxReqDate",DateTimeUtil.toDateTimeString(lastMaxReqDate));
-        data.put("lastMaxResp",lastMaxResp);
-        data.put("lastMaxRespDate",DateTimeUtil.toDateTimeString(lastMaxRespDate));
-        data.put("lastMaxReqBytes",lastMaxReqBytes);
-        data.put("lastMaxReqBytesDate",DateTimeUtil.toDateTimeString(lastMaxReqBytesDate));
-        return data;
+            data.put("lastMaxReq", lastMaxReq);
+            data.put("lastMaxReqDate", DateTimeUtil.toDateTimeString(lastMaxReqDate));
+            data.put("lastMaxResp", lastMaxResp);
+            data.put("lastMaxRespDate", DateTimeUtil.toDateTimeString(lastMaxRespDate));
+            data.put("lastMaxReqBytes", lastMaxReqBytes);
+            data.put("lastMaxReqBytesDate", DateTimeUtil.toDateTimeString(lastMaxReqBytesDate));
+            return data;
+        }
     }
 
 
     public void runStat(){
-        long curtime = System.currentTimeMillis();
+        synchronized (lock) {
+            long curtime = System.currentTimeMillis();
 
-        int tmpReqBytes =  getReqBytes() - getReqBytesOld();
-        if(tmpReqBytes<0)
-            tmpReqBytes = 0;
-        setReqBytesOld(getReqBytes());
+            int tmpReqBytes = getReqBytes() - getReqBytesOld();
+            if (tmpReqBytes < 0)
+                tmpReqBytes = 0;
+            setReqBytesOld(getReqBytes());
 
-        int tmpRespBytes = getRespBytes() - getRespBytesOld();
-        if(tmpRespBytes<0)
-            tmpRespBytes = 0;
-        setRespBytesOld(getRespBytes());
+            int tmpRespBytes = getRespBytes() - getRespBytesOld();
+            if (tmpRespBytes < 0)
+                tmpRespBytes = 0;
+            setRespBytesOld(getRespBytes());
+            if (reqBytesStat.size() >= 180) {
+                reqBytesStat.pollFirst();
+            }
+            if (respBytesStat.size() >= 180) {
+                respBytesStat.pollFirst();
+            }
+            reqBytesStat.addLast(new long[]{curtime, tmpReqBytes});
+            respBytesStat.addLast(new long[]{curtime, tmpRespBytes});
 
-        reqBytesStat.addLast(new long[]{curtime,tmpReqBytes});
-        respBytesStat.addLast(new long[]{curtime,tmpRespBytes});
+            int tmpAuthReq = getAuthReq() - getAuthReqOld();
+            if (tmpAuthReq < 0)
+                tmpAuthReq = 0;
+            setAuthReqOld(getAuthReq());
 
-        int tmpAuthReq = getAuthReq() - getAuthReqOld();
-        if(tmpAuthReq<0)
-            tmpAuthReq = 0;
-        setAuthReqOld(getAuthReq());
+            int tmpAuthResp = getAuthAccept() + getAuthReject() - getAuthRespOld();
+            if (tmpAuthResp < 0)
+                tmpAuthResp = 0;
+            setAuthRespOld(getAuthAccept() + getAuthReject());
+            if (authReqStat.size() >= 180) {
+                authReqStat.pollFirst();
+            }
+            if (authRespStat.size() >= 180) {
+                authRespStat.pollFirst();
+            }
+            authReqStat.addLast(new long[]{curtime, tmpAuthReq});
+            authRespStat.addLast(new long[]{curtime, tmpAuthResp});
 
-        int tmpAuthResp = getAuthAccept() + getAuthReject() - getAuthRespOld();
-        if(tmpAuthResp<0)
-            tmpAuthResp=0;
-        setAuthRespOld(getAuthAccept() + getAuthReject());
+            int tmpAcctReq = getAcctReq() - getAcctReqOld();
+            if (tmpAcctReq < 0)
+                tmpAcctReq = 0;
+            setAcctReqOld(getAcctReq());
 
-        authReqStat.addLast(new long[]{curtime,tmpAuthReq});
-        authRespStat.addLast(new long[]{curtime,tmpAuthResp});
+            int tmpAcctResp = getAcctResp() - getAcctRespOld();
+            if (tmpAcctResp < 0)
+                tmpAcctResp = 0;
+            setAcctRespOld(getAcctResp());
 
-        int tmpAcctReq = getAcctReq() - getAcctReqOld();
-        if(tmpAcctReq<0)
-            tmpAcctReq = 0;
-        setAcctReqOld(getAcctReq());
+            if (acctReqStat.size() >= 180) {
+                acctReqStat.pollFirst();
+            }
+            if (acctRespStat.size() >= 180) {
+                acctRespStat.pollFirst();
+            }
+            acctReqStat.addLast(new long[]{curtime, tmpAcctReq});
+            acctRespStat.addLast(new long[]{curtime, tmpAcctResp});
 
-        int tmpAcctResp = getAcctResp() - getAcctRespOld();
-        if(tmpAcctResp<0)
-            tmpAcctResp = 0;
-        setAcctRespOld(getAcctReq());
+            int reqbytesPercount = tmpReqBytes / 5;
+            if (getLastMaxReqBytes() < reqbytesPercount) {
+                setLastMaxReqBytes(reqbytesPercount);
+                setLastMaxReqBytesDate(new Date());
+            }
 
-        acctReqStat.addLast(new long[]{curtime,tmpAcctReq});
-        acctRespStat.addLast(new long[]{curtime,tmpAcctResp});
+            int respbytesPercount = tmpRespBytes / 5;
+            if (getLastMaxRespBytes() < respbytesPercount) {
+                setLastMaxRespBytes(respbytesPercount);
+                setLastMaxRespBytesDate(new Date());
+            }
 
-        int reqbytesPercount = tmpReqBytes/10;
-        if(getLastMaxReqBytes() < reqbytesPercount){
-            setLastMaxReqBytes(reqbytesPercount);
-            setLastMaxReqBytesDate(new Date());
-        }
-
-        int respbytesPercount = tmpRespBytes/10;
-        if(getLastMaxRespBytes() < respbytesPercount){
-            setLastMaxRespBytes(respbytesPercount);
-            setLastMaxRespBytesDate(new Date());
-        }
-
-        int reqPercount = (tmpAuthReq+tmpAcctReq)/10;
-        if(getLastMaxReq() < reqPercount){
-            setLastMaxReq(reqPercount);
-            setLastMaxReqDate(new Date());
-        }
+            int reqPercount = (tmpAuthReq + tmpAcctReq) / 5;
+            if (getLastMaxReq() < reqPercount) {
+                setLastMaxReq(reqPercount);
+                setLastMaxReqDate(new Date());
+            }
 
 
-        int respPercount = (tmpAuthResp + tmpAcctResp)/10;
-        if(getLastMaxResp() < respPercount){
-            setLastMaxResp(respPercount);
-            setLastMaxRespDate(new Date());
+            int respPercount = (tmpAuthResp + tmpAcctResp) / 5;
+            if (getLastMaxResp() < respPercount) {
+                setLastMaxResp(respPercount);
+                setLastMaxRespDate(new Date());
+            }
         }
 
     }
@@ -210,6 +232,13 @@ public class RadiusStat {
 
     public void incrAuthReject() {
         this.authReject.incrementAndGet();
+    }
+    public int getAuthRejectdelay() {
+        return authRejectdelay.intValue();
+    }
+
+    public void incrAuthRejectdelay() {
+        this.authRejectdelay.incrementAndGet();
     }
 
     public int getAuthDrop() {

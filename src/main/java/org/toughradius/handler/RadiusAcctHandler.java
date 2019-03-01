@@ -1,23 +1,27 @@
 package org.toughradius.handler;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.toughradius.common.ValidateCache;
+import org.toughradius.component.Syslogger;
+import org.toughradius.entity.Bras;
+import org.toughradius.entity.Subscribe;
+import org.tinyradius.packet.AccountingRequest;
+import org.tinyradius.packet.RadiusPacket;
+import org.tinyradius.util.RadiusException;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.tinyradius.packet.AccountingRequest;
-import org.tinyradius.packet.RadiusPacket;
-import org.tinyradius.util.RadiusException;
-import org.toughradius.entity.Nas;
-import org.toughradius.entity.User;
 
 import java.net.InetSocketAddress;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
 public class RadiusAcctHandler extends RadiusbasicHandler {
 
-    private final static Log logger = LogFactory.getLog(RadiusAcctHandler.class);
+    @Autowired
+    private RadiusAuthHandler authHandler;
 
 
     @Autowired
@@ -27,14 +31,44 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
     @Autowired
     private RadiusParseFilter parseFilter;
 
+    private AtomicInteger counter = new AtomicInteger();
 
-    public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Nas nas) throws RadiusException {
-        schedExecuter.execute(()-> {
+    /**
+     * BRAS 并发限制
+     */
+    private Map<Integer,ValidateCache> validateMap = new HashMap<Integer,ValidateCache>();
+
+
+    private ValidateCache getBrasValidate(Bras bras){
+        if(validateMap.containsKey(bras.getId())){
+            ValidateCache vc = validateMap.get(bras.getId());
+            Integer limit = bras.getAcctLimit();
+            if(limit==null){
+                limit = 1000;
+            }
+            if(limit !=vc.getMaxTimes()){
+                vc.setMaxTimes(limit);
+            }
+            return vc;
+        }else{
+            Integer limit = bras.getAcctLimit();
+            if(limit==null){
+                limit = 1000;
+            }
+            ValidateCache vc = new ValidateCache(1000,limit);
+            validateMap.put(bras.getId(),vc);
+            return vc;
+        }
+    }
+
+
+    public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Bras nas) throws RadiusException {
+        taskExecutor.execute(()-> {
             try {
-                User user = getUser(accountingRequest.getUserName());
+                Subscribe user = getUser(accountingRequest.getUserName());
                 accountingFilter.doFilter(accountingRequest,nas,user);
             } catch (RadiusException e) {
-                logger.error("记账处理错误",e);
+                logger.error(accountingRequest.getUserName(),"记账处理错误",e, Syslogger.RADIUSD);
             }
         });
         return getAccountingResponse(accountingRequest);
@@ -52,29 +86,48 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         buffer.get(data);
         radiusStat.incrReqBytes(data.length);
 
-        final InetSocketAddress remoteAddress = (InetSocketAddress) session.getRemoteAddress();
+        final InetSocketAddress remoteAddress = (InetSocketAddress) session.getAttribute(SESSION_CLIENT_IP_KEY);
         final InetSocketAddress localAddress = (InetSocketAddress) session.getLocalAddress();
         RadiusPacket preRequest = makeRadiusPacket(data, "1234567890", RadiusPacket.RESERVED);
+        if(preRequest.getPacketType()!=RadiusPacket.ACCOUNTING_REQUEST){
+            if(preRequest.getPacketType()==RadiusPacket.ACCESS_REQUEST){
+                logger.info("ACCT->AUTH-COUNT:"+counter.incrementAndGet(),Syslogger.RADIUSD);
+                buffer.flip();
+                authHandler.messageReceived(session, buffer);
+                return;
+            }else{
+                radiusStat.incrAcctDrop();
+                logger.error(String.format("错误的 RADIUS 记账消息类型 %s  <%s -> %s>", preRequest.getPacketType(), remoteAddress,localAddress), Syslogger.RADIUSD);
+                return;
+            }
+        }
         radiusStat.incrAcctReq();
-        final Nas nas = getNas(remoteAddress, preRequest);
+        final Bras nas = getNas(remoteAddress, preRequest);
 
         if (nas == null) {
             radiusStat.incrAcctDrop();
-            logger.error(String.format("未授权的接入设备<记账> <%s -> %s>", remoteAddress,localAddress));
+            logger.error(String.format("未授权的接入设备<记账> <%s -> %s>", remoteAddress,localAddress),Syslogger.RADIUSD);
             return;
         }
 
-        AccountingRequest request = (AccountingRequest)makeRadiusPacket(data, nas.getSecret(), RadiusPacket.UNDEFINED);
+        AccountingRequest request = (AccountingRequest)makeRadiusPacket(data, nas.getSecret(), RadiusPacket.ACCOUNTING_REQUEST);
         request.setRemoteAddr(remoteAddress);
-//        if (isPacketDuplicate(request, remoteAddress)){
-//            logger.error(getClass().toString(),String.format("重复的记账请求 <%s -> %s> : %s", remoteAddress,localAddress,request));
-//            return;
-//        }
 
         request = (AccountingRequest)parseFilter.doFilter(request,nas);
-        logger.info(String.format("接收到RADIUS 记账请求 <%s -> %s> : %s", remoteAddress,localAddress,request.toSimpleString()));
+
+        ValidateCache vc = getBrasValidate(nas);
+        String vckey = nas.getId().toString();
+        vc.incr(vckey);
+        if(vc.isOver(vckey)){
+            radiusStat.incrAcctDrop();
+            logger.error(request.getUsername(),String.format("接入设备记账并发限制超过%s <%s -> %s>", nas.getAcctLimit(), remoteAddress,localAddress), Syslogger.RADIUSD);
+            return;
+        }
+
+        logger.info(request.getUserName(), String.format("接收到 RADIUS 记账(%s)请求 <%s -> %s> : %s",
+                request.getStatusTypeName(), remoteAddress,localAddress,request.toSimpleString()),Syslogger.RADIUSD);
         if (radiusConfig.isTraceEnabled())
-            logger.info(request.toString());
+            logger.print(request.toString());
 
         // handle packet
         final RadiusPacket response = accountingRequestReceived(request, nas);
@@ -82,9 +135,10 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         // send response
         if (response != null) {
             radiusStat.incrAcctResp();
-            logger.info(String.format("发送记账响应至 %s， %s",remoteAddress,response.toLineString()));
+            logger.info(request.getUserName(),String.format("发送 RADIUS 记账(%s)响应至 %s， %s",
+                    request.getStatusTypeName(), remoteAddress,response.toLineString()),Syslogger.RADIUSD);
             if (radiusConfig.isTraceEnabled())
-                logger.info(response.toString());
+                logger.print(response.toString());
 
             sendResponse(session,remoteAddress,nas.getSecret(),request,response);
         }

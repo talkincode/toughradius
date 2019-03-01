@@ -1,23 +1,23 @@
 package org.toughradius.handler;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.tinyradius.packet.AccessAccept;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.ValidateUtil;
-import org.toughradius.component.OptionService;
-import org.toughradius.entity.Nas;
-import org.toughradius.entity.User;
+import org.toughradius.entity.Bras;
+import org.toughradius.entity.Subscribe;
+import org.tinyradius.attribute.StringAttribute;
+import org.tinyradius.packet.AccessAccept;
+import org.toughradius.component.ConfigService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Date;
 
 @Component
 public class RadiusAcceptFilter implements RadiusConstant{
 
     @Autowired
-    private OptionService configService;
+    private ConfigService configService;
 
     /**
      * Radius 认证成功后下发属性处理
@@ -26,9 +26,9 @@ public class RadiusAcceptFilter implements RadiusConstant{
      * @param user
      * @return
      */
-    public AccessAccept doFilter(AccessAccept accept, Nas nas, User user){
+    public AccessAccept doFilter(AccessAccept accept, Bras nas, Subscribe user){
         accept = filterDefault(accept,user, nas);
-        switch (nas.getVendorid()){
+        switch (nas.getVendorId()){
             case VENDOR_MIKROTIK:
                 return filterMikrotik(accept, user);
             case VENDOR_HUAWEI:
@@ -37,6 +37,8 @@ public class RadiusAcceptFilter implements RadiusConstant{
                 return filterH3c(accept, user);
             case VENDOR_ZTE:
                 return filterZTE(accept, user);
+            case VENDOR_CISCO:
+                return filterCisco(accept, user);
             case VENDOR_RADBACK:
                 return filterRadback(accept, user);
             default:
@@ -50,7 +52,7 @@ public class RadiusAcceptFilter implements RadiusConstant{
      * @param user
      * @return
      */
-    private AccessAccept filterDefault(AccessAccept accept, User user, Nas nas){
+    private AccessAccept filterDefault(AccessAccept accept, Subscribe user, Bras nas){
         int sessionTimeout  = DateTimeUtil.compareSecond(user.getExpireTime(),new Date());
         long preSessionTimeout = accept.getPreSessionTimeout();
         if(preSessionTimeout>Integer.MAX_VALUE){
@@ -81,21 +83,33 @@ public class RadiusAcceptFilter implements RadiusConstant{
     }
 
 
-    private AccessAccept filterMikrotik(AccessAccept accept, User user){
-        int up = user.getUpRate().multiply(BigInteger.valueOf(1024)).intValue();
-        int down = user.getDownRate().multiply(BigInteger.valueOf(1024)).intValue();
+    /**
+     * Mikrotik 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterMikrotik(AccessAccept accept, Subscribe user){
+        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024)).intValue();
+        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024)).intValue();
         accept.addAttribute("Mikrotik-Rate-Limit", String.format("%sk/%sk", up,down));
         return accept;
     }
 
-    private AccessAccept filterHuawei(AccessAccept accept, User user){
-        int up = user.getUpRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
-        int down = user.getDownRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
+    /**
+     * Huawei 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterHuawei(AccessAccept accept, Subscribe user){
+        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
         int peakUp = up * 4;
         int peakDown = down * 4;
         try{
-            peakUp = user.getUpPeakRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
-            peakDown = user.getDownPeakRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
+            peakUp = user.getUpPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+            peakDown = user.getDownPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -112,11 +126,23 @@ public class RadiusAcceptFilter implements RadiusConstant{
         return accept;
     }
 
-    private AccessAccept filterH3c(AccessAccept accept, User user){
-        int up = user.getUpRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
-        int down = user.getDownRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
+    /**
+     * H3c 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterH3c(AccessAccept accept, Subscribe user){
+        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
         int peakUp = up * 4;
         int peakDown = down * 4;
+        try{
+            peakUp = user.getUpPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+            peakDown = user.getDownPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
         accept.addAttribute("H3C-Input-Average-Rate", String.valueOf(up));
         accept.addAttribute("H3C-Input-Peak-Rate", String.valueOf(peakUp));
         accept.addAttribute("H3C-Output-Average-Rate", String.valueOf(down));
@@ -124,18 +150,45 @@ public class RadiusAcceptFilter implements RadiusConstant{
         return accept;
     }
 
-    private AccessAccept filterZTE(AccessAccept accept, User user){
-        int up = user.getUpRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
-        int down = user.getDownRate().multiply(BigInteger.valueOf(1024*1024)).intValue();
+    /**
+     * ZTE 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterZTE(AccessAccept accept, Subscribe user){
+        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
         accept.addAttribute("ZTE-Rate-Ctrl-Scr-Up", String.valueOf(up));
         accept.addAttribute("ZTE-Rate-Ctrl-Scr-Down", String.valueOf(down));
         return accept;
     }
 
-    private AccessAccept filterRadback(AccessAccept accept, User user){
-        String rateCode = user.getRateCode();
-        if(ValidateUtil.isNotEmpty(rateCode))
-            accept.addAttribute("Sub-Profile-Name", rateCode);
+    /**
+     * Cisco 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterCisco(AccessAccept accept, Subscribe user){
+        accept.addAttribute("Cisco-AVPair", String.format("sub-qos-policy-in=%s",user.getUpRateCode()));
+        accept.addAttribute("Cisco-AVPair", String.format("sub-qos-policy-out=%s",user.getDownRateCode()));
+        if(ValidateUtil.isNotEmpty(user.getAddrPool())){
+            accept.addAttribute("Cisco-AVPair", String.format("addr-pool=%s",user.getAddrPool()));
+        }
+        return accept;
+    }
+
+    /**
+     * radback 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterRadback(AccessAccept accept, Subscribe user){
+        String policy = user.getPolicy();
+        if(ValidateUtil.isNotEmpty(policy))
+            accept.addAttribute("Sub-Profile-Name", policy);
 
         String domain = user.getDomain();
         if(ValidateUtil.isNotEmpty(domain)){

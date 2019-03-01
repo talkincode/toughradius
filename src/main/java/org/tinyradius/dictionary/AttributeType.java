@@ -1,20 +1,10 @@
-/**
- * $Id: AttributeType.java,v 1.3 2005/09/06 18:06:33 wuttke Exp $
- * Copyright by teuto.net Netzdienste GmbH 2005. All rights reserved.
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation. Commercial licenses also available.
- * See the accompanying file LICENSE for details.
- * 
- * @author Matthias Wuttke
- * @version $Revision: 1.3 $
- */
 package org.tinyradius.dictionary;
+
+import org.tinyradius.attribute.RadiusAttribute;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import org.tinyradius.attribute.RadiusAttribute;
 
 /**
  * Represents a Radius attribute type.
@@ -197,7 +187,7 @@ public class AttributeType {
 	 * for debugging purposes.
 	 * 
 	 * @return string
-	 * @see java.lang.Object#toString()
+	 * @see Object#toString()
 	 */
 	public String toString() {
 		String s = getTypeCode() + "/" + getName() + ": " + attributeClass.getName();

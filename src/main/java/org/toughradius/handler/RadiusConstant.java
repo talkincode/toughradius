@@ -7,6 +7,7 @@ public interface RadiusConstant {
     public final static String VENDOR_ZTE = "3902";
     public final static String VENDOR_H3C = "25506";
     public final static String VENDOR_RADBACK = "2352";
+    public final static String VENDOR_CISCO = "9";
 
 
 }

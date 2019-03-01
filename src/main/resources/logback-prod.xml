@@ -1,23 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="true" scanPeriod="60 seconds" debug="false">
-    <contextName>RADIUSD</contextName>
-    <property name="log.path" value="/home/radiusd/logs"/>
+    <contextName>TOUGHRADIUS</contextName>
+    <property name="log.path" value="/var/toughradius/logs"/>
+    <!--输出到控制台-->
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
         </filter>
         <encoder>
-            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %contextName [%thread] %-5level %logger{36} - %msg%n</pattern>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %contextName [%thread] %-5level - %msg%n</pattern>
         </encoder>
     </appender>
 
+    <!--输出到文件-->
     <appender name="infolog" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${log.path}/radiusd.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>${log.path}/toughradius.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>64MB</maxFileSize>
+            <maxFileSize>32MB</maxFileSize>
         </triggeringPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>INFO</level>
@@ -33,7 +35,7 @@
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
-            <maxFileSize>64MB</maxFileSize>
+            <maxFileSize>32MB</maxFileSize>
         </triggeringPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>ERROR</level>
@@ -44,24 +46,18 @@
     </appender>
 
     <root level="INFO">
+       <!-- <appender-ref ref="console"/>-->
         <appender-ref ref="infolog"/>
         <appender-ref ref="errorlog"/>
     </root>
 
-    <logger name="org.toughradius.controller" level="info" additivity="false">
-        <appender-ref ref="infolog"/>
-        <appender-ref ref="errorlog"/>
-    </logger>
-    <logger name="org.toughradius.config" level="info" additivity="false">
-        <appender-ref ref="infolog"/>
-        <appender-ref ref="errorlog"/>
-    </logger>
-    <logger name="org.toughradius.component" level="info" additivity="false">
+    <!--logback.LogbackDemo：类的全路径 -->
+    <logger name="org.toughradius.mapper" level="info" additivity="false">
         <appender-ref ref="infolog"/>
         <appender-ref ref="errorlog"/>
     </logger>
 
-    <logger name="org.toughradius.mapper" level="info" additivity="false">
+    <logger name="org.toughradius.controller" level="info" additivity="false">
         <appender-ref ref="infolog"/>
         <appender-ref ref="errorlog"/>
     </logger>
@@ -71,9 +67,23 @@
         <appender-ref ref="errorlog"/>
     </logger>
 
-    <logger name="org.springframework.web" level="info" additivity="false">
+    <logger name="org.toughradius.wlan" level="info" additivity="false">
         <appender-ref ref="infolog"/>
         <appender-ref ref="errorlog"/>
+    </logger>
+
+    <logger name="org.toughradius.config" level="info" additivity="false">
+        <appender-ref ref="infolog"/>
+        <appender-ref ref="errorlog"/>
+    </logger>
+
+    <logger name="org.toughradius.component" level="info" additivity="false">
+        <appender-ref ref="infolog"/>
+        <appender-ref ref="errorlog"/>
+    </logger>
+
+    <logger name="org.springframework.web" level="info" additivity="false">
+       <appender-ref ref="console"/>
     </logger>
 
 </configuration>

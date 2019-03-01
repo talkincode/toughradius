@@ -1,11 +1,11 @@
 package org.toughradius.handler;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.stereotype.Component;
-import org.tinyradius.packet.RadiusPacket;
 import org.toughradius.common.ValidateUtil;
-import org.toughradius.entity.Nas;
+import org.toughradius.component.Syslogger;
+import org.toughradius.entity.Bras;
+import org.tinyradius.packet.RadiusPacket;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -14,7 +14,8 @@ import java.util.regex.Pattern;
 @Component
 public class RadiusParseFilter implements RadiusConstant{
 
-    private final static Log logger = LogFactory.getLog(RadiusParseFilter.class);
+    @Autowired
+    public Syslogger logger;
 
     private final static Pattern pattern = Pattern.compile("\\w?\\s?\\d+/\\d+/\\d+:(\\d+).(\\d+)\\s?");
 
@@ -24,21 +25,26 @@ public class RadiusParseFilter implements RadiusConstant{
      * @param nas
      * @return
      */
-    public RadiusPacket doFilter(RadiusPacket request, Nas nas){
-        parseCiscoVlan(request);
-        switch (nas.getVendorid()) {
-            case VENDOR_MIKROTIK:
-                return filterMikrotik(request);
-            case VENDOR_HUAWEI:
-                return filterHuawei(request);
-            case VENDOR_H3C:
-                return filterH3c(request);
-            case VENDOR_ZTE:
-                return filterZTE(request);
-            case VENDOR_RADBACK:
-                return filterRadback(request);
-            default:
-                return filterDefault(request);
+    public RadiusPacket doFilter(RadiusPacket request, Bras nas){
+        try{
+            parseCiscoVlan(request);
+            switch (nas.getVendorId()) {
+                case VENDOR_MIKROTIK:
+                    return filterMikrotik(request);
+                case VENDOR_HUAWEI:
+                    return filterHuawei(request);
+                case VENDOR_H3C:
+                    return filterH3c(request);
+                case VENDOR_ZTE:
+                    return filterZTE(request);
+                case VENDOR_RADBACK:
+                    return filterRadback(request);
+                default:
+                    return filterDefault(request);
+            }
+        } catch(Exception e){
+            logger.error(e.getMessage(),Syslogger.RADIUSD);
+            return request;
         }
     }
 
@@ -89,7 +95,7 @@ public class RadiusParseFilter implements RadiusConstant{
         try {
             ipHostAddr = request.getAttribute("H3C-Ip-Host-Addr ").getStringValue();
         }catch (Exception e){
-            logger.error("H3C MacAddr 解析失败");
+            logger.error("H3C MacAddr 解析失败",Syslogger.RADIUSD);
         }
 
         if(ValidateUtil.isNotEmpty(ipHostAddr)){
@@ -125,7 +131,7 @@ public class RadiusParseFilter implements RadiusConstant{
             macAddr = request.getAttribute("Mac-Addr").getStringValue();
             request.setMacAddr(macAddr.replaceAll("-",":"));
         }catch (Exception e){
-            logger.error("Radback MacAddr 解析失败");
+            logger.error("Radback MacAddr 解析失败",Syslogger.RADIUSD);
         }
         int[] vlans = parseCiscoVlan(request);
         request.setInVlanId(vlans[0]);
@@ -198,7 +204,7 @@ public class RadiusParseFilter implements RadiusConstant{
                 result[1] = Integer.valueOf(m.group(1));
             }
         } catch(Exception e){
-            logger.error(String.format("VLAN 解析失败 nasPortId=%s", requset.getNasPortId()),e);
+            logger.error(String.format("VLAN 解析失败 nasPortId=%s", requset.getNasPortId()),e,Syslogger.RADIUSD);
         }
         return result;
     }

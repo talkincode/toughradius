@@ -1,9 +1,3 @@
-/**
- * $Id: StringAttribute.java,v 1.1.1.1 2005/04/17 14:51:33 wuttke Exp $
- * Created on 08.04.2005
- * @author Matthias Wuttke
- * @version $Revision: 1.1.1.1 $
- */
 package org.tinyradius.attribute;
 
 import java.io.UnsupportedEncodingException;

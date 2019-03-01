@@ -1,25 +1,21 @@
-/**
- * $Id: AccountingRequest.java,v 1.2 2006/02/17 18:14:54 wuttke Exp $
- * Created on 09.04.2005
- * 
- * @author Matthias Wuttke
- * @version $Revision: 1.2 $
- */
 package org.tinyradius.packet;
 
-import java.security.MessageDigest;
-import java.util.List;
 import org.tinyradius.attribute.IntegerAttribute;
 import org.tinyradius.attribute.RadiusAttribute;
 import org.tinyradius.attribute.StringAttribute;
 import org.tinyradius.util.RadiusException;
 import org.tinyradius.util.RadiusUtil;
 
+import java.security.MessageDigest;
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * This class represents a Radius packet of the type
  * "Accounting-Request".
  */
 public class AccountingRequest extends RadiusPacket {
+
 
 	/**
 	 * Acct-Status-Type: Start
@@ -68,8 +64,19 @@ public class AccountingRequest extends RadiusPacket {
 		super(ACCOUNTING_REQUEST);
 	}
 
+	public String getStatusTypeName(){
+		switch (getAcctStatusType()){
+			case ACCT_STATUS_TYPE_START:return "Start";
+			case ACCT_STATUS_TYPE_INTERIM_UPDATE:return "Update";
+			case ACCT_STATUS_TYPE_STOP:return "Stop";
+			case ACCT_STATUS_TYPE_ACCOUNTING_ON:return "AcctOn";
+			case ACCT_STATUS_TYPE_ACCOUNTING_OFF:return "AcctOff";
+			default:return "Unknow";
+		}
+	}
+
 	/**
-	 * Sets the User-Name attribute of this Accountnig-Request.
+	 * Sets the RadUser-Name attribute of this Accountnig-Request.
 	 * 
 	 * @param userName
 	 *            user name to set
@@ -85,15 +92,15 @@ public class AccountingRequest extends RadiusPacket {
 	}
 
 	/**
-	 * Retrieves the user name from the User-Name attribute.
+	 * Retrieves the user name from the RadUser-Name attribute.
 	 * 
 	 * @return user name
 	 * @throws RadiusException
 	 */
-	public String getUserName() throws RuntimeException {
+	public String getUserName()  {
 		List attrs = getAttributes(USER_NAME);
 		if (attrs.size() < 1 || attrs.size() > 1)
-			throw new RuntimeException("exactly one User-Name attribute required");
+			throw new RuntimeException("exactly one RadUser-Name attribute required");
 
 		RadiusAttribute ra = (RadiusAttribute) attrs.get(0);
 		return ((StringAttribute) ra).getAttributeValue();
@@ -113,12 +120,12 @@ public class AccountingRequest extends RadiusPacket {
 	}
 
 	/**
-	 * Retrieves the user name from the User-Name attribute.
+	 * Retrieves the user name from the RadUser-Name attribute.
 	 * 
 	 * @return user name
 	 * @throws RadiusException
 	 */
-	public int getAcctStatusType() throws RadiusException {
+	public int getAcctStatusType()  {
 		RadiusAttribute ra = getAttribute(ACCT_STATUS_TYPE);
 		if (ra == null) {
 			return -1;
@@ -129,7 +136,7 @@ public class AccountingRequest extends RadiusPacket {
 	/**
 	 * Calculates the request authenticator as specified by RFC 2866.
 	 * 
-	 * @see org.tinyradius.packet.RadiusPacket#updateRequestAuthenticator(java.lang.String, int, byte[])
+	 * @see RadiusPacket#updateRequestAuthenticator(String, int, byte[])
 	 */
 	protected byte[] updateRequestAuthenticator(String sharedSecret, int packetLength, byte[] attributes) {
 		byte[] authenticator = new byte[16];
@@ -160,7 +167,7 @@ public class AccountingRequest extends RadiusPacket {
 	}
 
 	/**
-	 * Radius User-Name attribute type
+	 * Radius RadUser-Name attribute type
 	 */
 	private static final int USER_NAME = 1;
 
@@ -168,5 +175,52 @@ public class AccountingRequest extends RadiusPacket {
 	 * Radius Acct-Status-Type attribute type
 	 */
 	private static final int ACCT_STATUS_TYPE = 40;
+
+
+	/**
+	 * String representation of this packet, for debugging purposes.
+	 *
+	 * @see Object#toString()
+	 */
+	public String toString() {
+		StringBuffer s = new StringBuffer();
+		s.append(getPacketTypeName());
+		s.append("(").append(getStatusTypeName()).append(")");
+		s.append(", ID ");
+		s.append(getPacketIdentifier());
+		for (Iterator i = getAttributes().iterator(); i.hasNext();) {
+			RadiusAttribute attr = (RadiusAttribute) i.next();
+			s.append("\n");
+			s.append(String.format("\t%s", attr.toString()));
+		}
+		return s.toString();
+	}
+
+	public String toLineString() {
+		StringBuffer s = new StringBuffer();
+		s.append(getPacketTypeName());
+		s.append("(").append(getStatusTypeName()).append(")");
+		s.append(", ID ");
+		s.append(getPacketIdentifier());
+		for (Iterator i = getAttributes().iterator(); i.hasNext();) {
+			RadiusAttribute attr = (RadiusAttribute) i.next();
+			s.append(", ");
+			s.append(attr.toString());
+		}
+		return s.toString();
+	}
+
+
+	public String toSimpleString() {
+		StringBuffer s = new StringBuffer();
+		s.append(getPacketTypeName());
+		s.append("(").append(getStatusTypeName()).append(")").append(":");
+		s.append(String.format("username=%s, ", getUsername()));
+		s.append(String.format("macAddr=%s, ", getMacAddr()));
+		s.append(String.format("nasPortId=%s, ", getNasPortId()));
+		s.append(String.format("userIp=%s, ", getFramedIpaddr()));
+		s.append(String.format("nasAddr=%s ", getNasAddr()));
+		return s.toString();
+	}
 
 }

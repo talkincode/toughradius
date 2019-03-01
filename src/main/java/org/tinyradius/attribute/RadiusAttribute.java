@@ -1,11 +1,3 @@
-/**
- * $Id: RadiusAttribute.java,v 1.4 2006/02/20 23:37:38 wuttke Exp $
- * Created on 07.04.2005
- * Released under the terms of the LGPL
- * 
- * @author Matthias Wuttke
- * @version $Revision: 1.4 $
- */
 package org.tinyradius.attribute;
 
 import org.tinyradius.dictionary.AttributeType;
@@ -29,7 +21,7 @@ public class RadiusAttribute {
 	/**
 	 * Constructs a Radius attribute with the specified
 	 * type and data.
-	 *
+	 * 
 	 * @param type
 	 *            attribute type, see AttributeTypes.*
 	 * @param data
@@ -42,7 +34,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Returns the data for this attribute.
-	 *
+	 * 
 	 * @return attribute data
 	 */
 	public byte[] getAttributeData() {
@@ -51,7 +43,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Sets the data for this attribute.
-	 *
+	 * 
 	 * @param attributeData
 	 *            attribute data
 	 */
@@ -63,7 +55,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Returns the type of this Radius attribute.
-	 *
+	 * 
 	 * @return type code, 0-255
 	 */
 	public int getAttributeType() {
@@ -72,7 +64,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Sets the type of this Radius attribute.
-	 *
+	 * 
 	 * @param attributeType
 	 *            type code, 0-255
 	 */
@@ -84,7 +76,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Sets the value of the attribute using a string.
-	 *
+	 * 
 	 * @param value
 	 *            value as a string
 	 */
@@ -94,7 +86,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Gets the value of this attribute as a string.
-	 *
+	 * 
 	 * @return value
 	 * @exception RadiusException
 	 *                if the value is invalid
@@ -107,7 +99,7 @@ public class RadiusAttribute {
 	 * Gets the Vendor-Id of the Vendor-Specific attribute this
 	 * attribute belongs to. Returns -1 if this attribute is not
 	 * a sub attribute of a Vendor-Specific attribute.
-	 *
+	 * 
 	 * @return vendor ID
 	 */
 	public int getVendorId() {
@@ -118,7 +110,7 @@ public class RadiusAttribute {
 	 * Sets the Vendor-Id of the Vendor-Specific attribute this
 	 * attribute belongs to. The default value of -1 means this attribute
 	 * is not a sub attribute of a Vendor-Specific attribute.
-	 *
+	 * 
 	 * @param vendorId
 	 *            vendor ID
 	 */
@@ -128,7 +120,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Returns the dictionary this Radius attribute uses.
-	 *
+	 * 
 	 * @return Dictionary instance
 	 */
 	public Dictionary getDictionary() {
@@ -138,7 +130,7 @@ public class RadiusAttribute {
 	/**
 	 * Sets a custom dictionary to use. If no dictionary is set,
 	 * the default dictionary is used.
-	 *
+	 * 
 	 * @param dictionary
 	 *            Dictionary class to use
 	 * @see DefaultDictionary
@@ -149,7 +141,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Returns this attribute encoded as a byte array.
-	 *
+	 * 
 	 * @return attribute
 	 */
 	public byte[] writeAttribute() {
@@ -167,7 +159,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Reads in this attribute from the passed byte array.
-	 *
+	 * 
 	 * @param data
 	 */
 	public void readAttribute(byte[] data, int offset, int length) throws RadiusException {
@@ -183,7 +175,7 @@ public class RadiusAttribute {
 
 	/**
 	 * String representation for debugging purposes.
-	 *
+	 * 
 	 * @see Object#toString()
 	 */
 	public String toString() {
@@ -207,7 +199,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Retrieves an AttributeType object for this attribute.
-	 *
+	 * 
 	 * @return AttributeType object for (sub-)attribute or null
 	 */
 	public AttributeType getAttributeTypeObject() {
@@ -219,7 +211,7 @@ public class RadiusAttribute {
 
 	/**
 	 * Creates a RadiusAttribute object of the appropriate type.
-	 *
+	 * 
 	 * @param dictionary
 	 *            Dictionary to use
 	 * @param vendorId
@@ -250,7 +242,7 @@ public class RadiusAttribute {
 	/**
 	 * Creates a Radius attribute, including vendor-specific
 	 * attributes. The default dictionary is used.
-	 *
+	 * 
 	 * @param vendorId
 	 *            vendor ID or -1
 	 * @param attributeType
@@ -265,7 +257,7 @@ public class RadiusAttribute {
 	/**
 	 * Creates a Radius attribute. The default dictionary is
 	 * used.
-	 *
+	 * 
 	 * @param attributeType
 	 *            attribute type
 	 * @return RadiusAttribute instance

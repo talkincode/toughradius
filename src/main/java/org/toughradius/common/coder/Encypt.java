@@ -1,13 +1,7 @@
-/*
- * 版权所有 (C) 2001-2008 深圳市凌亚科技有限公司。保留所有权利。
- * 版本：
- * 修改记录：
- *		1、Jun 17, 2008，zouzhigang创建。 
- */
 package org.toughradius.common.coder;
 
 /**
- * 凌亚使用的加密算法,主要用于数据库密码的加密
+ * 加密算法,主要用于数据库密码的加密
  */
 public class Encypt
 {

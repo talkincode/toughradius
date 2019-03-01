@@ -1,14 +1,8 @@
-/**
- * $Id: IpAttribute.java,v 1.3 2005/09/06 16:38:41 wuttke Exp $
- * Created on 10.04.2005
- * @author Matthias Wuttke
- * @version $Revision: 1.3 $
- */
 package org.tinyradius.attribute;
 
-import java.util.StringTokenizer;
-
 import org.tinyradius.util.RadiusException;
+
+import java.util.StringTokenizer;
 
 /**
  * This class represents a Radius attribute for an IP number.
@@ -45,7 +39,7 @@ public class IpAttribute extends RadiusAttribute {
 	/**
 	 * Returns the attribute value (IP number) as a string of the
 	 * format "xx.xx.xx.xx".
-	 * @see org.tinyradius.attribute.RadiusAttribute#getAttributeValue()
+	 * @see RadiusAttribute#getAttributeValue()
 	 */
 	public String getAttributeValue() {
 		StringBuffer ip = new StringBuffer();
@@ -69,7 +63,7 @@ public class IpAttribute extends RadiusAttribute {
 	 * "xx.xx.xx.xx".
 	 * @throws IllegalArgumentException
 	 * @throws NumberFormatException
-	 * @see org.tinyradius.attribute.RadiusAttribute#setAttributeValue(java.lang.String)
+	 * @see RadiusAttribute#setAttributeValue(String)
 	 */
 	public void setAttributeValue(String value) {
 		if (value == null || value.length() < 7 || value.length() > 15)
@@ -119,7 +113,7 @@ public class IpAttribute extends RadiusAttribute {
 
 	/**
 	 * Check attribute length.
-	 * @see org.tinyradius.attribute.RadiusAttribute#readAttribute(byte[], int, int)
+	 * @see RadiusAttribute#readAttribute(byte[], int, int)
 	 */
 	public void readAttribute(byte[] data, int offset, int length)
 	throws RadiusException {

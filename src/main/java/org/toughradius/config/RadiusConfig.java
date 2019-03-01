@@ -1,4 +1,7 @@
 package org.toughradius.config;
+import org.toughradius.common.ValidateCache;
+import org.toughradius.handler.RadiusAcctHandler;
+import org.toughradius.handler.RadiusAuthHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
@@ -9,35 +12,47 @@ import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.toughradius.handler.RadiusAcctHandler;
-import org.toughradius.handler.RadiusAuthHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
-@ConfigurationProperties(prefix = "org.toughradius.radiusd")
+@ConfigurationProperties(prefix = "org.toughradius")
 public class RadiusConfig {
 
     private Log logger = LogFactory.getLog(RadiusConfig.class);
 
     private int authport;
     private int acctport;
+    private int eventport;
     private int trace;
     private int interimUpdate;
     private int maxSessionTimeout;
     private String ticketDir;
+    private String statDir;
     private boolean running;
     private boolean isBillInput;
     private boolean isBillBackFlow;
     private boolean allowNegative;
     private int rejectdelay;
+    private int rejectdelayTimes;
+    private int rejectdelayEnabled;
     private int ticketExpireDays;
     private int authPool;
     private int acctPool;
     private String statfile;
+
+    /**
+     * 5秒内认证拒绝超过 rejectdelayTimes 次数，将触发延迟拒绝
+     * @return
+     */
+    @Bean
+    public ValidateCache authValidate(){
+        return new ValidateCache(5000,rejectdelayTimes);
+    }
 
     /**
      * Radius 认证服务配置
@@ -54,13 +69,17 @@ public class RadiusConfig {
         NioDatagramAcceptor nioAuthAcceptor = new NioDatagramAcceptor();
         nioAuthAcceptor.setDefaultLocalAddress(new InetSocketAddress(authport));
         DatagramSessionConfig dcfg = nioAuthAcceptor.getSessionConfig();
-        dcfg.setReceiveBufferSize(1048576);
+        dcfg.setReceiveBufferSize(33554432);
         dcfg.setReadBufferSize(8192);
-        dcfg.setSendBufferSize(4096);
-        dcfg.setReuseAddress(true);
+        dcfg.setSendBufferSize(8192);
+        dcfg.setBothIdleTime(0);
+        dcfg.setReuseAddress(false);
+
+
         DefaultIoFilterChainBuilder authIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
+        ExecutorFilter authExecutorFilter = new ExecutorFilter(3, getAuthPool(), 60, TimeUnit.SECONDS);
         Map<String, IoFilter> filters = new LinkedHashMap<>();
-        filters.put("executor", new ExecutorFilter(getAuthPool()));
+        filters.put("executor", authExecutorFilter);
         authIoFilterChainBuilder.setFilters(filters);
         nioAuthAcceptor.setFilterChainBuilder(authIoFilterChainBuilder);
         nioAuthAcceptor.setHandler(radiusAuthHandler);
@@ -84,13 +103,16 @@ public class RadiusConfig {
         NioDatagramAcceptor nioAcctAcceptor = new NioDatagramAcceptor();
         nioAcctAcceptor.setDefaultLocalAddress(new InetSocketAddress(acctport));
         DatagramSessionConfig dcfg = nioAcctAcceptor.getSessionConfig();
-        dcfg.setReceiveBufferSize(1048576);
+        dcfg.setReceiveBufferSize(33554432);
         dcfg.setReadBufferSize(8192);
-        dcfg.setSendBufferSize(4096);
-        dcfg.setReuseAddress(true);
+        dcfg.setSendBufferSize(8192);
+        dcfg.setBothIdleTime(0);
+        dcfg.setReuseAddress(false);
+
         DefaultIoFilterChainBuilder acctIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
+        ExecutorFilter acctExecutorFilter = new ExecutorFilter(3, getAcctPool(), 60, TimeUnit.SECONDS);
         Map<String, IoFilter> filters = new LinkedHashMap<>();
-        filters.put("executor", new ExecutorFilter(getAcctPool()));
+        filters.put("executor", acctExecutorFilter);
         acctIoFilterChainBuilder.setFilters(filters);
         nioAcctAcceptor.setFilterChainBuilder(acctIoFilterChainBuilder);
         nioAcctAcceptor.setHandler(radiusAcctHandler);
@@ -99,12 +121,21 @@ public class RadiusConfig {
         return nioAcctAcceptor;
     }
 
+
     public int getAuthport() {
         return authport;
     }
 
     public void setAuthport(int authport) {
         this.authport = authport;
+    }
+
+    public int getEventport() {
+        return eventport;
+    }
+
+    public void setEventport(int eventport) {
+        this.eventport = eventport;
     }
 
     public int getAcctport() {
@@ -115,6 +146,13 @@ public class RadiusConfig {
         this.acctport = acctport;
     }
 
+    public int getRejectdelayTimes() {
+        return rejectdelayTimes;
+    }
+
+    public void setRejectdelayTimes(int rejectdelayTimes) {
+        this.rejectdelayTimes = rejectdelayTimes;
+    }
 
     public int getTrace() {
         return trace;
@@ -224,4 +262,19 @@ public class RadiusConfig {
         this.statfile = statfile;
     }
 
+    public int getRejectdelayEnabled() {
+        return rejectdelayEnabled;
+    }
+
+    public void setRejectdelayEnabled(int rejectdelayEnabled) {
+        this.rejectdelayEnabled = rejectdelayEnabled;
+    }
+
+    public String getStatDir() {
+        return statDir;
+    }
+
+    public void setStatDir(String statDir) {
+        this.statDir = statDir;
+    }
 }

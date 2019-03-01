@@ -1,112 +1,135 @@
 package org.toughradius.component;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.stereotype.Service;
+import org.toughradius.config.RadiusConfig;
+import org.toughradius.entity.Bras;
 import org.tinyradius.packet.AccountingRequest;
+import org.toughradius.common.DateTimeUtil;
 import org.tinyradius.packet.CoaRequest;
 import org.tinyradius.packet.RadiusPacket;
 import org.tinyradius.util.RadiusClient;
 import org.tinyradius.util.RadiusException;
-import org.toughradius.common.DateTimeUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.stereotype.Service;
+import org.toughradius.common.PageResult;
 import org.toughradius.common.ValidateUtil;
-import org.toughradius.entity.Nas;
-import org.toughradius.entity.Online;
-import org.toughradius.entity.PageResult;
-
-import java.io.IOException;
+import org.toughradius.entity.RadiusOnline;
+import org.toughradius.entity.Subscribe;
+import java.io.*;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class OnlineCache {
 
-    private final static  ConcurrentHashMap<String,Online> cacheData = new ConcurrentHashMap<String,Online>();
-    private final static Log logger = LogFactory.getLog(OnlineCache.class);
+    private final static  HashMap<String,RadiusOnline> cacheData = new HashMap<String,RadiusOnline>();
+    @Autowired
+    private Syslogger logger;
 
     @Autowired
-    private NasService nasService;
+    private RadiusConfig radiusConfig;
+
+
+    @Autowired
+    private BrasService brasService;
+
+    @Autowired
+    private SubscribeCache subscribeCache;
 
     @Autowired
     private ThreadPoolTaskExecutor taskExecutor;
 
 
-    public ConcurrentHashMap<String,Online> getCacheData(){
+    public HashMap<String,RadiusOnline> getCacheData(){
         return cacheData;
     }
+
+    private Object flowStatLock = new Object();
+
 
     public int size()
     {
         return cacheData.size();
     }
 
-    public List<Online> getOnlineList()
+    public List<RadiusOnline> getOnlineList()
     {
-        return new ArrayList<Online>(Collections.unmodifiableCollection(cacheData.values()));
+        return new ArrayList<RadiusOnline>(Collections.unmodifiableCollection(cacheData.values()));
     }
 
-    public List<Online> list(String groupId)
+    public List<RadiusOnline> list(String nodeId)
     {
-        List<Online> onlineList = new ArrayList<Online>();
-        for (Online online : cacheData.values()) {
-            if (online != null && online.getGroupId().equals(groupId))
-                onlineList.add(online);
+        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
+        synchronized (cacheData)
+        {
+            for (RadiusOnline online : cacheData.values()) {
+                if (online != null && online.getNodeId().equals(nodeId))
+                    onlineList.add(online);
+            }
         }
         return onlineList;
     }
 
-    public List<Online> queryNoAmountOnline( )
+    public List<RadiusOnline> queryNoAmountOnline( )
     {
-        List<Online> onlineList = new ArrayList<Online>();
-        for (Online online : cacheData.values()) {
-            if (online.getUnLockFlag() == Online.AMOUNT_NOT_ENOUGH)
-                onlineList.add(online);
+        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
+        synchronized (cacheData){
+            for (RadiusOnline online : cacheData.values()) {
+                if (online.getUnLockFlag() == RadiusOnline.AMOUNT_NOT_ENOUGH)
+                    onlineList.add(online);
+            }
         }
         return onlineList;
     }
 
     public boolean isExist(String sessionId)
     {
-        return cacheData.containsKey(sessionId);
+        synchronized (cacheData){
+            return cacheData.containsKey(sessionId);
+        }
     }
 
-    public Online getOnline(String sessionId)
+    public RadiusOnline getOnline(String sessionId)
     {
-        return cacheData.get(sessionId);
+        synchronized (cacheData){
+            return cacheData.get(sessionId);
+        }
     }
 
     public boolean isOnline(String userName)
     {
-        boolean isOnline = false;
-        for (Online online : cacheData.values()) {
-            if (userName.equalsIgnoreCase(online.getUsername())) {
-                isOnline = true;
-                break;
+        boolean isTcRadiusOnline = false;
+        synchronized (cacheData){
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername())) {
+                    isTcRadiusOnline = true;
+                    break;
+                }
             }
         }
-        return isOnline;
+        return isTcRadiusOnline;
     }
 
-    public Online getFirstOnline(String userName)
+    public RadiusOnline getFirstOnline(String userName)
     {
-        for (Online online : cacheData.values()) {
-            if (userName.equalsIgnoreCase(online.getUsername())) {
-                return online;
+        synchronized (cacheData){
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername())) {
+                    return online;
+                }
             }
         }
         return null;
     }
 
 
-    public Online getLastOnline(String userName)
+    public RadiusOnline getLastOnline(String userName)
     {
-        Online online =null;
-        for (Online _online : cacheData.values()) {
-            if (userName.equalsIgnoreCase(_online.getUsername())) {
-                online = _online;
-                break;
+        RadiusOnline online =null;
+        synchronized (cacheData){
+            for (RadiusOnline _online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(_online.getUsername())) {
+                    online = _online;
+                    break;
+                }
             }
         }
         return online;
@@ -117,31 +140,21 @@ public class OnlineCache {
      * 异步批量下线
      * @param ids
      */
+    public void unlockOnlines(List<String> ids)
+    {
+        for(String sessionid : ids){
+            asyncUnlockOnline(sessionid);
+        }
+    }
+
+    /**
+     * 异步批量下线
+     * @param ids
+     */
     public void unlockOnlines(String ids)
     {
         for(String sessionid : ids.split(",")){
-            Online online = getOnline(sessionid);
-            if(online==null){
-                logger.error("发送下线失败,无在线信息");
-                continue;
-            }
-            taskExecutor.execute(()->{
-                try {
-                    Nas bras = nasService.findNas(online.getNasAddr(),online.getNasId());
-                    RadiusClient cli = new RadiusClient(online.getNasPaddr(),bras.getSecret());
-                    CoaRequest dmreq = new CoaRequest(RadiusPacket.DISCONNECT_REQUEST);
-                    dmreq.addAttribute("User-Name",online.getUsername());
-                    dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
-                    if(ValidateUtil.isNotEmpty(online.getNasAddr())&&!online.getNasAddr().equals("0.0.0.0"))
-                        dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
-                    logger.info(String.format("发送下线请求 %s", dmreq.toString()));
-                    RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
-                    logger.info(String.format("接收到下线响应 %s", dmrep.toString()));
-                } catch (ServiceException | IOException | RadiusException e) {
-                    logger.error("发送下线失败",e);
-                    removeOnline(sessionid);
-                }
-            });
+            asyncUnlockOnline(sessionid);
         }
     }
 
@@ -151,43 +164,76 @@ public class OnlineCache {
      */
     public boolean unlockOnline(String sessionId)
     {
-        Online online = getOnline(sessionId);
+        RadiusOnline online = getOnline(sessionId);
         try {
             if(online==null){
-                logger.error("发送下线失败,无在线信息");
+                logger.error("发送下线失败,无在线信息",Syslogger.RADIUSD);
                 return false;
             }
-            Nas bras = nasService.findNas(online.getNasId(), online.getNasAddr());
+            Bras bras = brasService.findBras(online.getNasAddr(),null, online.getNasId());
             RadiusClient cli = new RadiusClient(online.getNasPaddr(),bras.getSecret());
             CoaRequest dmreq = new CoaRequest(RadiusPacket.DISCONNECT_REQUEST);
             dmreq.addAttribute("User-Name",online.getUsername());
             dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
             dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
-            logger.info(String.format("发送下线请求 %s", dmreq.toString()));
+            logger.info(online.getUsername(), String.format("发送下线请求 %s", dmreq.toLineString()),Syslogger.RADIUSD);
             RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
-            logger.info(String.format("接收到下线响应 %s", dmrep.toString()));
+            logger.info(online.getUsername(), String.format("接收到下线响应 %s", dmrep.toLineString()),Syslogger.RADIUSD);
             return dmrep.getPacketType() == RadiusPacket.DISCONNECT_ACK;
         } catch (ServiceException | IOException | RadiusException e) {
-            logger.error("发送下线失败",e);
+            logger.error(online.getUsername(),"发送下线失败",e,Syslogger.RADIUSD);
             removeOnline(sessionId);
             return false;
         }
     }
 
+    public void asyncUnlockOnline(String sessionid){
+        RadiusOnline online = getOnline(sessionid);
+        if(online==null){
+            logger.error("发送下线失败,无在线信息",Syslogger.RADIUSD);
+            return;
+        }
+        taskExecutor.execute(()->{
+            try {
+                Bras bras = brasService.findBras(online.getNasAddr(),null,online.getNasId());
+                if(bras==null){
+                    logger.error(online.getUsername(),
+                            String.format("发送下线失败,查找BRAS失败（nasid=%s,nasip=%s）",
+                                    online.getNasId(), online.getNasAddr()),Syslogger.RADIUSD);
+                    return;
+                }
+                RadiusClient cli = new RadiusClient(online.getNasPaddr(),bras.getSecret());
+                CoaRequest dmreq = new CoaRequest(RadiusPacket.DISCONNECT_REQUEST);
+                dmreq.addAttribute("User-Name",online.getUsername());
+                dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
+                if(ValidateUtil.isNotEmpty(online.getNasAddr())&&!online.getNasAddr().equals("0.0.0.0"))
+                    dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
+                logger.info(online.getUsername(), String.format("发送下线请求 %s", dmreq.toLineString()),Syslogger.RADIUSD);
+                RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
+                logger.info(online.getUsername(), String.format("接收到下线响应 %s", dmrep.toLineString()),Syslogger.RADIUSD);
+            } catch (ServiceException | IOException | RadiusException e) {
+                logger.error(online.getUsername(),"发送下线失败",e,Syslogger.RADIUSD);
+                removeOnline(sessionid);
+            }
+        });
+    }
 
-    public List<Online> getOnlineByUserName(String userName)
+
+    public List<RadiusOnline> getOnlineByUserName(String userName)
     {
-        List<Online> onlineList = new ArrayList<Online>();
-        for (Online online : cacheData.values()) {
-            if (userName.equalsIgnoreCase(online.getUsername())) {
-                onlineList.add(online);
+        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
+        synchronized (cacheData){
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername())) {
+                    onlineList.add(online);
+                }
             }
         }
         return onlineList;
     }
 
     /** 用户上线 */
-    public void putOnline(Online online)
+    public void putOnline(RadiusOnline online)
     {
         synchronized (cacheData)
         {
@@ -197,29 +243,33 @@ public class OnlineCache {
     }
 
     /** 一个用户下线 */
-    public Online removeOnline(String sessionId)
+    public RadiusOnline removeOnline(String sessionId)
     {
-        return (Online) cacheData.remove(sessionId);
+        synchronized (cacheData){
+            return (RadiusOnline) cacheData.remove(sessionId);
+        }
     }
 
     /** 设置解锁标记 */
     public void setUnLock(String sessionId,int  flag)
     {
-        Online online = (Online) cacheData.get(sessionId);
-        if(online!=null){
-            online.setUnLockFlag(flag);
+        synchronized (cacheData){
+            RadiusOnline online = (RadiusOnline) cacheData.get(sessionId);
+            if(online!=null){
+                online.setUnLockFlag(flag);
+            }
         }
     }
 
     /** BAS所有在线用户下线 */
-    public List<Online> removeAllOnline(String nasAddr, String nasId)
+    public List<RadiusOnline> removeAllOnline(String nasAddr, String nasId)
     {
-        List<Online> onlineList = new ArrayList<Online>();
+        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
         synchronized (cacheData)
         {
-            for (Iterator<Online> it = cacheData.values().iterator(); it.hasNext();)
+            for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
-                Online online = it.next();
+                RadiusOnline online = it.next();
                 if (online.getNasId().equalsIgnoreCase(nasId)|| online.getNasAddr().equalsIgnoreCase(nasAddr)||online.getNasPaddr().equalsIgnoreCase(nasAddr))
                 {
                     onlineList.add(online);
@@ -234,9 +284,11 @@ public class OnlineCache {
     public int getUserOnlineNum(String userName)
     {
         int onlineNum = 0;
-        for (Online online : cacheData.values()) {
-            if (userName.equalsIgnoreCase(online.getUsername()))
-                onlineNum++;
+        synchronized (cacheData){
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername()))
+                    onlineNum++;
+            }
         }
         return onlineNum;
     }
@@ -245,9 +297,11 @@ public class OnlineCache {
     public int getUserOnlineNum(String userName, String macAddr)
     {
         int onlineNum = 0;
-        for (Online online : cacheData.values()) {
-            if (userName.equalsIgnoreCase(online.getUsername()) && !macAddr.equalsIgnoreCase(online.getMacAddr()))
-                onlineNum++;
+        synchronized (cacheData){
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername()) && !macAddr.equalsIgnoreCase(online.getMacAddr()))
+                    onlineNum++;
+            }
         }
         return onlineNum;
     }
@@ -258,7 +312,7 @@ public class OnlineCache {
      * @param interim_times
      * @return
      */
-    private  boolean isExpire(Online online, int interim_times)
+    private  boolean isExpire(RadiusOnline online, int interim_times)
     {
         String curTime = DateTimeUtil.getDateTimeString();
         String acctStart =  online.getAcctStartTime();
@@ -269,42 +323,90 @@ public class OnlineCache {
             return false;
     }
 
-    public void clearOvertimeOnline( int interim_times)
+
+    public void clearOvertimeTcRadiusOnline( int interim_times)
     {
-        for (Iterator<Online> it = cacheData.values().iterator(); it.hasNext();)
-        {
-            Online online = it.next();
-            if (!this.isExpire(online,interim_times))
-                continue;//直到没有超时的用户
+        synchronized (cacheData){
+            for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
+            {
+                RadiusOnline online = it.next();
+                if (!this.isExpire(online,interim_times))
+                    continue;//直到没有超时的用户
 
-            it.remove();
+                it.remove();
 
-            //超时下线消息跟踪
-            logger.info("BRAS[nasip="+online.getNasAddr()+",nasid="+online.getNasId()+"]:用户[user="+online.getUsername()+",session="+online.getAcctSessionId()+"]上线时间["+online.getAcctStartTime()+"]超时未收到更新消息，被自动清理。");
+                //超时下线消息跟踪
+                logger.info(online.getUsername(),"BRAS[nasip="+online.getNasAddr()+",nasid="+online.getNasId()+"]:用户[user="+online.getUsername()+",session="+online.getAcctSessionId()+"]上线时间["+online.getAcctStartTime()+"]超时未收到更新消息，被自动清理。");
+            }
         }
+    }
+
+    public void unlockExpireTcRadiusOnline()
+    {
+
+        List ids = new ArrayList();
+        synchronized (cacheData){
+            for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
+            {
+                RadiusOnline online = it.next();
+                Subscribe user = subscribeCache.findSubscribe(online.getUsername());
+                if(user == null)
+                    continue;
+
+                if(DateTimeUtil.compareSecond(new Date(),user.getExpireTime())>0){
+                    ids.add(online.getAcctSessionId());
+                }else if("flow".equals(user.getBillType()) && user.getFlowAmount().intValue() <= 0){
+                    ids.add(online.getAcctSessionId());
+                }
+
+                if(ids.size()>=32){
+                    List idscopy = new ArrayList(ids);
+                    this.unlockOnlines(idscopy);
+                    ids.clear();
+                }
+
+                //超时下线消息跟踪
+                logger.info(online.getUsername(),"BRAS[nasip="+online.getNasAddr()+",nasid="+online.getNasId()+"]:用户[user="+online.getUsername()+",session="+online.getAcctSessionId()+"]已经过期/或流量不足，即将发送下线指令。");
+            }
+        }
+
+        this.unlockOnlines(ids);
     }
 
     public void updateOnline(AccountingRequest request) {
-        Online online = cacheData.get(request.getAcctSessionId());
-        if(online!=null){
-            online.setUsername(request.getUserName());
-            online.setAcctSessionId(request.getAcctSessionId());
-            online.setAcctSessionTime(request.getAcctSessionTime());
-            online.setAcctInputTotal(request.getAcctInputTotal());
-            online.setAcctOutputTotal(request.getAcctOutputTotal());
-            online.setAcctInputPackets(request.getAcctInputPackets());
-            online.setAcctOutputPackets(request.getAcctOutputPackets());
+        synchronized (cacheData){
+            RadiusOnline online = cacheData.get(request.getAcctSessionId());
+            if(online!=null){
+                online.setUsername(request.getUserName());
+                online.setAcctSessionId(request.getAcctSessionId());
+                online.setAcctSessionTime(request.getAcctSessionTime());
+                online.setAcctInputTotal(request.getAcctInputTotal());
+                online.setAcctOutputTotal(request.getAcctOutputTotal());
+                online.setAcctInputPackets(request.getAcctInputPackets());
+                online.setAcctOutputPackets(request.getAcctOutputPackets());
+            }
         }
     }
 
-    private boolean filterOnline(Online online, Integer groupId, String nasAddr, String nasId, String beginTime, String endTime,  String keyword) {
-        if(groupId!=null&&groupId!=online.getGroupId()) {
+
+    private boolean filterOnline(RadiusOnline online, String nodeId, String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword) {
+        if(ValidateUtil.isNotEmpty(nodeId)&&!nodeId.equalsIgnoreCase(online.getNodeId().toString())) {
             return false;
         }
-        if(ValidateUtil.isNotEmpty(nasAddr)&&(!nasAddr.equalsIgnoreCase(online.getNasAddr())&&!nasAddr.equals(online.getNasPaddr()))) {
+        if(ValidateUtil.isNotEmpty(areaId)&&!areaId.equalsIgnoreCase(online.getAreaId().toString())) {
+            return false;
+        }
+        if(ValidateUtil.isNotEmpty(nasAddr)&&(!nodeId.equalsIgnoreCase(online.getNasAddr())&&!nodeId.equals(online.getNasPaddr()))) {
             return  false;
         }
         if(ValidateUtil.isNotEmpty(nasId)&&!nasId.equalsIgnoreCase(online.getNasId())) {
+            return  false;
+        }
+
+        if(invlan!=null&&!invlan.equals(online.getInVlan())) {
+            return  false;
+        }
+        if(outVlan!=null&&!outVlan.equals(online.getOutVlan())) {
             return  false;
         }
 
@@ -334,6 +436,7 @@ public class OnlineCache {
                 (ValidateUtil.isNotEmpty(online.getNasPaddr()) && online.getNasPaddr().contains(keyword)) ||
                 (ValidateUtil.isNotEmpty(online.getNasPortId()) && online.getNasPortId().contains(keyword)) ||
                 (ValidateUtil.isNotEmpty(online.getFramedIpaddr())&& online.getFramedIpaddr().contains(keyword))||
+                (ValidateUtil.isNotEmpty(online.getRealname())&& online.getRealname().contains(keyword))||
                 (ValidateUtil.isNotEmpty(online.getMacAddr())&& online.getMacAddr().contains(keyword)) ){
                 return  true;
             }else{
@@ -343,58 +446,80 @@ public class OnlineCache {
         return true;
     }
 
-    public PageResult<Online> queryOnlinePage(int pos, int count, Integer groupId, String nasAddr, String nasId, String beginTime, String endTime, String keyword){
+    public PageResult<RadiusOnline> queryOnlinePage(int pos, int count, String nodeId,
+                                                    String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId,
+                                                    String beginTime, String endTime, String keyword, String sort){
         int total = 0;
         int start = pos+1;
         int end = pos +  count ;
 
-        List<Online> copyList = new ArrayList<Online>(cacheData.values());
-        List<Online> onlineList = new ArrayList<Online>();
-        Comparator<Online> comp = (Online a, Online b) -> {
-            return (int)DateTimeUtil.compareSecond(b.getAcctStartTime(),a.getAcctStartTime());
-        };
-        copyList.sort(comp);
-        for (Online online : copyList) {
-            if (!this.filterOnline(online, groupId, nasAddr, nasId, beginTime, endTime, keyword)) {
-                continue;
-            }
-            else{
-                total++;
-                if (total >= start && total <= end) {
-                    try {
-                        onlineList.add(online.clone());
-                    } catch (CloneNotSupportedException e) {
-                        e.printStackTrace();
+        synchronized (cacheData){
+            List<RadiusOnline> copyList = new ArrayList<RadiusOnline>(cacheData.values());
+            List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
+            Comparator<RadiusOnline> comp = (RadiusOnline a, RadiusOnline b) -> {
+                if("acctInputTotal_asc".equals(sort)){
+                    return a.getAcctInputTotal().compareTo(b.getAcctInputTotal());
+                }else if("acctInputTotal_desc".equals(sort)){
+                    return b.getAcctInputTotal().compareTo(a.getAcctInputTotal());
+                }else if("acctOutputTotal_asc".equals(sort)){
+                    return a.getAcctOutputTotal().compareTo(b.getAcctOutputTotal());
+                }else if("acctOutputTotal_desc".equals(sort)){
+                    return b.getAcctOutputTotal().compareTo(a.getAcctOutputTotal());
+                }else if("acctStartTime_asc".equals(sort)){
+                    return (int)DateTimeUtil.compareSecond(a.getAcctStartTime(),b.getAcctStartTime());
+                }else if("acctStartTime_desc".equals(sort)){
+                    return (int)DateTimeUtil.compareSecond(b.getAcctStartTime(),a.getAcctStartTime());
+                }else{
+                    return (int)DateTimeUtil.compareSecond(b.getAcctStartTime(),a.getAcctStartTime());
+                }
+            };
+            copyList.sort(comp);
+            for (RadiusOnline online : copyList) {
+                if (!this.filterOnline(online, nodeId, areaId, invlan,outVlan, nasAddr, nasId, beginTime, endTime, keyword)) {
+                    continue;
+                }
+                else{
+                    total++;
+                    if (total >= start && total <= end) {
+                        try {
+                            onlineList.add(online.clone());
+                        } catch (CloneNotSupportedException e) {
+                            e.printStackTrace();
+                        }
                     }
                 }
-            }
 
+            }
+            return new PageResult<RadiusOnline>(pos, total, onlineList);
         }
-        return new PageResult<Online>(pos, total, onlineList);
     }
 
 
-    public  List<Online> queryOnlineByIds(String ids){
+    public  List<RadiusOnline> queryOnlineByIds(String ids){
         String[] idarray = ids.split(",");
-        List<Online> onlineList = new ArrayList<Online>();
-        for (String sid : idarray) {
-            Online online = cacheData.get(sid);
-            if(online!=null){
-                onlineList.add(online);
+        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
+        synchronized (cacheData){
+            for (String sid : idarray) {
+                RadiusOnline online = cacheData.get(sid);
+                if(online!=null){
+                    onlineList.add(online);
+                }
             }
         }
         return onlineList;
     }
 
-    public int clearOnlineByFilter(Integer groupId, String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
+    public int clearOnlineByFilter(String nodeId, String areaId, Integer invlan,Integer outVlan,String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
         int total = 0;
-        List<Online> onlineList = new ArrayList<Online>();
-        for (Iterator<Online> it = cacheData.values().iterator(); it.hasNext();)
-        {
-            Online online = it.next();
-            if(this.filterOnline(online, groupId,   nasAddr, nasId, beginTime, endTime,  keyword)) {
-                total++;
-                it.remove();
+        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
+        synchronized (cacheData){
+            for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
+            {
+                RadiusOnline online = it.next();
+                if(this.filterOnline(online, nodeId, areaId,  invlan, outVlan, nasAddr, nasId, beginTime, endTime,  keyword)) {
+                    total++;
+                    it.remove();
+                }
             }
         }
         return total;
@@ -402,12 +527,14 @@ public class OnlineCache {
 
     public int clearOnlineByFilter(String nasAddr, String nasId){
         int total = 0;
-        for (Iterator<Online> it = cacheData.values().iterator(); it.hasNext();)
-        {
-            Online online = it.next();
-            if(this.filterOnline(online, null,  nasAddr, nasId, null, null,  null)) {
-                total++;
-                it.remove();
+        synchronized (cacheData){
+            for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
+            {
+                RadiusOnline online = it.next();
+                if(this.filterOnline(online, null, null, null,null, nasAddr, nasId, null, null,  null)) {
+                    total++;
+                    it.remove();
+                }
             }
         }
         return total;

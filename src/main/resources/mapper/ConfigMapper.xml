@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.toughradius.mapper.ConfigMapper">
+  <resultMap id="BaseResultMap" type="org.toughradius.entity.Config">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="value" jdbcType="VARCHAR" property="value" />
+    <result column="remark" jdbcType="VARCHAR" property="remark" />
+  </resultMap>
+
+  <cache type="org.mybatis.caches.ehcache.EhcacheCache" readOnly="true"  >
+    <property name="maxElementsInMemory" value="512"></property>
+    <property name="eternal" value="false"></property>
+    <property name="timeToIdleSeconds" value="60"></property>
+    <property name="timeToLiveSeconds" value="60"></property>
+    <property name="memoryStoreEvictionPolicy" value="LRU"></property>
+    <property name="overflowToDisk" value="false"></property>
+    <property name="diskPersistent" value="false"></property>
+  </cache>
+
+
+  <select id="findConfig" resultMap="BaseResultMap" useCache="true">
+    select id, type, name, value
+    from tr_config
+    where type = #{type} and name = #{name}
+  </select>
+
+
+  <select id="getInterimTimes"  resultType="java.lang.Integer" useCache="true">
+    select value from tr_config where type = 'radius' and name = "RADIUS_INTERIM_INTELVAL"
+  </select>
+
+  <select id="getIsCheckPwd"  resultType="java.lang.Integer" useCache="true">
+    select value from tr_config where type = 'radius' and name = "RADIUS_IGNORE_PASSWORD"
+  </select>
+
+
+</mapper>

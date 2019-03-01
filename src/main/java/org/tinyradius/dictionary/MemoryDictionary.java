@@ -1,10 +1,3 @@
-/**
- * $Id: MemoryDictionary.java,v 1.2 2006/09/24 10:06:38 wuttke Exp $
- * Created on 28.08.2005
- * 
- * @author mw
- * @version $Revision: 1.2 $
- */
 package org.tinyradius.dictionary;
 
 import java.util.HashMap;
@@ -18,19 +11,19 @@ import java.util.Map;
  * 
  * @see #addAttributeType(AttributeType)
  * @see #addVendor(int, String)
- * @see org.tinyradius.dictionary.Dictionary
- * @see org.tinyradius.dictionary.WritableDictionary
+ * @see Dictionary
+ * @see WritableDictionary
  */
 public class MemoryDictionary implements WritableDictionary {
 
 	/**
 	 * Returns the AttributeType for the vendor -1 from the
-	 * cache.
+	 * component.
 	 * 
 	 * @param typeCode
 	 *            attribute type code
 	 * @return AttributeType or null
-	 * @see org.tinyradius.dictionary.Dictionary#getAttributeTypeByCode(int)
+	 * @see Dictionary#getAttributeTypeByCode(int)
 	 */
 	public AttributeType getAttributeTypeByCode(int typeCode) {
 		return getAttributeTypeByCode(-1, typeCode);
@@ -44,7 +37,7 @@ public class MemoryDictionary implements WritableDictionary {
 	 * @param typeCode
 	 *            attribute type code
 	 * @return AttributeType or null
-	 * @see org.tinyradius.dictionary.Dictionary#getAttributeTypeByCode(int, int)
+	 * @see Dictionary#getAttributeTypeByCode(int, int)
 	 */
 	public AttributeType getAttributeTypeByCode(int vendorCode, int typeCode) {
 		Map vendorAttributes = (Map) attributesByCode.get(new Integer(vendorCode));
@@ -60,7 +53,7 @@ public class MemoryDictionary implements WritableDictionary {
 	 * @param typeName
 	 *            name of the attribute type
 	 * @return AttributeType or null
-	 * @see org.tinyradius.dictionary.Dictionary#getAttributeTypeByName(java.lang.String)
+	 * @see Dictionary#getAttributeTypeByName(String)
 	 */
 	public AttributeType getAttributeTypeByName(String typeName) {
 		return (AttributeType) attributesByName.get(typeName);
@@ -69,11 +62,11 @@ public class MemoryDictionary implements WritableDictionary {
 	/**
 	 * Searches the vendor with the given name and returns its
 	 * code. This method is seldomly used.
-	 * 
+	 *
 	 * @param vendorName
 	 *            vendor name
 	 * @return vendor code or -1
-	 * @see org.tinyradius.dictionary.Dictionary#getVendorId(java.lang.String)
+	 * @see Dictionary#getVendorId(String)
 	 */
 	public int getVendorId(String vendorName) {
 		for (Iterator i = vendorsByCode.entrySet().iterator(); i.hasNext();) {
@@ -86,19 +79,19 @@ public class MemoryDictionary implements WritableDictionary {
 
 	/**
 	 * Retrieves the name of the vendor with the given code from
-	 * the cache.
+	 * the component.
 	 * 
 	 * @param vendorId
 	 *            vendor number
 	 * @return vendor name or null
-	 * @see org.tinyradius.dictionary.Dictionary#getVendorName(int)
+	 * @see Dictionary#getVendorName(int)
 	 */
 	public String getVendorName(int vendorId) {
 		return (String) vendorsByCode.get(new Integer(vendorId));
 	}
 
 	/**
-	 * Adds the given vendor to the cache.
+	 * Adds the given vendor to the component.
 	 * 
 	 * @param vendorId
 	 *            vendor ID
@@ -118,7 +111,7 @@ public class MemoryDictionary implements WritableDictionary {
 	}
 
 	/**
-	 * Adds an AttributeType object to the cache.
+	 * Adds an AttributeType object to the component.
 	 * 
 	 * @param attributeType
 	 *            AttributeType object

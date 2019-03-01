@@ -1,9 +1,3 @@
-/**
- * $Id: RadiusException.java,v 1.2 2005/10/15 11:35:30 wuttke Exp $
- * Created on 10.04.2005
- * @author Matthias Wuttke
- * @version $Revision: 1.2 $
- */
 package org.tinyradius.util;
 
 /**

@@ -1,25 +1,16 @@
-/**
- * $Id: RadiusClient.java,v 1.7 2005/11/10 10:20:21 wuttke Exp $
- * Created on 09.04.2005
- * 
- * @author Matthias Wuttke
- * @version $Revision: 1.7 $
- */
+
 package org.tinyradius.util;
+
+import org.tinyradius.packet.AccessRequest;
+import org.tinyradius.packet.AccountingRequest;
+import org.tinyradius.packet.RadiusPacket;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.SocketTimeoutException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.tinyradius.packet.AccessRequest;
-import org.tinyradius.packet.AccountingRequest;
-import org.tinyradius.packet.RadiusPacket;
+import java.net.*;
 
 /**
  * This object represents a simple Radius client which communicates with

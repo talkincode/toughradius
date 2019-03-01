@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper  
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="org.toughradius.mapper.SubscribeMapper">
+
+	<resultMap id="TcSubscribeBillMap" type="org.toughradius.entity.SubscribeBill">
+		<result column="bill_type" jdbcType="CHAR" property="billType" />
+		<result column="flow_amount" jdbcType="INTEGER" property="flowAmount" />
+	</resultMap>
+
+	<resultMap id="BaseResultMap" type="org.toughradius.entity.Subscribe">
+		<id column="id" jdbcType="INTEGER" property="id" />
+		<result column="node_id" jdbcType="INTEGER" property="nodeId" />
+		<result column="area_id" jdbcType="INTEGER" property="areaId" />
+		<result column="product_id" jdbcType="INTEGER" property="productId" />
+		<result column="realname" jdbcType="VARCHAR" property="realname" />
+		<result column="subscriber" jdbcType="VARCHAR" property="subscriber" />
+		<result column="password" jdbcType="VARCHAR" property="password" />
+		<result column="bill_type" jdbcType="CHAR" property="billType" />
+		<result column="domain" jdbcType="VARCHAR" property="domain" />
+		<result column="addr_pool" jdbcType="VARCHAR" property="addrPool" />
+		<result column="policy" jdbcType="VARCHAR" property="policy" />
+		<result column="is_online" jdbcType="INTEGER" property="isOnline" />
+		<result column="active_num" jdbcType="INTEGER" property="activeNum" />
+		<result column="flow_amount" jdbcType="BIGINT" property="flowAmount" />
+		<result column="bind_mac" jdbcType="BIT" property="bindMac" />
+		<result column="bind_vlan" jdbcType="BIT" property="bindVlan" />
+		<result column="ip_addr" jdbcType="VARCHAR" property="ipAddr" />
+		<result column="mac_addr" jdbcType="VARCHAR" property="macAddr" />
+		<result column="in_vlan" jdbcType="INTEGER" property="inVlan" />
+		<result column="out_vlan" jdbcType="INTEGER" property="outVlan" />
+		<result column="up_rate" jdbcType="DECIMAL" property="upRate" />
+		<result column="down_rate" jdbcType="DECIMAL" property="downRate" />
+		<result column="up_peak_rate" jdbcType="DECIMAL" property="upPeakRate" />
+		<result column="down_peak_rate" jdbcType="DECIMAL" property="downPeakRate" />
+		<result column="up_rate_code" jdbcType="VARCHAR" property="upRateCode" />
+		<result column="down_rate_code" jdbcType="VARCHAR" property="downRateCode" />
+		<result column="status" jdbcType="CHAR" property="status" />
+		<result column="begin_time" jdbcType="TIMESTAMP" property="beginTime" />
+		<result column="expire_time" jdbcType="TIMESTAMP" property="expireTime" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+	</resultMap>
+
+	<select id="fetchSubscribeBill" parameterType="java.lang.String" resultMap="TcSubscribeBillMap">
+		select bill_type, flow_amount from tr_subscribe where subscriber = #{username} and status = 'enabled'
+	</select>
+
+	<select id="findAllUsername"  resultType="java.lang.String" useCache="false">
+		SELECT subscriber FROM tr_subscribe WHERE STATUS = 'enabled'
+	</select>
+
+	<select id="findLastUpdateUser" parameterType="java.lang.String"  resultMap="BaseResultMap" useCache="false">
+		<![CDATA[
+		SELECT subscriber, update_time FROM tr_subscribe
+		WHERE STATUS = 'enabled'
+		AND update_time >= #{lastUpdate}
+		]]>
+	</select>
+
+	<select id="findSubscribe" resultMap="BaseResultMap" useCache="false">
+		SELECT
+		node_id,
+		area_id,
+		realname,
+		subscriber,
+		password,
+		bill_type,
+		domain,
+		addr_pool,
+		policy,
+		active_num,
+		bind_mac,
+		bind_vlan,
+		ip_addr,
+		mac_addr,
+		in_vlan,
+		out_vlan,
+		up_rate,
+		down_rate,
+		up_peak_rate,
+		down_peak_rate,
+		up_rate_code,
+		down_rate_code,
+		status,
+		expire_time,
+		update_time,
+		flow_amount
+		FROM  tr_subscribe WHERE status = 'enabled'
+	</select>
+
+
+	<update id="updateFlowAmountByUsername">
+		update tr_subscribe
+		set flow_amount=#{flowAmount}
+		where subscriber=#{username} and status='enabled'
+	</update>
+
+	<update id="updateMacAddr">
+		update tr_subscribe
+		set mac_addr=#{macAddr}
+		where subscriber=#{username} and status='enabled'
+	</update>
+	
+	<update id="updateInValn">
+		update tr_subscribe
+		set in_vlan=#{inValn}
+		where subscriber=#{username} and status='enabled'
+	</update>
+	
+	<update id="updateOutValn" >
+		update tr_subscribe
+		set out_vlan=#{outValn}
+		where subscriber=#{username} and status='enabled'
+	</update>
+
+	<update id="updateOnlineStatus">
+		update tr_subscribe set is_online=#{status} where subscriber=#{username}
+	</update>
+
+
+</mapper>

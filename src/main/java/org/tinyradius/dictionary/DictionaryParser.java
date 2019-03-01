@@ -1,26 +1,9 @@
-/**
- * $Id: DictionaryParser.java,v 1.2 2005/09/06 16:38:40 wuttke Exp $
- * Created on 28.08.2005
- * 
- * @author mw
- * @version $Revision: 1.2 $
- */
 package org.tinyradius.dictionary;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import org.tinyradius.attribute.*;
+
+import java.io.*;
 import java.util.StringTokenizer;
-import org.tinyradius.attribute.IntegerAttribute;
-import org.tinyradius.attribute.IpAttribute;
-import org.tinyradius.attribute.Ipv6Attribute;
-import org.tinyradius.attribute.Ipv6PrefixAttribute;
-import org.tinyradius.attribute.RadiusAttribute;
-import org.tinyradius.attribute.StringAttribute;
-import org.tinyradius.attribute.VendorSpecificAttribute;
 
 /**
  * Parses a dictionary in "Radiator format" and fills a
@@ -108,7 +91,7 @@ public class DictionaryParser {
 		else
 			type = getAttributeTypeClass(code, typeStr);
 
-		// create and cache object
+		// create and component object
 		dictionary.addAttributeType(new AttributeType(code, name, type));
 	}
 

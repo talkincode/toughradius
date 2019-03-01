@@ -1,8 +1,8 @@
 package org.toughradius.common;
 
+import java.util.Calendar;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.TimeZone;
 
 
@@ -1928,71 +1928,6 @@ public class DateTimeUtil
             return null;
         
         return new Timestamp(newDate.getTime());
-    }
-
-    public static String toTimeDesc(long seconds){
-        if(seconds < 60){
-            return String.format("%s秒", seconds);
-        }else if( seconds > 60 && seconds < 3600 ){
-            int m = (int)seconds / 60;
-            int s = (int)seconds % 60;
-            StringBuilder buff = new StringBuilder();
-            buff.append(String.format("%s分钟", m));
-            if(s>0){
-                buff.append(String.format("%s秒", s));
-            }
-            return buff.toString();
-        }else if( seconds > 3600 && seconds < (3600*24) ){
-            int h = (int)seconds / 3600;
-            int _h = 0;
-            int m = 0;
-            int _m = 0;
-            int s = 0;
-            _h = (int)seconds % 3600;
-            if(_h>0){
-                m = _h / 60;
-                s = _h % 60;
-            }
-            StringBuilder buff = new StringBuilder();
-            buff.append(String.format("%s小时", h));
-            if(m>0){
-                buff.append(String.format("%s分钟", m));
-            }
-            if(m>0 && s>0){
-                buff.append(String.format("%s秒", s));
-            }
-            return buff.toString();
-        }else if( seconds > 3600* 24 ){
-            int d = (int)seconds / 3600 * 24;
-            int _d = 0;
-            int h = 0;
-            int _h = 0;
-            int m = 0;
-            int _m = 0;
-            int s = 0;
-            if(_d > 3600){
-                h = _d / 3600;
-                _h = _d % 3600;
-            }
-            if(_h>0){
-                m = _h / 60;
-                s = _h % 60;
-            }
-
-            StringBuilder buff = new StringBuilder();
-            buff.append(String.format("%s天", d));
-            if(h>0){
-                buff.append(String.format("%s小时", h));
-            }
-            if(m>0){
-                buff.append(String.format("%s分钟", m));
-            }
-            if(s>0){
-                buff.append(String.format("%s秒", s));
-            }
-            return buff.toString();
-        }
-        return String.format("%s秒", seconds);
     }
 
 }

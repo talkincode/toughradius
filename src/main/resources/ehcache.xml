@@ -16,7 +16,7 @@
     -->
     <diskStore path="java.io.tmpdir"/>
     <defaultCache      
-            maxElementsInMemory="30000"
+            maxElementsInMemory="65535"
             eternal="false"      
             timeToIdleSeconds="15"
             timeToLiveSeconds="15"

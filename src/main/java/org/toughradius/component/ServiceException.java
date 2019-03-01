@@ -1,8 +1,15 @@
 package org.toughradius.component;
 
-
+/**
+ * An exception which occurs on Radius protocol errors like
+ * invalid packets or malformed attributes.
+ */
 public class ServiceException extends Exception {
 
+	/**
+	 * Constructs a RadiusException with a message.
+	 * @param message error message
+	 */
 	public ServiceException(String message) {
 		super(message);
 	}

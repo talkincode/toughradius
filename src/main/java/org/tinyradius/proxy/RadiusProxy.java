@@ -1,29 +1,19 @@
-/**
- * $Id: RadiusProxy.java,v 1.1 2005/09/07 22:19:01 wuttke Exp $
- * Created on 07.09.2005
- * 
- * @author glanz, Matthias Wuttke
- * @version $Revision: 1.1 $
- */
 package org.tinyradius.proxy;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.tinyradius.attribute.RadiusAttribute;
 import org.tinyradius.packet.RadiusPacket;
 import org.tinyradius.util.RadiusEndpoint;
 import org.tinyradius.util.RadiusException;
 import org.tinyradius.util.RadiusServer;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This class implements a Radius proxy that receives Radius packets
@@ -159,7 +149,7 @@ public abstract class RadiusProxy extends RadiusServer {
 
 	/**
 	 * Sends an answer to a proxied packet back to the original host.
-	 * Retrieves the RadiusProxyConnection object from the cache employing
+	 * Retrieves the RadiusProxyConnection object from the component employing
 	 * the Proxy-State attribute.
 	 * 
 	 * @param packet
@@ -175,7 +165,7 @@ public abstract class RadiusProxy extends RadiusServer {
 			throw new RadiusException("proxy packet without Proxy-State attribute");
 		RadiusAttribute proxyState = (RadiusAttribute) proxyStates.get(proxyStates.size() - 1);
 
-		// retrieve proxy connection from cache
+		// retrieve proxy connection from component
 		String state = new String(proxyState.getAttributeData());
 		RadiusProxyConnection proxyConnection = (RadiusProxyConnection) proxyConnections.remove(state);
 		if (proxyConnection == null) {
@@ -209,12 +199,11 @@ public abstract class RadiusProxy extends RadiusServer {
 
 	/**
 	 * Proxies the given packet to the server given in the proxy connection.
-	 * Stores the proxy connection object in the cache with a key that
+	 * Stores the proxy connection object in the component with a key that
 	 * is added to the packet in the "Proxy-State" attribute.
 	 * 
 	 * @param packet
 	 *            the packet to proxy
-	 * @param proxyCon
 	 *            the RadiusProxyConnection for this packet
 	 * @throws IOException
 	 */

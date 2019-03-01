@@ -1,11 +1,8 @@
-/**
- * $Id: VendorSpecificAttribute.java,v 1.7 2005/11/22 10:18:38 wuttke Exp $
- * Created on 10.04.2005
- * 
- * @author Matthias Wuttke
- * @version $Revision: 1.7 $
- */
 package org.tinyradius.attribute;
+
+import org.tinyradius.dictionary.AttributeType;
+import org.tinyradius.dictionary.Dictionary;
+import org.tinyradius.util.RadiusException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -13,9 +10,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import org.tinyradius.dictionary.AttributeType;
-import org.tinyradius.dictionary.Dictionary;
-import org.tinyradius.util.RadiusException;
 
 /**
  * This class represents a "Vendor-Specific" attribute.
@@ -69,7 +63,7 @@ public class VendorSpecificAttribute extends RadiusAttribute {
 	 * 
 	 * @param dictionary
 	 *            dictionary to set
-	 * @see org.tinyradius.attribute.RadiusAttribute#setDictionary(org.tinyradius.dictionary.Dictionary)
+	 * @see RadiusAttribute#setDictionary(Dictionary)
 	 */
 	public void setDictionary(Dictionary dictionary) {
 		super.setDictionary(dictionary);
@@ -229,7 +223,7 @@ public class VendorSpecificAttribute extends RadiusAttribute {
 	/**
 	 * Renders this attribute as a byte array.
 	 * 
-	 * @see org.tinyradius.attribute.RadiusAttribute#writeAttribute()
+	 * @see RadiusAttribute#writeAttribute()
 	 */
 	public byte[] writeAttribute() {
 		// write vendor ID
@@ -269,7 +263,7 @@ public class VendorSpecificAttribute extends RadiusAttribute {
 	 * Reads a Vendor-Specific attribute and decodes the internal sub-attribute
 	 * structure.
 	 * 
-	 * @see org.tinyradius.attribute.RadiusAttribute#readAttribute(byte[], int, int)
+	 * @see RadiusAttribute#readAttribute(byte[], int, int)
 	 */
 	public void readAttribute(byte[] data, int offset, int length) throws RadiusException {
 		// check length
@@ -324,7 +318,7 @@ public class VendorSpecificAttribute extends RadiusAttribute {
 	/**
 	 * Returns a string representation for debugging.
 	 * 
-	 * @see org.tinyradius.attribute.RadiusAttribute#toString()
+	 * @see RadiusAttribute#toString()
 	 */
 	public String toString() {
 		StringBuffer sb = new StringBuffer();
@@ -343,7 +337,7 @@ public class VendorSpecificAttribute extends RadiusAttribute {
 		}
 		for (Iterator i = getSubAttributes().iterator(); i.hasNext();) {
 			RadiusAttribute attr = (RadiusAttribute) i.next();
-			sb.append("\n");
+			sb.append("\n\t");
 			sb.append(attr.toString());
 		}
 		return sb.toString();

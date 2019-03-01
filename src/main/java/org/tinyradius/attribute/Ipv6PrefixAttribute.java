@@ -1,15 +1,10 @@
-/**
- * Created on 24/Jun/2016
- * @author Ivan F. Martinez
- */
 package org.tinyradius.attribute;
 
-import java.util.Arrays;
-import java.util.StringTokenizer;
+import org.tinyradius.util.RadiusException;
+
 import java.net.Inet6Address;
 import java.net.UnknownHostException;
-
-import org.tinyradius.util.RadiusException;
+import java.util.Arrays;
 
 /**
  * This class represents a Radius attribute for an IPv6 prefix.
@@ -36,7 +31,7 @@ public class Ipv6PrefixAttribute extends RadiusAttribute {
 	/**
 	 * Returns the attribute value (IP number) as a string of the
 	 * format "xx.xx.xx.xx".
-	 * @see org.tinyradius.attribute.RadiusAttribute#getAttributeValue()
+	 * @see RadiusAttribute#getAttributeValue()
 	 */
 	public String getAttributeValue() {
 		final byte[] data = getAttributeData();
@@ -58,7 +53,7 @@ public class Ipv6PrefixAttribute extends RadiusAttribute {
 	 * ipv6 address.
 	 * @throws IllegalArgumentException
 	 * @throws NumberFormatException
-	 * @see org.tinyradius.attribute.RadiusAttribute#setAttributeValue(java.lang.String)
+	 * @see RadiusAttribute#setAttributeValue(String)
 	 */
 	public void setAttributeValue(String value) {
 		if (value == null || value.length() < 3)
@@ -86,7 +81,7 @@ public class Ipv6PrefixAttribute extends RadiusAttribute {
 
 	/**
 	 * Check attribute length.
-	 * @see org.tinyradius.attribute.RadiusAttribute#readAttribute(byte[], int, int)
+	 * @see RadiusAttribute#readAttribute(byte[], int, int)
 	 */
 	public void readAttribute(byte[] data, int offset, int length)
 	throws RadiusException {

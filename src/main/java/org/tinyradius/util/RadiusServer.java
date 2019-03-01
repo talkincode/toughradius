@@ -1,7 +1,7 @@
 /**
  * $Id: RadiusServer.java,v 1.11 2008/04/24 05:22:50 wuttke Exp $
  * Created on 09.04.2005
- * 
+ *
  * @author Matthias Wuttke
  * @version $Revision: 1.11 $
  */
@@ -21,12 +21,13 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.tinyradius.attribute.RadiusAttribute;
 import org.tinyradius.packet.AccessRequest;
 import org.tinyradius.packet.AccountingRequest;
 import org.tinyradius.packet.RadiusPacket;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Implements a simple Radius server. This class must be subclassed to
@@ -40,11 +41,11 @@ public abstract class RadiusServer {
 	 * Define this executor in child class to make packet processing be made in separate threads
 	 */
 	protected ExecutorService executor = null;
-	
+
 	/**
 	 * Returns the shared secret used to communicate with the client with the
 	 * passed IP address or null if the client is not allowed at this server.
-	 * 
+	 *
 	 * @param client
 	 *            IP address and port number of client
 	 * @return shared secret or null
@@ -58,7 +59,7 @@ public abstract class RadiusServer {
 	 *
 	 * for compatiblity this standard implementation just call the getSharedSecret(InetSocketAddress) method
 	 * and should be overrived when necessary
-	 * 
+	 *
 	 * @param client
 	 *            IP address and port number of client
 	 * @param packet
@@ -73,7 +74,7 @@ public abstract class RadiusServer {
 	/**
 	 * Returns the password of the passed user. Either this
 	 * method or accessRequestReceived() should be overriden.
-	 * 
+	 *
 	 * @param userName
 	 *            user name
 	 * @return plain-text password or null if user unknown
@@ -83,7 +84,7 @@ public abstract class RadiusServer {
 	/**
 	 * Constructs an answer for an Access-Request packet. Either this
 	 * method or isUserAuthenticated should be overriden.
-	 * 
+	 *
 	 * @param accessRequest
 	 *            Radius request packet
 	 * @param client
@@ -107,7 +108,7 @@ public abstract class RadiusServer {
 	/**
 	 * Constructs an answer for an Accounting-Request packet. This method
 	 * should be overriden if accounting is supported.
-	 * 
+	 *
 	 * @param accountingRequest
 	 *            Radius request packet
 	 * @param client
@@ -125,7 +126,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Starts the Radius server.
-	 * 
+	 *
 	 * @param listenAuth
 	 *            open auth port?
 	 * @param listenAcct
@@ -181,7 +182,7 @@ public abstract class RadiusServer {
 	public void stop() {
 		logger.info("stopping Radius server");
 		closing = true;
-		if (executor != null) 
+		if (executor != null)
 			executor.shutdown();
 		if (authSocket != null)
 			authSocket.close();
@@ -191,7 +192,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Returns the auth port the server will listen on.
-	 * 
+	 *
 	 * @return auth port
 	 */
 	public int getAuthPort() {
@@ -200,7 +201,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Sets the auth port the server will listen on.
-	 * 
+	 *
 	 * @param authPort
 	 *            auth port, 1-65535
 	 */
@@ -213,7 +214,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Returns the socket timeout (ms).
-	 * 
+	 *
 	 * @return socket timeout
 	 */
 	public int getSocketTimeout() {
@@ -222,7 +223,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Sets the socket timeout.
-	 * 
+	 *
 	 * @param socketTimeout
 	 *            socket timeout, >0 ms
 	 * @throws SocketException
@@ -239,7 +240,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Sets the acct port the server will listen on.
-	 * 
+	 *
 	 * @param acctPort
 	 *            acct port 1-65535
 	 */
@@ -252,7 +253,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Returns the acct port the server will listen on.
-	 * 
+	 *
 	 * @return acct port
 	 */
 	public int getAcctPort() {
@@ -264,7 +265,7 @@ public abstract class RadiusServer {
 	 * A packet is discarded as a duplicate if in the duplicate interval
 	 * there was another packet with the same identifier originating from the
 	 * same address.
-	 * 
+	 *
 	 * @return duplicate interval (ms)
 	 */
 	public long getDuplicateInterval() {
@@ -276,7 +277,7 @@ public abstract class RadiusServer {
 	 * A packet is discarded as a duplicate if in the duplicate interval
 	 * there was another packet with the same identifier originating from the
 	 * same address.
-	 * 
+	 *
 	 * @param duplicateInterval
 	 *            duplicate interval (ms), >0
 	 */
@@ -289,7 +290,7 @@ public abstract class RadiusServer {
 	/**
 	 * Returns the IP address the server listens on.
 	 * Returns null if listening on the wildcard address.
-	 * 
+	 *
 	 * @return listen address or null
 	 */
 	public InetAddress getListenAddress() {
@@ -301,7 +302,7 @@ public abstract class RadiusServer {
 	 * Must be called before start().
 	 * Defaults to null, meaning listen on every
 	 * local address (wildcard address).
-	 * 
+	 *
 	 * @param listenAddress
 	 *            listen address or null
 	 */
@@ -312,7 +313,7 @@ public abstract class RadiusServer {
 	/**
 	 * Copies all Proxy-State attributes from the request
 	 * packet to the response packet.
-	 * 
+	 *
 	 * @param request
 	 *            request packet
 	 * @param answer
@@ -329,10 +330,10 @@ public abstract class RadiusServer {
 	/**
 	 * Listens on the auth port (blocks the current thread).
 	 * Returns when stop() is called.
-	 * 
+	 *
 	 * @throws SocketException
 	 * @throws InterruptedException
-	 * 
+	 *
 	 */
 	protected void listenAuth() throws SocketException {
 		listen(getAuthSocket());
@@ -341,7 +342,7 @@ public abstract class RadiusServer {
 	/**
 	 * Listens on the acct port (blocks the current thread).
 	 * Returns when stop() is called.
-	 * 
+	 *
 	 * @throws SocketException
 	 * @throws InterruptedException
 	 */
@@ -351,7 +352,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Listens on the passed socket, blocks until stop() is called.
-	 * 
+	 *
 	 * @param s
 	 *            socket to listen on
 	 */
@@ -382,12 +383,12 @@ public abstract class RadiusServer {
 				}
 				else {
 					executor.submit(new Runnable() {
-						
+
 						@Override
 						public void run() {
 							processRequest(s, packetIn);
 						}
-						
+
 					});
 				}
 			}
@@ -405,7 +406,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Process a single received request
-	 * 
+	 *
 	 * @param s
 	 *            socket to send response on
 	 * @param packetIn
@@ -454,7 +455,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Handles the received Radius packet and constructs a response.
-	 * 
+	 *
 	 * @param localAddress
 	 *            local address the packet was received on
 	 * @param remoteAddress
@@ -467,7 +468,7 @@ public abstract class RadiusServer {
 	 * @throws IOException
 	 */
 	protected RadiusPacket handlePacket(InetSocketAddress localAddress, InetSocketAddress remoteAddress, RadiusPacket request, String sharedSecret)
-	        throws RadiusException, IOException {
+			throws RadiusException, IOException {
 		RadiusPacket response = null;
 
 		// check for duplicates
@@ -498,7 +499,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Returns a socket bound to the auth port.
-	 * 
+	 *
 	 * @return socket
 	 * @throws SocketException
 	 */
@@ -515,7 +516,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Returns a socket bound to the acct port.
-	 * 
+	 *
 	 * @return socket
 	 * @throws SocketException
 	 */
@@ -532,7 +533,7 @@ public abstract class RadiusServer {
 
 	/**
 	 * Creates a Radius response datagram packet from a RadiusPacket to be send.
-	 * 
+	 *
 	 * @param packet
 	 *            RadiusPacket
 	 * @param secret
@@ -547,7 +548,7 @@ public abstract class RadiusServer {
 	 * @throws IOException
 	 */
 	protected DatagramPacket makeDatagramPacket(RadiusPacket packet, String secret, InetAddress address, int port, RadiusPacket request)
-	        throws IOException {
+			throws IOException {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		packet.encodeResponsePacket(bos, secret, request);
 		byte[] data = bos.toByteArray();
@@ -559,7 +560,7 @@ public abstract class RadiusServer {
 	/**
 	 * Creates a RadiusPacket for a Radius request from a received
 	 * datagram packet.
-	 * 
+	 *
 	 * @param packet
 	 *            received datagram
 	 * @return RadiusPacket object
@@ -578,7 +579,7 @@ public abstract class RadiusServer {
 	 * Checks whether the passed packet is a duplicate.
 	 * A packet is duplicate if another packet with the same identifier
 	 * has been sent from the same host in the last time.
-	 * 
+	 *
 	 * @param packet
 	 *            packet in question
 	 * @param address

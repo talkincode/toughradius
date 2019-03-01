@@ -1,23 +1,22 @@
 package org.toughradius.handler;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.mina.core.buffer.IoBuffer;
-import org.apache.mina.core.service.IoHandlerAdapter;
-import org.apache.mina.core.session.IdleStatus;
-import org.apache.mina.core.session.IoSession;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.toughradius.config.RadiusConfig;
+import org.toughradius.entity.Bras;
+import org.toughradius.entity.Subscribe;
 import org.tinyradius.attribute.RadiusAttribute;
 import org.tinyradius.packet.AccessAccept;
 import org.tinyradius.packet.AccessRequest;
 import org.tinyradius.packet.AccountingRequest;
 import org.tinyradius.packet.RadiusPacket;
 import org.tinyradius.util.RadiusException;
+import org.toughradius.component.RadiusStat;
+import org.apache.mina.core.buffer.IoBuffer;
+import org.apache.mina.core.service.IoHandlerAdapter;
+import org.apache.mina.core.session.IdleStatus;
+import org.apache.mina.core.session.IoSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.toughradius.component.*;
-import org.toughradius.config.RadiusConfig;
-import org.toughradius.entity.Nas;
-import org.toughradius.entity.User;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,6 +34,8 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class RadiusbasicHandler extends IoHandlerAdapter {
 
+    protected  final String SESSION_CLIENT_IP_KEY = "SESSION_CLIENT_IP_KEY";
+
     protected final static ScheduledExecutorService schedExecuter = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
@@ -44,19 +45,19 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
     protected RadiusConfig radiusConfig;
 
     @Autowired
-    protected NasService brasService;
+    protected BrasService brasService;
 
     @Autowired
-    protected UserService subscribeService;
+    protected SubscribeService subscribeService;
 
     @Autowired
     protected OnlineCache onlineCache;
 
     @Autowired
-    protected UserCache subscribeCache;
+    protected SubscribeCache subscribeCache;
 
     @Autowired
-    protected OptionService configService;
+    protected ConfigService configService;
 
     @Autowired
     protected RadiusParseFilter parseFilter;
@@ -64,7 +65,8 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
     @Autowired
     protected ThreadPoolTaskExecutor taskExecutor;
 
-    private final static Log logger = LogFactory.getLog(RadiusbasicHandler.class);
+    @Autowired
+    protected Syslogger logger;
 
     /**
      * 查询设备信息
@@ -73,11 +75,11 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
      * @return
      * @throws RadiusException
      */
-    public Nas getNas(InetSocketAddress client, RadiusPacket packet) throws RadiusException {
+    public Bras getNas(InetSocketAddress client, RadiusPacket packet) throws RadiusException {
         String ip = client.getAddress().getHostAddress();
         RadiusAttribute nasid = packet.getAttribute(32);
         try {
-            return brasService.findNas(ip,nasid.getAttributeValue());
+            return brasService.findBras(ip,null,nasid.getAttributeValue());
         } catch (ServiceException e) {
             throw  new RadiusException(e.getMessage());
         }
@@ -88,8 +90,8 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
      * @param username
      * @return
      */
-    public User getUser(String username) {
-        return subscribeCache.findUser(username);
+    public Subscribe getUser(String username) {
+        return subscribeCache.findSubscribe(username);
     }
 
     /**
@@ -98,9 +100,9 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
      * @param accessRequest
      * @throws RadiusException
      */
-    public void authUser(User user, AccessRequest accessRequest) throws RadiusException {
+    public void authUser(Subscribe user, AccessRequest accessRequest) throws RadiusException {
         String plaintext = user.getPassword();
-        String ignorePwd = configService.getStringValue(OptionService.RADIUS_IGNORE_PASSWORD);
+        String ignorePwd = configService.getStringValue(ConfigService.RADIUS_MODULE,ConfigService.RADIUS_IGNORE_PASSWORD);
 
         if(!"enabled".equals(ignorePwd)){
             if (plaintext == null || !accessRequest.verifyPassword(plaintext)){
@@ -137,6 +139,9 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
 
     public RadiusPacket getAccessReject(AccessRequest accessRequest, String error) {
         RadiusPacket answer = new RadiusPacket(RadiusPacket.ACCESS_REJECT, accessRequest.getPacketIdentifier());
+        if(error==null){
+            error = "Unknow Error";
+        }
         answer.addAttribute("Reply-Message",error);
         copyProxyState(accessRequest, answer);
         return answer;
@@ -162,7 +167,9 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
             try {
                 this.sendResponse(session,remoteAddress,secret,request,responses);
             } catch (IOException e) {
-                logger.error("发送延迟响应失败",e);
+                logger.error("发送延迟响应失败",e,Syslogger.RADIUSD);
+            }finally {
+                session.closeOnFlush();
             }
         },delay, TimeUnit.SECONDS);
     }
@@ -183,6 +190,7 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
         IoBuffer outbuff = IoBuffer.wrap(data);
         radiusStat.incrRespBytes(data.length);
         session.write(outbuff,remoteAddress);
+        session.closeOnFlush();
     }
 
     @Override
@@ -197,11 +205,8 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
 
     @Override
     public void sessionCreated(IoSession session) throws Exception {
-//        NioDatagramSessionConfig cfg = session.getConfig();
-//        cfg.setReceiveBufferSize(64 * 1024 * 1024);
-//        cfg.setReadBufferSize(2 * 1024 * 1024);
-////        cfg.setKeepAlive(true);
-//        cfg.setSoLinger(0);
+        InetSocketAddress remoteAddress = (InetSocketAddress) session.getRemoteAddress();
+        session.setAttribute(SESSION_CLIENT_IP_KEY, remoteAddress);
     }
 
     @Override
@@ -210,77 +215,5 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
 
     @Override
     public void sessionOpened(IoSession session) throws Exception {
-    }
-
-
-    /**
-     * 重复报文判断
-     * @param packet
-     * @param address
-     * @return
-     */
-    protected boolean isPacketDuplicate(RadiusPacket packet, InetSocketAddress address) {
-        long now = System.currentTimeMillis();
-        long intervalStart = now - getDuplicateInterval();
-        byte[] authenticator = packet.getAuthenticator();
-        for (Iterator i = receivedPackets.iterator(); i.hasNext();) {
-            ReceivedPacket p = (ReceivedPacket) i.next();
-            if (p.receiveTime < intervalStart) {
-                // packet is older than duplicate interval
-                i.remove();
-            }
-            else {
-                if (p.address.equals(address) && p.packetIdentifier == packet.getPacketIdentifier()) {
-                    if (authenticator != null && p.authenticator != null) {
-                        // packet is duplicate if stored authenticator is equal
-                        // to the packet authenticator
-                        return Arrays.equals(p.authenticator, authenticator);
-                    }
-                    // should not happen, packet is duplicate
-                    return true;
-                }
-            }
-        }
-
-        // add packet to receive list
-        ReceivedPacket rp = new ReceivedPacket();
-        rp.address = address;
-        rp.packetIdentifier = packet.getPacketIdentifier();
-        rp.receiveTime = now;
-        rp.authenticator = authenticator;
-        receivedPackets.add(rp);
-
-
-        return false;
-    }
-
-    public long getDuplicateInterval() {
-        return duplicateInterval;
-    }
-    private Queue receivedPackets = new ConcurrentLinkedQueue();
-    private long duplicateInterval = 30000; // 30 s
-
-    class ReceivedPacket {
-
-        /**
-         * The identifier of the packet.
-         */
-        public int packetIdentifier;
-
-        /**
-         * The time the packet was received.
-         */
-        public long receiveTime;
-
-        /**
-         * The address of the host who sent the packet.
-         */
-        public InetSocketAddress address;
-
-        /**
-         * Authenticator of the received packet.
-         */
-        public byte[] authenticator;
-
     }
 }

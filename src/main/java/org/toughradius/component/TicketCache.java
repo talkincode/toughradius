@@ -1,18 +1,17 @@
 package org.toughradius.component;
 
+import org.toughradius.common.DateTimeUtil;
+import org.toughradius.common.PageResult;
+import org.toughradius.common.ValidateUtil;
+import org.toughradius.config.RadiusConfig;
+import org.toughradius.entity.RadiusTicket;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
-import org.toughradius.common.DateTimeUtil;
-import org.toughradius.common.ValidateUtil;
-import org.toughradius.config.RadiusConfig;
-import org.toughradius.entity.PageResult;
-import org.toughradius.entity.Ticket;
 
 import java.io.*;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -23,7 +22,7 @@ import java.util.zip.GZIPOutputStream;
 public class TicketCache {
 
     private Log logger = LogFactory.getLog(TicketCache.class);
-    private final static ConcurrentLinkedDeque<Ticket> queue = new  ConcurrentLinkedDeque<Ticket>();
+    private final static ConcurrentLinkedDeque<RadiusTicket> queue = new  ConcurrentLinkedDeque<RadiusTicket>();
 
     @Autowired
     private RadiusConfig radiusConfig;
@@ -32,14 +31,14 @@ public class TicketCache {
     private ThreadPoolTaskExecutor taskExecutor;
 
 
-    public void addTicket(Ticket ticket)
+    public void addTicket(RadiusTicket ticket)
     {
         queue.addFirst(ticket);
     }
 
     public void syncData(){
         try {
-            List<Ticket> logs = new ArrayList<Ticket>();
+            List<RadiusTicket> logs = new ArrayList<RadiusTicket>();
             int count = 0;
             while(queue.size() > 0 && count <= 4096){
                 logs.add(queue.removeFirst());
@@ -56,10 +55,10 @@ public class TicketCache {
                 boolean isnew = !tfile.exists();
                 out = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(tfile, true)));
                 if(isnew){
-                    out.write(Ticket.getHeaderString().getBytes("utf-8"));
+                    out.write(RadiusTicket.getHeaderString().getBytes("utf-8"));
                     out.write("\n".getBytes());
                 }
-                for(Ticket ticket : logs){
+                for(RadiusTicket ticket : logs){
                     out.write(ticket.toString().getBytes("utf-8"));
                     out.write("\n".getBytes());
                 }
@@ -79,15 +78,16 @@ public class TicketCache {
         }
     }
 
-    public PageResult<Ticket> queryTicket(int start,
-                                          int count,
-                                          String startDate,
-                                          String endDate,
-                                          String nasid,
-                                          String nasaddr,
-                                          Integer groupId,
-                                          String username,
-                                          String keyword) throws ServiceException {
+    public PageResult<RadiusTicket> queryTicket(int start,
+                                                int count,
+                                                String startDate,
+                                                String endDate,
+                                                String nasid,
+                                                String nasaddr,
+                                                Integer nodeId,
+                                                Integer areaId,
+                                                String username,
+                                                String keyword) throws ServiceException {
         int rowNum = 0;
         if(ValidateUtil.isEmpty(startDate)){
             startDate = DateTimeUtil.getDateString()+" 00:00:00";
@@ -126,7 +126,7 @@ public class TicketCache {
             String filename = String.format("%s/radius-ticket",radiusConfig.getTicketDir());
             String currendDate = DateTimeUtil.getDateString();
             int index = 0, end = start + count;
-            ArrayList<Ticket> list = new ArrayList<Ticket>();
+            ArrayList<RadiusTicket> list = new ArrayList<RadiusTicket>();
 
             boolean loop = true;
             while (beginDay.compareTo(endDay) <= 0 && loop)
@@ -140,11 +140,11 @@ public class TicketCache {
                     continue;
                 }
 
-                reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file)), Charset.forName("utf-8")));
+                reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file)), "UTF-8"));
                 String line = null;
                 while ((line = reader.readLine()) != null)
                 {
-                    Ticket logdata = Ticket.fromString(line);
+                    RadiusTicket logdata = RadiusTicket.fromString(line);
                     if(logdata==null){
                         continue;
                     }
@@ -158,9 +158,11 @@ public class TicketCache {
                     if (ValidateUtil.isNotEmpty(nasaddr) && !nasaddr.equalsIgnoreCase(logdata.getNasAddr()))
                         continue;
 
-                    if (groupId!=null && groupId != logdata.getGroupId())
+                    if (nodeId!=null && nodeId != logdata.getNodeId().intValue())
                         continue;
 
+                    if (areaId!=null && areaId != logdata.getAreaId().intValue())
+                        continue;
 
                     if (ValidateUtil.isNotEmpty(keyword) &&
                             ( !logdata.getUsername().contains(keyword)
@@ -191,7 +193,7 @@ public class TicketCache {
                 beginDay = DateTimeUtil.getNextDateString(beginDay);
                 reader.close();
             }
-            return new PageResult<Ticket>(start, rowNum, list);
+            return new PageResult<RadiusTicket>(start, rowNum, list);
         }
         catch (Exception e)
         {

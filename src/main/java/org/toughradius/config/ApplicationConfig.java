@@ -1,6 +1,5 @@
 package org.toughradius.config;
 
-import com.google.gson.Gson;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,16 +22,11 @@ public class ApplicationConfig {
     @Bean
     public ThreadPoolTaskExecutor taskExecutor(){
         ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(8);
-        taskExecutor.setQueueCapacity(65535);
+        taskExecutor.setCorePoolSize(32);
+        taskExecutor.setMaxPoolSize(512);
+        taskExecutor.setQueueCapacity(100000);
         taskExecutor.setKeepAliveSeconds(60);
         taskExecutor.setThreadNamePrefix("TASK_EXECUTOR");
-        taskExecutor.setMaxPoolSize(32);
         return taskExecutor;
-    }
-
-    @Bean
-    public Gson gson(){
-        return new Gson();
     }
 }
