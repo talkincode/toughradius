@@ -31,6 +31,8 @@ public class RadiusAcceptFilter implements RadiusConstant{
         switch (nas.getVendorId()){
             case VENDOR_MIKROTIK:
                 return filterMikrotik(accept, user);
+            case VENDOR_IKUAI:
+                return filterIkuai(accept, user);
             case VENDOR_HUAWEI:
                 return filterHuawei(accept, user);
             case VENDOR_H3C:
@@ -93,6 +95,15 @@ public class RadiusAcceptFilter implements RadiusConstant{
         int up = user.getUpRate().multiply(BigDecimal.valueOf(1024)).intValue();
         int down = user.getDownRate().multiply(BigDecimal.valueOf(1024)).intValue();
         accept.addAttribute("Mikrotik-Rate-Limit", String.format("%sk/%sk", up,down));
+        return accept;
+    }
+
+
+    private AccessAccept filterIkuai(AccessAccept accept, Subscribe user){
+        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*8)).intValue();
+        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*8)).intValue();
+        accept.addAttribute("RP-Upstream-Speed-Limit", String.valueOf(up));
+        accept.addAttribute("RP-Downstream-Speed-Limit", String.valueOf(down));
         return accept;
     }
 

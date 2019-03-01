@@ -356,3 +356,11 @@ VENDORATTR      311   MS-Secondary-DNS-Server 29	string
 VENDORATTR      311   MS-Primary-NBNS-Server 30	string
 VENDORATTR      311   MS-Secondary-NBNS-Server 31	string
 VENDORATTR      311   MS-ARAP-Challenge 33	string
+
+VENDOR          10055   Roaring-Penguin
+
+VENDORATTR      10055	RP-Upstream-Speed-Limit			1	integer
+VENDORATTR      10055	RP-Downstream-Speed-Limit		2	integer
+VENDORATTR      10055	RP-HURL					3	string
+VENDORATTR      10055	RP-MOTM					4	string
+VENDORATTR      10055	RP-Max-Sessions-Per-User		5	integer
