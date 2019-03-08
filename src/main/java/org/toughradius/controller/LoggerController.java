@@ -30,7 +30,7 @@ public class LoggerController {
     @Autowired
     private Syslogger logger;
 
-    @GetMapping("/admin/logger/query")
+    @GetMapping("/logger/query")
     public PageResult<TraceMessage> queryTraceMessage(@RequestParam(defaultValue = "0") int start,
                                                       @RequestParam(defaultValue = "40") int count,
                                                       String startDate, String endDate, String type, String username, String keyword){
@@ -43,12 +43,12 @@ public class LoggerController {
         return logger.queryMessage(start,count,startDate,endDate,type, username,keyword);
     }
 
-    @GetMapping("/admin/radius/stat")
+    @GetMapping("/radius/stat")
     public Map queryRadiusStat(){
         return radiusStat.getData();
     }
 
-    @PostMapping("/admin/logger/add")
+    @PostMapping("/logger/add")
     public RestResult addTraceMessage(String name, String msg, String type){
         if(ValidateUtil.isNotEmpty(msg)){
             logger.info(name, msg,type);
@@ -56,7 +56,7 @@ public class LoggerController {
         return RestResult.SUCCESS;
     }
 
-    @GetMapping("/admin/ticket/query")
+    @GetMapping("/ticket/query")
     public PageResult<RadiusTicket> queryTicket(@RequestParam(defaultValue = "0") int start,
                                                 @RequestParam(defaultValue = "40") int count,
                                                 String startDate,

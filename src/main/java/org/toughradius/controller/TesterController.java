@@ -12,13 +12,13 @@ public class TesterController {
     private RadiusTester radiusTester;
 
 
-    @GetMapping("/admin/radius/auth/test")
+    @GetMapping("/radius/auth/test")
     public String AuthTestHandler(String username,String papchap){
         return radiusTester.sendAuth(username,papchap);
     }
 
 
-    @GetMapping("/admin/radius/acct/test")
+    @GetMapping("/radius/acct/test")
     public String AcctTestHandler(String username,int type){
         return radiusTester.sendAcct(username,type);
     }
