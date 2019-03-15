@@ -3,6 +3,7 @@ package org.toughradius.controller;
 import org.toughradius.common.PageResult;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.ValidateUtil;
+import org.toughradius.config.ApiAccess;
 import org.toughradius.entity.RadiusOnline;
 import org.toughradius.component.OnlineCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ public class OnlineController {
     private OnlineCache onlineCache;
 
     //在线查询
+    @ApiAccess
     @GetMapping("/online/query")
     public PageResult<RadiusOnline> queryOnlineHandler(@RequestParam(defaultValue = "0") int start, @RequestParam(defaultValue = "40") int count,
                                                        String nodeId, String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword, String sort){

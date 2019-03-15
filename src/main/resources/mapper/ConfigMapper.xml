@@ -27,6 +27,32 @@
   </select>
 
 
+  <select id="queryForList" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select id, type, name, value
+    from tr_config
+    <where>
+      <if test="type != null  and type != '' "> and type = #{type}</if>
+    </where>
+  </select>
+
+
+  <select id="insertConfig" parameterType="org.toughradius.entity.Config">
+    insert into tr_config (`type`, `name`, `value`) values (#{type},#{name},#{value})
+  </select>
+
+
+  <select id="updateConfig" parameterType="org.toughradius.entity.Config">
+    update tr_config SET type=#{type}, name=#{name}, value=#{value}
+  </select>
+
+  <delete id="deleteConfig">
+    delete from tr_config where type = #{type} and name = #{name}
+  </delete>
+
+  <delete id="deleteById" parameterType="java.lang.Integer">
+    delete from tr_config where id = #{id}
+  </delete>
+
   <select id="getInterimTimes"  resultType="java.lang.Integer" useCache="true">
     select value from tr_config where type = 'radius' and name = "RADIUS_INTERIM_INTELVAL"
   </select>

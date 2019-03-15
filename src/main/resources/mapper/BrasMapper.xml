@@ -32,6 +32,67 @@
 		id, identifier, `name`, ipaddr, vendor_id, secret, coa_port,auth_limit,acct_limit, status,remark, create_time
 	</sql>
 
+	<select id="queryForList" parameterType="org.toughradius.entity.Bras" resultMap="BaseResultMap" useCache="false">
+		select
+		<include refid="Base_Column_List" />
+		from tr_bras
+		<where>
+			<if test="name != null  and name != '' "> and name = #{name}</if>
+			<if test="ipaddr != null  and ipaddr != '' "> and ipaddr = #{ipaddr}</if>
+			<if test="identifier != null  and identifier != '' "> and identifier = #{identifier}</if>
+			<if test="remark != null  and remark != '' "> and remark like CONCAT('%',#{remark},'%') </if>
+		</where>
+	</select>
+
+	<insert id="insertBras" parameterType="org.toughradius.entity.Bras">
+		insert into xs_customer
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="name != null  and name != ''  ">name,</if>
+			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr,</if>
+			<if test="vendorId != null  and vendorId != ''  ">vendor_id,</if>
+			<if test="secret != null  and secret != ''  ">secret,</if>
+			<if test="coaPort != null  and coaPort != ''  ">coa_port,</if>
+			<if test="authLimit != null  and authLimit != ''  ">auth_limit,</if>
+			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit,</if>
+			<if test="status != null  and status != ''  ">status,</if>
+			<if test="remark != null  and remark != ''  ">remark,</if>
+			<if test="createTime != null  and createTime != ''  ">create_time,</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="name != null  and name != ''  ">#{name},</if>
+			<if test="ipaddr != null  and ipaddr != ''  ">#{ipaddr},</if>
+			<if test="vendorId != null  and vendorId != ''  ">#{vendorId},</if>
+			<if test="secret != null  and secret != ''  ">#{secret},</if>
+			<if test="coaPort != null  and coaPort != ''  ">#{coaPort},</if>
+			<if test="authLimit != null  and authLimit != ''  ">#{authLimit},</if>
+			<if test="acctLimit != null  and acctLimit != ''  ">#{acctLimit},</if>
+			<if test="status != null  and status != ''  ">#{status},</if>
+			<if test="remark != null  and remark != ''  ">#{remark},</if>
+			<if test="createTime != null  and createTime != ''  ">#{createTime},</if>
+		</trim>
+	</insert>
+
+	<select id="updateBras" parameterType="org.toughradius.entity.Bras">
+		update tr_bras
+		<trim prefix="SET" suffixOverrides=",">
+			<if test="name != null  and name != ''  ">name = #{name},</if>
+			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr = #{ipaddr},</if>
+			<if test="vendorId != null  and vendorId != ''  ">vendor_id = #{vendorId},</if>
+			<if test="secret != null  and secret != ''  ">secret = #{secret},</if>
+			<if test="coaPort != null  and coaPort != ''  ">coa_port = #{coaPort},</if>
+			<if test="authLimit != null  and authLimit != ''  ">auth_limit = #{authLimit},</if>
+			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit = #{acctLimit},</if>
+			<if test="status != null  and status != ''  ">status = #{status},</if>
+			<if test="remark != null  and remark != ''  ">remark = #{remark},</if>
+			<if test="createTime != null  and createTime != ''  ">create_time = #{createTime},</if>
+		</trim>
+		where id = #{id}
+	</select>
+
+	<delete id="deleteById" parameterType="java.lang.Integer">
+		delete from tr_bras where id = #{id}
+	</delete>
+
 	<select id="selectByIPAddr" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
 		select
 		<include refid="Base_Column_List" />

@@ -20,6 +20,12 @@ public interface SubscribeMapper {
 
 	List<Subscribe> findLastUpdateUser(@Param(value = "lastUpdate") String lastUpdate);
 
+	List<Subscribe> queryForList(Subscribe subscribe);
+
+	void insertSubscribe(Subscribe subscribe);
+
+	void updateSubscribe(Subscribe subscribe);
+
 	List<String> findAllUsername();
 
 	int updateFlowAmountByUsername(@Param(value = "username") String username, @Param(value = "flowAmount") BigInteger flowAmount);
