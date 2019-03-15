@@ -13,6 +13,7 @@ import javax.servlet.MultipartConfigElement;
 @ConfigurationProperties(prefix = "application")
 public class ApplicationConfig {
 
+    private String version;
     private String apikey;
     private String apisecret;
 
@@ -54,5 +55,13 @@ public class ApplicationConfig {
 
     public void setApisecret(String apisecret) {
         this.apisecret = apisecret;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 }

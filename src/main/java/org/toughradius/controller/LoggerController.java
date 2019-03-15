@@ -30,7 +30,7 @@ public class LoggerController {
     @Autowired
     private Syslogger logger;
 
-    @GetMapping("/logger/query")
+    @GetMapping("/admin/logger/query")
     public PageResult<TraceMessage> queryTraceMessage(@RequestParam(defaultValue = "0") int start,
                                                       @RequestParam(defaultValue = "40") int count,
                                                       String startDate, String endDate, String type, String username, String keyword){
@@ -43,12 +43,12 @@ public class LoggerController {
         return logger.queryMessage(start,count,startDate,endDate,type, username,keyword);
     }
 
-    @GetMapping("/radius/stat")
+    @GetMapping("/admin/radius/stat")
     public Map queryRadiusStat(){
         return radiusStat.getData();
     }
 
-    @PostMapping("/logger/add")
+    @PostMapping("/admin/logger/add")
     public RestResult addTraceMessage(String name, String msg, String type){
         if(ValidateUtil.isNotEmpty(msg)){
             logger.info(name, msg,type);
@@ -56,7 +56,7 @@ public class LoggerController {
         return RestResult.SUCCESS;
     }
 
-    @GetMapping("/ticket/query")
+    @GetMapping("/admin/ticket/query")
     public PageResult<RadiusTicket> queryTicket(@RequestParam(defaultValue = "0") int start,
                                                 @RequestParam(defaultValue = "40") int count,
                                                 String startDate,
@@ -71,7 +71,7 @@ public class LoggerController {
         try {
             return ticketCache.queryTicket(start,count,startDate,endDate, nasid, nasaddr, nodeId, areaId, username,keyword);
         } catch (ServiceException e) {
-            logger.error(String.format("查询上网日志发生错误, %s", e.getMessage()),e,Syslogger.SYSTEM);
+            logger.error(String.format("/admin查询上网日志发生错误, %s", e.getMessage()),e,Syslogger.SYSTEM);
             return new PageResult<RadiusTicket>(start,0, new ArrayList<RadiusTicket>());
         }
     }
