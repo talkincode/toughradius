@@ -24,12 +24,6 @@ toughradius.admin.bras.loadPage = function(session){
                 view:"toolbar",
                 css:"page-toolbar",
                 cols:[
-                    {
-                        view: "button", type: "base", width: 70, icon: "upload", label: "导入",
-                        click: function () {
-                            $$("toughradius.admin_bras_upload").fileDialog({});
-                        }
-                    },
                     { view:"button", type:"form", width:70, icon:"plus", label:"添加",  click:function(){
                         toughradius.admin.bras.brasAdd(session,function(){
                             reloadData();
@@ -64,13 +58,13 @@ toughradius.admin.bras.loadPage = function(session){
                 id:tableid,
                 view:"datatable",
                 columns:[
-                    { id: "id", header: ["ID"], width: 60, sort: "string" },
+                    { id: "id", header: ["ID"],  sort: "string" , hidden:true},
                     { id:"name",header:["名称"], sort:"string"},
-                    { id:"identifier",header:["标识"], sort:"string", width:150},
-                    { id:"ipaddr",header:["IP"], sort:"string", width:120},
-                    { id:"auth_limit",header:["认证并发"], sort:"int", width:100},
-                    { id:"acct_limit",header:["记账并发"], sort:"int", width:100},
-                    { id:"vendor_id",header:["厂商"], sort:"string", width:120,template:function(obj){
+                    { id:"identifier",header:["标识"], sort:"string"},
+                    { id:"ipaddr",header:["IP"], sort:"string"},
+                    { id:"auth_limit",header:["认证并发"], sort:"int"},
+                    { id:"acct_limit",header:["记账并发"], sort:"int"},
+                    { id:"vendor_id",header:["厂商"], sort:"string",template:function(obj){
                         if(obj.vendor_id==="0"){
                             return "标准";
                         }else if(obj.vendor_id==="2352"){
@@ -91,8 +85,8 @@ toughradius.admin.bras.loadPage = function(session){
                             return "爱快";
                         }
                     }},
-                    { id:"coa_port",header:["COA端口"], sort:"string", width:80},
-                    { id:"secret",header:["密钥"], sort:"string", width:100,template:function(obj){
+                    { id:"coa_port",header:["COA端口"], sort:"string"},
+                    { id:"secret",header:["密钥"], sort:"string",template:function(obj){
                         return "******"
                     }},
                     { id:"status",header:["状态"], sort:"string", template:function(obj){
@@ -102,12 +96,12 @@ toughradius.admin.bras.loadPage = function(session){
                             return "<span style='color:red;'>停用</span>";
                         }
                     }},
-                    { id:"remark",header:["备注"], sort:"string",fillspace:true},
+                    { id:"remark",header:["备注"], sort:"string", hidden:true},
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
                 select:true,
-                maxWidth:4096,
-                maxHeight:1000,
+                // maxWidth:4096,
+                // maxHeight:1000,
                 resizeColumn:true,
                 autoWidth:true,
                 autoHeight:true,

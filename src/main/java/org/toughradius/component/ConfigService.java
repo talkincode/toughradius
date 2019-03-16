@@ -46,7 +46,12 @@ public class ConfigService {
     }
 
     public void updateConfig(Config config){
-        configMapper.updateConfig(config);
+        Config cfg = configMapper.findConfig(config.getType(),config.getName());
+        if(cfg==null){
+            configMapper.insertConfig(config);
+        }else{
+            configMapper.updateConfig(config);
+        }
     }
 
     public void deleteById(Integer id){

@@ -150,7 +150,7 @@ webix.ready(function() {
                                             {
                                                 view: "sidebar",
                                                 scroll:"auto",
-                                                width: 220,
+                                                width: 180,
                                                 data: session.menudata,
                                                 on: {
                                                     onAfterSelect: function (id) {
@@ -195,22 +195,11 @@ webix.ready(function() {
                                     {
                                         id: toughradius.admin.pageId,
                                         css:"main-page",
-                                        paddingX:15,
                                         // paddingY:3,
                                         rows:[
-                                            {height:9},
                                             {
                                                 id: toughradius.admin.panelId,
                                                 template: ""
-                                            },
-                                            {height:9},
-                                            {
-                                                css:"page-footer",
-                                                height:36,
-                                                borderless:true,
-                                                cols:[
-                                                    {},{view:"label", css:"Copyright", label:"Copyright © 2016 - 2020 版权所有，侵权必究！"}, {}
-                                                ]
                                             }
                                         ]
                                     }

@@ -301,7 +301,8 @@ toughradius.admin.dashboard.updateDiskUseChart = function (uid) {
 
 toughradius.admin.dashboard.basicInfo = function(session){
     return {
-        view:"portlet",icon:false,
+        // view:"portlet",
+        icon:false,
         body:{
             borderless:true,
             css:"panel-box",
@@ -531,7 +532,8 @@ toughradius.admin.dashboard.loadPage = function(session){
                         toughradius.admin.dashboard.basicInfo(session),
                         // {height:10},
                         {
-                            view: "portlet", icon: false,
+                            // view: "portlet",
+                            icon: false,
                             borderless:true,
                             css:"panel-box",
                             rows:[
@@ -553,7 +555,7 @@ toughradius.admin.dashboard.loadPage = function(session){
                                                 toughradius.admin.dashboard.updateMemUseChart(memchartUid);
                                                 toughradius.admin.dashboard.updateDiskUseChart(memchartUid);
                                                 webix.ajax().get('/admin/dashboard/uptime',{}).then(function (result) {
-                                                    $$(uptimeid).define("template", result.text());
+                                                    $$(uptimeid).define("template",  result.text());
                                                     $$(uptimeid).refresh();
                                                 });
                                             }
@@ -572,7 +574,8 @@ toughradius.admin.dashboard.loadPage = function(session){
                         },
                         // {height:10},
                         {
-                            view: "portlet", icon: false,
+                            // view: "portlet",
+                            icon: false,
                             borderless:true,
                             css:"panel-box",
                             rows:[

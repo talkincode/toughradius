@@ -1930,4 +1930,30 @@ public class DateTimeUtil
         return new Timestamp(newDate.getTime());
     }
 
+
+    /**
+     * 秒转换成时间描述
+     * @param times
+     * @return
+     */
+    public  static String formatSecond(long times){
+        if(times < 60){
+            return String.format("%s 秒", times);
+        }
+        long d = times / (3600 * 24);
+        long h = times % (3600 * 24) / 3600;
+        long m = times % (3600 * 24) % 3600 / 60;
+        long s = times % (3600 * 24) % 3600 % 60;
+
+        if(d>0){
+            return String.format("%s天%s小时%s分钟%s秒",  d, h, m, s);
+        }else if(d==0 && h >0){
+            return String.format("%s小时%s分钟%s秒", h,m,s);
+        }else if(d==0 && h==0 && m > 0){
+            return String.format("%s分钟%s秒", m,s);
+        }else{
+            return String.valueOf(times);
+        }
+    }
+
 }
