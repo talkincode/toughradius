@@ -1,13 +1,26 @@
 package org.toughradius.controller;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.SystemUtil;
+import org.toughradius.component.RadiusStat;
+
+import java.util.Map;
 
 @Controller
 public class DashboardController {
+
+    @Autowired
+    private RadiusStat radiusStat;
+
+    @GetMapping("/admin/radius/stat")
+    @ResponseBody
+    public Map queryRadiusStat(){
+        return radiusStat.getData();
+    }
 
     @GetMapping(value = {"/admin/dashboard/cpuuse"})
     @ResponseBody

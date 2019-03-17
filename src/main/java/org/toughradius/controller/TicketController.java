@@ -19,42 +19,13 @@ import java.util.ArrayList;
 import java.util.Map;
 
 @RestController
-public class LoggerController {
+public class TicketController {
 
     @Autowired
     private TicketCache ticketCache;
 
     @Autowired
-    private RadiusStat radiusStat;
-
-    @Autowired
     private Syslogger logger;
-
-    @GetMapping("/admin/logger/query")
-    public PageResult<TraceMessage> queryTraceMessage(@RequestParam(defaultValue = "0") int start,
-                                                      @RequestParam(defaultValue = "40") int count,
-                                                      String startDate, String endDate, String type, String username, String keyword){
-        if(ValidateUtil.isNotEmpty(startDate)&&startDate.length() == 16){
-            startDate += ":00";
-        }
-        if(ValidateUtil.isNotEmpty(endDate)&&endDate.length() == 16){
-            endDate += ":59";
-        }
-        return logger.queryMessage(start,count,startDate,endDate,type, username,keyword);
-    }
-
-    @GetMapping("/admin/radius/stat")
-    public Map queryRadiusStat(){
-        return radiusStat.getData();
-    }
-
-    @PostMapping("/admin/logger/add")
-    public RestResult addTraceMessage(String name, String msg, String type){
-        if(ValidateUtil.isNotEmpty(msg)){
-            logger.info(name, msg,type);
-        }
-        return RestResult.SUCCESS;
-    }
 
     @GetMapping("/admin/ticket/query")
     public PageResult<RadiusTicket> queryTicket(@RequestParam(defaultValue = "0") int start,

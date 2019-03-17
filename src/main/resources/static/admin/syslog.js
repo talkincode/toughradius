@@ -1,9 +1,9 @@
-if (!window.toughsms.admin.syslog)
-    toughsms.admin.syslog={};
+if (!window.toughradius.admin.syslog)
+    toughradius.admin.syslog={};
 
 
-toughsms.admin.syslog.loadPage = function(session){
-    toughsms.admin.methods.setToolbar("hdd-o","系统日志","syslog");
+toughradius.admin.syslog.loadPage = function(session){
+    toughradius.admin.methods.setToolbar("hdd-o","系统日志","syslog");
     var tableid = webix.uid();
     var queryid = webix.uid();
     var reloadData = function(){
@@ -18,54 +18,50 @@ toughsms.admin.syslog.loadPage = function(session){
         $$(tableid).load('/admin/syslog/query?'+args.join("&"));
     };
     webix.ui({
-        id:toughsms.admin.panelId,
+        id:toughradius.admin.panelId,
         css:"main-panel",padding:2,
         rows:[
             {
-                view:"toolbar",
-                css:"page-toolbar",
-                cols:[
+                id: queryid,
+                css:"query-form",
+                view: "form",
+                hidden: false,
+                paddingX: 10,
+                paddingY: 5,
+                elementsConfig: {minWidth:180},
+                elements: [
                     {
-                        id: queryid,
-                        css:"query-form",
-                        // height:40,
-                        paddingY:5,
-                        view: "form",
-                        hidden: false,
-                        maxWidth: 2000,
-                        borderless:true,
-                        elements: [
-                            {
-                                cols:[
-                                    {view: "richselect", name: "type", label: "类型", value: "radiusd",width:140,labelWidth:40,
-                                        options: [{ id: "radiusd", value: "认证" },{ id: "system", value: "系统" },
-                                            { id: "api", value: "接口" },{ id: "bras", value: "设备" },{ id: "all", value: "所有" }]},
-                                    {view: "datepicker", timepicker:true, name:"startDate",label:"", labelWidth:0, width:170, stringResult:true, format: "%Y-%m-%d %H:%i"},
-                                    {view: "datepicker", timepicker:true, name:"endDate",label:"至", labelWidth:27, width:190, stringResult:true,format: "%Y-%m-%d %H:%i"},
-                                    { view: "text", name: "username", label: "", labelWidth: 0, placeholder: "用户帐号", width:120},
-                                    { view: "text", name: "keyword", label: "", labelWidth: 0, placeholder: "内容关键字", width:150},
-                                    {view: "button", label: "查询", type: "icon", icon: "search", borderless: true, width: 55,click:function(){
-                                        reloadData();
-                                    }},
-                                    {view: "button", label: "重置", type: "icon", icon: "refresh", borderless: true, width: 55,click:function(){
-                                        $$(queryid).setValues({
-                                            start_date: "",
-                                            end_date: "",
-                                            level: "",
-                                            keyword: ""
-                                        });
-                                    }}
-                                ]
-                            }
-                        ]
-                    }
+                        type:"space", id:"a1", rows:[{
+                            type:"space", padding:0, responsive:"a1", cols:[
+                                {view: "datepicker", timepicker:true, name:"startDate",label:"起始时间", stringResult:true, format: "%Y-%m-%d %H:%i"},
+                                {view: "datepicker", timepicker:true, name:"endDate",label:"至", stringResult:true,format: "%Y-%m-%d %H:%i"},
+                                { view: "text", name: "username", label: "",  placeholder: "用户帐号"},
+                                { view: "text", name: "keyword", label: "", placeholder: "内容关键字"},
+                                {
+                                    cols:[
+                                        {view: "richselect",  name: "type", label: "", value: "radiusd", labelWidth:0,width:66,
+                                            options: [{ id: "radiusd", value: "认证" },{ id: "system", value: "系统" }, { id: "api", value: "接口" },{ id: "bras", value: "设备" },{ id: "other", value: "其他" }]},
+                                        {view: "button", label: "查询", type: "icon", icon: "search", borderless: true, width: 55,click:function(){
+                                                reloadData();
+                                            }},
+                                        {view: "button", label: "重置", type: "icon", icon: "refresh", borderless: true, width: 55,click:function(){
+                                                $$(queryid).setValues({
+                                                    start_date: "",
+                                                    end_date: "",
+                                                    level: "",
+                                                    keyword: ""
+                                                });
+                                            }},{}
+                                    ]
+                                }
+                            ]
+                        }
+                    ]}
                 ]
             },
             {
                 id:tableid,
                 view:"treetable",
-                scroll:"y",
-                leftSplit:1,
                 subview:{
                     borderless:true,
                     view:"template",
@@ -79,17 +75,16 @@ toughsms.admin.syslog.loadPage = function(session){
                     }
                 },
                 columns:[
-                    { id:"name", header:["帐号"], width:120,  template:"{common.subrow()} #name#"},
-                    { id:"time",header:["时间"], width:180},
-                    { id:"type",header:["类型"], width:70},
-                    { id:"msg",header:["内容"], fillspace:true},
+                    { id:"name", header:["帐号"],  template:"{common.subrow()} #name#"},
+                    { id:"time",header:["时间"]},
+                    { id:"type",header:["类型"]},
+                    { id:"msg",header:["内容"], hidden:true},
+                    { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
-                select:true,
-                maxWidth:2000,
-                maxHeight:1000,
-                resizeColumn:true,
-                autoWidth:true,
-                autoHeight:true,
+                select: true,
+                resizeColumn: true,
+                autoWidth: true,
+                autoHeight: true,
                 url:"/admin/syslog/query",
                 pager: "dataPager",
                 datafetch:40,
@@ -122,7 +117,7 @@ toughsms.admin.syslog.loadPage = function(session){
                 ]
             }
         ]
-    },$$(toughsms.admin.pageId),$$(toughsms.admin.panelId));
+    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
     webix.extend($$(tableid), webix.ProgressBar);
 };
 

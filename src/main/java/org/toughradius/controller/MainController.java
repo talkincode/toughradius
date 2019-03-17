@@ -37,6 +37,9 @@ public class MainController {
 
     private static final String SESSION_USER_KEY = "SESSION_USER_KEY";
 
+    /**
+     * 构造界面菜单数据
+     */
     public static List<MenuItem> getMenuData() {
         ArrayList<MenuItem> menuItems = new ArrayList<>();
 
@@ -46,12 +49,14 @@ public class MainController {
         MenuItem userItem = new MenuItem("subscribe", "users", "用户管理");
         MenuItem onlineItem = new MenuItem("online", "user-circle", "在线查询");
         MenuItem ticketItem = new MenuItem("ticket", "table", "上网日志");
+        MenuItem syslogItem = new MenuItem("syslog", "hdd-o", "系统日志");
         menuItems.add(dashboardItem);
         menuItems.add(cfgItem);
         menuItems.add(nasItem);
         menuItems.add(userItem);
         menuItems.add(onlineItem);
         menuItems.add(ticketItem);
+        menuItems.add(syslogItem);
         return menuItems;
     }
 
