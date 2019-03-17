@@ -7,7 +7,7 @@ target
 .classpath
 .project
 *.pyc
-
+out
 # IntelliJ IDEA
 *.iml
 .idea/*

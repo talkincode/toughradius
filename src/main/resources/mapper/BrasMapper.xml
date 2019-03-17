@@ -14,7 +14,7 @@
 		<result column="acct_limit" jdbcType="INTEGER" property="acctLimit" />
 		<result column="status" jdbcType="CHAR" property="status" />
 		<result column="remark" jdbcType="VARCHAR" property="remark" />
-		<result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" javaType="java.sql.Timestamp"/>
 	</resultMap>
 	
 	<cache  type="org.mybatis.caches.ehcache.EhcacheCache" readOnly="true"  >
@@ -56,7 +56,7 @@
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit,</if>
 			<if test="status != null  and status != ''  ">status,</if>
 			<if test="remark != null  and remark != ''  ">remark,</if>
-			<if test="createTime != null  and createTime != ''  ">create_time</if>
+			<if test="createTime != null  ">create_time</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">#{name},</if>
@@ -68,7 +68,7 @@
 			<if test="acctLimit != null  and acctLimit != ''  ">#{acctLimit},</if>
 			<if test="status != null  and status != ''  ">#{status},</if>
 			<if test="remark != null  and remark != ''  ">#{remark},</if>
-			<if test="createTime != null  and createTime != ''  ">#{createTime,jdbcType=TIMESTAMP}</if>
+			<if test="createTime != null  ">#{createTime,jdbcType=TIMESTAMP}</if>
 		</trim>
 	</insert>
 
@@ -84,7 +84,7 @@
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit = #{acctLimit},</if>
 			<if test="status != null  and status != ''  ">status = #{status},</if>
 			<if test="remark != null  and remark != ''  ">remark = #{remark},</if>
-			<if test="createTime != null  and createTime != ''  ">create_time = #{createTime,jdbcType=TIMESTAMP},</if>
+			<if test="createTime != null  ">create_time = #{createTime,jdbcType=TIMESTAMP},</if>
 		</trim>
 		where id = #{id}
 	</select>
