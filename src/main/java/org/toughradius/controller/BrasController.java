@@ -49,7 +49,7 @@ public class BrasController {
                 return new RestResult(1,"BRAS标识已经存在");
             }
             bras.setRemark("");
-            bras.setStatus("enable");
+            bras.setStatus("enabled");
             bras.setCreateTime(DateTimeUtil.nowTimestamp());
             brasService.insertBras(bras);
             return RestResult.SUCCESS;

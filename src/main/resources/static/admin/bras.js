@@ -9,12 +9,7 @@ toughradius.admin.bras.loadPage = function(session){
         $$(tableid).define("url", $$(tableid));
         $$(tableid).refresh();
         $$(tableid).clearAll();
-        var params = $$(queryid).getValues();
-        var args = [];
-        for(var k in params){
-            args.push(k+"="+params[k]);
-        }
-        $$(tableid).load('/admin/bras/query?'+args.join("&"));
+        $$(tableid).load('/admin/bras/query');
     };
     webix.ui({
         id:toughradius.admin.panelId,
@@ -243,11 +238,11 @@ toughradius.admin.bras.brasUpdate = function(session,item,callback){
                         {view: "text", name: "identifier", label: "标识", value: item.identifier, validate:webix.rules.isNotEmpty},
                         {view: "text", name: "secret", label: "共享密钥", value: item.secret,validate:webix.rules.isNotEmpty},
                         {view: "text", name: "ipaddr", label: "ip地址", value: item.ipaddr,validate:webix.rules.isNotEmpty},
-                        {view: "text", name: "coa_port", label: "COA端口", value: item.coa_port, validate:webix.rules.isNotEmpty},
+                        {view: "text", name: "coa_port", label: "COA端口", value: item.coaPort, validate:webix.rules.isNotEmpty},
                         {view: "counter", name: "authLimit", label: "认证并发(*)",  value: item.authLimit, min:1, max:10000},
                         {view: "counter", name: "acctLimit", label: "记帐并发(*)",  value: item.acctLimit, min:1, max:10000},
                         {view:"radio", name:"status", label: "状态", value:item.status, options:[{id:'enabled',value:"启用"}, {id:'disabled',value:"停用"}]},
-                        {view: "textarea", name: "remark", label: "备注", value: item.remark, height:80}
+                        {view: "textarea", name: "remark", label: "备注", value: item.remark, height:40}
 
                     ]
                 },

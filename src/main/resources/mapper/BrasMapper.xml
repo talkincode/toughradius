@@ -48,6 +48,7 @@
 		insert into tr_bras
 		<trim prefix="(" suffix=")" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">name,</if>
+			<if test="identifier != null  and identifier != ''  ">identifier,</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr,</if>
 			<if test="vendorId != null  and vendorId != ''  ">vendor_id,</if>
 			<if test="secret != null  and secret != ''  ">secret,</if>
@@ -60,6 +61,7 @@
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">#{name},</if>
+			<if test="identifier != null  and identifier != ''  ">#{identifier},</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">#{ipaddr},</if>
 			<if test="vendorId != null  and vendorId != ''  ">#{vendorId},</if>
 			<if test="secret != null  and secret != ''  ">#{secret},</if>
@@ -76,6 +78,7 @@
 		update tr_bras
 		<trim prefix="SET" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">name = #{name},</if>
+			<if test="identifier != null  and identifier != ''  ">identifier = #{identifier},</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr = #{ipaddr},</if>
 			<if test="vendorId != null  and vendorId != ''  ">vendor_id = #{vendorId},</if>
 			<if test="secret != null  and secret != ''  ">secret = #{secret},</if>
