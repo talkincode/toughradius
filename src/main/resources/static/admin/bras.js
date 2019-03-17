@@ -62,30 +62,30 @@ toughradius.admin.bras.loadPage = function(session){
                     { id:"name",header:["名称"], sort:"string"},
                     { id:"identifier",header:["标识"], sort:"string"},
                     { id:"ipaddr",header:["IP"], sort:"string"},
-                    { id:"auth_limit",header:["认证并发"], sort:"int"},
-                    { id:"acct_limit",header:["记账并发"], sort:"int"},
-                    { id:"vendor_id",header:["厂商"], sort:"string",template:function(obj){
-                        if(obj.vendor_id==="0"){
+                    { id:"authLimit",header:["认证并发"], sort:"int"},
+                    { id:"acctLimit",header:["记账并发"], sort:"int"},
+                    { id:"vendorId",header:["厂商"], sort:"string",template:function(obj){
+                        if(obj.vendorId==="0"){
                             return "标准";
-                        }else if(obj.vendor_id==="2352"){
+                        }else if(obj.vendorId==="2352"){
                             return "爱立信";
-                        }else if(obj.vendor_id==="3902"){
+                        }else if(obj.vendorId==="3902"){
                             return "中兴";
-                        }else if(obj.vendor_id==="9"){
+                        }else if(obj.vendorId==="9"){
                             return "思科";
-                        }else if(obj.vendor_id==="25506"){
+                        }else if(obj.vendorId==="25506"){
                             return "H3C";
-                        }else if(obj.vendor_id==="2011"){
+                        }else if(obj.vendorId==="2011"){
                             return "华为";
-                        }else if(obj.vendor_id==="2636"){
+                        }else if(obj.vendorId==="2636"){
                             return "juniper";
-                        }else if(obj.vendor_id==="14988"){
+                        }else if(obj.vendorId==="14988"){
                             return "Mikrotik";
-                        }else if(obj.vendor_id==="10055"){
+                        }else if(obj.vendorId==="10055"){
                             return "爱快";
                         }
                     }},
-                    { id:"coa_port",header:["COA端口"], sort:"string"},
+                    { id:"coaPort",header:["COA端口"], sort:"string"},
                     { id:"secret",header:["密钥"], sort:"string",template:function(obj){
                         return "******"
                     }},
@@ -128,8 +128,8 @@ toughradius.admin.bras.brasAdd = function(session,callback){
         id:winid,
         view: "window",css:"win-body",
         move:true,
-        width:480,
-        height:540,
+        width:360,
+        height:480,
         position: "center",
         head: {
             view: "toolbar",
@@ -148,20 +148,17 @@ toughradius.admin.bras.brasAdd = function(session,callback){
                     id: formid,
                     view: "form",
                     scroll: false,
-                    maxWidth: 4096,
-                    maxHeight: 4096,
                     elementsConfig: {},
                     elements: [
-                        {view:"richselect", name:"vendor_id", label: "设备厂商",value:"", options:"/admin/bras/vendor/options"},
+                        {view:"richselect", name:"vendorId", label: "设备厂商",value:"", options:BRAS_VENDOR_OPTIONS},
                         {view: "text", name: "name", label: "名称", placeholder: "名称", validate:webix.rules.isNotEmpty},
                         {view: "text", name: "identifier", label: "标识", placeholder: "标识", validate:webix.rules.isNotEmpty},
                         {view: "text", name: "secret", label: "共享密钥", placeholder: "共享密钥",validate:webix.rules.isNotEmpty},
-                        {view: "text", name: "ipaddr", label: "ip地址", placeholder: "ip地址",validate:webix.rules.isNotEmpty},
-                        {view: "text", name: "coa_port", label: "COA 端口", value: "3799", validate:webix.rules.isNotEmpty},
-                        {view: "counter", name: "auth_limit", label: "认证并发(*)",  value:1000, min:1, max:10000},
-                        {view: "counter", name: "acct_limit", label: "记帐并发(*)",  value:1000, min:1, max:10000},
-                        {view: "textarea", name: "remark", label: "备注", placeholder: "备注", height:80},
-
+                        {view: "text", name: "ipaddr", label: "ip地址",value:"0.0.0.0", placeholder: "ip地址",validate:webix.rules.isNotEmpty},
+                        {view: "text", name: "coaPort", label: "COA 端口", value: "3799", validate:webix.rules.isNotEmpty},
+                        {view: "counter", name: "authLimit", label: "认证并发(*)",  value:1000, min:1, max:10000},
+                        {view: "counter", name: "acctLimit", label: "记帐并发(*)",  value:1000, min:1, max:10000},
+                        {view: "textarea", name: "remark", label: "备注", placeholder: "备注", height:50}
                     ]
                 },
                 {
@@ -218,8 +215,8 @@ toughradius.admin.bras.brasUpdate = function(session,item,callback){
         id:winid,
         view: "window",css:"win-body",
         move:true,
-        width:480,
-        height:576,
+        width:360,
+        height:480,
         position: "center",
         head: {
             view: "toolbar",
@@ -239,23 +236,18 @@ toughradius.admin.bras.brasUpdate = function(session,item,callback){
                     id: formid,
                     view: "form",
                     scroll: false,
-                    maxWidth: 4096,
-                    maxHeight: 4096,
                     elementsConfig: {},
                     elements: [
-                        {view:"richselect", name:"vendor_id", label: "设备厂商",value:item.vendor_id, options:"/admin/bras/vendor/options"},
+                        {view:"richselect", name:"vendorId", label: "设备厂商",value:item.vendorId, options:BRAS_VENDOR_OPTIONS},
                         {view: "text", name: "name", label: "名称", value: item.name, validate:webix.rules.isNotEmpty},
                         {view: "text", name: "identifier", label: "标识", value: item.identifier, validate:webix.rules.isNotEmpty},
                         {view: "text", name: "secret", label: "共享密钥", value: item.secret,validate:webix.rules.isNotEmpty},
                         {view: "text", name: "ipaddr", label: "ip地址", value: item.ipaddr,validate:webix.rules.isNotEmpty},
                         {view: "text", name: "coa_port", label: "COA端口", value: item.coa_port, validate:webix.rules.isNotEmpty},
-                        {view: "text", name: "ac_port",hidden:true,value: item.coa_port},
-                        {view: "text", name: "portal_vendor",hidden:true,value: item.portal_vendor},
-                        {view: "text", name: "pap_chap",hidden:true,value: item.pap_chap},
-                        {view: "counter", name: "auth_limit", label: "认证并发(*)",  value: item.auth_limit, min:1, max:10000},
-                        {view: "counter", name: "acct_limit", label: "记帐并发(*)",  value: item.acct_limit, min:1, max:10000},
+                        {view: "counter", name: "authLimit", label: "认证并发(*)",  value: item.authLimit, min:1, max:10000},
+                        {view: "counter", name: "acctLimit", label: "记帐并发(*)",  value: item.acctLimit, min:1, max:10000},
                         {view:"radio", name:"status", label: "状态", value:item.status, options:[{id:'enabled',value:"启用"}, {id:'disabled',value:"停用"}]},
-                        {view: "textarea", name: "remark", label: "备注", value: item.remark, height:80},
+                        {view: "textarea", name: "remark", label: "备注", value: item.remark, height:80}
 
                     ]
                 },

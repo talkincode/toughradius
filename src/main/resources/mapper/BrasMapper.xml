@@ -14,7 +14,7 @@
 		<result column="acct_limit" jdbcType="INTEGER" property="acctLimit" />
 		<result column="status" jdbcType="CHAR" property="status" />
 		<result column="remark" jdbcType="VARCHAR" property="remark" />
-		<result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+		<result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
 	</resultMap>
 	
 	<cache  type="org.mybatis.caches.ehcache.EhcacheCache" readOnly="true"  >
@@ -44,8 +44,8 @@
 		</where>
 	</select>
 
-	<insert id="insertBras" parameterType="org.toughradius.entity.Bras">
-		insert into xs_customer
+	<insert id="insertBras" parameterType="org.toughradius.entity.Bras" flushCache="true">
+		insert into tr_bras
 		<trim prefix="(" suffix=")" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">name,</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr,</if>
@@ -56,7 +56,7 @@
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit,</if>
 			<if test="status != null  and status != ''  ">status,</if>
 			<if test="remark != null  and remark != ''  ">remark,</if>
-			<if test="createTime != null  and createTime != ''  ">create_time,</if>
+			<if test="createTime != null  and createTime != ''  ">create_time</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">#{name},</if>
@@ -68,11 +68,11 @@
 			<if test="acctLimit != null  and acctLimit != ''  ">#{acctLimit},</if>
 			<if test="status != null  and status != ''  ">#{status},</if>
 			<if test="remark != null  and remark != ''  ">#{remark},</if>
-			<if test="createTime != null  and createTime != ''  ">#{createTime},</if>
+			<if test="createTime != null  and createTime != ''  ">#{createTime,jdbcType=TIMESTAMP}</if>
 		</trim>
 	</insert>
 
-	<select id="updateBras" parameterType="org.toughradius.entity.Bras">
+	<select id="updateBras" parameterType="org.toughradius.entity.Bras" flushCache="true">
 		update tr_bras
 		<trim prefix="SET" suffixOverrides=",">
 			<if test="name != null  and name != ''  ">name = #{name},</if>
@@ -84,7 +84,7 @@
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit = #{acctLimit},</if>
 			<if test="status != null  and status != ''  ">status = #{status},</if>
 			<if test="remark != null  and remark != ''  ">remark = #{remark},</if>
-			<if test="createTime != null  and createTime != ''  ">create_time = #{createTime},</if>
+			<if test="createTime != null  and createTime != ''  ">create_time = #{createTime,jdbcType=TIMESTAMP},</if>
 		</trim>
 		where id = #{id}
 	</select>
@@ -93,18 +93,25 @@
 		delete from tr_bras where id = #{id}
 	</delete>
 
+	<select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
+		select
+		<include refid="Base_Column_List" />
+		from tr_bras
+		where id=#{id}
+	</select>
+
 	<select id="selectByIPAddr" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
 		select
 		<include refid="Base_Column_List" />
 		from tr_bras
-		where ipaddr = #{ipaddr}
+		where ipaddr = #{ipaddr} limit 1
 	</select>
 
 	<select id="selectByidentifier" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
 		select
 		<include refid="Base_Column_List" />
 		from tr_bras
-		where identifier = #{identifier}
+		where identifier = #{identifier} limit 1
 	</select>
 
 

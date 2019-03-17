@@ -45,7 +45,7 @@ public class MainController {
 
         MenuItem dashboardItem = new MenuItem("dashboard", "dashboard", "控制面板");
         MenuItem cfgItem = new MenuItem("config", "cogs", "系统设置");
-        MenuItem nasItem = new MenuItem("bras", "desktop", "NAS 管理");
+        MenuItem nasItem = new MenuItem("bras", "desktop", "BRAS 管理");
         MenuItem userItem = new MenuItem("subscribe", "users", "用户管理");
         MenuItem onlineItem = new MenuItem("online", "user-circle", "在线查询");
         MenuItem ticketItem = new MenuItem("ticket", "table", "上网日志");

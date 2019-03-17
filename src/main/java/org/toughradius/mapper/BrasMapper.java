@@ -10,7 +10,7 @@ import java.util.List;
 @Mapper
 public interface BrasMapper {
 
-    Bras selectByIPAddr(String ipaddr);
+
 
     List<Bras> queryForList(Bras bras);
 
@@ -21,6 +21,10 @@ public interface BrasMapper {
     void deleteById(Integer id);
 
     Bras selectByidentifier(String identifier);
+
+    Bras selectByIPAddr(String ipaddr);
+
+    Bras selectById(Integer id);
 
     int  flushCache();
 }

@@ -286,8 +286,8 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
         view: "window",
         css:"win-body",
         move:true,
-        width:520,
-        height:490,
+        width:340,
+        height:480,
         position: "center",
         head: {
             view: "toolbar",
@@ -307,77 +307,18 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
                     id: formid,
                     view: "form",
                     scroll: 'y',
-                    elementsConfig: { labelWidth: 100 },
+                    elementsConfig: { labelWidth: 110 },
                     elements: [
-                        { view: "fieldset", label: "授权信息", body: {
-                            rows:[
-                                {
-                                    cols: [
-                                        { view: "text", name: "subscriber", label: "帐号" },
-                                        { view: "text", name: "password", label: "认证密码"}
-                                    ]
-                                },
-                                {
-                                    cols: [
-                                        { view: "text", name: "expire_time", label: "过期时间"},
-                                        { view: "text", name: "addr_pool", label: "地址池" }
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "mac_addr", label: "MAc地址" },
-                                        { view: "text", name: "ip_addr", label: "固定IP地址" }
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "in_vlan", label: "内层VLAN" },
-                                        { view: "text", name: "out_vlan", label: "外层VLAN" },
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "radio", name: "bind_mac", label: "绑定MAC", value: '0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-                                        { view: "radio", name: "bind_vlan", label: "绑定VLAN", value: '0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "up_rate", label: "上行速率(Mbps)"},
-                                        { view: "text", name: "down_rate", label: "下行速率(Mbps)"},
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "up_peak_rate", label: "突发上行(Mbps)"},
-                                        { view: "text", name: "down_peak_rate", label: "突发下行(Mbps)"},
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "up_rate_code", label: "上行速率策略"},
-                                        { view: "text", name: "down_rate_code", label: "下行速率策略"},
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "domain", label: "认证域"},
-                                        { view: "counter", name: "active_num", label: "最大在线", placeholder: "最大在线", value: 1, min: 1, max: 99999}
-                                    ]
-                                },
-                                {
-                                    rows: [
-                                        { view: "text", name: "policy", label: "自定义策略"},
-                                        {
-                                            cols:[
-                                                { view: "textarea", name: "remark", label: "备注",height: 80 }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }}
+                        { view: "text", name: "subscriber", label: "帐号" },
+                        { view: "text", name: "password", label: "认证密码"},
+                        { view: "datepicker", name: "expireTime", label: "过期时间", stringResult:true, timepicker: true, format: "%Y-%m-%d %h:%i" },
+                        { view: "text", name: "addrPool", label: "地址池" },
+                        { view: "text", name: "ipAddr", label: "固定IP地址" , placeholder: "可选，填写后则地址池无效"},
+                        { view: "counter", name: "activeNum", label: "最大在线", placeholder: "最大在线", value: 1, min: 1, max: 99999},
+                        { view: "radio", name: "bindMac", label: "绑定MAC", value: '0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                        { view: "radio", name: "bindVlan", label: "绑定VLAN", value: '0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                        { view: "text", name: "upRate", label: "上行速率(Mbps)"},
+                        { view: "text", name: "downRate", label: "下行速率(Mbps)"}
                     ]
                 },
                 {
@@ -385,7 +326,7 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
                     height:42,
                     css: "page-toolbar",
                     cols: [
-                        {view:"label",css: "form-desc",label:"资料录入 (*)必填"}, {},
+                        {},
                         {
                             view: "button", type: "form", width: 100, icon: "check-circle", label: "提交", click: function () {
                                 if (!$$(formid).validate()) {
@@ -412,7 +353,7 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
                             }
                         }
                     ]
-                },
+                }
             ]
         }
 

@@ -1,6 +1,7 @@
 package org.toughradius.entity;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.util.Date;
 
 public class Bras implements Serializable{
@@ -27,7 +28,7 @@ public class Bras implements Serializable{
 
     private String remark;
 
-    private Date createTime;
+    private Timestamp createTime;
 
     public Integer getId() {
         return id;
@@ -101,11 +102,11 @@ public class Bras implements Serializable{
         this.remark = remark == null ? null : remark.trim();
     }
 
-    public Date getCreateTime() {
+    public Timestamp getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(Timestamp createTime) {
         this.createTime = createTime;
     }
 
