@@ -45,6 +45,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</resultMap>
 
 	<sql id="Base_Column_List">
+		id,
 		node_id,
 		area_id,
 		realname,
@@ -83,7 +84,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 
 	<select id="findById"  resultType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
-		SELECT subscriber FROM tr_subscribe WHERE id = #{id}
+		SELECT <include refid="Base_Column_List" /> FROM tr_subscribe WHERE id = #{id}
 	</select>
 
 	<select id="findLastUpdateUser" parameterType="java.lang.String"  resultMap="BaseResultMap" useCache="false">
@@ -96,9 +97,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="findSubscribe" resultMap="BaseResultMap" useCache="false">
 		SELECT
 		<include refid="Base_Column_List" />
-		FROM  tr_subscribe WHERE status = 'enabled'
+		FROM  tr_subscribe WHERE subscriber=#{username}
 	</select>
-
 
 	<update id="updateFlowAmountByUsername">
 		update tr_subscribe
@@ -143,8 +143,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="outVlan != null  and outVlan != '' "> and out_vlan = #{outVlan}</if>
 			<if test="subscriber != null  and subscriber != '' "> and subscriber = #{subscriber}</if>
 			<if test="domain != null  and domain != '' "> and domain = #{domain}</if>
-			<if test="status != null  and status != '' "> and status = #{status}</if>
-			<if test="expireTime != null  and expireTime != '' "> and expire_time &lt;= #{expireTime}</if>
+			<if test="status != null  and status != 'expire'  "> and status = #{status}</if>
+			<if test="status != null  and status == 'expire'  "> and expire_time &lt;  NOW()</if>
+			<if test="expireTime != null  "> and expire_time &lt;= #{expireTime}</if>
 			<if test="addrPool != null  and addrPool != '' "> and addr_pool = #{addrPool}</if>
 			<if test="realname != null  and realname != '' "> and realname like CONCAT('%',#{realname},'%') </if>
 			<if test="remark != null  and remark != '' "> and remark like CONCAT('%',#{remark},'%') </if>
@@ -190,8 +191,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="upRateCode != null  and upRateCode != ''  ">up_rate_code,</if>
 			<if test="downRateCode != null  and downRateCode != ''  ">down_rate_code,</if>
 			<if test="status != null  and status != ''  ">status,</if>
-			<if test="expireTime != null  and expireTime != ''  ">expire_time,</if>
-			<if test="updateTime != null  and updateTime != ''  ">update_time,</if>
+			<if test="beginTime != null ">begin_time,</if>
+			<if test="createTime != null ">create_time,</if>
+			<if test="expireTime != null ">expire_time,</if>
+			<if test="updateTime != null ">update_time,</if>
 			<if test="flowAmount != null  and flowAmount != ''  ">flow_amount,</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
@@ -218,13 +221,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="upRateCode != null  and upRateCode != ''  ">#{upRateCode},</if>
 			<if test="downRateCode != null  and downRateCode != ''  ">#{downRateCode},</if>
 			<if test="status != null  and status != ''  ">#{status},</if>
-			<if test="expireTime != null  and expireTime != ''  ">#{expireTime},</if>
-			<if test="updateTime != null  and updateTime != ''  ">#{updateTime},</if>
+			<if test="beginTime != null   ">#{beginTime},</if>
+			<if test="createTime != null   ">#{createTime},</if>
+			<if test="expireTime != null   ">#{expireTime},</if>
+			<if test="updateTime != null   ">#{updateTime},</if>
 			<if test="flowAmount != null  and flowAmount != ''  ">#{flowAmount},</if>
 		</trim>
 	</insert>
 
-	<select id="updateSubscribe" parameterType="org.toughradius.entity.Subscribe">
+	<select id="updateSubscribe" parameterType="org.toughradius.entity.Subscribe" useCache="false">
 		update tr_subscribe
 		<trim prefix="SET" suffixOverrides=",">
 			<if test="nodeId != null  and nodeId != ''  ">node_id = #{nodeId},</if>
@@ -250,9 +255,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="upRateCode != null  and upRateCode != ''  ">up_rate_code = #{upRateCode},</if>
 			<if test="downRateCode != null  and downRateCode != ''  ">down_rate_code = #{downRateCode},</if>
 			<if test="status != null  and status != ''  ">status = #{status},</if>
-			<if test="expireTime != null  and expireTime != ''  ">expire_time = #{expireTime},</if>
-			<if test="updateTime != null  and updateTime != ''  ">update_time = #{updateTime},</if>
-			<if test="flowAmount != null  and flowAmount != ''  ">flow_amount = #{flowAmount},</if>
+			<if test="expireTime != null">expire_time = #{expireTime},</if>
+			<if test="updateTime != null">update_time = #{updateTime},</if>
+			<if test="flowAmount != null  and flowAmount != ''  ">flow_amount = #{flowAmount}</if>
 		</trim>
 		where id = #{id}
 	</select>

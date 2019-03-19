@@ -91,7 +91,7 @@ public class Syslogger {
     }
 
     public void error(String message,Throwable e,String type){
-        logger.error(message);
+        logger.error(message,e);
         StringBuilder buf = new StringBuilder(message);
         buf.append("\n");
         for(StackTraceElement err:  e.getStackTrace()){

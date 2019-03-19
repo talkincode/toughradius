@@ -119,10 +119,10 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                                 { view: "datepicker", name: "createTime", label: "创建时间不超过", labelWidth:100, stringResult: true,timepicker: true, format: "%Y-%m-%d" },
                                                 { view: "datepicker", name: "expireTime", label: "到期时间不超过", labelWidth:100,stringResult: true, format: "%Y-%m-%d" },
                                                 {
-                                                    view: "richselect", css:"nborder-input2", name: "status", label: "用户状态", icon: "caret-down",
+                                                    view: "richselect", css:"nborder-input2", name: "status", value:"enabled", label: "用户状态", icon: "caret-down",
                                                     options: [
                                                         { id: 'enabled', value: "正常" },
-                                                        { id: 'pause', value: "停用" },
+                                                        { id: 'disabled', value: "停用" },
                                                         { id: 'expire', value: "已到期" }
                                                     ]
                                                 },
@@ -626,8 +626,8 @@ toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
             css:"win-body",
             move:true,
             resize:true,
-            width:800,
-            height:600,
+            width:360,
+            height:480,
             position: "center",
             head: {
                 view: "toolbar",
@@ -648,89 +648,39 @@ toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
                 {
                     id: formid,
                     view: "form",
-                    scroll: "auto",
-                    minHeight:360,
+                    scroll: "y",
                     elementsConfig: { labelWidth: 120 },
+                    paddingX:10,
                     elements: [
+                        { view: "text", name: "id",  hidden: true, value: subs.id },
+                        { view: "text", name: "subscriber", label: "帐号", css: "nborder-input", readonly: true, value: subs.subscriber },
+                        { view: "text", name: "realname", label: "帐号",value: subs.realname },
+                        { view: "radio", name: "status", label: "状态", value: subs.status, options: [{ id: 'enabled', value: "正常" }, { id: 'disabled', value: "停用" }] },
                         {
-                            view: "fieldset", label: "授权信息", paddingX: 20, body: {
-                            paddingX: 20,
-                            rows: [
-                                { view: "label", css: "form-desc", label: "注意： 修改用户帐号的授权数据可能会造成用户续费，变更，销户时无法自动准确计算费用，请自行进行调整" },
-                                {
-                                    cols: [
-                                        { view: "text", name: "subscriber", label: "帐号", css: "nborder-input", readonly: true, value: subs.subscriber },
-                                        { view: "text", name: "password", label: "认证密码", css: "nborder-input", readonly: true, value: subs.password },
-                                        { view: "text", name: "expire_time", label: "过期时间", css: "nborder-input", readonly: true, value: subs.expireTime }
-                                    ]
-                                }
-                            ]
-                        }
+                            view: "datepicker", name: "expireTime", timepicker: true, value:subs.expireTime,
+                            label: "过期时间", stringResult: true,  format: "%Y-%m-%d %h:%i", validate: webix.rules.isNotEmpty
                         },
+                        { view: "text", name: "addrPool", label: "地址池",  value: subs.addrPool },
+                        { view: "radio", name: "bindMac", label: "绑定MAC", value: subs.bindMac?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                        { view: "radio", name: "bindVlan", label: "绑定VLAN", value: subs.bindVlan?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                        { view: "text", name: "macAddr", label: "MAc地址",  value: subs.macAddr },
+                        { view: "text", name: "ipAddr", label: "固定IP地址",  value: subs.ipAddr },
+                        { view: "text", name: "inVlan", label: "内层VLAN",  value: subs.inVlan },
+                        { view: "text", name: "outVlan", label: "外层VLAN",  value: subs.outVlan },
+                        { view: "text", name: "upRate", label: "上行速率(Mbps)",  value: subs.upRate},
+                        { view: "text", name: "downRate", label: "下行速率(Mbps)",  value: subs.downRate},
+                        { view: "text", name: "upPeakRate", label: "突发上行速率(Mbps)",  value: subs.upPeakRate},
+                        { view: "text", name: "downPeakRate", label: "突发下行速率(Mbps)",  value: subs.downPeakRate},
+                        { view: "counter", name: "activeNum", label: "最大在线", placeholder: "最大在线", value: subs.activeNum, min: 1, max: 99999},
+                        { view: "text", name: "upRateCode", label: "上行速率策略",  value: subs.upRateCode},
+                        { view: "text", name: "downRateCode", label: "下行速率策略",  value: subs.downRateCode},
+                        { view: "text", name: "domain", label: "认证域", value: subs.domain},
+                        { view: "text", name: "policy", label: "自定义策略", value:subs.policy},
                         {
-                            view: "fieldset", label: "修改信息", body: {
-                            paddingX: 20,
-                            rows: [
-                                {
-                                    cols: [
-                                        {
-                                            view: "datepicker", name: "new_expire_time", timepicker: true, value:subs.expireTime,
-                                            label: "修改过期时间", stringResult: true, format: session.system_config.SYSTEM_USER_EXPORT_FORMAT, validate: webix.rules.isNotEmpty
-                                        }
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "addr_pool", label: "地址池",  value: subs.addr_pool },
-                                        { view: "text", name: "mac_addr", label: "MAc地址",  value: subs.mac_addr },
-                                        { view: "text", name: "ip_addr", label: "固定IP地址",  value: subs.ip_addr }
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "in_vlan", label: "内层VLAN",  value: subs.in_vlan },
-                                        { view: "text", name: "out_vlan", label: "外层VLAN",  value: subs.out_vlan },
-                                        { view: "radio", name: "bind_vlan", label: "绑定VLAN", value: subs.bind_vlan?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "up_rate", label: "上行速率(Mbps)",  value: subs.up_rate,disabled:!hasPerms(session,['subscribe_rate_modify'])},
-                                        { view: "text", name: "down_rate", label: "下行速率(Mbps)",  value: subs.down_rate,disabled:!hasPerms(session,['subscribe_rate_modify'])},
-                                        { view: "radio", name: "bind_mac", label: "绑定MAC", value: subs.bind_mac?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "up_peak_rate", label: "突发上行速率(Mbps)",  value: subs.up_peak_rate,disabled:!hasPerms(session,['subscribe_rate_modify'])},
-                                        { view: "text", name: "down_peak_rate", label: "突发下行速率(Mbps)",  value: subs.down_peak_rate,disabled:!hasPerms(session,['subscribe_rate_modify'])},
-                                        { view: "counter", name: "active_num", label: "最大在线", placeholder: "最大在线", value: subs.active_num, min: 1, max: 99999,disabled:!hasPerms(session,['subscribe_limit_modify'])}
-
-                                    ]
-                                },
-                                {
-                                    cols:[
-                                        { view: "text", name: "up_rate_code", label: "上行速率策略",  value: subs.up_rate_code,disabled:!hasPerms(session,['subscribe_rate_modify'])},
-                                        { view: "text", name: "down_rate_code", label: "下行速率策略",  value: subs.down_rate_code,disabled:!hasPerms(session,['subscribe_rate_modify'])},
-                                        { view: "text", name: "domain", label: "认证域", value: subs.domain},
-                                    ]
-                                },
-                                {
-                                    rows: [
-                                        { view: "text", name: "policy", label: "自定义策略", value:subs.policy},
-                                        {
-                                            cols:[
-                                                { view: "textarea", name: "remark", label: "备注",value: subs.remark, height: 80 }
-                                            ]
-                                        }
-                                    ]
-                                }
+                            cols:[
+                                { view: "textarea", name: "remark", label: "备注",value: subs.remark, height: 80 }
                             ]
                         }
-                        }
-
                     ]
                 },
                 {
@@ -758,7 +708,7 @@ toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
                                 });
                             }
                         },
-                        {view: "button", type: "base", width: 70, icon: "check-circle", label: "取消", click: function(){$$(winid).close()}}
+                        {view: "button", type: "base", width: 70, icon: "check-circle", label: "取消", click: function(){$$(updateWinid).close()}}
 
                     ]
                 }

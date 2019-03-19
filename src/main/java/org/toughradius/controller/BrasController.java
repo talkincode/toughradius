@@ -74,10 +74,9 @@ public class BrasController {
         }
     }
 
-    @PostMapping(value = {"/admin/bras/delete"})
+    @GetMapping(value = {"/admin/bras/delete"})
     @ResponseBody
     public RestResult deleteBras(Integer id){
-        List<Bras> result = new ArrayList<Bras>();
         try{
             brasService.deleteById(id);
             return RestResult.SUCCESS;

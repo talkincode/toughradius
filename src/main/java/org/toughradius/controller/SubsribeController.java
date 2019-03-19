@@ -4,10 +4,7 @@ import com.github.pagehelper.Page;
 import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.PageResult;
 import org.toughradius.common.RestResult;
@@ -15,6 +12,7 @@ import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.SubscribeService;
 import org.toughradius.component.Syslogger;
 import org.toughradius.entity.Subscribe;
+import org.toughradius.entity.SubscribeForm;
 import org.toughradius.entity.SubscribeQuery;
 
 import java.util.List;
@@ -27,6 +25,8 @@ public class SubsribeController {
 
     @Autowired
     protected SubscribeService subscribeService;
+
+
 
 
     @GetMapping(value = {"/admin/subscribe/query"})
@@ -65,9 +65,9 @@ public class SubsribeController {
 
     @GetMapping(value = {"/admin/subscribe/detail"})
     @ResponseBody
-    public RestResult<Subscribe> querySubscribeDetail(String username){
+    public RestResult<Subscribe> querySubscribeDetail(Integer id){
         try{
-            return new RestResult<Subscribe>(0,"ok",subscribeService.findSubscribe(username));
+            return new RestResult<Subscribe>(0,"ok",subscribeService.findById(id));
         }catch(Exception e){
             logger.error("查询用户详情失败",e, Syslogger.SYSTEM);
             return new RestResult(1,"查询用户详情失败");
@@ -76,11 +76,13 @@ public class SubsribeController {
 
     @PostMapping(value = {"/admin/subscribe/create"})
     @ResponseBody
-    public RestResult addSubscribe(Subscribe subscribe){
+    public RestResult addSubscribe(SubscribeForm form){
         try{
-            if(subscribeService.findSubscribe(subscribe.getSubscriber())!=null){
+            if(subscribeService.findSubscribe(form.getSubscriber())!=null){
                 return new RestResult(1,"用户已经存在");
             }
+            Subscribe subscribe = form.getSubscribeData();
+            subscribe.setBeginTime(DateTimeUtil.nowTimestamp());
             subscribe.setCreateTime(DateTimeUtil.nowTimestamp());
             subscribe.setUpdateTime(DateTimeUtil.nowTimestamp());
             subscribe.setBeginTime(DateTimeUtil.nowTimestamp());
@@ -97,12 +99,12 @@ public class SubsribeController {
 
     @PostMapping(value = {"/admin/subscribe/update"})
     @ResponseBody
-    public RestResult updateBras(Subscribe subscribe){
+    public RestResult updateBras(SubscribeForm subscribe){
         try{
             if(subscribeService.findById(subscribe.getId())==null){
-                return new RestResult(1,"BRAS不存在");
+                return new RestResult(1,"用户不存在");
             }
-            subscribeService.updateSubscribe(subscribe);
+            subscribeService.updateSubscribe(subscribe.getSubscribeData());
             return RestResult.SUCCESS;
         }catch(Exception e){
             logger.error("更新用户失败",e, Syslogger.SYSTEM);
@@ -110,11 +112,13 @@ public class SubsribeController {
         }
     }
 
-    @PostMapping(value = {"/admin/subscribe/delete"})
+    @GetMapping(value = {"/admin/subscribe/delete"})
     @ResponseBody
-    public RestResult delete(Integer id){
+    public RestResult delete(String ids){
         try{
-            subscribeService.deleteById(id);
+            for (String id : ids.split(",") ) {
+                subscribeService.deleteById(Integer.valueOf(id));
+            }
             return RestResult.SUCCESS;
         }catch(Exception e){
             logger.error("删除用户失败",e, Syslogger.SYSTEM);

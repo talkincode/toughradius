@@ -51,6 +51,7 @@ toughradius.admin.bras.loadPage = function(session){
             },
             {
                 id:tableid,
+                rightSplit: 1,
                 view:"datatable",
                 columns:[
                     { id: "id", header: ["ID"],  sort: "string" , hidden:true},
@@ -91,7 +92,7 @@ toughradius.admin.bras.loadPage = function(session){
                             return "<span style='color:red;'>停用</span>";
                         }
                     }},
-                    { id:"remark",header:["备注"], sort:"string", hidden:true},
+                    { id:"remark",header:["备注"], sort:"string", fillspace:true},
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
                 select:true,
