@@ -2,6 +2,7 @@ package org.toughradius.entity;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Timestamp;
 import java.util.Date;
 
 public class Subscribe {
@@ -28,6 +29,7 @@ public class Subscribe {
     private String policy;
 
     private Integer activeNum;
+
     private Integer isOnline;
 
     private BigInteger flowAmount;
@@ -58,14 +60,15 @@ public class Subscribe {
 
     private String status;
 
-    private Date beginTime;
+    private Timestamp beginTime;
 
-    private Date expireTime;
+    private Timestamp expireTime;
 
-    private Date createTime;
+    private Timestamp createTime;
 
-    private Date updateTime;
+    private Timestamp updateTime;
 
+    private String remark;
 
     public String getRealname() {
         return realname;
@@ -82,7 +85,6 @@ public class Subscribe {
     public void setId(Integer id) {
         this.id = id;
     }
-
 
     public Integer getProductId() {
         return productId;
@@ -228,36 +230,35 @@ public class Subscribe {
         this.status = status == null ? null : status.trim();
     }
 
-
-    public Date getBeginTime() {
+    public Timestamp getBeginTime() {
         return beginTime;
     }
 
-    public void setBeginTime(Date beginTime) {
+    public void setBeginTime(Timestamp beginTime) {
         this.beginTime = beginTime;
     }
 
-    public Date getExpireTime() {
+    public Timestamp getExpireTime() {
         return expireTime;
     }
 
-    public void setExpireTime(Date expireTime) {
+    public void setExpireTime(Timestamp expireTime) {
         this.expireTime = expireTime;
     }
 
-    public Date getCreateTime() {
+    public Timestamp getCreateTime() {
         return createTime;
     }
 
-    public void setCreateTime(Date createTime) {
+    public void setCreateTime(Timestamp createTime) {
         this.createTime = createTime;
     }
 
-    public Date getUpdateTime() {
+    public Timestamp getUpdateTime() {
         return updateTime;
     }
 
-    public void setUpdateTime(Date updateTime) {
+    public void setUpdateTime(Timestamp updateTime) {
         this.updateTime = updateTime;
     }
 
@@ -315,5 +316,13 @@ public class Subscribe {
 
     public void setIsOnline(Integer isOnline) {
         this.isOnline = isOnline;
+    }
+
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark;
     }
 }

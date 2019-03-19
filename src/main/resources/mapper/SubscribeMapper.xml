@@ -81,11 +81,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		SELECT subscriber FROM tr_subscribe WHERE STATUS = 'enabled'
 	</select>
 
+
+	<select id="findById"  resultType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
+		SELECT subscriber FROM tr_subscribe WHERE id = #{id}
+	</select>
+
 	<select id="findLastUpdateUser" parameterType="java.lang.String"  resultMap="BaseResultMap" useCache="false">
 		<![CDATA[
 		SELECT subscriber, update_time FROM tr_subscribe
-		WHERE STATUS = 'enabled'
-		AND update_time >= #{lastUpdate}
+		WHERE update_time >= #{lastUpdate}
 		]]>
 	</select>
 
@@ -124,11 +128,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		update tr_subscribe set is_online=#{status} where subscriber=#{username}
 	</update>
 
+	<delete id="deleteById" parameterType="java.lang.Integer">
+		delete from tr_subscribe where id = #{id}
+	</delete>
 
-	<select id="queryForList" parameterType="org.toughradius.entity.Subscribe" resultMap="BaseResultMap" useCache="false">
-		SELECT
-		<include refid="Base_Column_List" />
-		FROM  tr_subscribe
+
+	<sql id="query_where">
 		<where>
 			<if test="nodeId != null  and nodeId != '' "> and node_id = #{nodeId}</if>
 			<if test="productId != null  and productId != '' "> and product_id = #{productId}</if>
@@ -144,6 +149,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="realname != null  and realname != '' "> and realname like CONCAT('%',#{realname},'%') </if>
 			<if test="remark != null  and remark != '' "> and remark like CONCAT('%',#{remark},'%') </if>
 		</where>
+	</sql>
+
+	<select id="queryTotal" parameterType="org.toughradius.entity.SubscribeQuery" resultType="integer" useCache="false">
+		SELECT count(*) FROM  tr_subscribe
+		<include refid="query_where" />
+	</select>
+
+
+	<select id="queryForList" parameterType="org.toughradius.entity.SubscribeQuery" resultMap="BaseResultMap" useCache="false">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM  tr_subscribe
+		<include refid="query_where" />
 	</select>
 
 	<insert id="insertSubscribe" parameterType="org.toughradius.entity.Subscribe">

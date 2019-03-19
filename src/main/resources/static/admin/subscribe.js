@@ -155,12 +155,12 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                 view: "datatable",
                                 rightSplit: 2,
                                 columns: [
-                                    { id: "state", header: { content: "masterCheckbox", css: "center" }, width: 50, css: "center", template: "{common.checkbox()}" },
-                                    { id: "id", header: ["ID"], width: 65 ,hidden:true},
-                                    { id: "subscriber", header: ["帐号"], sort: "server", width: 120 },
-                                    { id: "realname", header: ["姓名"],  width: 150 },
+                                    { id: "state", header: { content: "masterCheckbox", css: "center" }, width: 35, css: "center", template: "{common.checkbox()}" },
+                                    { id: "id", header: ["ID"],hidden:true},
+                                    { id: "subscriber", header: ["帐号"]},
+                                    { id: "realname", header: ["姓名"]},
                                     {
-                                        id: "status", header: ["状态"], sort: "server", template: function (obj) {
+                                        id: "status", header: ["状态"], sort: "string",  minWidth:60, template: function (obj) {
                                             if (obj.status === 'enabled' && new Date(obj.expireTime) < new Date()) {
                                                 return "<span style='color:orange;'>过期</span>";
                                             } else if (obj.status === 'enabled') {
@@ -170,22 +170,23 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                             }
                                         }
                                     },
-                                    { id: "expire_time", header: ["过期时间"], width: 160, sort: "server" },
-                                    { id: "addr_pool", header: ["地址池"], width: 160 , hidden:true},
-                                    { id: "active_num", header: ["最大在线"], width: 160, hidden:true },
-                                    { id: "ip_addr", header: ["ip 地址"], width: 160, hidden:true },
-                                    { id: "mac_addr", header: ["MAC 地址"], width: 160, hidden:true },
-                                    { id: "in_vlan", header: ["内层VLAN"], width: 160 , hidden:true},
-                                    { id: "out_vlan", header: ["外层VLAN"], width: 160 , hidden:true},
-                                    { id: "opt", header: '操作', template: function(obj){
+                                    { id: "expireTime", header: ["过期时间"],sort:"date", minWidth:120},
+                                    { id: "addrPool", header: ["地址池"] },
+                                    { id: "activeNum", header: ["最大在线"]},
+                                    { id: "ipAddr", header: ["ip 地址"]},
+                                    { id: "macAddr", header: ["MAC 地址"]},
+                                    { id: "inVlan", header: ["内层VLAN"]},
+                                    { id: "outVlan", header: ["外层VLAN"]},
+                                    { id: "remark", header: ["备注"],fillspace:true},
+                                    { id: "opt", header: '操作',  width: 155, template: function(obj){
                                            var actions = [];
                                            actions.push("<span title='测试' class='table-btn do_tester'><i class='fa fa-tty'></i></span> ");
                                            actions.push("<span title='详情' class='table-btn do_detail'><i class='fa fa-eye'></i></span> ");
-                                            actions.push("<span title='修改账号' class='table-btn do_update'><i class='fa fa-edit'></i></span> ");
-                                            actions.push("<span title='删除账号' class='table-btn do_delete'><i class='fa fa-times'></i></span> ");
+                                            actions.push("<span title='修改' class='table-btn do_update'><i class='fa fa-edit'></i></span> ");
+                                            // actions.push("<span title='删除账号' class='table-btn do_delete'><i class='fa fa-times'></i></span> ");
                                            return actions.join(" ");
                                     }},
-                                    { header: { content: "headerMenu" }, headermenu: false, width: 35 }
+                                    { header: { content: "headerMenu" }, headermenu: false, width: 32 }
                                 ],
                                 select: true,
                                 tooltip:true,
@@ -373,15 +374,14 @@ toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
     // if($$(detailWinid))
     //     return;
     var formid = detailWinid+"_form";
-    var order_tabid = webix.uid();
-    var issues_tabid = webix.uid();
     var online_tabid = webix.uid();
-    var idcard_img1 = webix.uid();
-    var idcard_img2 = webix.uid();
-    var idcard_id1 = webix.uid();
-    var idcard_id2 = webix.uid();
     webix.ajax().get('/admin/subscribe/detail', {id:itemid}).then(function (result) {
-        var subs = result.json();
+        var resp = result.json();
+        if(resp.code>0){
+            webix.message({ type: "error", text: resp.msg, expire: 3000 });
+            return;
+        }
+        var subs = resp.data;
         webix.ui({
             id:toughradius.admin.subscribe.detailFormID,
             borderless:true,
@@ -406,83 +406,79 @@ toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
                     view: "tabview",
                     cells: [
                         {
-                            header: "基本信息",
+                            header: "用户信息",
                             body: {
                                 id: formid,
                                 view: "form",
                                 scroll: "auto",
-                                minHeight:360,
-                                maxWidth: 2000,
-                                maxHeight: 2000,
-                                elementsConfig: { labelWidth: 100 },
+                                elementsConfig: { labelWidth: 110 },
                                 elements: [
-                                    { view: "fieldset", label: "授权信息",  body: {
+                                    { view: "fieldset", label: "基本信息",  body: {
                                         rows:[
                                             {
                                                 cols: [
                                                     { view: "text", name: "subscriber", label: "订阅帐号", css: "nborder-input", readonly: true, value: subs.subscriber },
                                                     { view: "text", name: "password", label: "认证密码", css: "nborder-input", readonly: true, value: subs.password },
-                                                    { view: "text", name: "expire_time", label: "过期时间", css: "nborder-input", readonly: true, value: subs.expire_time }
                                                 ]
                                             },
+                                            {
+                                                cols:[
+                                                    { view: "text", name: "expireime", label: "过期时间", css: "nborder-input", readonly: true, value: subs.expireTime },
+                                                    { view: "text", name: "addrPool", label: "地址池", css: "nborder-input",  value: subs.addrPool,readonly:true },
+                                                ]
+                                            },
+                                            {
+                                              cols:[
+                                                  { view: "text", name: "ipAddr", label: "固定IP地址", css: "nborder-input", value: subs.ipAddr ,readonly:true},
+                                                  { view: "text", name: "macAddr", label: "MAc地址", css: "nborder-input", value: subs.macAddr ,readonly:true},
+                                              ]
+                                            },
+                                            {
+                                                cols:[
+                                                    { view: "text", name: "inVlan", label: "内层VLAN", css: "nborder-input", value: subs.in_vlan ,readonly:true},
+                                                    { view: "text", name: "outVlan", label: "外层VLAN", css: "nborder-input", value: subs.out_vlan ,readonly:true},
+
+                                                ]
+                                            }
+                                        ]
+
+                                    }},
+                                    { view: "fieldset", label: "授权策略",  body: {
+                                        rows:[
                                             {
                                                 cols: [
-                                                    { view: "text", name: "last_renew", label: "最后续费", css: "nborder-input", readonly: true, value: subs.last_renew },
-                                                    { view: "text", name: "last_pause", label: "最后停机", css: "nborder-input", readonly: true, value: subs.last_pause },
-                                                    { view: "text", name: "last_resume", label: "最后复机", css: "nborder-input", readonly: true, value: subs.last_resume }
-                                                ]
-                                            },
-                                            {
-                                                cols: [
-                                                    {view: "text", name: "product_name", label: "商品", css: "nborder-input", value:subs.product.name,readonly:true},
-                                                    { view: "text", name: "active_num", label: "最大在线", css: "nborder-input", value: subs.active_num,readonly:true},
-                                                    { view: "text", name: "flow_amount", label: "剩余流量", css: "nborder-input", value: bytesToSize(subs.flow_amount),readonly:true}
+                                                    { view: "text", name: "activeNum", label: "最大在线", css: "nborder-input", value: subs.activeNum,readonly:true},
+                                                    { view: "text", name: "flowAmount", label: "剩余流量", css: "nborder-input", value: bytesToSize(subs.flowAmount),readonly:true},
                                                 ]
                                             },
                                             {
                                                 cols:[
-                                                    { view: "text", name: "addr_pool", label: "地址池", css: "nborder-input",  value: subs.addr_pool,readonly:true },
-                                                    { view: "text", name: "mac_addr", label: "MAc地址", css: "nborder-input", value: subs.mac_addr ,readonly:true},
-                                                    { view: "text", name: "ip_addr", label: "固定IP地址", css: "nborder-input", value: subs.ip_addr ,readonly:true}
+                                                    { view: "radio", name: "bindVlan", label: "绑定VLAN", disabled:true, value: subs.bind_vlan?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                                                    { view: "radio", name: "bindMac", label: "绑定MAC", disabled:true,value: subs.bindMac?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
                                                 ]
                                             },
                                             {
                                                 cols:[
-                                                    { view: "text", name: "in_vlan", label: "内层VLAN", css: "nborder-input", value: subs.in_vlan ,readonly:true},
-                                                    { view: "text", name: "out_vlan", label: "外层VLAN", css: "nborder-input", value: subs.out_vlan ,readonly:true},
-                                                    { view: "radio", name: "bind_vlan", label: "绑定VLAN", disabled:true, value: subs.bind_vlan?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-
+                                                    { view: "text", name: "upRate", label: "上行速率(Mbps)",  value: subs.upRate,css: "nborder-input", readonly:true},
+                                                    { view: "text", name: "downRate", label: "下行速率(Mbps)",  value: subs.downRate,css: "nborder-input",readonly:true},
                                                 ]
                                             },
                                             {
                                                 cols:[
-                                                    { view: "text", name: "up_rate", label: "上行速率(Mbps)",  value: subs.up_rate,css: "nborder-input", readonly:true},
-                                                    { view: "text", name: "down_rate", label: "下行速率(Mbps)",  value: subs.down_rate,css: "nborder-input",readonly:true},
-                                                    { view: "radio", name: "bind_mac", label: "绑定MAC", disabled:true,value: subs.bind_mac?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-
+                                                    { view: "text", name: "upPeakRate", label: "突发上行(Mbps)",  value: subs.upPeakRate,css: "nborder-input", readonly:true},
+                                                    { view: "text", name: "downPeakRate", label: "突发下行(Mbps)",  value: subs.downPeakRate,css: "nborder-input",readonly:true},
                                                 ]
                                             },
                                             {
                                                 cols:[
-                                                    { view: "text", name: "up_peak_rate", label: "突发上行速率(Mbps)",  value: subs.up_peak_rate,css: "nborder-input", readonly:true},
-                                                    { view: "text", name: "down_peak_rate", label: "突发下行速率(Mbps)",  value: subs.down_peak_rate,css: "nborder-input",readonly:true},
-                                                    { },
-
+                                                    { view: "text", name: "upRateCode", label: "上行速率策略",  value: subs.upRateCode,css: "nborder-input",readonly:true},
+                                                    { view: "text", name: "downRateCode", label: "下行速率策略",  value: subs.downRateCode,css: "nborder-input",readonly:true},
                                                 ]
                                             },
                                             {
                                                 cols:[
-                                                    { view: "text", name: "up_rate_code", label: "上行速率策略",  value: subs.up_rate_code,css: "nborder-input",readonly:true},
-                                                    { view: "text", name: "down_rate_code", label: "下行速率策略",  value: subs.down_rate_code,css: "nborder-input",readonly:true},
-                                                    { view: "text", name: "domain", label: "认证域", value: subs.domain,css: "nborder-input",readonly:true},
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "radio", name: "free_auth", label: "到期免授权", disabled:true, value: subs.free_auth?'1':'0' , options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-                                                    { view: "text", name: "free_auth_uprate", label: "免授权上行速率",  value: subs.free_auth_uprate, css: "nborder-input",readonly:true},
-                                                    { view: "text", name: "free_auth_downrate", label: "免授权下行速率", value: subs.free_auth_downrate, css: "nborder-input",readonly:true}
-
+                                                    { view: "text", name: "domain", label: "认证域", css: "nborder-input", value: subs.domain,readonly:true},
+                                                    { view: "text", name: "policy", label: "扩展策略", css: "nborder-input", value: subs.policy,readonly:true},
                                                 ]
                                             }
 
@@ -562,8 +558,6 @@ toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
                                     { id: "msg", header: ["最近200条记录"], fillspace:true  }
                                 ],
                                 select: true,
-                                maxWidth: 2000,
-                                maxHeight: 2000,
                                 resizeColumn: true,
                                 autoWidth: true,
                                 autoHeight: true,
@@ -603,7 +597,7 @@ toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
                                 resizeColumn: true,
                                 autoWidth: true,
                                 autoHeight: true,
-                                url: "/admin/ticket/query?username=" + subs.subscriber+ "&area_id="+subs.customer.area_id
+                                url: "/admin/ticket/query?username=" + subs.subscriber
                             }
                         }
                     ]
@@ -620,7 +614,12 @@ toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
         return;
     var formid = updateWinid+"_form";
     webix.ajax().get('/admin/subscribe/detail', {id:item.id}).then(function (result) {
-        var subs = result.json();
+        var resp = result.json();
+        if(resp.code>0){
+            webix.message({ type: "error", text: resp.msg, expire: 3000 });
+            return;
+        }
+        var subs = resp.data;
         webix.ui({
             id:updateWinid,
             view: "window",

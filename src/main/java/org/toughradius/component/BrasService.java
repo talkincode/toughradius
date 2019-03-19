@@ -20,15 +20,15 @@ public class BrasService {
 	public Bras findBras(String ipaddr, String srcip, String identifier) throws ServiceException{
 		Bras tcBras = null;
 		if(ValidateUtil.isNotEmpty(ipaddr)&&!"0.0.0.0".equals(ipaddr)){
-			tcBras = brasMapper.selectByIPAddr(ipaddr);
+			tcBras = brasMapper.findByIPAddr(ipaddr);
 		}
 
 		if(ValidateUtil.isNotEmpty(srcip)&&!"0.0.0.0".equals(srcip)){
-			tcBras = brasMapper.selectByIPAddr(srcip);
+			tcBras = brasMapper.findByIPAddr(srcip);
 		}
 
 		if (tcBras == null && ValidateUtil.isNotEmpty(identifier)) {
-			tcBras = brasMapper.selectByidentifier(identifier);
+			tcBras = brasMapper.findByidentifier(identifier);
 		}
 
 		if (tcBras == null) {
@@ -63,14 +63,14 @@ public class BrasService {
 	}
 
 	public Bras selectByidentifier(String identifier){
-		return brasMapper.selectByidentifier(identifier);
+		return brasMapper.findByidentifier(identifier);
 	}
 
 	public Bras selectByIPAddr(String ipaddr){
-		return brasMapper.selectByIPAddr(ipaddr);
+		return brasMapper.findByIPAddr(ipaddr);
 	}
 
 	public Bras selectById(Integer id){
-		return brasMapper.selectById(id);
+		return brasMapper.findById(id);
 	}
 }

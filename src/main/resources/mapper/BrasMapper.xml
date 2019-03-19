@@ -96,21 +96,21 @@
 		delete from tr_bras where id = #{id}
 	</delete>
 
-	<select id="selectById" parameterType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
+	<select id="findById" parameterType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
 		select
 		<include refid="Base_Column_List" />
 		from tr_bras
 		where id=#{id}
 	</select>
 
-	<select id="selectByIPAddr" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
+	<select id="findByIPAddr" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
 		select
 		<include refid="Base_Column_List" />
 		from tr_bras
 		where ipaddr = #{ipaddr} limit 1
 	</select>
 
-	<select id="selectByidentifier" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
+	<select id="findByidentifier" parameterType="java.lang.String" resultMap="BaseResultMap" useCache="true">
 		select
 		<include refid="Base_Column_List" />
 		from tr_bras

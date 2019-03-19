@@ -26,7 +26,7 @@
     </root>
 
     <!--logback.LogbackDemo：类的全路径 -->
-    <logger name="org.toughradius.mapper.BrasMapper" level="info" additivity="false">
+    <logger name="org.toughradius.mapper.SubscribeMapper" level="debug" additivity="false">
         <appender-ref ref="console"/>
     </logger>
 

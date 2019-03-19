@@ -20,11 +20,11 @@ public interface BrasMapper {
 
     void deleteById(Integer id);
 
-    Bras selectByidentifier(String identifier);
+    Bras findByidentifier(String identifier);
 
-    Bras selectByIPAddr(String ipaddr);
+    Bras findByIPAddr(String ipaddr);
 
-    Bras selectById(Integer id);
+    Bras findById(Integer id);
 
     int  flushCache();
 }
