@@ -40,7 +40,7 @@ public class SubsribeController {
         if(ValidateUtil.isNotEmpty(createTime)&&createTime.length() == 16){
             createTime += ":59";
         }
-        int page = start / 20;
+        int page = start / count;
         Page<Object> objects = PageHelper.startPage(page + 1, count);
         PageResult<Subscribe> result = new PageResult<Subscribe>(0,0,null);
         try{
@@ -52,11 +52,8 @@ public class SubsribeController {
             query.setStatus(status);
             query.setKeyword(keyword);
             List<Subscribe> data = subscribeService.queryForList(query);
-            if (start == 0) {
-                return new PageResult<Subscribe>(start,(int) objects.getTotal(), data);
-            } else {
-                return new PageResult<Subscribe>(start,0, data);
-            }
+            return new PageResult<Subscribe>(start,(int) objects.getTotal(), data);
+
         }catch(Exception e){
             logger.error("query subscribe error",e, Syslogger.SYSTEM);
         }
@@ -99,12 +96,14 @@ public class SubsribeController {
 
     @PostMapping(value = {"/admin/subscribe/update"})
     @ResponseBody
-    public RestResult updateBras(SubscribeForm subscribe){
+    public RestResult updateBras(SubscribeForm form){
         try{
-            if(subscribeService.findById(subscribe.getId())==null){
+            if(subscribeService.findById(form.getId())==null){
                 return new RestResult(1,"用户不存在");
             }
-            subscribeService.updateSubscribe(subscribe.getSubscribeData());
+            Subscribe subscribe = form.getSubscribeData();
+            subscribe.setUpdateTime(DateTimeUtil.nowTimestamp());
+            subscribeService.updateSubscribe(subscribe);
             return RestResult.SUCCESS;
         }catch(Exception e){
             logger.error("更新用户失败",e, Syslogger.SYSTEM);

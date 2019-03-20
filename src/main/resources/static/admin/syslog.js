@@ -40,7 +40,7 @@ toughradius.admin.syslog.loadPage = function(session){
                                 {
                                     cols:[
                                         {view: "richselect",  name: "type", label: "", value: "system", labelWidth:0,width:66,
-                                            options: [{ id: "radiusd", value: "认证" },{ id: "system", value: "系统" }, { id: "api", value: "接口" },{ id: "bras", value: "设备" },{ id: "other", value: "其他" }]},
+                                            options: [{ id: "radiusd", value: "认证" },{ id: "system", value: "系统" }, { id: "api", value: "接口" },{ id: "other", value: "其他" }]},
                                         {view: "button", label: "查询", type: "icon", icon: "search", borderless: true, width: 55,click:function(){
                                                 reloadData();
                                             }},
@@ -77,8 +77,8 @@ toughradius.admin.syslog.loadPage = function(session){
                 columns:[
                     { id:"name", header:["帐号"],  template:"{common.subrow()} #name#"},
                     { id:"type",header:["类型"]},
-                    { id:"time",header:["时间"],fillspace:true},
-                    { id:"msg",header:["内容"], hidden:true},
+                    { id:"time",header:["时间"]},
+                    { id:"msg",header:["内容"], fillspace:true},
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
                 select: true,

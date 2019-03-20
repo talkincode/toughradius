@@ -84,7 +84,6 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
             authUser(user, accessRequest);
 
         long timeout = (user.getExpireTime().getTime() - new Date().getTime())/1000;
-        boolean freeAuthRate = false;
         if (timeout <= 0 ) {
             if(radiusConfig.isAllowNegative()){
                 timeout = -1;
@@ -98,7 +97,6 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
             SubscribeBill billdata = subscribeCache.getBillData(accessRequest.getUserName());
             if(billdata.getFlowAmount()==null || billdata.getFlowAmount().longValue() <=0){
                 timeout = 86400;
-                freeAuthRate = true;
             }
         }
 
@@ -240,10 +238,11 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
             if (radiusConfig.isTraceEnabled())
                 logger.print(response.toString());
 
-            if(radiusConfig.getRejectdelayEnabled() == 1){
-                if(response.getPacketType()==RadiusPacket.ACCESS_ACCEPT){
-                    sendResponse(session,remoteAddress,nas.getSecret(),request,response);
-                }else{
+            if(response.getPacketType()==RadiusPacket.ACCESS_ACCEPT){
+                sendResponse(session,remoteAddress,nas.getSecret(),request,response);
+            }else{
+                if(radiusConfig.getRejectdelayEnabled() == 1){
+                    //检查是否启用拒绝延迟, 为防止ddos攻击，对频繁认证错误的请求延迟响应
                     authValidate.incr(request.getUsername());
                     if(authValidate.isOver(request.getUsername())){
                         radiusStat.incrAuthRejectdelay();
@@ -251,12 +250,10 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
                     }else{
                         sendResponse(session,remoteAddress,nas.getSecret(),request,response);
                     }
+                }else{
+                    sendResponse(session,remoteAddress,nas.getSecret(),request,response);
                 }
-            }else{
-                sendResponse(session,remoteAddress,nas.getSecret(),request,response);
             }
-
-
         }
         if (radiusConfig.isTraceEnabled())
             logger.print(String.format("用户认证处理耗时:%s 毫秒", (System.currentTimeMillis()-start)));

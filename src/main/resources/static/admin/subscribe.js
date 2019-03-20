@@ -156,11 +156,11 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                 rightSplit: 2,
                                 columns: [
                                     { id: "state", header: { content: "masterCheckbox", css: "center" }, width: 35, css: "center", template: "{common.checkbox()}" },
-                                    { id: "id", header: ["ID"],hidden:true},
-                                    { id: "subscriber", header: ["帐号"]},
-                                    { id: "realname", header: ["姓名"]},
+                                    { id: "id", header: ["ID"], hidden:true},
+                                    { id: "subscriber", header: ["帐号"],width:110},
+                                    { id: "realname", header: ["姓名"],width:110},
                                     {
-                                        id: "status", header: ["状态"], sort: "string",  minWidth:60, template: function (obj) {
+                                        id: "status", header: ["状态"], sort: "string",  width:60, template: function (obj) {
                                             if (obj.status === 'enabled' && new Date(obj.expireTime) < new Date()) {
                                                 return "<span style='color:orange;'>过期</span>";
                                             } else if (obj.status === 'enabled') {
@@ -170,11 +170,11 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                             }
                                         }
                                     },
-                                    { id: "expireTime", header: ["过期时间"],sort:"date", minWidth:120},
-                                    { id: "addrPool", header: ["地址池"] },
-                                    { id: "activeNum", header: ["最大在线"]},
-                                    { id: "ipAddr", header: ["ip 地址"]},
-                                    { id: "macAddr", header: ["MAC 地址"]},
+                                    { id: "expireTime", header: ["过期时间"],sort:"date", width:155},
+                                    { id: "addrPool", header: ["地址池"] ,width:80},
+                                    { id: "activeNum", header: ["最大在线"],width:100},
+                                    { id: "ipAddr", header: ["ip 地址"],width:120},
+                                    { id: "macAddr", header: ["MAC 地址"],width:140},
                                     { id: "inVlan", header: ["内层VLAN"]},
                                     { id: "outVlan", header: ["外层VLAN"]},
                                     { id: "remark", header: ["备注"],fillspace:true},

@@ -237,27 +237,27 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="realname != null  and realname != ''  ">realname = #{realname},</if>
 			<if test="subscriber != null  and subscriber != ''  ">subscriber = #{subscriber},</if>
 			<if test="password != null  and password != ''  ">password = #{password},</if>
-			<if test="billType != null  and billType != ''  ">bill_type = #{billType},</if>
-			<if test="domain != null  and domain != ''  ">domain = #{domain},</if>
-			<if test="addrPool != null  and addrPool != ''  ">addr_pool = #{addrPool},</if>
-			<if test="policy != null  and policy != ''  ">policy = #{policy},</if>
-			<if test="activeNum != null  and activeNum != ''  ">active_num = #{activeNum},</if>
-			<if test="bindMac != null  and bindMac != ''  ">bind_mac = #{bindMac},</if>
-			<if test="bindVlan != null  and bindVlan != ''  ">bind_vlan = #{bindVlan},</if>
-			<if test="ipAddr != null  and ipAddr != ''  ">ip_addr = #{ipAddr},</if>
-			<if test="macAddr != null  and macAddr != ''  ">mac_addr = #{macAddr},</if>
-			<if test="inVlan != null  and inVlan != ''  ">in_vlan = #{inVlan},</if>
-			<if test="outVlan != null  and outVlan != ''  ">out_vlan #{outVlan},</if>
-			<if test="upRate != null  and upRate != ''  ">up_rate = #{upRate},</if>
-			<if test="downRate != null  and downRate != ''  ">down_rate = #{downRate},</if>
-			<if test="upPeakRate != null  and upPeakRate != ''  ">up_peak_rate = #{upPeakRate},</if>
-			<if test="downPeakRate != null  and downPeakRate != ''  ">down_peak_rate = #{downPeakRate},</if>
-			<if test="upRateCode != null  and upRateCode != ''  ">up_rate_code = #{upRateCode},</if>
-			<if test="downRateCode != null  and downRateCode != ''  ">down_rate_code = #{downRateCode},</if>
+			<if test="billType != null  ">bill_type = #{billType},</if>
+			<if test="domain != null ">domain = #{domain},</if>
+			<if test="addrPool != null">addr_pool = #{addrPool},</if>
+			<if test="policy != null ">policy = #{policy},</if>
+			<if test="activeNum != null ">active_num = #{activeNum},</if>
+			<if test="bindMac != null ">bind_mac = #{bindMac},</if>
+			<if test="bindVlan != null  ">bind_vlan = #{bindVlan},</if>
+			<if test="ipAddr != null ">ip_addr = #{ipAddr},</if>
+			<if test="macAddr != null ">mac_addr = #{macAddr},</if>
+			<if test="inVlan != null ">in_vlan = #{inVlan},</if>
+			<if test="outVlan != null ">out_vlan = #{outVlan},</if>
+			<if test="upRate != null ">up_rate = #{upRate},</if>
+			<if test="downRate != null ">down_rate = #{downRate},</if>
+			<if test="upPeakRate != null ">up_peak_rate = #{upPeakRate},</if>
+			<if test="downPeakRate != null ">down_peak_rate = #{downPeakRate},</if>
+			<if test="upRateCode != null ">up_rate_code = #{upRateCode},</if>
+			<if test="downRateCode != null ">down_rate_code = #{downRateCode},</if>
 			<if test="status != null  and status != ''  ">status = #{status},</if>
-			<if test="expireTime != null">expire_time = #{expireTime},</if>
-			<if test="updateTime != null">update_time = #{updateTime},</if>
-			<if test="flowAmount != null  and flowAmount != ''  ">flow_amount = #{flowAmount}</if>
+			<if test="expireTime != null ">expire_time = #{expireTime},</if>
+			<if test="updateTime != null ">update_time = #{updateTime},</if>
+			<if test="flowAmount != null ">flow_amount = #{flowAmount},</if>
 		</trim>
 		where id = #{id}
 	</select>

@@ -54,13 +54,13 @@ toughradius.admin.bras.loadPage = function(session){
                 rightSplit: 1,
                 view:"datatable",
                 columns:[
-                    { id: "id", header: ["ID"],  sort: "string" , hidden:true},
-                    { id:"name",header:["名称"], sort:"string"},
-                    { id:"identifier",header:["标识"], sort:"string"},
-                    { id:"ipaddr",header:["IP"], sort:"string"},
-                    { id:"authLimit",header:["认证并发"], sort:"int"},
-                    { id:"acctLimit",header:["记账并发"], sort:"int"},
-                    { id:"vendorId",header:["厂商"], sort:"string",template:function(obj){
+                    { id: "id", header: ["ID"],  hidden:true},
+                    { id:"name",header:["名称"],  width:110},
+                    { id:"identifier",header:["标识"], width:110},
+                    { id:"ipaddr",header:["IP"], width:120},
+                    { id:"authLimit",header:["认证并发"],width:90},
+                    { id:"acctLimit",header:["记账并发"], width:90},
+                    { id:"vendorId",header:["厂商"], width:120,template:function(obj){
                         if(obj.vendorId==="0"){
                             return "标准";
                         }else if(obj.vendorId==="2352"){
@@ -81,11 +81,8 @@ toughradius.admin.bras.loadPage = function(session){
                             return "爱快";
                         }
                     }},
-                    { id:"coaPort",header:["COA端口"], sort:"string"},
-                    { id:"secret",header:["密钥"], sort:"string",template:function(obj){
-                        return "******"
-                    }},
-                    { id:"status",header:["状态"], sort:"string", template:function(obj){
+                    { id:"coaPort",header:["COA端口"], width:80},
+                    { id:"status",header:["状态"], width:80, template:function(obj){
                         if(obj.status === 'enabled'){
                             return "<span style='color:green;'>正常</span>";
                         }else if(obj.status === 'disabled'){

@@ -1,6 +1,7 @@
 package org.toughradius.entity;
 
 import org.toughradius.common.DateTimeUtil;
+import org.toughradius.common.StringUtil;
 
 import java.util.Date;
 
@@ -265,8 +266,17 @@ public class RadiusTicket {
         this.outVlan = outVlan;
     }
 
+    private static String safestr(Object src){
+        if(src==null){
+            return "";
+        }
+        return String.valueOf(src);
+    }
+
+
     public static String getHeaderString(){
         StringBuilder buff = new StringBuilder();
+
         buff.append("nodeId").append(",");
         buff.append("areaId").append(",");
         buff.append("username").append(",");
@@ -295,43 +305,46 @@ public class RadiusTicket {
         return buff.toString();
     }
 
-
     public String toString(){
         StringBuilder buff = new StringBuilder();
-        buff.append(String.valueOf(nodeId)).append(",");
-        buff.append(String.valueOf(areaId)).append(",");
-        buff.append(username).append(",");
-        buff.append(nasId).append(",");
-        buff.append(nasAddr).append(",");
-        buff.append(nasPaddr).append(",");
+        buff.append(safestr(nodeId)).append(",");
+        buff.append(safestr(areaId)).append(",");
+        buff.append(safestr(username)).append(",");
+        buff.append(safestr(nasId)).append(",");
+        buff.append(safestr(nasAddr)).append(",");
+        buff.append(safestr(nasPaddr)).append(",");
         buff.append(String.valueOf(sessionTimeout)).append(",");
-        buff.append(framedIpaddr).append(",");
-        buff.append(framedNetmask).append(",");
-        buff.append(macAddr).append(",");
-        buff.append(String.valueOf(nasPort)).append(",");
-        buff.append(nasClass).append(",");
-        buff.append(nasPortId).append(",");
-        buff.append(String.valueOf(nasPortType)).append(",");
-        buff.append(String.valueOf(serviceType)).append(",");
-        buff.append(acctSessionId).append(",");
-        buff.append(String.valueOf(acctSessionTime)).append(",");
-        buff.append(String.valueOf(acctInputTotal)).append(",");
-        buff.append(String.valueOf(acctOutputTotal)).append(",");
-        buff.append(String.valueOf(acctInputPackets)).append(",");
-        buff.append(String.valueOf(acctOutputPackets)).append(",");
+        buff.append(safestr(framedIpaddr)).append(",");
+        buff.append(safestr(framedNetmask)).append(",");
+        buff.append(safestr(macAddr)).append(",");
+        buff.append(safestr(nasPort)).append(",");
+        buff.append(safestr(nasClass)).append(",");
+        buff.append(safestr(nasPortId)).append(",");
+        buff.append(safestr(nasPortType)).append(",");
+        buff.append(safestr(serviceType)).append(",");
+        buff.append(safestr(acctSessionId)).append(",");
+        buff.append(safestr(acctSessionTime)).append(",");
+        buff.append(safestr(acctInputTotal)).append(",");
+        buff.append(safestr(acctOutputTotal)).append(",");
+        buff.append(safestr(acctInputPackets)).append(",");
+        buff.append(safestr(acctOutputPackets)).append(",");
         buff.append(DateTimeUtil.toDateTimeString(acctStartTime)).append(",");
-        buff.append(DateTimeUtil.toDateTimeString(acctStopTime));
-        buff.append(String.valueOf(inVlan)).append(",");
-        buff.append(String.valueOf(outVlan));
+        buff.append(DateTimeUtil.toDateTimeString(acctStopTime)).append(",");
+        buff.append(safestr(inVlan)).append(",");
+        buff.append(safestr(outVlan));
         return buff.toString();
     }
 
     public static RadiusTicket fromString(String line) {
         try{
             String [] strs = line.trim().split(",");
-            if(strs.length!=23){
+            if(strs.length!=25){
                 return null;
             }
+//            nodeId,areaId,username,nasId,nasAddr,nasPaddr,sessionTimeout,framedIpaddr,framedNetmask,macAddr,nasPort,nasClass,nasPortId,
+//                    nasPortType,serviceType,acctSessionId,acctSessionTime,acctInputTotal,acctOutputTotal,acctInputPackets,
+//                    acctOutputPackets,acctStartTime,acctStopTime,inVlan,outVlan
+
             RadiusTicket log = new RadiusTicket();
             log.setNodeId(Integer.valueOf(strs[0]));
             log.setAreaId(Integer.valueOf(strs[1]));

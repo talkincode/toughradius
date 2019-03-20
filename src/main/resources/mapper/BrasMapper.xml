@@ -85,8 +85,8 @@
 			<if test="coaPort != null  and coaPort != ''  ">coa_port = #{coaPort},</if>
 			<if test="authLimit != null  and authLimit != ''  ">auth_limit = #{authLimit},</if>
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit = #{acctLimit},</if>
-			<if test="status != null  and status != ''  ">status = #{status},</if>
-			<if test="remark != null  and remark != ''  ">remark = #{remark},</if>
+			<if test="status != null  ">status = #{status},</if>
+			<if test="remark != null ">remark = #{remark},</if>
 			<if test="createTime != null  ">create_time = #{createTime,jdbcType=TIMESTAMP},</if>
 		</trim>
 		where id = #{id}

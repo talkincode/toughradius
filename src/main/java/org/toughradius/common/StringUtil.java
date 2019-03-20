@@ -1211,4 +1211,7 @@ public class StringUtil
         int value = integer + radix;
         return (isNegative)?-value:value;
     }
+
+
+
 }

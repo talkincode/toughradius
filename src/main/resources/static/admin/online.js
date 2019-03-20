@@ -11,16 +11,9 @@ toughradius.admin.online.loadPage = function(session){
         $$(tableid).refresh();
         $$(tableid).clearAll();
         var params = $$(queryid).getValues();
-        var rparam = {
-            nodeId: params.node_id,
-            areaId: params.area_id,
-            beginTime: params.start_time,
-            endTime: params.end_time,
-            keyword: params.keyword
-        };
         var args = [];
-        for(var k in rparam){
-            args.push(k+"="+rparam[k]);
+        for(var k in params){
+            args.push(k+"="+params[k]);
         }
         $$(tableid).load('/admin/online/query?'+args.join("&"));
     };
@@ -110,7 +103,7 @@ toughradius.admin.online.loadPage = function(session){
                     {
                        type:"space", id:"a1", rows:[{
                          type:"space", padding:0, responsive:"a1", cols:[
-                            { view: "datepicker", name: "startTime", label: "上线时间",stringResult:true, timepicker: true, format: "%Y-%m-%d %h:%i" },
+                            { view: "datepicker", name: "beginTime", label: "上线时间",stringResult:true, timepicker: true, format: "%Y-%m-%d %h:%i" },
                             { view: "datepicker", name: "endTime", label: "至", labelWidth:27,stringResult:true, timepicker: true, format: "%Y-%m-%d %h:%i" },
                             {view: "text", name: "keyword", label: "关键字",  placeholder: "帐号 / IP地址 / MAC地址 .."},
                             {
