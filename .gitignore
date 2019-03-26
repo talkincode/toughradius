@@ -13,3 +13,4 @@ out
 .idea/*
 logs
 application-wjt.properties
+*.pyc
