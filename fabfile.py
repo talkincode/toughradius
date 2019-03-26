@@ -4,7 +4,7 @@ sys.path.insert(0,os.path.dirname(__file__))
 from fabric.api import *
 import datetime
 
-__version__ = "v6.0.1"
+__version__ = "6.0.1"
 
 currtime = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
