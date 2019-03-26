@@ -19,6 +19,16 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
         configurer.setUseSuffixPatternMatch(false);//当此参数设置为true的时候，那么/user.html，/user.aa，/user.*都能是正常访问的。
     }
 
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/api/**");
+        registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/admin/**")
+                .excludePathPatterns("/")
+                .excludePathPatterns("/admin")
+                .excludePathPatterns("/admin/login")
+                .excludePathPatterns("/admin/session")
+                .excludePathPatterns("/admin/logout");
+        super.addInterceptors(registry);
+    }
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

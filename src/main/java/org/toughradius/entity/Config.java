@@ -11,6 +11,22 @@ public class Config {
 
     private String remark;
 
+    public Config() {
+    }
+
+    public Config(String type, String name, String value) {
+        this.type = type;
+        this.name = name;
+        this.value = value;
+    }
+
+    public Config(String type, String name, String value, String remark) {
+        this.type = type;
+        this.name = name;
+        this.value = value;
+        this.remark = remark;
+    }
+
     public Integer getId() {
         return id;
     }

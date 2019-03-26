@@ -126,7 +126,7 @@ insert test data
             
 ### Running the main program
 
-    java -jar -Xms256m -Xmx1024G /opt/toughradius-latest.jar  --spring.profiles.active=prod
+    java -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar  --spring.profiles.active=prod
     
 > Note the file (toughradius-latest.jar) path
 

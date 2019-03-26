@@ -1,0 +1,52 @@
+body {
+    /*background: url(../imgs/login_bg.jpg) no-repeat center center;*/
+    background-color: #2a2f35;
+    background-size: 100% 100%;
+}
+
+.login-win{
+    border-radius: 5px;
+    background-color: #323e4d !important;
+    box-shadow: 3px 5px 15px 0px rgba(50, 54, 58, 0.17);
+    border: 2px solid #364150;
+}
+
+.login-logo{
+    width:117px;height:56px;
+    background-image: url(../imgs/logo.png);
+    background-position: center center;
+    background-repeat: no-repeat;
+}
+
+.login-win .webix_view{
+    background-color: #323e4d !important;
+    border: none;
+    font-size: 16px !important;
+}
+
+.login-win .webix_form input{
+    border-radius: 5px;
+    background-color: #27303c;
+    border-color: #354c5f;
+    color: #bfbfbf;
+}
+
+.login-win #login_btn button{
+    font-size: 16px;
+}
+.verify-img{
+    padding-top: 0!important;
+    border-radius: 5px;
+}
+.verify-img .webix_template{
+    padding-top: 3px!important;
+}
+.verify-refresh-btn .webix_icon_btn{
+    /*color: #c0c0c0;*/
+    color: rgb(197, 219, 255);
+}
+
+.retrieve-pwd-btn .webix_icon_btn,
+.retrieve-pwd-btn .webix_img_btn{
+    color: #bdbdbd !important;
+}

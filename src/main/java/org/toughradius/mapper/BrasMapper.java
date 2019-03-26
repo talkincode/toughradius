@@ -4,14 +4,27 @@ import org.toughradius.entity.Bras;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Mapper
 public interface BrasMapper {
-	
 
-    Bras selectByIPAddr(String ipaddr);
-    
-    Bras selectByidentifier(String identifier);
+
+
+    List<Bras> queryForList(Bras bras);
+
+    void insertBras(Bras bras);
+
+    void updateBras(Bras bras);
+
+    void deleteById(Integer id);
+
+    Bras findByidentifier(String identifier);
+
+    Bras findByIPAddr(String ipaddr);
+
+    Bras findById(Integer id);
 
     int  flushCache();
 }

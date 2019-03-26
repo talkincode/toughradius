@@ -2,6 +2,7 @@ package org.toughradius.component;
 
 import org.toughradius.entity.Subscribe;
 import org.toughradius.entity.SubscribeBill;
+import org.toughradius.entity.SubscribeQuery;
 import org.toughradius.mapper.SubscribeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,28 @@ public class SubscribeService {
 
     public int stopOnline(String username){
         return subscribeMapper.updateOnlineStatus(username,0);
+    }
+
+    public List<Subscribe> queryForList(SubscribeQuery subscribe){
+        return subscribeMapper.queryForList(subscribe);
+    }
+    public Integer queryTotal(SubscribeQuery subscribe){
+        return subscribeMapper.queryTotal(subscribe);
+    }
+
+    public void insertSubscribe(Subscribe subscribe){
+        subscribeMapper.insertSubscribe(subscribe);
+    }
+
+    public void updateSubscribe(Subscribe subscribe){
+        subscribeMapper.updateSubscribe(subscribe);
+    }
+
+    public Subscribe findById(Integer id){
+        return subscribeMapper.findById(id);
+    }
+    public void deleteById(Integer id){
+        subscribeMapper.deleteById(id);
     }
 
 }

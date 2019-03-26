@@ -6,8 +6,11 @@ target
 .settings
 .classpath
 .project
-
+*.pyc
+out
 # IntelliJ IDEA
 *.iml
 .idea/*
 logs
+application-wjt.properties
+*.pyc

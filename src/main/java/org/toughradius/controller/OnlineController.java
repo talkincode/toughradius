@@ -3,6 +3,7 @@ package org.toughradius.controller;
 import org.toughradius.common.PageResult;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.ValidateUtil;
+import org.toughradius.config.ApiAccess;
 import org.toughradius.entity.RadiusOnline;
 import org.toughradius.component.OnlineCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,19 +20,20 @@ public class OnlineController {
     private OnlineCache onlineCache;
 
     //在线查询
-    @GetMapping("/online/query")
+    @ApiAccess
+    @GetMapping("/admin/online/query")
     public PageResult<RadiusOnline> queryOnlineHandler(@RequestParam(defaultValue = "0") int start, @RequestParam(defaultValue = "40") int count,
                                                        String nodeId, String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword, String sort){
         return onlineCache.queryOnlinePage(start,count,nodeId,areaId,invlan,outVlan,nasAddr,nasId,beginTime,endTime,keyword,sort);
     }
 
 
-    @GetMapping("/online/getlast")
+    @GetMapping("/admin/online/getlast")
     public RadiusOnline getLastOnlineHandler(String username){
         return onlineCache.getLastOnline(username);
     }
 
-    @GetMapping("/online/unlock")
+    @GetMapping("/admin/online/unlock")
     public RestResult unlockOnlineHandler(@RequestParam(name = "ids")String ids,
                                           @RequestParam(name = "sessionId")String sessionId){
         if(ValidateUtil.isNotEmpty(ids)){
@@ -45,40 +47,35 @@ public class OnlineController {
         }
     }
     //清理在线
-    @GetMapping("/online/clear")
+    @GetMapping("/admin/online/clear")
     public RestResult clearOnlineHandler( String nodeId, String areaId,Integer invlan, Integer outVlan,  String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
         onlineCache.clearOnlineByFilter(nodeId,areaId,invlan, outVlan,nasAddr,nasId,beginTime,endTime,keyword);
         return new RestResult(0,"success");
     }
     //一个下线
-    @GetMapping("/online/delete")
+    @GetMapping("/admin/online/delete")
     public RestResult DeleteOnlineHandler(String ids){
-        for(String oid : ids.split(",")){
+        for(String oid : ids.split("/admin,")){
             onlineCache.removeOnline(oid);
         }
         return new RestResult(0,"success");
     }
 
-    @GetMapping("/online/query/byids")
+    @GetMapping("/admin/online/query/byids")
     public List<RadiusOnline> queryOnlineByIds(String ids){
         return onlineCache.queryOnlineByIds(ids);
     }
 
-    @GetMapping("/online/query/noamount")
+    @GetMapping("/admin/online/query/noamount")
     public List<RadiusOnline> queryNoAmountOnline(){
         return onlineCache.queryNoAmountOnline();
     }
 
     //清理在线用户（超时的）
-    @GetMapping("/online/autoclear")
+    @GetMapping("/admin/online/autoclear")
     public void autoClearHandler(int interim_times){
         onlineCache.clearOvertimeTcRadiusOnline(interim_times);
     }
 
-
-    @GetMapping("/")
-    public String indexHandler(){
-        return "ok";
-    }
 }
 

@@ -6,11 +6,13 @@ import org.toughradius.mapper.BrasMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class BrasService {
 
 	@Autowired
-	private BrasMapper tcBrasMapper;
+	private BrasMapper brasMapper;
 
 	@Autowired
 	private Syslogger logger;
@@ -18,15 +20,15 @@ public class BrasService {
 	public Bras findBras(String ipaddr, String srcip, String identifier) throws ServiceException{
 		Bras tcBras = null;
 		if(ValidateUtil.isNotEmpty(ipaddr)&&!"0.0.0.0".equals(ipaddr)){
-			tcBras = tcBrasMapper.selectByIPAddr(ipaddr);
+			tcBras = brasMapper.findByIPAddr(ipaddr);
 		}
 
 		if(ValidateUtil.isNotEmpty(srcip)&&!"0.0.0.0".equals(srcip)){
-			tcBras = tcBrasMapper.selectByIPAddr(srcip);
+			tcBras = brasMapper.findByIPAddr(srcip);
 		}
 
 		if (tcBras == null && ValidateUtil.isNotEmpty(identifier)) {
-			tcBras = tcBrasMapper.selectByidentifier(identifier);
+			tcBras = brasMapper.findByidentifier(identifier);
 		}
 
 		if (tcBras == null) {
@@ -42,5 +44,33 @@ public class BrasService {
 		}
 
 		return tcBras;
+	}
+
+	public List<Bras> queryForList(Bras bras){
+		return brasMapper.queryForList(bras);
+	}
+
+	public void insertBras(Bras bras){
+		brasMapper.insertBras(bras);
+	}
+
+	public void updateBras(Bras bras){
+		brasMapper.updateBras(bras);
+	}
+
+	public void deleteById(Integer id){
+		brasMapper.deleteById(id);
+	}
+
+	public Bras selectByidentifier(String identifier){
+		return brasMapper.findByidentifier(identifier);
+	}
+
+	public Bras selectByIPAddr(String ipaddr){
+		return brasMapper.findByIPAddr(ipaddr);
+	}
+
+	public Bras selectById(Integer id){
+		return brasMapper.findById(id);
 	}
 }
