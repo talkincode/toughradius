@@ -1,0 +1,52 @@
+# v6.0.0.1  20190326
+
+- developed based on Java & SpringBoot,which implements the standard Radius protocol and supports the extension of Radius protocol.
+- Provides the basic management interface
+
+Radius features
+
+1. Authentication message: support BAS to initiate Authentication message, use RADIUS protocol to authenticate AAA system
+
+2. Authentication PAP authentication: PAP authentication is used to support BAS initiating Authentication messages
+
+3. Authentication CHAP authentication: support BAS to initiate Authentication message using CHAP authentication
+
+4. Authentication MS CHAP V2 authentication mode: support BAS to initiate Authentication message using MS CHAP V2 authentication mode
+
+5. Authentication Authorization: After receiving BAS Authentication request message, RADIUS Server encapsulates user authorization information according to user information resources, and authorizes user bandwidth limitation, maximum time, IP and other information to BAS through Authentication response message.
+
+6. Accounting-On message: Support BAS to initiate Accounting-On message, inform RADIUS that the BAS started successfully and start billing
+
+7. Accounting-Off message: Support BAS to initiate Accounting-Off message, notify RADIUS that the BAS ends billing, online users unify offline, and BAS enters maintenance or switching status.
+
+8. Accounting-Start message: Support the standard RADIUS billing message analysis function. BAS initiates the Accounting-Start message and notifies the user to start billing.
+
+9. Accounting-Interium-Update message: Support the standard RADIUS billing message analysis function. BAS initiates Accounting-Start message to inform users of billing updates.
+
+10. Accounting-Stop message: Support the standard RADIUS billing message analysis function. BAS initiates the Accounting-Start message to notify users of the end of billing.
+
+11. Distribution of Maximum Session Length Attribute: Supports sending maximum session length to BAS authentication message, requiring users to go offline within a specified length of time in order to record online records.
+
+12. User's fixed IP address issuance: support to send IP address information to BAS authentication message. Users use the fixed IP to access the Internet after dialing up, which is suitable for special line users.
+
+13. Subpooling of user address pool: It supports sending address pool information to BAS authentication message, and users can access the Internet using the address allocated by the address pool after dialing up.
+
+14. COA Dynamic Authorization: Support the implementation of COA Dynamic Authorization to BRAS system after user authentication, and change the user accounting strategy (requiring BRAS support).
+
+RADIUS Interface Management
+
+1. A control panel is provided.
+
+2. System parameter configuration management
+
+3. Bras Equipment Intervention Management
+
+4. User Management
+
+5. Online User Query
+
+6. Online Logging Query
+
+7. System Logging Query
+
+8. Manage password modification
