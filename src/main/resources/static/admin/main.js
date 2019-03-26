@@ -78,6 +78,62 @@ toughradius.admin.initUploadApi = function(uid, uploadurl, callback){
     });
 };
 
+
+toughradius.admin.methods.updatePassword = function(hnode){
+    var pwinid = webix.uid();
+    var formid = webix.uid();
+    webix.ui({
+        id:pwinid,
+        view:"popup",
+        width:270,
+        height:270,
+        body:{
+            rows:[
+                {
+                    id: formid,
+                    view: "form",
+                    scroll: false,
+                    elementsConfig: {},
+                    elements: [
+                        {view: "text", name: "oldpassword", type: "password", label: "原密码", validate:webix.rules.isNotEmpty},
+                        {view: "text", name: "password1", type: "password", label: "新密码", validate:webix.rules.isNotEmpty},
+                        {view: "text", name: "password2", type: "password", label: "确认新密码", validate:webix.rules.isNotEmpty}
+                    ]
+                },
+                {
+                    padding:5,
+                    cols: [{},
+                        {
+                            view: "button", name: "submit", type: "form", value: "提交修改", width: 90, height: 36,
+                            click: function () {
+                                if (!$$(formid).validate()) {
+                                    webix.message({type: "error", text: "请正确填写资料", expire: 1000});
+                                    return false;
+                                }
+                                var btn = this;
+                                webix.ajax().post('/admin/password', $$(formid).getValues()).then(function (result) {
+                                    btn.enable();
+                                    var resp = result.json();
+                                    console.log(resp);
+                                    webix.message({type: resp.msgtype, text: resp.msg, expire: 3000});
+                                    if (resp.code === 0) {
+                                        $$(pwinid).close();
+                                    }
+                                });
+                            }
+                        },
+                        {
+                            view: "button", type: "base", icon: "times-circle", width: 70, css: "alter", label: "取消", click: function () {
+                                $$(pwinid).close();
+                            }
+                        }
+                    ]
+                }
+            ]
+        }
+    }).show(hnode);
+};
+
 toughradius.admin.methods.requirejs = function(jsname, session,callback){
     console.log("load admin/" + jsname + ".js");
     if(session.dev_mode === 'enabled'){
@@ -93,14 +149,11 @@ toughradius.admin.methods.requirejs = function(jsname, session,callback){
 
 
 webix.ready(function() {
-    /**
-     * 加载主界面
-     */
     webix.ajax().get('/admin/session',{}).then(function (result) {
         var resp = result.json();
         if(resp.code===1){
             webix.message({type:"error",text:resp.msg});
-            setTimeout(function(){window.location.href = "/admin";},2000);
+            setTimeout(function(){window.location.href = "/admin/login";},2000);
             return false;
         }
         var session = resp.data;
@@ -126,6 +179,7 @@ webix.ready(function() {
                                     {
                                         view: "button", css: "nav-item-color", type: "icon", width: 90, maxWidth: 200, icon: "key",align:"right",
                                         label: "修改密码", click: function () {
+                                            toughradius.admin.methods.updatePassword(this.$view);
                                         }
                                     },
                                     {

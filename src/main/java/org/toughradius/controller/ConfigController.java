@@ -5,8 +5,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.toughradius.common.CoderUtil;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.SystemUtil;
+import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.ConfigService;
 import org.toughradius.component.Syslogger;
 import org.toughradius.entity.Config;
@@ -56,5 +58,30 @@ public class ConfigController {
         }
         return new RestResult(0,"update radius config done");
     }
+
+
+
+    @PostMapping(value = {"/admin/password"})
+    @ResponseBody
+    public RestResult updatePasswordConfig(String oldpassword,String password1,String password2 ){
+        if(ValidateUtil.isEmpty(password1)||password1.length() < 6){
+            return new RestResult(1, String.format("密码长度至少%s位", 6));
+        }
+
+        if(!password1.equals(password2)){
+            return new RestResult(1,"确认密码不符");
+        }
+
+        String sysUserPwd = configService.getStringValue(ConfigService.SYSTEM_MODULE,ConfigService.SYSTEM_USERPWD);
+
+        if(!sysUserPwd.equals(CoderUtil.md5Salt(oldpassword))){
+            return new RestResult(1,"旧密码错误");
+        }
+
+        configService.updateConfig(new Config(ConfigService.SYSTEM_MODULE,ConfigService.SYSTEM_USERPWD,CoderUtil.md5Salt(password1),""));
+
+        return new RestResult(0,"密码修改成功");
+    }
+
 }
 

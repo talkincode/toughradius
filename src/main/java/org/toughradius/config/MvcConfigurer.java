@@ -20,7 +20,7 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
     }
 
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/api/**");
+//        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/api/**");
         super.addInterceptors(registry);
     }
 

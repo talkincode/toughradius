@@ -66,13 +66,8 @@ public class MainController {
     }
 
     @GetMapping(value = {"/admin","/"})
-    public String indexPage(HttpSession session){
-        SessionUser user = (SessionUser) session.getAttribute(SESSION_USER_KEY);
-        if(user==null){
-            return "/static/login.html";
-        }else {
-            return "/static/index.html";
-        }
+    public String indexPage(){
+        return "/static/index.html";
     }
 
     @GetMapping(value = "/admin/session")
@@ -80,7 +75,7 @@ public class MainController {
     public RestResult sessionHandeler(HttpSession session, HttpServletRequest request){
         SessionUser user = (SessionUser) session.getAttribute(SESSION_USER_KEY);
         if(user==null){
-            return new RestResult(1, "not login");
+            return new RestResult(1, "用户未登录或登录已经过期");
         }
         RestResult result = new RestResult(0,"ok");
         Map<String, Object> child = new HashMap<>();

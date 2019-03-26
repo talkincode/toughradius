@@ -41,7 +41,7 @@
   </select>
 
 
-  <select id="updateConfig" parameterType="org.toughradius.entity.Config">
+  <select id="updateConfig" parameterType="org.toughradius.entity.Config" flushCache="true">
     update tr_config SET  value=#{value} where type=#{type} and name=#{name}
   </select>
 
