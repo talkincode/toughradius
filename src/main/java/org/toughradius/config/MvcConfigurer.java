@@ -20,10 +20,15 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
     }
 
     public void addInterceptors(InterceptorRegistry registry) {
-//        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/api/**");
+        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/api/**");
+        registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/admin/**")
+                .excludePathPatterns("/")
+                .excludePathPatterns("/admin")
+                .excludePathPatterns("/admin/login")
+                .excludePathPatterns("/admin/session")
+                .excludePathPatterns("/admin/logout");
         super.addInterceptors(registry);
     }
-
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {

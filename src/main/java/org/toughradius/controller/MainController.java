@@ -12,6 +12,7 @@ import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.ConfigService;
 import org.toughradius.component.Syslogger;
 import org.toughradius.config.ApplicationConfig;
+import org.toughradius.config.Constant;
 import org.toughradius.entity.Config;
 import org.toughradius.entity.MenuItem;
 import org.toughradius.entity.SessionUser;
@@ -24,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
-public class MainController {
+public class MainController implements Constant {
 
     @Autowired
     protected Syslogger logger;
@@ -35,7 +36,7 @@ public class MainController {
     @Autowired
     private ConfigService configService;
 
-    private static final String SESSION_USER_KEY = "SESSION_USER_KEY";
+
 
     /**
      * 构造界面菜单数据
