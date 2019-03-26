@@ -8,7 +8,7 @@ User=root
 LimitNOFILE=65535
 LimitNPROC=65535
 Type=simple
-ExecStart=/usr/bin/java -jar -Xms256m -Xmx1024G /opt/toughradius-latest.jar  --spring.profiles.active=prod
+ExecStart=/usr/bin/java -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar  --spring.profiles.active=prod
 SuccessExitStatus=143
 
 [Install]
