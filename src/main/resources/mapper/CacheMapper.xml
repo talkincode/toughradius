@@ -17,7 +17,7 @@
     </cache>
 
     <select id="findAllUser" resultType="java.lang.String" useCache="true">
-        SELECT subscriber FROM tr_subscribe WHERE STATUS = 'enabled' and expire_time >= NOW()
+        SELECT subscriber FROM tr_subscribe
     </select>
 
 </mapper>

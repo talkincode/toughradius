@@ -8,7 +8,6 @@ import java.security.SecureRandom;
 /**
  * 从JDK1.5拷贝的唯一标识
  */
-@SuppressWarnings("unchecked")
 public final class UUID implements Serializable, Comparable
 {
     private static final long serialVersionUID = 1L;

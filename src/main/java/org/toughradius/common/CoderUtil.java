@@ -1,9 +1,3 @@
-/*
- * 版权所有 (C) 2005-2008 WWW.ZOULAB.COM。保留所有权利。
- * 版本：
- * 修改记录：
- *		1、2006-8-12，zouchenggang创建。 
- */
 package org.toughradius.common;
 
 import org.toughradius.common.bits.NetBits;
