@@ -1,7 +1,7 @@
 package org.toughradius.handler;
 
 import org.toughradius.common.ValidateCache;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Bras;
 import org.toughradius.entity.Subscribe;
 import org.tinyradius.packet.AccountingRequest;
@@ -63,12 +63,12 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
 
 
     public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Bras nas) throws RadiusException {
-        taskExecutor.execute(()-> {
+        systaskExecutor.execute(()-> {
             try {
                 Subscribe user = getUser(accountingRequest.getUserName());
                 accountingFilter.doFilter(accountingRequest,nas,user);
             } catch (RadiusException e) {
-                logger.error(accountingRequest.getUserName(),"记账处理错误",e, Syslogger.RADIUSD);
+                logger.error(accountingRequest.getUserName(),"记账处理错误",e, Memarylogger.RADIUSD);
             }
         });
         return getAccountingResponse(accountingRequest);
@@ -91,13 +91,13 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         RadiusPacket preRequest = makeRadiusPacket(data, "1234567890", RadiusPacket.RESERVED);
         if(preRequest.getPacketType()!=RadiusPacket.ACCOUNTING_REQUEST){
             if(preRequest.getPacketType()==RadiusPacket.ACCESS_REQUEST){
-                logger.info("ACCT->AUTH-COUNT:"+counter.incrementAndGet(),Syslogger.RADIUSD);
+                logger.info("ACCT->AUTH-COUNT:"+counter.incrementAndGet(), Memarylogger.RADIUSD);
                 buffer.flip();
                 authHandler.messageReceived(session, buffer);
                 return;
             }else{
                 radiusStat.incrAcctDrop();
-                logger.error(String.format("错误的 RADIUS 记账消息类型 %s  <%s -> %s>", preRequest.getPacketType(), remoteAddress,localAddress), Syslogger.RADIUSD);
+                logger.error(String.format("错误的 RADIUS 记账消息类型 %s  <%s -> %s>", preRequest.getPacketType(), remoteAddress,localAddress), Memarylogger.RADIUSD);
                 return;
             }
         }
@@ -106,7 +106,7 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
 
         if (nas == null) {
             radiusStat.incrAcctDrop();
-            logger.error(String.format("未授权的接入设备<记账> <%s -> %s>", remoteAddress,localAddress),Syslogger.RADIUSD);
+            logger.error(String.format("未授权的接入设备<记账> <%s -> %s>", remoteAddress,localAddress), Memarylogger.RADIUSD);
             return;
         }
 
@@ -120,12 +120,12 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         vc.incr(vckey);
         if(vc.isOver(vckey)){
             radiusStat.incrAcctDrop();
-            logger.error(request.getUsername(),String.format("接入设备记账并发限制超过%s <%s -> %s>", nas.getAcctLimit(), remoteAddress,localAddress), Syslogger.RADIUSD);
+            logger.error(request.getUsername(),String.format("接入设备记账并发限制超过%s <%s -> %s>", nas.getAcctLimit(), remoteAddress,localAddress), Memarylogger.RADIUSD);
             return;
         }
 
         logger.info(request.getUserName(), String.format("接收到 RADIUS 记账(%s)请求 <%s -> %s> : %s",
-                request.getStatusTypeName(), remoteAddress,localAddress,request.toSimpleString()),Syslogger.RADIUSD);
+                request.getStatusTypeName(), remoteAddress,localAddress,request.toSimpleString()), Memarylogger.RADIUSD);
         if (radiusConfig.isTraceEnabled())
             logger.print(request.toString());
 
@@ -136,7 +136,7 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         if (response != null) {
             radiusStat.incrAcctResp();
             logger.info(request.getUserName(),String.format("发送 RADIUS 记账(%s)响应至 %s， %s",
-                    request.getStatusTypeName(), remoteAddress,response.toLineString()),Syslogger.RADIUSD);
+                    request.getStatusTypeName(), remoteAddress,response.toLineString()), Memarylogger.RADIUSD);
             if (radiusConfig.isTraceEnabled())
                 logger.print(response.toString());
 

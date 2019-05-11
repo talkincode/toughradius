@@ -3,7 +3,7 @@ if (!window.toughradius.admin.online)
 
 
 toughradius.admin.online.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("user-circle","在线查询","online");
+    // toughradius.admin.methods.setToolbar("user-circle","在线查询","online");
     var tableid = webix.uid();
     var queryid = webix.uid();
     var reloadData = function(){
@@ -35,8 +35,8 @@ toughradius.admin.online.loadPage = function(session){
             reloadData();
         })
     };
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.online",
         css:"main-panel",padding:2,
         rows: [
             {
@@ -205,7 +205,8 @@ toughradius.admin.online.loadPage = function(session){
                 ]
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.online","users","在线查询", cview, true);
     webix.extend($$(tableid), webix.ProgressBar);
 };
 

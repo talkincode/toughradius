@@ -3,7 +3,6 @@ if (!window.toughradius.admin.syslog)
 
 
 toughradius.admin.syslog.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("hdd-o","系统日志","syslog");
     var tableid = webix.uid();
     var queryid = webix.uid();
     var reloadData = function(){
@@ -17,8 +16,8 @@ toughradius.admin.syslog.loadPage = function(session){
         }
         $$(tableid).load('/admin/syslog/query?'+args.join("&"));
     };
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.syslog",
         css:"main-panel",padding:2,
         rows:[
             {
@@ -117,7 +116,8 @@ toughradius.admin.syslog.loadPage = function(session){
                 ]
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.syslog","hdd-o","系统日志", cview, true);
     webix.extend($$(tableid), webix.ProgressBar);
 };
 

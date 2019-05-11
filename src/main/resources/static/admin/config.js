@@ -3,15 +3,15 @@ if (!window.toughradius.admin.config)
 
 
 toughradius.admin.config.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("cogs","系统配置","config");
+    // toughradius.admin.methods.setToolbar("cogs","系统配置","config");
     var tableid = webix.uid();
     var reloadData = function(){
         $$(tableid).clearAll();
         $$(tableid).load("/admin/config/query");
         $$(tableid).refresh()
     };
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.config",
         view:"scrollview",
         css:"main-panel",padding:2,
         body:{
@@ -69,7 +69,8 @@ toughradius.admin.config.loadPage = function(session){
             ]
         }
 
-    },$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.config","cogs","系统配置", cview, true);
 };
 
 

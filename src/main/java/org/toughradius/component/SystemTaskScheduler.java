@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * Radius 定时任务设计
  */
 @Component
-public class TaskScheduler {
+public class SystemTaskScheduler {
 
     @Autowired
     private OnlineCache onlineCache;
@@ -42,10 +42,10 @@ public class TaskScheduler {
     private Gson gson;
 
     @Autowired
-    private ThreadPoolTaskExecutor taskExecutor;
+    private ThreadPoolTaskExecutor systaskExecutor;
 
     @Autowired
-    private Syslogger logger;
+    private Memarylogger logger;
 
 
 
@@ -54,7 +54,7 @@ public class TaskScheduler {
      */
     @Scheduled(fixedRate = 5 * 1000, initialDelay = 5)
     public void syncStatFile(){
-        taskExecutor.execute(()->{
+        systaskExecutor.execute(()->{
             radiusStat.runStat();
             FileUtil.writeFile(radiusConfig.getStatfile(),gson.toJson(radiusStat.getData()));
         });
@@ -99,7 +99,7 @@ public class TaskScheduler {
      */
     @Scheduled(fixedRate = 10 * 1000)
     public void  updateSubscribeCache(){
-        taskExecutor.execute(() -> subscribeCache.updateSubscribeCache());
+        systaskExecutor.execute(() -> subscribeCache.updateSubscribeCache());
     }
 
     /**
@@ -107,7 +107,7 @@ public class TaskScheduler {
      */
     @Scheduled(fixedRate = 10 * 1000)
     public void syncTcRadiusTicket() {
-        taskExecutor.execute(()->ticketCache.syncData());
+        systaskExecutor.execute(()->ticketCache.syncData());
     }
 
 }

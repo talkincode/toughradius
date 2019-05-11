@@ -1,7 +1,7 @@
 package org.toughradius.handler;
 
 import org.toughradius.common.ValidateCache;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Bras;
 import org.toughradius.entity.Subscribe;
 import org.toughradius.entity.SubscribeBill;
@@ -104,7 +104,7 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
         //判断MAC绑定
         if (user.getBindMac()) {
             if (user.getMacAddr() == null||"".equals(user.getMacAddr())) {
-                taskExecutor.execute(() -> {
+                systaskExecutor.execute(() -> {
                     subscribeService.updateMacAddr(accessRequest.getUserName(), accessRequest.getMacAddr());
                     if(radiusConfig.isTraceEnabled())
                         logger.info(accessRequest.getUserName(), String.format("用户MAC绑定更新：%s", accessRequest.getMacAddr()));
@@ -116,7 +116,7 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
         //判断invlan绑定
         if (user.getBindVlan()) {
             if (user.getInVlan() == null || user.getInVlan() == 0) {
-                taskExecutor.execute(() -> {
+                systaskExecutor.execute(() -> {
                     subscribeService.updateInValn(accessRequest.getUserName(), accessRequest.getInVlanId());
                     if(radiusConfig.isTraceEnabled())
                         logger.info(accessRequest.getUserName(), String.format("用户内层VLAN绑定更新：%s", accessRequest.getInVlanId()));
@@ -128,7 +128,7 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
         //判断outvlan绑定
         if (user.getBindVlan()) {
             if (user.getOutVlan() == null || user.getOutVlan() == 0) {
-                taskExecutor.execute(() -> {
+                systaskExecutor.execute(() -> {
                     subscribeService.updateOutValn(accessRequest.getUserName(), accessRequest.getOutVlanId());
                     if(radiusConfig.isTraceEnabled())
                         logger.info(accessRequest.getUserName(), String.format("用户外层VLAN绑定更新：%s", accessRequest.getOutVlanId()));
@@ -181,13 +181,13 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
         RadiusPacket preRequest = makeRadiusPacket(data, "1234567890", RadiusPacket.RESERVED);
         if(preRequest.getPacketType()!=RadiusPacket.ACCESS_REQUEST){
             if(preRequest.getPacketType()==RadiusPacket.ACCOUNTING_REQUEST){
-                logger.info("AUTH->ACCT-COUNT:"+counter.incrementAndGet(),Syslogger.RADIUSD);
+                logger.info("AUTH->ACCT-COUNT:"+counter.incrementAndGet(), Memarylogger.RADIUSD);
                 buffer.flip();
                 acctHandler.messageReceived(session,buffer);
                 return;
             }else {
                 radiusStat.incrAuthDrop();
-                logger.error(String.format("错误的 RADIUS 认证消息类型 %s  <%s -> %s>", preRequest.getPacketType(), remoteAddress,localAddress), Syslogger.RADIUSD);
+                logger.error(String.format("错误的 RADIUS 认证消息类型 %s  <%s -> %s>", preRequest.getPacketType(), remoteAddress,localAddress), Memarylogger.RADIUSD);
                 return;
             }
         }
@@ -197,7 +197,7 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
 
         if (nas == null) {
             radiusStat.incrAuthDrop();
-            logger.error(String.format("未授权的接入设备<认证> <%s -> %s>", remoteAddress,localAddress), Syslogger.RADIUSD);
+            logger.error(String.format("未授权的接入设备<认证> <%s -> %s>", remoteAddress,localAddress), Memarylogger.RADIUSD);
             return;
         }
 
@@ -212,12 +212,12 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
         vc.incr(vckey);
         if(vc.isOver(vckey)){
             radiusStat.incrAuthDrop();
-            logger.error(request.getUsername(),String.format("接入设备认证并发限制超过%s <%s -> %s>", nas.getAuthLimit(), remoteAddress,localAddress), Syslogger.RADIUSD);
+            logger.error(request.getUsername(),String.format("接入设备认证并发限制超过%s <%s -> %s>", nas.getAuthLimit(), remoteAddress,localAddress), Memarylogger.RADIUSD);
             return;
         }
 
 
-        logger.info(request.getUsername(), String.format("接收到RADIUS 认证请求 <%s -> %s> : %s", remoteAddress,localAddress,request.toSimpleString()),Syslogger.RADIUSD);
+        logger.info(request.getUsername(), String.format("接收到RADIUS 认证请求 <%s -> %s> : %s", remoteAddress,localAddress,request.toSimpleString()), Memarylogger.RADIUSD);
         if (radiusConfig.isTraceEnabled())
             logger.print(request.toString());
 
@@ -228,13 +228,13 @@ public class RadiusAuthHandler extends RadiusbasicHandler{
             radiusStat.incrAuthAccept();
         } catch(Exception e){
             radiusStat.incrAuthReject();
-            logger.error(request.getUserName(), String.format("认证处理失败 %s", e.getMessage()),Syslogger.RADIUSD);
+            logger.error(request.getUserName(), String.format("认证处理失败 %s", e.getMessage()), Memarylogger.RADIUSD);
             response = getAccessReject(request,e.getMessage());
         }
 
         // send response
         if (response != null) {
-            logger.info(request.getUsername(), String.format("发送认证响应至 %s， %s",remoteAddress,response.toLineString()),Syslogger.RADIUSD);
+            logger.info(request.getUsername(), String.format("发送认证响应至 %s， %s",remoteAddress,response.toLineString()), Memarylogger.RADIUSD);
             if (radiusConfig.isTraceEnabled())
                 logger.print(response.toString());
 

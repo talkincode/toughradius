@@ -1,28 +1,19 @@
 package org.toughradius.controller;
 
 import org.toughradius.common.PageResult;
-import org.toughradius.common.RestResult;
 import org.toughradius.common.ValidateUtil;
-import org.toughradius.component.TicketCache;
-import org.toughradius.entity.RadiusTicket;
 import org.toughradius.entity.TraceMessage;
-import org.toughradius.component.Syslogger;
-import org.toughradius.component.ServiceException;
-import org.toughradius.component.RadiusStat;
+import org.toughradius.component.Memarylogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.Map;
 
 @RestController
 public class SyslogController {
 
     @Autowired
-    private Syslogger logger;
+    private Memarylogger logger;
 
     @GetMapping("/admin/syslog/query")
     public PageResult<TraceMessage> queryTraceMessage(@RequestParam(defaultValue = "0") int start, @RequestParam(defaultValue = "40") int count,

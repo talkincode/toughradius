@@ -5,7 +5,6 @@ if (!window.toughradius.admin.subscribe)
 toughradius.admin.subscribe.dataViewID = "toughradius.admin.subscribe.dataViewID";
 toughradius.admin.subscribe.detailFormID = "toughradius.admin.subscribe.detailFormID";
 toughradius.admin.subscribe.loadPage = function(session,keyword){
-    toughradius.admin.methods.setToolbar("user-o","客户业务受理","subscribe");
     var tableid = webix.uid();
     var queryid = webix.uid();
     toughradius.admin.subscribe.reloadData = function(){
@@ -30,8 +29,8 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
     }
     var reloadData = toughradius.admin.subscribe.reloadData;
 
-    webix.ui({
-        id: toughradius.admin.panelId,
+    var cview = {
+        id: "toughradius.admin.subscribe",
         css:"main-panel",padding:2,
         rows:[
             {
@@ -267,7 +266,8 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                 hidden:true
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.subscribe","user-o","用户帐号管理", cview, true);
     webix.extend($$(tableid), webix.ProgressBar);
 };
 

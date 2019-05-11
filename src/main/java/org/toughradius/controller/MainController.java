@@ -10,7 +10,7 @@ import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.ConfigService;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.config.ApplicationConfig;
 import org.toughradius.config.Constant;
 import org.toughradius.entity.Config;
@@ -28,7 +28,7 @@ import java.util.Map;
 public class MainController implements Constant {
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     @Autowired
     private ApplicationConfig appconfig;
@@ -118,7 +118,7 @@ public class MainController implements Constant {
                 return  new RestResult(1,"用户名密码错误");
             }
         } catch (Exception e) {
-            logger.error("登录失败",e,Syslogger.SYSTEM);
+            logger.error("登录失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"login failure");
         }
     }

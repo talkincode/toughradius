@@ -15,6 +15,9 @@ webix.i18n.setLocale(currentLang);
 toughradius.admin = {};
 toughradius.admin.pageId = "toughradius.admin-main-page";
 toughradius.admin.panelId = "toughradius.admin-main-panel";
+toughradius.admin.tabsId = "toughradius.admin-main-tabs";
+toughradius.admin.viewsId = "toughradius.admin-main-views";
+toughradius.admin.tabviews = "toughradius.admin-main-tabviews";
 toughradius.admin.toolbarId = "toughradius.admin-main-toolbar";
 toughradius.admin.actions = {};
 toughradius.admin.methods = {};
@@ -24,6 +27,14 @@ toughradius.admin.methods.setToolbar = function(icon, title, help){
     $$(toughradius.admin.toolbarId+"_icon").refresh();
     $$(toughradius.admin.toolbarId+"_title").define("label",title);
     $$(toughradius.admin.toolbarId+"_title").refresh();
+};
+
+toughradius.admin.methods.addTabView = function (vid, icon, title, tabview, close){
+    $$(toughradius.admin.viewsId).addView(tabview);
+    // $$(toughradius.admin.tabsId).addOption(vid, "<span class='fa fa-"+icon+"'></span><span style='padding-left: 10px;'>"+title+"</span>", true);
+    $$(toughradius.admin.tabsId).addOption({id:vid, value:title, close:close, icon:icon}, true);
+    $$(vid).show(true,false);
+    $$(toughradius.admin.tabviews).refresh();
 };
 
 toughradius.admin.methods.doLogin = function (formValues){
@@ -153,7 +164,7 @@ webix.ready(function() {
         var resp = result.json();
         if(resp.code===1){
             webix.message({type:"error",text:resp.msg});
-            setTimeout(function(){window.location.href = "/admin/login";},2000);
+            setTimeout(function(){window.location.href = "/admin/login";},1000);
             return false;
         }
         var session = resp.data;
@@ -221,6 +232,8 @@ webix.ready(function() {
                                                 ready: function () {
                                                     webix.require("admin/dashboard.js?rand="+new Date().getTime(), function () {
                                                         toughradius.admin.dashboard.loadPage(session);
+                                                        // toughradius.admin.config.loadPage(session);
+
                                                     });
                                                 }
                                             }
@@ -230,31 +243,48 @@ webix.ready(function() {
                             },
                             {
                                 rows:[
+                                    // {
+                                    //     height:40,
+                                    //     css:"main-toolbar",
+                                    //     cols:[
+                                    //         { id:toughradius.admin.toolbarId+"_icon",view:"icon", icon:"home", width:45},
+                                    //         { id:toughradius.admin.toolbarId+"_title", view: "label", label: ""},
+                                    //         { },
+                                    //         {
+                                    //             view: "button", type: "icon", width: 100, icon: "book", label: "在线文档",  click: function () {
+                                    //                 var bookurl = "https://docs.toughradius.net/zh/";
+                                    //                 windowObjectReference = window.open(bookurl,"在线文档","resizable,scrollbars,status");
+                                    //             }
+                                    //         }
+                                    //     ]
+                                    // },
+                                    // {height:5},
+                                    // {
+                                    //     id: toughradius.admin.pageId,
+                                    //     css:"main-page",
+                                    //     paddingY:3,
+                                    //     rows:[
+                                    //         {
+                                    //             id: toughradius.admin.panelId,
+                                    //             template: ""
+                                    //         }
+                                    //     ]
+                                    // },
                                     {
-                                        height:40,
-                                        css:"main-toolbar",
-                                        cols:[
-                                            { id:toughradius.admin.toolbarId+"_icon",view:"icon", icon:"home", width:45},
-                                            { id:toughradius.admin.toolbarId+"_title", view: "label", label: ""},
-                                            { },
-                                            {
-                                                view: "button", type: "icon", width: 100, icon: "book", label: "在线文档",  click: function () {
-                                                    var bookurl = "https://docs.toughradius.net/zh/";
-                                                    windowObjectReference = window.open(bookurl,"在线文档","resizable,scrollbars,status");
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {height:5},
-                                    {
-                                        id: toughradius.admin.pageId,
-                                        css:"main-page",
-                                        // paddingY:3,
+                                        id:toughradius.admin.tabviews,
                                         rows:[
                                             {
-                                                id: toughradius.admin.panelId,
-                                                template: ""
-                                            }
+                                                id:toughradius.admin.tabsId, view:"tabbar",
+                                                animate:false,
+                                                bottomOffset:10,
+                                                align:'left',
+                                                multiview:true,
+                                                options:[],
+                                                height:50
+                                            },
+                                            { id:toughradius.admin.viewsId, animate:false,cells:[
+                                                {view:"template", id:"tpl", template:"0000"}
+                                            ]}
                                         ]
                                     }
                                 ]

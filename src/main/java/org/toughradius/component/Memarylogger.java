@@ -1,70 +1,59 @@
 package org.toughradius.component;
 
+import org.springframework.stereotype.Component;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.PageResult;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.TraceMessage;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-@Service
-public class Syslogger {
+/**
+ * 内存日志工具
+ */
+@Component
+public class Memarylogger {
 
     public final static String RADIUSD = "radiusd";
     public final static String SYSTEM = "system";
     public final static String BRAS = "bras";
     public final static String API = "api";
-    public final static String OTHER = "other";
+    public final static String ERROR = "error";
 
 
-    private Log logger = LogFactory.getLog(Syslogger.class);
+    private Log logger = LogFactory.getLog(Memarylogger.class);
 
-    private Map<String,ArrayDeque<TraceMessage>> traceMap = null;
+    private Map<String,LoggerDeque> traceMap = null;
 
-    public Syslogger() {
+    public Memarylogger() {
         traceMap = new ConcurrentHashMap<>();
-        traceMap.put(RADIUSD,new ArrayDeque<TraceMessage>());
-        traceMap.put(SYSTEM,new ArrayDeque<TraceMessage>());
-        traceMap.put(API,new ArrayDeque<TraceMessage>());
-        traceMap.put(BRAS,new ArrayDeque<TraceMessage>());
+        traceMap.put(RADIUSD,new LoggerDeque(10000));
+        traceMap.put(SYSTEM,new LoggerDeque(10000));
+        traceMap.put(API,new LoggerDeque(10000));
+        traceMap.put(BRAS,new LoggerDeque(10000));
+        traceMap.put(ERROR,new LoggerDeque(10000));
     }
 
-    public Map<String, ArrayDeque<TraceMessage>> getTraceMap() {
+    public Map<String, LoggerDeque> getTraceMap() {
         return traceMap;
     }
 
 
     public void trace(String username, String message, String type){
-        ArrayDeque<TraceMessage> traceQueue = traceMap.get(type);
-        if(traceQueue != null){
-            synchronized (traceQueue){
-                traceQueue.addFirst(new TraceMessage(username,DateTimeUtil.getDateTimeString(),message, type));
-                if(traceQueue.size()>10000){
-                    traceQueue.pollLast();
-                }
-            }
+        LoggerDeque traceQueue = traceMap.get(type);
+        if(traceQueue != null) {
+            traceQueue.add(new TraceMessage(username, DateTimeUtil.getDateTimeString(), message, type));
         }
-
-
     }
 
     public void trace(String message,String type){
-        ArrayDeque<TraceMessage> traceQueue = traceMap.get(type);
-        if(traceQueue != null)
-        {
-            synchronized (traceQueue){
-                traceQueue.addFirst(new TraceMessage("all",DateTimeUtil.getDateTimeString(),message, type));
-                if(traceQueue.size()>10000){
-                    traceQueue.pollLast();
-                }
-            }
+        LoggerDeque traceQueue = traceMap.get(type);
+        if(traceQueue != null) {
+            traceQueue.add(new TraceMessage(null, DateTimeUtil.getDateTimeString(), message, type));
         }
-
     }
 
     public void print(String message){
@@ -117,7 +106,7 @@ public class Syslogger {
 
 
     public PageResult<TraceMessage> queryMessage(int pos, int count, String startTime,String endTime, String type, String username, String keyword){
-        ArrayDeque<TraceMessage> traceQueue = traceMap.get(type);
+        LoggerDeque traceQueue = traceMap.get(type);
         if(traceQueue == null)
             return new PageResult<TraceMessage>(pos, 0, null);;
 
@@ -126,7 +115,7 @@ public class Syslogger {
             int start = pos+1;
             int end = pos +  count ;
             List<TraceMessage> messages = new ArrayList<TraceMessage>();
-            for (TraceMessage message : traceQueue) {
+            for (TraceMessage message : traceQueue.getQueue()) {
                 if(ValidateUtil.isNotEmpty(type)&&!message.getType().equalsIgnoreCase(type)) {
                     continue;
                 }
@@ -150,6 +139,28 @@ public class Syslogger {
             return new PageResult<TraceMessage>(pos, total, messages);
         }
 
+    }
+
+    class LoggerDeque{
+
+        ArrayDeque<TraceMessage> queue = new ArrayDeque<>();
+        private int max = 10000;
+        public LoggerDeque(int max) {
+            this.max = max;
+        }
+
+        public ArrayDeque<TraceMessage> getQueue() {
+            return queue;
+        }
+
+        public void add(TraceMessage message){
+            synchronized (queue){
+                queue.addFirst(message);
+                if(queue.size()>this.max){
+                    queue.pollLast();
+                }
+            }
+        }
     }
 
 

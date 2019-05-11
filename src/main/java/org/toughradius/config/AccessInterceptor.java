@@ -10,7 +10,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.common.coder.Base64;
 import org.toughradius.component.LangResources;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 public class AccessInterceptor extends HandlerInterceptorAdapter {
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     @Autowired
     protected LangResources langs;

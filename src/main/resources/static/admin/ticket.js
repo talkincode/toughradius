@@ -3,7 +3,6 @@ if (!window.toughradius.admin.ticket)
 
 
 toughradius.admin.ticket.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("table","上网日志","ticket");
     var tableid = webix.uid();
     var queryid = webix.uid();
     var reloadData = function(node_id){
@@ -17,8 +16,8 @@ toughradius.admin.ticket.loadPage = function(session){
         }
         $$(tableid).load('/admin/ticket/query?'+args.join("&"));
     };
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.ticket",
         css:"main-panel",padding:2,
         rows: [
             {
@@ -135,6 +134,7 @@ toughradius.admin.ticket.loadPage = function(session){
                 ]
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.ticket","hdd-o","上网日志", cview, true);
     webix.extend($$(tableid), webix.ProgressBar);
 };

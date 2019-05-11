@@ -6,13 +6,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.toughradius.common.DateTimeUtil;
-import org.toughradius.common.PageResult;
 import org.toughradius.common.RestResult;
 import org.toughradius.component.BrasService;
-import org.toughradius.component.ConfigService;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Bras;
-import org.toughradius.entity.Config;
 
 import java.util.*;
 
@@ -20,7 +17,7 @@ import java.util.*;
 public class BrasController {
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     @Autowired
     private BrasService brasService;
@@ -33,7 +30,7 @@ public class BrasController {
             result = brasService.queryForList(new Bras());
             return result;
         }catch(Exception e){
-            logger.error("query bras error",e, Syslogger.SYSTEM);
+            logger.error("query bras error",e, Memarylogger.SYSTEM);
         }
         return result;
     }
@@ -54,7 +51,7 @@ public class BrasController {
             brasService.insertBras(bras);
             return RestResult.SUCCESS;
         }catch(Exception e){
-            logger.error("创建BRAS失败",e, Syslogger.SYSTEM);
+            logger.error("创建BRAS失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"创建BRAS失败");
         }
     }
@@ -69,7 +66,7 @@ public class BrasController {
             brasService.updateBras(bras);
             return RestResult.SUCCESS;
         }catch(Exception e){
-            logger.error("更新BRAS失败",e, Syslogger.SYSTEM);
+            logger.error("更新BRAS失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"更新BRAS失败");
         }
     }
@@ -81,7 +78,7 @@ public class BrasController {
             brasService.deleteById(id);
             return RestResult.SUCCESS;
         }catch(Exception e){
-            logger.error("删除BRAS失败",e, Syslogger.SYSTEM);
+            logger.error("删除BRAS失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"删除BRAS失败");
         }
     }

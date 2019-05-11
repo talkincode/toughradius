@@ -23,11 +23,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -63,10 +60,10 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
     protected RadiusParseFilter parseFilter;
 
     @Autowired
-    protected ThreadPoolTaskExecutor taskExecutor;
+    protected ThreadPoolTaskExecutor systaskExecutor;
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     /**
      * 查询设备信息
@@ -167,7 +164,7 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
             try {
                 this.sendResponse(session,remoteAddress,secret,request,responses);
             } catch (IOException e) {
-                logger.error("发送延迟响应失败",e,Syslogger.RADIUSD);
+                logger.error("发送延迟响应失败",e, Memarylogger.RADIUSD);
             }finally {
                 session.closeOnFlush();
             }

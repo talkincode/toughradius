@@ -7,10 +7,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.toughradius.common.CoderUtil;
 import org.toughradius.common.RestResult;
-import org.toughradius.common.SystemUtil;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.ConfigService;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Config;
 import org.toughradius.entity.RadiusConfigForm;
 
@@ -23,7 +22,7 @@ import java.util.Map;
 public class ConfigController {
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     @Autowired
     private ConfigService configService;
@@ -38,7 +37,7 @@ public class ConfigController {
                 result.put(cfg.getName(),cfg.getValue());
             }
         }catch(Exception e){
-            logger.error("query config error",e,Syslogger.SYSTEM);
+            logger.error("query config error",e, Memarylogger.SYSTEM);
         }
         return result;
     }
@@ -54,7 +53,7 @@ public class ConfigController {
             configService.updateConfig(new Config(ConfigService.RADIUS_MODULE,"RADIUS_EXPORE_ADDR_POOL",form.getRADIUS_EXPORE_ADDR_POOL()));
             configService.updateConfig(new Config(ConfigService.RADIUS_MODULE,"RADIUS_ONLINE_EXPIRE_CHECK",form.getRADIUS_ONLINE_EXPIRE_CHECK()));
         }catch(Exception e){
-            logger.error("update config error",e,Syslogger.SYSTEM);
+            logger.error("update config error",e, Memarylogger.SYSTEM);
         }
         return new RestResult(0,"update radius config done");
     }

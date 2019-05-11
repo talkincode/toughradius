@@ -10,7 +10,7 @@ import org.toughradius.common.PageResult;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.SubscribeService;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Subscribe;
 import org.toughradius.entity.SubscribeForm;
 import org.toughradius.entity.SubscribeQuery;
@@ -21,7 +21,7 @@ import java.util.List;
 public class SubsribeController {
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     @Autowired
     protected SubscribeService subscribeService;
@@ -55,7 +55,7 @@ public class SubsribeController {
             return new PageResult<Subscribe>(start,(int) objects.getTotal(), data);
 
         }catch(Exception e){
-            logger.error("query subscribe error",e, Syslogger.SYSTEM);
+            logger.error("query subscribe error",e, Memarylogger.SYSTEM);
         }
         return result;
     }
@@ -66,7 +66,7 @@ public class SubsribeController {
         try{
             return new RestResult<Subscribe>(0,"ok",subscribeService.findById(id));
         }catch(Exception e){
-            logger.error("查询用户详情失败",e, Syslogger.SYSTEM);
+            logger.error("查询用户详情失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"查询用户详情失败");
         }
     }
@@ -89,7 +89,7 @@ public class SubsribeController {
             subscribeService.insertSubscribe(subscribe);
             return RestResult.SUCCESS;
         }catch(Exception e){
-            logger.error("创建用户失败",e, Syslogger.SYSTEM);
+            logger.error("创建用户失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"创建用户失败");
         }
     }
@@ -106,7 +106,7 @@ public class SubsribeController {
             subscribeService.updateSubscribe(subscribe);
             return RestResult.SUCCESS;
         }catch(Exception e){
-            logger.error("更新用户失败",e, Syslogger.SYSTEM);
+            logger.error("更新用户失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"更新用户失败");
         }
     }
@@ -120,7 +120,7 @@ public class SubsribeController {
             }
             return RestResult.SUCCESS;
         }catch(Exception e){
-            logger.error("删除用户失败",e, Syslogger.SYSTEM);
+            logger.error("删除用户失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"删除用户失败");
         }
     }

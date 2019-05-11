@@ -11,7 +11,7 @@ import org.tinyradius.packet.AccountingRequest;
 import org.tinyradius.util.RadiusException;
 import org.toughradius.component.RadiusStat;
 import org.toughradius.component.SubscribeService;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -26,7 +26,7 @@ public class RadiusAccountingFilter {
     @Autowired
     protected RadiusStat radiusStat;
     @Autowired
-    public Syslogger logger;
+    public Memarylogger logger;
     @Autowired
     private OnlineCache onlineCache;
     @Autowired
@@ -38,7 +38,7 @@ public class RadiusAccountingFilter {
     @Autowired
     private SubscribeService subscribeService;
     @Autowired
-    private ThreadPoolTaskExecutor taskExecutor;
+    private ThreadPoolTaskExecutor systaskExecutor;
 
 
     public final static int ACCOUNTING_STATUS_START = 1;
@@ -83,7 +83,7 @@ public class RadiusAccountingFilter {
             radiusStat.incrAcctOff();
             doNasOff(request,nas,user);
         }else{
-            logger.error(request.getUsername(),String.format("无效的记账请求类型 %s", type),Syslogger.RADIUSD);
+            logger.error(request.getUsername(),String.format("无效的记账请求类型 %s", type), Memarylogger.RADIUSD);
         }
     }
 
@@ -99,17 +99,17 @@ public class RadiusAccountingFilter {
 
         if(user==null){
             String errMessage = String.format("用户不存在或状态未启用（记账请求） %s", request.getAcctStatusType());
-            logger.error(request.getUsername(), errMessage,Syslogger.RADIUSD);
+            logger.error(request.getUsername(), errMessage, Memarylogger.RADIUSD);
             return;
         }
         if(onlineCache.isExist(request.getAcctSessionId())){
-            logger.error(request.getUsername(),"记账报文重复",Syslogger.RADIUSD);
+            logger.error(request.getUsername(),"记账报文重复", Memarylogger.RADIUSD);
         }
 
         int onlineCount = onlineCache.getUserOnlineNum(request.getUserName());
         if (onlineCount >= user.getActiveNum()) {
             String errMessage = String.format("用户<%s>在线超过限制(MAX=%s)(记账请求) %s",user.getSubscriber(), user.getActiveNum(),request.getAcctStatusType());
-            logger.error(request.getUsername(),errMessage,Syslogger.RADIUSD);
+            logger.error(request.getUsername(),errMessage, Memarylogger.RADIUSD);
             return;
         }
         SubscribeBill billData = subscribeCache.getBillData(request.getUserName());
@@ -149,7 +149,7 @@ public class RadiusAccountingFilter {
         onlineCache.putOnline(online);
         subscribeCache.startSubscribeOnline(request.getUsername());
         if(radiusConfig.getTrace() ==1){
-            logger.info(request.getUsername(),String.format(":: 新增用户在线信息: sessionId=%s", request.getAcctSessionId()),Syslogger.RADIUSD);
+            logger.info(request.getUsername(),String.format(":: 新增用户在线信息: sessionId=%s", request.getAcctSessionId()), Memarylogger.RADIUSD);
         }
 
     }
@@ -163,14 +163,14 @@ public class RadiusAccountingFilter {
             RadiusOnline online = onlineCache.getOnline(request.getAcctSessionId());
             if (online!=null &&"flow".equals(online.getBillType())) {
                 if (radiusConfig.getTrace() == 1) {
-                    logger.info(request.getUsername(), "开始用户记账扣费处理",Syslogger.RADIUSD);
+                    logger.info(request.getUsername(), "开始用户记账扣费处理", Memarylogger.RADIUSD);
                 }
 
                 //获取计费类型和用户剩余流量
                 SubscribeBill billData = subscribeCache.getBillData(request.getUserName());
                 if (billData == null) {
                     onlineCache.setUnLock(request.getAcctSessionId(), RadiusOnline.USER_NOT_EXIST);
-                    logger.error(request.getUsername(), "处理记账扣费时用户不存在",Syslogger.RADIUSD);
+                    logger.error(request.getUsername(), "处理记账扣费时用户不存在", Memarylogger.RADIUSD);
                     return;
                 }
                 Long outputTotal = online.getAcctOutputTotal();
@@ -205,11 +205,11 @@ public class RadiusAccountingFilter {
                     }
                 }
                 if (radiusConfig.getTrace() == 1) {
-                    logger.info(request.getUsername(), ":: 完成用户 %s 记账扣费处理",Syslogger.RADIUSD);
+                    logger.info(request.getUsername(), ":: 完成用户 %s 记账扣费处理", Memarylogger.RADIUSD);
                 }
             }
         }catch (Exception e){
-            logger.error(request.getUsername(),  "用户记账扣费处理失败", e,Syslogger.RADIUSD);
+            logger.error(request.getUsername(),  "用户记账扣费处理失败", e, Memarylogger.RADIUSD);
         }
     }
 
@@ -218,7 +218,7 @@ public class RadiusAccountingFilter {
     }
 
     public void doUpdate(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-        taskExecutor.execute(() -> {
+        systaskExecutor.execute(() -> {
             try {
                 if(!onlineCache.isExist(request.getAcctSessionId())){
                     logger.print(String.format(":: 更新在线用户时用户在线记录不存在，立即新增在线信息 %s ", request.getUserName()));
@@ -233,27 +233,27 @@ public class RadiusAccountingFilter {
                     logger.print(String.format(":: %s 结束记账更新 ", request.getUsername()));
                 }
             } catch (Exception e) {
-                logger.error(request.getUsername(),"记账更新错误",e,Syslogger.RADIUSD);
+                logger.error(request.getUsername(),"记账更新错误",e, Memarylogger.RADIUSD);
             }
         });
     }
 
     public void doStop(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-        taskExecutor.execute(() -> {
+        systaskExecutor.execute(() -> {
             try {
                 onlineStopValid.incr(request.getAcctSessionId());
                 if(onlineStopValid.isOver(request.getAcctSessionId())){
-                    logger.info(request.getUsername(), String.format(":: 收到重复记账下线消息:%s;", request.toString()),Syslogger.RADIUSD);
+                    logger.info(request.getUsername(), String.format(":: 收到重复记账下线消息:%s;", request.toString()), Memarylogger.RADIUSD);
                     return;
                 }
 
                 if(radiusConfig.getTrace()==1){
                     if(!onlineCache.isExist(request.getAcctSessionId()))
                     {
-                        logger.info(request.getUsername(), String.format(":: 收到记账下线消息(但在线用户不存在):%s", request.toString()),Syslogger.RADIUSD);
+                        logger.info(request.getUsername(), String.format(":: 收到记账下线消息(但在线用户不存在):%s", request.toString()), Memarylogger.RADIUSD);
                         return;
                     }
-                    logger.info(request.getUsername(),":: 开始记账下线处理:" + request.toString(),Syslogger.RADIUSD);
+                    logger.info(request.getUsername(),":: 开始记账下线处理:" + request.toString(), Memarylogger.RADIUSD);
                 }
 
                 RadiusOnline online = onlineCache.removeOnline(request.getAcctSessionId());
@@ -306,21 +306,21 @@ public class RadiusAccountingFilter {
                 if(radiusConfig.getTrace()==1)
                     logger.print("新增上网日志");
             }catch (Exception e) {
-                logger.error(request.getUsername(), "用户下线处理错误", e,Syslogger.RADIUSD);
+                logger.error(request.getUsername(), "用户下线处理错误", e, Memarylogger.RADIUSD);
             }
         });
     }
 
     public void doNasOn(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
         if(radiusConfig.getTrace() ==1){
-            logger.info(String.format(":: NAS <%s %s> 记账启用 ", nas.getIdentifier(), nas.getIpaddr()),Syslogger.RADIUSD);
+            logger.info(String.format(":: NAS <%s %s> 记账启用 ", nas.getIdentifier(), nas.getIpaddr()), Memarylogger.RADIUSD);
         }
         onlineCache.clearOnlineByFilter(nas.getIpaddr(),nas.getIdentifier());
     }
 
     public void doNasOff(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
         if(radiusConfig.getTrace() ==1){
-            logger.info(String.format(":: NAS <%s %s> 记账关闭 ", nas.getIdentifier(), nas.getIpaddr()),Syslogger.RADIUSD);
+            logger.info(String.format(":: NAS <%s %s> 记账关闭 ", nas.getIdentifier(), nas.getIpaddr()), Memarylogger.RADIUSD);
         }
         onlineCache.clearOnlineByFilter(nas.getIpaddr(),nas.getIdentifier());
     }
