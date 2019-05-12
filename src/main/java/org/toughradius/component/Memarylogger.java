@@ -77,6 +77,7 @@ public class Memarylogger {
     public void error(String message,String type){
         logger.error(message);
         trace(message,type);
+        trace(message,ERROR);
     }
 
     public void error(String message,Throwable e,String type){
@@ -86,12 +87,15 @@ public class Memarylogger {
         for(StackTraceElement err:  e.getStackTrace()){
             buf.append(err.toString()).append("\n");
         }
-        trace(buf.toString(),type);
+        String errmessage = buf.toString();
+        trace(errmessage,type);
+        trace(errmessage,ERROR);
     }
 
     public void error(String username,String message,String type){
         logger.error(String.format("%s:%s", username,message));
         trace(username,message,type);
+        trace(username,message,ERROR);
     }
 
     public void error(String username,String message,Throwable e,String type){
@@ -101,7 +105,9 @@ public class Memarylogger {
         for(StackTraceElement err:  e.getStackTrace()){
             buf.append(err.toString()).append("\n");
         }
-        trace(username,buf.toString(),type);
+        String errmessage = buf.toString();
+        trace(username,errmessage,type);
+        trace(username,errmessage,ERROR);
     }
 
 

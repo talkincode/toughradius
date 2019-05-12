@@ -73,7 +73,7 @@ public class BrasController {
 
     @GetMapping(value = {"/admin/bras/delete"})
     @ResponseBody
-    public RestResult deleteBras(Integer id){
+    public RestResult deleteBras(Long id){
         try{
             brasService.deleteById(id);
             return RestResult.SUCCESS;
@@ -82,6 +82,4 @@ public class BrasController {
             return new RestResult(1,"删除BRAS失败");
         }
     }
-
-
 }

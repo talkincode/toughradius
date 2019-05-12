@@ -8,21 +8,16 @@ import java.math.BigInteger;
 
 public class SubscribeForm {
 
-    private Integer id;
+    private Long id;
 
-    private Integer nodeId;
-
-    private Integer areaId;
-
-    private Integer productId;
+    private Long nodeId;
 
     private String subscriber;
 
     private String realname;
 
     private String password;
-
-    private String billType;
+    private String cpassword;
 
     private String domain;
 
@@ -33,8 +28,6 @@ public class SubscribeForm {
     private Integer activeNum;
 
     private Integer isOnline;
-
-    private BigInteger flowAmount;
 
     private Boolean bindMac;
 
@@ -48,13 +41,13 @@ public class SubscribeForm {
 
     private Integer outVlan;
 
-    private BigDecimal upRate;
+    private Long upRate;
 
-    private BigDecimal downRate;
+    private Long downRate;
 
-    private BigDecimal upPeakRate;
+    private Long upPeakRate;
 
-    private BigDecimal downPeakRate;
+    private Long downPeakRate;
 
     private String upRateCode;
 
@@ -79,18 +72,15 @@ public class SubscribeForm {
         subs.setRealname(getRealname());
         subs.setActiveNum(getActiveNum());
         subs.setAddrPool(getAddrPool());
-        subs.setAreaId(getAreaId());
         if(ValidateUtil.isNotEmpty(getBeginTime()) && getBeginTime().length() == 16)
             subs.setBeginTime(DateTimeUtil.toTimestamp(getBeginTime()+":00"));
         if(ValidateUtil.isNotEmpty(getExpireTime()) && getExpireTime().length() == 16)
             subs.setExpireTime(DateTimeUtil.toTimestamp(getExpireTime()+":00"));
         subs.setUpdateTime(DateTimeUtil.nowTimestamp());
-        subs.setBillType(getBillType());
         subs.setBindMac(getBindMac());
         subs.setBindVlan(getBindVlan());
         subs.setDomain(getDomain());
         subs.setIpAddr(getIpAddr());
-        subs.setFlowAmount(getFlowAmount());
         subs.setMacAddr(getMacAddr());
         subs.setInVlan(getInVlan());
         subs.setOutVlan(getOutVlan());
@@ -104,40 +94,23 @@ public class SubscribeForm {
         subs.setRealname(getRealname());
         subs.setNodeId(getNodeId());
         subs.setPassword(getPassword());
-        subs.setProductId(getProductId());
         return subs;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getNodeId() {
+    public Long getNodeId() {
         return nodeId;
     }
 
-    public void setNodeId(Integer nodeId) {
+    public void setNodeId(Long nodeId) {
         this.nodeId = nodeId;
-    }
-
-    public Integer getAreaId() {
-        return areaId;
-    }
-
-    public void setAreaId(Integer areaId) {
-        this.areaId = areaId;
-    }
-
-    public Integer getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
     }
 
     public String getSubscriber() {
@@ -162,14 +135,6 @@ public class SubscribeForm {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getBillType() {
-        return billType;
-    }
-
-    public void setBillType(String billType) {
-        this.billType = billType;
     }
 
     public String getDomain() {
@@ -210,14 +175,6 @@ public class SubscribeForm {
 
     public void setIsOnline(Integer isOnline) {
         this.isOnline = isOnline;
-    }
-
-    public BigInteger getFlowAmount() {
-        return flowAmount;
-    }
-
-    public void setFlowAmount(BigInteger flowAmount) {
-        this.flowAmount = flowAmount;
     }
 
     public Boolean getBindMac() {
@@ -268,35 +225,35 @@ public class SubscribeForm {
         this.outVlan = outVlan;
     }
 
-    public BigDecimal getUpRate() {
+    public Long getUpRate() {
         return upRate;
     }
 
-    public void setUpRate(BigDecimal upRate) {
+    public void setUpRate(Long upRate) {
         this.upRate = upRate;
     }
 
-    public BigDecimal getDownRate() {
+    public Long getDownRate() {
         return downRate;
     }
 
-    public void setDownRate(BigDecimal downRate) {
+    public void setDownRate(Long downRate) {
         this.downRate = downRate;
     }
 
-    public BigDecimal getUpPeakRate() {
+    public Long getUpPeakRate() {
         return upPeakRate;
     }
 
-    public void setUpPeakRate(BigDecimal upPeakRate) {
+    public void setUpPeakRate(Long upPeakRate) {
         this.upPeakRate = upPeakRate;
     }
 
-    public BigDecimal getDownPeakRate() {
+    public Long getDownPeakRate() {
         return downPeakRate;
     }
 
-    public void setDownPeakRate(BigDecimal downPeakRate) {
+    public void setDownPeakRate(Long downPeakRate) {
         this.downPeakRate = downPeakRate;
     }
 
@@ -362,5 +319,13 @@ public class SubscribeForm {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getCpassword() {
+        return cpassword;
+    }
+
+    public void setCpassword(String cpassword) {
+        this.cpassword = cpassword;
     }
 }

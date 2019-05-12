@@ -66,7 +66,7 @@ public class BrasService {
 		brasMapper.updateBras(bras);
 	}
 
-	public void deleteById(Integer id){
+	public void deleteById(Long id){
 		brasMapper.deleteById(id);
 	}
 
@@ -78,7 +78,7 @@ public class BrasService {
 		return brasMapper.findByIPAddr(ipaddr);
 	}
 
-	public Bras selectById(Integer id){
+	public Bras selectById(Long id){
 		return brasMapper.findById(id);
 	}
 }

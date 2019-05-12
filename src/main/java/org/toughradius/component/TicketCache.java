@@ -22,14 +22,10 @@ import java.util.zip.GZIPOutputStream;
 public class TicketCache {
 
     private Log logger = LogFactory.getLog(TicketCache.class);
-    private final static ConcurrentLinkedDeque<RadiusTicket> queue = new  ConcurrentLinkedDeque<RadiusTicket>();
+    private final static ConcurrentLinkedDeque<RadiusTicket> queue = new  ConcurrentLinkedDeque<>();
 
     @Autowired
     private RadiusConfig radiusConfig;
-
-    @Autowired
-    private ThreadPoolTaskExecutor systaskExecutor;
-
 
     public void addTicket(RadiusTicket ticket)
     {
@@ -85,7 +81,6 @@ public class TicketCache {
                                                 String nasid,
                                                 String nasaddr,
                                                 Integer nodeId,
-                                                Integer areaId,
                                                 String username,
                                                 String keyword) throws ServiceException {
         int rowNum = 0;
@@ -159,9 +154,6 @@ public class TicketCache {
                         continue;
 
                     if (nodeId!=null && nodeId != logdata.getNodeId().intValue())
-                        continue;
-
-                    if (areaId!=null && areaId != logdata.getAreaId().intValue())
                         continue;
 
                     if (ValidateUtil.isNotEmpty(keyword) &&

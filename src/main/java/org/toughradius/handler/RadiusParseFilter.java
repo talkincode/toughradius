@@ -204,7 +204,7 @@ public class RadiusParseFilter implements RadiusConstant{
                 result[1] = Integer.valueOf(m.group(1));
             }
         } catch(Exception e){
-            logger.error(String.format("VLAN 解析失败 nasPortId=%s", requset.getNasPortId()),e, Memarylogger.RADIUSD);
+            logger.error(String.format("VLAN 解析失败 nasPortId=%s", requset.getNasPortId()), Memarylogger.RADIUSD);
         }
         return result;
     }

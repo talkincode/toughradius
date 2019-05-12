@@ -243,33 +243,6 @@ webix.ready(function() {
                             },
                             {
                                 rows:[
-                                    // {
-                                    //     height:40,
-                                    //     css:"main-toolbar",
-                                    //     cols:[
-                                    //         { id:toughradius.admin.toolbarId+"_icon",view:"icon", icon:"home", width:45},
-                                    //         { id:toughradius.admin.toolbarId+"_title", view: "label", label: ""},
-                                    //         { },
-                                    //         {
-                                    //             view: "button", type: "icon", width: 100, icon: "book", label: "在线文档",  click: function () {
-                                    //                 var bookurl = "https://docs.toughradius.net/zh/";
-                                    //                 windowObjectReference = window.open(bookurl,"在线文档","resizable,scrollbars,status");
-                                    //             }
-                                    //         }
-                                    //     ]
-                                    // },
-                                    // {height:5},
-                                    // {
-                                    //     id: toughradius.admin.pageId,
-                                    //     css:"main-page",
-                                    //     paddingY:3,
-                                    //     rows:[
-                                    //         {
-                                    //             id: toughradius.admin.panelId,
-                                    //             template: ""
-                                    //         }
-                                    //     ]
-                                    // },
                                     {
                                         id:toughradius.admin.tabviews,
                                         rows:[
@@ -277,6 +250,7 @@ webix.ready(function() {
                                                 id:toughradius.admin.tabsId, view:"tabbar",
                                                 animate:false,
                                                 bottomOffset:10,
+                                                optionWidth: 180,
                                                 align:'left',
                                                 multiview:true,
                                                 options:[],
@@ -288,7 +262,10 @@ webix.ready(function() {
                                         ]
                                     }
                                 ]
-                            }
+                            },
+                            // {
+                            //
+                            // }
 
                         ]
                     }

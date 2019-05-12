@@ -1,7 +1,6 @@
 package org.toughradius.component;
 
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeBill;
 import org.toughradius.entity.SubscribeQuery;
 import org.toughradius.mapper.SubscribeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,16 +39,12 @@ public class SubscribeService {
         return subscribeMapper.findLastUpdateUser(lastUpdate);
     }
 
-    public SubscribeBill fetchSubscribeBill(String username) {
-        return subscribeMapper.fetchSubscribeBill(username);
+    public int startOnline(Long userid){
+        return subscribeMapper.updateOnlineStatus(userid,1);
     }
 
-    public int startOnline(String username){
-        return subscribeMapper.updateOnlineStatus(username,1);
-    }
-
-    public int stopOnline(String username){
-        return subscribeMapper.updateOnlineStatus(username,0);
+    public int stopOnline(Long userid){
+        return subscribeMapper.updateOnlineStatus(userid,0);
     }
 
     public List<Subscribe> queryForList(SubscribeQuery subscribe){
@@ -67,10 +62,14 @@ public class SubscribeService {
         subscribeMapper.updateSubscribe(subscribe);
     }
 
-    public Subscribe findById(Integer id){
+    public void updatePassword(Long id, String password){
+        subscribeMapper.updatePassword(id, password);
+    }
+
+    public Subscribe findById(Long id){
         return subscribeMapper.findById(id);
     }
-    public void deleteById(Integer id){
+    public void deleteById(Long id){
         subscribeMapper.deleteById(id);
     }
 

@@ -25,10 +25,6 @@ public class OnlineCache {
     private Memarylogger logger;
 
     @Autowired
-    private RadiusConfig radiusConfig;
-
-
-    @Autowired
     private BrasService brasService;
 
     @Autowired
@@ -41,8 +37,6 @@ public class OnlineCache {
     public HashMap<String,RadiusOnline> getCacheData(){
         return cacheData;
     }
-
-    private Object flowStatLock = new Object();
 
 
     public int size()
@@ -99,7 +93,7 @@ public class OnlineCache {
         boolean isTcRadiusOnline = false;
         synchronized (cacheData){
             for (RadiusOnline online : cacheData.values()) {
-                if (userName.equalsIgnoreCase(online.getUsername())) {
+                if (userName.equals(online.getUsername())) {
                     isTcRadiusOnline = true;
                     break;
                 }
@@ -107,34 +101,6 @@ public class OnlineCache {
         }
         return isTcRadiusOnline;
     }
-
-    public RadiusOnline getFirstOnline(String userName)
-    {
-        synchronized (cacheData){
-            for (RadiusOnline online : cacheData.values()) {
-                if (userName.equalsIgnoreCase(online.getUsername())) {
-                    return online;
-                }
-            }
-        }
-        return null;
-    }
-
-
-    public RadiusOnline getLastOnline(String userName)
-    {
-        RadiusOnline online =null;
-        synchronized (cacheData){
-            for (RadiusOnline _online : cacheData.values()) {
-                if (userName.equalsIgnoreCase(_online.getUsername())) {
-                    online = _online;
-                    break;
-                }
-            }
-        }
-        return online;
-    }
-
 
     /**
      * 异步批量下线
@@ -176,9 +142,9 @@ public class OnlineCache {
             dmreq.addAttribute("User-Name",online.getUsername());
             dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
             dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
-            logger.info(online.getUsername(), String.format("发送下线请求 %s", dmreq.toLineString()), Memarylogger.RADIUSD);
+            logger.info(online.getUsername(), "发送下线请求 " + dmreq.toLineString(), Memarylogger.RADIUSD);
             RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
-            logger.info(online.getUsername(), String.format("接收到下线响应 %s", dmrep.toLineString()), Memarylogger.RADIUSD);
+            logger.info(online.getUsername(), "接收到下线响应 " + dmrep.toLineString(), Memarylogger.RADIUSD);
             return dmrep.getPacketType() == RadiusPacket.DISCONNECT_ACK;
         } catch (ServiceException | IOException | RadiusException e) {
             logger.error(online.getUsername(),"发送下线失败",e, Memarylogger.RADIUSD);
@@ -198,8 +164,7 @@ public class OnlineCache {
                 Bras bras = brasService.findBras(online.getNasAddr(),null,online.getNasId());
                 if(bras==null){
                     logger.error(online.getUsername(),
-                            String.format("发送下线失败,查找BRAS失败（nasid=%s,nasip=%s）",
-                                    online.getNasId(), online.getNasAddr()), Memarylogger.RADIUSD);
+                            "发送下线失败,查找BRAS失败（nasid=" + online.getNasId() + ",nasip=" + online.getNasAddr() + "）", Memarylogger.RADIUSD);
                     return;
                 }
                 RadiusClient cli = new RadiusClient(online.getNasPaddr(),bras.getSecret());
@@ -208,7 +173,7 @@ public class OnlineCache {
                 dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
                 if(ValidateUtil.isNotEmpty(online.getNasAddr())&&!online.getNasAddr().equals("0.0.0.0"))
                     dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
-                logger.info(online.getUsername(), String.format("发送下线请求 %s", dmreq.toLineString()), Memarylogger.RADIUSD);
+                logger.info(online.getUsername(), "发送下线请求 " + dmreq.toLineString(), Memarylogger.RADIUSD);
                 RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
                 logger.info(online.getUsername(), String.format("接收到下线响应 %s", dmrep.toLineString()), Memarylogger.RADIUSD);
             } catch (ServiceException | IOException | RadiusException e) {
@@ -250,35 +215,6 @@ public class OnlineCache {
         }
     }
 
-    /** 设置解锁标记 */
-    public void setUnLock(String sessionId,int  flag)
-    {
-        synchronized (cacheData){
-            RadiusOnline online = (RadiusOnline) cacheData.get(sessionId);
-            if(online!=null){
-                online.setUnLockFlag(flag);
-            }
-        }
-    }
-
-    /** BAS所有在线用户下线 */
-    public List<RadiusOnline> removeAllOnline(String nasAddr, String nasId)
-    {
-        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-        synchronized (cacheData)
-        {
-            for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
-            {
-                RadiusOnline online = it.next();
-                if (online.getNasId().equalsIgnoreCase(nasId)|| online.getNasAddr().equalsIgnoreCase(nasAddr)||online.getNasPaddr().equalsIgnoreCase(nasAddr))
-                {
-                    onlineList.add(online);
-                    it.remove();
-                }
-            }
-        }
-        return onlineList;
-    }
 
     /** 查询上网帐号并发数 */
     public int getUserOnlineNum(String userName)
@@ -299,7 +235,7 @@ public class OnlineCache {
         int onlineNum = 0;
         synchronized (cacheData){
             for (RadiusOnline online : cacheData.values()) {
-                if (userName.equalsIgnoreCase(online.getUsername()) && !macAddr.equalsIgnoreCase(online.getMacAddr()))
+                if (userName.equals(online.getUsername()) && !macAddr.equals(online.getMacAddr()))
                     onlineNum++;
             }
         }
@@ -317,7 +253,7 @@ public class OnlineCache {
         String curTime = DateTimeUtil.getDateTimeString();
         String acctStart =  online.getAcctStartTime();
         int second = DateTimeUtil.compareSecond(curTime,acctStart);
-        if (second > (online.getAcctSessionTime()+interim_times+120))
+        if (second > (online.getAcctSessionTime()+interim_times+30))
             return true;
         else
             return false;
@@ -355,8 +291,6 @@ public class OnlineCache {
 
                 if(DateTimeUtil.compareSecond(new Date(),user.getExpireTime())>0){
                     ids.add(online.getAcctSessionId());
-                }else if("flow".equals(user.getBillType()) && user.getFlowAmount().intValue() <= 0){
-                    ids.add(online.getAcctSessionId());
                 }
 
                 if(ids.size()>=32){
@@ -389,13 +323,11 @@ public class OnlineCache {
     }
 
 
-    private boolean filterOnline(RadiusOnline online, String nodeId, String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword) {
+    private boolean filterOnline(RadiusOnline online, String nodeId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword) {
         if(ValidateUtil.isNotEmpty(nodeId)&&!nodeId.equalsIgnoreCase(online.getNodeId().toString())) {
             return false;
         }
-        if(ValidateUtil.isNotEmpty(areaId)&&!areaId.equalsIgnoreCase(online.getAreaId().toString())) {
-            return false;
-        }
+
         if(ValidateUtil.isNotEmpty(nasAddr)&&(!nodeId.equalsIgnoreCase(online.getNasAddr())&&!nodeId.equals(online.getNasPaddr()))) {
             return  false;
         }
@@ -447,7 +379,7 @@ public class OnlineCache {
     }
 
     public PageResult<RadiusOnline> queryOnlinePage(int pos, int count, String nodeId,
-                                                    String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId,
+                                                    Integer invlan, Integer outVlan, String nasAddr, String nasId,
                                                     String beginTime, String endTime, String keyword, String sort){
         int total = 0;
         int start = pos+1;
@@ -475,7 +407,7 @@ public class OnlineCache {
             };
             copyList.sort(comp);
             for (RadiusOnline online : copyList) {
-                if (!this.filterOnline(online, nodeId, areaId, invlan,outVlan, nasAddr, nasId, beginTime, endTime, keyword)) {
+                if (!this.filterOnline(online, nodeId, invlan,outVlan, nasAddr, nasId, beginTime, endTime, keyword)) {
                     continue;
                 }
                 else{
@@ -509,14 +441,14 @@ public class OnlineCache {
         return onlineList;
     }
 
-    public int clearOnlineByFilter(String nodeId, String areaId, Integer invlan,Integer outVlan,String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
+    public int clearOnlineByFilter(String nodeId, Integer invlan,Integer outVlan,String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
         int total = 0;
         List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
         synchronized (cacheData){
             for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
                 RadiusOnline online = it.next();
-                if(this.filterOnline(online, nodeId, areaId,  invlan, outVlan, nasAddr, nasId, beginTime, endTime,  keyword)) {
+                if(this.filterOnline(online, nodeId,   invlan, outVlan, nasAddr, nasId, beginTime, endTime,  keyword)) {
                     total++;
                     it.remove();
                 }
@@ -531,7 +463,7 @@ public class OnlineCache {
             for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
                 RadiusOnline online = it.next();
-                if(this.filterOnline(online, null, null, null,null, nasAddr, nasId, null, null,  null)) {
+                if(this.filterOnline(online, null,  null,null, nasAddr, nasId, null, null,  null)) {
                     total++;
                     it.remove();
                 }

@@ -1,7 +1,7 @@
 package org.toughradius.entity;
 
 public class Config {
-    private Integer id;
+    private Long id;
 
     private String type;
 
@@ -27,11 +27,11 @@ public class Config {
         this.remark = remark;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 

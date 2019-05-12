@@ -29,12 +29,11 @@ public class TicketController {
                                                 String nasid,
                                                 String nasaddr,
                                                 Integer nodeId,
-                                                Integer areaId,
                                                 String username,
                                                 String keyword){
 
         try {
-            return ticketCache.queryTicket(start,count,startDate,endDate, nasid, nasaddr, nodeId, areaId, username,keyword);
+            return ticketCache.queryTicket(start,count,startDate,endDate, nasid, nasaddr, nodeId, username,keyword);
         } catch (ServiceException e) {
             logger.error(String.format("/admin查询上网日志发生错误, %s", e.getMessage()),e, Memarylogger.SYSTEM);
             return new PageResult<RadiusTicket>(start,0, new ArrayList<RadiusTicket>());

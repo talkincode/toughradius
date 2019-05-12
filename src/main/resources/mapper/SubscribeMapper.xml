@@ -5,34 +5,25 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 <mapper namespace="org.toughradius.mapper.SubscribeMapper">
 
-	<resultMap id="TcSubscribeBillMap" type="org.toughradius.entity.SubscribeBill">
-		<result column="bill_type" jdbcType="CHAR" property="billType" />
-		<result column="flow_amount" jdbcType="INTEGER" property="flowAmount" />
-	</resultMap>
-
 	<resultMap id="BaseResultMap" type="org.toughradius.entity.Subscribe">
-		<id column="id" jdbcType="INTEGER" property="id" />
-		<result column="node_id" jdbcType="INTEGER" property="nodeId" />
-		<result column="area_id" jdbcType="INTEGER" property="areaId" />
-		<result column="product_id" jdbcType="INTEGER" property="productId" />
+		<id column="id" jdbcType="BIGINT" property="id" />
+		<result column="node_id" jdbcType="BIGINT" property="nodeId" />
 		<result column="realname" jdbcType="VARCHAR" property="realname" />
 		<result column="subscriber" jdbcType="VARCHAR" property="subscriber" />
 		<result column="password" jdbcType="VARCHAR" property="password" />
-		<result column="bill_type" jdbcType="CHAR" property="billType" />
 		<result column="domain" jdbcType="VARCHAR" property="domain" />
 		<result column="addr_pool" jdbcType="VARCHAR" property="addrPool" />
 		<result column="policy" jdbcType="VARCHAR" property="policy" />
 		<result column="is_online" jdbcType="INTEGER" property="isOnline" />
 		<result column="active_num" jdbcType="INTEGER" property="activeNum" />
-		<result column="flow_amount" jdbcType="BIGINT" property="flowAmount" />
 		<result column="bind_mac" jdbcType="BIT" property="bindMac" />
 		<result column="bind_vlan" jdbcType="BIT" property="bindVlan" />
 		<result column="ip_addr" jdbcType="VARCHAR" property="ipAddr" />
 		<result column="mac_addr" jdbcType="VARCHAR" property="macAddr" />
 		<result column="in_vlan" jdbcType="INTEGER" property="inVlan" />
 		<result column="out_vlan" jdbcType="INTEGER" property="outVlan" />
-		<result column="up_rate" jdbcType="DECIMAL" property="upRate" />
-		<result column="down_rate" jdbcType="DECIMAL" property="downRate" />
+		<result column="up_rate" jdbcType="BIGINT" property="upRate" />
+		<result column="down_rate" jdbcType="BIGINT" property="downRate" />
 		<result column="up_peak_rate" jdbcType="DECIMAL" property="upPeakRate" />
 		<result column="down_peak_rate" jdbcType="DECIMAL" property="downPeakRate" />
 		<result column="up_rate_code" jdbcType="VARCHAR" property="upRateCode" />
@@ -47,11 +38,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<sql id="Base_Column_List">
 		id,
 		node_id,
-		area_id,
 		realname,
 		subscriber,
 		password,
-		bill_type,
 		domain,
 		addr_pool,
 		policy,
@@ -70,20 +59,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		down_rate_code,
 		status,
 		expire_time,
-		update_time,
-		flow_amount
+		update_time
 	</sql>
-
-	<select id="fetchSubscribeBill" parameterType="java.lang.String" resultMap="TcSubscribeBillMap">
-		select bill_type, flow_amount from tr_subscribe where subscriber = #{username} and status = 'enabled'
-	</select>
 
 	<select id="findAllUsername"  resultType="java.lang.String" useCache="false">
 		SELECT subscriber FROM tr_subscribe WHERE STATUS = 'enabled'
 	</select>
 
 
-	<select id="findById"  resultType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
+	<select id="findById"  resultType="java.lang.Long" resultMap="BaseResultMap" useCache="false">
 		SELECT <include refid="Base_Column_List" /> FROM tr_subscribe WHERE id = #{id}
 	</select>
 
@@ -99,12 +83,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<include refid="Base_Column_List" />
 		FROM  tr_subscribe WHERE subscriber=#{username}
 	</select>
-
-	<update id="updateFlowAmountByUsername">
-		update tr_subscribe
-		set flow_amount=#{flowAmount}
-		where subscriber=#{username} and status='enabled'
-	</update>
 
 	<update id="updateMacAddr">
 		update tr_subscribe
@@ -128,7 +106,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		update tr_subscribe set is_online=#{status} where subscriber=#{username}
 	</update>
 
-	<delete id="deleteById" parameterType="java.lang.Integer">
+	<delete id="deleteById" parameterType="java.lang.Long">
 		delete from tr_subscribe where id = #{id}
 	</delete>
 
@@ -136,7 +114,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<sql id="query_where">
 		<where>
 			<if test="nodeId != null  and nodeId != '' "> and node_id = #{nodeId}</if>
-			<if test="productId != null  and productId != '' "> and product_id = #{productId}</if>
 			<if test="ipAddr != null  and ipAddr != '' "> and ip_addr = #{ipAddr}</if>
 			<if test="macAddr != null  and macAddr != '' "> and mac_addr = #{macAddr}</if>
 			<if test="inVlan != null  and inVlan != '' "> and in_vlan = #{inVlan}</if>
@@ -168,12 +145,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<insert id="insertSubscribe" parameterType="org.toughradius.entity.Subscribe">
 		insert into tr_subscribe
 		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null  and id != ''  ">id,</if>
 			<if test="nodeId != null  and nodeId != ''  ">node_id,</if>
-			<if test="areaId != null  and areaId != ''  ">area_id,</if>
 			<if test="realname != null  and realname != ''  ">realname,</if>
 			<if test="subscriber != null  and subscriber != ''  ">subscriber,</if>
 			<if test="password != null  and password != ''  ">password,</if>
-			<if test="billType != null  and billType != ''  ">bill_type,</if>
 			<if test="domain != null  and domain != ''  ">domain,</if>
 			<if test="addrPool != null  and addrPool != ''  ">addr_pool,</if>
 			<if test="policy != null  and policy != ''  ">policy,</if>
@@ -195,15 +171,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="createTime != null ">create_time,</if>
 			<if test="expireTime != null ">expire_time,</if>
 			<if test="updateTime != null ">update_time,</if>
-			<if test="flowAmount != null  and flowAmount != ''  ">flow_amount,</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null  and id != ''  ">#{id},</if>
 			<if test="nodeId != null  and nodeId != ''  ">#{nodeId},</if>
-			<if test="areaId != null  and areaId != ''  ">#{areaId},</if>
 			<if test="realname != null  and realname != ''  ">#{realname},</if>
-			<if test="subscriber != null  and subscriber != ''  ">#{subscriber},</if>
+			<if test="subscrriber != null  and subscriber != ''  ">#{subscriber},</if>
 			<if test="password != null  and password != ''  ">#{password},</if>
-			<if test="billType != null  and billType != ''  ">#{billType},</if>
 			<if test="domain != null  and domain != ''  ">#{domain},</if>
 			<if test="addrPool != null  and addrPool != ''  ">#{addrPool},</if>
 			<if test="policy != null  and policy != ''  ">#{policy},</if>
@@ -225,7 +199,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="createTime != null   ">#{createTime},</if>
 			<if test="expireTime != null   ">#{expireTime},</if>
 			<if test="updateTime != null   ">#{updateTime},</if>
-			<if test="flowAmount != null  and flowAmount != ''  ">#{flowAmount},</if>
 		</trim>
 	</insert>
 
@@ -233,11 +206,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		update tr_subscribe
 		<trim prefix="SET" suffixOverrides=",">
 			<if test="nodeId != null  and nodeId != ''  ">node_id = #{nodeId},</if>
-			<if test="areaId != null  and areaId != ''  ">area_id = #{areaId},</if>
 			<if test="realname != null  and realname != ''  ">realname = #{realname},</if>
 			<if test="subscriber != null  and subscriber != ''  ">subscriber = #{subscriber},</if>
 			<if test="password != null  and password != ''  ">password = #{password},</if>
-			<if test="billType != null  ">bill_type = #{billType},</if>
 			<if test="domain != null ">domain = #{domain},</if>
 			<if test="addrPool != null">addr_pool = #{addrPool},</if>
 			<if test="policy != null ">policy = #{policy},</if>
@@ -257,9 +228,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="status != null  and status != ''  ">status = #{status},</if>
 			<if test="expireTime != null ">expire_time = #{expireTime},</if>
 			<if test="updateTime != null ">update_time = #{updateTime},</if>
-			<if test="flowAmount != null ">flow_amount = #{flowAmount},</if>
 		</trim>
 		where id = #{id}
+	</select>
+
+	<select id="updatePassword" useCache="false">
+		update tr_subscribe set password =  #{password}, update_time = NOW() where id = #{id}
 	</select>
 
 

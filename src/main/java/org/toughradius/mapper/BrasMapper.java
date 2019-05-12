@@ -18,13 +18,12 @@ public interface BrasMapper {
 
     void updateBras(Bras bras);
 
-    void deleteById(Integer id);
+    void deleteById(Long id);
 
     Bras findByidentifier(String identifier);
 
     Bras findByIPAddr(String ipaddr);
 
-    Bras findById(Integer id);
+    Bras findById(Long id);
 
-    int  flushCache();
 }

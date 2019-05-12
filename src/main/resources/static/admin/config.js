@@ -3,13 +3,6 @@ if (!window.toughradius.admin.config)
 
 
 toughradius.admin.config.loadPage = function(session){
-    // toughradius.admin.methods.setToolbar("cogs","系统配置","config");
-    var tableid = webix.uid();
-    var reloadData = function(){
-        $$(tableid).clearAll();
-        $$(tableid).load("/admin/config/query");
-        $$(tableid).refresh()
-    };
     var cview = {
         id:"toughradius.admin.config",
         view:"scrollview",

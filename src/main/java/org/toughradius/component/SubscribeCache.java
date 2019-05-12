@@ -2,7 +2,6 @@ package org.toughradius.component;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeBill;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -77,16 +76,18 @@ public class SubscribeCache {
         Subscribe subs = findSubscribe(username);
         if(subs!=null){
             subs.setIsOnline(1);
+            subscribeService.startOnline(subs.getId());
         }
-        subscribeService.startOnline(username);
+
     }
 
     public void stopSubscribeOnline(String username){
         Subscribe subs = findSubscribe(username);
         if(subs!=null){
             subs.setIsOnline(0);
+            subscribeService.stopOnline(subs.getId());
         }
-        subscribeService.stopOnline(username);
+
     }
 
     protected void reloadSubscribe(String username){
@@ -126,10 +127,6 @@ public class SubscribeCache {
             }
         }
         logger.print(String.format("update user total = %s, cast %s ms ", count, System.currentTimeMillis()-start));
-    }
-
-    public SubscribeBill getBillData(String username){
-        return subscribeService.fetchSubscribeBill(username);
     }
 
     class CacheObject {

@@ -3,7 +3,6 @@ if (!window.toughradius.admin.bras)
 
 toughradius.admin.bras.loadPage = function(session){
     var tableid = webix.uid();
-    var queryid = webix.uid();
     var reloadData = function(){
         $$(tableid).define("url", $$(tableid));
         $$(tableid).refresh();
@@ -109,7 +108,7 @@ toughradius.admin.bras.loadPage = function(session){
             }
         ]
     };
-    toughradius.admin.methods.addTabView("toughradius.admin.bras","laptop","BRAS 设备管理", cview, true);
+    toughradius.admin.methods.addTabView("toughradius.admin.bras","laptop","设备管理", cview, true);
 };
 
 toughradius.admin.bras.brasAdd = function(session,callback){

@@ -26,9 +26,6 @@ public class SubsribeController {
     @Autowired
     protected SubscribeService subscribeService;
 
-
-
-
     @GetMapping(value = {"/admin/subscribe/query"})
     @ResponseBody
     public PageResult<Subscribe> querySubscribe(@RequestParam(defaultValue = "0") int start,
@@ -42,7 +39,7 @@ public class SubsribeController {
         }
         int page = start / count;
         Page<Object> objects = PageHelper.startPage(page + 1, count);
-        PageResult<Subscribe> result = new PageResult<Subscribe>(0,0,null);
+        PageResult<Subscribe> result = new PageResult<>(0,0,null);
         try{
             SubscribeQuery query = new SubscribeQuery();
             if(ValidateUtil.isNotEmpty(expireTime))
@@ -52,7 +49,7 @@ public class SubsribeController {
             query.setStatus(status);
             query.setKeyword(keyword);
             List<Subscribe> data = subscribeService.queryForList(query);
-            return new PageResult<Subscribe>(start,(int) objects.getTotal(), data);
+            return new PageResult<>(start,(int) objects.getTotal(), data);
 
         }catch(Exception e){
             logger.error("query subscribe error",e, Memarylogger.SYSTEM);
@@ -62,7 +59,7 @@ public class SubsribeController {
 
     @GetMapping(value = {"/admin/subscribe/detail"})
     @ResponseBody
-    public RestResult<Subscribe> querySubscribeDetail(Integer id){
+    public RestResult<Subscribe> querySubscribeDetail(Long id){
         try{
             return new RestResult<Subscribe>(0,"ok",subscribeService.findById(id));
         }catch(Exception e){
@@ -94,9 +91,27 @@ public class SubsribeController {
         }
     }
 
+    @PostMapping(value = {"/admin/subscribe/uppwd"})
+    @ResponseBody
+    public RestResult updateSubscribe(SubscribeForm form){
+        try{
+            if(subscribeService.findById(form.getId())==null){
+                return new RestResult(1,"用户不存在");
+            }
+            if(form.getPassword().equals(form.getCpassword())){
+                return new RestResult(1,"确认密码不符");
+            }
+            subscribeService.updatePassword(form.getId(),form.getPassword());
+            return RestResult.SUCCESS;
+        }catch(Exception e){
+            logger.error("更新用户失败",e, Memarylogger.SYSTEM);
+            return new RestResult(1,"更新用户失败");
+        }
+    }
+
     @PostMapping(value = {"/admin/subscribe/update"})
     @ResponseBody
-    public RestResult updateBras(SubscribeForm form){
+    public RestResult updatePassword(SubscribeForm form){
         try{
             if(subscribeService.findById(form.getId())==null){
                 return new RestResult(1,"用户不存在");
@@ -116,7 +131,7 @@ public class SubsribeController {
     public RestResult delete(String ids){
         try{
             for (String id : ids.split(",") ) {
-                subscribeService.deleteById(Integer.valueOf(id));
+                subscribeService.deleteById(Long.valueOf(id));
             }
             return RestResult.SUCCESS;
         }catch(Exception e){

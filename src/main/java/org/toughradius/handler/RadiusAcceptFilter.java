@@ -92,16 +92,16 @@ public class RadiusAcceptFilter implements RadiusConstant{
      * @return
      */
     private AccessAccept filterMikrotik(AccessAccept accept, Subscribe user){
-        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024)).intValue();
-        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024)).intValue();
+        long up = user.getUpRate() * 1024;
+        long down = user.getDownRate() * 1024;
         accept.addAttribute("Mikrotik-Rate-Limit", String.format("%sk/%sk", up,down));
         return accept;
     }
 
 
     private AccessAccept filterIkuai(AccessAccept accept, Subscribe user){
-        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*8)).intValue();
-        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*8)).intValue();
+        long up = user.getUpRate() * 1024 * 8;
+        long down = user.getDownRate() * 1024 * 8;
         accept.addAttribute("RP-Upstream-Speed-Limit", String.valueOf(up));
         accept.addAttribute("RP-Downstream-Speed-Limit", String.valueOf(down));
         return accept;
@@ -114,13 +114,13 @@ public class RadiusAcceptFilter implements RadiusConstant{
      * @return
      */
     private AccessAccept filterHuawei(AccessAccept accept, Subscribe user){
-        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-        int peakUp = up * 4;
-        int peakDown = down * 4;
+        long up = user.getUpRate() * 1024 * 1024;
+        long down = user.getDownRate()* 1024 * 1024;
+        long peakUp = up * 4;
+        long peakDown = down * 4;
         try{
-            peakUp = user.getUpPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-            peakDown = user.getDownPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+            peakUp = user.getUpPeakRate()* 1024 * 1024;
+            peakDown = user.getDownPeakRate()* 1024 * 1024;
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -144,13 +144,13 @@ public class RadiusAcceptFilter implements RadiusConstant{
      * @return
      */
     private AccessAccept filterH3c(AccessAccept accept, Subscribe user){
-        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-        int peakUp = up * 4;
-        int peakDown = down * 4;
+        long up = user.getUpRate()* 1024 * 1024;
+        long down = user.getDownRate()* 1024 * 1024;
+        long peakUp = up * 4;
+        long peakDown = down * 4;
         try{
-            peakUp = user.getUpPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-            peakDown = user.getDownPeakRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+            peakUp = user.getUpPeakRate()* 1024 * 1024;
+            peakDown = user.getDownPeakRate()* 1024 * 1024;
         }catch(Exception e){
             e.printStackTrace();
         }
@@ -168,8 +168,8 @@ public class RadiusAcceptFilter implements RadiusConstant{
      * @return
      */
     private AccessAccept filterZTE(AccessAccept accept, Subscribe user){
-        int up = user.getUpRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
-        int down = user.getDownRate().multiply(BigDecimal.valueOf(1024*1024)).intValue();
+        long up = user.getUpRate()* 1024 * 1024;
+        long down = user.getDownRate()* 1024 * 1024;
         accept.addAttribute("ZTE-Rate-Ctrl-Scr-Up", String.valueOf(up));
         accept.addAttribute("ZTE-Rate-Ctrl-Scr-Down", String.valueOf(down));
         return accept;

@@ -3,7 +3,7 @@
 <mapper namespace="org.toughradius.mapper.BrasMapper">
 
 	<resultMap id="BaseResultMap" type="org.toughradius.entity.Bras">
-		<id column="id" jdbcType="INTEGER" property="id" />
+		<id column="id" jdbcType="BIGINT" property="id" />
 		<result column="identifier" jdbcType="VARCHAR" property="identifier" />
 		<result column="name" jdbcType="VARCHAR" property="name" />
 		<result column="ipaddr" jdbcType="VARCHAR" property="ipaddr" />
@@ -47,6 +47,7 @@
 	<insert id="insertBras" parameterType="org.toughradius.entity.Bras" flushCache="true">
 		insert into tr_bras
 		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null  and id != ''  ">id,</if>
 			<if test="name != null  and name != ''  ">name,</if>
 			<if test="identifier != null  and identifier != ''  ">identifier,</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr,</if>
@@ -60,6 +61,7 @@
 			<if test="createTime != null  ">create_time</if>
 		</trim>
 		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null  and id != ''  ">#{id},</if>
 			<if test="name != null  and name != ''  ">#{name},</if>
 			<if test="identifier != null  and identifier != ''  ">#{identifier},</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">#{ipaddr},</if>
@@ -92,11 +94,11 @@
 		where id = #{id}
 	</select>
 
-	<delete id="deleteById" parameterType="java.lang.Integer">
+	<delete id="deleteById" parameterType="java.lang.Long">
 		delete from tr_bras where id = #{id}
 	</delete>
 
-	<select id="findById" parameterType="java.lang.Integer" resultMap="BaseResultMap" useCache="false">
+	<select id="findById" parameterType="java.lang.Long" resultMap="BaseResultMap" useCache="false">
 		select
 		<include refid="Base_Column_List" />
 		from tr_bras

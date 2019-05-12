@@ -1,5 +1,6 @@
 package org.toughradius.handler;
 
+import org.toughradius.common.CoderUtil;
 import org.toughradius.common.ValidateCache;
 import org.toughradius.component.OnlineCache;
 import org.toughradius.component.SubscribeCache;
@@ -96,7 +97,6 @@ public class RadiusAccountingFilter {
      * @throws RadiusException
      */
     private void addOnline(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-
         if(user==null){
             String errMessage = String.format("用户不存在或状态未启用（记账请求） %s", request.getAcctStatusType());
             logger.error(request.getUsername(), errMessage, Memarylogger.RADIUSD);
@@ -104,6 +104,7 @@ public class RadiusAccountingFilter {
         }
         if(onlineCache.isExist(request.getAcctSessionId())){
             logger.error(request.getUsername(),"记账报文重复", Memarylogger.RADIUSD);
+            return;
         }
 
         int onlineCount = onlineCache.getUserOnlineNum(request.getUserName());
@@ -112,20 +113,11 @@ public class RadiusAccountingFilter {
             logger.error(request.getUsername(),errMessage, Memarylogger.RADIUSD);
             return;
         }
-        SubscribeBill billData = subscribeCache.getBillData(request.getUserName());
-        SubscribeBill billData2 = new SubscribeBill();
-        Subscribe subscribe = subscribeCache.findSubscribe(request.getUsername());
-        billData2.setBillType(subscribe.getBillType());
         RadiusOnline online = new RadiusOnline();
+        online.setId(CoderUtil.randomLongId());
         online.setNodeId(user.getNodeId());
-        online.setAreaId(user.getAreaId());
         online.setRealname(user.getRealname());
         online.setUsername(request.getUserName());
-        if (billData==null){
-            online.setBillType(billData2.getBillType());
-        }else {
-            online.setBillType(billData.getBillType());
-        }
         online.setNasId(request.getIdentifier());
         online.setNasAddr(nas.getIpaddr());
         online.setNasPaddr(request.getRemoteAddr().getHostName());
@@ -154,64 +146,6 @@ public class RadiusAccountingFilter {
 
     }
 
-    /**
-     * 记账扣除流量, 必须再在线数据更新或删除前完成
-     * @param request
-     */
-    private void radiusBilling(AccountingRequest request) {
-        try{
-            RadiusOnline online = onlineCache.getOnline(request.getAcctSessionId());
-            if (online!=null &&"flow".equals(online.getBillType())) {
-                if (radiusConfig.getTrace() == 1) {
-                    logger.info(request.getUsername(), "开始用户记账扣费处理", Memarylogger.RADIUSD);
-                }
-
-                //获取计费类型和用户剩余流量
-                SubscribeBill billData = subscribeCache.getBillData(request.getUserName());
-                if (billData == null) {
-                    onlineCache.setUnLock(request.getAcctSessionId(), RadiusOnline.USER_NOT_EXIST);
-                    logger.error(request.getUsername(), "处理记账扣费时用户不存在", Memarylogger.RADIUSD);
-                    return;
-                }
-                Long outputTotal = online.getAcctOutputTotal();
-                Long inputTotal = online.getAcctInputTotal();
-                long useFlows = 0;
-                if (outputTotal != null) {
-                    long curr_output_total = request.getAcctOutputTotal();
-                    useFlows = curr_output_total - outputTotal;
-
-                    if (radiusConfig.isBillInput() && inputTotal != null && inputTotal > 0) {
-                        long curr_input_total = request.getAcctInputTotal();
-                        useFlows += curr_input_total - inputTotal;
-                    }
-
-                    if (radiusConfig.isBillBackFlow()) {
-                        long inpkts = request.getAcctInputPackets() - online.getAcctInputPackets();
-                        long outpkts = request.getAcctOutputPackets() - online.getAcctOutputPackets();
-                        long flows = (inpkts + outpkts) * 80;
-                        useFlows += flows;
-                    }
-
-                    if (useFlows <= 0) {
-                        useFlows = 0;
-                    }
-                    if (useFlows > 0) {
-                        if (billData.getFlowAmount().longValue() > useFlows) {
-                            subscribeService.updateFlowAmountByUsername(request.getUserName(),  BigInteger.valueOf(billData.getFlowAmount().longValue() - useFlows));
-                        } else {
-                            subscribeService.updateFlowAmountByUsername(request.getUserName(), BigInteger.ZERO);
-                            onlineCache.setUnLock(online.getAcctSessionId(), RadiusOnline.AMOUNT_NOT_ENOUGH);
-                        }
-                    }
-                }
-                if (radiusConfig.getTrace() == 1) {
-                    logger.info(request.getUsername(), ":: 完成用户 %s 记账扣费处理", Memarylogger.RADIUSD);
-                }
-            }
-        }catch (Exception e){
-            logger.error(request.getUsername(),  "用户记账扣费处理失败", e, Memarylogger.RADIUSD);
-        }
-    }
 
     public void doStart(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
         addOnline(request,nas,user);
@@ -225,8 +159,6 @@ public class RadiusAccountingFilter {
                     addOnline(request,nas,user);
                     return;
                 }
-                //1. 进行流量扣费操作
-                radiusBilling(request);
                 //2. 更新在线数据
                 onlineCache.updateOnline(request);
                 if (radiusConfig.getTrace() == 1) {
@@ -258,26 +190,10 @@ public class RadiusAccountingFilter {
 
                 RadiusOnline online = onlineCache.removeOnline(request.getAcctSessionId());
                 subscribeCache.stopSubscribeOnline(online.getUsername());
-                //删除在线数据
-                if(radiusConfig.getTrace()==1)
-                    logger.print("删除在线用户缓存");
-
-                //执行流量扣费
-                radiusBilling(request);
                 //新增上网日志
-                int nodeId = 0;
-                int areaId = 0;
-                if(user!=null&&!user.getSubscriber().substring(0,2).equals("ls")){
-                    nodeId = user.getNodeId();
-                    areaId = user.getAreaId();
-                }
-                if(online!=null&&!user.getSubscriber().substring(0,2).equals("ls")){
-                    nodeId = online.getNodeId();
-                    areaId = online.getAreaId();
-                }
                 RadiusTicket radiusTicket = new RadiusTicket();
-                radiusTicket.setNodeId(nodeId);
-                radiusTicket.setAreaId(areaId);
+                radiusTicket.setId(CoderUtil.randomLongId());
+                radiusTicket.setNodeId(user.getNodeId());
                 radiusTicket.setUsername(request.getUserName());
                 radiusTicket.setNasId(request.getIdentifier());
                 radiusTicket.setNasAddr(nas.getIpaddr());

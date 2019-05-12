@@ -625,6 +625,4 @@ toughradius.admin.dashboard.loadPage = function(session){
         toughradius.admin.dashboard.updateMsgChart(session, msgstatchartid,msgstatInfoid);
     };
     toughradius.admin.dashboard.msgRefershTimer = setInterval(reffunc,60*1000)
-    $$("toughradius.admin.dashboard").refresh();
-
 };

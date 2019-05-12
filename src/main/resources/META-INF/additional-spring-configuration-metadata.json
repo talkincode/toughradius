@@ -1,0 +1,8 @@
+{
+  "properties": [
+    {
+      "name": "spring.datasource.max-active",
+      "type": "java.lang.String",
+      "description": "Description for spring.datasource.max-active."
+    }
+  ] }
