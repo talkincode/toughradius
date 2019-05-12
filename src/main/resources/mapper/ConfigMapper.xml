@@ -37,7 +37,7 @@
 
 
   <insert id="insertConfig" parameterType="org.toughradius.entity.Config" flushCache="true">
-    insert into tr_bras
+    insert into tr_config
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null  and id != ''  ">id,</if>
       <if test="name != null  and name != ''  ">name,</if>

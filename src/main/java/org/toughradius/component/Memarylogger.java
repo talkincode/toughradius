@@ -114,7 +114,7 @@ public class Memarylogger {
     public PageResult<TraceMessage> queryMessage(int pos, int count, String startTime,String endTime, String type, String username, String keyword){
         LoggerDeque traceQueue = traceMap.get(type);
         if(traceQueue == null)
-            return new PageResult<TraceMessage>(pos, 0, null);;
+            return new PageResult<TraceMessage>(0, 0, null);;
 
         synchronized ( traceQueue ){
             int total = 0;
@@ -142,7 +142,7 @@ public class Memarylogger {
                     messages.add(message.copy());
                 }
             }
-            return new PageResult<TraceMessage>(pos, total, messages);
+            return new PageResult<>(pos, total, messages);
         }
 
     }

@@ -86,24 +86,24 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
 	<update id="updateMacAddr">
 		update tr_subscribe
-		set mac_addr=#{macAddr}
+		set mac_addr=#{macAddr}, update_time=NOW()
 		where subscriber=#{username} and status='enabled'
 	</update>
 	
 	<update id="updateInValn">
 		update tr_subscribe
-		set in_vlan=#{inValn}
+		set in_vlan=#{inValn}, update_time=NOW()
 		where subscriber=#{username} and status='enabled'
 	</update>
 	
 	<update id="updateOutValn" >
 		update tr_subscribe
-		set out_vlan=#{outValn}
+		set out_vlan=#{outValn}, update_time=NOW()
 		where subscriber=#{username} and status='enabled'
 	</update>
 
-	<update id="updateOnlineStatus">
-		update tr_subscribe set is_online=#{status} where subscriber=#{username}
+	<update id="release">
+		update tr_subscribe set mac_addr='', in_vlan=0, out_vlan=0, update_time=NOW()  where id in (#{ids})
 	</update>
 
 	<delete id="deleteById" parameterType="java.lang.Long">

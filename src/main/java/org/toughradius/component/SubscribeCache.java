@@ -76,7 +76,6 @@ public class SubscribeCache {
         Subscribe subs = findSubscribe(username);
         if(subs!=null){
             subs.setIsOnline(1);
-            subscribeService.startOnline(subs.getId());
         }
 
     }
@@ -85,7 +84,6 @@ public class SubscribeCache {
         Subscribe subs = findSubscribe(username);
         if(subs!=null){
             subs.setIsOnline(0);
-            subscribeService.stopOnline(subs.getId());
         }
 
     }

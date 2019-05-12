@@ -44,12 +44,12 @@ public class TicketCache {
             if(!logdir.exists()){
                 logdir.mkdirs();
             }
-            GZIPOutputStream out = null;
+            BufferedOutputStream out = null;
             try {
-                String filename = String.format("%s/radius-ticket.%s.gz",radiusConfig.getTicketDir(), DateTimeUtil.getDateString());
+                String filename = String.format("%s/radius-ticket.%s.txt",radiusConfig.getTicketDir(), DateTimeUtil.getDateString());
                 File tfile = new File(filename);
                 boolean isnew = !tfile.exists();
-                out = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(tfile, true)));
+                out = new BufferedOutputStream(new FileOutputStream(tfile, true));
                 if(isnew){
                     out.write(RadiusTicket.getHeaderString().getBytes("utf-8"));
                     out.write("\n".getBytes());
@@ -126,7 +126,7 @@ public class TicketCache {
             boolean loop = true;
             while (beginDay.compareTo(endDay) <= 0 && loop)
             {
-                String curFileName = String.format("%s.%s.gz" , filename,beginDay);
+                String curFileName = String.format("%s.%s.txt" , filename,beginDay);
 
                 File file = new File(curFileName);
                 if (!file.exists())
@@ -135,7 +135,7 @@ public class TicketCache {
                     continue;
                 }
 
-                reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file)), "UTF-8"));
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String line = null;
                 while ((line = reader.readLine()) != null)
                 {

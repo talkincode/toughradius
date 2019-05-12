@@ -30,10 +30,10 @@ toughradius.admin.config.loadPage = function(session){
                                 elements: [
 
                                     {view: "counter", name: "RADIUS_INTERIM_INTELVAL", label: "RADIUS 记账间隔(秒)",  value:300},
-                                    {view: "counter", name: "RADIUS_MAX_SESSION_TIMEOUT", label: "RADIUS 最大会话时长(秒)",  value:864000},
+                                    // {view: "counter", name: "RADIUS_MAX_SESSION_TIMEOUT", label: "RADIUS 最大会话时长(秒)",  value:864000},
                                     {view: "counter", name: "RADIUS_TICKET_HISTORY_DAYS", label: "RADIUS 上网日志保存最大天数",  value:180},
                                     {view: "richselect", name: "RADIUS_IGNORE_PASSWORD", label: "RADIUS 免密码认证:",value:"0", options:[{id:"1",value:"否"},{id:"0",value:'是'}], width:220},
-                                    {view: "richselect", name:"RADIUS_ONLINE_EXPIRE_CHECK", label: "RADIUS 在线过期定时清理",  options:[{id:'enabled',value:"启用"}, {id:'disabled',value:"停用"}],width:220},
+                                    // {view: "richselect", name:"RADIUS_ONLINE_EXPIRE_CHECK", label: "RADIUS 在线过期定时清理",  options:[{id:'enabled',value:"启用"}, {id:'disabled',value:"停用"}],width:220},
                                     {view: "text", name: "RADIUS_EXPORE_ADDR_POOL", label: "RADIUS 到期下发地址池",  width:220},
                                     {
                                         cols: [

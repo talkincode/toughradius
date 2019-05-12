@@ -1,6 +1,7 @@
 package org.toughradius.component;
 
 import org.apache.ibatis.annotations.Param;
+import org.toughradius.common.CoderUtil;
 import org.toughradius.entity.Config;
 import org.toughradius.mapper.ConfigMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ public class ConfigService {
     public void updateConfig(Config config){
         Config cfg = configMapper.findConfig(config.getType(),config.getName());
         if(cfg==null){
+            config.setId(CoderUtil.randomLongId());
             configMapper.insertConfig(config);
         }else{
             configMapper.updateConfig(config);

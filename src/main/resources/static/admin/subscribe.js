@@ -21,12 +21,6 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
         $$(tableid).load('/admin/subscribe/query?'+args.join("&"));
     }
 
-    var releaseData = function(){
-        var params = $$(queryid).getValues();
-        toughradius.admin.subscribe.subscribeReleaseByquery(params,function(){
-            reloadData();
-        })
-    }
     var reloadData = toughradius.admin.subscribe.reloadData;
 
     var cview = {
@@ -92,7 +86,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                     if (rows.length === 0) {
                                         webix.message({ type: 'error', text: "请至少勾选一项", expire: 1500 });
                                     } else {
-                                        toughradius.admin.subscribe.subscribeRelease(rows.join(","), id,function () {
+                                        toughradius.admin.subscribe.subscribeRelease(rows.join(","), function () {
                                             reloadData();
                                         });
                                     }
@@ -196,7 +190,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                 autoWidth: true,
                                 autoHeight: true,
                                 url: "/admin/subscribe/query",
-                                pager: "dataPager",
+                                pager: "subs_dataPager",
                                 datafetch: 40,
                                 loadahead: 15,
                                 ready: function () {
@@ -244,14 +238,14 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                             { id: 500, value: "500" },
                                             { id: 1000, value: "1000" }],on: {
                                             onChange: function (newv, oldv) {
-                                                $$("dataPager").define("size",parseInt(newv));
+                                                $$("subs_dataPager").define("size",parseInt(newv));
                                                 $$(tableid).refresh();
                                                 reloadData();
                                             }
                                         }
                                     },
                                     {
-                                        id: "dataPager", view: 'pager', master: false, size: 20, group: 5,
+                                        id: "subs_dataPager", view: 'pager', master: false, size: 20, group: 5,
                                         template: '{common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()} total:#count#'
                                     },{},
 
@@ -447,8 +441,7 @@ toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
                                         rows:[
                                             {
                                                 cols: [
-                                                    { view: "text", name: "activeNum", label: "最大在线", css: "nborder-input", value: subs.activeNum,readonly:true},
-                                                    { view: "text", name: "flowAmount", label: "剩余流量", css: "nborder-input", value: bytesToSize(subs.flowAmount),readonly:true},
+                                                    { view: "text", name: "activeNum", label: "最大在线", css: "nborder-input", value: subs.activeNum,readonly:true},{}
                                                 ]
                                             },
                                             {
@@ -512,7 +505,7 @@ toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
                                         resizeColumn: true,
                                         autoWidth: true,
                                         autoHeight: true,
-                                        url: "/admin/syslog/query?start=0&count=20&type=radiusd&username=" + subs.subscriber
+                                        url: "/admin/syslog/query?start=0&count=20&type=error&username=" + subs.subscriber
                                     }
                                 ]
                             }
@@ -684,7 +677,7 @@ toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
                     elements: [
                         { view: "text", name: "id",  hidden: true, value: subs.id },
                         { view: "text", name: "subscriber", label: "帐号", css: "nborder-input", readonly: true, value: subs.subscriber , validate:webix.rules.isNotEmpty},
-                        { view: "text", name: "realname", label: "帐号",value: subs.realname , validate:webix.rules.isNotEmpty},
+                        { view: "text", name: "realname", label: "姓名",value: subs.realname , validate:webix.rules.isNotEmpty},
                         { view: "radio", name: "status", label: "状态", value: subs.status, options: [{ id: 'enabled', value: "正常" }, { id: 'disabled', value: "停用" }] },
                         {
                             view: "datepicker", name: "expireTime", timepicker: true, value:subs.expireTime,
@@ -811,7 +804,7 @@ toughradius.admin.subscribe.subscribeUppwd = function(session,item,callback){
                                 var btn = this;
                                 btn.disable();
                                 var params = $$(formid).getValues();
-                                params.subs_id = item.id;
+                                params.id = item.id;
                                 webix.ajax().post('/admin/subscribe/uppwd', params).then(function (result) {
                                     btn.enable();
                                     var resp = result.json();
@@ -877,11 +870,7 @@ toughradius.admin.subscribe.subscribeReleaseByquery = function (params,callback)
 };
 
 
-toughradius.admin.subscribe.subscribeRelease = function (ids,rtype,callback) {
-    console.log(rtype);
-    if(['subscribe_release_mac','subscribe_release_invlan','subscribe_release_outvlan'].indexOf(rtype)==-1){
-        return;
-    }
+toughradius.admin.subscribe.subscribeRelease = function (ids,callback) {
     webix.confirm({
         title: "操作确认",
         ok: "是", cancel: "否",
@@ -889,7 +878,7 @@ toughradius.admin.subscribe.subscribeRelease = function (ids,rtype,callback) {
         width:270,
         callback: function (ev) {
             if (ev) {
-                webix.ajax().get('/admin/subscribe/release', {ids:ids,rtype:rtype}).then(function (result) {
+                webix.ajax().get('/admin/subscribe/release', {ids:ids}).then(function (result) {
                     var resp = result.json();
                     webix.message({type: resp.msgtype, text: resp.msg, expire: 1500});
                     if(callback)

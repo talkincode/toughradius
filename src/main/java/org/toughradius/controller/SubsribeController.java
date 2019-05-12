@@ -98,7 +98,7 @@ public class SubsribeController {
             if(subscribeService.findById(form.getId())==null){
                 return new RestResult(1,"用户不存在");
             }
-            if(form.getPassword().equals(form.getCpassword())){
+            if(!form.getPassword().equals(form.getCpassword())){
                 return new RestResult(1,"确认密码不符");
             }
             subscribeService.updatePassword(form.getId(),form.getPassword());
@@ -106,6 +106,18 @@ public class SubsribeController {
         }catch(Exception e){
             logger.error("更新用户失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"更新用户失败");
+        }
+    }
+
+    @GetMapping(value = {"/admin/subscribe/release"})
+    @ResponseBody
+    public RestResult releaseSubscribe(String ids){
+        try{
+            subscribeService.release(ids);
+            return RestResult.SUCCESS;
+        }catch(Exception e){
+            logger.error("释放用户绑定失败",e, Memarylogger.SYSTEM);
+            return new RestResult(1,"释放用户绑定失败");
         }
     }
 

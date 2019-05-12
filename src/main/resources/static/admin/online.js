@@ -3,7 +3,6 @@ if (!window.toughradius.admin.online)
 
 
 toughradius.admin.online.loadPage = function(session){
-    // toughradius.admin.methods.setToolbar("user-circle","在线查询","online");
     var tableid = webix.uid();
     var queryid = webix.uid();
     var reloadData = function(){
@@ -148,27 +147,27 @@ toughradius.admin.online.loadPage = function(session){
                 rightSplit: 1,
                 columns: [
                     { id: "state", header: { content: "masterCheckbox", css: "center" }, width: 50, css: "center", template: "{common.checkbox()}" },
-                    { id: "realname", header: ["用户姓名"] },
-                    { id: "username", header: ["用户名"]  },
-                    { id: "acctSessionId", header: ["会话ID"],  hidden: true },
-                    { id: "nasId", header: ["BRAS 标识"] },
-                    { id: "acctStartTime", header: ["上线时间"], sort: "server" },
-                    { id: "nasAddr", header: ["BRAS IP"]  },
-                    { id: "framedIpaddr", header: ["用户 IP"]},
-                    { id: "macAddr", header: ["用户 Mac"] },
-                    { id: "nasPortId", header: ["端口信息"], hidden:true},
+                    { id: "realname", header: ["用户姓名"], adjust:true },
+                    { id: "username", header: ["用户名"] , adjust:true ,sort: "string", },
+                    { id: "acctSessionId", header: ["会话ID"], hidden:true, adjust:true  },
+                    { id: "nasId", header: ["BRAS 标识"] ,sort: "string",},
+                    { id: "acctStartTime", header: ["上线时间"], sort: "string", adjust:true  },
+                    { id: "nasAddr", header: ["BRAS IP"]  , adjust:true },
+                    { id: "framedIpaddr", header: ["用户 IP"],sort: "string", adjust:true },
+                    { id: "macAddr", header: ["用户 Mac"] , sort: "string",adjust:true },
+                    { id: "nasPortId", header: ["端口信息"], adjust:true },
                     {
-                        id: "acctInputTotal", header: ["上传"],sort: "server", template: function (obj) {
+                        id: "acctInputTotal", header: ["上传"],sort: "int", adjust:true , template: function (obj) {
                             return bytesToSize(obj.acctInputTotal);
                         }
                     },
                     {
-                        id: "acctOutputTotal", header: ["下载"],  sort: "server", template: function (obj) {
+                        id: "acctOutputTotal", header: ["下载"],  sort: "int",  adjust:true ,template: function (obj) {
                             return bytesToSize(obj.acctOutputTotal);
                         }
                     },
-                    { id: "acctInputPackets", header: ["上行数据包"], hidden:true},
-                    { id: "acctOutputPackets", header: ["下行数据包"],hidden:true},
+                    { id: "acctInputPackets", header: ["上行数据包"], sort: "int", adjust:true },
+                    { id: "acctOutputPackets", header: ["下行数据包"],sort: "int", adjust:true },
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
                 select: true,
@@ -176,7 +175,7 @@ toughradius.admin.online.loadPage = function(session){
                 autoWidth: true,
                 autoHeight: true,
                 url: "/admin/online/query",
-                pager: "dataPager",
+                pager: "online_dataPager",
                 datafetch: 40,
                 loadahead: 15,
                 on: {}
@@ -192,14 +191,14 @@ toughradius.admin.online.loadPage = function(session){
                             { id: 500, value: "500" },
                             { id: 1000, value: "1000" }],on: {
                             onChange: function (newv, oldv) {
-                                $$("dataPager").define("size",parseInt(newv));
+                                $$("online_dataPager").define("size",parseInt(newv));
                                 $$(tableid).refresh();
                                 reloadData();
                             }
                         }
                     },
                     {
-                        id: "dataPager", view: 'pager', master: false, size: 20, group: 5,
+                        id: "online_dataPager", view: 'pager', master: false, size: 20, group: 5,
                         template: '{common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()} total:#count#'
                     },{}
                 ]

@@ -13,8 +13,6 @@ if(!currentLang){
 webix.i18n.setLocale(currentLang);
 
 toughradius.admin = {};
-toughradius.admin.pageId = "toughradius.admin-main-page";
-toughradius.admin.panelId = "toughradius.admin-main-panel";
 toughradius.admin.tabsId = "toughradius.admin-main-tabs";
 toughradius.admin.viewsId = "toughradius.admin-main-views";
 toughradius.admin.tabviews = "toughradius.admin-main-tabviews";
@@ -22,19 +20,22 @@ toughradius.admin.toolbarId = "toughradius.admin-main-toolbar";
 toughradius.admin.actions = {};
 toughradius.admin.methods = {};
 
-toughradius.admin.methods.setToolbar = function(icon, title, help){
-    $$(toughradius.admin.toolbarId+"_icon").define("icon",icon);
-    $$(toughradius.admin.toolbarId+"_icon").refresh();
-    $$(toughradius.admin.toolbarId+"_title").define("label",title);
-    $$(toughradius.admin.toolbarId+"_title").refresh();
-};
-
 toughradius.admin.methods.addTabView = function (vid, icon, title, tabview, close){
-    $$(toughradius.admin.viewsId).addView(tabview);
-    // $$(toughradius.admin.tabsId).addOption(vid, "<span class='fa fa-"+icon+"'></span><span style='padding-left: 10px;'>"+title+"</span>", true);
-    $$(toughradius.admin.tabsId).addOption({id:vid, value:title, close:close, icon:icon}, true);
-    $$(vid).show(true,false);
-    $$(toughradius.admin.tabviews).refresh();
+    if(!$$(vid)){
+        $$(toughradius.admin.viewsId).addView(tabview);
+        $$(toughradius.admin.tabsId).addOption({id:vid, value:title, close:close, icon:icon}, true);
+        $$(vid).show(true,false);
+        $$(toughradius.admin.viewsId).refresh();
+        $$(toughradius.admin.tabviews).refresh();
+    }else{
+        $$(toughradius.admin.tabsId).addOption({id:vid, value:title, close:close, icon:icon}, true);
+        $$(toughradius.admin.tabsId).setValue(vid);
+        $$(toughradius.admin.tabsId).showOption(vid);
+        $$(vid).show(true,false);
+        $$(toughradius.admin.viewsId).refresh();
+        $$(toughradius.admin.tabviews).refresh();
+    }
+
 };
 
 toughradius.admin.methods.doLogin = function (formValues){
@@ -180,7 +181,7 @@ webix.ready(function() {
                         elements: [
                             {
                                 cols: [
-                                    { view: "template", css: "nav-logo", maxWidth:188, template: "<a href='/admin'><img src='/static/imgs/logo.png' width='156' height='25'/></a>", height:40},
+                                    { view: "template", css: "nav-logo", maxWidth:188, template: "<a href='/admin'><img src='/static/imgs/logo.png' width='175' height='34'/></a>", height:40},
                                     {
                                         view: "button", type: "icon", icon: "bars", width: 37, align: "left", css: "nav-item-color", click: function () {
                                             $$("$sidebar1").toggle()
@@ -232,8 +233,6 @@ webix.ready(function() {
                                                 ready: function () {
                                                     webix.require("admin/dashboard.js?rand="+new Date().getTime(), function () {
                                                         toughradius.admin.dashboard.loadPage(session);
-                                                        // toughradius.admin.config.loadPage(session);
-
                                                     });
                                                 }
                                             }
@@ -260,13 +259,17 @@ webix.ready(function() {
                                                 {view:"template", id:"tpl", template:"0000"}
                                             ]}
                                         ]
+                                    },
+                                    {
+                                        css:"page-footer",
+                                        height:36,
+                                        borderless:true,
+                                        cols:[
+                                            {},{view:"label", css:"Copyright", label:"Copyright © TOUGHRADIUS 版权所有，侵权必究！"}, {}
+                                        ]
                                     }
                                 ]
-                            },
-                            // {
-                            //
-                            // }
-
+                            }
                         ]
                     }
                 ]

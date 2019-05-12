@@ -142,7 +142,7 @@ a,a:hover,a:active,a:visited{
 }
 .page-nav{
     box-shadow: 3px 2px 20px 1px rgba(215, 215, 215, 0.25);
-    background-color: #0080cc;
+    background-color: #0069bd;
     /*background: -webkit-gradient(linear,left top,left bottom,color-stop(0, #ffffff),color-stop(100%, #e9e9e9));*/
     /*background: linear-gradient(#00569c,#0075d4);*/
 }
@@ -164,10 +164,13 @@ a,a:hover,a:active,a:visited{
     /*background-color: #151515;*/
 /*}*/
 .nav-logo{
-    padding-left: 6px;
-    /* padding-top: 5px; */
-    background-color: #0080cc;
+    padding-left: 0px;
+     padding-top: 0px;
+    background-color: #0069bd;
     border: none;
+}
+.nav-logo .webix_template{
+    padding: 0;
 }
 
 .dash-title{

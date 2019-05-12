@@ -77,27 +77,27 @@ toughradius.admin.ticket.loadPage = function(session){
                 view: "datatable",
                 rightSplit: 1,
                 columns: [
-                    { id: "username", header: ["用户名"], sort: "string" },
-                    { id: "acctSessionId", header: ["会话ID"],  sort: "string", hidden: true },
-                    { id: "nasId", header: ["BRAS 标识"], sort: "string" },
-                    { id: "acctStartTime", header: ["上线时间"],  sort: "string" },
-                    { id: "acctStopTime", header: ["下线时间"], sort: "string" },
-                    { id: "nasAddr", header: ["BRAS IP"], sort: "string" },
-                    { id: "framedIpaddr", header: ["用户 IP"],  sort: "string" },
-                    { id: "macAddr", header: ["用户 Mac"], sort: "string" },
-                    { id: "nasPortId", header: ["端口信息"],  sort: "string" ,hidden:true},
+                    { id: "username", header: ["用户名"], sort: "string" , adjust:true},
+                    { id: "acctSessionId", header: ["会话ID"],  sort: "string", hidden: true , adjust:true },
+                    { id: "nasId", header: ["BRAS 标识"], sort: "string"  , adjust:true},
+                    { id: "acctStartTime", header: ["上线时间"],  sort: "string" , adjust:true },
+                    { id: "acctStopTime", header: ["下线时间"], sort: "string" , adjust:true },
+                    { id: "nasAddr", header: ["BRAS IP"], sort: "string" , adjust:true },
+                    { id: "framedIpaddr", header: ["用户 IP"],  sort: "string"  , adjust:true},
+                    { id: "macAddr", header: ["用户 Mac"], sort: "string"  , adjust:true},
+                    { id: "nasPortId", header: ["端口信息"],  sort: "string" , adjust:true},
                     {
-                        id: "acctInputTotal", header: ["上传"],  sort: "nt", template: function (obj) {
+                        id: "acctInputTotal", header: ["上传"],  sort: "int" , adjust:true, template: function (obj) {
                             return bytesToSize(obj.acctInputTotal);
                         }
                     },
                     {
-                        id: "acctOutputTotal", header: ["下载"], sort: "int", template: function (obj) {
+                        id: "acctOutputTotal", header: ["下载"], sort: "int" , adjust:true, template: function (obj) {
                             return bytesToSize(obj.acctOutputTotal);
                         }
                     },
-                    { id: "acctInputPackets", header: ["上行数据包"],  sort: "string",hidden:true },
-                    { id: "acctOutputPackets", header: ["下行数据包"], sort: "string",hidden:true},
+                    { id: "acctInputPackets", header: ["上行数据包"],  sort: "string", adjust:true},
+                    { id: "acctOutputPackets", header: ["下行数据包"], sort: "string", adjust:true},
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
                 select: true,
@@ -105,7 +105,7 @@ toughradius.admin.ticket.loadPage = function(session){
                 autoWidth: true,
                 autoHeight: true,
                 url: "/admin/ticket/query",
-                pager: "dataPager",
+                pager: "ticket_dataPager",
                 datafetch: 40,
                 loadahead: 15,
                 on: {}
@@ -121,14 +121,14 @@ toughradius.admin.ticket.loadPage = function(session){
                             { id: 500, value: "500" },
                             { id: 1000, value: "1000" }],on: {
                             onChange: function (newv, oldv) {
-                                $$("dataPager").define("size",parseInt(newv));
+                                $$("ticket_dataPager").define("size",parseInt(newv));
                                 $$(tableid).refresh();
                                 reloadData();
                             }
                         }
                     },
                     {
-                        id: "dataPager", view: 'pager', master: false, size: 20, group: 5,
+                        id: "ticket_dataPager", view: 'pager', master: false, size: 20, group: 5,
                         template: '{common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()} total:#count#'
                     },{}
                 ]

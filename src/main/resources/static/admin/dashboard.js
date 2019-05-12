@@ -511,7 +511,6 @@ toughradius.admin.dashboard.msgstatInfos = function(session,uid,statdata){
 };
 
 toughradius.admin.dashboard.loadPage = function(session){
-    // toughradius.admin.methods.setToolbar("dashboard","控制面板","dashboard");
     var cpuchartUid = "toughradius.admin.dashboard.cpuchart_viewid." + webix.uid();
     var memchartUid = "toughradius.admin.dashboard.memchart_viewid." + webix.uid();
     var diskchartUid = "toughradius.admin.dashboard.diskchart_viewid." + webix.uid();

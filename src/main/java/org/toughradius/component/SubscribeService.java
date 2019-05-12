@@ -23,28 +23,20 @@ public class SubscribeService {
         subscribeMapper.updateFlowAmountByUsername(username,flowAmount);
     }
 
-    public int updateMacAddr(String username, String macAddr){
+    public Integer updateMacAddr(String username, String macAddr){
         return subscribeMapper.updateMacAddr(username,macAddr);
     }
 
-    public int updateInValn(String username, Integer inValn){
+    public Integer updateInValn(String username, Integer inValn){
         return subscribeMapper.updateInValn(username,inValn);
     }
 
-    public int updateOutValn(String username, Integer outValn){
+    public Integer updateOutValn(String username, Integer outValn){
         return subscribeMapper.updateOutValn(username,outValn);
     }
 
     public List<Subscribe> findLastUpdateUser(String lastUpdate) {
         return subscribeMapper.findLastUpdateUser(lastUpdate);
-    }
-
-    public int startOnline(Long userid){
-        return subscribeMapper.updateOnlineStatus(userid,1);
-    }
-
-    public int stopOnline(Long userid){
-        return subscribeMapper.updateOnlineStatus(userid,0);
     }
 
     public List<Subscribe> queryForList(SubscribeQuery subscribe){
@@ -64,6 +56,9 @@ public class SubscribeService {
 
     public void updatePassword(Long id, String password){
         subscribeMapper.updatePassword(id, password);
+    }
+    public void release(String ids){
+        subscribeMapper.release(ids);
     }
 
     public Subscribe findById(Long id){

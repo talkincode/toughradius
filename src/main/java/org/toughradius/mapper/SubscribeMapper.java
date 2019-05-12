@@ -32,16 +32,15 @@ public interface SubscribeMapper {
 
 	List<String> findAllUsername();
 
-	int updateFlowAmountByUsername(@Param(value = "username") String username, @Param(value = "flowAmount") BigInteger flowAmount);
+	Integer updateFlowAmountByUsername(@Param(value = "username") String username, @Param(value = "flowAmount") BigInteger flowAmount);
 
-	 int updateMacAddr(@Param(value = "username") String username, @Param(value = "macAddr") String macAddr);
+	 Integer updateMacAddr(@Param(value = "username") String username, @Param(value = "macAddr") String macAddr);
 
-	 int updateInValn(@Param(value = "username") String username, @Param(value = "inValn") Integer inValn);
+	 Integer updateInValn(@Param(value = "username") String username, @Param(value = "inValn") Integer inValn);
 
-	 int updateOutValn(@Param(value = "username") String username, @Param(value = "outValn") Integer outValn);
+	 Integer updateOutValn(@Param(value = "username") String username, @Param(value = "outValn") Integer outValn);
 
-	 int updatePassword(@Param(value = "username") Long id, @Param(value = "password") String password);
+	 void updatePassword(@Param(value = "id") Long id, @Param(value = "password") String password);
 
-	int updateOnlineStatus(@Param(value = "id") Long id, @Param(value = "status") Integer status);
-
+    void release(String ids);
 }

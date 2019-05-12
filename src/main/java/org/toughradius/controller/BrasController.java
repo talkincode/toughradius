@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.toughradius.common.CoderUtil;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.RestResult;
 import org.toughradius.component.BrasService;
@@ -45,6 +46,7 @@ public class BrasController {
             if(brasService.selectByidentifier(bras.getIdentifier())!=null){
                 return new RestResult(1,"BRAS标识已经存在");
             }
+            bras.setId(CoderUtil.randomLongId());
             bras.setRemark("");
             bras.setStatus("enabled");
             bras.setCreateTime(DateTimeUtil.nowTimestamp());
