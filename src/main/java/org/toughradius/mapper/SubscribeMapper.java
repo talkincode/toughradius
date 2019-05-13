@@ -1,7 +1,6 @@
 package org.toughradius.mapper;
 
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeBill;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -15,11 +14,9 @@ import java.util.List;
 @Mapper
 public interface SubscribeMapper {
 	
-	SubscribeBill fetchSubscribeBill(String username);
-
 	Subscribe findSubscribe(@Param(value = "username") String username);
 
-	Subscribe findById(Integer id);
+	Subscribe findById(Long id);
 
 	List<Subscribe> findLastUpdateUser(@Param(value = "lastUpdate") String lastUpdate);
 
@@ -31,19 +28,19 @@ public interface SubscribeMapper {
 
 	void updateSubscribe(Subscribe subscribe);
 
-	void deleteById(Integer id);
+	void deleteById(Long id);
 
 	List<String> findAllUsername();
 
-	int updateFlowAmountByUsername(@Param(value = "username") String username, @Param(value = "flowAmount") BigInteger flowAmount);
+	Integer updateFlowAmountByUsername(@Param(value = "username") String username, @Param(value = "flowAmount") BigInteger flowAmount);
 
-	 int updateMacAddr(@Param(value = "username") String username, @Param(value = "macAddr") String macAddr);
+	 Integer updateMacAddr(@Param(value = "username") String username, @Param(value = "macAddr") String macAddr);
 
-	 int updateInValn(@Param(value = "username") String username, @Param(value = "inValn") Integer inValn);
+	 Integer updateInValn(@Param(value = "username") String username, @Param(value = "inValn") Integer inValn);
 
-	 int updateOutValn(@Param(value = "username") String username, @Param(value = "outValn") Integer outValn);
+	 Integer updateOutValn(@Param(value = "username") String username, @Param(value = "outValn") Integer outValn);
 
-	int updateOnlineStatus(@Param(value = "username") String username, @Param(value = "status") Integer status);
+	 void updatePassword(@Param(value = "id") Long id, @Param(value = "password") String password);
 
-
+    void release(String ids);
 }

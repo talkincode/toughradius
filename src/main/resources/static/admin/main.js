@@ -13,17 +13,29 @@ if(!currentLang){
 webix.i18n.setLocale(currentLang);
 
 toughradius.admin = {};
-toughradius.admin.pageId = "toughradius.admin-main-page";
-toughradius.admin.panelId = "toughradius.admin-main-panel";
+toughradius.admin.tabsId = "toughradius.admin-main-tabs";
+toughradius.admin.viewsId = "toughradius.admin-main-views";
+toughradius.admin.tabviews = "toughradius.admin-main-tabviews";
 toughradius.admin.toolbarId = "toughradius.admin-main-toolbar";
 toughradius.admin.actions = {};
 toughradius.admin.methods = {};
 
-toughradius.admin.methods.setToolbar = function(icon, title, help){
-    $$(toughradius.admin.toolbarId+"_icon").define("icon",icon);
-    $$(toughradius.admin.toolbarId+"_icon").refresh();
-    $$(toughradius.admin.toolbarId+"_title").define("label",title);
-    $$(toughradius.admin.toolbarId+"_title").refresh();
+toughradius.admin.methods.addTabView = function (vid, icon, title, tabview, close){
+    if(!$$(vid)){
+        $$(toughradius.admin.viewsId).addView(tabview);
+        $$(toughradius.admin.tabsId).addOption({id:vid, value:title, close:close, icon:icon}, true);
+        $$(vid).show(true,false);
+        $$(toughradius.admin.viewsId).refresh();
+        $$(toughradius.admin.tabviews).refresh();
+    }else{
+        $$(toughradius.admin.tabsId).addOption({id:vid, value:title, close:close, icon:icon}, true);
+        $$(toughradius.admin.tabsId).setValue(vid);
+        $$(toughradius.admin.tabsId).showOption(vid);
+        $$(vid).show(true,false);
+        $$(toughradius.admin.viewsId).refresh();
+        $$(toughradius.admin.tabviews).refresh();
+    }
+
 };
 
 toughradius.admin.methods.doLogin = function (formValues){
@@ -153,7 +165,7 @@ webix.ready(function() {
         var resp = result.json();
         if(resp.code===1){
             webix.message({type:"error",text:resp.msg});
-            setTimeout(function(){window.location.href = "/admin/login";},2000);
+            setTimeout(function(){window.location.href = "/admin/login";},1000);
             return false;
         }
         var session = resp.data;
@@ -169,7 +181,7 @@ webix.ready(function() {
                         elements: [
                             {
                                 cols: [
-                                    { view: "template", css: "nav-logo", maxWidth:188, template: "<a href='/admin'><img src='/static/imgs/logo.png' width='156' height='25'/></a>", height:40},
+                                    { view: "template", css: "nav-logo", maxWidth:188, template: "<a href='/admin'><img src='/static/imgs/logo.png' width='175' height='34'/></a>", height:40},
                                     {
                                         view: "button", type: "icon", icon: "bars", width: 37, align: "left", css: "nav-item-color", click: function () {
                                             $$("$sidebar1").toggle()
@@ -231,35 +243,33 @@ webix.ready(function() {
                             {
                                 rows:[
                                     {
-                                        height:40,
-                                        css:"main-toolbar",
-                                        cols:[
-                                            { id:toughradius.admin.toolbarId+"_icon",view:"icon", icon:"home", width:45},
-                                            { id:toughradius.admin.toolbarId+"_title", view: "label", label: ""},
-                                            { },
-                                            {
-                                                view: "button", type: "icon", width: 100, icon: "book", label: "在线文档",  click: function () {
-                                                    var bookurl = "https://docs.toughradius.net/zh/";
-                                                    windowObjectReference = window.open(bookurl,"在线文档","resizable,scrollbars,status");
-                                                }
-                                            }
-                                        ]
-                                    },
-                                    {height:5},
-                                    {
-                                        id: toughradius.admin.pageId,
-                                        css:"main-page",
-                                        // paddingY:3,
+                                        id:toughradius.admin.tabviews,
                                         rows:[
                                             {
-                                                id: toughradius.admin.panelId,
-                                                template: ""
-                                            }
+                                                id:toughradius.admin.tabsId, view:"tabbar",
+                                                animate:false,
+                                                bottomOffset:10,
+                                                optionWidth: 180,
+                                                align:'left',
+                                                multiview:true,
+                                                options:[],
+                                                height:50
+                                            },
+                                            { id:toughradius.admin.viewsId, animate:false,cells:[
+                                                {view:"template", id:"tpl", template:"0000"}
+                                            ]}
+                                        ]
+                                    },
+                                    {
+                                        css:"page-footer",
+                                        height:36,
+                                        borderless:true,
+                                        cols:[
+                                            {},{view:"label", css:"Copyright", label:"Copyright © TOUGHRADIUS 版权所有，侵权必究！"}, {}
                                         ]
                                     }
                                 ]
                             }
-
                         ]
                     }
                 ]

@@ -1,7 +1,6 @@
 package org.toughradius.component;
 
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeBill;
 import org.toughradius.entity.SubscribeQuery;
 import org.toughradius.mapper.SubscribeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,32 +23,20 @@ public class SubscribeService {
         subscribeMapper.updateFlowAmountByUsername(username,flowAmount);
     }
 
-    public int updateMacAddr(String username, String macAddr){
+    public Integer updateMacAddr(String username, String macAddr){
         return subscribeMapper.updateMacAddr(username,macAddr);
     }
 
-    public int updateInValn(String username, Integer inValn){
+    public Integer updateInValn(String username, Integer inValn){
         return subscribeMapper.updateInValn(username,inValn);
     }
 
-    public int updateOutValn(String username, Integer outValn){
+    public Integer updateOutValn(String username, Integer outValn){
         return subscribeMapper.updateOutValn(username,outValn);
     }
 
     public List<Subscribe> findLastUpdateUser(String lastUpdate) {
         return subscribeMapper.findLastUpdateUser(lastUpdate);
-    }
-
-    public SubscribeBill fetchSubscribeBill(String username) {
-        return subscribeMapper.fetchSubscribeBill(username);
-    }
-
-    public int startOnline(String username){
-        return subscribeMapper.updateOnlineStatus(username,1);
-    }
-
-    public int stopOnline(String username){
-        return subscribeMapper.updateOnlineStatus(username,0);
     }
 
     public List<Subscribe> queryForList(SubscribeQuery subscribe){
@@ -67,10 +54,17 @@ public class SubscribeService {
         subscribeMapper.updateSubscribe(subscribe);
     }
 
-    public Subscribe findById(Integer id){
+    public void updatePassword(Long id, String password){
+        subscribeMapper.updatePassword(id, password);
+    }
+    public void release(String ids){
+        subscribeMapper.release(ids);
+    }
+
+    public Subscribe findById(Long id){
         return subscribeMapper.findById(id);
     }
-    public void deleteById(Integer id){
+    public void deleteById(Long id){
         subscribeMapper.deleteById(id);
     }
 

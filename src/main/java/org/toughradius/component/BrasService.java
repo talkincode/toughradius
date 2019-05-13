@@ -15,8 +15,16 @@ public class BrasService {
 	private BrasMapper brasMapper;
 
 	@Autowired
-	private Syslogger logger;
+	private Memarylogger logger;
 
+	/**
+	 * 查找 BRAS 信息
+	 * @param ipaddr 数据包来源IP
+	 * @param srcip 设备中配置的IP，可能是内网IP
+	 * @param identifier  设备唯一标识
+	 * @return
+	 * @throws ServiceException
+	 */
 	public Bras findBras(String ipaddr, String srcip, String identifier) throws ServiceException{
 		Bras tcBras = null;
 		if(ValidateUtil.isNotEmpty(ipaddr)&&!"0.0.0.0".equals(ipaddr)){
@@ -33,13 +41,13 @@ public class BrasService {
 
 		if (tcBras == null) {
 			String message = String.format("Bras设备 id=%s, ip=%s 不存在", identifier, ipaddr);
-			logger.error(message,Syslogger.RADIUSD);
+			logger.error(message, Memarylogger.RADIUSD);
 			throw new ServiceException(message);
 		}
 
 		if (tcBras.getStatus() != null && "disabled".equals(tcBras.getStatus())) {
 			String message = String.format("Bras设备 id=%s, ip=%s 已停用", identifier, ipaddr);
-			logger.error(message,Syslogger.RADIUSD);
+			logger.error(message, Memarylogger.RADIUSD);
 			throw new ServiceException(message);
 		}
 
@@ -58,7 +66,7 @@ public class BrasService {
 		brasMapper.updateBras(bras);
 	}
 
-	public void deleteById(Integer id){
+	public void deleteById(Long id){
 		brasMapper.deleteById(id);
 	}
 
@@ -70,7 +78,7 @@ public class BrasService {
 		return brasMapper.findByIPAddr(ipaddr);
 	}
 
-	public Bras selectById(Integer id){
+	public Bras selectById(Long id){
 		return brasMapper.findById(id);
 	}
 }

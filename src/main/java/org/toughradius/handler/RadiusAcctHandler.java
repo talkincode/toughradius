@@ -1,13 +1,12 @@
 package org.toughradius.handler;
 
 import org.toughradius.common.ValidateCache;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Bras;
 import org.toughradius.entity.Subscribe;
 import org.tinyradius.packet.AccountingRequest;
 import org.tinyradius.packet.RadiusPacket;
 import org.tinyradius.util.RadiusException;
-import org.apache.mina.core.buffer.IoBuffer;
 import org.apache.mina.core.session.IoSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -15,28 +14,19 @@ import org.springframework.stereotype.Component;
 import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Component
-public class RadiusAcctHandler extends RadiusbasicHandler {
-
-    @Autowired
-    private RadiusAuthHandler authHandler;
-
+public class RadiusAcctHandler extends RadiusBasicHandler {
 
     @Autowired
     private RadiusAccountingFilter accountingFilter;
 
-
     @Autowired
     private RadiusParseFilter parseFilter;
-
-    private AtomicInteger counter = new AtomicInteger();
-
     /**
      * BRAS 并发限制
      */
-    private Map<Integer,ValidateCache> validateMap = new HashMap<Integer,ValidateCache>();
+    private Map<Long,ValidateCache> validateMap = new HashMap<>();
 
 
     private ValidateCache getBrasValidate(Bras bras){
@@ -63,12 +53,12 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
 
 
     public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Bras nas) throws RadiusException {
-        taskExecutor.execute(()-> {
+        systaskExecutor.execute(()-> {
             try {
                 Subscribe user = getUser(accountingRequest.getUserName());
                 accountingFilter.doFilter(accountingRequest,nas,user);
             } catch (RadiusException e) {
-                logger.error(accountingRequest.getUserName(),"记账处理错误",e, Syslogger.RADIUSD);
+                logger.error(accountingRequest.getUserName(),"记账处理错误",e, Memarylogger.RADIUSD);
             }
         });
         return getAccountingResponse(accountingRequest);
@@ -77,42 +67,27 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
     @Override
     public void messageReceived(IoSession session, Object message)
             throws Exception {
-
-        if (!(message instanceof IoBuffer)) {
-            return;
-        }
-        IoBuffer buffer = (IoBuffer) message;
-        byte[] data = new byte[buffer.limit()];
-        buffer.get(data);
-        radiusStat.incrReqBytes(data.length);
-
         final InetSocketAddress remoteAddress = (InetSocketAddress) session.getAttribute(SESSION_CLIENT_IP_KEY);
         final InetSocketAddress localAddress = (InetSocketAddress) session.getLocalAddress();
+        byte[] data = parseMessage(session, message);
+        radiusStat.incrReqBytes(data.length);
         RadiusPacket preRequest = makeRadiusPacket(data, "1234567890", RadiusPacket.RESERVED);
         if(preRequest.getPacketType()!=RadiusPacket.ACCOUNTING_REQUEST){
-            if(preRequest.getPacketType()==RadiusPacket.ACCESS_REQUEST){
-                logger.info("ACCT->AUTH-COUNT:"+counter.incrementAndGet(),Syslogger.RADIUSD);
-                buffer.flip();
-                authHandler.messageReceived(session, buffer);
-                return;
-            }else{
-                radiusStat.incrAcctDrop();
-                logger.error(String.format("错误的 RADIUS 记账消息类型 %s  <%s -> %s>", preRequest.getPacketType(), remoteAddress,localAddress), Syslogger.RADIUSD);
-                return;
-            }
+            radiusStat.incrAcctDrop();
+            logger.error("错误的 RADIUS 记账消息类型 " + preRequest.getPacketType() + "  <" + remoteAddress + " -> " + localAddress + ">", Memarylogger.RADIUSD);
+            return;
         }
         radiusStat.incrAcctReq();
         final Bras nas = getNas(remoteAddress, preRequest);
 
         if (nas == null) {
             radiusStat.incrAcctDrop();
-            logger.error(String.format("未授权的接入设备<记账> <%s -> %s>", remoteAddress,localAddress),Syslogger.RADIUSD);
+            logger.error("未授权的接入设备<记账> <" + remoteAddress + " -> " + localAddress + ">", Memarylogger.RADIUSD);
             return;
         }
 
         AccountingRequest request = (AccountingRequest)makeRadiusPacket(data, nas.getSecret(), RadiusPacket.ACCOUNTING_REQUEST);
         request.setRemoteAddr(remoteAddress);
-
         request = (AccountingRequest)parseFilter.doFilter(request,nas);
 
         ValidateCache vc = getBrasValidate(nas);
@@ -120,12 +95,11 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         vc.incr(vckey);
         if(vc.isOver(vckey)){
             radiusStat.incrAcctDrop();
-            logger.error(request.getUsername(),String.format("接入设备记账并发限制超过%s <%s -> %s>", nas.getAcctLimit(), remoteAddress,localAddress), Syslogger.RADIUSD);
+            logger.error(request.getUsername(), "接入设备记账并发限制超过" + nas.getAcctLimit() + " <" + remoteAddress + " -> " + localAddress + ">", Memarylogger.RADIUSD);
             return;
         }
 
-        logger.info(request.getUserName(), String.format("接收到 RADIUS 记账(%s)请求 <%s -> %s> : %s",
-                request.getStatusTypeName(), remoteAddress,localAddress,request.toSimpleString()),Syslogger.RADIUSD);
+        logger.info(request.getUserName(), "接收到 RADIUS 记账(" + request.getStatusTypeName() + ")请求 <" + remoteAddress + " -> " + localAddress + "> : " + request.toLineString(), Memarylogger.RADIUSD);
         if (radiusConfig.isTraceEnabled())
             logger.print(request.toString());
 
@@ -135,8 +109,7 @@ public class RadiusAcctHandler extends RadiusbasicHandler {
         // send response
         if (response != null) {
             radiusStat.incrAcctResp();
-            logger.info(request.getUserName(),String.format("发送 RADIUS 记账(%s)响应至 %s， %s",
-                    request.getStatusTypeName(), remoteAddress,response.toLineString()),Syslogger.RADIUSD);
+            logger.info(request.getUserName(), "发送 RADIUS 记账(" + request.getStatusTypeName() + ")响应至 " + remoteAddress + "， " + response.toLineString(), Memarylogger.RADIUSD);
             if (radiusConfig.isTraceEnabled())
                 logger.print(response.toString());
 

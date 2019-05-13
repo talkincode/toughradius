@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.toughradius.mapper.ConfigMapper">
   <resultMap id="BaseResultMap" type="org.toughradius.entity.Config">
-    <id column="id" jdbcType="INTEGER" property="id" />
+    <id column="id" jdbcType="BIGINT" property="id" />
     <result column="type" jdbcType="VARCHAR" property="type" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="value" jdbcType="VARCHAR" property="value" />
@@ -36,9 +36,21 @@
   </select>
 
 
-  <select id="insertConfig" parameterType="org.toughradius.entity.Config">
-    insert into tr_config (`type`, `name`, `value`) values (#{type},#{name},#{value})
-  </select>
+  <insert id="insertConfig" parameterType="org.toughradius.entity.Config" flushCache="true">
+    insert into tr_config
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null  and id != ''  ">id,</if>
+      <if test="name != null  and name != ''  ">name,</if>
+      <if test="type != null  and type != ''  ">type,</if>
+      <if test="value != null  and value != ''  ">value,</if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null  and id != ''  ">#{id},</if>
+      <if test="name != null  and name != ''  ">#{name},</if>
+      <if test="type != null  and type != ''  ">#{type},</if>
+      <if test="value != null  and value != ''  ">#{value},</if>
+    </trim>
+  </insert>
 
 
   <select id="updateConfig" parameterType="org.toughradius.entity.Config" flushCache="true">
@@ -49,7 +61,7 @@
     delete from tr_config where type = #{type} and name = #{name}
   </delete>
 
-  <delete id="deleteById" parameterType="java.lang.Integer">
+  <delete id="deleteById" parameterType="java.lang.Long">
     delete from tr_config where id = #{id}
   </delete>
 

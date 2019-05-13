@@ -22,27 +22,26 @@ webix.ready(function() {
                 align: "center,middle",
                 body:{
                     css:"login-win",
+                    width: 360,
                     rows:[
-                        {
-                            maxWidth:340,
-                            width:320,
-                            height:90,
-                            cols:[
-                                {css:"login-logo"}
-                            ]
-                        },
                         {
                             id:logviewId,
                             view: "form",
                             scroll: false,
-                            maxWidth: 340,
                             autoHeight: true,
                             paddingX: 30,
+                            paddingY: 30,
                             elements: [
+                                {
+                                    height:90,
+                                    cols:[
+                                        {css:"login-logo"}
+                                    ]
+                                },
                                 {view: "text",name:"username", value: '', placeholder: "帐 号", height:35},
                                 {view: "text", name:"password",type: 'password', value: '', placeholder: "密 码",height:35},
                                 {
-                                    margin: 3, cols: [
+                                    margin: 0, cols: [
                                         {
                                             id:"login_btn",
                                             view: "button",
@@ -62,8 +61,6 @@ webix.ready(function() {
                                         }
                                     ]
                                 },
-                                {height:20}
-
                             ]
                         }
                     ]

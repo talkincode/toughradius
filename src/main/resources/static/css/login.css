@@ -1,14 +1,14 @@
 body {
-    /*background: url(../imgs/login_bg.jpg) no-repeat center center;*/
+    background: url(/static/imgs/login_bg.jpg) no-repeat center center;
     background-color: #2a2f35;
     background-size: 100% 100%;
 }
 
 .login-win{
     border-radius: 5px;
-    background-color: #323e4d !important;
-    box-shadow: 3px 5px 15px 0px rgba(50, 54, 58, 0.17);
-    border: 2px solid #364150;
+    /*background-color: #323e4d !important;*/
+    /*box-shadow: 3px 5px 15px 0px rgba(50, 54, 58, 0.17);*/
+    /*border: 2px solid #364150;*/
 }
 
 .login-logo{
@@ -19,16 +19,16 @@ body {
 }
 
 .login-win .webix_view{
-    background-color: #323e4d !important;
+    background-color: rgb(1, 9, 21) !important;
     border: none;
     font-size: 16px !important;
 }
 
 .login-win .webix_form input{
     border-radius: 5px;
-    background-color: #27303c;
-    border-color: #354c5f;
-    color: #bfbfbf;
+    background-color: #061727;
+    border-color: #061826;
+    color: #d0d0d0;
 }
 
 .login-win #login_btn button{

@@ -1,7 +1,7 @@
 package org.toughradius.config;
 import org.toughradius.common.ValidateCache;
 import org.toughradius.handler.RadiusAcctHandler;
-import org.toughradius.handler.RadiusAuthHandler;
+import org.toughradius.handler.RadiusBasicHandler;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
@@ -61,7 +61,7 @@ public class RadiusConfig {
      * @throws IOException
      */
     @Bean( destroyMethod = "unbind")
-    public NioDatagramAcceptor nioAuthAcceptor(RadiusAuthHandler radiusAuthHandler) throws IOException {
+    public NioDatagramAcceptor nioAuthAcceptor(RadiusBasicHandler radiusAuthHandler) throws IOException {
         if(!running){
             logger.info("====== RadiusAuthServer not running =======");
             return null;

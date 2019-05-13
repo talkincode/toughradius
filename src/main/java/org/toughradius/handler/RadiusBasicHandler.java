@@ -23,20 +23,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
-public abstract class RadiusbasicHandler extends IoHandlerAdapter {
+public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     protected  final String SESSION_CLIENT_IP_KEY = "SESSION_CLIENT_IP_KEY";
-
-    protected final static ScheduledExecutorService schedExecuter = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     protected RadiusStat radiusStat;
@@ -63,10 +55,10 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
     protected RadiusParseFilter parseFilter;
 
     @Autowired
-    protected ThreadPoolTaskExecutor taskExecutor;
+    protected ThreadPoolTaskExecutor systaskExecutor;
 
     @Autowired
-    protected Syslogger logger;
+    protected Memarylogger logger;
 
     /**
      * 查询设备信息
@@ -124,12 +116,23 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
         }
     }
 
+    /**
+     * 创建记帐响应包
+     * @param accountingRequest
+     * @return
+     * @throws RadiusException
+     */
     public RadiusPacket getAccountingResponse(AccountingRequest accountingRequest) throws RadiusException {
         RadiusPacket answer = new RadiusPacket(RadiusPacket.ACCOUNTING_RESPONSE, accountingRequest.getPacketIdentifier());
         copyProxyState(accountingRequest, answer);
         return answer;
     }
 
+    /**
+     * 创建认证授权响应
+     * @param accessRequest
+     * @return
+     */
     public AccessAccept getAccessAccept(AccessRequest accessRequest) {
         AccessAccept answer = new AccessAccept(accessRequest.getPacketIdentifier());
         answer.addAttribute("Reply-Message","ok");
@@ -137,6 +140,12 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
         return answer;
     }
 
+    /**
+     * 创建认证拒绝响应
+     * @param accessRequest
+     * @param error
+     * @return
+     */
     public RadiusPacket getAccessReject(AccessRequest accessRequest, String error) {
         RadiusPacket answer = new RadiusPacket(RadiusPacket.ACCESS_REJECT, accessRequest.getPacketIdentifier());
         if(error==null){
@@ -147,31 +156,37 @@ public abstract class RadiusbasicHandler extends IoHandlerAdapter {
         return answer;
     }
 
+    /**
+     * 解码原始数据傲文
+     * @param data
+     * @param sharedSecret
+     * @param forceType
+     * @return
+     * @throws IOException
+     * @throws RadiusException
+     */
     protected RadiusPacket makeRadiusPacket(byte[] data, String sharedSecret, int forceType) throws IOException, RadiusException {
         ByteArrayInputStream in = new ByteArrayInputStream(data);
         return RadiusPacket.decodeRequestPacket(in, sharedSecret, forceType);
     }
 
     /**
-     * 发送延迟响应
-     * @param delay
+     * 数据报文解析
      * @param session
-     * @param remoteAddress
-     * @param secret
-     * @param request
-     * @param responses
+     * @param message
+     * @return
      * @throws IOException
+     * @throws RadiusException
      */
-    protected void sendDelayResponse(int delay, IoSession session, SocketAddress remoteAddress, String secret, RadiusPacket request, RadiusPacket responses) throws IOException {
-        schedExecuter.schedule(()->{
-            try {
-                this.sendResponse(session,remoteAddress,secret,request,responses);
-            } catch (IOException e) {
-                logger.error("发送延迟响应失败",e,Syslogger.RADIUSD);
-            }finally {
-                session.closeOnFlush();
-            }
-        },delay, TimeUnit.SECONDS);
+    protected byte[] parseMessage(IoSession session, Object message) throws IOException, RadiusException {
+        if (!(message instanceof IoBuffer)) {
+            return null;
+        }
+        IoBuffer buffer = (IoBuffer) message;
+        byte[] data = new byte[buffer.limit()];
+        buffer.get(data);
+        radiusStat.incrReqBytes(data.length);
+        return  data;
     }
 
     /**

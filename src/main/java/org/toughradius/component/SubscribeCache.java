@@ -2,13 +2,9 @@ package org.toughradius.component;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeBill;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,7 +17,7 @@ public class SubscribeCache {
     private SubscribeService subscribeService;
 
     @Autowired
-    private Syslogger logger;
+    private Memarylogger logger;
 
     public ConcurrentHashMap<String,CacheObject> getCacheData(){
         return cacheData;
@@ -81,7 +77,7 @@ public class SubscribeCache {
         if(subs!=null){
             subs.setIsOnline(1);
         }
-        subscribeService.startOnline(username);
+
     }
 
     public void stopSubscribeOnline(String username){
@@ -89,7 +85,7 @@ public class SubscribeCache {
         if(subs!=null){
             subs.setIsOnline(0);
         }
-        subscribeService.stopOnline(username);
+
     }
 
     protected void reloadSubscribe(String username){
@@ -129,10 +125,6 @@ public class SubscribeCache {
             }
         }
         logger.print(String.format("update user total = %s, cast %s ms ", count, System.currentTimeMillis()-start));
-    }
-
-    public SubscribeBill getBillData(String username){
-        return subscribeService.fetchSubscribeBill(username);
     }
 
     class CacheObject {

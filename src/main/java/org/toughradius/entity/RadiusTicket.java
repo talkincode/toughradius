@@ -6,11 +6,9 @@ import org.toughradius.common.StringUtil;
 import java.util.Date;
 
 public class RadiusTicket {
-    private Integer id;
+    private Long id;
 
-    private Integer nodeId;
-
-    private Integer areaId;
+    private Long nodeId;
 
     private String username;
 
@@ -58,28 +56,20 @@ public class RadiusTicket {
 
     private Integer outVlan;
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
-    public Integer getNodeId() {
+    public Long getNodeId() {
         return nodeId;
     }
 
-    public void setNodeId(Integer nodeId) {
+    public void setNodeId(Long nodeId) {
         this.nodeId = nodeId;
-    }
-
-    public Integer getAreaId() {
-        return areaId;
-    }
-
-    public void setAreaId(Integer areaId) {
-        this.areaId = areaId;
     }
 
     public String getUsername() {
@@ -276,9 +266,8 @@ public class RadiusTicket {
 
     public static String getHeaderString(){
         StringBuilder buff = new StringBuilder();
-
+        buff.append("id").append(",");
         buff.append("nodeId").append(",");
-        buff.append("areaId").append(",");
         buff.append("username").append(",");
         buff.append("nasId").append(",");
         buff.append("nasAddr").append(",");
@@ -307,8 +296,8 @@ public class RadiusTicket {
 
     public String toString(){
         StringBuilder buff = new StringBuilder();
+        buff.append(safestr(id)).append(",");
         buff.append(safestr(nodeId)).append(",");
-        buff.append(safestr(areaId)).append(",");
         buff.append(safestr(username)).append(",");
         buff.append(safestr(nasId)).append(",");
         buff.append(safestr(nasAddr)).append(",");
@@ -341,13 +330,9 @@ public class RadiusTicket {
             if(strs.length!=25){
                 return null;
             }
-//            nodeId,areaId,username,nasId,nasAddr,nasPaddr,sessionTimeout,framedIpaddr,framedNetmask,macAddr,nasPort,nasClass,nasPortId,
-//                    nasPortType,serviceType,acctSessionId,acctSessionTime,acctInputTotal,acctOutputTotal,acctInputPackets,
-//                    acctOutputPackets,acctStartTime,acctStopTime,inVlan,outVlan
-
             RadiusTicket log = new RadiusTicket();
-            log.setNodeId(Integer.valueOf(strs[0]));
-            log.setAreaId(Integer.valueOf(strs[1]));
+            log.setId(Long.valueOf(strs[0]));
+            log.setNodeId(Long.valueOf(strs[1]));
             log.setUsername(strs[2]);
             log.setNasId(strs[3]);
             log.setNasAddr(strs[4]);

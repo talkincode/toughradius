@@ -3,7 +3,6 @@ if (!window.toughradius.admin.syslog)
 
 
 toughradius.admin.syslog.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("hdd-o","系统日志","syslog");
     var tableid = webix.uid();
     var queryid = webix.uid();
     var reloadData = function(){
@@ -17,8 +16,8 @@ toughradius.admin.syslog.loadPage = function(session){
         }
         $$(tableid).load('/admin/syslog/query?'+args.join("&"));
     };
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.syslog",
         css:"main-panel",padding:2,
         rows:[
             {
@@ -39,8 +38,8 @@ toughradius.admin.syslog.loadPage = function(session){
                                 { view: "text", name: "keyword", label: "", placeholder: "内容关键字"},
                                 {
                                     cols:[
-                                        {view: "richselect",  name: "type", label: "", value: "system", labelWidth:0,width:66,
-                                            options: [{ id: "radiusd", value: "认证" },{ id: "system", value: "系统" }, { id: "api", value: "接口" },{ id: "other", value: "其他" }]},
+                                        {view: "richselect",  name: "type", label: "", value: "error", labelWidth:0,width:100,
+                                            options: [{ id: "radiusd", value: "RADIUS" },{ id: "api", value: "API" },{ id: "error", value: "ERROR" }]},
                                         {view: "button", label: "查询", type: "icon", icon: "search", borderless: true, width: 55,click:function(){
                                                 reloadData();
                                             }},
@@ -75,9 +74,9 @@ toughradius.admin.syslog.loadPage = function(session){
                     }
                 },
                 columns:[
-                    { id:"name", header:["帐号"],  template:"{common.subrow()} #name#"},
-                    { id:"type",header:["类型"]},
-                    { id:"time",header:["时间"]},
+                    { id:"name", header:["帐号"], adjust:true, sort: "string",template:"{common.subrow()} #name#"},
+                    { id:"type",header:["类型"],sort: "string", adjust:true},
+                    { id:"time",header:["时间"], sort: "string",adjust:true},
                     { id:"msg",header:["内容"], fillspace:true},
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
@@ -86,7 +85,7 @@ toughradius.admin.syslog.loadPage = function(session){
                 autoWidth: true,
                 autoHeight: true,
                 url:"/admin/syslog/query",
-                pager: "dataPager",
+                pager: "syslog_dataPager",
                 datafetch:40,
 				loadahead:15,
                 ready:function () {
@@ -104,20 +103,21 @@ toughradius.admin.syslog.loadPage = function(session){
                             { id: 500, value: "500" },
                             { id: 1000, value: "1000" }],on: {
                             onChange: function (newv, oldv) {
-                                $$("dataPager").define("size",parseInt(newv));
+                                $$("syslog_dataPager").define("size",parseInt(newv));
                                 $$(tableid).refresh();
                                 reloadData();
                             }
                         }
                     },
                     {
-                        id:"dataPager", view: 'pager', master:false, size: 20, group: 5,
+                        id:"syslog_dataPager", view: 'pager', master:false, size: 20, group: 5,
                         template: '{common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()} total:#count#'
                     },{}
                 ]
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.syslog","hdd-o","系统日志", cview, true);
     webix.extend($$(tableid), webix.ProgressBar);
 };
 

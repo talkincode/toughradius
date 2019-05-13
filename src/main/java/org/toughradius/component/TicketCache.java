@@ -22,14 +22,10 @@ import java.util.zip.GZIPOutputStream;
 public class TicketCache {
 
     private Log logger = LogFactory.getLog(TicketCache.class);
-    private final static ConcurrentLinkedDeque<RadiusTicket> queue = new  ConcurrentLinkedDeque<RadiusTicket>();
+    private final static ConcurrentLinkedDeque<RadiusTicket> queue = new  ConcurrentLinkedDeque<>();
 
     @Autowired
     private RadiusConfig radiusConfig;
-
-    @Autowired
-    private ThreadPoolTaskExecutor taskExecutor;
-
 
     public void addTicket(RadiusTicket ticket)
     {
@@ -48,12 +44,12 @@ public class TicketCache {
             if(!logdir.exists()){
                 logdir.mkdirs();
             }
-            GZIPOutputStream out = null;
+            BufferedOutputStream out = null;
             try {
-                String filename = String.format("%s/radius-ticket.%s.gz",radiusConfig.getTicketDir(), DateTimeUtil.getDateString());
+                String filename = String.format("%s/radius-ticket.%s.txt",radiusConfig.getTicketDir(), DateTimeUtil.getDateString());
                 File tfile = new File(filename);
                 boolean isnew = !tfile.exists();
-                out = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(tfile, true)));
+                out = new BufferedOutputStream(new FileOutputStream(tfile, true));
                 if(isnew){
                     out.write(RadiusTicket.getHeaderString().getBytes("utf-8"));
                     out.write("\n".getBytes());
@@ -85,7 +81,6 @@ public class TicketCache {
                                                 String nasid,
                                                 String nasaddr,
                                                 Integer nodeId,
-                                                Integer areaId,
                                                 String username,
                                                 String keyword) throws ServiceException {
         int rowNum = 0;
@@ -131,7 +126,7 @@ public class TicketCache {
             boolean loop = true;
             while (beginDay.compareTo(endDay) <= 0 && loop)
             {
-                String curFileName = String.format("%s.%s.gz" , filename,beginDay);
+                String curFileName = String.format("%s.%s.txt" , filename,beginDay);
 
                 File file = new File(curFileName);
                 if (!file.exists())
@@ -140,7 +135,7 @@ public class TicketCache {
                     continue;
                 }
 
-                reader = new BufferedReader(new InputStreamReader(new GZIPInputStream(new FileInputStream(file)), "UTF-8"));
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));
                 String line = null;
                 while ((line = reader.readLine()) != null)
                 {
@@ -159,9 +154,6 @@ public class TicketCache {
                         continue;
 
                     if (nodeId!=null && nodeId != logdata.getNodeId().intValue())
-                        continue;
-
-                    if (areaId!=null && areaId != logdata.getAreaId().intValue())
                         continue;
 
                     if (ValidateUtil.isNotEmpty(keyword) &&

@@ -511,15 +511,14 @@ toughradius.admin.dashboard.msgstatInfos = function(session,uid,statdata){
 };
 
 toughradius.admin.dashboard.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("dashboard","控制面板","dashboard");
     var cpuchartUid = "toughradius.admin.dashboard.cpuchart_viewid." + webix.uid();
     var memchartUid = "toughradius.admin.dashboard.memchart_viewid." + webix.uid();
     var diskchartUid = "toughradius.admin.dashboard.diskchart_viewid." + webix.uid();
     var msgstatchartid = "toughradius.admin.dashboard.msgstatchart_viewid." + webix.uid();
     var msgstatInfoid = "toughradius.admin.dashboard.msgstatinfo_viewid." + webix.uid();
     var uptimeid = "toughradius.admin.dashboard.uptime.label";
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.dashboard",
         css:"main-panel",padding:5,
         rows:[
             {
@@ -610,7 +609,8 @@ toughradius.admin.dashboard.loadPage = function(session){
                 }
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.dashboard","dashboard","控制面板", cview, false);
     webix.ajax().get('/admin/dashboard/uptime',{}).then(function (result) {
         $$(uptimeid).define("template",result.text());
         $$(uptimeid).refresh();
@@ -624,5 +624,4 @@ toughradius.admin.dashboard.loadPage = function(session){
         toughradius.admin.dashboard.updateMsgChart(session, msgstatchartid,msgstatInfoid);
     };
     toughradius.admin.dashboard.msgRefershTimer = setInterval(reffunc,60*1000)
-
 };

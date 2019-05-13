@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<exe4j version="6.0.2" transformSequenceNumber="2">
+  <directoryPresets config="E:/github/ToughRADIUS/target" />
+  <application name="toughradius" distributionSourceDir="E:/github/ToughRADIUS/release">
+    <languages>
+      <principalLanguage id="en" customLocalizationFile="" />
+    </languages>
+  </application>
+  <executable name="toughradius" type="1" iconSet="true" iconFile="E:/github/ToughRADIUS/src/main/resources/static/favicon.ico" executableDir="." redirectStderr="false" stderrFile="toughradius-error.log" stderrMode="append" redirectStdout="false" stdoutFile="toughradius.log" stdoutMode="append" failOnStderrOutput="true" executableMode="2" changeWorkingDirectory="true" workingDirectory="." singleInstance="true" serviceStartType="2" serviceDependencies="" serviceDescription="toughradius service" jreLocation="" executionLevel="asInvoker" checkConsoleParameter="false" globalSingleInstance="false" singleInstanceActivate="true" dpiAware="java9+" amd64="true">
+    <messageSet />
+    <versionInfo include="true" fileVersion="" fileDescription="" legalCopyright="" internalName="toughradius" productName="" companyName="toughstruct.com" productVersion="v6.0.1" />
+  </executable>
+  <splashScreen show="false" width="0" height="0" bitmapFile="" textOverlay="false">
+    <text>
+      <statusLine x="20" y="20" text="" fontSize="8" fontColor="0,0,0" bold="false" />
+      <versionLine x="20" y="40" text="version %VERSION%" fontSize="8" fontColor="0,0,0" bold="false" />
+    </text>
+  </splashScreen>
+  <java mainClass="org.springframework.boot.loader.JarLauncher" mainMode="1" vmParameters="-server -Xms256M -Xmx2048M" arguments="--spring.profiles.active=prod" allowVMPassthroughParameters="true" preferredVM="" bundleRuntime="true" minVersion="1.8" maxVersion="1.8" allowBetaVM="false" jdkOnly="false">
+    <searchSequence>
+      <registry />
+      <envVar name="JAVA_HOME" />
+      <envVar name="JDK_HOME" />
+    </searchSequence>
+    <classPath>
+      <archive location="E:/github/ToughRADIUS/target/toughradius-latest.jar" failOnError="false" />
+    </classPath>
+    <modulePath />
+    <nativeLibraryDirectories />
+    <vmOptions />
+  </java>
+  <includedFiles />
+  <unextractableFiles />
+</exe4j>

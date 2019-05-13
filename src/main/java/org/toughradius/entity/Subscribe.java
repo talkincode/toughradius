@@ -3,24 +3,17 @@ package org.toughradius.entity;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.util.Date;
 
 public class Subscribe {
-    private Integer id;
+    private Long id;
 
-    private Integer nodeId;
-
-    private Integer areaId;
-
-    private Integer productId;
+    private Long nodeId;
 
     private String subscriber;
 
     private String realname;
 
     private String password;
-
-    private String billType;
 
     private String domain;
 
@@ -31,8 +24,6 @@ public class Subscribe {
     private Integer activeNum;
 
     private Integer isOnline;
-
-    private BigInteger flowAmount;
 
     private Boolean bindMac;
 
@@ -46,13 +37,13 @@ public class Subscribe {
 
     private Integer outVlan;
 
-    private BigDecimal upRate;
+    private Long upRate;
 
-    private BigDecimal downRate;
+    private Long downRate;
 
-    private BigDecimal upPeakRate;
+    private Long upPeakRate;
 
-    private BigDecimal downPeakRate;
+    private Long downPeakRate;
 
     private String upRateCode;
 
@@ -78,20 +69,12 @@ public class Subscribe {
         this.realname = realname;
     }
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
-    }
-
-    public Integer getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
     }
 
     public String getSubscriber() {
@@ -108,14 +91,6 @@ public class Subscribe {
 
     public void setPassword(String password) {
         this.password = password == null ? null : password.trim();
-    }
-
-    public String getBillType() {
-        return billType;
-    }
-
-    public void setBillType(String billType) {
-        this.billType = billType == null ? null : billType.trim();
     }
 
     public String getDomain() {
@@ -148,14 +123,6 @@ public class Subscribe {
 
     public void setActiveNum(Integer activeNum) {
         this.activeNum = activeNum;
-    }
-
-    public BigInteger getFlowAmount() {
-        return flowAmount;
-    }
-
-    public void setFlowAmount(BigInteger flowAmount) {
-        this.flowAmount = flowAmount;
     }
 
     public Boolean getBindMac() {
@@ -206,19 +173,19 @@ public class Subscribe {
         this.outVlan = outVlan;
     }
 
-    public BigDecimal getUpRate() {
+    public Long getUpRate() {
         return upRate;
     }
 
-    public void setUpRate(BigDecimal upRate) {
+    public void setUpRate(Long upRate) {
         this.upRate = upRate;
     }
 
-    public BigDecimal getDownRate() {
+    public Long getDownRate() {
         return downRate;
     }
 
-    public void setDownRate(BigDecimal downRate) {
+    public void setDownRate(Long downRate) {
         this.downRate = downRate;
     }
 
@@ -278,36 +245,28 @@ public class Subscribe {
         this.downRateCode = downRateCode;
     }
 
-    public Integer getNodeId() {
+    public Long getNodeId() {
         return nodeId;
     }
 
-    public void setNodeId(Integer nodeId) {
+    public void setNodeId(Long nodeId) {
         this.nodeId = nodeId;
     }
 
-    public BigDecimal getUpPeakRate() {
+    public Long getUpPeakRate() {
         return upPeakRate;
     }
 
-    public void setUpPeakRate(BigDecimal upPeakRate) {
+    public void setUpPeakRate(Long upPeakRate) {
         this.upPeakRate = upPeakRate;
     }
 
-    public BigDecimal getDownPeakRate() {
+    public Long getDownPeakRate() {
         return downPeakRate;
     }
 
-    public void setDownPeakRate(BigDecimal downPeakRate) {
+    public void setDownPeakRate(Long downPeakRate) {
         this.downPeakRate = downPeakRate;
-    }
-
-    public Integer getAreaId() {
-        return areaId;
-    }
-
-    public void setAreaId(Integer areaId) {
-        this.areaId = areaId;
     }
 
     public Integer getIsOnline() {

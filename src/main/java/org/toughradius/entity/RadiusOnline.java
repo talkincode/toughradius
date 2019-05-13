@@ -5,16 +5,13 @@ public class RadiusOnline implements Cloneable{
     public final static int AMOUNT_NOT_ENOUGH = 1000;
     public final static int USER_NOT_EXIST = 1001;
 
-    private Integer id;
+    private Long id;
 
-    private Integer nodeId;
-
-    private Integer areaId;
+    private Long nodeId;
 
     private String realname;
-    private String username;
 
-    private String billType;
+    private String username;
 
     private String nasId;
 
@@ -66,6 +63,22 @@ public class RadiusOnline implements Cloneable{
         return (RadiusOnline) super.clone();
     }
 
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Long getNodeId() {
+        return nodeId;
+    }
+
+    public void setNodeId(Long nodeId) {
+        this.nodeId = nodeId;
+    }
+
     public String getRealname() {
         return realname;
     }
@@ -74,29 +87,6 @@ public class RadiusOnline implements Cloneable{
         this.realname = realname;
     }
 
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getNodeId() {
-        return nodeId;
-    }
-
-    public void setNodeId(Integer nodeId) {
-        this.nodeId = nodeId;
-    }
-
-    public Integer getAreaId() {
-        return areaId;
-    }
-
-    public void setAreaId(Integer areaId) {
-        this.areaId = areaId;
-    }
 
     public String getUsername() {
         return username;
@@ -257,15 +247,6 @@ public class RadiusOnline implements Cloneable{
     public void setAcctStartTime(String acctStartTime) {
         this.acctStartTime = acctStartTime;
     }
-
-    public String getBillType() {
-        return billType;
-    }
-
-    public void setBillType(String billType) {
-        this.billType = billType;
-    }
-
     public int getUnLockFlag() {
         return unLockFlag;
     }

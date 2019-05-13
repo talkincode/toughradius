@@ -1,7 +1,7 @@
 package org.toughradius.handler;
 
 import org.toughradius.common.ValidateUtil;
-import org.toughradius.component.Syslogger;
+import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Bras;
 import org.tinyradius.packet.RadiusPacket;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 public class RadiusParseFilter implements RadiusConstant{
 
     @Autowired
-    public Syslogger logger;
+    public Memarylogger logger;
 
     private final static Pattern pattern = Pattern.compile("\\w?\\s?\\d+/\\d+/\\d+:(\\d+).(\\d+)\\s?");
 
@@ -43,7 +43,7 @@ public class RadiusParseFilter implements RadiusConstant{
                     return filterDefault(request);
             }
         } catch(Exception e){
-            logger.error(e.getMessage(),Syslogger.RADIUSD);
+            logger.error(e.getMessage(), Memarylogger.RADIUSD);
             return request;
         }
     }
@@ -95,7 +95,7 @@ public class RadiusParseFilter implements RadiusConstant{
         try {
             ipHostAddr = request.getAttribute("H3C-Ip-Host-Addr ").getStringValue();
         }catch (Exception e){
-            logger.error("H3C MacAddr 解析失败",Syslogger.RADIUSD);
+            logger.error("H3C MacAddr 解析失败", Memarylogger.RADIUSD);
         }
 
         if(ValidateUtil.isNotEmpty(ipHostAddr)){
@@ -131,7 +131,7 @@ public class RadiusParseFilter implements RadiusConstant{
             macAddr = request.getAttribute("Mac-Addr").getStringValue();
             request.setMacAddr(macAddr.replaceAll("-",":"));
         }catch (Exception e){
-            logger.error("Radback MacAddr 解析失败",Syslogger.RADIUSD);
+            logger.error("Radback MacAddr 解析失败", Memarylogger.RADIUSD);
         }
         int[] vlans = parseCiscoVlan(request);
         request.setInVlanId(vlans[0]);
@@ -204,7 +204,7 @@ public class RadiusParseFilter implements RadiusConstant{
                 result[1] = Integer.valueOf(m.group(1));
             }
         } catch(Exception e){
-            logger.error(String.format("VLAN 解析失败 nasPortId=%s", requset.getNasPortId()),e,Syslogger.RADIUSD);
+            logger.error(String.format("VLAN 解析失败 nasPortId=%s", requset.getNasPortId()), Memarylogger.RADIUSD);
         }
         return result;
     }

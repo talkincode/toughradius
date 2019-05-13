@@ -26,7 +26,7 @@ public class RadiusTester {
     protected RadiusConfig radiusConfig;
 
     @Autowired
-    private Syslogger logger;
+    private Memarylogger logger;
 
     @Autowired
     private BrasService brasService;

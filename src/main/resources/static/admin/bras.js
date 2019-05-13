@@ -2,17 +2,15 @@ if (!window.toughradius.admin.bras)
     toughradius.admin.bras={};
 
 toughradius.admin.bras.loadPage = function(session){
-    toughradius.admin.methods.setToolbar("laptop","BRAS 设备管理","bras");
     var tableid = webix.uid();
-    var queryid = webix.uid();
     var reloadData = function(){
         $$(tableid).define("url", $$(tableid));
         $$(tableid).refresh();
         $$(tableid).clearAll();
         $$(tableid).load('/admin/bras/query');
     };
-    webix.ui({
-        id:toughradius.admin.panelId,
+    var cview = {
+        id:"toughradius.admin.bras",
         css:"main-panel",padding:2,
         rows:[
             {
@@ -109,7 +107,8 @@ toughradius.admin.bras.loadPage = function(session){
                 },
             }
         ]
-    },$$(toughradius.admin.pageId),$$(toughradius.admin.panelId));
+    };
+    toughradius.admin.methods.addTabView("toughradius.admin.bras","laptop","设备管理", cview, true);
 };
 
 toughradius.admin.bras.brasAdd = function(session,callback){

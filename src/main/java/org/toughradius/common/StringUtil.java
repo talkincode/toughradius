@@ -1,13 +1,3 @@
-/*
- * 版权所有 (C) 2005-2008 WWW.ZOULAB.COM。保留所有权利。
- * 版本：V1.0.1
- * 修改记录：
- *      1、2005-6-14，zouchenggang创建 V1.0.0 基础版本;
-  *     2、2005-12-22，zouchenggang修改,调整结构,并加上说明
-  *         1)StringUtil类负责String的应用
-  *         2)ValidateUtil类负责String的验证
-  *         3)DateTimeUtil类负责String与Date的转换 
- */
 package org.toughradius.common;
 
 import java.io.IOException;

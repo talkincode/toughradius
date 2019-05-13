@@ -23,15 +23,10 @@ public class OnlineController {
     @ApiAccess
     @GetMapping("/admin/online/query")
     public PageResult<RadiusOnline> queryOnlineHandler(@RequestParam(defaultValue = "0") int start, @RequestParam(defaultValue = "40") int count,
-                                                       String nodeId, String areaId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword, String sort){
-        return onlineCache.queryOnlinePage(start,count,nodeId,areaId,invlan,outVlan,nasAddr,nasId,beginTime,endTime,keyword,sort);
+                                                       String nodeId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword, String sort){
+        return onlineCache.queryOnlinePage(start,count,nodeId,invlan,outVlan,nasAddr,nasId,beginTime,endTime,keyword,sort);
     }
 
-
-    @GetMapping("/admin/online/getlast")
-    public RadiusOnline getLastOnlineHandler(String username){
-        return onlineCache.getLastOnline(username);
-    }
 
     @GetMapping("/admin/online/unlock")
     public RestResult unlockOnlineHandler(@RequestParam(name = "ids")String ids,
@@ -48,8 +43,8 @@ public class OnlineController {
     }
     //清理在线
     @GetMapping("/admin/online/clear")
-    public RestResult clearOnlineHandler( String nodeId, String areaId,Integer invlan, Integer outVlan,  String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
-        onlineCache.clearOnlineByFilter(nodeId,areaId,invlan, outVlan,nasAddr,nasId,beginTime,endTime,keyword);
+    public RestResult clearOnlineHandler( String nodeId,Integer invlan, Integer outVlan,  String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
+        onlineCache.clearOnlineByFilter(nodeId,invlan, outVlan,nasAddr,nasId,beginTime,endTime,keyword);
         return new RestResult(0,"success");
     }
     //一个下线
