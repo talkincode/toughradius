@@ -1,9 +1,6 @@
-create schema if not exists toughradius collate utf8_general_ci;
-
 create table if not exists tr_bras
 (
-	id bigint auto_increment
-		primary key,
+	id bigint auto_increment primary key,
 	identifier varchar(128) null,
 	name varchar(64) not null,
 	ipaddr varchar(32) null,
@@ -17,16 +14,13 @@ create table if not exists tr_bras
 	create_time datetime not null
 );
 
-create index ix_tr_bras_identifier
-	on tr_bras (identifier);
+create index ix_tr_bras_identifier on tr_bras (identifier);
 
-create index ix_tr_bras_ipaddr
-	on tr_bras (ipaddr);
+create index ix_tr_bras_ipaddr on tr_bras (ipaddr);
 
 create table if not exists tr_config
 (
-	id bigint auto_increment
-		primary key,
+	id bigint auto_increment primary key,
 	type varchar(32) not null,
 	name varchar(128) not null,
 	value varchar(255) null,
@@ -35,8 +29,7 @@ create table if not exists tr_config
 
 create table if not exists tr_subscribe
 (
-	id bigint auto_increment
-		primary key,
+	id bigint auto_increment primary key,
 	node_id bigint default 0 not null,
 	subscriber varchar(32) null,
 	realname varchar(32) null,

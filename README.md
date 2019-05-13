@@ -34,82 +34,84 @@ create database
 
 create tables
 
-    CREATE TABLE `tr_bras` (
-      `id` INT(11) NOT NULL AUTO_INCREMENT,
-      `identifier` VARCHAR(128) NULL DEFAULT NULL,
-      `name` VARCHAR(64) NOT NULL,
-      `ipaddr` VARCHAR(32) NULL DEFAULT NULL,
-      `vendor_id` VARCHAR(32) NOT NULL,
-      `secret` VARCHAR(64) NOT NULL,
-      `coa_port` INT(11) NOT NULL,
-      `auth_limit` INT(11) NULL DEFAULT NULL,
-      `acct_limit` INT(11) NULL DEFAULT NULL,
-      `status` ENUM('enabled','disabled') NULL DEFAULT NULL,
-      `remark` VARCHAR(512) NULL DEFAULT NULL,
-      `create_time` DATETIME NOT NULL,
-      PRIMARY KEY (`id`),
-      INDEX `ix_tr_bras_identifier` (`identifier`),
-      INDEX `ix_tr_bras_ipaddr` (`ipaddr`)
-    )
-      COLLATE='utf8_general_ci'
-      ENGINE=InnoDB
-    ;
+    create schema if not exists toughradius collate utf8_general_ci;
+
+    create table if not exists tr_bras
+    (
+        id bigint auto_increment primary key,
+        identifier varchar(128) null,
+        name varchar(64) not null,
+        ipaddr varchar(32) null,
+        vendor_id varchar(32) not null,
+        secret varchar(64) not null,
+        coa_port int not null,
+        auth_limit int null,
+        acct_limit int null,
+        status enum('enabled', 'disabled') null,
+        remark varchar(512) null,
+        create_time datetime not null
+    );
     
-    CREATE TABLE `tr_config` (
-      `id` INT(11) NOT NULL AUTO_INCREMENT,
-      `type` VARCHAR(32) NOT NULL,
-      `name` VARCHAR(128) NOT NULL,
-      `value` VARCHAR(255) NULL DEFAULT NULL,
-      `remark` VARCHAR(255) NULL DEFAULT NULL,
-      PRIMARY KEY (`id`)
-    )
-      COLLATE='utf8_general_ci'
-      ENGINE=InnoDB
-    ;
+    create index ix_tr_bras_identifier on tr_bras (identifier);
     
+    create index ix_tr_bras_ipaddr on tr_bras (ipaddr);
     
-    CREATE TABLE `tr_subscribe` (
-      `id` INT(11) NOT NULL AUTO_INCREMENT,
-       `node_id` INT(11) NOT NULL DEFAULT 0,
-       `area_id` int(11) NOT NULL DEFAULT 0,
-      `subscriber` VARCHAR(32) NULL DEFAULT NULL,
-      `realname` VARCHAR(32) NULL DEFAULT NULL,
-      `password` VARCHAR(128) NOT NULL,
-      `bill_type` ENUM('flow','time') NOT NULL DEFAULT 'time',
-      `domain` VARCHAR(128) NULL DEFAULT NULL,
-      `addr_pool` VARCHAR(128) NULL DEFAULT NULL,
-      `policy` VARCHAR(512) NULL DEFAULT NULL,
-      `is_online` INT(11) NULL DEFAULT NULL,
-      `active_num` INT(11) NULL DEFAULT NULL,
-      `flow_amount` BIGINT(20) NULL DEFAULT NULL,
-      `bind_mac` TINYINT(1) NULL DEFAULT NULL,
-      `bind_vlan` TINYINT(1) NULL DEFAULT NULL,
-      `ip_addr` VARCHAR(32) NULL DEFAULT NULL,
-      `mac_addr` VARCHAR(32) NULL DEFAULT NULL,
-      `in_vlan` INT(11) NULL DEFAULT NULL,
-      `out_vlan` INT(11) NULL DEFAULT NULL,
-      `up_rate` DECIMAL(6,3) NULL DEFAULT NULL,
-      `down_rate` DECIMAL(6,3) NULL DEFAULT NULL,
-      `up_peak_rate` DECIMAL(6,3) NULL DEFAULT NULL,
-      `down_peak_rate` DECIMAL(6,3) NULL DEFAULT NULL,
-      `up_rate_code` VARCHAR(32) NULL DEFAULT NULL,
-      `down_rate_code` VARCHAR(32) NULL DEFAULT NULL,
-      `status` ENUM('enabled','disabled') NULL DEFAULT NULL,
-      `remark` VARCHAR(512) NULL DEFAULT NULL,
-      `begin_time` DATETIME NOT NULL,
-      `expire_time` DATETIME NOT NULL,
-      `create_time` DATETIME NOT NULL,
-      `update_time` DATETIME NULL DEFAULT NULL,
-      PRIMARY KEY (`id`),
-      INDEX `ix_tr_subscribe_subscriber` (`subscriber`),
-      INDEX `ix_tr_subscribe_expire_time` (`expire_time`),
-      INDEX `ix_tr_subscribe_status` (`status`),
-      INDEX `ix_tr_subscribe_create_time` (`create_time`),
-      INDEX `ix_tr_subscribe_update_time` (`update_time`)
-    )
-      COLLATE='utf8_general_ci'
-      ENGINE=InnoDB
-    ;
+    create table if not exists tr_config
+    (
+        id bigint auto_increment primary key,
+        type varchar(32) not null,
+        name varchar(128) not null,
+        value varchar(255) null,
+        remark varchar(255) null
+    );
+    
+    create table if not exists tr_subscribe
+    (
+        id bigint auto_increment primary key,
+        node_id bigint default 0 not null,
+        subscriber varchar(32) null,
+        realname varchar(32) null,
+        password varchar(128) not null,
+        domain varchar(128) null,
+        addr_pool varchar(128) null,
+        policy varchar(512) null,
+        is_online int null,
+        active_num int null,
+        bind_mac tinyint(1) null,
+        bind_vlan tinyint(1) null,
+        ip_addr varchar(32) null,
+        mac_addr varchar(32) null,
+        in_vlan int null,
+        out_vlan int null,
+        up_rate bigint null,
+        down_rate bigint null,
+        up_peak_rate bigint null,
+        down_peak_rate bigint null,
+        up_rate_code varchar(32) null,
+        down_rate_code varchar(32) null,
+        status enum('enabled', 'disabled') null,
+        remark varchar(512) null,
+        begin_time datetime not null,
+        expire_time datetime not null,
+        create_time datetime not null,
+        update_time datetime null
+    );
+    
+    create index ix_tr_subscribe_create_time
+        on tr_subscribe (create_time);
+    
+    create index ix_tr_subscribe_expire_time
+        on tr_subscribe (expire_time);
+    
+    create index ix_tr_subscribe_status
+        on tr_subscribe (status);
+    
+    create index ix_tr_subscribe_subscriber
+        on tr_subscribe (subscriber);
+    
+    create index ix_tr_subscribe_update_time
+        on tr_subscribe (update_time);
+    
 
 insert test data
 
