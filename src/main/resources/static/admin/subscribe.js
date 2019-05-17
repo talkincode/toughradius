@@ -25,7 +25,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
 
     var cview = {
         id: "toughradius.admin.subscribe",
-        css:"main-panel",padding:2,
+        css:"main-panel",padding:15,
         rows:[
             {
                 id:toughradius.admin.subscribe.dataViewID,

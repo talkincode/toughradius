@@ -147,6 +147,7 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
             throws Exception {
         long start = System.currentTimeMillis();
         byte[] data = parseMessage(session, message);
+
         radiusStat.incrReqBytes(data.length);
 
         final InetSocketAddress remoteAddress = (InetSocketAddress) session.getAttribute(SESSION_CLIENT_IP_KEY);

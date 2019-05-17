@@ -19,6 +19,20 @@ public class ConfigService {
     public final static String SYSTEM_USERNAME = "SYSTEM_USERNAME";
     public final static String SYSTEM_USERPWD = "SYSTEM_USERPWD";
 
+    public final static String SMS_MODULE = "sms";
+    public final static String SMS_GATEWAY = "SMS_GATEWAY";
+    public final static String SMS_APPID = "SMS_APPID";
+    public final static String SMS_APPKEY = "SMS_APPKEY";
+
+    public final static String WLAN_MODULE = "wlan";
+    public final static String WLAN_WECHAT_SSID = "wlan_wechat_ssid";
+    public final static String WLAN_WECHAT_SHOPID = "wlan_wechat_shopid";
+    public final static String WLAN_WECHAT_APPID = "wlan_wechat_appid";
+    public final static String WLAN_WECHAT_SECRETKEY = "wlan_wechat_secretkey";
+
+
+
+
     @Autowired
     private ConfigMapper configMapper;
 

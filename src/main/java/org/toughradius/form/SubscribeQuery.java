@@ -1,6 +1,8 @@
-package org.toughradius.entity;
+package org.toughradius.form;
 
-public class SubscribeQuery extends Subscribe{
+import org.toughradius.entity.Subscribe;
+
+public class SubscribeQuery extends Subscribe {
 
     private String keyword;
 

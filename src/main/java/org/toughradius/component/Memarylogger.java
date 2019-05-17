@@ -19,7 +19,7 @@ public class Memarylogger {
 
     public final static String RADIUSD = "radiusd";
     public final static String SYSTEM = "system";
-    public final static String BRAS = "bras";
+    public final static String PORTAL = "portal";
     public final static String API = "api";
     public final static String ERROR = "error";
 
@@ -33,7 +33,7 @@ public class Memarylogger {
         traceMap.put(RADIUSD,new LoggerDeque(10000));
         traceMap.put(SYSTEM,new LoggerDeque(10000));
         traceMap.put(API,new LoggerDeque(10000));
-        traceMap.put(BRAS,new LoggerDeque(10000));
+        traceMap.put(PORTAL,new LoggerDeque(10000));
         traceMap.put(ERROR,new LoggerDeque(10000));
     }
 

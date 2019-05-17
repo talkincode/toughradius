@@ -1,7 +1,5 @@
 package org.toughradius.entity;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.Timestamp;
 
 public class Subscribe {

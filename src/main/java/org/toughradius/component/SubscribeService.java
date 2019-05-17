@@ -1,7 +1,7 @@
 package org.toughradius.component;
 
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeQuery;
+import org.toughradius.form.SubscribeQuery;
 import org.toughradius.mapper.SubscribeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

@@ -12,8 +12,8 @@ import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.SubscribeService;
 import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeForm;
-import org.toughradius.entity.SubscribeQuery;
+import org.toughradius.form.SubscribeForm;
+import org.toughradius.form.SubscribeQuery;
 
 import java.util.List;
 
@@ -113,7 +113,9 @@ public class SubsribeController {
     @ResponseBody
     public RestResult releaseSubscribe(String ids){
         try{
-            subscribeService.release(ids);
+            for(String id : ids.split(",")){
+                subscribeService.release(id);
+            }
             return RestResult.SUCCESS;
         }catch(Exception e){
             logger.error("释放用户绑定失败",e, Memarylogger.SYSTEM);

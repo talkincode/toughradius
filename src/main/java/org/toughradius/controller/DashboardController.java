@@ -10,6 +10,9 @@ import org.toughradius.component.RadiusStat;
 
 import java.util.Map;
 
+/**
+ * 控制面板
+ */
 @Controller
 public class DashboardController {
 

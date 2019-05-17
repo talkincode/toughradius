@@ -139,7 +139,6 @@ public class RadiusAccountingFilter {
         online.setAcctOutputPackets(request.getAcctOutputPackets());
         online.setAcctStartTime(request.getAcctStartTime());
         onlineCache.putOnline(online);
-        subscribeCache.startSubscribeOnline(request.getUsername());
         if(radiusConfig.getTrace() ==1){
             logger.info(request.getUsername(),String.format(":: 新增用户在线信息: sessionId=%s", request.getAcctSessionId()), Memarylogger.RADIUSD);
         }
@@ -152,22 +151,13 @@ public class RadiusAccountingFilter {
     }
 
     public void doUpdate(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-        systaskExecutor.execute(() -> {
-            try {
-                if(!onlineCache.isExist(request.getAcctSessionId())){
-                    logger.print(String.format(":: 更新在线用户时用户在线记录不存在，立即新增在线信息 %s ", request.getUserName()));
-                    addOnline(request,nas,user);
-                    return;
-                }
-                //2. 更新在线数据
-                onlineCache.updateOnline(request);
-                if (radiusConfig.getTrace() == 1) {
-                    logger.print(String.format(":: %s 结束记账更新 ", request.getUsername()));
-                }
-            } catch (Exception e) {
-                logger.error(request.getUsername(),"记账更新错误",e, Memarylogger.RADIUSD);
-            }
-        });
+        if(!onlineCache.isExist(request.getAcctSessionId())){
+            logger.info(request.getUserName(),":: 更新在线用户时用户在线记录不存在，立即新增在线信息 " + request.getUserName() + " ",Memarylogger.RADIUSD);
+            addOnline(request,nas,user);
+            return;
+        }
+        //2. 更新在线数据
+        onlineCache.updateOnline(request);
     }
 
     public void doStop(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
@@ -189,7 +179,6 @@ public class RadiusAccountingFilter {
                 }
 
                 RadiusOnline online = onlineCache.removeOnline(request.getAcctSessionId());
-                subscribeCache.stopSubscribeOnline(online.getUsername());
                 //新增上网日志
                 RadiusTicket radiusTicket = new RadiusTicket();
                 radiusTicket.setId(CoderUtil.randomLongId());

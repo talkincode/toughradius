@@ -1,5 +1,22 @@
 # TOUGHRADIUS
 
+
+                 )                        )   (                (       (              (
+      *   )   ( /(            (        ( /(   )\ )     (       )\ )    )\ )           )\ )              (
+    ` )  /(   )\())      (    )\ )     )\()) (()/(     )\     (()/(   (()/(      (   (()/(     (   (    )\ )
+     ( )(_)) ((_)\       )\  (()/(    ((_)\   /(_)) ((((_)(    /(_))   /(_))     )\   /(_))    )\  )\  (()/(
+    (_(_())    ((_)   _ ((_)  /(_))_   _((_) (_))    )\ _ )\  (_))_   (_))    _ ((_) (_))     ((_)((_)  /(_))
+    |_   _|   / _ \  | | | | (_)) __| | || | | _ \   (_)_\(_)  |   \  |_ _|  | | | | / __|    \ \ / /  (_) /
+      | |    | (_) | | |_| |   | (_ | | __ | |   /    / _ \    | |) |  | |   | |_| | \__ \     \ V /    / _ \
+      |_|     \___/   \___/     \___| |_||_| |_|_\   /_/ \_\   |___/  |___|   \___/  |___/      \_/     \___/
+
+                                              /)
+        _   __   __   _    _/_  ___       _  (/   _  _/_  __      _ _/_      _  ______
+        (_(/ (_(/ (_(/  .  (__ (_) (_(_  (_/_/ )_/_)_(__ / (_(_(_(__(__  .  (__(_) // (_
+                                        .-/
+                                       (_/
+
+
 ToughRADIUS is a Radius server software developed based on Java & SpringBoot (since v6.x), which implements the standard Radius protocol and supports the extension of Radius protocol.
 
 ToughRADIUS can be understood as a Radius middleware, and it does not implement all of the business functions. But it's easy to Easier to extended development.
@@ -40,15 +57,17 @@ create tables
         name varchar(64) not null,
         ipaddr varchar(32) null,
         vendor_id varchar(32) not null,
+        portal_vendor varchar(32) not null,
         secret varchar(64) not null,
         coa_port int not null,
+        ac_port int not null,
         auth_limit int null,
         acct_limit int null,
         status enum('enabled', 'disabled') null,
         remark varchar(512) null,
         create_time datetime not null
     );
-    
+
     create index ix_tr_bras_identifier on tr_bras (identifier);
     
     create index ix_tr_bras_ipaddr on tr_bras (ipaddr);
@@ -114,9 +133,9 @@ create tables
 insert test data
 
     INSERT INTO toughradius.tr_bras
-    (identifier, name, ipaddr, vendor_id, secret, coa_port, auth_limit, acct_limit, STATUS, remark, create_time)
-    VALUES ('radius-tester', 'radius-tester', '127.0.0.1', '14988', 'secret', 3799, 1000, 1000, NULL, '0', '2019-03-01 14:07:46');
-    
+    (identifier, name, ipaddr, vendor_id, portal_vendor,secret, coa_port,ac_port, auth_limit, acct_limit, STATUS, remark, create_time)
+    VALUES ('radius-tester', 'radius-tester', '127.0.0.1', '14988',"cmccv1", 'secret', 3799,2000, 1000, 1000, NULL, '0', '2019-03-01 14:07:46');
+
     INSERT INTO toughradius.tr_subscribe
     (node_id,  subscriber, realname, password, domain, addr_pool, policy, is_online, active_num,
      bind_mac, bind_vlan, ip_addr, mac_addr, in_vlan, out_vlan, up_rate, down_rate, up_peak_rate, down_peak_rate, up_rate_code,

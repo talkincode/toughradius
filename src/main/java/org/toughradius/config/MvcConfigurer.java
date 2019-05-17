@@ -1,15 +1,25 @@
 package org.toughradius.config;
 
+import freemarker.template.TemplateException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.ViewResolver;
 import org.springframework.web.servlet.config.annotation.*;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerConfigurer;
+import org.springframework.web.servlet.view.freemarker.FreeMarkerViewResolver;
+
+import java.io.IOException;
 
 @Configuration
 public class MvcConfigurer extends WebMvcConfigurerAdapter {
 
+    @Autowired
+    private PortalConfig portalConfig;
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addViewController("/accessError").setViewName("/static/accesseErrorPage.html");
+        registry.addViewController("/error").setViewName("/templates/global_error.html");
         super.addViewControllers(registry);
     }
 
@@ -33,6 +43,27 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+        registry.addResourceHandler("/portal/**").addResourceLocations(portalConfig.getTemplateDir());
         super.addResourceHandlers(registry);
     }
+
+    @Bean
+    public ViewResolver viewResolver() {
+        FreeMarkerViewResolver resolver = new FreeMarkerViewResolver();
+        resolver.setCache(true);
+        resolver.setPrefix("");
+        resolver.setSuffix(".html");
+        resolver.setContentType("text/html; charset=UTF-8");
+        return resolver;
+    }
+
+    @Bean
+    public FreeMarkerConfigurer freemarkerConfig() throws IOException, TemplateException {
+        FreeMarkerConfigurer configurer = new FreeMarkerConfigurer();
+        configurer.setTemplateLoaderPaths(portalConfig.getTemplateDir(),"classpath:/templates/");
+        configurer.setDefaultEncoding("UTF-8");
+        return configurer;
+    }
+
+
 }

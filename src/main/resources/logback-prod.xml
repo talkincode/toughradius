@@ -67,7 +67,7 @@
         <appender-ref ref="errorlog"/>
     </logger>
 
-    <logger name="org.toughradius.wlan" level="info" additivity="false">
+    <logger name="org.toughradius.portal" level="info" additivity="false">
         <appender-ref ref="infolog"/>
         <appender-ref ref="errorlog"/>
     </logger>

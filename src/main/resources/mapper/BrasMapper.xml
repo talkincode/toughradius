@@ -8,8 +8,10 @@
 		<result column="name" jdbcType="VARCHAR" property="name" />
 		<result column="ipaddr" jdbcType="VARCHAR" property="ipaddr" />
 		<result column="vendor_id" jdbcType="VARCHAR" property="vendorId" />
+		<result column="portal_vendor" jdbcType="VARCHAR" property="portalVendor" />
 		<result column="secret" jdbcType="VARCHAR" property="secret" />
 		<result column="coa_port" jdbcType="INTEGER" property="coaPort" />
+		<result column="ac_port" jdbcType="INTEGER" property="acPort" />
 		<result column="auth_limit" jdbcType="INTEGER" property="authLimit" />
 		<result column="acct_limit" jdbcType="INTEGER" property="acctLimit" />
 		<result column="status" jdbcType="CHAR" property="status" />
@@ -29,7 +31,7 @@
 	</cache>
 
 	<sql id="Base_Column_List">
-		id, identifier, `name`, ipaddr, vendor_id, secret, coa_port,auth_limit,acct_limit, status,remark, create_time
+		id, identifier, `name`, ipaddr, vendor_id, secret, coa_port,ac_port,portal_vendor,auth_limit,acct_limit, status,remark, create_time
 	</sql>
 
 	<select id="queryForList" parameterType="org.toughradius.entity.Bras" resultMap="BaseResultMap" useCache="false">
@@ -52,8 +54,10 @@
 			<if test="identifier != null  and identifier != ''  ">identifier,</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr,</if>
 			<if test="vendorId != null  and vendorId != ''  ">vendor_id,</if>
+			<if test="portalVendor != null  and portalVendor != ''  ">portal_vendor,</if>
 			<if test="secret != null  and secret != ''  ">secret,</if>
 			<if test="coaPort != null  and coaPort != ''  ">coa_port,</if>
+			<if test="acPort != null  and acPort != ''  ">ac_port,</if>
 			<if test="authLimit != null  and authLimit != ''  ">auth_limit,</if>
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit,</if>
 			<if test="status != null  and status != ''  ">status,</if>
@@ -66,8 +70,10 @@
 			<if test="identifier != null  and identifier != ''  ">#{identifier},</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">#{ipaddr},</if>
 			<if test="vendorId != null  and vendorId != ''  ">#{vendorId},</if>
+			<if test="portalVendor != null  and portalVendor != ''  ">#{portalVendor},</if>
 			<if test="secret != null  and secret != ''  ">#{secret},</if>
 			<if test="coaPort != null  and coaPort != ''  ">#{coaPort},</if>
+			<if test="acPort != null  and acPort != ''  ">#{acPort},</if>
 			<if test="authLimit != null  and authLimit != ''  ">#{authLimit},</if>
 			<if test="acctLimit != null  and acctLimit != ''  ">#{acctLimit},</if>
 			<if test="status != null  and status != ''  ">#{status},</if>
@@ -83,8 +89,10 @@
 			<if test="identifier != null  and identifier != ''  ">identifier = #{identifier},</if>
 			<if test="ipaddr != null  and ipaddr != ''  ">ipaddr = #{ipaddr},</if>
 			<if test="vendorId != null  and vendorId != ''  ">vendor_id = #{vendorId},</if>
+			<if test="portalVendor != null  and portalVendor != ''  ">portal_vendor = #{portalVendor},</if>
 			<if test="secret != null  and secret != ''  ">secret = #{secret},</if>
 			<if test="coaPort != null  and coaPort != ''  ">coa_port = #{coaPort},</if>
+			<if test="acPort != null  and acPort != ''  ">ac_port = #{acPort},</if>
 			<if test="authLimit != null  and authLimit != ''  ">auth_limit = #{authLimit},</if>
 			<if test="acctLimit != null  and acctLimit != ''  ">acct_limit = #{acctLimit},</if>
 			<if test="status != null  ">status = #{status},</if>

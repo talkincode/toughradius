@@ -1,4 +1,4 @@
-package org.toughradius.entity;
+package org.toughradius.form;
 
 public class RadiusConfigForm {
 

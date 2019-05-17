@@ -129,13 +129,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		</where>
 	</sql>
 
-	<select id="queryTotal" parameterType="org.toughradius.entity.SubscribeQuery" resultType="integer" useCache="false">
+	<select id="queryTotal" parameterType="org.toughradius.form.SubscribeQuery" resultType="integer" useCache="false">
 		SELECT count(*) FROM  tr_subscribe
 		<include refid="query_where" />
 	</select>
 
 
-	<select id="queryForList" parameterType="org.toughradius.entity.SubscribeQuery" resultMap="BaseResultMap" useCache="false">
+	<select id="queryForList" parameterType="org.toughradius.form.SubscribeQuery" resultMap="BaseResultMap" useCache="false">
 		SELECT
 		<include refid="Base_Column_List" />
 		FROM  tr_subscribe
