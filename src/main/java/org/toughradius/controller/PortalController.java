@@ -4,12 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.toughradius.common.*;
 import org.toughradius.component.*;
+import org.toughradius.config.Constant;
 import org.toughradius.config.PortalConfig;
 import org.toughradius.entity.Bras;
 import org.toughradius.entity.Subscribe;
@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 
 @Controller
-public class PortalController {
+public class PortalController implements Constant {
 
     private final static String MODEL_OK = "ok";
     private final static String MODEL_FAIL = "fail";
@@ -63,6 +63,11 @@ public class PortalController {
     @Autowired
     private SubscribeCache subscribeCache;
 
+    /**
+     * 模拟 ac 强制跳转
+     * @param response
+     * @throws IOException
+     */
     @GetMapping("/wlandemo")
     public void wlandemo(HttpServletResponse response)throws IOException {
         response.sendRedirect("/wlan/default?wlanuserip=127.0.0.1&wlanusername=test01&" +
@@ -70,15 +75,26 @@ public class PortalController {
                 "ssid=toughwifi&wlanuserfirsturl=baidu.com&error=&v="+ DateTimeUtil.getDateTimeString());
     }
 
-    @GetMapping("/wlan/{template}")
-    public ModelAndView wlanIndexHandler(@PathVariable(name = "template")String template,WlanParam wlanParam){
+    /**
+     * portal 首页
+     * @param wlanParam
+     * @return
+     */
+    @GetMapping("/wlan/index")
+    public ModelAndView wlanIndexHandler(WlanParam wlanParam){
+        String template = configService.getStringValue(WLAN_MODULE,Constant.WLAN_TEMPLATE);
         ModelAndView modelAndView = new ModelAndView(template+"/index");
         wlanParam.setTemplate(template);
         modelAndView.addObject("params", wlanParam);
         return modelAndView;
     }
 
-    @GetMapping("/wlan/portal/login")
+    /**
+     * 认证页面
+     * @param wlanParam
+     * @return
+     */
+    @GetMapping("/wlan/login")
     public ModelAndView wlanLoginHandler(WlanParam wlanParam){
         ModelAndView modelAndView = new ModelAndView(wlanParam.getTemplate()+"/"+wlanParam.getAuthmode());
         modelAndView.addObject("params", wlanParam);
@@ -97,7 +113,15 @@ public class PortalController {
         return  mv;
     }
 
-    @PostMapping("/wlan/portal/login")
+    /**
+     * 认证POST提交
+     * @param session
+     * @param request
+     * @param param
+     * @param password
+     * @return
+     */
+    @PostMapping("/wlan/login")
     public ModelAndView wlanLoginPostHandler(HttpSession session,HttpServletRequest request, WlanParam param, String password){
         ModelAndView modelAndView = new ModelAndView(param.getTemplate()+"/result");
         // 预处理参数
@@ -119,22 +143,22 @@ public class PortalController {
         String authMode = param.getAuthmode();
 
         //用户密码认证
-        if(WlanParam.AUTH_USERPWD.equals(authMode)){
+        if(PORTAL_AUTH_USERPWD.equals(authMode)){
             return userPwdAuth(session, request, param, nas, password);
         }
 
         //固定密码认证
-        if(WlanParam.AUTH_PASSWORD.equals(authMode)){
+        if(PORTAL_AUTH_PASSWORD.equals(authMode)){
             return passwordAuth(session, request,  param,nas, password);
         }
 
         //微信认证
-        if(WlanParam.AUTH_WEIXIN.equals(authMode)){
+        if(PORTAL_AUTH_WEIXIN.equals(authMode)){
             return weixinAuth(session, request,  param, nas);
         }
 
         //短信认证
-        if(WlanParam.AUTH_SMS.equals(authMode)){
+        if(PORTAL_AUTH_SMS.equals(authMode)){
             return smsAuth(session, request, param, nas);
         }
         return  processModel(modelAndView,param.getUsername(), MODEL_FAIL,"不支持的认证模式");
@@ -195,10 +219,10 @@ public class PortalController {
         subscribeCache.createTempSubscribe(username,password,1);
         param.setUsername(username);
 
-        String ssid= configService.getStringValue(ConfigService.WLAN_MODULE,ConfigService.WLAN_WECHAT_SSID);
-        String shopid = configService.getStringValue(ConfigService.WLAN_MODULE,ConfigService.WLAN_WECHAT_SHOPID);
-        String appid = configService.getStringValue(ConfigService.WLAN_MODULE,ConfigService.WLAN_WECHAT_APPID);
-        String secretKey = configService.getStringValue(ConfigService.WLAN_MODULE,ConfigService.WLAN_WECHAT_SECRETKEY);
+        String ssid= configService.getStringValue(WLAN_MODULE,WLAN_WECHAT_SSID);
+        String shopid = configService.getStringValue(WLAN_MODULE,WLAN_WECHAT_SHOPID);
+        String appid = configService.getStringValue(WLAN_MODULE,WLAN_WECHAT_APPID);
+        String secretKey = configService.getStringValue(WLAN_MODULE,WLAN_WECHAT_SECRETKEY);
         String extend = param.getWlanusermac();
         String timestamp = String.valueOf(DateTimeUtil.nowTimestamp().getTime());
         String authurl = "http://"+request.getHeader("host")+"/wlan/wxcallback";
@@ -406,7 +430,7 @@ public class PortalController {
      * @param response
      * @return
      */
-    @PostMapping("/wlan/portal/disconnect")
+    @PostMapping("/wlan/disconnect")
     public ModelAndView wlanDisconnectHandler(HttpSession session,HttpServletResponse response){
         WlanSession wlanSession = (WlanSession) session.getAttribute(WLAN_SESSION_KEY);
         if(wlanSession!=null){
@@ -453,7 +477,7 @@ public class PortalController {
             } catch (Exception ee){
                 logger.error("下线错误",ee,Memarylogger.PORTAL);
             }finally {
-                if(!param.getAuthmode().equals(WlanParam.AUTH_USERPWD)){
+                if(!param.getAuthmode().equals(PORTAL_AUTH_USERPWD)){
                     subscribeCache.remove(param.getUsername());
                 }
                 param.setRmflag(true);

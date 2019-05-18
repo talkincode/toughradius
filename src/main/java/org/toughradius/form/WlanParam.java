@@ -5,11 +5,6 @@ import java.util.Date;
 
 public class WlanParam {
 
-    public final static String AUTH_USERPWD = "userauth";
-    public final static String AUTH_PASSWORD = "pwdauth";
-    public final static String AUTH_SMS = "smsauth";
-    public final static String AUTH_WEIXIN = "wxauth";
-
     private String template;
     private String wlanuserip;
     private String wlanusername;

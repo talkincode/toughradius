@@ -119,6 +119,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="inVlan != null  and inVlan != '' "> and in_vlan = #{inVlan}</if>
 			<if test="outVlan != null  and outVlan != '' "> and out_vlan = #{outVlan}</if>
 			<if test="subscriber != null  and subscriber != '' "> and subscriber = #{subscriber}</if>
+			<if test="keyword != null  and keyword != '' "> and subscriber like CONCAT('%',#{keyword},'%')</if>
 			<if test="domain != null  and domain != '' "> and domain = #{domain}</if>
 			<if test="status != null  and status != 'expire'  "> and status = #{status}</if>
 			<if test="status != null  and status == 'expire'  "> and expire_time &lt;  NOW()</if>
@@ -176,7 +177,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			<if test="id != null  and id != ''  ">#{id},</if>
 			<if test="nodeId != null  and nodeId != ''  ">#{nodeId},</if>
 			<if test="realname != null  and realname != ''  ">#{realname},</if>
-			<if test="subscrriber != null  and subscriber != ''  ">#{subscriber},</if>
+			<if test="subscriber != null  and subscriber != ''  ">#{subscriber},</if>
 			<if test="password != null  and password != ''  ">#{password},</if>
 			<if test="domain != null  and domain != ''  ">#{domain},</if>
 			<if test="addrPool != null  and addrPool != ''  ">#{addrPool},</if>

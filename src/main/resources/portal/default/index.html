@@ -36,7 +36,7 @@ var doWxLogin = function(authmode){
 	<div class="limiter">
 		<div class="container-login100">
 			<div class="wrap-login100 p-t-90 p-b-30">
-				<form id="wlanForm" class="login100-form validate-form" action="/wlan/portal/login" method="get">
+				<form id="wlanForm" class="login100-form validate-form" action="/wlan/login" method="get">
 					<span class="login100-form-title p-b-40">
 						TOUGHRADIUS 无线认证
 					</span>
@@ -78,7 +78,7 @@ var doWxLogin = function(authmode){
 					</div>
 
 					<div class="flex-col-c p-t-224">
-						<a href="/wlan/register" class="txt3 bo1 hov1" target="_blank">
+						<a href="${params.wlanJoinUrl!}" class="txt3 bo1 hov1" target="_blank">
 							立即注册
 						</a>
 					</div>

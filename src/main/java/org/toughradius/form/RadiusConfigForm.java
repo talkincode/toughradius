@@ -2,58 +2,41 @@ package org.toughradius.form;
 
 public class RadiusConfigForm {
 
-    private String RADIUS_INTERIM_INTELVAL;
-    private String RADIUS_MAX_SESSION_TIMEOUT;
-    private String RADIUS_TICKET_HISTORY_DAYS;
-    private String RADIUS_IGNORE_PASSWORD;
-    private String RADIUS_EXPORE_ADDR_POOL;
-    private String RADIUS_ONLINE_EXPIRE_CHECK;
+    private String radiusInterimIntelval;
+    private String radiusIgnorePassword;
+    private String radiusTicketHistoryDays;
+    private String radiusExpireAddrPool;
 
-    public String getRADIUS_INTERIM_INTELVAL() {
-        return RADIUS_INTERIM_INTELVAL;
+
+    public String getRadiusInterimIntelval() {
+        return radiusInterimIntelval;
     }
 
-    public void setRADIUS_INTERIM_INTELVAL(String RADIUS_INTERIM_INTELVAL) {
-        this.RADIUS_INTERIM_INTELVAL = RADIUS_INTERIM_INTELVAL;
+    public void setRadiusInterimIntelval(String radiusInterimIntelval) {
+        this.radiusInterimIntelval = radiusInterimIntelval;
     }
 
-    public String getRADIUS_MAX_SESSION_TIMEOUT() {
-        return RADIUS_MAX_SESSION_TIMEOUT;
+    public String getRadiusIgnorePassword() {
+        return radiusIgnorePassword;
     }
 
-    public void setRADIUS_MAX_SESSION_TIMEOUT(String RADIUS_MAX_SESSION_TIMEOUT) {
-        this.RADIUS_MAX_SESSION_TIMEOUT = RADIUS_MAX_SESSION_TIMEOUT;
+    public void setRadiusIgnorePassword(String radiusIgnorePassword) {
+        this.radiusIgnorePassword = radiusIgnorePassword;
     }
 
-    public String getRADIUS_TICKET_HISTORY_DAYS() {
-        return RADIUS_TICKET_HISTORY_DAYS;
+    public String getRadiusTicketHistoryDays() {
+        return radiusTicketHistoryDays;
     }
 
-    public void setRADIUS_TICKET_HISTORY_DAYS(String RADIUS_TICKET_HISTORY_DAYS) {
-        this.RADIUS_TICKET_HISTORY_DAYS = RADIUS_TICKET_HISTORY_DAYS;
+    public void setRadiusTicketHistoryDays(String radiusTicketHistoryDays) {
+        this.radiusTicketHistoryDays = radiusTicketHistoryDays;
     }
 
-    public String getRADIUS_IGNORE_PASSWORD() {
-        return RADIUS_IGNORE_PASSWORD;
+    public String getRadiusExpireAddrPool() {
+        return radiusExpireAddrPool;
     }
 
-    public void setRADIUS_IGNORE_PASSWORD(String RADIUS_IGNORE_PASSWORD) {
-        this.RADIUS_IGNORE_PASSWORD = RADIUS_IGNORE_PASSWORD;
-    }
-
-    public String getRADIUS_EXPORE_ADDR_POOL() {
-        return RADIUS_EXPORE_ADDR_POOL;
-    }
-
-    public void setRADIUS_EXPORE_ADDR_POOL(String RADIUS_EXPORE_ADDR_POOL) {
-        this.RADIUS_EXPORE_ADDR_POOL = RADIUS_EXPORE_ADDR_POOL;
-    }
-
-    public String getRADIUS_ONLINE_EXPIRE_CHECK() {
-        return RADIUS_ONLINE_EXPIRE_CHECK;
-    }
-
-    public void setRADIUS_ONLINE_EXPIRE_CHECK(String RADIUS_ONLINE_EXPIRE_CHECK) {
-        this.RADIUS_ONLINE_EXPIRE_CHECK = RADIUS_ONLINE_EXPIRE_CHECK;
+    public void setRadiusExpireAddrPool(String radiusExpireAddrPool) {
+        this.radiusExpireAddrPool = radiusExpireAddrPool;
     }
 }

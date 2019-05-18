@@ -2,6 +2,7 @@ package org.toughradius.component;
 
 import org.apache.ibatis.annotations.Param;
 import org.toughradius.common.CoderUtil;
+import org.toughradius.config.Constant;
 import org.toughradius.entity.Config;
 import org.toughradius.mapper.ConfigMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,28 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ConfigService {
-
-    public final static String RADIUS_MODULE = "radius";
-    public final static String RADIUS_IGNORE_PASSWORD = "RADIUS_IGNORE_PASSWORD";
-
-    public final static String SYSTEM_MODULE = "system";
-    public final static String SYSTEM_USERNAME = "SYSTEM_USERNAME";
-    public final static String SYSTEM_USERPWD = "SYSTEM_USERPWD";
-
-    public final static String SMS_MODULE = "sms";
-    public final static String SMS_GATEWAY = "SMS_GATEWAY";
-    public final static String SMS_APPID = "SMS_APPID";
-    public final static String SMS_APPKEY = "SMS_APPKEY";
-
-    public final static String WLAN_MODULE = "wlan";
-    public final static String WLAN_WECHAT_SSID = "wlan_wechat_ssid";
-    public final static String WLAN_WECHAT_SHOPID = "wlan_wechat_shopid";
-    public final static String WLAN_WECHAT_APPID = "wlan_wechat_appid";
-    public final static String WLAN_WECHAT_SECRETKEY = "wlan_wechat_secretkey";
-
-
-
+public class ConfigService implements Constant {
 
     @Autowired
     private ConfigMapper configMapper;

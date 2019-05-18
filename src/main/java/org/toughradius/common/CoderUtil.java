@@ -19,7 +19,7 @@ import java.util.Random;
  */
 public class CoderUtil 
 {
-	public static final String MD5_SALT = "XSPEEDER-CLOUD-!@#$%^";
+	public static final String MD5_SALT = "TOUGHRADIUS-!@#$%^";
 	public static final String ALGORITHM_MD5 = "MD5";
 	public static final String ALGORITHM_SHA = "SHA";
 	public static final String ALGORITHM_DES = "DES";

@@ -2,31 +2,31 @@ package org.toughradius.form;
 
 public class SmsConfigForm {
 
-    private String SMS_GATEWAY;
-    private String SMS_APPID;
-    private String SMS_APPKEY;
+    private String smsGateway;
+    private String smsAppid;
+    private String smsAppkey;
 
-    public String getSMS_GATEWAY() {
-        return SMS_GATEWAY;
+    public String getSmsGateway() {
+        return smsGateway;
     }
 
-    public void setSMS_GATEWAY(String SMS_GATEWAY) {
-        this.SMS_GATEWAY = SMS_GATEWAY;
+    public void setSmsGateway(String smsGateway) {
+        this.smsGateway = smsGateway;
     }
 
-    public String getSMS_APPID() {
-        return SMS_APPID;
+    public String getSmsAppid() {
+        return smsAppid;
     }
 
-    public void setSMS_APPID(String SMS_APPID) {
-        this.SMS_APPID = SMS_APPID;
+    public void setSmsAppid(String smsAppid) {
+        this.smsAppid = smsAppid;
     }
 
-    public String getSMS_APPKEY() {
-        return SMS_APPKEY;
+    public String getSmsAppkey() {
+        return smsAppkey;
     }
 
-    public void setSMS_APPKEY(String SMS_APPKEY) {
-        this.SMS_APPKEY = SMS_APPKEY;
+    public void setSmsAppkey(String smsAppkey) {
+        this.smsAppkey = smsAppkey;
     }
 }

@@ -30,7 +30,7 @@ public class SubsribeController {
     @ResponseBody
     public PageResult<Subscribe> querySubscribe(@RequestParam(defaultValue = "0") int start,
                                                 @RequestParam(defaultValue = "40") int count,
-                                                String  createTime, String expireTime, String status, String keyword){
+                                                String  createTime, String expireTime, String status,String subscriber, String keyword){
         if(ValidateUtil.isNotEmpty(expireTime)&&expireTime.length() == 16){
             expireTime += ":00";
         }
@@ -48,6 +48,7 @@ public class SubsribeController {
                 query.setCreateTime(DateTimeUtil.toTimestamp(createTime));
             query.setStatus(status);
             query.setKeyword(keyword);
+            query.setSubscriber(subscriber);
             List<Subscribe> data = subscribeService.queryForList(query);
             return new PageResult<>(start,(int) objects.getTotal(), data);
 

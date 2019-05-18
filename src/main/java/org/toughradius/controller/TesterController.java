@@ -14,13 +14,13 @@ public class TesterController {
 
     @GetMapping("/admin/radius/auth/test")
     public String AuthTestHandler(String username,String papchap){
-        return radiusTester.sendAuth(username,papchap);
+        return radiusTester.sendAuth(username,papchap).replaceAll("\n","<br>");
     }
 
 
     @GetMapping("/admin/radius/acct/test")
     public String AcctTestHandler(String username,int type){
-        return radiusTester.sendAcct(username,type);
+        return radiusTester.sendAcct(username,type).replaceAll("\n","<br>");
     }
 
 }

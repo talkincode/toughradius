@@ -10,7 +10,7 @@ toughradius.admin.config.loadPage = function(session){
         // borderless:true,
         view:"tabview",
         tabbar:{
-            optionWidth:180,
+            optionWidth:160,
         },
         cells:[
             {
@@ -27,10 +27,10 @@ toughradius.admin.config.loadPage = function(session){
                     elements: [
                         { view: "fieldset", label: "基本设置",  body: {
                             rows:[
-                                {view: "counter", name: "RADIUS_INTERIM_INTELVAL", label: "记账间隔(秒)",  value:300},
-                                {view: "counter", name: "RADIUS_TICKET_HISTORY_DAYS", label: "上网日志保存最大天数",  value:180},
-                                {view: "richselect", name: "RADIUS_IGNORE_PASSWORD", label: "免密码认证:",value:"0", options:[{id:"1",value:"否"},{id:"0",value:'是'}]},
-                                {view: "text", name: "RADIUS_EXPORE_ADDR_POOL", label: "到期下发地址池"},
+                                {view: "counter", name: "radiusInterimIntelval", label: "记账间隔(秒)",  value:300},
+                                {view: "counter", name: "radiusTicketHistoryDays", label: "上网日志保存最大天数",  value:180},
+                                {view: "radio", name: "radiusIgnorePassword", label: "免密码认证:",value:"0", options:[{id:"1",value:"关闭"},{id:"0",value:'开启'}]},
+                                {view: "text", name: "radiusExpireAddrPool", label: "到期下发地址池"},
                             ]
                         }},
                         {
@@ -68,9 +68,10 @@ toughradius.admin.config.loadPage = function(session){
                     elements: [
                         { view: "fieldset", label: "短信网关",  body: {
                             rows:[
-                                {view: "richselect", name: "SMS_GATEWAY", label: "短信网关:",value:"qcloud", options:[{id:"qcloud",value:"腾讯云短信"}]},
-                                {view: "text", name: "SMS_APPID", label: "短信网关APPID"},
-                                {view: "text", type:"password", name: "SMS_APPKEY", label: "短信网关APPKEY"},
+                                {view: "richselect", name: "smsGateway", label: "短信网关:",value:"qcloud", options:[{id:"qcloud",value:"腾讯云短信"}]},
+                                {view: "text", name: "smsAppid", label: "短信网关APPID"},
+                                {view: "text", type:"password", name: "smsAppkey", label: "短信网关APPKEY"},
+                                {view: "text", name: "smsVcodeTemplate", label: "短信验证码模板"}
                             ]
                         }},
                         {
@@ -104,14 +105,24 @@ toughradius.admin.config.loadPage = function(session){
                         labelWidth:160,
                         // labelPosition:"top"
                     },
-                    url:"/admin/config/load/sms",
+                    url:"/admin/config/load/wlan",
                     elements: [
-                        { view: "fieldset", label: "微信连WiFi设",  body: {
+                        { view: "fieldset", label: "基本设置",  body: {
                             rows:[
-                                {view: "text", name: "WLAN_WECHAT_SSID", label: "SSID"},
-                                {view: "text", name: "WLAN_WECHAT_SHOPID", label: "门店ID"},
-                                {view: "text", name: "WLAN_WECHAT_APPID", label: "APPID"},
-                                {view: "text", name: "WLAN_WECHAT_SECRETKEY", label: "APP密钥"},
+                                {view: "richselect", name: "wlanTemplate", label: "认证模板:",value:"default", options:[{id:"default",value:"默认"}]},
+                                {view: "text", name: "wlanJoinUrl", label: "自助服务网站"},
+                                {view:"radio", name:"wlanUserauthEnabled", label: "用户密码认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},
+                                {view:"radio", name:"wlanPwdauthEnabled", label: "固定密码认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},
+                                {view:"radio", name:"wlanSmsauthEnabled", label: "手机短信认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},
+                                {view:"radio", name:"wlanWxauthEnabled", label: "微信连WiFi认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},
+                            ]
+                        }},
+                        { view: "fieldset", label: "微信连WiFi设置",  body: {
+                            rows:[
+                                {view: "text", name: "wlanWechatSsid", label: "SSID"},
+                                {view: "text", name: "wlanWechatShopid", label: "门店ID"},
+                                {view: "text", name: "wlanWechatAppid", label: "APPID"},
+                                {view: "text", name: "wlanWechatSecretkey", label: "APP密钥"}
                             ]
                         }},
                         {

@@ -1,41 +1,94 @@
 package org.toughradius.form;
 
 public class WlanCongigForm {
-    private String WLAN_WECHAT_SSID;
-    private String WLAN_WECHAT_SHOPID;
-    private String WLAN_WECHAT_APPID;
-    private String WLAN_WECHAT_SECRETKEY;
+    private String wlanWechatSsid;
+    private String wlanWechatShopid;
+    private String wlanWechatAppid;
+    private String wlanWechatSecretkey;
+    private String wlanTemplate;
+    private String wlanJoinUrl;
+    private String wlanUserauthEnabled;
+    private String wlanPwdauthEnabled;
+    private String wlanSmsauthEnabled;
+    private String wlanWxauthEnabled;
 
-
-    public String getWLAN_WECHAT_SSID() {
-        return WLAN_WECHAT_SSID;
+    public String getWlanWechatSsid() {
+        return wlanWechatSsid;
     }
 
-    public void setWLAN_WECHAT_SSID(String WLAN_WECHAT_SSID) {
-        this.WLAN_WECHAT_SSID = WLAN_WECHAT_SSID;
+    public void setWlanWechatSsid(String wlanWechatSsid) {
+        this.wlanWechatSsid = wlanWechatSsid;
     }
 
-    public String getWLAN_WECHAT_SHOPID() {
-        return WLAN_WECHAT_SHOPID;
+    public String getWlanWechatShopid() {
+        return wlanWechatShopid;
     }
 
-    public void setWLAN_WECHAT_SHOPID(String WLAN_WECHAT_SHOPID) {
-        this.WLAN_WECHAT_SHOPID = WLAN_WECHAT_SHOPID;
+    public void setWlanWechatShopid(String wlanWechatShopid) {
+        this.wlanWechatShopid = wlanWechatShopid;
     }
 
-    public String getWLAN_WECHAT_APPID() {
-        return WLAN_WECHAT_APPID;
+    public String getWlanWechatAppid() {
+        return wlanWechatAppid;
     }
 
-    public void setWLAN_WECHAT_APPID(String WLAN_WECHAT_APPID) {
-        this.WLAN_WECHAT_APPID = WLAN_WECHAT_APPID;
+    public void setWlanWechatAppid(String wlanWechatAppid) {
+        this.wlanWechatAppid = wlanWechatAppid;
     }
 
-    public String getWLAN_WECHAT_SECRETKEY() {
-        return WLAN_WECHAT_SECRETKEY;
+    public String getWlanWechatSecretkey() {
+        return wlanWechatSecretkey;
     }
 
-    public void setWLAN_WECHAT_SECRETKEY(String WLAN_WECHAT_SECRETKEY) {
-        this.WLAN_WECHAT_SECRETKEY = WLAN_WECHAT_SECRETKEY;
+    public void setWlanWechatSecretkey(String wlanWechatSecretkey) {
+        this.wlanWechatSecretkey = wlanWechatSecretkey;
+    }
+
+    public String getWlanTemplate() {
+        return wlanTemplate;
+    }
+
+    public void setWlanTemplate(String wlanTemplate) {
+        this.wlanTemplate = wlanTemplate;
+    }
+
+    public String getWlanJoinUrl() {
+        return wlanJoinUrl;
+    }
+
+    public void setWlanJoinUrl(String wlanJoinUrl) {
+        this.wlanJoinUrl = wlanJoinUrl;
+    }
+
+    public String getWlanUserauthEnabled() {
+        return wlanUserauthEnabled;
+    }
+
+    public void setWlanUserauthEnabled(String wlanUserauthEnabled) {
+        this.wlanUserauthEnabled = wlanUserauthEnabled;
+    }
+
+    public String getWlanPwdauthEnabled() {
+        return wlanPwdauthEnabled;
+    }
+
+    public void setWlanPwdauthEnabled(String wlanPwdauthEnabled) {
+        this.wlanPwdauthEnabled = wlanPwdauthEnabled;
+    }
+
+    public String getWlanSmsauthEnabled() {
+        return wlanSmsauthEnabled;
+    }
+
+    public void setWlanSmsauthEnabled(String wlanSmsauthEnabled) {
+        this.wlanSmsauthEnabled = wlanSmsauthEnabled;
+    }
+
+    public String getWlanWxauthEnabled() {
+        return wlanWxauthEnabled;
+    }
+
+    public void setWlanWxauthEnabled(String wlanWxauthEnabled) {
+        this.wlanWxauthEnabled = wlanWxauthEnabled;
     }
 }
