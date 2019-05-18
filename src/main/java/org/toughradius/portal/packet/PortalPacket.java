@@ -478,7 +478,7 @@ public  class PortalPacket {
         PortalPacket message = createMessage(ver, REQ_LOGOUT,userIp,_serialNo,(short)0,secret, isChap);
 
         if(ValidateUtil.isMacAddress(mac)){
-            message.addAttribute(new PortalAttribute(ATTRIBUTE_BASIP_TYPE, PortalUtils.encodeMacAddr(mac)));
+            message.addAttribute(new PortalAttribute(ATTRIBUTE_MAC_TYPE, PortalUtils.encodeMacAddr(mac)));
         }
 
         if(ValidateUtil.isIP(basIp)){

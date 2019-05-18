@@ -70,9 +70,24 @@ public class PortalController implements Constant {
      */
     @GetMapping("/wlandemo")
     public void wlandemo(HttpServletResponse response)throws IOException {
-        response.sendRedirect("/wlan/default?wlanuserip=127.0.0.1&wlanusername=test01&" +
+        response.sendRedirect("/wlan/index?wlanuserip=127.0.0.1&wlanusername=test01&" +
                 "wlanusermac=00:00:00:00:00:00&wlanacname=default&wlanacip=127.0.0.1&wlanapmac=00:00:00:00:00:00&" +
                 "ssid=toughwifi&wlanuserfirsturl=baidu.com&error=&v="+ DateTimeUtil.getDateTimeString());
+    }
+
+    private void setConfigModel(ModelAndView modelAndView){
+        modelAndView.addObject(WLAN_USERAUTH_ENABLED, configService.getStringValue(WLAN_MODULE,Constant.WLAN_USERAUTH_ENABLED));
+        modelAndView.addObject(WLAN_PWDAUTH_ENABLED, configService.getStringValue(WLAN_MODULE,Constant.WLAN_PWDAUTH_ENABLED));
+        modelAndView.addObject(WLAN_SMSAUTH_ENABLED, configService.getStringValue(WLAN_MODULE,Constant.WLAN_SMSAUTH_ENABLED));
+        modelAndView.addObject(WLAN_WXAUTH_ENABLED, configService.getStringValue(WLAN_MODULE,Constant.WLAN_WXAUTH_ENABLED));
+    }
+
+    private String getWlanemplate(){
+        String template = configService.getStringValue(WLAN_MODULE,Constant.WLAN_TEMPLATE);
+        if(ValidateUtil.isEmpty(template)){
+            return "default";
+        }
+        return template;
     }
 
     /**
@@ -82,10 +97,11 @@ public class PortalController implements Constant {
      */
     @GetMapping("/wlan/index")
     public ModelAndView wlanIndexHandler(WlanParam wlanParam){
-        String template = configService.getStringValue(WLAN_MODULE,Constant.WLAN_TEMPLATE);
+        String template = getWlanemplate();
         ModelAndView modelAndView = new ModelAndView(template+"/index");
         wlanParam.setTemplate(template);
         modelAndView.addObject("params", wlanParam);
+        setConfigModel(modelAndView);
         return modelAndView;
     }
 
@@ -96,7 +112,7 @@ public class PortalController implements Constant {
      */
     @GetMapping("/wlan/login")
     public ModelAndView wlanLoginHandler(WlanParam wlanParam){
-        ModelAndView modelAndView = new ModelAndView(wlanParam.getTemplate()+"/"+wlanParam.getAuthmode());
+        ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/"+wlanParam.getAuthmode());
         modelAndView.addObject("params", wlanParam);
         return modelAndView;
     }
@@ -123,7 +139,7 @@ public class PortalController implements Constant {
      */
     @PostMapping("/wlan/login")
     public ModelAndView wlanLoginPostHandler(HttpSession session,HttpServletRequest request, WlanParam param, String password){
-        ModelAndView modelAndView = new ModelAndView(param.getTemplate()+"/result");
+        ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/result");
         // 预处理参数
         if(ValidateUtil.isEmpty(param.getWlanuserfirsturl())){
             if(ValidateUtil.isNotEmpty(param.getUrl())){
@@ -174,7 +190,7 @@ public class PortalController implements Constant {
      * @return
      */
     private ModelAndView userPwdAuth(HttpSession session, HttpServletRequest request,  WlanParam param, Bras nas,String password){
-        ModelAndView mv = new ModelAndView(param.getTemplate()+"/result");
+        ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
         if(ValidateUtil.isEmpty(param.getUsername())){
             return  processModel(mv,param.getUsername(), MODEL_FAIL,"帐号不能为空");
         }
@@ -194,7 +210,7 @@ public class PortalController implements Constant {
      * @return
      */
     private ModelAndView passwordAuth(HttpSession session,HttpServletRequest request, WlanParam param,Bras nas, String password){
-        ModelAndView mv = new ModelAndView(param.getTemplate()+"/result");
+        ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
         if(ValidateUtil.isEmpty(password)){
             return  processModel(mv,param.getWlanusername(), MODEL_FAIL,"密码不能为空");
         }
@@ -213,7 +229,7 @@ public class PortalController implements Constant {
      * @return
      */
     private ModelAndView weixinAuth(HttpSession session, HttpServletRequest request, WlanParam param, Bras nas){
-        ModelAndView mv = new ModelAndView(param.getTemplate()+"/weixin");
+        ModelAndView mv = new ModelAndView(getWlanemplate()+"/weixin");
         String username = "wxu_"+ CoderUtil.random16str();
         String password = CoderUtil.random16str();
         subscribeCache.createTempSubscribe(username,password,1);
@@ -272,7 +288,7 @@ public class PortalController implements Constant {
      * @return
      */
     private ModelAndView smsAuth(HttpSession session,HttpServletRequest request, WlanParam param,Bras nas){
-        ModelAndView mv = new ModelAndView(param.getTemplate()+"/result");
+        ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
         String phone = param.getPhone();
         String smscode = param.getSmscode();
         if(ValidateUtil.isEmpty(smscode)){
@@ -430,19 +446,21 @@ public class PortalController implements Constant {
      * @param response
      * @return
      */
-    @PostMapping("/wlan/disconnect")
+    @GetMapping("/wlan/disconnect")
     public ModelAndView wlanDisconnectHandler(HttpSession session,HttpServletResponse response){
         WlanSession wlanSession = (WlanSession) session.getAttribute(WLAN_SESSION_KEY);
         if(wlanSession!=null){
             WlanParam param = wlanSession.getWlanParam();
             sendLogout(param);
             session.removeAttribute(WLAN_SESSION_KEY);
-            ModelAndView modelAndView = new ModelAndView(param.getTemplate()+"/index");
+            ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/index");
             modelAndView.addObject("params", param);
+            setConfigModel(modelAndView);
             return modelAndView;
         }
-        ModelAndView modelAndView = new ModelAndView("default/index");
+        ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/index");
         modelAndView.addObject("params", new WlanParam());
+        setConfigModel(modelAndView);
         return modelAndView;
     }
 

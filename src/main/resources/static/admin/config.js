@@ -29,7 +29,7 @@ toughradius.admin.config.loadPage = function(session){
                             rows:[
                                 {view: "counter", name: "radiusInterimIntelval", label: "记账间隔(秒)",  value:300},
                                 {view: "counter", name: "radiusTicketHistoryDays", label: "上网日志保存最大天数",  value:180},
-                                {view: "radio", name: "radiusIgnorePassword", label: "免密码认证:",value:"0", options:[{id:"1",value:"关闭"},{id:"0",value:'开启'}]},
+                                {view: "radio", name: "radiusIgnorePassword", label: "免密码认证:",value:"disabled", options:[{id:"disabled",value:"关闭"},{id:"enabled",value:'开启'}]},
                                 {view: "text", name: "radiusExpireAddrPool", label: "到期下发地址池"},
                             ]
                         }},
@@ -140,6 +140,10 @@ toughradius.admin.config.loadPage = function(session){
                                         });
                                     }
                                 },
+                                {view: "button", name: "preview", type: "base", value: "预览界面", width: 120, height:36, click: function () {
+                                        toughradius.admin.config.openWlanTemplate();
+                                    }
+                                },
                                 {}
                             ]
                         },{}
@@ -153,5 +157,36 @@ toughradius.admin.config.loadPage = function(session){
     toughradius.admin.methods.addTabView("toughradius.admin.config","cogs","系统配置", cview, true);
 };
 
+
+toughradius.admin.config.openWlanTemplate = function(){
+    var winid = "toughradius.admin.config.openWlanTemplate";
+    if($$(winid))
+        return;
+    webix.ui({
+        id:winid,
+        view: "window",css:"win-body",
+        move:true,
+        width:360,
+        height:640,
+        position: "center",
+        head: {
+            view: "toolbar",
+            css:"win-toolbar",
+            cols: [
+                {view: "icon", icon: "laptop", css: "alter"},
+                {view: "label", label: "预览模板"},
+                {view: "icon", icon: "times-circle", css: "alter", click: function(){
+                        $$(winid).close();
+                    }}
+            ]
+        },
+        body:{
+            view:"iframe",
+            height:640,
+            id:"frame-body",
+            src:"/wlandemo"
+        }
+    }).show();
+};
 
 

@@ -19,9 +19,6 @@ public class SubscribeService {
         return subscribeMapper.findSubscribe(username);
     }
 
-    public void updateFlowAmountByUsername(String username, BigInteger flowAmount){
-        subscribeMapper.updateFlowAmountByUsername(username,flowAmount);
-    }
 
     public Integer updateMacAddr(String username, String macAddr){
         return subscribeMapper.updateMacAddr(username,macAddr);
@@ -41,9 +38,6 @@ public class SubscribeService {
 
     public List<Subscribe> queryForList(SubscribeQuery subscribe){
         return subscribeMapper.queryForList(subscribe);
-    }
-    public Integer queryTotal(SubscribeQuery subscribe){
-        return subscribeMapper.queryTotal(subscribe);
     }
 
     public void insertSubscribe(Subscribe subscribe){

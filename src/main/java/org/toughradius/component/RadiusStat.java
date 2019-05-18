@@ -2,6 +2,8 @@ package org.toughradius.component;
 
 import org.toughradius.common.DateTimeUtil;
 import org.springframework.stereotype.Component;
+import org.toughradius.common.SpinLock;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 public class RadiusStat {
 
-    private Object lock = new Object();
+    private final static SpinLock lock = new SpinLock();
     private ConcurrentLinkedDeque<long[]> reqBytesStat = new ConcurrentLinkedDeque<long[]>();
     private ConcurrentLinkedDeque<long[]> respBytesStat = new ConcurrentLinkedDeque<long[]>();
     private ConcurrentLinkedDeque<long[]> authReqStat = new ConcurrentLinkedDeque<long[]>();
@@ -53,7 +55,8 @@ public class RadiusStat {
     private Date lastMaxRespBytesDate = new Date();
 
     public Map getData(){
-        synchronized (lock) {
+        try {
+            lock.lock();
             Map data = new HashMap();
             data.put("reqBytesStat", reqBytesStat.toArray());
             data.put("respBytesStat", respBytesStat.toArray());
@@ -92,12 +95,15 @@ public class RadiusStat {
             data.put("lastMaxReqBytes", lastMaxReqBytes);
             data.put("lastMaxReqBytesDate", DateTimeUtil.toDateTimeString(lastMaxReqBytesDate));
             return data;
+        }finally {
+            lock.unLock();
         }
     }
 
 
     public void runStat(){
-        synchronized (lock) {
+        try {
+            lock.lock();
             long curtime = System.currentTimeMillis();
 
             int tmpReqBytes = getReqBytes() - getReqBytesOld();
@@ -179,8 +185,9 @@ public class RadiusStat {
                 setLastMaxResp(respPercount);
                 setLastMaxRespDate(new Date());
             }
+        }finally {
+            lock.unLock();
         }
-
     }
 
     public int getOnline() {

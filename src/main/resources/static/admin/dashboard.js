@@ -242,6 +242,178 @@ toughradius.admin.dashboard.updateMsgChart = function (session,uid, infoid) {
     });
 };
 
+
+
+toughradius.admin.dashboard.castMsgStatChart = function (session,uid) {
+    return {
+        id: uid,
+        view: "highcharts",
+        height:270,
+        credits: {enabled: false},
+        chart: {
+            type: 'areaspline',
+            events: {
+                load: function () {
+                    toughradius.admin.dashboard.updateCastMsgChart(session, uid);
+                }
+            }
+        },
+        title: "",
+        colors:['#00cca0', '#0080ff', '#ccae00','#cc0b2a'],
+        xAxis: {type: 'datetime',tickInterval : 60*1000},
+        yAxis: {title: {text: '处理耗时'},
+            labels: {formatter: function() {return this.value;}}
+        },
+        tooltip: {shared: true},
+        plotOptions: {areaspline: {
+                stacking: 'normal',
+                marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+                fillOpacity: 0.2,
+                series: {
+                    pointPlacement: "on"
+                }
+            }},
+        series: [{},{},{},{}]
+    }
+};
+
+
+toughradius.admin.dashboard.updateCastMsgChart = function (session,uid) {
+    webix.ajax().get('/admin/radius/caststat',{}).then(function (result) {
+        var data = result.json();
+        try {
+            var authCastStat = {name:'认证耗时',data:data.authCastStat};
+            var acctStartCastStat = {name:'上线耗时',data:data.acctStartCastStat};
+            var acctUpdateCastStat = {name:'记帐耗时',data:data.acctUpdateCastStat};
+            var acctStopCastStat = {name:'下线耗时',data:data.acctStopCastStat};
+            $$(uid).parse([authCastStat,acctStartCastStat,acctUpdateCastStat,acctStopCastStat]);
+            // $$(uid).parse([acctStopCastStat]);
+        } catch(e){
+            console.log(e);
+        }
+    }).fail(function (xhr) {
+        webix.message({type: 'error', text: "加载数据失败:"+xhr.statusText,expire:700});
+    });
+};
+
+
+
+toughradius.admin.dashboard.authStatChart = function (session,uid) {
+    return {
+        id: uid,
+        view: "highcharts",
+        height:270,
+        credits: {enabled: false},
+        chart: {
+            type: 'areaspline',
+            events: {
+                load: function () {
+                    toughradius.admin.dashboard.updateAuthStatChart(session, uid);
+                }
+            }
+        },
+        title: "",
+        colors:['#40cc6f', '#c4aaff', '#ccc300','#006bcc','#cc6d3a','#cc6587','#cc0018','#cc00b1','#6d00cc','#cc9a00'],
+        xAxis: {type: 'datetime',tickInterval : 60*1000},
+        yAxis: {title: {text: '消息数'},
+            labels: {formatter: function() {return this.value;}}
+        },
+        tooltip: {shared: true},
+        plotOptions: {areaspline: {
+                stacking: 'normal',
+                marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+                fillOpacity: 0.2,
+                series: {
+                    pointPlacement: "on"
+                }
+            }},
+        series: [{},{},{},{},{},{},{}]
+    }
+};
+
+toughradius.admin.dashboard.updateAuthStatChart = function (session,uid) {
+    webix.ajax().get('/admin/radius/authstat',{}).then(function (result) {
+        var data = result.json();
+        try {
+            var authAcceptStat = {name:'认证成功',data:data.authAcceptStat};
+            var AuthNotExistErrStat = {name:'用户不存在',data:data.AuthNotExistErrStat};
+            var AuthPwdErrStat = {name:'密码错误',data:data.AuthPwdErrStat};
+            var AuthLimitErrStat = {name:'并发限制',data:data.AuthLimitErrStat};
+            var AuthRateErrStat = {name:'拨号频率过高',data:data.AuthRateErrStat};
+            var AuthStatusErrStat = {name:'状态不正常',data:data.AuthStatusErrStat};
+            var AuthBrasLimitErrStat = {name:'BRAS 并发限制',data:data.AuthBrasLimitErrStat};
+            var AuthBindErrStat = {name:'绑定错误',data:data.AuthBindErrStat};
+            var AuthOtherErrStat = {name:'其他错误',data:data.AuthOtherErrStat};
+            var AuthDropStat = {name:'丢弃消息',data:data.AuthDropStat};
+            $$(uid).parse([authAcceptStat,AuthNotExistErrStat,AuthPwdErrStat,AuthLimitErrStat,AuthRateErrStat,AuthStatusErrStat,AuthBrasLimitErrStat,AuthBindErrStat,AuthOtherErrStat,AuthDropStat]);
+        } catch(e){
+            console.log(e);
+        }
+    }).fail(function (xhr) {
+        webix.message({type: 'error', text: "加载数据失败:"+xhr.statusText,expire:700});
+    });
+};
+
+
+
+toughradius.admin.dashboard.onlineStatChart = function (session,uid) {
+    return {
+        id: uid,
+        view: "highcharts",
+        height:270,
+        credits: {enabled: false},
+        chart: {
+            type: 'areaspline',
+            events: {
+                load: function () {
+                    toughradius.admin.dashboard.updateOnlineStatChart(session, uid);
+                }
+            }
+        },
+        title: "",
+        colors:['#40cc6f', '#c260ff', '#ccc300'],
+        xAxis: {type: 'datetime',tickInterval : 60*1000},
+        yAxis: {title: {text: '在线数'},
+            labels: {formatter: function() {return this.value;}}
+        },
+        tooltip: {shared: true},
+        plotOptions: {areaspline: {
+                stacking: 'normal',
+                marker: {enabled: false,symbol: 'circle',radius: 2,states: {hover: {enabled: true}}},
+                fillOpacity: 0.2,
+                series: {
+                    pointPlacement: "on"
+                }
+            }},
+        series: [{},{}]
+    }
+};
+
+toughradius.admin.dashboard.updateOnlineStatChart = function (session,uid) {
+    webix.ajax().get('/admin/radius/onlinestat',{}).then(function (result) {
+        var data = result.json();
+        try {
+            var onineStat = {name:'正常在线',data:data.onineStat};
+            var onlineDelayStat = {name:'记账延时',data:data.onlineDelayStat};
+            $$(uid).parse([onineStat,onlineDelayStat]);
+        } catch(e){
+            console.log(e);
+        }
+    }).fail(function (xhr) {
+        webix.message({type: 'error', text: "加载数据失败:"+xhr.statusText,expire:700});
+    });
+};
+
+
+
+
+
+
+
+
+
+
+
 /**
  * 更新CPU性能数据
  */
@@ -516,6 +688,9 @@ toughradius.admin.dashboard.loadPage = function(session){
     var diskchartUid = "toughradius.admin.dashboard.diskchart_viewid." + webix.uid();
     var msgstatchartid = "toughradius.admin.dashboard.msgstatchart_viewid." + webix.uid();
     var msgstatInfoid = "toughradius.admin.dashboard.msgstatinfo_viewid." + webix.uid();
+    var castmsgstatchartid = "toughradius.admin.dashboard.castmsgstatchart_viewid." + webix.uid();
+    var authstatchartid = "toughradius.admin.dashboard.authstatchart_viewid." + webix.uid();
+    var onlinestatchartid = "toughradius.admin.dashboard.onlinestatchart_viewid." + webix.uid();
     var uptimeid = "toughradius.admin.dashboard.uptime.label";
     var cview = {
         id:"toughradius.admin.dashboard",
@@ -592,6 +767,9 @@ toughradius.admin.dashboard.loadPage = function(session){
                                             width:60,
                                             click: function () {
                                                 toughradius.admin.dashboard.updateMsgChart(session,msgstatchartid,msgstatInfoid);
+                                                toughradius.admin.dashboard.updateCastMsgChart(session,castmsgstatchartid);
+                                                toughradius.admin.dashboard.updateAuthStatChart(session,authstatchartid);
+                                                toughradius.admin.dashboard.updateOnlineStatChart(session,onlinestatchartid);
                                             }
                                         }
                                     ]
@@ -599,6 +777,9 @@ toughradius.admin.dashboard.loadPage = function(session){
                                 {
                                     rows:[
                                         toughradius.admin.dashboard.MsgStatChart(session,msgstatchartid,msgstatInfoid),
+                                        toughradius.admin.dashboard.onlineStatChart(session,onlinestatchartid),
+                                        toughradius.admin.dashboard.authStatChart(session,authstatchartid),
+                                        toughradius.admin.dashboard.castMsgStatChart(session,castmsgstatchartid),
                                         {id:msgstatInfoid}
                                     ]
                                 }

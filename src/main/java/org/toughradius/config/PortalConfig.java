@@ -29,7 +29,7 @@ public class PortalConfig {
     private int simPort;
     private int listenPort;
     private boolean portalEnabled;
-    private int trace;
+    private boolean trace;
     private int papchap;
     private int timeout;
     private int pool;
@@ -110,13 +110,6 @@ public class PortalConfig {
         this.listenPort = listenPort;
     }
 
-    public int getTrace() {
-        return trace;
-    }
-
-    public void setTrace(int trace) {
-        this.trace = trace;
-    }
 
     public int getPapchap() {
         return papchap;
@@ -135,7 +128,7 @@ public class PortalConfig {
     }
 
     public boolean isTraceEnabled(){
-        return trace == 1;
+        return trace;
     }
 
     public boolean isPortalEnabled() {
@@ -160,5 +153,13 @@ public class PortalConfig {
 
     public void setTemplateDir(String templateDir) {
         this.templateDir = templateDir;
+    }
+
+    public boolean isTrace() {
+        return trace;
+    }
+
+    public void setTrace(boolean trace) {
+        this.trace = trace;
     }
 }

@@ -34,30 +34,12 @@ public class RadiusAccountingFilter {
     private TicketCache ticketCache;
     @Autowired
     private RadiusConfig radiusConfig;
-    @Autowired
-    private SubscribeCache subscribeCache;
-    @Autowired
-    private SubscribeService subscribeService;
-    @Autowired
-    private ThreadPoolTaskExecutor systaskExecutor;
-
 
     public final static int ACCOUNTING_STATUS_START = 1;
     public final static int ACCOUNTING_STATUS_STOP = 2;
     public final static int ACCOUNTING_STATUS_UPDATE = 3;
     public final static int ACCOUNTING_STATUS_ON = 7;
     public final static int ACCOUNTING_STATUS_OFF = 8;
-
-    /**
-     * 重复下先报文检测,每个会话每秒只能有一个
-     */
-    private ValidateCache onlineStopValid= new ValidateCache(3000,1);
-
-    @Scheduled(fixedRate = 60 * 1000)
-    public void  checkValidateCacheExpire(){
-        onlineStopValid.clearExpire();
-    }
-
 
     /**
      * RADIUS 记账处理
@@ -98,21 +80,22 @@ public class RadiusAccountingFilter {
      */
     private void addOnline(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
         if(user==null){
-            String errMessage = String.format("用户不存在或状态未启用（记账请求） %s", request.getAcctStatusType());
+            String errMessage = "用户不存在或状态未启用（记账请求） " + request.getAcctStatusType();
             logger.error(request.getUsername(), errMessage, Memarylogger.RADIUSD);
             return;
         }
+
         if(onlineCache.isExist(request.getAcctSessionId())){
             logger.error(request.getUsername(),"记账报文重复", Memarylogger.RADIUSD);
             return;
         }
 
-        int onlineCount = onlineCache.getUserOnlineNum(request.getUserName());
-        if (onlineCount >= user.getActiveNum()) {
-            String errMessage = String.format("用户<%s>在线超过限制(MAX=%s)(记账请求) %s",user.getSubscriber(), user.getActiveNum(),request.getAcctStatusType());
+        if (onlineCache.isLimitOver(user.getSubscriber(),user.getActiveNum())) {
+            String errMessage = "用户<" + user.getSubscriber() + ">在线超过限制(MAX=" + user.getActiveNum() + ")(记账请求) " + request.getAcctStatusType();
             logger.error(request.getUsername(),errMessage, Memarylogger.RADIUSD);
             return;
         }
+
         RadiusOnline online = new RadiusOnline();
 //        online.setId(CoderUtil.randomLongId());
         online.setNodeId(user.getNodeId());
@@ -139,7 +122,7 @@ public class RadiusAccountingFilter {
         online.setAcctOutputPackets(request.getAcctOutputPackets());
         online.setAcctStartTime(request.getAcctStartTime());
         onlineCache.putOnline(online);
-        if(radiusConfig.getTrace() ==1){
+        if(radiusConfig.isTrace()){
             logger.info(request.getUsername(),String.format(":: 新增用户在线信息: sessionId=%s", request.getAcctSessionId()), Memarylogger.RADIUSD);
         }
 
@@ -161,70 +144,53 @@ public class RadiusAccountingFilter {
     }
 
     public void doStop(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-        systaskExecutor.execute(() -> {
-            try {
-                onlineStopValid.incr(request.getAcctSessionId());
-                if(onlineStopValid.isOver(request.getAcctSessionId())){
-                    logger.info(request.getUsername(), String.format(":: 收到重复记账下线消息:%s;", request.toString()), Memarylogger.RADIUSD);
-                    return;
-                }
-
-                if(radiusConfig.getTrace()==1){
-                    if(!onlineCache.isExist(request.getAcctSessionId()))
-                    {
-                        logger.info(request.getUsername(), String.format(":: 收到记账下线消息(但在线用户不存在):%s", request.toString()), Memarylogger.RADIUSD);
-                        return;
-                    }
-                    logger.info(request.getUsername(),":: 开始记账下线处理:" + request.toString(), Memarylogger.RADIUSD);
-                }
-
-                RadiusOnline online = onlineCache.removeOnline(request.getAcctSessionId());
-                //新增上网日志
-                RadiusTicket radiusTicket = new RadiusTicket();
-                radiusTicket.setId(CoderUtil.randomLongId());
-                radiusTicket.setNodeId(user.getNodeId());
-                radiusTicket.setUsername(request.getUserName());
-                radiusTicket.setNasId(request.getIdentifier());
-                radiusTicket.setNasAddr(nas.getIpaddr());
-                radiusTicket.setNasPaddr(request.getRemoteAddr().getHostName());
-                radiusTicket.setAcctSessionTime(request.getAcctSessionTime());
-                radiusTicket.setSessionTimeout(request.getSessionTimeout());
-                radiusTicket.setFramedIpaddr(request.getFramedIpaddr());
-                radiusTicket.setFramedNetmask(request.getFramedNetmask());
-                radiusTicket.setMacAddr(request.getMacAddr());
-                radiusTicket.setInVlan(request.getInVlanId());
-                radiusTicket.setOutVlan(request.getOutVlanId());
-                radiusTicket.setNasPort((long) request.getNasPort());
-                radiusTicket.setNasClass(request.getNasClass());
-                radiusTicket.setNasPortId(request.getNasPortId());
-                radiusTicket.setNasPortType(0);
-                radiusTicket.setServiceType(request.getServiceType());
-                radiusTicket.setAcctSessionId(request.getAcctSessionId());
-                radiusTicket.setAcctInputTotal(request.getAcctInputTotal());
-                radiusTicket.setAcctOutputTotal(request.getAcctOutputTotal());
-                radiusTicket.setAcctInputPackets(request.getAcctInputPackets());
-                radiusTicket.setAcctOutputPackets(request.getAcctOutputPackets());
-                radiusTicket.setAcctStopTime(new Date());
-                radiusTicket.setAcctStartTime(DateTimeUtil.toDate(request.getAcctStartTime()));
-                ticketCache.addTicket(radiusTicket);
-                //删除在线数据
-                if(radiusConfig.getTrace()==1)
-                    logger.print("新增上网日志");
-            }catch (Exception e) {
-                logger.error(request.getUsername(), "用户下线处理错误", e, Memarylogger.RADIUSD);
+        try {
+            RadiusOnline online = onlineCache.removeOnline(request.getAcctSessionId());
+            if(online==null){
+                logger.info(request.getUsername(), ":: 收到记账下线消息(但在线用户不存在):" + request.toString(), Memarylogger.RADIUSD);
+                return;
             }
-        });
+            RadiusTicket radiusTicket = new RadiusTicket();
+            radiusTicket.setId(CoderUtil.randomLongId());
+            radiusTicket.setNodeId(online.getNodeId());
+            radiusTicket.setUsername(online.getUsername());
+            radiusTicket.setNasId(online.getNasId());
+            radiusTicket.setNasAddr(online.getNasAddr());
+            radiusTicket.setNasPaddr(online.getNasPaddr());
+            radiusTicket.setAcctSessionTime(request.getAcctSessionTime());
+            radiusTicket.setSessionTimeout(request.getSessionTimeout());
+            radiusTicket.setFramedIpaddr(online.getFramedIpaddr());
+            radiusTicket.setFramedNetmask(online.getFramedNetmask());
+            radiusTicket.setMacAddr(online.getMacAddr());
+            radiusTicket.setInVlan(online.getInVlan());
+            radiusTicket.setOutVlan(online.getOutVlan());
+            radiusTicket.setNasPort(online.getNasPort());
+            radiusTicket.setNasClass(online.getNasClass());
+            radiusTicket.setNasPortId(online.getNasPortId());
+            radiusTicket.setNasPortType(0);
+            radiusTicket.setServiceType(online.getServiceType());
+            radiusTicket.setAcctSessionId(online.getAcctSessionId());
+            radiusTicket.setAcctInputTotal(request.getAcctInputTotal());
+            radiusTicket.setAcctOutputTotal(request.getAcctOutputTotal());
+            radiusTicket.setAcctInputPackets(request.getAcctInputPackets());
+            radiusTicket.setAcctOutputPackets(request.getAcctOutputPackets());
+            radiusTicket.setAcctStopTime(new Date());
+            radiusTicket.setAcctStartTime(DateTimeUtil.toDate(request.getAcctStartTime()));
+            ticketCache.addTicket(radiusTicket);
+        }catch (Exception e) {
+            logger.error(request.getUsername(), "用户下线处理错误", e, Memarylogger.RADIUSD);
+        }
     }
 
     public void doNasOn(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-        if(radiusConfig.getTrace() ==1){
+        if(radiusConfig.isTrace()){
             logger.info(String.format(":: NAS <%s %s> 记账启用 ", nas.getIdentifier(), nas.getIpaddr()), Memarylogger.RADIUSD);
         }
         onlineCache.clearOnlineByFilter(nas.getIpaddr(),nas.getIdentifier());
     }
 
     public void doNasOff(AccountingRequest request, Bras nas, Subscribe user) throws RadiusException {
-        if(radiusConfig.getTrace() ==1){
+        if(radiusConfig.isTrace()){
             logger.info(String.format(":: NAS <%s %s> 记账关闭 ", nas.getIdentifier(), nas.getIpaddr()), Memarylogger.RADIUSD);
         }
         onlineCache.clearOnlineByFilter(nas.getIpaddr(),nas.getIdentifier());

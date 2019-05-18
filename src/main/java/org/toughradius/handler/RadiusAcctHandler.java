@@ -2,6 +2,7 @@ package org.toughradius.handler;
 
 import org.toughradius.common.ValidateCache;
 import org.toughradius.component.Memarylogger;
+import org.toughradius.component.RadiusCastStat;
 import org.toughradius.entity.Bras;
 import org.toughradius.entity.Subscribe;
 import org.tinyradius.packet.AccountingRequest;
@@ -28,6 +29,9 @@ public class RadiusAcctHandler extends RadiusBasicHandler {
      */
     private Map<Long,ValidateCache> validateMap = new HashMap<>();
 
+    @Autowired
+    private RadiusCastStat radiusCastStat;
+
 
     private ValidateCache getBrasValidate(Bras bras){
         if(validateMap.containsKey(bras.getId())){
@@ -53,20 +57,19 @@ public class RadiusAcctHandler extends RadiusBasicHandler {
 
 
     public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Bras nas) throws RadiusException {
-        systaskExecutor.execute(()-> {
-            try {
-                Subscribe user = getUser(accountingRequest.getUserName());
-                accountingFilter.doFilter(accountingRequest,nas,user);
-            } catch (RadiusException e) {
-                logger.error(accountingRequest.getUserName(),"记账处理错误",e, Memarylogger.RADIUSD);
-            }
-        });
+        try {
+            Subscribe user = getUser(accountingRequest.getUserName());
+            accountingFilter.doFilter(accountingRequest,nas,user);
+        } catch (RadiusException e) {
+            logger.error(accountingRequest.getUserName(),"记账处理错误",e, Memarylogger.RADIUSD);
+        }
         return getAccountingResponse(accountingRequest);
     }
 
     @Override
     public void messageReceived(IoSession session, Object message)
             throws Exception {
+        long start = System.currentTimeMillis();
         final InetSocketAddress remoteAddress = (InetSocketAddress) session.getAttribute(SESSION_CLIENT_IP_KEY);
         final InetSocketAddress localAddress = (InetSocketAddress) session.getLocalAddress();
         byte[] data = parseMessage(session, message);
@@ -114,6 +117,15 @@ public class RadiusAcctHandler extends RadiusBasicHandler {
                 logger.print(response.toString());
 
             sendResponse(session,remoteAddress,nas.getSecret(),request,response);
+
+            int cast = (int) (System.currentTimeMillis()-start);
+            if(request.getAcctStatusType()==AccountingRequest.ACCT_STATUS_TYPE_START){
+                radiusCastStat.updateAcctStart(cast);
+            }else if(request.getAcctStatusType()==AccountingRequest.ACCT_STATUS_TYPE_INTERIM_UPDATE){
+                radiusCastStat.updateAcctUpdate(cast);
+            }else if(request.getAcctStatusType()==AccountingRequest.ACCT_STATUS_TYPE_STOP){
+                radiusCastStat.updateAcctStop(cast);
+            }
         }
 
     }

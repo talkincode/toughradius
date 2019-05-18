@@ -1,4 +1,5 @@
 package org.toughradius.component;
+import org.toughradius.common.SpinLock;
 import org.toughradius.config.RadiusConfig;
 import org.toughradius.entity.Bras;
 import org.tinyradius.packet.AccountingRequest;
@@ -31,11 +32,23 @@ public class OnlineCache {
     private SubscribeCache subscribeCache;
 
     @Autowired
+    private RadiusConfig radiusConfig;
+
+    @Autowired
     private ThreadPoolTaskExecutor systaskExecutor;
+
+    private final static SpinLock lock = new SpinLock();
 
 
     public HashMap<String,RadiusOnline> getCacheData(){
         return cacheData;
+    }
+
+    public long[] getOnlineStat(){
+        ArrayList<RadiusOnline> copy = new ArrayList<>(cacheData.values());
+        long v1 = copy.stream().filter(x->!isExpire(x,radiusConfig.getInterimUpdate())).count();
+        long v2 = copy.size() - v1;
+        return new long[]{v1, v2};
     }
 
 
@@ -44,20 +57,28 @@ public class OnlineCache {
         return cacheData.size();
     }
 
-    public List<RadiusOnline> getOnlineList()
+    public List<RadiusOnline> getReadonlyOnlineList()
     {
-        return new ArrayList<RadiusOnline>(Collections.unmodifiableCollection(cacheData.values()));
+        try {
+            lock.lock();
+            return new ArrayList<>(Collections.unmodifiableCollection(cacheData.values()));
+        }
+        finally {
+            lock.unLock();
+        }
     }
 
     public List<RadiusOnline> list(String nodeId)
     {
         List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-        synchronized (cacheData)
-        {
+        try{
+            lock.lock();
             for (RadiusOnline online : cacheData.values()) {
                 if (online != null && online.getNodeId().equals(nodeId))
                     onlineList.add(online);
             }
+        }finally {
+            lock.unLock();
         }
         return onlineList;
     }
@@ -65,41 +86,53 @@ public class OnlineCache {
     public List<RadiusOnline> queryNoAmountOnline( )
     {
         List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-        synchronized (cacheData){
+        try{
+            lock.lock();
             for (RadiusOnline online : cacheData.values()) {
                 if (online.getUnLockFlag() == RadiusOnline.AMOUNT_NOT_ENOUGH)
                     onlineList.add(online);
             }
+        } finally {
+            lock.unLock();
         }
         return onlineList;
     }
 
     public boolean isExist(String sessionId)
     {
-        synchronized (cacheData){
+        try{
+            lock.lock();
             return cacheData.containsKey(sessionId);
+        } finally {
+            lock.unLock();
         }
     }
 
     public RadiusOnline getOnline(String sessionId)
     {
-        synchronized (cacheData){
+        try{
+            lock.lock();
             return cacheData.get(sessionId);
+        } finally {
+            lock.unLock();
         }
     }
 
     public boolean isOnline(String userName)
     {
-        boolean isTcRadiusOnline = false;
-        synchronized (cacheData){
+        try{
+            lock.lock();
+            boolean isTcRadiusOnline = false;
             for (RadiusOnline online : cacheData.values()) {
                 if (userName.equals(online.getUsername())) {
                     isTcRadiusOnline = true;
                     break;
                 }
             }
+            return isTcRadiusOnline;
+        } finally {
+            lock.unLock();
         }
-        return isTcRadiusOnline;
     }
 
     /**
@@ -186,32 +219,40 @@ public class OnlineCache {
 
     public List<RadiusOnline> getOnlineByUserName(String userName)
     {
-        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-        synchronized (cacheData){
+        try{
+            lock.lock();
+            List<RadiusOnline> onlineList = new ArrayList<>();
             for (RadiusOnline online : cacheData.values()) {
                 if (userName.equalsIgnoreCase(online.getUsername())) {
                     onlineList.add(online);
                 }
             }
+            return onlineList;
+        } finally {
+            lock.unLock();
         }
-        return onlineList;
     }
 
     /** 用户上线 */
     public void putOnline(RadiusOnline online)
     {
-        synchronized (cacheData)
-        {
+        try{
+            lock.lock();
             String key = online.getAcctSessionId();
             cacheData.put(key, online);
+        } finally {
+            lock.unLock();
         }
     }
 
     /** 一个用户下线 */
     public RadiusOnline removeOnline(String sessionId)
     {
-        synchronized (cacheData){
-            return (RadiusOnline) cacheData.remove(sessionId);
+        try{
+            lock.lock();
+            return cacheData.remove(sessionId);
+        } finally {
+            lock.unLock();
         }
     }
 
@@ -219,27 +260,55 @@ public class OnlineCache {
     /** 查询上网帐号并发数 */
     public int getUserOnlineNum(String userName)
     {
-        int onlineNum = 0;
-        synchronized (cacheData){
+
+        try{
+            lock.lock();
+            int onlineNum = 0;
             for (RadiusOnline online : cacheData.values()) {
                 if (userName.equalsIgnoreCase(online.getUsername()))
                     onlineNum++;
             }
+            return onlineNum;
+        } finally {
+            lock.unLock();
         }
-        return onlineNum;
+    }
+
+    /** 查询上网帐号并发数 是否超过限制， 超过预设即返回， 避免多次循环*/
+    public boolean isLimitOver(String userName, int size)
+    {
+        try{
+            lock.lock();
+            int onlineNum = 0;
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername()))
+                {
+                    onlineNum++;
+                }
+                if (onlineNum >= size){
+                    return true;
+                }
+            }
+            return onlineNum >= size;
+        } finally {
+            lock.unLock();
+        }
     }
 
     /** 查询上网帐号并发数,要求MAC地址不相等 */
     public int getUserOnlineNum(String userName, String macAddr)
     {
-        int onlineNum = 0;
-        synchronized (cacheData){
+        try{
+            lock.lock();
+            int onlineNum = 0;
             for (RadiusOnline online : cacheData.values()) {
                 if (userName.equals(online.getUsername()) && !macAddr.equals(online.getMacAddr()))
                     onlineNum++;
             }
+            return onlineNum;
+        } finally {
+            lock.unLock();
         }
-        return onlineNum;
     }
 
     /**
@@ -262,7 +331,8 @@ public class OnlineCache {
 
     public void clearOvertimeTcRadiusOnline( int interim_times)
     {
-        synchronized (cacheData){
+        try{
+            lock.lock();
             for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
                 RadiusOnline online = it.next();
@@ -274,14 +344,17 @@ public class OnlineCache {
                 //超时下线消息跟踪
                 logger.info(online.getUsername(),"BRAS[nasip="+online.getNasAddr()+",nasid="+online.getNasId()+"]:用户[user="+online.getUsername()+",session="+online.getAcctSessionId()+"]上线时间["+online.getAcctStartTime()+"]超时未收到更新消息，被自动清理。");
             }
+        } finally {
+            lock.unLock();
         }
     }
 
     public void unlockExpireTcRadiusOnline()
     {
 
-        List ids = new ArrayList();
-        synchronized (cacheData){
+        List<String> ids = new ArrayList<>();
+        try{
+            lock.lock();
             for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
                 RadiusOnline online = it.next();
@@ -294,21 +367,22 @@ public class OnlineCache {
                 }
 
                 if(ids.size()>=32){
-                    List idscopy = new ArrayList(ids);
+                    List<String> idscopy = new ArrayList<>(ids);
                     this.unlockOnlines(idscopy);
                     ids.clear();
                 }
-
                 //超时下线消息跟踪
                 logger.info(online.getUsername(),"BRAS[nasip="+online.getNasAddr()+",nasid="+online.getNasId()+"]:用户[user="+online.getUsername()+",session="+online.getAcctSessionId()+"]已经过期/或流量不足，即将发送下线指令。");
             }
+        } finally {
+            lock.unLock();
         }
-
         this.unlockOnlines(ids);
     }
 
     public void updateOnline(AccountingRequest request) {
-        synchronized (cacheData){
+        try{
+            lock.lock();
             RadiusOnline online = cacheData.get(request.getAcctSessionId());
             if(online!=null){
                 online.setUsername(request.getUserName());
@@ -319,11 +393,14 @@ public class OnlineCache {
                 online.setAcctInputPackets(request.getAcctInputPackets());
                 online.setAcctOutputPackets(request.getAcctOutputPackets());
             }
+        } finally {
+            lock.unLock();
         }
     }
 
 
-    private boolean filterOnline(RadiusOnline online, String nodeId, Integer invlan, Integer outVlan, String nasAddr, String nasId, String beginTime, String endTime, String keyword) {
+    private boolean filterOnline(RadiusOnline online, String nodeId, Integer invlan, Integer outVlan, String nasAddr,
+                                 String nasId, String beginTime, String endTime, String keyword) {
         if(ValidateUtil.isNotEmpty(nodeId)&&!nodeId.equalsIgnoreCase(online.getNodeId().toString())) {
             return false;
         }
@@ -384,67 +461,47 @@ public class OnlineCache {
         int total = 0;
         int start = pos+1;
         int end = pos +  count ;
-
-        synchronized (cacheData){
-            List<RadiusOnline> copyList = new ArrayList<RadiusOnline>(cacheData.values());
-            List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-            Comparator<RadiusOnline> comp = (RadiusOnline a, RadiusOnline b) -> {
-                if("acctInputTotal_asc".equals(sort)){
-                    return a.getAcctInputTotal().compareTo(b.getAcctInputTotal());
-                }else if("acctInputTotal_desc".equals(sort)){
-                    return b.getAcctInputTotal().compareTo(a.getAcctInputTotal());
-                }else if("acctOutputTotal_asc".equals(sort)){
-                    return a.getAcctOutputTotal().compareTo(b.getAcctOutputTotal());
-                }else if("acctOutputTotal_desc".equals(sort)){
-                    return b.getAcctOutputTotal().compareTo(a.getAcctOutputTotal());
-                }else if("acctStartTime_asc".equals(sort)){
-                    return (int)DateTimeUtil.compareSecond(a.getAcctStartTime(),b.getAcctStartTime());
-                }else if("acctStartTime_desc".equals(sort)){
-                    return (int)DateTimeUtil.compareSecond(b.getAcctStartTime(),a.getAcctStartTime());
-                }else{
-                    return (int)DateTimeUtil.compareSecond(b.getAcctStartTime(),a.getAcctStartTime());
-                }
-            };
-            copyList.sort(comp);
-            for (RadiusOnline online : copyList) {
-                if (!this.filterOnline(online, nodeId, invlan,outVlan, nasAddr, nasId, beginTime, endTime, keyword)) {
-                    continue;
-                }
-                else{
-                    total++;
-                    if (total >= start && total <= end) {
-                        try {
-                            onlineList.add(online.clone());
-                        } catch (CloneNotSupportedException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-
+        List<RadiusOnline> copyList = getReadonlyOnlineList();;
+        List<RadiusOnline> onlineList = new ArrayList<>();
+        for (RadiusOnline online : copyList) {
+            if (!this.filterOnline(online, nodeId, invlan,outVlan, nasAddr, nasId, beginTime, endTime, keyword)) {
+                continue;
             }
-            return new PageResult<RadiusOnline>(pos, total, onlineList);
+            total++;
+            if (total >= start && total <= end) {
+                try {
+                    onlineList.add(online.clone());
+                } catch (CloneNotSupportedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
+        return new PageResult<>(pos, total, onlineList);
     }
 
 
     public  List<RadiusOnline> queryOnlineByIds(String ids){
-        String[] idarray = ids.split(",");
-        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-        synchronized (cacheData){
+        try{
+            lock.lock();
+            String[] idarray = ids.split(",");
+            List<RadiusOnline> onlineList = new ArrayList<>();
             for (String sid : idarray) {
                 RadiusOnline online = cacheData.get(sid);
                 if(online!=null){
                     onlineList.add(online);
                 }
             }
+            return onlineList;
+        } finally {
+            lock.unLock();
         }
-        return onlineList;
+
     }
 
     public int clearOnlineByFilter(String nodeId, Integer invlan,Integer outVlan,String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
-        int total = 0;
-        List<RadiusOnline> onlineList = new ArrayList<RadiusOnline>();
-        synchronized (cacheData){
+        try{
+            lock.lock();
+            int total = 0;
             for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
                 RadiusOnline online = it.next();
@@ -453,13 +510,18 @@ public class OnlineCache {
                     it.remove();
                 }
             }
+            return total;
+        } finally {
+            lock.unLock();
         }
-        return total;
+
     }
 
     public int clearOnlineByFilter(String nasAddr, String nasId){
-        int total = 0;
-        synchronized (cacheData){
+
+        try{
+            lock.lock();
+            int total = 0;
             for (Iterator<RadiusOnline> it = cacheData.values().iterator(); it.hasNext();)
             {
                 RadiusOnline online = it.next();
@@ -468,8 +530,10 @@ public class OnlineCache {
                     it.remove();
                 }
             }
+            return total;
+        } finally {
+            lock.unLock();
         }
-        return total;
     }
 
 

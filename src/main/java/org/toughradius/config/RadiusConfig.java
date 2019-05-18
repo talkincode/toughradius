@@ -28,7 +28,7 @@ public class RadiusConfig {
 
     private int authport;
     private int acctport;
-    private int trace;
+    private boolean trace;
     private int interimUpdate;
     private int maxSessionTimeout;
     private String ticketDir;
@@ -125,12 +125,11 @@ public class RadiusConfig {
         this.acctport = acctport;
     }
 
-
-    public int getTrace() {
+    public boolean isTrace() {
         return trace;
     }
 
-    public void setTrace(int trace) {
+    public void setTrace(boolean trace) {
         this.trace = trace;
     }
 
@@ -175,7 +174,7 @@ public class RadiusConfig {
     }
 
     public boolean isTraceEnabled(){
-        return trace == 1;
+        return trace;
     }
 
     public int getAuthPool() {

@@ -38,8 +38,8 @@ toughradius.admin.syslog.loadPage = function(session){
                                 { view: "text", name: "keyword", label: "", placeholder: "内容关键字"},
                                 {
                                     cols:[
-                                        {view: "richselect",  name: "type", label: "", value: "error", labelWidth:0,width:100,
-                                            options: [{ id: "radiusd", value: "RADIUS" },{ id: "api", value: "API" },{ id: "error", value: "ERROR" }]},
+                                        {view: "richselect",  name: "type", label: "", value: "radiusd", labelWidth:0,width:150,
+                                            options: [{ id: "radiusd", value: "RADIUS认证" },{ id: "portal", value: "PORTAL认证" },{ id: "api", value: "API接口" },{ id: "error", value: "错误日志" },{ id: "system", value: "系统日志" }]},
                                         {view: "button", label: "查询", type: "icon", icon: "search", borderless: true, width: 55,click:function(){
                                                 reloadData();
                                             }},

@@ -30,19 +30,6 @@ public class SubscribeCache {
         return cacheData.size();
     }
 
-    public boolean cacheExists(String username) {
-        if(ValidateUtil.isEmpty(username))
-        {
-            return false;
-        }
-        username = username.toLowerCase();
-        if(cacheData.containsKey(username))
-            return true;
-        String srcUsername = username.contains("@") ? username.substring(0, username.indexOf("@")) : null;
-        return ValidateUtil.isNotEmpty(srcUsername) && cacheData.containsKey(srcUsername);
-
-    }
-
     /**
      *  获取缓存用户
      * @param username
@@ -87,7 +74,7 @@ public class SubscribeCache {
 
     public void remove(String username){
         username = username.toLowerCase();
-        String srcUsername = username.contains("@")? username.substring(0,username.indexOf("@")):null;
+        String srcUsername = username.contains("@")? username.substring(0,username.indexOf("@")):"";
         cacheData.remove(srcUsername);
     }
 

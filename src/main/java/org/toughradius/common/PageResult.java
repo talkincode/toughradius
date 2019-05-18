@@ -3,17 +3,17 @@ package org.toughradius.common;
 import java.util.List;
 
 public class PageResult<T> {
-    private int pos;
-    private int total_count;
+    private long pos;
+    private long total_count;
     private List<T> data;
 
-    public PageResult(int pos, int total_count, List<T> data) {
+    public PageResult(long pos, long total_count, List<T> data) {
         this.pos = pos;
         this.total_count = total_count;
         this.data = data;
     }
 
-    public int getPos() {
+    public long getPos() {
         return pos;
     }
 
@@ -21,7 +21,7 @@ public class PageResult<T> {
         this.pos = pos;
     }
 
-    public int getTotal_count() {
+    public long getTotal_count() {
         return total_count;
     }
 

@@ -3,6 +3,7 @@ package org.toughradius.component;
 
 import com.google.gson.Gson;
 import org.toughradius.common.FileUtil;
+import org.toughradius.config.Constant;
 import org.toughradius.config.RadiusConfig;
 import org.toughradius.entity.Config;
 import org.toughradius.entity.RadiusOnline;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
  * Radius 定时任务设计
  */
 @Component
-public class SystemTaskScheduler {
+public class SystemTaskScheduler implements Constant {
 
     @Autowired
     private OnlineCache onlineCache;
@@ -27,9 +28,6 @@ public class SystemTaskScheduler {
     private SubscribeCache subscribeCache;
 
     @Autowired
-    private SubscribeService subscribeService;
-
-    @Autowired
     private ConfigService configService;
 
     @Autowired
@@ -39,14 +37,16 @@ public class SystemTaskScheduler {
     private RadiusStat radiusStat;
 
     @Autowired
+    private RadiusAuthStat radiusAuthStat;
+
+    @Autowired
+    private RadiusOnlineStat radiusOnlineStat;
+
+    @Autowired
     private Gson gson;
 
     @Autowired
     private ThreadPoolTaskExecutor systaskExecutor;
-
-    @Autowired
-    private Memarylogger logger;
-
 
 
     /**
@@ -61,11 +61,31 @@ public class SystemTaskScheduler {
     }
 
     /**
+     * 消息统计任务
+     */
+    @Scheduled(fixedRate = 5 * 1000, initialDelay = 5)
+    public void updateRadiusAuthStat(){
+        systaskExecutor.execute(()->{
+            radiusAuthStat.runStat();
+        });
+    }
+
+    /**
+     * 消息统计任务
+     */
+    @Scheduled(fixedRate = 5 * 1000, initialDelay = 5)
+    public void updateRadiusOnlineStat(){
+        systaskExecutor.execute(()->{
+            radiusOnlineStat.runStat();
+        });
+    }
+
+    /**
      * 在线用户清理
      */
     @Scheduled(fixedRate =60 * 1000)
     public void  checkOnlineExpire(){
-        Config config = configService.findConfig("radius","RADIUS_INTERIM_INTELVAL");
+        Config config = configService.findConfig(Constant.RADIUS_MODULE,RADIUS_INTERIM_INTELVAL);
         if(config!=null){
             int interim_times = Integer.valueOf(config.getValue());
             onlineCache.clearOvertimeTcRadiusOnline(interim_times);
@@ -80,19 +100,6 @@ public class SystemTaskScheduler {
         onlineCache.unlockExpireTcRadiusOnline();
     }
 
-
-    /**
-     * 清理余额不足的在线用户, 8小时一次
-     */
-    @Scheduled(fixedRate = 4 * 3600 * 1000)
-    public void unlockNoAmountOnline( )
-    {
-        for (RadiusOnline online : onlineCache.getCacheData().values()) {
-            if (online.getUnLockFlag() == RadiusOnline.AMOUNT_NOT_ENOUGH){
-                onlineCache.asyncUnlockOnline(online.getAcctSessionId());
-            }
-        }
-    }
 
     /**
      * 更新用户缓存

@@ -6,6 +6,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.RestResult;
 import org.toughradius.common.SystemUtil;
+import org.toughradius.component.RadiusAuthStat;
+import org.toughradius.component.RadiusCastStat;
+import org.toughradius.component.RadiusOnlineStat;
 import org.toughradius.component.RadiusStat;
 
 import java.util.Map;
@@ -19,10 +22,37 @@ public class DashboardController {
     @Autowired
     private RadiusStat radiusStat;
 
+    @Autowired
+    private RadiusCastStat radiusCastStat;
+
+    @Autowired
+    private RadiusAuthStat radiusAuthStat;
+
+    @Autowired
+    private RadiusOnlineStat radiusOnlineStat;
+
     @GetMapping("/admin/radius/stat")
     @ResponseBody
     public Map queryRadiusStat(){
         return radiusStat.getData();
+    }
+
+    @GetMapping({"/radius/caststat","/admin/radius/caststat"})
+    @ResponseBody
+    public Map queryRadiusCastStat(){
+        return radiusCastStat.getData();
+    }
+
+    @GetMapping({"/radius/authstat","/admin/radius/authstat"})
+    @ResponseBody
+    public Map queryRadiusAuthStat(){
+        return radiusAuthStat.getData();
+    }
+
+    @GetMapping({"/radius/onlinestat","/admin/radius/onlinestat"})
+    @ResponseBody
+    public Map queryRadiusOnlineStat(){
+        return radiusOnlineStat.getData();
     }
 
     @GetMapping(value = {"/admin/dashboard/cpuuse"})

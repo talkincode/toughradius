@@ -3,6 +3,7 @@ package org.toughradius.component;
 import org.springframework.stereotype.Component;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.PageResult;
+import org.toughradius.common.SpinLock;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.TraceMessage;
 import org.apache.commons.logging.Log;
@@ -10,6 +11,8 @@ import org.apache.commons.logging.LogFactory;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 内存日志工具
@@ -22,7 +25,6 @@ public class Memarylogger {
     public final static String PORTAL = "portal";
     public final static String API = "api";
     public final static String ERROR = "error";
-
 
     private Log logger = LogFactory.getLog(Memarylogger.class);
 
@@ -110,46 +112,46 @@ public class Memarylogger {
         trace(username,errmessage,ERROR);
     }
 
+    private boolean filterData(TraceMessage message, String type,String username, String keyword,String startTime, String endTime){
+        if(startTime.length() == 16){
+            startTime += ":00";
+        }
+
+        if(endTime.length() == 16){
+            endTime += ":59";
+        }
+        if(ValidateUtil.isNotEmpty(type)&&!message.getType().equalsIgnoreCase(type)) {
+            return false;
+        }
+        if(ValidateUtil.isNotEmpty(username)&&!message.getName().contains(username)) {
+            return false;
+        }
+        if(ValidateUtil.isNotEmpty(keyword)&&!message.getMsg().contains(keyword)) {
+            return false;
+        }
+        if(ValidateUtil.isNotEmpty(startTime)&&DateTimeUtil.compareSecond(message.getTime(),startTime)<0){
+            return false;
+        }
+        if(ValidateUtil.isNotEmpty(endTime)&&DateTimeUtil.compareSecond(message.getTime(),endTime)>0){
+            return false;
+        }
+        return true;
+    }
 
     public PageResult<TraceMessage> queryMessage(int pos, int count, String startTime,String endTime, String type, String username, String keyword){
         LoggerDeque traceQueue = traceMap.get(type);
         if(traceQueue == null)
-            return new PageResult<TraceMessage>(0, 0, null);;
-
-        synchronized ( traceQueue ){
-            int total = 0;
-            int start = pos+1;
-            int end = pos +  count ;
-            List<TraceMessage> messages = new ArrayList<TraceMessage>();
-            for (TraceMessage message : traceQueue.getQueue()) {
-                if(ValidateUtil.isNotEmpty(type)&&!message.getType().equalsIgnoreCase(type)) {
-                    continue;
-                }
-                if(ValidateUtil.isNotEmpty(username)&&!message.getName().contains(username)) {
-                    continue;
-                }
-                if(ValidateUtil.isNotEmpty(keyword)&&!message.getMsg().contains(keyword)) {
-                    continue;
-                }
-                if(ValidateUtil.isNotEmpty(startTime)&&DateTimeUtil.compareSecond(message.getTime(),startTime)<0){
-                    continue;
-                }
-                if(ValidateUtil.isNotEmpty(endTime)&&DateTimeUtil.compareSecond(message.getTime(),endTime)>0){
-                    continue;
-                }
-                total++;
-                if (total >= start && total <= end) {
-                    messages.add(message.copy());
-                }
-            }
-            return new PageResult<>(pos, total, messages);
-        }
-
+            return new PageResult<>(0, 0, null);
+        List<TraceMessage> copyList = new ArrayList<>(traceQueue.getQueue());
+        long total  = copyList.stream().filter(x -> filterData(x, type, username, keyword, startTime,endTime)).count();
+        Stream<TraceMessage> stream = copyList.stream().filter(x ->  filterData(x, type, username, keyword, startTime,endTime));
+        List<TraceMessage> data = stream.skip(pos).limit(count).collect(Collectors.toList());
+        return new PageResult<>(pos, total, data);
     }
 
-    class LoggerDeque{
-
-        ArrayDeque<TraceMessage> queue = new ArrayDeque<>();
+    static class LoggerDeque {
+        private final static SpinLock lock = new SpinLock();
+        private final ArrayDeque<TraceMessage> queue = new ArrayDeque<>();
         private int max = 10000;
         public LoggerDeque(int max) {
             this.max = max;
@@ -160,11 +162,14 @@ public class Memarylogger {
         }
 
         public void add(TraceMessage message){
-            synchronized (queue){
+            try{
+                lock.lock();
                 queue.addFirst(message);
                 if(queue.size()>this.max){
                     queue.pollLast();
                 }
+            }finally {
+                lock.unLock();
             }
         }
     }
