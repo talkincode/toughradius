@@ -2,6 +2,7 @@ package org.toughradius.component;
 
 import org.apache.ibatis.annotations.Param;
 import org.toughradius.common.CoderUtil;
+import org.toughradius.config.Constant;
 import org.toughradius.entity.Config;
 import org.toughradius.mapper.ConfigMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,14 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ConfigService {
-
-    public final static String RADIUS_MODULE = "radius";
-    public final static String RADIUS_IGNORE_PASSWORD = "RADIUS_IGNORE_PASSWORD";
-
-    public final static String SYSTEM_MODULE = "system";
-    public final static String SYSTEM_USERNAME = "SYSTEM_USERNAME";
-    public final static String SYSTEM_USERPWD = "SYSTEM_USERPWD";
+public class ConfigService implements Constant {
 
     @Autowired
     private ConfigMapper configMapper;

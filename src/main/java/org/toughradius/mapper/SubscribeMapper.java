@@ -4,7 +4,7 @@ import org.toughradius.entity.Subscribe;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
-import org.toughradius.entity.SubscribeQuery;
+import org.toughradius.form.SubscribeQuery;
 
 import java.math.BigInteger;
 import java.util.List;

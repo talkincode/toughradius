@@ -10,7 +10,6 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
     toughradius.admin.subscribe.reloadData = function(){
         $$(toughradius.admin.subscribe.detailFormID).hide();
         $$(toughradius.admin.subscribe.dataViewID).show();
-        $$(tableid).define("url", $$(tableid));
         $$(tableid).refresh();
         $$(tableid).clearAll();
         var params = $$(queryid).getValues();
@@ -25,7 +24,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
 
     var cview = {
         id: "toughradius.admin.subscribe",
-        css:"main-panel",padding:2,
+        css:"main-panel",padding:10,
         rows:[
             {
                 id:toughradius.admin.subscribe.dataViewID,
@@ -119,7 +118,8 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                                         { id: 'expire', value: "已到期" }
                                                     ]
                                                 },
-                                                {view: "text", css:"nborder-input2",  name: "keyword", label: "关键字",  value: keyword || "", placeholder: "姓名/帐号/手机/邮箱/地址...", width:240},
+                                                {view: "text", css:"nborder-input2",  name: "subscriber", label: "用户名", placeholder: "帐号精确匹配", width:240},
+                                                {view: "text", css:"nborder-input2",  name: "keyword", label: "",labelWidth:0,  value: keyword || "", placeholder: "帐号模糊匹配", width:180},
 
                                             {
                                                 cols:[
@@ -223,7 +223,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                         });
                                     },
                                     do_tester: function(e, id){
-                                        toughradius.admin.subscribe.subscribeRadiusTest(session,this.getItem(id).id);
+                                        toughradius.admin.subscribe.subscribeRadiusTest(session,this.getItem(id));
                                     }
                                 }
                             },
@@ -890,51 +890,46 @@ toughradius.admin.subscribe.subscribeRelease = function (ids,callback) {
 };
 
 
-toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
+toughradius.admin.subscribe.subscribeRadiusTest = function(session,item){
     var winid = "toughradius.admin.subscribe.subscribeRadiusTest";
     var logvid = webix.uid();
     if($$(winid))
         return;
     var formid = winid+"_form";
     var updateLog = function(iresult){
-        var rst = iresult.json();
+        var rst = iresult.text();
         console.log(rst);
-        $$(logvid).define("template",rst.msg.replace("\n","<br>"))
+        $$(logvid).define("template",rst);
         $$(logvid).refresh();
-    }
-    webix.ajax().get('/admin/subscribe/detail', {id:itemid}).then(function (result) {
-        var subs = result.json();
-        webix.ui({
-            id:winid,
-            view: "window",
-            css:"win-body",
-            move:true,
-            width:680,
-            height:500,
-            position: "center",
-            head: {
-                view: "toolbar",
-                css:"win-toolbar",
+    };
+    webix.ui({
+        id:winid,
+        view: "window",
+        css:"win-body",
+        move:true,
+        width:480,
+        height:480,
+        position: "center",
+        head: {
+            view: "toolbar",
+            css:"win-toolbar",
 
-                cols: [
-                    {view: "icon", icon: "laptop", css: "alter"},
-                    {view: "label", label: "用户拨号测试"},
-                    {view: "icon", icon: "times-circle", css: "alter", click: function(){
+            cols: [
+                {view: "icon", icon: "laptop", css: "alter"},
+                {view: "label", label: "用户拨号测试"},
+                {view: "icon", icon: "times-circle", css: "alter", click: function(){
                         $$(winid).close();
                     }}
-                ]
-            },
-            body:{
-                borderless: true,
-                padding:5,
-                rows:[
+            ]
+        },
+        body:{
+            borderless: true,
+            padding:5,
+            rows:[
                 {
                     id: formid,
                     view: "form",
                     scroll: "auto",
-                    maxWidth: 2000,
-                    maxHeight: 2000,
-                    elementsConfig: { labelWidth: 120 },
                     elements: [
                         {
                             view: "fieldset", label: "测试帐号", paddingX: 20, body: {
@@ -942,14 +937,15 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                                 rows: [
                                     {
                                         cols: [
-                                            { view: "text", name: "subscriber", label: "订阅帐号", css: "nborder-input", readonly: true, value: subs.subscriber },
-                                            { view: "text", name: "product_name", label: "订阅商品", css: "nborder-input", readonly: true, value: subs.product.name }
-                                        ]
+                                            { view: "text", name: "subscriber", label: "帐号", css: "nborder-input", readonly: true, value: item.subscriber },
+                                            { view: "text", name: "password", label: "密码", css: "nborder-input", readonly: true, value: item.password },
+
+                                        ],
                                     },
                                     {
-                                        cols: [
-                                            { view: "text", name: "password", label: "当前密码", css: "nborder-input", readonly: true, value: subs.password },
-                                            { view: "text", name: "expire_time", label: "过期时间", css: "nborder-input", readonly: true, value: subs.expire_time }
+                                        cols:[
+                                            { view: "text", name: "expireTime", label: "过期", css: "nborder-input", readonly: true, value: item.expireTime },
+                                            {}
                                         ]
                                     }
                                 ]
@@ -973,7 +969,7 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                             view: "button", type: "form", width: 80, icon: "check-circle", label: "PAP 认证", click: function () {
                                 var btn = this;
                                 btn.disable();
-                                var params = {username:subs.subscriber,papchap:"pap"}
+                                var params = {username:item.subscriber,papchap:"pap"}
                                 webix.ajax().get('/admin/radius/auth/test', params).then(function (iresult) {
                                     btn.enable();
                                     updateLog(iresult);
@@ -984,7 +980,7 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                             view: "button", type: "form", width: 80, icon: "check-circle", label: "CHAP 认证", click: function () {
                                 var btn = this;
                                 btn.disable();
-                                var params = {username:subs.subscriber,papchap:"pap"}
+                                var params = {username:item.subscriber,papchap:"pap"}
                                 webix.ajax().get('/admin/radius/auth/test', params).then(function (iresult) {
                                     btn.enable();
                                     updateLog(iresult);
@@ -995,7 +991,7 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                             view: "button", type: "form", width: 80, icon: "check-circle", label: "上线", click: function () {
                                 var btn = this;
                                 btn.disable();
-                                var params = {username:subs.subscriber,type:"1"}
+                                var params = {username:item.subscriber,type:"1"}
                                 webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
                                     btn.enable();
                                     updateLog(iresult);
@@ -1006,7 +1002,7 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                             view: "button", type: "form", width: 80, icon: "check-circle", label: "更新", click: function () {
                                 var btn = this;
                                 btn.disable();
-                                var params = {username:subs.subscriber,type:"3"}
+                                var params = {username:item.subscriber,type:"3"}
                                 webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
                                     btn.enable();
                                     updateLog(iresult);
@@ -1017,7 +1013,7 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                             view: "button", type: "form", width: 80, icon: "check-circle", label: "下线", click: function () {
                                 var btn = this;
                                 btn.disable();
-                                var params = {username:subs.subscriber,type:"2"}
+                                var params = {username:item.subscriber,type:"2"}
                                 webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
                                     btn.enable();
                                     updateLog(iresult);
@@ -1026,13 +1022,12 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,itemid){
                         },
                         {
                             view: "button", type: "base", icon: "times-circle", width: 70, css: "alter", label: "关闭", click: function () {
-                                 $$(winid).close();
+                                $$(winid).close();
                             }
                         }
                     ]
                 }
             ]
-            }
-        }).show(0)
-    })
+        }
+    }).show(0)
 };

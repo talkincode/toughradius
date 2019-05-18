@@ -1,7 +1,8 @@
-package org.toughradius.entity;
+package org.toughradius.form;
 
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.ValidateUtil;
+import org.toughradius.entity.Subscribe;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;

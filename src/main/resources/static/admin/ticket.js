@@ -18,7 +18,7 @@ toughradius.admin.ticket.loadPage = function(session){
     };
     var cview = {
         id:"toughradius.admin.ticket",
-        css:"main-panel",padding:2,
+        css:"main-panel",padding:10,
         rows: [
             {
                 view: "toolbar",

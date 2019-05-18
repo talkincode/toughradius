@@ -1,4 +1,5 @@
 package org.toughradius.config;
+import org.toughradius.common.DefaultThreadFactory;
 import org.toughradius.common.ValidateCache;
 import org.toughradius.handler.RadiusAcctHandler;
 import org.toughradius.handler.RadiusBasicHandler;
@@ -27,32 +28,18 @@ public class RadiusConfig {
 
     private int authport;
     private int acctport;
-    private int eventport;
     private int trace;
     private int interimUpdate;
     private int maxSessionTimeout;
     private String ticketDir;
     private String statDir;
-    private boolean running;
-    private boolean isBillInput;
-    private boolean isBillBackFlow;
+    private boolean authEnabled;
+    private boolean acctEnabled;
     private boolean allowNegative;
-    private int rejectdelay;
-    private int rejectdelayTimes;
-    private int rejectdelayEnabled;
     private int ticketExpireDays;
     private int authPool;
     private int acctPool;
     private String statfile;
-
-    /**
-     * 5秒内认证拒绝超过 rejectdelayTimes 次数，将触发延迟拒绝
-     * @return
-     */
-    @Bean
-    public ValidateCache authValidate(){
-        return new ValidateCache(5000,rejectdelayTimes);
-    }
 
     /**
      * Radius 认证服务配置
@@ -62,7 +49,7 @@ public class RadiusConfig {
      */
     @Bean( destroyMethod = "unbind")
     public NioDatagramAcceptor nioAuthAcceptor(RadiusBasicHandler radiusAuthHandler) throws IOException {
-        if(!running){
+        if(!authEnabled){
             logger.info("====== RadiusAuthServer not running =======");
             return null;
         }
@@ -77,7 +64,7 @@ public class RadiusConfig {
 
 
         DefaultIoFilterChainBuilder authIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
-        ExecutorFilter authExecutorFilter = new ExecutorFilter(3, getAuthPool(), 60, TimeUnit.SECONDS);
+        ExecutorFilter authExecutorFilter = new ExecutorFilter(8, getAuthPool(), 60, TimeUnit.SECONDS,new DefaultThreadFactory("authExecutorFilter",Thread.MAX_PRIORITY));
         Map<String, IoFilter> filters = new LinkedHashMap<>();
         filters.put("executor", authExecutorFilter);
         authIoFilterChainBuilder.setFilters(filters);
@@ -96,7 +83,7 @@ public class RadiusConfig {
      */
     @Bean(destroyMethod = "unbind")
     public NioDatagramAcceptor nioAcctAcceptor(RadiusAcctHandler radiusAcctHandler) throws IOException {
-        if(!running){
+        if(!acctEnabled){
             logger.info("====== RadiusAcctServer not running ======");
             return null;
         }
@@ -110,7 +97,7 @@ public class RadiusConfig {
         dcfg.setReuseAddress(false);
 
         DefaultIoFilterChainBuilder acctIoFilterChainBuilder = new DefaultIoFilterChainBuilder();
-        ExecutorFilter acctExecutorFilter = new ExecutorFilter(3, getAcctPool(), 60, TimeUnit.SECONDS);
+        ExecutorFilter acctExecutorFilter = new ExecutorFilter(8, getAcctPool(), 60, TimeUnit.SECONDS,new DefaultThreadFactory("acctExecutorFilter",Thread.MAX_PRIORITY));
         Map<String, IoFilter> filters = new LinkedHashMap<>();
         filters.put("executor", acctExecutorFilter);
         acctIoFilterChainBuilder.setFilters(filters);
@@ -130,14 +117,6 @@ public class RadiusConfig {
         this.authport = authport;
     }
 
-    public int getEventport() {
-        return eventport;
-    }
-
-    public void setEventport(int eventport) {
-        this.eventport = eventport;
-    }
-
     public int getAcctport() {
         return acctport;
     }
@@ -146,13 +125,6 @@ public class RadiusConfig {
         this.acctport = acctport;
     }
 
-    public int getRejectdelayTimes() {
-        return rejectdelayTimes;
-    }
-
-    public void setRejectdelayTimes(int rejectdelayTimes) {
-        this.rejectdelayTimes = rejectdelayTimes;
-    }
 
     public int getTrace() {
         return trace;
@@ -186,44 +158,12 @@ public class RadiusConfig {
         this.ticketDir = ticketDir;
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
-    public void setRunning(boolean running) {
-        this.running = running;
-    }
-
-    public boolean isBillInput() {
-        return isBillInput;
-    }
-
-    public void setBillInput(boolean billInput) {
-        isBillInput = billInput;
-    }
-
-    public boolean isBillBackFlow() {
-        return isBillBackFlow;
-    }
-
-    public void setBillBackFlow(boolean billBackFlow) {
-        isBillBackFlow = billBackFlow;
-    }
-
     public boolean isAllowNegative() {
         return allowNegative;
     }
 
     public void setAllowNegative(boolean allowNegative) {
         this.allowNegative = allowNegative;
-    }
-
-    public int getRejectdelay() {
-        return rejectdelay;
-    }
-
-    public void setRejectdelay(int rejectdelay) {
-        this.rejectdelay = rejectdelay;
     }
 
     public int getTicketExpireDays() {
@@ -262,19 +202,27 @@ public class RadiusConfig {
         this.statfile = statfile;
     }
 
-    public int getRejectdelayEnabled() {
-        return rejectdelayEnabled;
-    }
-
-    public void setRejectdelayEnabled(int rejectdelayEnabled) {
-        this.rejectdelayEnabled = rejectdelayEnabled;
-    }
-
     public String getStatDir() {
         return statDir;
     }
 
     public void setStatDir(String statDir) {
         this.statDir = statDir;
+    }
+
+    public boolean isAuthEnabled() {
+        return authEnabled;
+    }
+
+    public void setAuthEnabled(boolean authEnabled) {
+        this.authEnabled = authEnabled;
+    }
+
+    public boolean isAcctEnabled() {
+        return acctEnabled;
+    }
+
+    public void setAcctEnabled(boolean acctEnabled) {
+        this.acctEnabled = acctEnabled;
     }
 }

@@ -24,9 +24,13 @@ public class Bras implements Serializable{
 
     private String status;
 
+    private Integer acPort;
+
     private Integer authLimit;
 
     private Integer acctLimit;
+
+    private String portalVendor;
 
     private String remark;
 
@@ -126,5 +130,21 @@ public class Bras implements Serializable{
 
     public void setAcctLimit(Integer acctLimit) {
         this.acctLimit = acctLimit;
+    }
+
+    public Integer getAcPort() {
+        return acPort;
+    }
+
+    public void setAcPort(Integer acPort) {
+        this.acPort = acPort;
+    }
+
+    public String getPortalVendor() {
+        return portalVendor;
+    }
+
+    public void setPortalVendor(String portalVendor) {
+        this.portalVendor = portalVendor;
     }
 }

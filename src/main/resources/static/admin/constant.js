@@ -9,3 +9,10 @@ var BRAS_VENDOR_OPTIONS = [
     {"id": 14988, "value": "mikrotik"},
     {"id": 10055, "value": "爱快"}
 ];
+
+var PORTAL_VENDOR_OPTIONS = [
+    {"id": "cmccv1", "value": "cmccv1"},
+    {"id": "cmccv2", "value": "cmccv2"},
+    {"id": "huaweiv1", "value": "huaweiv1"},
+    {"id": "huaweiv2", "value": "huaweiv2"}
+];

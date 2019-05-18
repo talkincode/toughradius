@@ -519,7 +519,7 @@ toughradius.admin.dashboard.loadPage = function(session){
     var uptimeid = "toughradius.admin.dashboard.uptime.label";
     var cview = {
         id:"toughradius.admin.dashboard",
-        css:"main-panel",padding:5,
+        css:"main-panel",padding:10,
         rows:[
             {
                 view:"scrollview",

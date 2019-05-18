@@ -4,5 +4,10 @@
       "name": "spring.datasource.max-active",
       "type": "java.lang.String",
       "description": "Description for spring.datasource.max-active."
+    },
+    {
+      "name": "mybatis.config-locations",
+      "type": "java.lang.String",
+      "description": "Description for mybatis.config-locations."
     }
   ] }

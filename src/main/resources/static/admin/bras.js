@@ -11,7 +11,7 @@ toughradius.admin.bras.loadPage = function(session){
     };
     var cview = {
         id:"toughradius.admin.bras",
-        css:"main-panel",padding:2,
+        css:"main-panel",padding:10,
         rows:[
             {
                 view:"toolbar",
@@ -53,12 +53,12 @@ toughradius.admin.bras.loadPage = function(session){
                 view:"datatable",
                 columns:[
                     { id: "id", header: ["ID"],  hidden:true},
-                    { id:"name",header:["名称"],  width:110},
-                    { id:"identifier",header:["标识"], width:110},
-                    { id:"ipaddr",header:["IP"], width:120},
-                    { id:"authLimit",header:["认证并发"],width:90},
-                    { id:"acctLimit",header:["记账并发"], width:90},
-                    { id:"vendorId",header:["厂商"], width:120,template:function(obj){
+                    { id:"name",header:["名称"],  adjust:true},
+                    { id:"identifier",header:["标识"], adjust:true},
+                    { id:"ipaddr",header:["IP"], adjust:true},
+                    { id:"authLimit",header:["认证并发"],adjust:true},
+                    { id:"acctLimit",header:["记账并发"], adjust:true},
+                    { id:"vendorId",header:["厂商"], adjust:true,template:function(obj){
                         if(obj.vendorId==="0"){
                             return "标准";
                         }else if(obj.vendorId==="2352"){
@@ -79,8 +79,10 @@ toughradius.admin.bras.loadPage = function(session){
                             return "爱快";
                         }
                     }},
-                    { id:"coaPort",header:["COA端口"], width:80},
-                    { id:"status",header:["状态"], width:80, template:function(obj){
+                    { id:"coaPort",header:["COA端口"], adjust:true},
+                    { id:"acPort",header:["AC端口"], adjust:true},
+                    { id:"portalVendor",header:["Portal协议"], adjust:true},
+                    { id:"status",header:["状态"], adjust:true, template:function(obj){
                         if(obj.status === 'enabled'){
                             return "<span style='color:green;'>正常</span>";
                         }else if(obj.status === 'disabled'){
@@ -139,7 +141,7 @@ toughradius.admin.bras.brasAdd = function(session,callback){
                 {
                     id: formid,
                     view: "form",
-                    scroll: false,
+                    scroll: "y",
                     elementsConfig: {},
                     elements: [
                         {view:"richselect", name:"vendorId", label: "设备厂商",value:"", options:BRAS_VENDOR_OPTIONS},
@@ -148,9 +150,11 @@ toughradius.admin.bras.brasAdd = function(session,callback){
                         {view: "text", name: "secret", label: "共享密钥", placeholder: "共享密钥",validate:webix.rules.isNotEmpty},
                         {view: "text", name: "ipaddr", label: "ip地址",value:"0.0.0.0", placeholder: "ip地址",validate:webix.rules.isNotEmpty},
                         {view: "text", name: "coaPort", label: "COA 端口", value: "3799", validate:webix.rules.isNotEmpty},
+                        {view:"richselect", name:"portalVendor", label: "Portal协议",value:"", options:PORTAL_VENDOR_OPTIONS},
+                        {view: "text", name: "acPort", label: "AC 端口", value: "2000"},
                         {view: "counter", name: "authLimit", label: "认证并发(*)",  value:1000, min:1, max:10000},
                         {view: "counter", name: "acctLimit", label: "记帐并发(*)",  value:1000, min:1, max:10000},
-                        {view: "textarea", name: "remark", label: "备注", placeholder: "备注", height:50}
+                        {view: "textarea", name: "remark", label: "备注", placeholder: "备注", height:90}
                     ]
                 },
                 {
@@ -227,7 +231,7 @@ toughradius.admin.bras.brasUpdate = function(session,item,callback){
                 {
                     id: formid,
                     view: "form",
-                    scroll: false,
+                    scroll: "y",
                     elementsConfig: {},
                     elements: [
                         {view:"richselect", name:"vendorId", label: "设备厂商",value:item.vendorId, options:BRAS_VENDOR_OPTIONS},
@@ -236,10 +240,12 @@ toughradius.admin.bras.brasUpdate = function(session,item,callback){
                         {view: "text", name: "secret", label: "共享密钥", value: item.secret,validate:webix.rules.isNotEmpty},
                         {view: "text", name: "ipaddr", label: "ip地址", value: item.ipaddr,validate:webix.rules.isNotEmpty},
                         {view: "text", name: "coa_port", label: "COA端口", value: item.coaPort, validate:webix.rules.isNotEmpty},
+                        {view:"richselect", name:"portalVendor", label: "设备厂商",value:item.portalVendor, options:PORTAL_VENDOR_OPTIONS},
+                        {view: "text", name: "acPort", label: "AC 端口", value: item.acPort},
                         {view: "counter", name: "authLimit", label: "认证并发(*)",  value: item.authLimit, min:1, max:10000},
                         {view: "counter", name: "acctLimit", label: "记帐并发(*)",  value: item.acctLimit, min:1, max:10000},
                         {view:"radio", name:"status", label: "状态", value:item.status, options:[{id:'enabled',value:"启用"}, {id:'disabled',value:"停用"}]},
-                        {view: "textarea", name: "remark", label: "备注", value: item.remark, height:40}
+                        {view: "textarea", name: "remark", label: "备注", value: item.remark, height:90}
 
                     ]
                 },

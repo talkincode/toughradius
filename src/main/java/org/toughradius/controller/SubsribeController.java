@@ -12,8 +12,8 @@ import org.toughradius.common.ValidateUtil;
 import org.toughradius.component.SubscribeService;
 import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Subscribe;
-import org.toughradius.entity.SubscribeForm;
-import org.toughradius.entity.SubscribeQuery;
+import org.toughradius.form.SubscribeForm;
+import org.toughradius.form.SubscribeQuery;
 
 import java.util.List;
 
@@ -30,7 +30,7 @@ public class SubsribeController {
     @ResponseBody
     public PageResult<Subscribe> querySubscribe(@RequestParam(defaultValue = "0") int start,
                                                 @RequestParam(defaultValue = "40") int count,
-                                                String  createTime, String expireTime, String status, String keyword){
+                                                String  createTime, String expireTime, String status,String subscriber, String keyword){
         if(ValidateUtil.isNotEmpty(expireTime)&&expireTime.length() == 16){
             expireTime += ":00";
         }
@@ -48,6 +48,7 @@ public class SubsribeController {
                 query.setCreateTime(DateTimeUtil.toTimestamp(createTime));
             query.setStatus(status);
             query.setKeyword(keyword);
+            query.setSubscriber(subscriber);
             List<Subscribe> data = subscribeService.queryForList(query);
             return new PageResult<>(start,(int) objects.getTotal(), data);
 
@@ -113,7 +114,9 @@ public class SubsribeController {
     @ResponseBody
     public RestResult releaseSubscribe(String ids){
         try{
-            subscribeService.release(ids);
+            for(String id : ids.split(",")){
+                subscribeService.release(id);
+            }
             return RestResult.SUCCESS;
         }catch(Exception e){
             logger.error("释放用户绑定失败",e, Memarylogger.SYSTEM);

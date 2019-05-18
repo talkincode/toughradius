@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>ToughRADIUS Wlan Portal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/portal/default/static/icons/favicon.ico"/>
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animate/animate.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/css-hamburgers/hamburgers.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animsition/css/animsition.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/select2/select2.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/css/util.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/css/main.css">
+<script>
+
+var doLogin = function(authmode){
+	$("#authmode").val(authmode);
+	$("#wlanForm").attr("method", "get");
+	$("#wlanForm").submit();
+}
+
+var doWxLogin = function(authmode){
+	$("#authmode").val(authmode);
+	$("#wlanForm").attr("method", "post");
+	$("#wlanForm").submit();
+}
+
+</script>
+</head>
+<body>
+	
+	<div class="limiter">
+		<div class="container-login100">
+			<div class="wrap-login100 p-t-90 p-b-30">
+				<form id="wlanForm" class="login100-form validate-form" action="/wlan/login" method="get">
+					<span class="login100-form-title p-b-40">
+						TOUGHRADIUS 无线认证
+					</span>
+
+					<div>
+						<a href="javascript:doLogin('userauth');" class="btn-login-with bg1 m-b-10" >
+							<i class="fa fa-user"></i>
+							帐号认证
+						</a>
+						<a href="javascript:doLogin('pwdauth');" class="btn-login-with bg1 m-b-10">
+							<i class="fa fa-key"></i>
+							密码认证
+						</a>
+						<a href="javascript:doWxLogin('wxauth');" class="btn-login-with bg3 m-b-10">
+							<i class="fa fa-wechat"></i>
+							微信认证
+						</a>
+						<a href="javascript:doLogin('smsauth');" class="btn-login-with bg2">
+							<i class="fa fa-comments-o"></i>
+							短信认证
+						</a>
+						<input type="hidden" id="template" name="template" value="default">
+						<input type="hidden" id="wlanuserip" name="wlanuserip" value="${params.wlanuserip!}">
+						<input type="hidden" id="wlanusername" name="wlanusername" value="${params.wlanusername!}">
+						<input type="hidden" id="wlanusermac" name="wlanusermac" value="${params.wlanusermac!}">
+						<input type="hidden" id="wlanstamac" name="wlanstamac" value="${params.wlanstamac!}">
+						<input type="hidden" id="wlanacname" name="wlanacname" value="${params.wlanacname!}">
+						<input type="hidden" id="wlanacip" name="wlanacip" value="${params.wlanacip!}">
+						<input type="hidden" id="wlanapmac" name="wlanapmac" value="${params.wlanapmac!}">
+						<input type="hidden" id="ssid" name="ssid" value="${params.ssid!}">
+						<input type="hidden" id="wlanuserfirsturl" name="wlanuserfirsturl" value="${params.wlanuserfirsturl!}">
+						<input type="hidden" id="vendor" name="vendor" value="${params.vendor!}">
+						<input type="hidden" id="error" name="error" value="${params.error!}">
+						<input type="hidden" id="username" name="username" value="${params.username!}">
+						<input type="hidden" id="domain" name="domain" value="${params.domain!}">
+						<input type="hidden" id="url" name="url" value="${params.url!}">
+						<input type="hidden" id="srcacip" name="srcacip" value="${params.srcacip!}">
+						<input type="hidden" id="authmode" name="authmode" value="${params.authmode!}">
+					</div>
+
+					<div class="flex-col-c p-t-224">
+						<a href="${params.wlanJoinUrl!}" class="txt3 bo1 hov1" target="_blank">
+							立即注册
+						</a>
+					</div>
+					
+				</form>
+			</div>
+		</div>
+	</div>
+	
+
+<script src="/portal/default/static/vendor/jquery/jquery-3.2.1.min.js"></script>
+<script src="/portal/default/static/vendor/animsition/js/animsition.min.js"></script>
+<script src="/portal/default/static/vendor/bootstrap/js/popper.js"></script>
+<script src="/portal/default/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+<script src="/portal/default/static/vendor/select2/select2.min.js"></script>
+<script src="/portal/default/static/vendor/daterangepicker/moment.min.js"></script>
+<script src="/portal/default/static/vendor/daterangepicker/daterangepicker.js"></script>
+<script src="/portal/default/static/vendor/countdowntime/countdowntime.js"></script>
+<script src="/portal/default/static/js/main.js"></script>
+</body>
+</html>

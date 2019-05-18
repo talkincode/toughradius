@@ -1,10 +1,12 @@
 package org.toughradius.component;
+import org.toughradius.common.CoderUtil;
 import org.toughradius.common.DateTimeUtil;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.Subscribe;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,20 +74,21 @@ public class SubscribeCache {
         return subs;
     }
 
-    public void startSubscribeOnline(String username){
-        Subscribe subs = findSubscribe(username);
-        if(subs!=null){
-            subs.setIsOnline(1);
-        }
-
+    /**
+     *  是否存在缓存用户
+     * @param username
+     * @return
+     */
+    public boolean exists(String username){
+        username = username.toLowerCase();
+        String srcUsername = username.contains("@")? username.substring(0,username.indexOf("@")):null;
+        return ValidateUtil.isNotEmpty(srcUsername) && cacheData.containsKey(srcUsername);
     }
 
-    public void stopSubscribeOnline(String username){
-        Subscribe subs = findSubscribe(username);
-        if(subs!=null){
-            subs.setIsOnline(0);
-        }
-
+    public void remove(String username){
+        username = username.toLowerCase();
+        String srcUsername = username.contains("@")? username.substring(0,username.indexOf("@")):null;
+        cacheData.remove(srcUsername);
     }
 
     protected void reloadSubscribe(String username){
@@ -126,6 +129,38 @@ public class SubscribeCache {
         }
         logger.print(String.format("update user total = %s, cast %s ms ", count, System.currentTimeMillis()-start));
     }
+
+    public Subscribe createTempSubscribe(String username, String password, int days){
+        Subscribe subscribe = new Subscribe();
+        subscribe.setId(CoderUtil.randomLongId());
+        subscribe.setSubscriber(username);
+        subscribe.setPassword(password);
+        subscribe.setNodeId(0L);
+        subscribe.setRealname("临时用户");
+        subscribe.setDomain("wlan");
+        subscribe.setAddrPool("");
+        subscribe.setPolicy("");
+        subscribe.setIsOnline(0);
+        subscribe.setActiveNum(1);
+        subscribe.setBindMac(false);
+        subscribe.setBindVlan(false);
+        subscribe.setIpAddr("");
+        subscribe.setMacAddr("");
+        subscribe.setInVlan(0);
+        subscribe.setOutVlan(0);
+        subscribe.setUpRate(10485760L);
+        subscribe.setDownRate(10485760L);
+        subscribe.setUpRateCode("");
+        subscribe.setDownRateCode("");
+        subscribe.setStatus("enabled");
+        subscribe.setBeginTime(DateTimeUtil.nowTimestamp());
+        subscribe.setExpireTime(DateTimeUtil.getDayEnd(DateTimeUtil.nowTimestamp(),days));
+        subscribe.setCreateTime(DateTimeUtil.nowTimestamp());
+        subscribe.setUpdateTime(DateTimeUtil.nowTimestamp());
+        subscribe.setRemark("临时用户");
+        return subscribe;
+    }
+
 
     class CacheObject {
 
