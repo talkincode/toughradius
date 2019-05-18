@@ -36,7 +36,7 @@ toughradius.admin.online.loadPage = function(session){
     };
     var cview = {
         id:"toughradius.admin.online",
-        css:"main-panel",padding:15,
+        css:"main-panel",padding:10,
         rows: [
             {
                 view: "toolbar",

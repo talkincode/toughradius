@@ -246,7 +246,7 @@ webix.ready(function() {
                                         id:toughradius.admin.tabviews,
                                         rows:[
                                             {
-                                                id:toughradius.admin.tabsId, view:"tabbar",
+                                                id:toughradius.admin.tabsId, view:"tabbar",css:"main-tabs",
                                                 animate:false,
                                                 bottomOffset:10,
                                                 optionWidth: 180,

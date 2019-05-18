@@ -18,7 +18,7 @@ toughradius.admin.syslog.loadPage = function(session){
     };
     var cview = {
         id:"toughradius.admin.syslog",
-        css:"main-panel",padding:15,
+        css:"main-panel",padding:10,
         rows:[
             {
                 id: queryid,

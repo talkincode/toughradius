@@ -11,7 +11,7 @@ toughradius.admin.bras.loadPage = function(session){
     };
     var cview = {
         id:"toughradius.admin.bras",
-        css:"main-panel",padding:15,
+        css:"main-panel",padding:10,
         rows:[
             {
                 view:"toolbar",
