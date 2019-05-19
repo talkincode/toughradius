@@ -29,11 +29,7 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
      */
     private Map<Long,ValidateCache> validateMap = new HashMap<>();
 
-    @Autowired
-    private RadiusAuthStat radiusAuthStat;
 
-    @Autowired
-    private RadiusCastStat radiusCastStat;
 
 
     private ValidateCache getBrasValidate(Bras bras){

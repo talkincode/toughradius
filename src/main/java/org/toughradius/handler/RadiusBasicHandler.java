@@ -55,6 +55,12 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
     protected RadiusParseFilter parseFilter;
 
     @Autowired
+    protected RadiusAuthStat radiusAuthStat;
+
+    @Autowired
+    protected RadiusCastStat radiusCastStat;
+
+    @Autowired
     protected ThreadPoolTaskExecutor systaskExecutor;
 
     @Autowired
@@ -98,6 +104,7 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
         if(!"enabled".equals(ignorePwd)){
             if (plaintext == null || !accessRequest.verifyPassword(plaintext)){
+                radiusAuthStat.update(RadiusAuthStat.PWD_ERR);
                 throw new RadiusException("密码错误");
             }
         }
