@@ -22,6 +22,7 @@ public interface Constant {
 
     public final static String WLAN_MODULE = "wlan";
     public final static String WLAN_TEMPLATE = "wlanTemplate";
+    public final static String WLAN_RESULT_URL = "wlanResultUrl";
     public final static String WLAN_JOIN_URL = "wlanJoinUrl";
     public final static String WLAN_USERAUTH_ENABLED = "wlanUserauthEnabled";
     public final static String WLAN_PWDAUTH_ENABLED = "wlanPwdauthEnabled";

@@ -1,20 +1,47 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>ToughRADIUS Wlan Portal</title>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="icon" type="image/png" href="/portal/default/static/icons/favicon.ico"/>
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animate/animate.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/css-hamburgers/hamburgers.min.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animsition/css/animsition.min.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/select2/select2.min.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/daterangepicker/daterangepicker.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/css/util.css">
-    <link rel="stylesheet" type="text/css" href="/portal/default/static/css/main.css">
+<title>ToughRADIUS Wlan Portal</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" type="image/png" href="/portal/default/static/icons/favicon.ico"/>
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animate/animate.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/css-hamburgers/hamburgers.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animsition/css/animsition.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/select2/select2.min.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/css/util.css">
+<link rel="stylesheet" type="text/css" href="/portal/default/static/css/main.css">
+<link rel="stylesheet" type="text/css" href="/static/webix.css">
+<script>
+var countdown=60;
+
+function sendsms(obj){
+    settime(obj)
+    var mobile = $("#phone").val();
+    webix.ajax().get('/wlan/sendsms',{phone: mobile}).then(function (result) {
+        var resp = result.json();
+        webix.message({type: resp.msgtype, text: resp.msg, expire: 1500});
+    });
+}
+
+function settime(obj) {
+    if (countdown === 0) {
+        obj.removeAttribute("disabled");
+        obj.value="获取验证码";
+        countdown = 60;
+        return;
+    } else {
+        obj.setAttribute("disabled", true);
+        obj.value="重新发送(" + countdown + ")";
+        countdown--;
+    }
+    setTimeout(function() {settime(obj) } ,1000)
+}
+</script>
 </head>
 <body>
 
@@ -26,7 +53,7 @@
                     <span class="txt1">用户认证</span>
                 </div>
                 <div class="wrap-input100 validate-input m-b-16" data-validate="请输入手机号码">
-                    <input class="input100" type="text" autocomplete="false" name="phone" value="${params.phone!}" placeholder="手机号码">
+                    <input class="input100" type="text" autocomplete="false" id="phone" name="phone" value="${params.phone!}" placeholder="手机号码">
                     <span class="focus-input100"></span>
                 </div>
                 <div class="wrap-input100 validate-input m-b-20" data-validate = "请输入验证码">
@@ -38,6 +65,7 @@
                 </div>
 
                 <div >
+                    <input type="button" id="btn" value="获取验证码" onclick="sendsms(this)" class="btn-sms-with bg1 m-b-10" />
                     <a href='javascript:$("#wlanForm").submit();' class="btn-login-with bg-green m-b-10" >
                         认 证
                     </a>
@@ -66,7 +94,7 @@
         </div>
     </div>
 </div>
-
+<script src="/static/webix.js"></script>
 <script src="/portal/default/static/vendor/jquery/jquery-3.2.1.min.js"></script>
 <script src="/portal/default/static/vendor/animsition/js/animsition.min.js"></script>
 <script src="/portal/default/static/vendor/bootstrap/js/popper.js"></script>

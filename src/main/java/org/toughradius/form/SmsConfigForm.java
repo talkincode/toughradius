@@ -5,6 +5,7 @@ public class SmsConfigForm {
     private String smsGateway;
     private String smsAppid;
     private String smsAppkey;
+    private String smsVcodeTemplate;
 
     public String getSmsGateway() {
         return smsGateway;
@@ -28,5 +29,13 @@ public class SmsConfigForm {
 
     public void setSmsAppkey(String smsAppkey) {
         this.smsAppkey = smsAppkey;
+    }
+
+    public String getSmsVcodeTemplate() {
+        return smsVcodeTemplate;
+    }
+
+    public void setSmsVcodeTemplate(String smsVcodeTemplate) {
+        this.smsVcodeTemplate = smsVcodeTemplate;
     }
 }

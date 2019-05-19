@@ -7,6 +7,7 @@ public class WlanCongigForm {
     private String wlanWechatSecretkey;
     private String wlanTemplate;
     private String wlanJoinUrl;
+    private String wlanResultUrl;
     private String wlanUserauthEnabled;
     private String wlanPwdauthEnabled;
     private String wlanSmsauthEnabled;
@@ -90,5 +91,13 @@ public class WlanCongigForm {
 
     public void setWlanWxauthEnabled(String wlanWxauthEnabled) {
         this.wlanWxauthEnabled = wlanWxauthEnabled;
+    }
+
+    public String getWlanResultUrl() {
+        return wlanResultUrl;
+    }
+
+    public void setWlanResultUrl(String wlanResultUrl) {
+        this.wlanResultUrl = wlanResultUrl;
     }
 }

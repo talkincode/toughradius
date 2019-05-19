@@ -206,7 +206,10 @@ toughradius.admin.dashboard.MsgStatChart = function (session,uid, infoid) {
             }
         },
         title: {
-            text: "RADIUS 消息统计"
+            text: "RADIUS 消息统计",
+            style:{
+                color:"#2f2f31", fontSize:"16px"
+            }
         },
         legend: {
             align: 'center',verticalAlign: 'top',x: 0,y: 0
@@ -264,7 +267,10 @@ toughradius.admin.dashboard.castMsgStatChart = function (session,uid) {
             }
         },
         title: {
-            text: "RADIUS 消息耗时统计"
+            text: "RADIUS 耗时统计",
+            style:{
+                color:"#2f2f31", fontSize:"16px"
+            }
         },
         legend: {
             align: 'center',verticalAlign: 'top',x: 0,y: 0
@@ -323,7 +329,10 @@ toughradius.admin.dashboard.authStatChart = function (session,uid) {
             }
         },
         title: {
-            text: "认证结果统计"
+            text: "认证结果统计",
+            style:{
+                color:"#2f2f31", fontSize:"16px"
+            }
         },
         legend: {
             align: 'center',verticalAlign: 'top',x: 0,y: 0
@@ -386,7 +395,10 @@ toughradius.admin.dashboard.onlineStatChart = function (session,uid) {
             }
         },
         title: {
-            text: "在线趋势"
+            text: "在线趋势",
+            style:{
+                color:"#2f2f31", fontSize:"16px"
+            }
         },
         legend: {
             align: 'center',verticalAlign: 'top',x: 0,y: 0

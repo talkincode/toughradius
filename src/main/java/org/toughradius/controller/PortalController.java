@@ -90,6 +90,13 @@ public class PortalController implements Constant {
         return template;
     }
 
+    private void setResultUrl(WlanParam param){
+        String resultUrl = configService.getStringValue(WLAN_MODULE,WLAN_RESULT_URL);
+        if(ValidateUtil.isNotEmpty(resultUrl)){
+            param.setWlanuserfirsturl(resultUrl);
+        }
+    }
+
     /**
      * portal 首页
      * @param wlanParam
@@ -97,9 +104,11 @@ public class PortalController implements Constant {
      */
     @GetMapping("/wlan/index")
     public ModelAndView wlanIndexHandler(WlanParam wlanParam){
+
         String template = getWlanemplate();
         ModelAndView modelAndView = new ModelAndView(template+"/index");
         wlanParam.setTemplate(template);
+        setResultUrl(wlanParam);
         modelAndView.addObject("params", wlanParam);
         setConfigModel(modelAndView);
         return modelAndView;
@@ -114,6 +123,7 @@ public class PortalController implements Constant {
     public ModelAndView wlanLoginHandler(WlanParam wlanParam){
         ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/"+wlanParam.getAuthmode());
         modelAndView.addObject("params", wlanParam);
+        setResultUrl(wlanParam);
         return modelAndView;
     }
 
@@ -140,6 +150,7 @@ public class PortalController implements Constant {
     @PostMapping("/wlan/login")
     public ModelAndView wlanLoginPostHandler(HttpSession session,HttpServletRequest request, WlanParam param, String password){
         ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/result");
+        modelAndView.addObject("param",param);
         // 预处理参数
         if(ValidateUtil.isEmpty(param.getWlanuserfirsturl())){
             if(ValidateUtil.isNotEmpty(param.getUrl())){
@@ -147,6 +158,7 @@ public class PortalController implements Constant {
             }
         }
         param.setSrcacip(request.getRemoteAddr());
+        setResultUrl(param);
 
         // 查找 AC 设备
         Bras nas = null;
@@ -191,12 +203,14 @@ public class PortalController implements Constant {
      */
     private ModelAndView userPwdAuth(HttpSession session, HttpServletRequest request,  WlanParam param, Bras nas,String password){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
+        mv.addObject("param",param);
         if(ValidateUtil.isEmpty(param.getUsername())){
             return  processModel(mv,param.getUsername(), MODEL_FAIL,"帐号不能为空");
         }
         if(ValidateUtil.isEmpty(password)){
             return  processModel(mv,param.getUsername(), MODEL_FAIL,"密码不能为空");
         }
+        setResultUrl(param);
         return doPortalAuth(session, request, mv, param, nas, param.getUsername(), password);
     }
 
@@ -211,12 +225,14 @@ public class PortalController implements Constant {
      */
     private ModelAndView passwordAuth(HttpSession session,HttpServletRequest request, WlanParam param,Bras nas, String password){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
+        mv.addObject("param",param);
         if(ValidateUtil.isEmpty(password)){
             return  processModel(mv,param.getWlanusername(), MODEL_FAIL,"密码不能为空");
         }
         String username = "pu_"+ CoderUtil.random16str();
         subscribeCache.createTempSubscribe(username,password,1);
         param.setUsername(username);
+        setResultUrl(param);
         return doPortalAuth(session, request, mv, param, nas, username, password);
     }
 
@@ -230,6 +246,7 @@ public class PortalController implements Constant {
      */
     private ModelAndView weixinAuth(HttpSession session, HttpServletRequest request, WlanParam param, Bras nas){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/weixin");
+        mv.addObject("param",param);
         String username = "wxu_"+ CoderUtil.random16str();
         String password = CoderUtil.random16str();
         subscribeCache.createTempSubscribe(username,password,1);
@@ -254,6 +271,7 @@ public class PortalController implements Constant {
         mv.addObject("mac",param.getWlanusermac());
         mv.addObject("bssid",param.getWlanapmac());
         mv.addObject("sign",sign);
+        setResultUrl(param);
         return doPortalAuth(session, request, mv, param, nas, username, password);
     }
 
@@ -289,8 +307,12 @@ public class PortalController implements Constant {
      */
     private ModelAndView smsAuth(HttpSession session,HttpServletRequest request, WlanParam param,Bras nas){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
+        mv.addObject("param",param);
         String phone = param.getPhone();
         String smscode = param.getSmscode();
+        if(ValidateUtil.isEmpty(phone)){
+            return processModel(mv,param.getPhone(),MODEL_FAIL,"手机号码不能为空");
+        }
         if(ValidateUtil.isEmpty(smscode)){
             return processModel(mv,param.getPhone(),MODEL_FAIL,"验证码不能为空");
         }
@@ -303,7 +325,7 @@ public class PortalController implements Constant {
             smscodeCache.remove(phone);
             return processModel(mv,param.getPhone(),MODEL_FAIL,"验证码已经过期");
         }
-        if(smscode.equals(smscounter.getSmscode())){
+        if(!smscode.equals(smscounter.getSmscode())){
             return processModel(mv,param.getPhone(),MODEL_FAIL,"验证码无效");
         }
 
@@ -316,6 +338,7 @@ public class PortalController implements Constant {
             password = u.getPassword();
         }
         param.setUsername(username);
+        setResultUrl(param);
         return doPortalAuth(session, request, mv, param, nas, username, password);
     }
 
@@ -325,19 +348,28 @@ public class PortalController implements Constant {
      * @return
      * @throws ServiceException
      */
-    @PostMapping("/wlan/sendsms")
+    @GetMapping("/wlan/sendsms")
     @ResponseBody
     public RestResult sendSms(String phone)throws ServiceException{
+        if(!ValidateUtil.isPhone(phone)){
+            return new RestResult(1,"无效的手机号码");
+        }
         Map<String,Object> map=new HashMap<>();
         if(smscodeCache.values().stream().anyMatch(x->x.getPhone().equals(phone)&&(new Date().getTime()-x.getSendtime())<60000)){
             return new RestResult(1,"同一手机号60秒只能发送一次请求");
         }
+        String vocdeTemplate = configService.getStringValue(SMS_MODULE,SMS_VCODE_TEMPLATE);
+        if(ValidateUtil.isEmpty(vocdeTemplate)){
+            return new RestResult(1,"没有配置短信验证码模板");
+        }
         String vcode =  String.valueOf(random.nextInt((999999 - 111111) + 1) + 111111);
-        int r = smsSender.sendQcloudSms(phone,"您本次的验证码是："+vcode);
+        int r = smsSender.sendQcloudSms(phone,vocdeTemplate.replaceAll("<vcode>",vcode));
         if(r==0){
             smscodeCache.put(phone,new SmsSender.SmscodeCounter(phone,vcode));
+            logger.info(phone,"短信验证码发送成功: "+phone+" "+vcode);
             return RestResult.SUCCESS;
         }
+        logger.error(phone,"短信验证码发送成失败: "+phone+" "+vcode);
         return RestResult.UNKNOW;
     }
 

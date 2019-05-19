@@ -21,12 +21,13 @@
 <div class="limiter">
     <div class="container-login100">
         <div class="wrap-login100 p-t-90 p-b-30">
+            <#if code?? && code == "ok">
             <form id="wlanForm" class="login100-form validate-form" method="get">
 					<span class="login100-form-title p-b-40">
 						认证成功
 					</span>
                 <div>
-                    <a href="${wlanuserfirsturl!}" class="btn-login-with bg-green m-b-10" >
+                    <a href="${param.wlanuserfirsturl!}" class="btn-login-with bg-green m-b-10" >
                         继续浏览网络
                     </a>
                     <a href="/wlan/disconnect" class="btn-login-with bg-red m-b-10">
@@ -34,6 +35,18 @@
                     </a>
                 </div>
             </form>
+            <#elseif code?? && code == "fail">
+                <form id="wlanForm" class="login100-form validate-form" method="get">
+					<span class="login100-form-message p-b-40">
+						认证失败 ${message!}
+					</span>
+                    <div>
+                        <a href="/wlan/disconnect" class="btn-login-with bg-red m-b-10">
+                            返回
+                        </a>
+                    </div>
+                </form>
+            </#if>
         </div>
     </div>
 </div>

@@ -111,6 +111,7 @@ toughradius.admin.config.loadPage = function(session){
                             rows:[
                                 {view: "richselect", name: "wlanTemplate", label: "认证模板:",value:"default", options:[{id:"default",value:"默认"}]},
                                 {view: "text", name: "wlanJoinUrl", label: "自助服务网站"},
+                                {view: "text", name: "wlanResultUrl", label: "认证成功跳转"},
                                 {view:"radio", name:"wlanUserauthEnabled", label: "用户密码认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},
                                 {view:"radio", name:"wlanPwdauthEnabled", label: "固定密码认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},
                                 {view:"radio", name:"wlanSmsauthEnabled", label: "手机短信认证",  options:[{id:'enabled',value:"开启"}, {id:'disabled',value:"关闭"}]},

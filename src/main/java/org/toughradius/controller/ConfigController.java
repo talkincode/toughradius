@@ -77,6 +77,7 @@ public class ConfigController implements Constant {
             configService.updateConfig(new Config(SMS_MODULE,SMS_GATEWAY,form.getSmsGateway()));
             configService.updateConfig(new Config(SMS_MODULE,SMS_APPID,form.getSmsAppid()));
             configService.updateConfig(new Config(SMS_MODULE,SMS_APPKEY,form.getSmsAppkey()));
+            configService.updateConfig(new Config(SMS_MODULE,SMS_VCODE_TEMPLATE,form.getSmsVcodeTemplate()));
         }catch(Exception e){
             logger.error("update config error",e, Memarylogger.SYSTEM);
         }
@@ -99,6 +100,7 @@ public class ConfigController implements Constant {
             configService.updateConfig(new Config(WLAN_MODULE,WLAN_WECHAT_SECRETKEY,form.getWlanWechatSecretkey()));
             configService.updateConfig(new Config(WLAN_MODULE,WLAN_TEMPLATE,form.getWlanTemplate()));
             configService.updateConfig(new Config(WLAN_MODULE,WLAN_JOIN_URL,form.getWlanJoinUrl()));
+            configService.updateConfig(new Config(WLAN_MODULE,WLAN_RESULT_URL,form.getWlanResultUrl()));
             configService.updateConfig(new Config(WLAN_MODULE,WLAN_USERAUTH_ENABLED,form.getWlanUserauthEnabled()));
             configService.updateConfig(new Config(WLAN_MODULE,WLAN_PWDAUTH_ENABLED,form.getWlanPwdauthEnabled()));
             configService.updateConfig(new Config(WLAN_MODULE,WLAN_SMSAUTH_ENABLED,form.getWlanSmsauthEnabled()));
