@@ -1,4 +1,4 @@
-# TOUGHRADIUS
+# 关于 TOUGHRADIUS 
 
 
                  )                        )   (                (       (              (
@@ -17,38 +17,30 @@
                                        (_/
 
 
-ToughRADIUS is a Radius server software developed based on Java & SpringBoot (since v6.x), which implements the standard Radius protocol and supports the extension of Radius protocol.
+TOUGHRADIUS 是一个开源的Radius服务软件，支持标准RADIUS协议（RFC 2865, RFC 2866），提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
-ToughRADIUS can be understood as a Radius middleware, and it does not implement all of the business functions. But it's easy to Easier to extended development.
+至 6.x 版本开始，基于Java语言重新开发。提供了一个高性能的 RADIUS 处理引擎，同时提供了一个简洁易用的 WEB管理界面，可以轻松上手。
 
-ToughRADIUS is similar to freeRADIUS, But it's simpler to use, Easier to extended development.
+TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易于扩展开发。
 
-## install
+## 快速开始
 
-### System environment dependence
+### 系统环境依赖
 
-operating system
+- 操作系统：支持跨平台部署 （Linux，Windows，MacOS等）
+- java 版本: 1.8或更高
+- 数据库服务器：MySQL/MariaDB
 
-- Linux
-- Windows
-- MacOS
+### 数据库初始化
 
-java version: 1.8+
+> 首先确保你的数据库服务器已经运行
 
-database server
-
-MySQL/MariaDB
-
-### Database init
-
-> First confirm that the database has started
-
-create database
+运行创建数据库脚本以及创建专用用户
 
     create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8mb4_unicode_ci;
     GRANT ALL ON toughradius.* TO raduser@'127.0.0.1' IDENTIFIED BY 'radpwd' WITH GRANT OPTION;FLUSH PRIVILEGES;
 
-create tables
+创建数据库表
 
     create table if not exists tr_bras
     (
@@ -129,8 +121,7 @@ create tables
         on tr_subscribe (update_time);
     
 
-
-insert test data
+插入测试数据
 
     INSERT INTO toughradius.tr_bras
     (identifier, name, ipaddr, vendor_id, portal_vendor,secret, coa_port,ac_port, auth_limit, acct_limit, STATUS, remark, create_time)
@@ -143,20 +134,20 @@ insert test data
     VALUES (0, 'test01', '', '888888',  null, null, null, null, 10, 0, 0, '', '', 0, 0, 10.000, 10.000, 100.000, 100.000,
             '10', '10', 'enabled', '', '2019-03-01 14:13:02', '2019-03-01 14:13:00', '2019-03-01 14:12:59', '2019-03-01 14:12:56');
             
-### Running the main program
+### 运行主程序
 
     java -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar  --spring.profiles.active=prod
     
-> Note the file (toughradius-latest.jar) path
+> 主要 jar 文件（toughradius-latest.jar）的路径
 
-### Linux systemd config
+### Linux  systemd 服务配置
 
-write config files( see scripts dir)
+写入配置文件到指定目录（参见项目script目录文件）
 
     /etc/toughradius.env
     /usr/lib/systemd/system/toughradius.service
 
-Run the following command
+通过以下指令启动服务
 
     systemctl enable toughradius
     systemctl start toughradius
