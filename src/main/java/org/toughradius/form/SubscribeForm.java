@@ -30,9 +30,9 @@ public class SubscribeForm {
 
     private Integer isOnline;
 
-    private Boolean bindMac;
+    private Integer bindMac;
 
-    private Boolean bindVlan;
+    private Integer bindVlan;
 
     private String ipAddr;
 
@@ -65,6 +65,10 @@ public class SubscribeForm {
     private String updateTime;
 
     private String remark;
+
+    private String userPrefix;
+    private int openNum;
+    private int randPasswd;
 
     public Subscribe getSubscribeData(){
         Subscribe subs = new Subscribe();
@@ -178,19 +182,19 @@ public class SubscribeForm {
         this.isOnline = isOnline;
     }
 
-    public Boolean getBindMac() {
+    public Integer getBindMac() {
         return bindMac;
     }
 
-    public void setBindMac(Boolean bindMac) {
+    public void setBindMac(Integer bindMac) {
         this.bindMac = bindMac;
     }
 
-    public Boolean getBindVlan() {
+    public Integer getBindVlan() {
         return bindVlan;
     }
 
-    public void setBindVlan(Boolean bindVlan) {
+    public void setBindVlan(Integer bindVlan) {
         this.bindVlan = bindVlan;
     }
 
@@ -328,5 +332,29 @@ public class SubscribeForm {
 
     public void setCpassword(String cpassword) {
         this.cpassword = cpassword;
+    }
+
+    public String getUserPrefix() {
+        return userPrefix;
+    }
+
+    public void setUserPrefix(String userPrefix) {
+        this.userPrefix = userPrefix;
+    }
+
+    public int getOpenNum() {
+        return openNum;
+    }
+
+    public void setOpenNum(int openNum) {
+        this.openNum = openNum;
+    }
+
+    public int getRandPasswd() {
+        return randPasswd;
+    }
+
+    public void setRandPasswd(int randPasswd) {
+        this.randPasswd = randPasswd;
     }
 }

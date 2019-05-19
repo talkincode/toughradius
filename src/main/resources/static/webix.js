@@ -1,9 +1,6 @@
 /*
 @license
 webix UI v.5.1.6
-This software is covered by Webix Commercial License.
-Usage without proper license is prohibited.
-(c) XB Software Ltd.
 */
 window.webix||(webix={}),webix.version="5.1.6",webix.codebase="./",webix.name="core",webix.cdn="//cdn.webix.com",webix.clone=function(t){var e=webix.clone.a;return e.prototype=t,new e},webix.clone.a=function(){},webix.extend=function(t,e,i){if(t.$protoWait)return webix.PowerArray.insertAt.call(t.$protoWait,e,1),
 t;for(var s in e)s in t&&!i||(t[s]=e[s]);return e.defaults&&webix.extend(t.defaults,e.defaults),e.$init&&e.$init.call(t),t},webix.copy=function(t){var e;arguments.length>1?(e=arguments[0],t=arguments[1]):e=webix.isArray(t)?[]:{};for(var i in t){var s=t[i];!s||"object"!=typeof s||s instanceof RegExp?e[i]=s:webix.isDate(s)?e[i]=new Date(s):webix.env.esModern&&(s instanceof Map||s instanceof Set||s instanceof WeakMap||s instanceof WeakSet)?e[i]=s:(e[i]=webix.isArray(s)?[]:{},

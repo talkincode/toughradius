@@ -29,9 +29,6 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
      */
     private Map<Long,ValidateCache> validateMap = new HashMap<>();
 
-
-
-
     private ValidateCache getBrasValidate(Bras bras){
         if(validateMap.containsKey(bras.getId())){
             ValidateCache vc = validateMap.get(bras.getId());
@@ -93,7 +90,7 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
         }
 
         //判断MAC绑定
-        if (user.getBindMac()) {
+        if (user.getBindMac()!=null&&user.getBindMac()==1) {
             if (user.getMacAddr() == null||"".equals(user.getMacAddr())) {
                 systaskExecutor.execute(() -> {
                     subscribeService.updateMacAddr(accessRequest.getUserName(), accessRequest.getMacAddr());
@@ -106,7 +103,7 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
             }
         }
         //判断invlan绑定
-        if (user.getBindVlan()) {
+        if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
             if (user.getInVlan() == null || user.getInVlan() == 0) {
                 systaskExecutor.execute(() -> {
                     subscribeService.updateInValn(accessRequest.getUserName(), accessRequest.getInVlanId());
@@ -119,7 +116,7 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
             }
         }
         //判断outvlan绑定
-        if (user.getBindVlan()) {
+        if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
             if (user.getOutVlan() == null || user.getOutVlan() == 0) {
                 systaskExecutor.execute(() -> {
                     subscribeService.updateOutValn(accessRequest.getUserName(), accessRequest.getOutVlanId());
@@ -206,10 +203,11 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
         try{
             response = accessRequestReceived(request, nas);
             radiusStat.incrAuthAccept();
+            radiusAuthStat.update(RadiusAuthStat.ACCEPT);
         } catch(Exception e){
             radiusStat.incrAuthReject();
             logger.error(request.getUserName(), "认证处理失败 " + e.getMessage(), Memarylogger.RADIUSD);
-            response = getAccessReject(request,e.getMessage());
+            response = getAccessReject(request, "认证处理失败");
         }
 
         // send response

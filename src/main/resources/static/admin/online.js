@@ -168,6 +168,7 @@ toughradius.admin.online.loadPage = function(session){
                     },
                     { id: "acctInputPackets", header: ["上行数据包"], sort: "int", adjust:true },
                     { id: "acctOutputPackets", header: ["下行数据包"],sort: "int", adjust:true },
+                    { id: "_", header: [""],   fillspace:true},
                     { header: { content: "headerMenu" }, headermenu: false, width: 35 }
                 ],
                 select: true,

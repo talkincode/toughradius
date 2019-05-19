@@ -1,9 +1,6 @@
 /*
 @license
 webix UI v.5.1.6
-This software is covered by Webix Commercial License.
-Usage without proper license is prohibited.
-(c) XB Software Ltd.
 */
 if (!window.webix) 
 	webix={};

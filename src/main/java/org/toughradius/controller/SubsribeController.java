@@ -5,10 +5,7 @@ import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import org.toughradius.common.DateTimeUtil;
-import org.toughradius.common.PageResult;
-import org.toughradius.common.RestResult;
-import org.toughradius.common.ValidateUtil;
+import org.toughradius.common.*;
 import org.toughradius.component.SubscribeService;
 import org.toughradius.component.Memarylogger;
 import org.toughradius.entity.Subscribe;
@@ -89,6 +86,34 @@ public class SubsribeController {
         }catch(Exception e){
             logger.error("创建用户失败",e, Memarylogger.SYSTEM);
             return new RestResult(1,"创建用户失败");
+        }
+    }
+
+
+    @PostMapping(value = {"/admin/subscribe/batchcreate"})
+    @ResponseBody
+    public RestResult batchAddSubscribe(SubscribeForm form){
+        try{
+            int width = String.valueOf(form.getOpenNum()).length();
+            for(int i = 0;i<form.getOpenNum();i++){
+                Subscribe subscribe = form.getSubscribeData();
+                subscribe.setSubscriber(form.getUserPrefix()+String.format("%0"+width+"d",i+1));
+                if(form.getRandPasswd()==1||ValidateUtil.isEmpty(form.getPassword())){
+                    subscribe.setPassword(StringUtil.getRandomDigits(6));
+                }
+                subscribe.setBeginTime(DateTimeUtil.nowTimestamp());
+                subscribe.setCreateTime(DateTimeUtil.nowTimestamp());
+                subscribe.setUpdateTime(DateTimeUtil.nowTimestamp());
+                subscribe.setBeginTime(DateTimeUtil.nowTimestamp());
+                subscribe.setStatus("enabled");
+                subscribe.setUpPeakRate(subscribe.getUpRate());
+                subscribe.setDownPeakRate(subscribe.getDownPeakRate());
+                subscribeService.insertSubscribe(subscribe);
+            }
+            return RestResult.SUCCESS;
+        }catch(Exception e){
+            logger.error("批量创建用户失败",e, Memarylogger.SYSTEM);
+            return new RestResult(1,"批量创建用户失败");
         }
     }
 

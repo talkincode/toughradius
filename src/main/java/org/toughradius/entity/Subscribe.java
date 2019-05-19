@@ -23,9 +23,9 @@ public class Subscribe {
 
     private Integer isOnline;
 
-    private Boolean bindMac;
+    private Integer bindMac;
 
-    private Boolean bindVlan;
+    private Integer bindVlan;
 
     private String ipAddr;
 
@@ -121,22 +121,6 @@ public class Subscribe {
 
     public void setActiveNum(Integer activeNum) {
         this.activeNum = activeNum;
-    }
-
-    public Boolean getBindMac() {
-        return bindMac;
-    }
-
-    public void setBindMac(Boolean bindMac) {
-        this.bindMac = bindMac;
-    }
-
-    public Boolean getBindVlan() {
-        return bindVlan;
-    }
-
-    public void setBindVlan(Boolean bindVlan) {
-        this.bindVlan = bindVlan;
     }
 
     public String getIpAddr() {
@@ -281,5 +265,21 @@ public class Subscribe {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public Integer getBindMac() {
+        return bindMac;
+    }
+
+    public void setBindMac(Integer bindMac) {
+        this.bindMac = bindMac;
+    }
+
+    public Integer getBindVlan() {
+        return bindVlan;
+    }
+
+    public void setBindVlan(Integer bindVlan) {
+        this.bindVlan = bindVlan;
     }
 }

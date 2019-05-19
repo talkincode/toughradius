@@ -1,9 +1,6 @@
 /*
 @license
 webix UI v.5.1.6
-This software is covered by Webix Commercial License.
-Usage without proper license is prohibited.
-(c) XB Software Ltd.
 */
 .webix_view{font-family:'PT Sans',Tahoma;font-size:15px;color:#666;-webkit-font-smoothing:antialiased;cursor:default;overflow:hidden;border:0 solid #ddd;background-color:#fff;white-space:normal;-webkit-appearance:none}
 .webix_view.webix_form{background-color:#fff}

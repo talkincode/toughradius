@@ -113,11 +113,11 @@ public class Memarylogger {
     }
 
     private boolean filterData(TraceMessage message, String type,String username, String keyword,String startTime, String endTime){
-        if(startTime.length() == 16){
+        if(ValidateUtil.isNotEmpty(startTime) && startTime.length() == 16){
             startTime += ":00";
         }
 
-        if(endTime.length() == 16){
+        if(ValidateUtil.isNotEmpty(endTime) && endTime.length() == 16){
             endTime += ":59";
         }
         if(ValidateUtil.isNotEmpty(type)&&!message.getType().equalsIgnoreCase(type)) {

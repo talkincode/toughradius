@@ -129,8 +129,8 @@ public class SubscribeCache {
         subscribe.setPolicy("");
         subscribe.setIsOnline(0);
         subscribe.setActiveNum(1);
-        subscribe.setBindMac(false);
-        subscribe.setBindVlan(false);
+        subscribe.setBindMac(0);
+        subscribe.setBindVlan(0);
         subscribe.setIpAddr("");
         subscribe.setMacAddr("");
         subscribe.setInVlan(0);

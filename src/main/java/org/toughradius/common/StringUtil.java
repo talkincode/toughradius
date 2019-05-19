@@ -241,7 +241,6 @@ public class StringUtil
      * 
      * 举例:如字符串数组有三个元素hello、my、friend，用户定义分隔符为|，那么字符串可 以合并为hello|my|friend
      * @param array 字符串数组
-     * @param delim 分隔符
      * @return 合并后的字符串
      */
     public static String toStringByArray(String[] array, String separator)

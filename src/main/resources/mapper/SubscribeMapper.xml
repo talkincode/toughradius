@@ -16,8 +16,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<result column="policy" jdbcType="VARCHAR" property="policy" />
 		<result column="is_online" jdbcType="INTEGER" property="isOnline" />
 		<result column="active_num" jdbcType="INTEGER" property="activeNum" />
-		<result column="bind_mac" jdbcType="BIT" property="bindMac" />
-		<result column="bind_vlan" jdbcType="BIT" property="bindVlan" />
+		<result column="bind_mac" jdbcType="INTEGER" property="bindMac" />
+		<result column="bind_vlan" jdbcType="INTEGER" property="bindVlan" />
 		<result column="ip_addr" jdbcType="VARCHAR" property="ipAddr" />
 		<result column="mac_addr" jdbcType="VARCHAR" property="macAddr" />
 		<result column="in_vlan" jdbcType="INTEGER" property="inVlan" />

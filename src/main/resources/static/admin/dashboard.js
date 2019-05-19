@@ -205,7 +205,12 @@ toughradius.admin.dashboard.MsgStatChart = function (session,uid, infoid) {
                 }
             }
         },
-        title: "",
+        title: {
+            text: "RADIUS 消息统计"
+        },
+        legend: {
+            align: 'center',verticalAlign: 'top',x: 0,y: 0
+        },
         colors:['#00cca0', '#0080ff', '#ccae00','#cc0b2a'],
         xAxis: {type: 'datetime',tickInterval : 60*1000},
         yAxis: {title: {text: '消息量'},
@@ -258,7 +263,12 @@ toughradius.admin.dashboard.castMsgStatChart = function (session,uid) {
                 }
             }
         },
-        title: "",
+        title: {
+            text: "RADIUS 消息耗时统计"
+        },
+        legend: {
+            align: 'center',verticalAlign: 'top',x: 0,y: 0
+        },
         colors:['#00cca0', '#0080ff', '#ccae00','#cc0b2a'],
         xAxis: {type: 'datetime',tickInterval : 60*1000},
         yAxis: {title: {text: '处理耗时'},
@@ -312,7 +322,12 @@ toughradius.admin.dashboard.authStatChart = function (session,uid) {
                 }
             }
         },
-        title: "",
+        title: {
+            text: "认证结果统计"
+        },
+        legend: {
+            align: 'center',verticalAlign: 'top',x: 0,y: 0
+        },
         colors:['#40cc6f', '#c4aaff', '#ccc300','#006bcc','#cc6d3a','#cc6587','#cc0018','#cc00b1','#6d00cc','#cc9a00'],
         xAxis: {type: 'datetime',tickInterval : 60*1000},
         yAxis: {title: {text: '消息数'},
@@ -370,7 +385,12 @@ toughradius.admin.dashboard.onlineStatChart = function (session,uid) {
                 }
             }
         },
-        title: "",
+        title: {
+            text: "在线趋势"
+        },
+        legend: {
+            align: 'center',verticalAlign: 'top',x: 0,y: 0
+        },
         colors:['#40cc6f', '#c260ff', '#ccc300'],
         xAxis: {type: 'datetime',tickInterval : 60*1000},
         yAxis: {title: {text: '在线数'},
@@ -767,8 +787,8 @@ toughradius.admin.dashboard.loadPage = function(session){
                                             width:60,
                                             click: function () {
                                                 toughradius.admin.dashboard.updateMsgChart(session,msgstatchartid,msgstatInfoid);
-                                                toughradius.admin.dashboard.updateCastMsgChart(session,castmsgstatchartid);
                                                 toughradius.admin.dashboard.updateAuthStatChart(session,authstatchartid);
+                                                toughradius.admin.dashboard.updateCastMsgChart(session,castmsgstatchartid);
                                                 toughradius.admin.dashboard.updateOnlineStatChart(session,onlinestatchartid);
                                             }
                                         }
@@ -776,11 +796,11 @@ toughradius.admin.dashboard.loadPage = function(session){
                                 },
                                 {
                                     rows:[
+                                        {id:msgstatInfoid},
                                         toughradius.admin.dashboard.MsgStatChart(session,msgstatchartid,msgstatInfoid),
-                                        toughradius.admin.dashboard.onlineStatChart(session,onlinestatchartid),
                                         toughradius.admin.dashboard.authStatChart(session,authstatchartid),
                                         toughradius.admin.dashboard.castMsgStatChart(session,castmsgstatchartid),
-                                        {id:msgstatInfoid}
+                                        toughradius.admin.dashboard.onlineStatChart(session,onlinestatchartid),
                                     ]
                                 }
                             ]

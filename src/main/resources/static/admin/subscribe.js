@@ -40,6 +40,11 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                 }
                             },
                             {
+                                view: "button", type: "form", width: 70, icon: "plus", label: "批量创建", click: function () {
+                                    toughradius.admin.subscribe.batchOpenSubscribeForm(session);
+                                }
+                            },
+                            {
                                 view: "button", type: "form", width: 55, icon: "key", label: "改密码", click: function () {
                                     var item = $$(tableid).getSelectedItem();
                                     if (item) {
@@ -201,15 +206,21 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                                 on: {
                                     onItemDblClick: function(id, e, node){
                                         var item = this.getSelectedItem();
-                                        toughradius.admin.subscribe.subscribeDetail(session, item.id, function () {
-                                            reloadData();
+                                        webix.require("admin/subscribeDetail.js?rand="+new Date().getTime(), function () {
+                                            toughradius.admin.subscribe.subscribeDetail(session, item.id, function () {
+                                                reloadData();
+                                            });
                                         });
+
                                     }
                                 },
                                 onClick: {
                                     do_detail: function (e, id) {
-                                        toughradius.admin.subscribe.subscribeDetail(session, this.getItem(id).id, function () {
-                                            reloadData();
+                                        var item= this.getItem(id);
+                                        webix.require("admin/subscribeDetail.js?rand="+new Date().getTime(), function () {
+                                            toughradius.admin.subscribe.subscribeDetail(session, item.id, function () {
+                                                reloadData();
+                                            });
                                         });
                                     },
                                     do_update: function(e, id){
@@ -336,7 +347,7 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
                                     var resp = result.json();
                                     webix.message({ type: resp.msgtype, text: resp.msg, expire: 3000 });
                                     if (resp.code === 0) {
-                                        toughradius.admin.subscribe.loadPage(session, params.subscriber);
+                                        toughradius.admin.subscribe.reloadData();
                                         $$(winid).close();
                                     }
                                 });
@@ -357,279 +368,97 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
 
 
 /**
- * 用户订阅详情
- * @param itemid
- * @param callback
+ * 批量开用户
+ * @param session
+ * @constructor
  */
-toughradius.admin.subscribe.subscribeDetail = function(session,itemid,callback){
-    $$(toughradius.admin.subscribe.detailFormID).show();
-    $$(toughradius.admin.subscribe.dataViewID).hide();
-    var detailWinid = "toughradius.admin.subscribe.subscribeDetail";
-    // if($$(detailWinid))
-    //     return;
-    var formid = detailWinid+"_form";
-    var online_tabid = webix.uid();
-    webix.ajax().get('/admin/subscribe/detail', {id:itemid}).then(function (result) {
-        var resp = result.json();
-        if(resp.code>0){
-            webix.message({ type: "error", text: resp.msg, expire: 3000 });
-            return;
-        }
-        var subs = resp.data;
-        webix.ui({
-            id:toughradius.admin.subscribe.detailFormID,
-            borderless:true,
-            padding:5,
+toughradius.admin.subscribe.batchOpenSubscribeForm = function(session){
+    var winid = "toughradius.admin.subscribe.batchOpenSubscribeForm";
+    if($$(winid))
+        return;
+    var formid = winid+"_form";
+    webix.ui({
+        id:winid,
+        view: "window",
+        css:"win-body",
+        move:true,
+        width:340,
+        height:480,
+        position: "center",
+        head: {
+            view: "toolbar",
+            css:"win-toolbar",
+
+            cols: [
+                {view: "icon", icon: "laptop", css: "alter"},
+                {view: "label", label: "批量创建用户"},
+                {view: "icon", icon: "times-circle", css: "alter", click: function(){
+                        $$(winid).close();
+                    }}
+            ]
+        },
+        body: {
             rows:[
                 {
-                    view: "toolbar",
-                    css: "page-toolbar",
-                    cols: [
-                        {view:"icon", icon:"user"},
-                        {view: "label", label: "用户详情"},
-                        { },
-                        {
-                            view: "button", type: "icon", width: 80, icon: "reply", label: "返回", click: function () {
-                                $$(toughradius.admin.subscribe.detailFormID).hide();
-                                $$(toughradius.admin.subscribe.dataViewID).show();
-                            }
-                        }
+                    id: formid,
+                    view: "form",
+                    scroll: 'y',
+                    elementsConfig: { labelWidth: 110 },
+                    elements: [
+                        { view: "text", name: "userPrefix", label: "帐号前缀", validate:webix.rules.isNotEmpty },
+                        { view: "counter", name: "openNum", label: "数量", placeholder: "数量（最大1000）", value: 10, min: 10, max: 1000},
+                        { view: "radio", name: "randPasswd", label: "密码类型 ", value: '0', options: [{ id: '1', value: "随机" }, { id: '0', value: "固定" }] },
+                        { view: "text", name: "password", label: "固定密码"},
+                        { view: "datepicker", name: "expireTime", label: "过期时间", stringResult:true, timepicker: true, format: "%Y-%m-%d %h:%i", validate:webix.rules.isNotEmpty },
+                        { view: "text", name: "addrPool", label: "地址池" },
+                        { view: "counter", name: "activeNum", label: "最大在线", placeholder: "最大在线", value: 1, min: 1, max: 99999},
+                        { view: "radio", name: "bindMac", label: "绑定MAC", value: '0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                        { view: "radio", name: "bindVlan", label: "绑定VLAN", value: '0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
+                        { view: "text", name: "upRate", label: "上行速率(Mbps)", validate:webix.rules.isNumber},
+                        { view: "text", name: "downRate", label: "下行速率(Mbps)", validate:webix.rules.isNumber}
                     ]
                 },
                 {
-                    view: "tabview",
-                    cells: [
+                    view: "toolbar",
+                    height:42,
+                    css: "page-toolbar",
+                    cols: [
+                        {},
                         {
-                            header: "用户信息",
-                            body: {
-                                id: formid,
-                                view: "form",
-                                scroll: "auto",
-                                elementsConfig: { labelWidth: 110 },
-                                elements: [
-                                    { view: "fieldset", label: "基本信息",  body: {
-                                        rows:[
-                                            {
-                                                cols: [
-                                                    { view: "text", name: "subscriber", label: "订阅帐号", css: "nborder-input", readonly: true, value: subs.subscriber },
-                                                    { view: "text", name: "password", label: "认证密码", css: "nborder-input", readonly: true, value: subs.password },
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "text", name: "expireime", label: "过期时间", css: "nborder-input", readonly: true, value: subs.expireTime },
-                                                    { view: "text", name: "addrPool", label: "地址池", css: "nborder-input",  value: subs.addrPool,readonly:true },
-                                                ]
-                                            },
-                                            {
-                                              cols:[
-                                                  { view: "text", name: "ipAddr", label: "固定IP地址", css: "nborder-input", value: subs.ipAddr ,readonly:true},
-                                                  { view: "text", name: "macAddr", label: "MAc地址", css: "nborder-input", value: subs.macAddr ,readonly:true},
-                                              ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "text", name: "inVlan", label: "内层VLAN", css: "nborder-input", value: subs.in_vlan ,readonly:true},
-                                                    { view: "text", name: "outVlan", label: "外层VLAN", css: "nborder-input", value: subs.out_vlan ,readonly:true},
-
-                                                ]
-                                            }
-                                        ]
-
-                                    }},
-                                    { view: "fieldset", label: "授权策略",  body: {
-                                        rows:[
-                                            {
-                                                cols: [
-                                                    { view: "text", name: "activeNum", label: "最大在线", css: "nborder-input", value: subs.activeNum,readonly:true},{}
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "radio", name: "bindVlan", label: "绑定VLAN", disabled:true, value: subs.bind_vlan?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-                                                    { view: "radio", name: "bindMac", label: "绑定MAC", disabled:true,value: subs.bindMac?'1':'0', options: [{ id: '1', value: "是" }, { id: '0', value: "否" }] },
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "text", name: "upRate", label: "上行速率(Mbps)",  value: subs.upRate,css: "nborder-input", readonly:true},
-                                                    { view: "text", name: "downRate", label: "下行速率(Mbps)",  value: subs.downRate,css: "nborder-input",readonly:true},
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "text", name: "upPeakRate", label: "突发上行(Mbps)",  value: subs.upPeakRate,css: "nborder-input", readonly:true},
-                                                    { view: "text", name: "downPeakRate", label: "突发下行(Mbps)",  value: subs.downPeakRate,css: "nborder-input",readonly:true},
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "text", name: "upRateCode", label: "上行速率策略",  value: subs.upRateCode,css: "nborder-input",readonly:true},
-                                                    { view: "text", name: "downRateCode", label: "下行速率策略",  value: subs.downRateCode,css: "nborder-input",readonly:true},
-                                                ]
-                                            },
-                                            {
-                                                cols:[
-                                                    { view: "text", name: "domain", label: "认证域", css: "nborder-input", value: subs.domain,readonly:true},
-                                                    { view: "text", name: "policy", label: "扩展策略", css: "nborder-input", value: subs.policy,readonly:true},
-                                                ]
-                                            }
-
-                                        ]
-                                    }},
-                                    {
-                                        view: "treetable",
-                                        scroll: "y",
-                                        subview: {
-                                            borderless: true,
-                                            view: "template",
-                                            height: 180,
-                                            template: "<div style='padding: 5px;'>#msg#</div>"
-                                        },
-                                        on: {
-                                            onSubViewCreate: function (view, item) {
-                                                item.msg = item.msg.replace("\n", "<br>");
-                                                view.setValues(item);
-                                            }
-                                        },
-                                        columns: [
-                                            {
-                                                id: "time",
-                                                header: ["时间"],
-                                                adjust: true,
-                                                template: "{common.subrow()} #time#"
-                                            },
-                                            {id: "msg", header: ["最近 20 条认证失败信息"], fillspace: true}
-                                        ],
-                                        select: true,
-                                        resizeColumn: true,
-                                        autoWidth: true,
-                                        autoHeight: true,
-                                        url: "/admin/syslog/query?start=0&count=20&type=error&username=" + subs.subscriber
-                                    }
-                                ]
-                            }
-                        },
-                         {
-                            header: "在线信息",
-                            body: {
-                                id:online_tabid,
-                                view: "datatable",
-                                leftSplit: 1,
-                                rightSplit: 2,
-                                columns: [
-                                    { id: "username", header: ["用户名"], sort: "string" },
-                                    { id: "acctSessionId", header: ["会话ID"], sort: "string", hidden: true },
-                                    { id: "nasId", header: ["BRAS 标识"], sort: "string" },
-                                    { id: "acctStartTime", header: ["上线时间"], sort: "string" },
-                                    { id: "nasAddr", header: ["BRAS IP"], sort: "string" },
-                                    { id: "framedIpaddr", header: ["用户 IP"],  sort: "string" },
-                                    { id: "macAddr", header: ["用户 Mac"],  sort: "string" },
-                                    { id: "nasPortId", header: ["端口信息"], sort: "string" },
-                                    {
-                                        id: "acctInputTotal", header: ["上传"],  sort: "nt", template: function (obj) {
-                                            return bytesToSize(obj.acctInputTotal);
-                                        }
-                                    },
-                                    {
-                                        id: "acctOutputTotal", header: ["下载"], sort: "int", template: function (obj) {
-                                            return bytesToSize(obj.acctOutputTotal);
-                                        }
-                                    },
-                                    { id: "acctInputPackets", header: ["上行数据包"], sort: "string" },
-                                    { id: "acctOutputPackets", header: ["下行数据包"],  sort: "string"},
-                                    { id: "opt", header: '操作', template: "<span class='table-btn do_clean'><i class='fa fa-unlock'></i> 清理</span> ", width: 100 },
-                                    { header: { content: "headerMenu" }, headermenu: false, width: 35 }
-                                ],
-                                select: true,
-                                resizeColumn: true,
-                                autoWidth: true,
-                                autoHeight: true,
-                                url: "/admin/online/query?keyword=" + subs.subscriber,
-                                onClick:{
-                                    do_clean: function (e, id) {
-                                        var sessionid = this.getItem(id).acctSessionId;
-                                        webix.require("admin/online.js?rand="+new Date().getTime(), function () {
-                                            toughradius.admin.online.onlineUnlock(sessionid,function(){
-                                               $$(online_tabid).load("/admin/online/query?keyword=" + subs.subscriber);
-                                               $$(online_tabid).refreash();
-                                            });
-                                        });
-                                    }
+                            view: "button", type: "form", width: 100, icon: "check-circle", label: "提交", click: function () {
+                                if (!$$(formid).validate()) {
+                                    webix.message({ type: "error", text: "请正确填写资料", expire: 1000 });
+                                    return false;
                                 }
-                            }
-                        },
-                        {
-                            header: "认证日志",
-                            body: {
-                                view:"treetable",
-                                scroll:"y",
-                                subview:{
-                                    borderless:true,
-                                    view:"template",
-                                    height:180,
-                                    template:"<div style='padding: 5px;'>#msg#</div>"
-                                },
-                                on:{
-                                    onSubViewCreate:function(view, item){
-                                        item.msg = item.msg.replace("\n","<br>");
-                                        view.setValues(item);
+                                var btn = this;
+                                btn.disable();
+                                var params = $$(formid).getValues();
+                                webix.ajax().post('/admin/subscribe/batchcreate', params).then(function (result) {
+                                    btn.enable();
+                                    var resp = result.json();
+                                    webix.message({ type: resp.msgtype, text: resp.msg, expire: 3000 });
+                                    if (resp.code === 0) {
+                                        toughradius.admin.subscribe.reloadData();
+                                        $$(winid).close();
                                     }
-                                },
-                                columns: [
-                                    { id: "time", header: ["时间"], width: 180, template:"{common.subrow()} #time#"},
-                                    { id: "msg", header: ["最近200条记录"], fillspace:true  }
-                                ],
-                                select: true,
-                                resizeColumn: true,
-                                autoWidth: true,
-                                autoHeight: true,
-                                url: "/admin/syslog/query?start=0&count=200&type=radiusd&username="+ subs.subscriber
+                                });
                             }
                         },
                         {
-                            header: "上网日志",
-                            body: {
-                                view: "datatable",
-                                rightSplit: 1,
-                                columns: [
-                                    { id: "username", header: ["用户名"], sort: "string" },
-                                    { id: "acctSessionId", header: ["会话ID"],sort: "string",  },
-                                    { id: "nasId", header: ["BRAS 标识"],  sort: "string",  },
-                                    { id: "nasAddr", header: ["BRAS IP"],  sort: "string" },
-                                    { id: "framedIpaddr", header: ["用户 IP"],  sort: "string" },
-                                    { id: "macAddr", header: ["用户 Mac"],  sort: "string" },
-                                    { id: "nasPortId", header: ["端口信息"],  sort: "string", hidden: true },
-                                    {
-                                        id: "acctInputTotal", header: ["上传"], sort: "nt", template: function (obj) {
-                                            return bytesToSize(obj.acctInputTotal);
-                                        }
-                                    },
-                                    {
-                                        id: "acctOutputTotal", header: ["下载"],  sort: "int", template: function (obj) {
-                                            return bytesToSize(obj.acctOutputTotal);
-                                        }
-                                    },
-                                    { id: "acctInputPackets", header: ["上行数据包"],  sort: "string", hidden: true },
-                                    { id: "acctOutputPackets", header: ["下行数据包"],  sort: "string", hidden: true },
-                                    { id: "acctStartTime", header: ["上线时间"],  sort: "string" },
-                                    { id: "acctStopTime", header: ["下线时间"],  sort: "string" },
-                                    { header: { content: "headerMenu" }, headermenu: false, width: 35 }
-                                ],
-                                select: true,
-                                resizeColumn: true,
-                                autoWidth: true,
-                                autoHeight: true,
-                                url: "/admin/ticket/query?username=" + subs.subscriber
+                            view: "button", type: "base", width: 100, icon: "times-circle", label: "取消", click: function () {
+                                $$(winid).close();
                             }
                         }
                     ]
                 }
             ]
+        }
 
-        },$$(toughradius.admin.subscribe.detailFormID));
-    })
+    }).show();
 };
+
+
+
 
 toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
     var updateWinid = "toughradius.admin.subscribe.subscribeUpdate";
@@ -780,8 +609,6 @@ toughradius.admin.subscribe.subscribeUppwd = function(session,item,callback){
                     id: formid,
                     view: "form",
                     scroll: "auto",
-                    maxWidth: 2000,
-                    maxHeight: 2000,
                     elementsConfig: { labelWidth: 120 },
                     elements: [
                         { view: "text", name: "id",  hidden: true, value: subs.id },
@@ -907,7 +734,7 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,item){
         view: "window",
         css:"win-body",
         move:true,
-        width:480,
+        width:360,
         height:480,
         position: "center",
         head: {
@@ -930,10 +757,10 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,item){
                     id: formid,
                     view: "form",
                     scroll: "auto",
+                    elementsConfig: { labelWidth: 40 },
                     elements: [
                         {
-                            view: "fieldset", label: "测试帐号", paddingX: 20, body: {
-                                paddingX: 20,
+                            view: "fieldset", label: "测试帐号", paddingX: 5, body: {
                                 rows: [
                                     {
                                         cols: [
@@ -941,19 +768,13 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,item){
                                             { view: "text", name: "password", label: "密码", css: "nborder-input", readonly: true, value: item.password },
 
                                         ],
-                                    },
-                                    {
-                                        cols:[
-                                            { view: "text", name: "expireTime", label: "过期", css: "nborder-input", readonly: true, value: item.expireTime },
-                                            {}
-                                        ]
                                     }
                                 ]
                             }
                         },
                         {
                             id: logvid,
-                            maxHeight: 2000,
+                            width:320,
                             view:"template",
                             css:"web-console",
                             borderless: true,
@@ -963,67 +784,76 @@ toughradius.admin.subscribe.subscribeRadiusTest = function(session,item){
                     ]
                 },
                 {
-                    height:36,
-                    cols: [{},
+                    height:72,
+                    rows:[
                         {
-                            view: "button", type: "form", width: 80, icon: "check-circle", label: "PAP 认证", click: function () {
-                                var btn = this;
-                                btn.disable();
-                                var params = {username:item.subscriber,papchap:"pap"}
-                                webix.ajax().get('/admin/radius/auth/test', params).then(function (iresult) {
-                                    btn.enable();
-                                    updateLog(iresult);
-                                });
-                            }
+                            cols:[
+                                {
+                                    view: "button", type: "form",  icon: "check-circle", label: "PAP 认证", click: function () {
+                                        var btn = this;
+                                        btn.disable();
+                                        var params = {username:item.subscriber,papchap:"pap"}
+                                        webix.ajax().get('/admin/radius/auth/test', params).then(function (iresult) {
+                                            btn.enable();
+                                            updateLog(iresult);
+                                        });
+                                    }
+                                },
+                                {
+                                    view: "button", type: "form",  icon: "check-circle", label: "CHAP 认证", click: function () {
+                                        var btn = this;
+                                        btn.disable();
+                                        var params = {username:item.subscriber,papchap:"pap"}
+                                        webix.ajax().get('/admin/radius/auth/test', params).then(function (iresult) {
+                                            btn.enable();
+                                            updateLog(iresult);
+                                        });
+                                    }
+                                },
+                                {
+                                    view: "button", type: "form",  icon: "check-circle", label: "上线", click: function () {
+                                        var btn = this;
+                                        btn.disable();
+                                        var params = {username:item.subscriber,type:"1"}
+                                        webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
+                                            btn.enable();
+                                            updateLog(iresult);
+                                        });
+                                    }
+                                },
+                            ]
                         },
                         {
-                            view: "button", type: "form", width: 80, icon: "check-circle", label: "CHAP 认证", click: function () {
-                                var btn = this;
-                                btn.disable();
-                                var params = {username:item.subscriber,papchap:"pap"}
-                                webix.ajax().get('/admin/radius/auth/test', params).then(function (iresult) {
-                                    btn.enable();
-                                    updateLog(iresult);
-                                });
-                            }
-                        },
-                        {
-                            view: "button", type: "form", width: 80, icon: "check-circle", label: "上线", click: function () {
-                                var btn = this;
-                                btn.disable();
-                                var params = {username:item.subscriber,type:"1"}
-                                webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
-                                    btn.enable();
-                                    updateLog(iresult);
-                                });
-                            }
-                        },
-                        {
-                            view: "button", type: "form", width: 80, icon: "check-circle", label: "更新", click: function () {
-                                var btn = this;
-                                btn.disable();
-                                var params = {username:item.subscriber,type:"3"}
-                                webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
-                                    btn.enable();
-                                    updateLog(iresult);
-                                });
-                            }
-                        },
-                        {
-                            view: "button", type: "form", width: 80, icon: "check-circle", label: "下线", click: function () {
-                                var btn = this;
-                                btn.disable();
-                                var params = {username:item.subscriber,type:"2"}
-                                webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
-                                    btn.enable();
-                                    updateLog(iresult);
-                                });
-                            }
-                        },
-                        {
-                            view: "button", type: "base", icon: "times-circle", width: 70, css: "alter", label: "关闭", click: function () {
-                                $$(winid).close();
-                            }
+                            cols: [
+
+                                {
+                                    view: "button", type: "form",  icon: "check-circle", label: "更新", click: function () {
+                                        var btn = this;
+                                        btn.disable();
+                                        var params = {username:item.subscriber,type:"3"}
+                                        webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
+                                            btn.enable();
+                                            updateLog(iresult);
+                                        });
+                                    }
+                                },
+                                {
+                                    view: "button", type: "form",  icon: "check-circle", label: "下线", click: function () {
+                                        var btn = this;
+                                        btn.disable();
+                                        var params = {username:item.subscriber,type:"2"}
+                                        webix.ajax().get('/admin/radius/acct/test', params).then(function (iresult) {
+                                            btn.enable();
+                                            updateLog(iresult);
+                                        });
+                                    }
+                                },
+                                {
+                                    view: "button", type: "danger", icon: "times-circle",  css: "alter", label: "关闭", click: function () {
+                                        $$(winid).close();
+                                    }
+                                }
+                            ]
                         }
                     ]
                 }
