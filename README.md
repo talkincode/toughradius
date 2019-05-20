@@ -1,4 +1,4 @@
-# 关于 TOUGHRADIUS [(文档链接)](https://github.com/talkincode/ToughRADIUS/wiki)
+# 关于 TOUGHRADIUS 
 
 
                  )                        )   (                (       (              (
@@ -22,6 +22,14 @@ TOUGHRADIUS 是一个开源的Radius服务软件，支持标准RADIUS协议（RF
 至 6.x 版本开始，基于Java语言重新开发。提供了一个高性能的 RADIUS 处理引擎，同时提供了一个简洁易用的 WEB管理界面，可以轻松上手。
 
 TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易于扩展开发。
+
+## 链接
+
+- [网站首页](https://www.toughradius.net/)
+- [TOUGHRADIUS WIKI 文档](https://github.com/talkincode/ToughRADIUS/wiki)
+- [GUI 测试工具](https://github.com/jamiesun/RadiusTester)
+- [命令行测试工具](https://github.com/talkincode/JRadiusTester)
+- [商业支持](http://www.toughstruct.com/)
 
 ## 快速开始
 
