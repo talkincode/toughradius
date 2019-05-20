@@ -1,4 +1,4 @@
-# 关于 TOUGHRADIUS 
+# 关于 TOUGHRADIUS [(文档链接)](https://github.com/talkincode/ToughRADIUS/wiki)
 
 
                  )                        )   (                (       (              (
