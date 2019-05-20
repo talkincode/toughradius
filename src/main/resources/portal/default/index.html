@@ -85,11 +85,13 @@ var doWxLogin = function(authmode){
 						<input type="hidden" id="authmode" name="authmode" value="${params.authmode!}">
 					</div>
 
+					<#if params.wlanJoinUrl?? >
 					<div class="flex-col-c p-t-100">
 						<a href="${params.wlanJoinUrl!}" class="txt3 bo1 hov1" target="_blank">
 							立即注册
 						</a>
 					</div>
+					</#if>
 					
 				</form>
 			</div>
