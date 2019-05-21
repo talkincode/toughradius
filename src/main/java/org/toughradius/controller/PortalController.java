@@ -90,6 +90,7 @@ public class PortalController implements Constant {
         return template;
     }
 
+
     private void setResultUrl(WlanParam param){
         String resultUrl = configService.getStringValue(WLAN_MODULE,WLAN_RESULT_URL);
         if(ValidateUtil.isNotEmpty(resultUrl)){
@@ -97,22 +98,26 @@ public class PortalController implements Constant {
         }
     }
 
+
     /**
      * portal 首页
      * @param wlanParam
      * @return
      */
     @GetMapping("/wlan/index")
-    public ModelAndView wlanIndexHandler(WlanParam wlanParam){
-
+    public ModelAndView wlanIndexHandler(WlanParam wlanParam,HttpServletRequest request){
+        String joinUrl = configService.getStringValue(WLAN_MODULE,Constant.WLAN_JOIN_URL);
         String template = getWlanemplate();
         ModelAndView modelAndView = new ModelAndView(template+"/index");
         wlanParam.setTemplate(template);
+        wlanParam.setSrcacip(request.getRemoteAddr());
         setResultUrl(wlanParam);
-        modelAndView.addObject("params", wlanParam);
+        modelAndView.addObject("param", wlanParam);
+        modelAndView.addObject("joinUrl", joinUrl);
         setConfigModel(modelAndView);
         return modelAndView;
     }
+
 
     /**
      * 认证页面
@@ -120,9 +125,10 @@ public class PortalController implements Constant {
      * @return
      */
     @GetMapping("/wlan/login")
-    public ModelAndView wlanLoginHandler(WlanParam wlanParam){
+    public ModelAndView wlanLoginHandler(WlanParam wlanParam,HttpServletRequest request){
         ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/"+wlanParam.getAuthmode());
-        modelAndView.addObject("params", wlanParam);
+        wlanParam.setSrcacip(request.getRemoteAddr());
+        modelAndView.addObject("param", wlanParam);
         setResultUrl(wlanParam);
         return modelAndView;
     }
@@ -157,13 +163,13 @@ public class PortalController implements Constant {
                 param.setWlanuserfirsturl(param.getUrl());
             }
         }
-        param.setSrcacip(request.getRemoteAddr());
+
         setResultUrl(param);
 
         // 查找 AC 设备
         Bras nas = null;
         try {
-            nas = brasService.findBras(param.getWlanacip(),param.getSrcacip(),null);
+            nas = brasService.findBras(param.getWlanacip(),param.getSrcacip(),param.getWlanacname());
         } catch (ServiceException e) {
             return  processModel(modelAndView,param.getUsername(), MODEL_FAIL,"接入设备不存在");
         }
@@ -388,7 +394,8 @@ public class PortalController implements Constant {
         //认证参数
         String userIp = param.getWlanuserip();
         String secret = nas.getSecret();
-        String acip = request.getRemoteAddr();
+        String acip = param.getWlanacip();
+        String basip = nas.getIpaddr();
         int acport = nas.getAcPort();
         String mac = param.getClientMac();
         short seriaNo = -1;
@@ -402,10 +409,10 @@ public class PortalController implements Constant {
             try {
                 PortalPacket challengeReq = PortalPacket.createReqChallenge(ver,userIp,nas.getSecret(),param.getClientMac());
                 if(portalConfig.isTraceEnabled())
-                    logger.info(username,String.format("### 发送 REQ_CHALLENGE: %s", challengeReq.toString()),Memarylogger.PORTAL);
-                challengeResp = client.sendToAc(challengeReq,acip,acport);
+                    logger.info(username,String.format(">> 发送 REQ_CHALLENGE -> : %s", basip ,challengeReq.toString()),Memarylogger.PORTAL);
+                challengeResp = client.sendToAc(challengeReq,basip,acport);
                 if(portalConfig.isTraceEnabled())
-                    logger.info(username,String.format("### 接收到 ACK_CHALLENGE: %s", challengeResp.toString()),Memarylogger.PORTAL);
+                    logger.info(username,String.format("<< 接收到 ACK_CHALLENGE <- %s : %s", basip,challengeResp.toString()),Memarylogger.PORTAL);
                 if(challengeResp.getErrCode()>0){
                     if(challengeResp.getErrCode()==2){
                         return  processModel(mv,username, MODEL_OK,challengeResp.getErrMessage());
@@ -425,10 +432,10 @@ public class PortalController implements Constant {
         try {
             PortalPacket authReq = PortalPacket.createReqAuth(ver,userIp,username,password,reqId,challenge,secret,acip,portalConfig.getPapchap(),mac);
             if(portalConfig.isTraceEnabled())
-                logger.info(username, String.format("### 发送 REQ_AUTH: %s", authReq.toString()),Memarylogger.PORTAL);
-            PortalPacket authResp = client.sendToAc(authReq,acip,acport);
+                logger.info(username, String.format(">> 发送 REQ_AUTH -> %s: %s", basip,authReq.toString()),Memarylogger.PORTAL);
+            PortalPacket authResp = client.sendToAc(authReq,basip,acport);
             if(portalConfig.isTraceEnabled())
-                logger.info(username, String.format("### 接收到 ACK_AUTH: %s", authResp.toString()),Memarylogger.PORTAL);
+                logger.info(username, String.format("<< 接收到 ACK_AUTH <- %s: %s", basip, authResp.toString()),Memarylogger.PORTAL);
             if(authResp.getErrCode()>0){
                 if(authResp.getErrCode()==2){
                     authSucess(session,param);
@@ -448,8 +455,8 @@ public class PortalController implements Constant {
         try {
             PortalPacket affackReq = PortalPacket.createAffAckAuth(ver,userIp,secret,acip,seriaNo,reqId,portalConfig.getPapchap(),mac);
             if(portalConfig.isTraceEnabled())
-                logger.info(username,String.format("### 发送 AFF_ACK_AUTH: %s", affackReq.toString()),Memarylogger.PORTAL);
-            client.sendToAcNoReply(affackReq,acip,acport);
+                logger.info(username,String.format(">> 发送 AFF_ACK_AUTH -> %s: %s",basip, affackReq.toString()),Memarylogger.PORTAL);
+            client.sendToAcNoReply(affackReq,basip,acport);
         } catch (PortalException e) {
             logger.error(username,"发送 AFF_ACK_AUTH 错误",e,Memarylogger.PORTAL);
         }
@@ -486,12 +493,12 @@ public class PortalController implements Constant {
             sendLogout(param);
             session.removeAttribute(WLAN_SESSION_KEY);
             ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/index");
-            modelAndView.addObject("params", param);
+            modelAndView.addObject("param", param);
             setConfigModel(modelAndView);
             return modelAndView;
         }
         ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/index");
-        modelAndView.addObject("params", new WlanParam());
+        modelAndView.addObject("param", new WlanParam());
         setConfigModel(modelAndView);
         return modelAndView;
     }
@@ -513,15 +520,16 @@ public class PortalController implements Constant {
 
                 String userIp = param.getWlanuserip();
                 String secret = nas.getSecret();
-                String acip = param.getSrcacip();
+                String acip = param.getWlanacip();
+                String basip = nas.getIpaddr();
                 int acport = nas.getAcPort();
                 String mac = param.getClientMac();
                 short seriaNo = (short)-1;
                 int ver = PortalPacket.getVerbyName(nas.getPortalVendor());
                 PortalPacket affackReq = PortalPacket.createReqLogout(ver,userIp,secret,acip,seriaNo,portalConfig.getPapchap(),mac);
                 if(portalConfig.isTraceEnabled())
-                    logger.info(String.format("### 发送 REQ_LOGOUT: %s", affackReq.toString()),Memarylogger.PORTAL);
-                client.sendToAcNoReply(affackReq,acip,acport);
+                    logger.info(String.format(">> 发送 REQ_LOGOUT -> %s: %s", basip, affackReq.toString()),Memarylogger.PORTAL);
+                client.sendToAcNoReply(affackReq,basip,acport);
             } catch (PortalException e) {
                 logger.error("发送 REQ_LOGOUT 错误",e,Memarylogger.PORTAL);
             } catch (Exception ee){

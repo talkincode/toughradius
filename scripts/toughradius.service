@@ -3,7 +3,7 @@ Description=toughradius
 After=syslog.target
 
 [Service]
-EnvironmentFile=/etc/toughradius.env
+WorkingDirectory=/opt
 User=root
 LimitNOFILE=65535
 LimitNPROC=65535

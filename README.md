@@ -152,7 +152,7 @@ TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易
 
 写入配置文件到指定目录（参见项目script目录文件）
 
-    /etc/toughradius.env
+     /opt/application-prod.properties
     /usr/lib/systemd/system/toughradius.service
 
 通过以下指令启动服务

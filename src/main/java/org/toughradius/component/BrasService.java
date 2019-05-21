@@ -31,7 +31,7 @@ public class BrasService {
 			tcBras = brasMapper.findByIPAddr(ipaddr);
 		}
 
-		if(ValidateUtil.isNotEmpty(srcip)&&!"0.0.0.0".equals(srcip)){
+		if(tcBras == null && ValidateUtil.isNotEmpty(srcip)&&!"0.0.0.0".equals(srcip)){
 			tcBras = brasMapper.findByIPAddr(srcip);
 		}
 
