@@ -23,6 +23,14 @@ TOUGHRADIUS 是一个开源的Radius服务软件，支持标准RADIUS协议（RF
 
 TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易于扩展开发。
 
+## 链接
+
+- [网站首页](https://www.toughradius.net/)
+- [TOUGHRADIUS WIKI 文档](https://github.com/talkincode/ToughRADIUS/wiki)
+- [GUI 测试工具](https://github.com/jamiesun/RadiusTester)
+- [命令行测试工具](https://github.com/talkincode/JRadiusTester)
+- [商业支持](http://www.toughstruct.com/)
+
 ## 快速开始
 
 ### 系统环境依赖
@@ -37,7 +45,7 @@ TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易
 
 运行创建数据库脚本以及创建专用用户
 
-    create database toughradius DEFAULT CHARACTER SET utf8 COLLATE utf8mb4_unicode_ci;
+    create database toughradius DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     GRANT ALL ON toughradius.* TO raduser@'127.0.0.1' IDENTIFIED BY 'radpwd' WITH GRANT OPTION;FLUSH PRIVILEGES;
 
 创建数据库表
