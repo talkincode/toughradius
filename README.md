@@ -41,7 +41,7 @@ TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易
 
 ### 数据库初始化
 
-> 首先确保你的数据库服务器已经运行
+> 数据库的安装配置请自行完成,首先确保你的数据库服务器已经运行
 
 运行创建数据库脚本以及创建专用用户
 
@@ -137,8 +137,8 @@ TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易
 
     INSERT INTO toughradius.tr_subscribe
     (node_id,  subscriber, realname, password, domain, addr_pool, policy, is_online, active_num,
-     bind_mac, bind_vlan, ip_addr, mac_addr, in_vlan, out_vlan, up_rate, down_rate, up_peak_rate, down_peak_rate, up_rate_code,
-     down_rate_code, status, remark, begin_time, expire_time, create_time, update_time)
+     bind_mac, bind_vlan, ip_addr, mac_addr, in_vlan, out_vlan, up_rate, down_rate, up_peak_rate, 
+     down_peak_rate, up_rate_code,down_rate_code, status, remark, begin_time, expire_time, create_time, update_time)
     VALUES (0, 'test01', '', '888888',  null, null, null, null, 10, 0, 0, '', '', 0, 0, 10.000, 10.000, 100.000, 100.000,
             '10', '10', 'enabled', '', '2019-03-01 14:13:02', '2019-03-01 14:13:00', '2019-03-01 14:12:59', '2019-03-01 14:12:56');
             
@@ -146,14 +146,51 @@ TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易
 
     java -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar  --spring.profiles.active=prod
     
-> 主要 jar 文件（toughradius-latest.jar）的路径
+> 注意 jar 文件（toughradius-latest.jar）的路径
 
 ### Linux  systemd 服务配置
 
-写入配置文件到指定目录（参见项目script目录文件）
+/opt/application-prod.properties
 
-     /opt/application-prod.properties
-    /usr/lib/systemd/system/toughradius.service
+    # web访问端口
+    server.port = 1816
+    
+    # 如果启用 https， 取消以下注释即可
+    #server.security.require-ssl=true
+    #server.ssl.key-store-type=PKCS12
+    #server.ssl.key-store=classpath:toughradius.p12
+    #server.ssl.key-store-password=toughstruct
+    #server.ssl.key-alias=toughradius
+    
+    # 日志配置，可选 logback-prod.xml 或 logback-dev.xml， 日志目录为 /var/toughradius/logs
+    logging.config=classpath:logback-prod.xml
+    
+    # 数据库配置
+    spring.datasource.url=${RADIUS_DBURL:jdbc:mysql://127.0.0.1:3306/toughradius?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true}
+    spring.datasource.username=${RADIUS_DBUSER:raduser}
+    spring.datasource.password=${RADIUS_DBPWD:radpwd}
+    spring.datasource.max-active=${RADIUS_DBPOOL:120}
+    spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+/usr/lib/systemd/system/toughradius.service
+
+    [Unit]
+    Description=toughradius
+    After=syslog.target
+    
+    [Service]
+    WorkingDirectory=/opt
+    User=root
+    LimitNOFILE=65535
+    LimitNPROC=65535
+    Type=simple
+    ExecStart=/usr/bin/java -server -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar  --spring.profiles.active=prod
+    SuccessExitStatus=143
+    
+    [Install]
+    WantedBy=multi-user.target
+
+> 如果了解 spring systemd和配置原理，可以根据自己的实际需要进行修改
 
 通过以下指令启动服务
 
