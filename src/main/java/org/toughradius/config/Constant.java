@@ -14,6 +14,11 @@ public interface Constant {
     public final static String SYSTEM_USERNAME = "systemUsername";
     public final static String SYSTEM_USERPWD = "systemUserpwd";
 
+    public final static String API_MODULE = "api";
+    public final static String API_TYPE = "apiType";
+    public final static String API_USERNAME = "apiUsername";
+    public final static String API_PASSWD = "apiPasswd";
+
     public final static String SMS_MODULE = "sms";
     public final static String SMS_GATEWAY = "smsGateway";
     public final static String SMS_APPID = "smsAppid";

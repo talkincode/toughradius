@@ -21,7 +21,7 @@ public class TicketController {
     @Autowired
     private Memarylogger logger;
 
-    @GetMapping("/admin/ticket/query")
+    @GetMapping({"/api/v6/ticket/query","/admin/ticket/query"})
     public PageResult<RadiusTicket> queryTicket(@RequestParam(defaultValue = "0") int start,
                                                 @RequestParam(defaultValue = "40") int count,
                                                 String startDate,

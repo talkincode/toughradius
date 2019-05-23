@@ -13,6 +13,7 @@ import org.toughradius.component.ConfigService;
 import org.toughradius.component.Memarylogger;
 import org.toughradius.config.Constant;
 import org.toughradius.entity.Config;
+import org.toughradius.form.ApiConfigForm;
 import org.toughradius.form.RadiusConfigForm;
 import org.toughradius.form.SmsConfigForm;
 import org.toughradius.form.WlanCongigForm;
@@ -31,7 +32,7 @@ public class ConfigController implements Constant {
     @Autowired
     private ConfigService configService;
 
-    @GetMapping(value = {"/admin/config/load/{module}"})
+    @GetMapping(value = {"/api/v6/config/load/{module}","/admin/config/load/{module}"})
     @ResponseBody
     public Map loadRadiusConfig(@PathVariable(name = "module")String module){
         Map result = new HashMap();
@@ -51,7 +52,7 @@ public class ConfigController implements Constant {
      * @param form
      * @return
      */
-    @PostMapping(value = {"/admin/config/radius/update"})
+    @PostMapping(value = {"/api/v6/radius/update","/admin/config/radius/update"})
     @ResponseBody
     public RestResult updateRadiusConfig(RadiusConfigForm form){
         try{
@@ -70,7 +71,7 @@ public class ConfigController implements Constant {
      * @param form
      * @return
      */
-    @PostMapping(value = {"/admin/config/sms/update"})
+    @PostMapping(value = {"/api/v6/sms/update","/admin/config/sms/update"})
     @ResponseBody
     public RestResult updateSmsConfig(SmsConfigForm form){
         try{
@@ -84,13 +85,31 @@ public class ConfigController implements Constant {
         return new RestResult(0,"update sms config done");
     }
 
+    /**
+     * API 配置更新呢
+     * @param form
+     * @return
+     */
+    @PostMapping(value = {"/admin/config/api/update"})
+    @ResponseBody
+    public RestResult updateApiConfig(ApiConfigForm form){
+        try{
+            configService.updateConfig(new Config(API_MODULE,API_TYPE,form.getApiType()));
+            configService.updateConfig(new Config(API_MODULE,API_USERNAME,form.getApiUsername()));
+            configService.updateConfig(new Config(API_MODULE,API_PASSWD,form.getApiPasswd()));
+        }catch(Exception e){
+            logger.error("update config error",e, Memarylogger.SYSTEM);
+        }
+        return new RestResult(0,"update api config done");
+    }
+
 
     /**
      * 无线认证配置更新
      * @param form
      * @return
      */
-    @PostMapping(value = {"/admin/config/wlan/update"})
+    @PostMapping(value = {"/api/v6/wlan/update","/admin/config/wlan/update"})
     @ResponseBody
     public RestResult updateWlanConfig(WlanCongigForm form){
         try{

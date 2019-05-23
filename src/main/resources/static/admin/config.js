@@ -150,7 +150,47 @@ toughradius.admin.config.loadPage = function(session){
                         },{}
                     ]
                 }
-            }
+            },
+            {
+                header:"API 设置",
+                body:{
+                    id: "api_settings",
+                    view: "form",
+                    paddingX:10,
+                    elementsConfig: {
+                        labelWidth:160,
+                        // labelPosition:"top"
+                    },
+                    url:"/admin/config/load/api",
+                    elements: [
+                        { view: "fieldset", label: "API",  body: {
+                                rows:[
+                                    {view: "richselect", name: "apiType", label: "API 类型:",value:"basic", options:[{id:"basic",value:"Basic"}]},
+                                    {view: "text", name: "apiUsername", label: "Basic 用户"},
+                                    {view: "text", type:"password", name: "apiPasswd", label: "Basic 密码"},
+                                ]
+                            }},
+                        {
+                            cols: [
+                                {view: "button", name: "submit", type: "form", value: "保存配置", width: 120, height:36, click: function () {
+                                        if (!$$("radius_settings").validate()){
+                                            webix.message({type: "error", text:"请正确填写",expire:1000});
+                                            return false;
+                                        }
+                                        var param =  $$("api_settings").getValues();
+                                        param['ctype'] = 'sms';
+                                        webix.ajax().post('/admin/config/api/update',param).then(function (result) {
+                                            var resp = result.json();
+                                            webix.message({type: resp.msgtype, text: resp.msg, expire: 3000});
+                                        });
+                                    }
+                                },
+                                {}
+                            ]
+                        },{}
+                    ]
+                }
+            },
         ]
 
 

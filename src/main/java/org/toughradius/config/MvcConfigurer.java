@@ -17,6 +17,10 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
     @Autowired
     private PortalConfig portalConfig;
 
+    @Autowired
+    private AccessInterceptor accessInterceptor;
+
+
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/error").setViewName("/templates/global_error.html");
@@ -30,7 +34,7 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
     }
 
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new AccessInterceptor()).addPathPatterns("/api/**");
+        registry.addInterceptor(accessInterceptor).addPathPatterns("/api/v6/**");
         registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/admin/**")
                 .excludePathPatterns("/")
                 .excludePathPatterns("/admin")

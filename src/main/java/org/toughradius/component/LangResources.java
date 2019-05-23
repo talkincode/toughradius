@@ -6,6 +6,7 @@ import org.springframework.stereotype.Component;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.config.LangElement;
 
+import javax.annotation.PostConstruct;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -13,13 +14,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
 @Component
 public class LangResources {
 
     private Map<String,LangElement> langMap = new HashMap<String, LangElement>();
 
-    public LangResources() {
+    @PostConstruct
+    public void LangResources() {
         try {
             InputStream fis = LangResources.class.getClassLoader().getResourceAsStream("lang_resource.json");
             BufferedReader reader = new BufferedReader(new InputStreamReader(fis));

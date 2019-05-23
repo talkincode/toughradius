@@ -99,15 +99,15 @@ public class MainController implements Constant {
     @ResponseBody
     public RestResult loginHandler(String username, String password, HttpSession session) {
         try {
-            String sysUserName = configService.getStringValue(ConfigService.SYSTEM_MODULE,ConfigService.SYSTEM_USERNAME);
-            String sysUserPwd = configService.getStringValue(ConfigService.SYSTEM_MODULE,ConfigService.SYSTEM_USERPWD);
+            String sysUserName = configService.getStringValue(SYSTEM_MODULE,SYSTEM_USERNAME);
+            String sysUserPwd = configService.getStringValue(SYSTEM_MODULE,SYSTEM_USERPWD);
             if(ValidateUtil.isEmpty(sysUserName)){
                 sysUserName = "admin";
-                configService.updateConfig(new Config(ConfigService.SYSTEM_MODULE,ConfigService.SYSTEM_USERNAME,sysUserName,""));
+                configService.updateConfig(new Config(SYSTEM_MODULE,SYSTEM_USERNAME,sysUserName,""));
             }
             if(ValidateUtil.isEmpty(sysUserPwd)){
                 sysUserPwd = CoderUtil.md5Salt("root");
-                configService.updateConfig(new Config(ConfigService.SYSTEM_MODULE,ConfigService.SYSTEM_USERPWD,sysUserPwd,""));
+                configService.updateConfig(new Config(SYSTEM_MODULE,SYSTEM_USERPWD,sysUserPwd,""));
             }
 
             if(username.equals(sysUserName) && CoderUtil.md5Salt(password).equals(sysUserPwd)){

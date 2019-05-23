@@ -31,43 +31,43 @@ public class DashboardController {
     @Autowired
     private RadiusOnlineStat radiusOnlineStat;
 
-    @GetMapping("/admin/radius/stat")
+    @GetMapping({"/api/v6/radius/stat","/admin/radius/stat"})
     @ResponseBody
     public Map queryRadiusStat(){
         return radiusStat.getData();
     }
 
-    @GetMapping({"/radius/caststat","/admin/radius/caststat"})
+    @GetMapping({"/api/v6/radius/caststat","/admin/radius/caststat"})
     @ResponseBody
     public Map queryRadiusCastStat(){
         return radiusCastStat.getData();
     }
 
-    @GetMapping({"/radius/authstat","/admin/radius/authstat"})
+    @GetMapping({"/api/v6/radius/authstat","/admin/radius/authstat"})
     @ResponseBody
     public Map queryRadiusAuthStat(){
         return radiusAuthStat.getData();
     }
 
-    @GetMapping({"/radius/onlinestat","/admin/radius/onlinestat"})
+    @GetMapping({"/api/v6/radius/onlinestat","/admin/radius/onlinestat"})
     @ResponseBody
     public Map queryRadiusOnlineStat(){
         return radiusOnlineStat.getData();
     }
 
-    @GetMapping(value = {"/admin/dashboard/cpuuse"})
+    @GetMapping({"/api/v6/cpuuse","/admin/dashboard/cpuuse"})
     @ResponseBody
     public RestResult cpuuse(){
         return new RestResult(0,"ok", SystemUtil.getCpuUsage());
     }
 
-    @GetMapping(value = {"/admin/dashboard/memuse"})
+    @GetMapping(value = {"/api/v6/memuse","/admin/dashboard/memuse"})
     @ResponseBody
     public RestResult memuse(){
         return new RestResult(0,"ok", SystemUtil.getMemUsage());
     }
 
-    @GetMapping(value = {"/admin/dashboard/diskuse"})
+    @GetMapping({"/api/v6/diskuse","/admin/dashboard/diskuse"})
     @ResponseBody
     public RestResult diskuse(){
         try {
@@ -78,7 +78,7 @@ public class DashboardController {
         }
     }
 
-    @GetMapping(value = {"/admin/dashboard/uptime"})
+    @GetMapping({"/admin/dashboard/uptime"})
     @ResponseBody
     public String uptime(){
         return String.format("<i class='fa fa-bar-chart'></i> 应用系统运行时长 %s ", DateTimeUtil.formatSecond(SystemUtil.getUptime()/1000));
