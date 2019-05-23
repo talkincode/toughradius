@@ -1,4 +1,5 @@
 package org.toughradius.config;
+import org.apache.mina.transport.socket.nio.NioSocketAcceptor;
 import org.toughradius.common.DefaultThreadFactory;
 import org.toughradius.common.ValidateCache;
 import org.toughradius.handler.RadiusAcctHandler;
@@ -13,6 +14,7 @@ import org.apache.mina.transport.socket.nio.NioDatagramAcceptor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.toughradius.handler.RadsecHandler;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -107,7 +109,6 @@ public class RadiusConfig {
         logger.info(String.format("====== RadiusAcctServer listen %s ======", acctport));
         return nioAcctAcceptor;
     }
-
 
     public int getAuthport() {
         return authport;

@@ -39,7 +39,12 @@ toughradius.admin.syslog.loadPage = function(session){
                                 {
                                     cols:[
                                         {view: "richselect",  name: "type", label: "", value: "radiusd", labelWidth:0,width:150,
-                                            options: [{ id: "radiusd", value: "RADIUS认证" },{ id: "portal", value: "PORTAL认证" },{ id: "api", value: "API接口" },{ id: "error", value: "错误日志" },{ id: "system", value: "系统日志" }]},
+                                            options: [{ id: "radiusd", value: "RADIUS认证" },
+                                                { id: "radiusd_coa", value: "RADIUS_COA" },
+                                                { id: "portal", value: "PORTAL认证" },
+                                                { id: "api", value: "API接口" },
+                                                { id: "error", value: "错误日志" },
+                                                { id: "system", value: "系统日志" }]},
                                         {view: "button", label: "查询", type: "icon", icon: "search", borderless: true, width: 55,click:function(){
                                                 reloadData();
                                             }},

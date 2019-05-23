@@ -4,10 +4,8 @@ import org.toughradius.common.ValidateCache;
 import org.toughradius.component.Memarylogger;
 import org.toughradius.component.RadiusCastStat;
 import org.toughradius.entity.Bras;
-import org.toughradius.entity.Subscribe;
 import org.tinyradius.packet.AccountingRequest;
 import org.tinyradius.packet.RadiusPacket;
-import org.tinyradius.util.RadiusException;
 import org.apache.mina.core.session.IoSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -19,52 +17,7 @@ import java.util.Map;
 @Component
 public class RadiusAcctHandler extends RadiusBasicHandler {
 
-    @Autowired
-    private RadiusAccountingFilter accountingFilter;
 
-    @Autowired
-    private RadiusParseFilter parseFilter;
-    /**
-     * BRAS 并发限制
-     */
-    private Map<Long,ValidateCache> validateMap = new HashMap<>();
-
-    @Autowired
-    private RadiusCastStat radiusCastStat;
-
-
-    private ValidateCache getBrasValidate(Bras bras){
-        if(validateMap.containsKey(bras.getId())){
-            ValidateCache vc = validateMap.get(bras.getId());
-            Integer limit = bras.getAcctLimit();
-            if(limit==null){
-                limit = 1000;
-            }
-            if(limit !=vc.getMaxTimes()){
-                vc.setMaxTimes(limit);
-            }
-            return vc;
-        }else{
-            Integer limit = bras.getAcctLimit();
-            if(limit==null){
-                limit = 1000;
-            }
-            ValidateCache vc = new ValidateCache(1000,limit);
-            validateMap.put(bras.getId(),vc);
-            return vc;
-        }
-    }
-
-
-    public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Bras nas) throws RadiusException {
-        try {
-            Subscribe user = getUser(accountingRequest.getUserName());
-            accountingFilter.doFilter(accountingRequest,nas,user);
-        } catch (RadiusException e) {
-            logger.error(accountingRequest.getUserName(),"记账处理错误",e, Memarylogger.RADIUSD);
-        }
-        return getAccountingResponse(accountingRequest);
-    }
 
     @Override
     public void messageReceived(IoSession session, Object message)
@@ -93,7 +46,7 @@ public class RadiusAcctHandler extends RadiusBasicHandler {
         request.setRemoteAddr(remoteAddress);
         request = (AccountingRequest)parseFilter.doFilter(request,nas);
 
-        ValidateCache vc = getBrasValidate(nas);
+        ValidateCache vc = getAcctBrasValidate(nas);
         String vckey = nas.getId().toString();
         vc.incr(vckey);
         if(vc.isOver(vckey)){

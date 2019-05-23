@@ -100,7 +100,8 @@ public class AccountingRequest extends RadiusPacket {
 	public String getUserName()  {
 		List attrs = getAttributes(USER_NAME);
 		if (attrs.size() < 1 || attrs.size() > 1)
-			throw new RuntimeException("exactly one RadUser-Name attribute required");
+			return "";
+//			throw new RuntimeException("exactly one RadUser-Name attribute required");
 
 		RadiusAttribute ra = (RadiusAttribute) attrs.get(0);
 		return ((StringAttribute) ra).getAttributeValue();
@@ -176,6 +177,15 @@ public class AccountingRequest extends RadiusPacket {
 	 */
 	private static final int ACCT_STATUS_TYPE = 40;
 
+	private boolean radsec;
+
+	public boolean isRadsec() {
+		return radsec;
+	}
+
+	public void setRadsec(boolean radsec) {
+		this.radsec = radsec;
+	}
 
 	/**
 	 * String representation of this packet, for debugging purposes.

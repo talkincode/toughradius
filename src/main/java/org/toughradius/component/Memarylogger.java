@@ -21,6 +21,7 @@ import java.util.stream.Stream;
 public class Memarylogger {
 
     public final static String RADIUSD = "radiusd";
+    public final static String RADIUSD_COA = "radiusd_coa";
     public final static String SYSTEM = "system";
     public final static String PORTAL = "portal";
     public final static String API = "api";
@@ -33,6 +34,7 @@ public class Memarylogger {
     public Memarylogger() {
         traceMap = new ConcurrentHashMap<>();
         traceMap.put(RADIUSD,new LoggerDeque(10000));
+        traceMap.put(RADIUSD_COA,new LoggerDeque(10000));
         traceMap.put(SYSTEM,new LoggerDeque(10000));
         traceMap.put(API,new LoggerDeque(10000));
         traceMap.put(PORTAL,new LoggerDeque(10000));

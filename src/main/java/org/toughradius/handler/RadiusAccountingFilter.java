@@ -97,6 +97,7 @@ public class RadiusAccountingFilter {
         }
 
         RadiusOnline online = new RadiusOnline();
+        online.setRadsec(request.isRadsec());
 //        online.setId(CoderUtil.randomLongId());
         online.setNodeId(user.getNodeId());
         online.setRealname(user.getRealname());

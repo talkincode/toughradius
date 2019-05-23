@@ -57,6 +57,8 @@ public class RadiusOnline implements Cloneable{
 
     private Integer outVlan;
 
+    private boolean radsec;
+
 
     @Override
     public RadiusOnline clone() throws CloneNotSupportedException {
@@ -269,5 +271,13 @@ public class RadiusOnline implements Cloneable{
 
     public void setOutVlan(Integer outVlan) {
         this.outVlan = outVlan;
+    }
+
+    public boolean isRadsec() {
+        return radsec;
+    }
+
+    public void setRadsec(boolean radsec) {
+        this.radsec = radsec;
     }
 }

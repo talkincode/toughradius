@@ -14,12 +14,16 @@ import org.springframework.stereotype.Service;
 import org.toughradius.common.PageResult;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.RadiusOnline;
+import org.toughradius.entity.RadiusTicket;
 import org.toughradius.entity.Subscribe;
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 
 @Service
 public class OnlineCache {
+
+    private final static ConcurrentLinkedDeque<CoaRequest> coaque = new  ConcurrentLinkedDeque<>();
 
     private final static  HashMap<String,RadiusOnline> cacheData = new HashMap<String,RadiusOnline>();
     @Autowired
@@ -42,6 +46,10 @@ public class OnlineCache {
 
     public HashMap<String,RadiusOnline> getCacheData(){
         return cacheData;
+    }
+
+    public CoaRequest peekCoaRequest(){
+        return coaque.removeFirst();
     }
 
     public long[] getOnlineStat(){
@@ -166,21 +174,27 @@ public class OnlineCache {
         RadiusOnline online = getOnline(sessionId);
         try {
             if(online==null){
-                logger.error("发送下线失败,无在线信息", Memarylogger.RADIUSD);
+                logger.error("发送下线失败,无在线信息", Memarylogger.RADIUSD_COA);
                 return false;
             }
+
+
             Bras bras = brasService.findBras(online.getNasAddr(),null, online.getNasId());
             RadiusClient cli = new RadiusClient(online.getNasPaddr(),bras.getSecret());
             CoaRequest dmreq = new CoaRequest(RadiusPacket.DISCONNECT_REQUEST);
             dmreq.addAttribute("User-Name",online.getUsername());
             dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
             dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
-            logger.info(online.getUsername(), "发送下线请求 " + dmreq.toLineString(), Memarylogger.RADIUSD);
+            logger.info(online.getUsername(), "发送下线请求 " + dmreq.toLineString(), Memarylogger.RADIUSD_COA);
+            if(online.isRadsec()){
+                coaque.addLast(dmreq);
+                return true;
+            }
             RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
-            logger.info(online.getUsername(), "接收到下线响应 " + dmrep.toLineString(), Memarylogger.RADIUSD);
+            logger.info(online.getUsername(), "接收到下线响应 " + dmrep.toLineString(), Memarylogger.RADIUSD_COA);
             return dmrep.getPacketType() == RadiusPacket.DISCONNECT_ACK;
         } catch (ServiceException | IOException | RadiusException e) {
-            logger.error(online.getUsername(),"发送下线失败",e, Memarylogger.RADIUSD);
+            logger.error(online.getUsername(),"发送下线失败",e, Memarylogger.RADIUSD_COA);
             removeOnline(sessionId);
             return false;
         }
@@ -189,7 +203,7 @@ public class OnlineCache {
     public void asyncUnlockOnline(String sessionid){
         RadiusOnline online = getOnline(sessionid);
         if(online==null){
-            logger.error("发送下线失败,无在线信息", Memarylogger.RADIUSD);
+            logger.error("发送下线失败,无在线信息", Memarylogger.RADIUSD_COA);
             return;
         }
         systaskExecutor.execute(()->{
@@ -197,7 +211,7 @@ public class OnlineCache {
                 Bras bras = brasService.findBras(online.getNasAddr(),null,online.getNasId());
                 if(bras==null){
                     logger.error(online.getUsername(),
-                            "发送下线失败,查找BRAS失败（nasid=" + online.getNasId() + ",nasip=" + online.getNasAddr() + "）", Memarylogger.RADIUSD);
+                            "发送下线失败,查找BRAS失败（nasid=" + online.getNasId() + ",nasip=" + online.getNasAddr() + "）", Memarylogger.RADIUSD_COA);
                     return;
                 }
                 RadiusClient cli = new RadiusClient(online.getNasPaddr(),bras.getSecret());
@@ -206,11 +220,15 @@ public class OnlineCache {
                 dmreq.addAttribute("Acct-Session-Id",online.getAcctSessionId());
                 if(ValidateUtil.isNotEmpty(online.getNasAddr())&&!online.getNasAddr().equals("0.0.0.0"))
                     dmreq.addAttribute("NAS-IP-Address",online.getNasAddr());
-                logger.info(online.getUsername(), "发送下线请求 " + dmreq.toLineString(), Memarylogger.RADIUSD);
+                logger.info(online.getUsername(), "发送下线请求 " + dmreq.toLineString(), Memarylogger.RADIUSD_COA);
+                if(online.isRadsec()){
+                    coaque.addLast(dmreq);
+                    return;
+                }
                 RadiusPacket dmrep = cli.communicate(dmreq,bras.getCoaPort());
-                logger.info(online.getUsername(), String.format("接收到下线响应 %s", dmrep.toLineString()), Memarylogger.RADIUSD);
+                logger.info(online.getUsername(), String.format("接收到下线响应 %s", dmrep.toLineString()), Memarylogger.RADIUSD_COA);
             } catch (ServiceException | IOException | RadiusException e) {
-                logger.error(online.getUsername(),"发送下线失败",e, Memarylogger.RADIUSD);
+                logger.error(online.getUsername(),"发送下线失败",e, Memarylogger.RADIUSD_COA);
                 removeOnline(sessionid);
             }
         });
