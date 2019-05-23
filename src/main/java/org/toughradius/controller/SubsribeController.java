@@ -23,7 +23,7 @@ public class SubsribeController {
     @Autowired
     protected SubscribeService subscribeService;
 
-    @GetMapping(value = {"/admin/subscribe/query"})
+    @GetMapping(value = {"/api/v6/subscribe/query","/admin/subscribe/query"})
     @ResponseBody
     public PageResult<Subscribe> querySubscribe(@RequestParam(defaultValue = "0") int start,
                                                 @RequestParam(defaultValue = "40") int count,
@@ -55,7 +55,7 @@ public class SubsribeController {
         return result;
     }
 
-    @GetMapping(value = {"/admin/subscribe/detail"})
+    @GetMapping(value = {"/api/v6/subscribe/detail","/admin/subscribe/detail"})
     @ResponseBody
     public RestResult<Subscribe> querySubscribeDetail(Long id){
         try{
@@ -66,7 +66,7 @@ public class SubsribeController {
         }
     }
 
-    @PostMapping(value = {"/admin/subscribe/create"})
+    @PostMapping(value = {"/api/v6/subscribe/create","/admin/subscribe/create"})
     @ResponseBody
     public RestResult addSubscribe(SubscribeForm form){
         try{
@@ -90,7 +90,7 @@ public class SubsribeController {
     }
 
 
-    @PostMapping(value = {"/admin/subscribe/batchcreate"})
+    @PostMapping(value = {"/api/v6/subscribe/batchcreate","/admin/subscribe/batchcreate"})
     @ResponseBody
     public RestResult batchAddSubscribe(SubscribeForm form){
         try{
@@ -117,7 +117,7 @@ public class SubsribeController {
         }
     }
 
-    @PostMapping(value = {"/admin/subscribe/uppwd"})
+    @PostMapping(value = {"/api/v6/subscribe/uppwd","/admin/subscribe/uppwd"})
     @ResponseBody
     public RestResult updateSubscribe(SubscribeForm form){
         try{
@@ -135,7 +135,7 @@ public class SubsribeController {
         }
     }
 
-    @GetMapping(value = {"/admin/subscribe/release"})
+    @GetMapping(value = {"/api/v6/subscribe/release","/admin/subscribe/release"})
     @ResponseBody
     public RestResult releaseSubscribe(String ids){
         try{
@@ -149,7 +149,7 @@ public class SubsribeController {
         }
     }
 
-    @PostMapping(value = {"/admin/subscribe/update"})
+    @PostMapping(value = {"/api/v6/subscribe/update","/admin/subscribe/update"})
     @ResponseBody
     public RestResult updatePassword(SubscribeForm form){
         try{
@@ -166,7 +166,7 @@ public class SubsribeController {
         }
     }
 
-    @GetMapping(value = {"/admin/subscribe/delete"})
+    @GetMapping(value = {"/api/v6/subscribe/delete","/admin/subscribe/delete"})
     @ResponseBody
     public RestResult delete(String ids){
         try{

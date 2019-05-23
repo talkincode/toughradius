@@ -161,7 +161,7 @@ toughradius.admin.methods.requirejs = function(jsname, session,callback){
 
 
 webix.ready(function() {
-    webix.ajax().get('/admin/session',{}).then(function (result) {
+    webix.ajax().get('/admin/session',{v:new Date().getTime()}).then(function (result) {
         var resp = result.json();
         if(resp.code===1){
             webix.message({type:"error",text:resp.msg});

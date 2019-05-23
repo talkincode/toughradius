@@ -34,28 +34,30 @@ public class RadsecHandler  extends RadiusBasicHandler {
     }
 
 
-    @Scheduled(fixedRate = 100)
+    @Scheduled(fixedDelay = 100)
     public void sendRadsecCoa()  {
         CoaRequest req;
-        try {
-            req = onlineCache.peekCoaRequest();
-        }catch (NoSuchElementException ne){
-            return;
-        }
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        try {
-            req.encodeRequestPacket(bos, "radsec");
-        } catch (IOException e) {
-            e.printStackTrace();
-            return;
-        }
-        byte[] data = bos.toByteArray();
-        for (IoSession session : getSessionSet()){
-            try{
-                session.write(IoBuffer.wrap(data));
+        while(true){
+            try {
+                req = onlineCache.peekCoaRequest();
+            }catch (NoSuchElementException ne){
                 return;
-            }catch (Exception ignore){
+            }
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            try {
+                req.encodeRequestPacket(bos, "radsec");
+            } catch (IOException e) {
+                e.printStackTrace();
+                return;
+            }
+            byte[] data = bos.toByteArray();
+            for (IoSession session : getSessionSet()){
+                try{
+                    session.write(IoBuffer.wrap(data));
+                    return;
+                }catch (Exception ignore){
 
+                }
             }
         }
     }

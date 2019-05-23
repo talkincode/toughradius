@@ -23,7 +23,7 @@ public class BrasController {
     @Autowired
     private BrasService brasService;
 
-    @GetMapping(value = {"/admin/bras/query"})
+    @GetMapping(value = {"/api/v6/bras/query","/admin/bras/query"})
     @ResponseBody
     public List<Bras> queryBras(){
         List<Bras> result = new ArrayList<Bras>();
@@ -36,7 +36,7 @@ public class BrasController {
         return result;
     }
 
-    @PostMapping(value = {"/admin/bras/create"})
+    @PostMapping(value = {"/api/v6/bras/create","/admin/bras/create"})
     @ResponseBody
     public RestResult addBras(Bras bras){
         try{
@@ -58,7 +58,7 @@ public class BrasController {
         }
     }
 
-    @PostMapping(value = {"/admin/bras/update"})
+    @PostMapping(value = {"/api/v6/bras/update","/admin/bras/update"})
     @ResponseBody
     public RestResult updateBras(Bras bras){
         try{
@@ -73,7 +73,7 @@ public class BrasController {
         }
     }
 
-    @GetMapping(value = {"/admin/bras/delete"})
+    @GetMapping(value = {"/api/v6/bras/delete","/admin/bras/delete"})
     @ResponseBody
     public RestResult deleteBras(Long id){
         try{

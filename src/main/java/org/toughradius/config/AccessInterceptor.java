@@ -4,20 +4,20 @@ package org.toughradius.config;
 import com.google.gson.Gson;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
+import org.toughradius.common.RestResult;
 import org.toughradius.common.ValidateUtil;
 import org.toughradius.common.coder.Base64;
+import org.toughradius.component.ConfigService;
 import org.toughradius.component.LangResources;
 import org.toughradius.component.Memarylogger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Method;
 
 @Configuration
-public class AccessInterceptor extends HandlerInterceptorAdapter {
+public class AccessInterceptor extends HandlerInterceptorAdapter implements Constant {
 
     @Autowired
     protected Memarylogger logger;
@@ -31,36 +31,38 @@ public class AccessInterceptor extends HandlerInterceptorAdapter {
     @Autowired
     protected ApplicationConfig appConfig;
 
+    @Autowired
+    protected ConfigService cfgService;
+
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        String header = request.getHeader("Authorization");
         response.setContentType("application/json;charset=UTF-8");
-        if (handler instanceof HandlerMethod){
-            String header = request.getHeader("Authorization");
-            if(ValidateUtil.isNotEmpty(header) && !header.substring(0, 6).equals("Basic ")){
-                response.getWriter().print(gson.toJson(langs.tr("未支持的验证方式",request.getHeader("Accept-Language"))));
-                return false;
-            }
-            HandlerMethod handlerMethod = (HandlerMethod) handler;
-            Method method = handlerMethod.getMethod();
-            ApiAccess access = method.getAnnotation(ApiAccess.class);
-            if(access!=null){
-                String basicAuthEncoded = header.substring(6);
-                //will contain "bob:secret"
-                String basicAuthAsString = new String(new Base64().decode(basicAuthEncoded.getBytes()));
-                if(!basicAuthAsString.trim().equals(String.format("%s:%s", appConfig.getApikey(),appConfig.getApisecret()))){
-                    response.getWriter().print(gson.toJson(langs.tr("未授权的操作",request.getHeader("Accept-Language"))));
-                    return false;
-                }else{
-                    return true;
-                }
-            }else {
-                return true;
-            }
-        }else {
+        if(ValidateUtil.isEmpty(header)){
+            response.setCharacterEncoding("UTF-8");
+            response.setHeader("Authorization","Required");
+            response.setHeader("WWW-Authentication ","Basic");
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().print(gson.toJson(new RestResult(1,"Forbidden, unauthorized user")));
+            return false;
+        }
+        if(ValidateUtil.isNotEmpty(header) && !header.substring(0, 6).equals("Basic ")){
+            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            response.getWriter().print(gson.toJson(new RestResult(1,"Unsupported authentication methods")));
+            return false;
+        }
+        String basicAuthEncoded = header.substring(6);
+        //will contain "bob:secret"
+        String basicAuthAsString = new String(new Base64().decode(basicAuthEncoded.getBytes()));
+        if(!basicAuthAsString.trim().equals(String.format("%s:%s",
+                cfgService.getStringValue(API_MODULE,API_USERNAME),
+                cfgService.getStringValue(API_MODULE,API_PASSWD)))){
+            response.getWriter().print(gson.toJson(new RestResult(1,"Authentication failure")));
+            return false;
+        }else{
             return true;
         }
-
     }
 
     @Override
