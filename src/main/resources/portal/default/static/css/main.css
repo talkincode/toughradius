@@ -1,4 +1,4 @@
-
+login100-form-message
 
 
 
@@ -221,6 +221,16 @@ iframe {
   font-family: Oswald-Medium;
   font-size: 20px;
   color: #fcf4ea;
+  line-height: 1.2;
+  text-align: center;
+  display: block;
+}
+
+
+.login100-form-error {
+  font-family: Oswald-Medium;
+  font-size: 14px;
+  color: #fceb54;
   line-height: 1.2;
   text-align: center;
   display: block;

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>ToughRADIUS Wlan Portal</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" type="image/png" href="/portal/default/static/icons/favicon.ico"/>
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/font-awesome-4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/fonts/Linearicons-Free-v1.0.0/icon-font.min.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animate/animate.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/css-hamburgers/hamburgers.min.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/animsition/css/animsition.min.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/select2/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/vendor/daterangepicker/daterangepicker.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/css/util.css">
+    <link rel="stylesheet" type="text/css" href="/portal/default/static/css/main.css">
+</head>
+<body>
+
+<div class="limiter">
+    <div class="container-login100">
+        <div class="wrap-login100 p-t-20 p-b-30">
+            <form id="wlanForm" class="login100-form validate-form" action="${param.linkLogin!}" method="post">
+                <div class="text-center p-t-0 p-b-30">
+                    <span class="txt1">用户认证</span>
+                </div>
+                <div class="wrap-input100 validate-input m-b-16" data-validate="请输入帐号">
+                    <input class="input100" type="text" autocomplete="false" name="username" value="${param.username!}" placeholder="用户帐号">
+                    <span class="focus-input100"></span>
+                </div>
+                <div class="wrap-input100 validate-input m-b-20" data-validate = "请输入密码">
+						<span class="btn-show-pass">
+							<i class="fa fa fa-eye"></i>
+						</span>
+                    <input class="input100" type="password" autocomplete="false" name="password" placeholder="请输入密码">
+                    <span class="focus-input100"></span>
+                </div>
+                <div >
+                    <a href='javascript:$("#wlanForm").submit();' class="btn-login-with bg-green m-b-10" >
+                        认 证
+                    </a>
+                </div>
+                <#if param.error?? && param.error != "">
+                    <span class="login100-form-error">${param.error!} </span>
+                </#if>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="/portal/default/static/vendor/jquery/jquery-3.2.1.min.js"></script>
+<script src="/portal/default/static/vendor/animsition/js/animsition.min.js"></script>
+<script src="/portal/default/static/vendor/bootstrap/js/popper.js"></script>
+<script src="/portal/default/static/vendor/bootstrap/js/bootstrap.min.js"></script>
+<script src="/portal/default/static/vendor/select2/select2.min.js"></script>
+<script src="/portal/default/static/vendor/daterangepicker/moment.min.js"></script>
+<script src="/portal/default/static/vendor/daterangepicker/daterangepicker.js"></script>
+<script src="/portal/default/static/vendor/countdowntime/countdowntime.js"></script>
+<script src="/portal/default/static/js/main.js"></script>
+</body>
+</html>
