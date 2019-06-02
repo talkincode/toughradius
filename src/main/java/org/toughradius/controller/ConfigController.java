@@ -97,6 +97,8 @@ public class ConfigController implements Constant {
             configService.updateConfig(new Config(API_MODULE,API_TYPE,form.getApiType()));
             configService.updateConfig(new Config(API_MODULE,API_USERNAME,form.getApiUsername()));
             configService.updateConfig(new Config(API_MODULE,API_PASSWD,form.getApiPasswd()));
+            configService.updateConfig(new Config(API_MODULE,API_ALLOW_IPLIST,form.getApiAllowIplist()));
+            configService.updateConfig(new Config(API_MODULE,API_BLACK_IPLIST,form.getApiBlackIplist()));
         }catch(Exception e){
             logger.error("update config error",e, Memarylogger.SYSTEM);
         }

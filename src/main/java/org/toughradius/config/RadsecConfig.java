@@ -4,7 +4,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.mina.core.filterchain.DefaultIoFilterChainBuilder;
 import org.apache.mina.core.filterchain.IoFilter;
-import org.apache.mina.core.session.IoSession;
 import org.apache.mina.filter.executor.ExecutorFilter;
 import org.apache.mina.filter.ssl.KeyStoreFactory;
 import org.apache.mina.filter.ssl.SslContextFactory;
@@ -18,8 +17,7 @@ import org.toughradius.common.DefaultThreadFactory;
 import org.toughradius.handler.RadsecHandler;
 
 import javax.net.ssl.SSLContext;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.InetSocketAddress;
 import java.security.KeyStore;
 import java.util.*;
@@ -112,22 +110,34 @@ public class RadsecConfig {
         public SSLContext getSslContext()
         {
             SSLContext sslContext = null;
+            InputStream infs = null;
+            ByteArrayOutputStream bos = null;
             try
             {
+
                 File _keyStoreFile = new File(getKeyStoreFile());
                 if(!_keyStoreFile.exists()){
-                    _keyStoreFile = new File(Objects.requireNonNull(SSLContextGenerator.class.getClassLoader().getResource("radsec/server.p12")).toURI());
+                    infs = SSLContextGenerator.class.getClassLoader().getResourceAsStream("radsec/server.p12");
+                }else{
+                    infs = new FileInputStream(_keyStoreFile);
+                }
+                if(infs==null){
+                    throw  new Exception("read keystore error");
+                }
+                bos = new ByteArrayOutputStream();
+                byte[] buf = new byte[1024];
+                int i = 0;
+                while ((i = infs.read(buf)) != -1) {
+                    bos.write(buf, 0, i);
                 }
 
-                logger.info("Use keyStoreFile: " + _keyStoreFile.getAbsolutePath());
+                byte[] cdata = bos.toByteArray();
                 final KeyStoreFactory keyStoreFactory = new KeyStoreFactory();
-                keyStoreFactory.setDataFile(_keyStoreFile);
-//                keyStoreFactory.setType("PKCS12");
+                keyStoreFactory.setData(cdata);
                 keyStoreFactory.setPassword("radsec");
 
                 final KeyStoreFactory trustStoreFactory = new KeyStoreFactory();
-                trustStoreFactory.setDataFile(_keyStoreFile);
-//                trustStoreFactory.setType("PKCS12");
+                trustStoreFactory.setData(cdata);
                 trustStoreFactory.setPassword("radsec");
 
                 final SslContextFactory sslContextFactory = new SslContextFactory();
@@ -143,6 +153,9 @@ public class RadsecConfig {
             catch (Exception ex)
             {
                 logger.error("getSslContext error",ex);
+            }finally {
+                try {if(infs!=null) infs.close(); }catch (Exception ignore){}
+                try {if(bos!=null) bos.close(); }catch (Exception ignore){}
             }
             return sslContext;
         }

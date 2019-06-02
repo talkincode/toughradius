@@ -45,6 +45,15 @@ public class OnlineController {
         onlineCache.clearOnlineByFilter(nodeId,invlan, outVlan,nasAddr,nasId,beginTime,endTime,keyword);
         return new RestResult(0,"success");
     }
+
+
+    @GetMapping("/api/v6/online/fc")
+    public RestResult forceClearOnlineHandler(String username){
+        onlineCache.unlockOnlineByUser(username);
+        return new RestResult(0,"success");
+    }
+
+
     //一个下线
     @GetMapping({"/api/v6/online/delete","/admin/online/delete"})
     public RestResult DeleteOnlineHandler(String ids){

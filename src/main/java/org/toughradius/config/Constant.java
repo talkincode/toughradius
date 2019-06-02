@@ -18,6 +18,8 @@ public interface Constant {
     public final static String API_TYPE = "apiType";
     public final static String API_USERNAME = "apiUsername";
     public final static String API_PASSWD = "apiPasswd";
+    public final static String API_ALLOW_IPLIST = "apiAllowIplist";
+    public final static String API_BLACK_IPLIST = "apiBlackIplist";
 
     public final static String SMS_MODULE = "sms";
     public final static String SMS_GATEWAY = "smsGateway";

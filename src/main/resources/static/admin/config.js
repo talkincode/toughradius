@@ -168,6 +168,8 @@ toughradius.admin.config.loadPage = function(session){
                                     {view: "richselect", name: "apiType", label: "API 类型:",value:"basic", options:[{id:"basic",value:"Basic"}]},
                                     {view: "text", name: "apiUsername", label: "Basic 用户"},
                                     {view: "text", type:"password", name: "apiPasswd", label: "Basic 密码"},
+                                    {view: "text", name: "apiAllowIplist", label: "IP 白名单"},
+                                    {view: "text", name: "apiBlackIplist", label: "IP 黑名单"}
                                 ]
                             }},
                         {
