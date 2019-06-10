@@ -29,6 +29,8 @@ public class RadiusAcceptFilter implements RadiusConstant{
     public AccessAccept doFilter(AccessAccept accept, Bras nas, Subscribe user){
         accept = filterDefault(accept,user, nas);
         switch (nas.getVendorId()){
+            case VENDOR_TOUGHSOCKS:
+                return filterToughSocks(accept, user);
             case VENDOR_MIKROTIK:
                 return filterMikrotik(accept, user);
             case VENDOR_IKUAI:
@@ -95,6 +97,21 @@ public class RadiusAcceptFilter implements RadiusConstant{
         long up = user.getUpRate() * 1024;
         long down = user.getDownRate() * 1024;
         accept.addAttribute("Mikrotik-Rate-Limit", String.format("%sk/%sk", up,down));
+        return accept;
+    }
+
+    /**
+     * Toughsocks 属性下发
+     * @param accept
+     * @param user
+     * @return
+     */
+    private AccessAccept filterToughSocks(AccessAccept accept, Subscribe user){
+        long up = user.getUpRate() * 1024;
+        long down = user.getDownRate() * 1024;
+        accept.addAttribute("ToughSocks-Up-Limit", String.valueOf(up));
+        accept.addAttribute("ToughSocks-Down-Limit", String.valueOf(down));
+        accept.addAttribute("ToughSocks-Max-Session", String.valueOf(user.getActiveNum()));
         return accept;
     }
 

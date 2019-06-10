@@ -524,3 +524,10 @@ iframe {
     padding-top: 20px
   }
 }
+
+.checkboxDiv{
+    color: white;
+  font-weight: 600;
+  font-size: 14px;
+  padding-left: 20px;
+}

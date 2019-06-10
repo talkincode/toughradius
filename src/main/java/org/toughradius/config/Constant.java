@@ -1,5 +1,7 @@
 package org.toughradius.config;
 
+import org.toughradius.common.CoderUtil;
+
 public interface Constant {
 
     public static final String SESSION_USER_KEY = "SESSION_USER_KEY";
@@ -45,4 +47,5 @@ public interface Constant {
     public final static String PORTAL_AUTH_PASSWORD = "pwdauth";
     public final static String PORTAL_AUTH_SMS = "smsauth";
     public final static String PORTAL_AUTH_WEIXIN = "wxauth";
+    public final static String PORTAL_REMBERPWD_COOKIE = "PORTAL_REMBERPWD_COOKIE";
 }

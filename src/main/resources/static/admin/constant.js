@@ -1,5 +1,6 @@
 var BRAS_VENDOR_OPTIONS = [
     {"id": "0", "value": "标准"},
+    {"id": 18168, "value": "ToughSocks"},
     {"id": 2352, "value": "爱立信"},
     {"id": 3902, "value": "中兴"},
     {"id": 9, "value": "思科"},
