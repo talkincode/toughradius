@@ -5,6 +5,8 @@ public class ApiConfigForm {
     private String apiType;
     private String apiUsername;
     private String apiPasswd;
+    private String apiAllowIplist;
+    private String apiBlackIplist;
 
     public String getApiType() {
         return apiType;
@@ -28,5 +30,21 @@ public class ApiConfigForm {
 
     public void setApiPasswd(String apiPasswd) {
         this.apiPasswd = apiPasswd;
+    }
+
+    public String getApiAllowIplist() {
+        return apiAllowIplist;
+    }
+
+    public void setApiAllowIplist(String apiAllowIplist) {
+        this.apiAllowIplist = apiAllowIplist;
+    }
+
+    public String getApiBlackIplist() {
+        return apiBlackIplist;
+    }
+
+    public void setApiBlackIplist(String apiBlackIplist) {
+        this.apiBlackIplist = apiBlackIplist;
     }
 }

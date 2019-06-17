@@ -1,1 +1,1 @@
-java -jar -Xms256m -Xmx1024G toughradius-latest.jar  --spring.profiles.active=prod
+java -jar -Xms256m -Xmx1024M toughradius-latest.jar  --spring.profiles.active=prod

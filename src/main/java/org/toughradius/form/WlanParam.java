@@ -24,6 +24,7 @@ public class WlanParam {
     private String srcacip;
     private String phone;
     private String smscode;
+    private String rememberPwd;
     private long starttime;
     private boolean rmflag;
 
@@ -213,6 +214,14 @@ public class WlanParam {
         this.rmflag = rmflag;
     }
 
+    public String getRememberPwd() {
+        return rememberPwd;
+    }
+
+    public void setRememberPwd(String rememberPwd) {
+        this.rememberPwd = rememberPwd;
+    }
+
     public String encodeParams() {
         StringBuilder buff = new StringBuilder();
         buff.append(String.format("wlanuserip=%s&", emptyStr(wlanuserip)));
@@ -248,6 +257,9 @@ public class WlanParam {
                 ", srcacip='" + srcacip + '\'' +
                 ", phone='" + phone + '\'' +
                 ", smscode='" + smscode + '\'' +
+                ", rememberPwd='" + rememberPwd + '\'' +
+                ", starttime=" + starttime +
+                ", rmflag=" + rmflag +
                 '}';
     }
 

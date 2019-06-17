@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 import org.toughradius.common.*;
+import org.toughradius.common.coder.Encypt;
 import org.toughradius.component.*;
 import org.toughradius.config.Constant;
 import org.toughradius.config.PortalConfig;
@@ -125,13 +126,53 @@ public class PortalController implements Constant {
      * @return
      */
     @GetMapping("/wlan/login")
-    public ModelAndView wlanLoginHandler(WlanParam wlanParam,HttpServletRequest request){
+    public ModelAndView wlanLoginHandler(WlanParam wlanParam,HttpSession session,HttpServletRequest request,HttpServletResponse response){
+        String autoAuthUsername = CookieUtils.getCookie(request,wlanParam.getWlanusermac());
+        if(ValidateUtil.isNotEmpty(autoAuthUsername)){
+            Subscribe subs = subscribeCache.findSubscribe(autoAuthUsername);
+            if(subs!=null){
+                wlanParam.setUsername(subs.getSubscriber());
+                return authAuthAction(session,request,response,wlanParam,subs);
+            }
+        }
+
         ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/"+wlanParam.getAuthmode());
         wlanParam.setSrcacip(request.getRemoteAddr());
         modelAndView.addObject("param", wlanParam);
         setResultUrl(wlanParam);
         return modelAndView;
     }
+
+
+    /**
+     * 自动认证
+     * @param session
+     * @param request
+     * @param param
+     * @return
+     */
+    public ModelAndView authAuthAction(HttpSession session, HttpServletRequest request, HttpServletResponse response, WlanParam param,
+                                       Subscribe subscribe){
+        ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/result");
+        modelAndView.addObject("param",param);
+        // 预处理参数
+        if(ValidateUtil.isEmpty(param.getWlanuserfirsturl())){
+            if(ValidateUtil.isNotEmpty(param.getUrl())){
+                param.setWlanuserfirsturl(param.getUrl());
+            }
+        }
+        setResultUrl(param);
+
+        // 查找 AC 设备
+        Bras nas = null;
+        try {
+            nas = brasService.findBras(param.getWlanacip(),param.getSrcacip(),param.getWlanacname());
+        } catch (ServiceException e) {
+            return  processModel(modelAndView,param.getUsername(), MODEL_FAIL,"接入设备不存在");
+        }
+        return userPwdAuth(session, request, response, param, nas, subscribe.getPassword());
+    }
+
 
     private ModelAndView processModel(ModelAndView mv, String username, String code, String message){
         mv.addObject("code",code);
@@ -154,7 +195,8 @@ public class PortalController implements Constant {
      * @return
      */
     @PostMapping("/wlan/login")
-    public ModelAndView wlanLoginPostHandler(HttpSession session,HttpServletRequest request, WlanParam param, String password){
+    public ModelAndView wlanLoginPostHandler(HttpSession session,HttpServletRequest request,HttpServletResponse response, WlanParam param,
+                                             String password){
         ModelAndView modelAndView = new ModelAndView(getWlanemplate()+"/result");
         modelAndView.addObject("param",param);
         // 预处理参数
@@ -178,22 +220,22 @@ public class PortalController implements Constant {
 
         //用户密码认证
         if(PORTAL_AUTH_USERPWD.equals(authMode)){
-            return userPwdAuth(session, request, param, nas, password);
+            return userPwdAuth(session, request,response, param, nas, password);
         }
 
         //固定密码认证
         if(PORTAL_AUTH_PASSWORD.equals(authMode)){
-            return passwordAuth(session, request,  param,nas, password);
+            return passwordAuth(session, request,response,  param,nas, password);
         }
 
         //微信认证
         if(PORTAL_AUTH_WEIXIN.equals(authMode)){
-            return weixinAuth(session, request,  param, nas);
+            return weixinAuth(session, request,response,  param, nas);
         }
 
         //短信认证
         if(PORTAL_AUTH_SMS.equals(authMode)){
-            return smsAuth(session, request, param, nas);
+            return smsAuth(session, request, response, param, nas);
         }
         return  processModel(modelAndView,param.getUsername(), MODEL_FAIL,"不支持的认证模式");
     }
@@ -207,7 +249,8 @@ public class PortalController implements Constant {
      * @param password
      * @return
      */
-    private ModelAndView userPwdAuth(HttpSession session, HttpServletRequest request,  WlanParam param, Bras nas,String password){
+    private ModelAndView userPwdAuth(HttpSession session, HttpServletRequest request,HttpServletResponse response,  WlanParam param, Bras nas,
+                                     String password){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
         mv.addObject("param",param);
         if(ValidateUtil.isEmpty(param.getUsername())){
@@ -217,7 +260,7 @@ public class PortalController implements Constant {
             return  processModel(mv,param.getUsername(), MODEL_FAIL,"密码不能为空");
         }
         setResultUrl(param);
-        return doPortalAuth(session, request, mv, param, nas, param.getUsername(), password);
+        return doPortalAuth(session, request, response, mv, param, nas, param.getUsername(), password);
     }
 
     /**
@@ -229,7 +272,8 @@ public class PortalController implements Constant {
      * @param password
      * @return
      */
-    private ModelAndView passwordAuth(HttpSession session,HttpServletRequest request, WlanParam param,Bras nas, String password){
+    private ModelAndView passwordAuth(HttpSession session,HttpServletRequest request,HttpServletResponse response, WlanParam param,Bras nas,
+                                      String password){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
         mv.addObject("param",param);
         if(ValidateUtil.isEmpty(password)){
@@ -239,7 +283,7 @@ public class PortalController implements Constant {
         subscribeCache.createTempSubscribe(username,password,1);
         param.setUsername(username);
         setResultUrl(param);
-        return doPortalAuth(session, request, mv, param, nas, username, password);
+        return doPortalAuth(session, request, response, mv, param, nas, username, password);
     }
 
     /**
@@ -250,7 +294,7 @@ public class PortalController implements Constant {
      * @param nas
      * @return
      */
-    private ModelAndView weixinAuth(HttpSession session, HttpServletRequest request, WlanParam param, Bras nas){
+    private ModelAndView weixinAuth(HttpSession session, HttpServletRequest request,HttpServletResponse response, WlanParam param, Bras nas){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/weixin");
         mv.addObject("param",param);
         String username = "wxu_"+ CoderUtil.random16str();
@@ -278,7 +322,7 @@ public class PortalController implements Constant {
         mv.addObject("bssid",param.getWlanapmac());
         mv.addObject("sign",sign);
         setResultUrl(param);
-        return doPortalAuth(session, request, mv, param, nas, username, password);
+        return doPortalAuth(session, request, response, mv, param, nas, username, password);
     }
 
     /**
@@ -311,7 +355,7 @@ public class PortalController implements Constant {
      * @param nas
      * @return
      */
-    private ModelAndView smsAuth(HttpSession session,HttpServletRequest request, WlanParam param,Bras nas){
+    private ModelAndView smsAuth(HttpSession session,HttpServletRequest request, HttpServletResponse response,WlanParam param,Bras nas){
         ModelAndView mv = new ModelAndView(getWlanemplate()+"/result");
         mv.addObject("param",param);
         String phone = param.getPhone();
@@ -345,7 +389,7 @@ public class PortalController implements Constant {
         }
         param.setUsername(username);
         setResultUrl(param);
-        return doPortalAuth(session, request, mv, param, nas, username, password);
+        return doPortalAuth(session, request,response, mv, param, nas, username, password);
     }
 
     /**
@@ -390,7 +434,8 @@ public class PortalController implements Constant {
      * @param password
      * @return
      */
-    private ModelAndView doPortalAuth(HttpSession session,HttpServletRequest request,ModelAndView mv, WlanParam param, Bras nas, String username, String password){
+    private ModelAndView doPortalAuth(HttpSession session,HttpServletRequest request,HttpServletResponse response,ModelAndView mv, WlanParam param,
+                                      Bras nas, String username, String password){
         //认证参数
         String userIp = param.getWlanuserip();
         String secret = nas.getSecret();
@@ -438,7 +483,7 @@ public class PortalController implements Constant {
                 logger.info(username, String.format("<< 接收到 ACK_AUTH <- %s: %s", basip, authResp.toString()),Memarylogger.PORTAL);
             if(authResp.getErrCode()>0){
                 if(authResp.getErrCode()==2){
-                    authSucess(session,param);
+                    authSucess(session,response,param);
                     return  processModel(mv,username, MODEL_OK,"认证成功");
                 }else{
                     return  processModel(mv,username, MODEL_FAIL,authResp.getErrMessage()+authResp.getTextInfo() );
@@ -461,7 +506,7 @@ public class PortalController implements Constant {
             logger.error(username,"发送 AFF_ACK_AUTH 错误",e,Memarylogger.PORTAL);
         }
 
-        authSucess(session,param);
+        authSucess(session,response,param);
         return  processModel(mv,username, MODEL_OK,"认证成功");
     }
 
@@ -472,11 +517,14 @@ public class PortalController implements Constant {
      * @param param
      * @return
      */
-    private void authSucess(HttpSession session,WlanParam param){
+    private void authSucess(HttpSession session,HttpServletResponse response,WlanParam param){
         WlanSession wss = new WlanSession();
         wss.setWlanParam(param);
         wss.setLoginStatus(1);
         session.setAttribute(WLAN_SESSION_KEY,wss);
+        if("enabled".equals(param.getRememberPwd())){
+            CookieUtils.writeCookie(response,PORTAL_REMBERPWD_COOKIE, param.getUsername());
+        }
     }
 
     /**

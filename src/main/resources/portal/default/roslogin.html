@@ -21,9 +21,13 @@
 <div class="limiter">
     <div class="container-login100">
         <div class="wrap-login100 p-t-20 p-b-30">
-            <form id="wlanForm" class="login100-form validate-form" action="/wlan/login" method="post">
+            <form id="wlanForm" class="login100-form validate-form" action="${param.linkLogin!}" method="post">
                 <div class="text-center p-t-0 p-b-30">
                     <span class="txt1">用户认证</span>
+                </div>
+                <div class="wrap-input100 validate-input m-b-16" data-validate="请输入帐号">
+                    <input class="input100" type="text" autocomplete="false" name="username" value="${param.username!}" placeholder="用户帐号">
+                    <span class="focus-input100"></span>
                 </div>
                 <div class="wrap-input100 validate-input m-b-20" data-validate = "请输入密码">
 						<span class="btn-show-pass">
@@ -32,35 +36,14 @@
                     <input class="input100" type="password" autocomplete="false" name="password" placeholder="请输入密码">
                     <span class="focus-input100"></span>
                 </div>
-                <div class="checkboxDiv m-b-20">
-                    <input type="checkbox" name="rememberPwd" value="enabled"> 记住密码<br>
-                </div>
-                <div>
+                <div >
                     <a href='javascript:$("#wlanForm").submit();' class="btn-login-with bg-green m-b-10" >
                         认 证
                     </a>
-                    <a href="javascript:history.go(-1)" class="btn-login-with bg-red m-b-10" >
-                        取 消
-                    </a>
                 </div>
-                <input type="hidden" id="template" name="template" value="default">
-                <input type="hidden" id="authmode" name="authmode" value="pwdauth">
-                <input type="hidden" id="wlanuserip" name="wlanuserip" value="${param.wlanuserip!}">
-                <input type="hidden" id="wlanusername" name="wlanusername" value="${param.wlanusername!}">
-                <input type="hidden" id="wlanusermac" name="wlanusermac" value="${param.wlanusermac!}">
-                <input type="hidden" id="wlanstamac" name="wlanstamac" value="${param.wlanstamac!}">
-                <input type="hidden" id="wlanacname" name="wlanacname" value="${param.wlanacname!}">
-                <input type="hidden" id="wlanacip" name="wlanacip" value="${param.wlanacip!}">
-                <input type="hidden" id="wlanapmac" name="wlanapmac" value="${param.wlanapmac!}">
-                <input type="hidden" id="ssid" name="ssid" value="${param.ssid!}">
-                <input type="hidden" id="wlanuserfirsturl" name="wlanuserfirsturl" value="${param.wlanuserfirsturl!}">
-                <input type="hidden" id="vendor" name="vendor" value="${param.vendor!}">
-                <input type="hidden" id="error" name="error" value="${param.error!}">
-                <input type="hidden" id="username" name="username" value="${param.username!}">
-                <input type="hidden" id="domain" name="domain" value="${param.domain!}">
-                <input type="hidden" id="url" name="url" value="${param.url!}">
-                <input type="hidden" id="srcacip" name="srcacip" value="${param.srcacip!}">
-
+                <#if param.error?? && param.error != "">
+                    <span class="login100-form-error">${param.error!} </span>
+                </#if>
             </form>
         </div>
     </div>

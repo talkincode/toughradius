@@ -516,6 +516,24 @@ public class OnlineCache {
 
     }
 
+
+    /**
+     * 根据用户名强制下线
+     */
+    public void unlockOnlineByUser(String username)
+    {
+        try{
+            lock.unLock();
+            for (RadiusOnline _online : cacheData.values()) {
+                if (username.equals(_online.getUsername())) {
+                    asyncUnlockOnline(_online.getAcctSessionId());
+                }
+            }
+        }finally {
+            lock.unLock();
+        }
+    }
+
     public int clearOnlineByFilter(String nodeId, Integer invlan,Integer outVlan,String nasAddr, String nasId, String beginTime, String endTime,  String keyword){
         try{
             lock.lock();

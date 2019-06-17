@@ -364,3 +364,9 @@ VENDORATTR      10055	RP-Downstream-Speed-Limit		2	integer
 VENDORATTR      10055	RP-HURL					3	string
 VENDORATTR      10055	RP-MOTM					4	string
 VENDORATTR      10055	RP-Max-Sessions-Per-User		5	integer
+
+VENDOR          18168   ToughSocks
+
+VENDORATTR      18168	ToughSocks-Up-Limit			1	integer
+VENDORATTR      18168	ToughSocks-Down-Limit		2	integer
+VENDORATTR      18168	ToughSocks-Max-Session		3	integer

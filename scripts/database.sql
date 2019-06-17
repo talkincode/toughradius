@@ -1,3 +1,5 @@
+use toughradius;
+
 create table if not exists tr_bras
 (
 	id bigint auto_increment primary key,
