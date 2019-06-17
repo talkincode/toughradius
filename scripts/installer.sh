@@ -5,6 +5,7 @@ install_package()
     \cp application-prod.properties /opt/application-prod.properties
     \cp toughradius-latest.jar /opt/toughradius-latest.jar
     \cp toughradius.service /usr/lib/systemd/system/toughradius.service
+    \cp -r portal /opt/
     systemctl enable toughradius
     echo "install done, please exec systenctl start toughradius after initdb"
 }
