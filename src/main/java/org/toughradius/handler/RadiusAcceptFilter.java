@@ -109,9 +109,9 @@ public class RadiusAcceptFilter implements RadiusConstant{
     private AccessAccept filterToughSocks(AccessAccept accept, Subscribe user){
         long up = user.getUpRate() * 1024;
         long down = user.getDownRate() * 1024;
-        accept.addAttribute("ToughSocks-Up-Limit", String.valueOf(up));
-        accept.addAttribute("ToughSocks-Down-Limit", String.valueOf(down));
-        accept.addAttribute("ToughSocks-Max-Session", String.valueOf(user.getActiveNum()));
+        accept.addAttribute("ToughProxy-Up-Limit", String.valueOf(up));
+        accept.addAttribute("ToughProxy-Down-Limit", String.valueOf(down));
+        accept.addAttribute("ToughProxy-Max-Session", String.valueOf(user.getActiveNum()));
         return accept;
     }
 
