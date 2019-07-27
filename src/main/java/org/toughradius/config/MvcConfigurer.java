@@ -38,6 +38,7 @@ public class MvcConfigurer extends WebMvcConfigurerAdapter {
         registry.addInterceptor(new SessionInterceptor()).addPathPatterns("/admin/**")
                 .excludePathPatterns("/")
                 .excludePathPatterns("/admin")
+                .excludePathPatterns("/admin/verify-img.jpg")
                 .excludePathPatterns("/admin/login")
                 .excludePathPatterns("/admin/session")
                 .excludePathPatterns("/admin/logout");

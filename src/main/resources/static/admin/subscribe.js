@@ -18,7 +18,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
             args.push(k+"="+params[k]);
         }
         $$(tableid).load('/admin/subscribe/query?'+args.join("&"));
-    }
+    };
 
     var reloadData = toughradius.admin.subscribe.reloadData;
 
@@ -36,12 +36,16 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
                         cols: [
                             {
                                 view: "button", type: "form", width: 70, icon: "plus", label: "创建用户", click: function () {
-                                    toughradius.admin.subscribe.OpenSubscribeForm(session);
+                                    toughradius.admin.subscribe.OpenSubscribeForm(session,function () {
+                                        reloadData();
+                                    });
                                 }
                             },
                             {
                                 view: "button", type: "form", width: 70, icon: "plus", label: "批量创建", click: function () {
-                                    toughradius.admin.subscribe.batchOpenSubscribeForm(session);
+                                    toughradius.admin.subscribe.batchOpenSubscribeForm(session,function () {
+                                        reloadData();
+                                    });
                                 }
                             },
                             {
@@ -282,7 +286,7 @@ toughradius.admin.subscribe.loadPage = function(session,keyword){
  * @param session
  * @constructor
  */
-toughradius.admin.subscribe.OpenSubscribeForm = function(session){
+toughradius.admin.subscribe.OpenSubscribeForm = function(session, callback){
     var winid = "toughradius.admin.subscribe.OpenSubscribeForm";
     if($$(winid))
         return;
@@ -347,7 +351,7 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
                                     var resp = result.json();
                                     webix.message({ type: resp.msgtype, text: resp.msg, expire: 3000 });
                                     if (resp.code === 0) {
-                                        toughradius.admin.subscribe.reloadData();
+                                        callback();
                                         $$(winid).close();
                                     }
                                 });
@@ -372,7 +376,7 @@ toughradius.admin.subscribe.OpenSubscribeForm = function(session){
  * @param session
  * @constructor
  */
-toughradius.admin.subscribe.batchOpenSubscribeForm = function(session){
+toughradius.admin.subscribe.batchOpenSubscribeForm = function(session, callback){
     var winid = "toughradius.admin.subscribe.batchOpenSubscribeForm";
     if($$(winid))
         return;
@@ -438,7 +442,7 @@ toughradius.admin.subscribe.batchOpenSubscribeForm = function(session){
                                     var resp = result.json();
                                     webix.message({ type: resp.msgtype, text: resp.msg, expire: 3000 });
                                     if (resp.code === 0) {
-                                        toughradius.admin.subscribe.reloadData();
+                                        callback();
                                         $$(winid).close();
                                     }
                                 });
@@ -554,7 +558,7 @@ toughradius.admin.subscribe.subscribeUpdate = function(session,item,callback){
                                     var resp = result.json();
                                     webix.message({ type: resp.msgtype, text: resp.msg, expire: 3000 });
                                     if (resp.code === 0) {
-                                        toughradius.admin.subscribe.reloadData();
+                                         callback();
                                          $$(updateWinid).close();
                                     }
                                 });
@@ -637,7 +641,7 @@ toughradius.admin.subscribe.subscribeUppwd = function(session,item,callback){
                                     var resp = result.json();
                                     webix.message({ type: resp.msgtype, text: resp.msg, expire: 3000 });
                                     if (resp.code === 0) {
-                                        toughradius.admin.subscribe.reloadData();
+                                        callback();
                                          $$(winid).close();
                                     }
                                 });

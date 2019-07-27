@@ -5,6 +5,7 @@ import org.toughradius.common.CoderUtil;
 public interface Constant {
 
     public static final String SESSION_USER_KEY = "SESSION_USER_KEY";
+    public static final String SESSION_VCODE_KEY = "SESSION_VCODE_KEY";
 
     public final static String RADIUS_MODULE = "radius";
     public final static String RADIUS_IGNORE_PASSWORD = "radiusIgnorePassword";

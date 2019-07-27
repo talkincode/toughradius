@@ -1,4 +1,5 @@
 package org.toughradius.form;
+import org.toughradius.common.DateTimeUtil;
 
 public class FreeradiusAcctRequest {
 
@@ -9,13 +10,16 @@ public class FreeradiusAcctRequest {
     private String nasPortId;
     private String framedIPAddress;
     private String acctSessionId;
-    private String acctSessionTime;
+    private Integer acctSessionTime;
+    private Integer sessionTimeout;
+    private String framedIPNetmask;
     private Long acctInputOctets;
     private Long acctOutputOctets;
     private Long acctInputGigawords;
     private Long acctOutputGigawords;
     private Integer acctInputPackets;
     private Integer acctOutputPackets;
+    private String acctStatusType;
 
     public String getUsername() {
         return username;
@@ -73,11 +77,11 @@ public class FreeradiusAcctRequest {
         this.acctSessionId = acctSessionId;
     }
 
-    public String getAcctSessionTime() {
+    public Integer getAcctSessionTime() {
         return acctSessionTime;
     }
 
-    public void setAcctSessionTime(String acctSessionTime) {
+    public void setAcctSessionTime(Integer acctSessionTime) {
         this.acctSessionTime = acctSessionTime;
     }
 
@@ -127,5 +131,65 @@ public class FreeradiusAcctRequest {
 
     public void setAcctOutputPackets(Integer acctOutputPackets) {
         this.acctOutputPackets = acctOutputPackets;
+    }
+
+    public String getAcctStatusType() {
+        return acctStatusType;
+    }
+
+    public void setAcctStatusType(String acctStatusType) {
+        this.acctStatusType = acctStatusType;
+    }
+
+    public Integer getSessionTimeout() {
+        return sessionTimeout;
+    }
+
+    public void setSessionTimeout(Integer sessionTimeout) {
+        this.sessionTimeout = sessionTimeout;
+    }
+
+    public String getFramedIPNetmask() {
+        return framedIPNetmask;
+    }
+
+    public void setFramedIPNetmask(String framedIPNetmask) {
+        this.framedIPNetmask = framedIPNetmask;
+    }
+
+    public long getAcctInputTotal(){
+        try{
+            Long ba = getAcctInputOctets();
+            Long ga = getAcctInputGigawords();
+            long b1 = ba!=null? ba :0L;
+            long gl = ga != null ? ga :0L;
+            long gb = gl * (4*1024*1024*1024);
+            return b1 + gb;
+        } catch(Exception e){
+            return 0;
+        }
+    }
+
+    public long getAcctOutputTotal(){
+        try{
+            Long ba = getAcctOutputOctets();
+            Long ga = getAcctOutputGigawords();
+            long b1 = ba!=null? ba :0L;
+            long gl = ga != null ? ga :0L;
+            long gb = gl * (4*1024*1024*1024);
+            return b1 + gb;
+        } catch(Exception e){
+            return 0;
+        }
+    }
+
+    public String getAcctStartTime(){
+        try{
+            Integer stime = getAcctSessionTime();
+            int sstime = stime!=null?stime:0;
+            return DateTimeUtil.getPreviousDateTimeBySecondString(sstime);
+        } catch(Exception e){
+            return DateTimeUtil.getDateTimeString();
+        }
     }
 }

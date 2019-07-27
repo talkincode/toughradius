@@ -4,7 +4,6 @@ if (!window.toughradius.admin.bras)
 toughradius.admin.bras.loadPage = function(session){
     var tableid = webix.uid();
     var reloadData = function(){
-        $$(tableid).define("url", $$(tableid));
         $$(tableid).refresh();
         $$(tableid).clearAll();
         $$(tableid).load('/admin/bras/query');
@@ -63,6 +62,8 @@ toughradius.admin.bras.loadPage = function(session){
                             return "标准";
                         }else if(obj.vendorId==="2352"){
                             return "爱立信";
+                        }else if(obj.vendorId==="18168"){
+                            return "ToughProxy";
                         }else if(obj.vendorId==="3902"){
                             return "中兴";
                         }else if(obj.vendorId==="9"){

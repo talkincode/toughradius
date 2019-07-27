@@ -42,6 +42,9 @@ public class FreeradiusController {
     private ConfigService configService;
 
     @Autowired
+    private FreeradiusService freeradiusService;
+
+    @Autowired
     private Gson gson;
 
     @Autowired
@@ -192,7 +195,27 @@ public class FreeradiusController {
 
     @PostMapping(value = {"/api/freeradius/accounting"})
     public void accounting(FreeradiusAcctRequest request, HttpServletResponse response) throws Exception {
-        sendAcctResp(response, EMPTY_MAP);
+        try {
+            radiusStat.incrAcctReq();
+            final Bras nas = getNas(request.getNasip(), request.getNasid());
+            if (nas == null) {
+                logger.error(request.getUsername(),"未授权的接入设备<认证> <" + request.getNasip() + ">", Memarylogger.RADIUSD);
+                return;
+            }
+
+            Subscribe user = subscribeCache.findSubscribe(request.getUsername());
+            if(user == null){
+                logger.error(request.getUsername(),"用户 " + request.getUsername() + " 不存在", Memarylogger.RADIUSD);
+                return;
+            }
+            freeradiusService.doFilter(request,nas,user);
+        } catch (Exception e) {
+            logger.error(request.getUsername(),"用户 " + request.getUsername() + " 记账失败",e, Memarylogger.RADIUSD);
+        }finally {
+            radiusStat.incrAcctResp();
+            sendAcctResp(response, EMPTY_MAP);
+        }
+
     }
 
 }

@@ -16,6 +16,8 @@ import org.toughradius.common.ValidateUtil;
 import org.toughradius.entity.RadiusOnline;
 import org.toughradius.entity.RadiusTicket;
 import org.toughradius.entity.Subscribe;
+import org.toughradius.form.FreeradiusAcctRequest;
+
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -404,6 +406,24 @@ public class OnlineCache {
             RadiusOnline online = cacheData.get(request.getAcctSessionId());
             if(online!=null){
                 online.setUsername(request.getUserName());
+                online.setAcctSessionId(request.getAcctSessionId());
+                online.setAcctSessionTime(request.getAcctSessionTime());
+                online.setAcctInputTotal(request.getAcctInputTotal());
+                online.setAcctOutputTotal(request.getAcctOutputTotal());
+                online.setAcctInputPackets(request.getAcctInputPackets());
+                online.setAcctOutputPackets(request.getAcctOutputPackets());
+            }
+        } finally {
+            lock.unLock();
+        }
+    }
+
+    public void updateOnline(FreeradiusAcctRequest request) {
+        try{
+            lock.lock();
+            RadiusOnline online = cacheData.get(request.getAcctSessionId());
+            if(online!=null){
+                online.setUsername(request.getUsername());
                 online.setAcctSessionId(request.getAcctSessionId());
                 online.setAcctSessionTime(request.getAcctSessionTime());
                 online.setAcctInputTotal(request.getAcctInputTotal());
