@@ -1,6 +1,7 @@
 # v6.1.1.4 build_20190727
 
 - 增加对 freeRADIUS rest 的支持，支持eap模式认证，支持通过freeRADIUS认证用户的在线管理
+- 修复 BRAS 无法修改和删除的bug
 
 # v6.1.1.3 build_20190617
 

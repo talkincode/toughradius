@@ -29,10 +29,14 @@ public class CoderUtil
 //	private static long L200801010000 = 1199116800000l;
 	private static int sequenceSeed = 0;
 	private static Object sequenceLock = new Object();
+
+	private static int sequenceSeed3 = 0;
+	private static Object sequenceLock3 = new Object();
 	
     private static int letterSeed = 0;
     private static Object letterLock = new Object();
-	
+
+
 	/** 获取由JDK1.5提供的32位唯一标识,并大写 */
 	public static String randomUuid()
 	{
@@ -46,6 +50,14 @@ public class CoderUtil
 	    String sequence5 = getSequence5();
 	    
 	    return Long.parseLong(datetime14 + sequence5);
+	}
+
+	public static long randomLong15Id()
+	{
+	    String datetime12 = DateTimeUtil.getDateTime12String();
+	    String sequence5 = getSequence3();
+
+	    return Long.parseLong(datetime12 + sequence5);
 	}
 	
 	/** 获取16位yyMMddHHmmss + 4(a-z0-9)的循环字符串，支持在1秒内作4个小写字母和数字的随机 */
@@ -66,6 +78,18 @@ public class CoderUtil
             
             int value = sequenceSeed++;
             return StringUtil.getPrefixFixLenStr(value, 5, '0');
+        }
+    }
+
+    private static String getSequence3()
+    {//从0开始
+        synchronized (sequenceLock3)
+        {
+            if (sequenceSeed3 > 99999)
+                sequenceSeed3 = 0;
+
+            int value = sequenceSeed3++;
+            return StringUtil.getPrefixFixLenStr(value, 3, '0');
         }
     }
     
@@ -90,6 +114,8 @@ public class CoderUtil
             return str;
         }
     }
+
+
     
     /**
      * URL UTF-8编码

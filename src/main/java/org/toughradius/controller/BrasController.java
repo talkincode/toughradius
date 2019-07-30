@@ -46,7 +46,7 @@ public class BrasController {
             if(brasService.selectByidentifier(bras.getIdentifier())!=null){
                 return new RestResult(1,"BRAS标识已经存在");
             }
-            bras.setId(CoderUtil.randomLongId());
+            bras.setId(CoderUtil.randomLong15Id());
             bras.setRemark("");
             bras.setStatus("enabled");
             bras.setCreateTime(DateTimeUtil.nowTimestamp());

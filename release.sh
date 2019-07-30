@@ -1,6 +1,6 @@
 #!/bin/sh
 currdir=$PWD
-version="v6.1.1.3"
+version="v6.1.1.4"
 releasedir=${currdir}/release/toughradius-${version}
 releasefile=toughradius-${version}.zip
 
@@ -14,6 +14,7 @@ build_version()
 
     cp -r ${currdir}/src/main/resources/portal ${releasedir}
     cp ${currdir}/scripts/application-prod.properties ${releasedir}/application-prod.properties
+    cp ${currdir}/scripts/freeradius-rest.conf ${releasedir}/freeradius-rest.conf
     cp ${currdir}/scripts/createdb.sql ${releasedir}/createdb.sql
     cp ${currdir}/scripts/database.sql ${releasedir}/database.sql
     cp ${currdir}/scripts/init.sql ${releasedir}/init.sql

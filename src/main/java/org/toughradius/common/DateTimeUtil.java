@@ -373,6 +373,7 @@ public class DateTimeUtil
         return FORMAT_YYYYMMDDHHMMSS14.format(nowDate());
     }
 
+
     /**
      * 取得当前的日期时间字符串yyyyMMddHHmmssSSS
      * 
