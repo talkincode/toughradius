@@ -149,6 +149,9 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
         String ip = client.getAddress().getHostAddress();
         RadiusAttribute nasid = packet.getAttribute(32);
         try {
+            if(nasid==null){
+                return brasService.findBras(ip,null,"default");
+            }
             return brasService.findBras(ip,null,nasid.getAttributeValue());
         } catch (ServiceException e) {
             throw  new RadiusException(e.getMessage());

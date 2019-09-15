@@ -104,7 +104,7 @@ public class RadiusAccountingFilter {
         online.setUsername(request.getUserName());
         online.setNasId(request.getIdentifier());
         online.setNasAddr(nas.getIpaddr());
-        online.setNasPaddr(request.getRemoteAddr().getHostName());
+        online.setNasPaddr(request.getRemoteAddr().getAddress().getHostAddress());
         online.setSessionTimeout(request.getSessionTimeout());
         online.setFramedIpaddr(request.getFramedIpaddr());
         online.setFramedNetmask(request.getFramedNetmask());
