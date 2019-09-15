@@ -41,6 +41,7 @@ public class RadiusConfig {
     private int ticketExpireDays;
     private int authPool;
     private int acctPool;
+    private long macAuthExpire;
     private String statfile;
 
     /**
@@ -224,5 +225,13 @@ public class RadiusConfig {
 
     public void setAcctEnabled(boolean acctEnabled) {
         this.acctEnabled = acctEnabled;
+    }
+
+    public long getMacAuthExpire() {
+        return macAuthExpire;
+    }
+
+    public void setMacAuthExpire(long macAuthExpire) {
+        this.macAuthExpire = macAuthExpire;
     }
 }

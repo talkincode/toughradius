@@ -53,6 +53,9 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
     protected SubscribeCache subscribeCache;
 
     @Autowired
+    protected SubscribeMacCache subscribeMacCache;
+
+    @Autowired
     protected ConfigService configService;
 
     @Autowired
@@ -167,6 +170,7 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
         return subscribeCache.findSubscribe(username);
     }
 
+
     /**
      * 验证用户密码
      * @param user
@@ -218,6 +222,12 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
     public AccessAccept getAccessAccept(AccessRequest accessRequest) {
         AccessAccept answer = new AccessAccept(accessRequest.getPacketIdentifier());
         answer.addAttribute("Reply-Message","ok");
+        copyProxyState(accessRequest, answer);
+        return answer;
+    }
+    public AccessAccept getAccessAccept(AccessRequest accessRequest, String message) {
+        AccessAccept answer = new AccessAccept(accessRequest.getPacketIdentifier());
+        answer.addAttribute("Reply-Message",message);
         copyProxyState(accessRequest, answer);
         return answer;
     }
@@ -304,7 +314,15 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
      * @throws RadiusException
      */
     public RadiusPacket accessRequestReceived(AccessRequest accessRequest, Bras nas) throws RadiusException {
-        Subscribe user = getUser(accessRequest.getUserName());
+        Subscribe user = null;
+        boolean macAuth = false;
+        // 判断是否mac 认证 （用户名密码与mac相同）
+        if(accessRequest.getUserName().replaceAll("-",":").equals(accessRequest.getMacAddr())){
+            user = subscribeMacCache.findSubscribe(accessRequest.getMacAddr());
+            macAuth = true;
+        }else{
+            user = getUser(accessRequest.getUserName());
+        }
 
         if(user == null){
             radiusAuthStat.update(RadiusAuthStat.NOT_EXIST);
@@ -316,9 +334,14 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
             radiusAuthStat.update(RadiusAuthStat.STATUS_ERR);
             throw new RadiusException("用户 " + accessRequest.getUserName() + " 已停用");
         }
-        Integer chkpwd = configService.getIsCheckPwd();
-        if((chkpwd==null ? 1 : chkpwd)!=0)
-            authUser(user, accessRequest);
+
+        // mac认证无需验证密码
+        if(!macAuth){
+            Integer chkpwd = configService.getIsCheckPwd();
+            if((chkpwd==null ? 1 : chkpwd)!=0)
+                authUser(user, accessRequest);
+        }
+
 
         long timeout = (user.getExpireTime().getTime() - new Date().getTime())/1000;
         if (timeout <= 0 ) {
@@ -334,47 +357,52 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
             throw new RadiusException("用户在线数超过限制(MAX=" + user.getActiveNum() + ")");
         }
 
-        //判断MAC绑定
-        if (user.getBindMac()!=null&&user.getBindMac()==1) {
-            if (user.getMacAddr() == null||"".equals(user.getMacAddr())) {
-                systaskExecutor.execute(() -> {
-                    subscribeService.updateMacAddr(accessRequest.getUserName(), accessRequest.getMacAddr());
-                    if(radiusConfig.isTraceEnabled())
-                        logger.info(accessRequest.getUserName(), "用户MAC绑定更新：" + accessRequest.getMacAddr());
-                });
-            } else if (!user.getMacAddr().equals(accessRequest.getMacAddr())) {
-                radiusAuthStat.update(RadiusAuthStat.BIND_ERR);
-                throw new RadiusException("用户MAC绑定不匹配， 请求MAC =" + accessRequest.getMacAddr() + ", 绑定MAC =" + user.getMacAddr());
+        // mac认证无需验证绑定
+        if(!macAuth){
+            //判断MAC绑定
+            if (user.getBindMac()!=null&&user.getBindMac()==1) {
+                if (user.getMacAddr() == null||"".equals(user.getMacAddr())) {
+                    systaskExecutor.execute(() -> {
+                        subscribeService.updateMacAddr(accessRequest.getUserName(), accessRequest.getMacAddr());
+                        if(radiusConfig.isTraceEnabled())
+                            logger.info(accessRequest.getUserName(), "用户MAC绑定更新：" + accessRequest.getMacAddr());
+                    });
+                } else if (!user.getMacAddr().equals(accessRequest.getMacAddr())) {
+                    radiusAuthStat.update(RadiusAuthStat.BIND_ERR);
+                    throw new RadiusException("用户MAC绑定不匹配， 请求MAC =" + accessRequest.getMacAddr() + ", 绑定MAC =" + user.getMacAddr());
+                }
             }
-        }
-        //判断invlan绑定
-        if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
-            if (user.getInVlan() == null || user.getInVlan() == 0) {
-                systaskExecutor.execute(() -> {
-                    subscribeService.updateInValn(accessRequest.getUserName(), accessRequest.getInVlanId());
-                    if(radiusConfig.isTraceEnabled())
-                        logger.info(accessRequest.getUserName(), "用户内层VLAN绑定更新：" + accessRequest.getInVlanId());
-                });
-            } else if (user.getInVlan() != accessRequest.getInVlanId()) {
-                radiusAuthStat.update(RadiusAuthStat.BIND_ERR);
-                throw new RadiusException("用户内层VLAN绑定不匹配 请求invlan =" + accessRequest.getInVlanId() + ", 绑定invlan =" + user.getInVlan());
+            //判断invlan绑定
+            if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
+                if (user.getInVlan() == null || user.getInVlan() == 0) {
+                    systaskExecutor.execute(() -> {
+                        subscribeService.updateInValn(accessRequest.getUserName(), accessRequest.getInVlanId());
+                        if(radiusConfig.isTraceEnabled())
+                            logger.info(accessRequest.getUserName(), "用户内层VLAN绑定更新：" + accessRequest.getInVlanId());
+                    });
+                } else if (user.getInVlan() != accessRequest.getInVlanId()) {
+                    radiusAuthStat.update(RadiusAuthStat.BIND_ERR);
+                    throw new RadiusException("用户内层VLAN绑定不匹配 请求invlan =" + accessRequest.getInVlanId() + ", 绑定invlan =" + user.getInVlan());
+                }
             }
-        }
-        //判断outvlan绑定
-        if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
-            if (user.getOutVlan() == null || user.getOutVlan() == 0) {
-                systaskExecutor.execute(() -> {
-                    subscribeService.updateOutValn(accessRequest.getUserName(), accessRequest.getOutVlanId());
-                    if(radiusConfig.isTraceEnabled())
-                        logger.info(accessRequest.getUserName(), "用户外层VLAN绑定更新：" + accessRequest.getOutVlanId());
-                });
-            } else if (user.getOutVlan() != accessRequest.getOutVlanId()) {
-                radiusAuthStat.update(RadiusAuthStat.BIND_ERR);
-                throw new RadiusException("用户外层VLAN绑定不匹配 请求outvlan =" + accessRequest.getOutVlanId() + ", 绑定outvlan =" + user.getOutVlan());
+            //判断outvlan绑定
+            if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
+                if (user.getOutVlan() == null || user.getOutVlan() == 0) {
+                    systaskExecutor.execute(() -> {
+                        subscribeService.updateOutValn(accessRequest.getUserName(), accessRequest.getOutVlanId());
+                        if(radiusConfig.isTraceEnabled())
+                            logger.info(accessRequest.getUserName(), "用户外层VLAN绑定更新：" + accessRequest.getOutVlanId());
+                    });
+                } else if (user.getOutVlan() != accessRequest.getOutVlanId()) {
+                    radiusAuthStat.update(RadiusAuthStat.BIND_ERR);
+                    throw new RadiusException("用户外层VLAN绑定不匹配 请求outvlan =" + accessRequest.getOutVlanId() + ", 绑定outvlan =" + user.getOutVlan());
+                }
             }
         }
 
-        AccessAccept accept = getAccessAccept(accessRequest);
+        // 刷新 MAC 认证缓存
+        subscribeMacCache.update(accessRequest.getMacAddr(), user.getSubscriber(), radiusConfig.getMacAuthExpire());
+        AccessAccept accept = macAuth?getAccessAccept(accessRequest,"mac auth ok"):getAccessAccept(accessRequest);
         accept.setPreSessionTimeout(timeout);
         accept.setPreInterim(radiusConfig.getInterimUpdate());
         accept =   acceptFilter.doFilter(accept,nas,user);

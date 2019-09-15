@@ -18,6 +18,9 @@ public class SubscribeService {
     public Subscribe findSubscribe(String username){
         return subscribeMapper.findSubscribe(username);
     }
+    public Subscribe findSubscribeByMac(String macAddr){
+        return subscribeMapper.findSubscribeByMac(macAddr);
+    }
 
 
     public Integer updateMacAddr(String username, String macAddr){
