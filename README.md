@@ -29,7 +29,6 @@ TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易
 - [TOUGHRADIUS WIKI 文档](https://github.com/talkincode/ToughRADIUS/wiki)
 - [GUI 测试工具](https://github.com/jamiesun/RadiusTester)
 - [命令行测试工具](https://github.com/talkincode/JRadiusTester)
-- [商业支持](http://www.toughstruct.com/)
 
 ## 快速开始
 
