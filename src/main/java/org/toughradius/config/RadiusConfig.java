@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 @ConfigurationProperties(prefix = "org.toughradius")
 public class RadiusConfig {
 
-    private Log logger = LogFactory.getLog(RadiusConfig.class);
+    private final Log logger = LogFactory.getLog(RadiusConfig.class);
 
     private int authport;
     private int acctport;

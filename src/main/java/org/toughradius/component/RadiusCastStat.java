@@ -35,9 +35,9 @@ public class RadiusCastStat {
     }
 
     private long lastAuthUpdate = System.currentTimeMillis();
-    private AtomicInteger authNum = new AtomicInteger(0);
-    private AtomicInteger authCastAvg = new AtomicInteger(0);
-    private AtomicInteger authCastTotal  = new AtomicInteger(0);
+    private final AtomicInteger authNum = new AtomicInteger(0);
+    private final AtomicInteger authCastAvg = new AtomicInteger(0);
+    private final AtomicInteger authCastTotal  = new AtomicInteger(0);
     private final static SpinLock authCastStatLock = new SpinLock();
 
     public void updateAuth(int cast){
@@ -64,9 +64,9 @@ public class RadiusCastStat {
 
 
     private long lastAcctStartUpdate = System.currentTimeMillis();
-    private AtomicInteger acctStartNum = new AtomicInteger(0);
-    private AtomicInteger acctStartCastAvg = new AtomicInteger(0);
-    private AtomicInteger acctStartCastTotal  = new AtomicInteger(0);
+    private final AtomicInteger acctStartNum = new AtomicInteger(0);
+    private final AtomicInteger acctStartCastAvg = new AtomicInteger(0);
+    private final AtomicInteger acctStartCastTotal  = new AtomicInteger(0);
     private final static SpinLock acctStartCastStatLock = new SpinLock();
 
     public void updateAcctStart(int cast){
@@ -93,9 +93,9 @@ public class RadiusCastStat {
 
 
     private long lastAcctUpdateUpdate = System.currentTimeMillis();
-    private AtomicInteger acctUpdateNum = new AtomicInteger(0);
-    private AtomicInteger acctUpdateCastAvg = new AtomicInteger(0);
-    private AtomicInteger acctUpdateCastTotal  = new AtomicInteger(0);
+    private final AtomicInteger acctUpdateNum = new AtomicInteger(0);
+    private final AtomicInteger acctUpdateCastAvg = new AtomicInteger(0);
+    private final AtomicInteger acctUpdateCastTotal  = new AtomicInteger(0);
     private final static SpinLock acctUpdateCastStatLock = new SpinLock();
 
     public void updateAcctUpdate(int cast){
@@ -121,9 +121,9 @@ public class RadiusCastStat {
     }
 
     private long lastAcctStopStop = System.currentTimeMillis();
-    private AtomicInteger acctStopNum = new AtomicInteger(0);
-    private AtomicInteger acctStopCastAvg = new AtomicInteger(0);
-    private AtomicInteger acctStopCastTotal  = new AtomicInteger(0);
+    private final AtomicInteger acctStopNum = new AtomicInteger(0);
+    private final AtomicInteger acctStopCastAvg = new AtomicInteger(0);
+    private final AtomicInteger acctStopCastTotal  = new AtomicInteger(0);
     private final static SpinLock acctStopCastStatLock = new SpinLock();
 
     public void updateAcctStop(int cast){
