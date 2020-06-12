@@ -14,8 +14,8 @@ public class RadiusOnlineStat {
 
     private final static SpinLock lock = new SpinLock();
 
-    private ConcurrentLinkedDeque<long[]> onineStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> onlineDelayStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> onineStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> onlineDelayStat = new ConcurrentLinkedDeque<long[]>();
 
     @Autowired
     private OnlineCache onlineCache;

@@ -84,6 +84,12 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		FROM  tr_subscribe WHERE subscriber=#{username}
 	</select>
 
+	<select id="findSubscribeByMac" resultMap="BaseResultMap" useCache="false">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM  tr_subscribe WHERE mac_addr=#{macAddr}
+	</select>
+
 	<update id="updateMacAddr">
 		update tr_subscribe
 		set mac_addr=#{macAddr}, update_time=NOW()

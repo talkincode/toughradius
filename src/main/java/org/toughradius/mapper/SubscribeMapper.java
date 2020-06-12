@@ -16,6 +16,8 @@ public interface SubscribeMapper {
 	
 	Subscribe findSubscribe(@Param(value = "username") String username);
 
+	Subscribe findSubscribeByMac(@Param(value = "macAddr") String macAddr);
+
 	Subscribe findById(Long id);
 
 	List<Subscribe> findLastUpdateUser(@Param(value = "lastUpdate") String lastUpdate);
@@ -31,8 +33,6 @@ public interface SubscribeMapper {
 	void deleteById(Long id);
 
 	List<String> findAllUsername();
-
-	Integer updateFlowAmountByUsername(@Param(value = "username") String username, @Param(value = "flowAmount") BigInteger flowAmount);
 
 	 Integer updateMacAddr(@Param(value = "username") String username, @Param(value = "macAddr") String macAddr);
 

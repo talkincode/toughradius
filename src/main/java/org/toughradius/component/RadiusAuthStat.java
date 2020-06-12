@@ -25,16 +25,16 @@ public class RadiusAuthStat {
     public final static String DROP = "drop";
 
 
-    private ConcurrentLinkedDeque<long[]> authAcceptStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthNotExistErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthPwdErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthLimitErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthRateErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthStatusErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthBrasLimitErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthBindErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthOtherErrStat = new ConcurrentLinkedDeque<long[]>();
-    private ConcurrentLinkedDeque<long[]> AuthDropStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> authAcceptStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthNotExistErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthPwdErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthLimitErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthRateErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthStatusErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthBrasLimitErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthBindErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthOtherErrStat = new ConcurrentLinkedDeque<long[]>();
+    private final ConcurrentLinkedDeque<long[]> AuthDropStat = new ConcurrentLinkedDeque<long[]>();
 
     public Map getData(){
         try{
@@ -56,16 +56,16 @@ public class RadiusAuthStat {
         }
     }
 
-    private AtomicInteger authAccept = new AtomicInteger(0);
-    private AtomicInteger notExist = new AtomicInteger(0);
-    private AtomicInteger pwdErr = new AtomicInteger(0);
-    private AtomicInteger limitErr = new AtomicInteger(0);
-    private AtomicInteger rateErr = new AtomicInteger(0);
-    private AtomicInteger statusErr = new AtomicInteger(0);
-    private AtomicInteger brasLimitErr = new AtomicInteger(0);
-    private AtomicInteger bindErr = new AtomicInteger(0);
-    private AtomicInteger othertErr = new AtomicInteger(0);
-    private AtomicInteger authDrop = new AtomicInteger(0);
+    private final AtomicInteger authAccept = new AtomicInteger(0);
+    private final AtomicInteger notExist = new AtomicInteger(0);
+    private final AtomicInteger pwdErr = new AtomicInteger(0);
+    private final AtomicInteger limitErr = new AtomicInteger(0);
+    private final AtomicInteger rateErr = new AtomicInteger(0);
+    private final AtomicInteger statusErr = new AtomicInteger(0);
+    private final AtomicInteger brasLimitErr = new AtomicInteger(0);
+    private final AtomicInteger bindErr = new AtomicInteger(0);
+    private final AtomicInteger othertErr = new AtomicInteger(0);
+    private final AtomicInteger authDrop = new AtomicInteger(0);
 
     public void runStat(){
         try{
