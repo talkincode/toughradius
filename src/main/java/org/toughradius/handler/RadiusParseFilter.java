@@ -93,7 +93,7 @@ public class RadiusParseFilter implements RadiusConstant{
     private RadiusPacket filterH3c(RadiusPacket request){
         String ipHostAddr = null;
         try {
-            ipHostAddr = request.getAttribute("H3C-Ip-Host-Addr ").getStringValue();
+            ipHostAddr = request.getAttribute("H3C-Ip-Host-Addr").getStringValue();
         }catch (Exception e){
             logger.error("H3C MacAddr 解析失败", Memarylogger.RADIUSD);
         }
