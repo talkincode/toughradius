@@ -1,0 +1,67 @@
+body {
+    color: #737373;
+    font-size: 12px;
+    background-color: #00457b;
+}
+
+input {
+    border-radius: 3px;
+}
+
+.maintable {
+    border: 1px solid #cccccc;
+    padding: 0px;
+    background-color: #ffffff;
+    border-radius: 5px;
+}
+
+.button-sms {
+    background-color: #666666;
+    height: 36px;
+    border-radius: 5px;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100%
+}
+
+.button-login {
+    background-color: #0d6df2;
+    height: 36px;
+    border-radius: 5px;
+    color: #ffffff;
+    font-size: 14px;
+    width: 100%
+}
+
+textarea, input, select {
+    background-color: #FDFBFB;
+    border: 1px solid #BBBBBB;
+    padding: 2px;
+    margin: 1px;
+    font-size: 14px;
+    color: #808080;
+}
+
+a, a:link, a:visited, a:active {
+    color: #AAAAAA;
+    text-decoration: none;
+    font-size: 10px;
+}
+
+a:hover {
+    border-bottom: 1px dotted #c1c1c1;
+    color: #AAAAAA;
+}
+
+img {
+    border: none;
+}
+
+th, td {
+    padding: 5px;
+}
+
+td {
+    font-size: 14px;
+    color: #7A7A7A;
+}

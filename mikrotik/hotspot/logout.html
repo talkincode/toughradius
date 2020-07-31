@@ -1,0 +1,73 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="-1">
+<title>mikrotik hotspot > logout</title>
+<style type="text/css">
+<!--
+textarea,input,select {
+	background-color: #FDFBFB;
+	border: 1px #BBBBBB solid;
+	padding: 2px;
+	margin: 1px;
+	font-size: 14px;
+	color: #808080;
+}
+
+.tabula{
+ 
+border-width: 1px; 
+border-collapse: collapse; 
+border-color: #c1c1c1; 
+background-color: transparent;
+font-family: verdana;
+font-size: 11px;
+}
+
+body{ color: #737373; font-size: 12px; font-family: verdana; }
+
+a, a:link, a:visited, a:active { color: #AAAAAA; text-decoration: none; font-size: 12px; }
+a:hover { border-bottom: 1px dotted #c1c1c1; color: #AAAAAA; }
+img {border: none;}
+td { font-size: 12px; padding: 4px;}
+
+-->
+</style>
+</head>
+
+<body>
+<script language="JavaScript">
+<!--
+    function openLogin() {
+	if (window.name != 'hotspot_logout') return true;
+	open('$(link-login)', '_blank', '');
+	window.close();
+	return false;
+    }
+//-->
+</script>
+
+<table width="100%" height="100%">
+
+<tr>
+<td align="center" valign="middle">
+<b>you have just logged out</b> <br><br>
+<table class="tabula" border="1">  
+<tr><td align="right">user name</td><td>$(username)</td></tr>
+<tr><td align="right">IP address</td><td>$(ip)</td></tr>
+<tr><td align="right">MAC address</td><td>$(mac)</td></tr>
+<tr><td align="right">session time</td><td>$(uptime)</td></tr>
+$(if session-time-left)
+<tr><td align="right">time left</td><td>$(session-time-left)</td></tr>
+$(endif)
+<tr><td align="right">bytes up/down:</td><td>$(bytes-in-nice) / $(bytes-out-nice)</td></tr>
+</table>
+<br>
+<form action="$(link-login)" name="login" onSubmit="return openLogin()">
+<input type="submit" value="log in">
+</form>
+</td>
+</table>
+</body>
+</html>

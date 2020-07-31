@@ -1,0 +1,49 @@
+<html>
+<head>
+<meta http-equiv="refresh" content="2; url=$(link-redirect)">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="pragma" content="no-cache">
+<meta http-equiv="expires" content="-1">
+<title>mikrotik hotspot > redirect</title>
+<style type="text/css">
+<!--
+textarea,input,select {
+	background-color: #FDFBFB;
+	border: 1px #BBBBBB solid;
+	padding: 2px;
+	margin: 1px;
+	font-size: 14px;
+	color: #808080;
+}
+
+body{ color: #737373; font-size: 12px; font-family: verdana; }
+
+a, a:link, a:visited, a:active { color: #AAAAAA; text-decoration: none; font-size: 12px; }
+a:hover { border-bottom: 1px dotted #c1c1c1; color: #AAAAAA; }
+img {border: none;}
+td { font-size: 12px; color: #7A7A7A; }
+
+-->
+</style>
+<script language="JavaScript">
+<!--
+    function startClock() {
+        $(if popup == 'true')
+        open('$(link-status)', 'hotspot_status', 'toolbar=0,location=0,directories=0,status=0,menubars=0,resizable=1,width=290,height=200');
+	$(endif)
+	location.href = unescape('$(link-redirect-esc)');
+    }
+//-->
+</script>
+</head>
+<body onLoad="startClock()">
+<table width="100%" height="100%">
+<tr>
+	<td align="center" valign="middle">
+	You are logged in
+	<br><br>
+	If nothing happens, click <a href="$(link-redirect)">here</a></td>
+</tr>
+</table>
+</body>
+</html>

@@ -70,47 +70,48 @@ public class AccessInterceptor extends HandlerInterceptorAdapter implements Cons
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         String ip = getIpAddr(request);
-
-        // 白名单检测
-        String allows = cfgService.getStringValue(API_MODULE,API_ALLOW_IPLIST);
-        if(ValidateUtil.isNotEmpty(allows) && allows.contains(ip)){
-            return true;
-        }
-
-        // 黑名单检测
-        String blacks = cfgService.getStringValue(API_MODULE,API_BLACK_IPLIST);
-        if(ValidateUtil.isNotEmpty(blacks) && blacks.contains(ip)){
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.getWriter().print(gson.toJson(new RestResult(1,"Forbidden, black ip " + ip)));
-            return false;
-        }
-
-        String header = request.getHeader("Authorization");
-        response.setContentType("application/json;charset=UTF-8");
-        if(ValidateUtil.isEmpty(header)){
-            response.setCharacterEncoding("UTF-8");
-            response.setHeader("Authorization","Required");
-            response.setHeader("WWW-Authentication ","Basic");
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.getWriter().print(gson.toJson(new RestResult(1,"Forbidden, unauthorized user")));
-            return false;
-        }
-        if(ValidateUtil.isNotEmpty(header) && !header.substring(0, 6).equals("Basic ")){
-            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-            response.getWriter().print(gson.toJson(new RestResult(1,"Unsupported authentication methods")));
-            return false;
-        }
-        String basicAuthEncoded = header.substring(6);
-        //will contain "bob:secret"
-        String basicAuthAsString = new String(new Base64().decode(basicAuthEncoded.getBytes()));
-        if(!basicAuthAsString.trim().equals(String.format("%s:%s",
-                cfgService.getStringValue(API_MODULE,API_USERNAME),
-                cfgService.getStringValue(API_MODULE,API_PASSWD)))){
-            response.getWriter().print(gson.toJson(new RestResult(1,"Authentication failure")));
-            return false;
-        }else{
-            return true;
-        }
+        return true;
+//
+//        // 白名单检测
+//        String allows = cfgService.getStringValue(API_MODULE,API_ALLOW_IPLIST);
+//        if(ValidateUtil.isNotEmpty(allows) && allows.contains(ip)){
+//            return true;
+//        }
+//
+//        // 黑名单检测
+//        String blacks = cfgService.getStringValue(API_MODULE,API_BLACK_IPLIST);
+//        if(ValidateUtil.isNotEmpty(blacks) && blacks.contains(ip)){
+//            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+//            response.getWriter().print(gson.toJson(new RestResult(1,"Forbidden, black ip " + ip)));
+//            return false;
+//        }
+//
+//        String header = request.getHeader("Authorization");
+//        response.setContentType("application/json;charset=UTF-8");
+//        if(ValidateUtil.isEmpty(header)){
+//            response.setCharacterEncoding("UTF-8");
+//            response.setHeader("Authorization","Required");
+//            response.setHeader("WWW-Authentication ","Basic");
+//            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+//            response.getWriter().print(gson.toJson(new RestResult(1,"Forbidden, unauthorized user")));
+//            return false;
+//        }
+//        if(ValidateUtil.isNotEmpty(header) && !header.substring(0, 6).equals("Basic ")){
+//            response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+//            response.getWriter().print(gson.toJson(new RestResult(1,"Unsupported authentication methods")));
+//            return false;
+//        }
+//        String basicAuthEncoded = header.substring(6);
+//        //will contain "bob:secret"
+//        String basicAuthAsString = new String(new Base64().decode(basicAuthEncoded.getBytes()));
+//        if(!basicAuthAsString.trim().equals(String.format("%s:%s",
+//                cfgService.getStringValue(API_MODULE,API_USERNAME),
+//                cfgService.getStringValue(API_MODULE,API_PASSWD)))){
+//            response.getWriter().print(gson.toJson(new RestResult(1,"Authentication failure")));
+//            return false;
+//        }else{
+//            return true;
+//        }
     }
 
     @Override

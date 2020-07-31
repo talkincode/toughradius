@@ -57,7 +57,7 @@ public class OnlineController {
     //一个下线
     @GetMapping({"/api/v6/online/delete","/admin/online/delete"})
     public RestResult DeleteOnlineHandler(String ids){
-        for(String oid : ids.split("/admin,")){
+        for(String oid : ids.split(",")){
             onlineCache.removeOnline(oid);
         }
         return new RestResult(0,"success");

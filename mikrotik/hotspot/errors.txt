@@ -1,0 +1,104 @@
+# This file contains error messages which are shown to user, when http/https
+# login is used.
+# These messages can be changed to make user interface more friendly, including
+# translations to different languages.
+#
+# Various variables can be used here as well. Most frequently used ones are:
+#	$(error-orig)	- original error message from hotspot
+#	$(ip)		- ip address of a client
+#	$(username)	- username of client trying to log in
+
+# internal-error
+# It should never happen. If it will, error page will be shown
+# displaying this error message (error-orig will describe what has happened)
+
+internal-error = internal error ($(error-orig))
+
+# config-error
+# Should never happen if hotspot is configured properly.
+
+config-error = configuration error ($(error-orig))
+
+# not-logged-in
+# Will happen, if status or logout page is requested by user,
+# which actually is not logged in
+
+not-logged-in = you are not logged in (ip $(ip))
+
+# ippool-empty
+# IP address for user is to be assigned from ip pool, but there are no more
+# addresses in that pool
+
+ippool-empty = cannot assign ip address - no more free addresses from pool
+
+# shutting-down
+# When shutdown is executed, new clients are not accepted
+
+shutting-down = hotspot service is shutting down
+
+# user-session-limit
+# If user profile has limit of shared-users, then this error will be shown
+# after reaching this limit
+
+user-session-limit = no more sessions are allowed for user $(username)
+
+# license-session-limit
+# Depending on licence number of active hotspot clients is limited to
+# one or another amount. If this limit is reached, following error is displayed.
+
+license-session-limit = session limit reached ($(error-orig))
+
+# wrong-mac-username
+# If username looks like MAC address (12:34:56:78:9a:bc), but is not
+# a MAC address of this client, login is rejected
+
+wrong-mac-username = invalid username ($(username)): this MAC address is not yours
+
+# chap-missing
+# If http-chap login method is used, but hotspot program does not receive
+# back encrypted password, this error message is shown.
+# Possible reasons of failure:
+#	- JavaScript is not enabled in web browser;
+#	- login.html page is not valid;
+#	- challenge value has expired on server (more than 1h of inactivity);
+#	- http-chap login method is recently removed;
+# If JavaScript is enabled and login.html page is valid,
+# then retrying to login usually fixes this problem.
+
+chap-missing = web browser did not send challenge response (try again, enable JavaScript)
+
+# invalid-username
+# Most general case of invalid username or password. If RADIUS server
+# has sent an error string with Access-Reject message, then it will
+# override this setting.
+
+invalid-username = invalid username or password
+
+# invalid-mac
+# Local users (on hotspot server) can be bound to some MAC address. If login
+# from different MAC is tried, this error message will be shown.
+
+invalid-mac = user $(username) is not allowed to log in from this MAC address
+
+# uptime-limit, traffic-limit
+# For local hotspot users in case if limits are reached
+
+uptime-limit = user $(username) has reached uptime limit
+traffic-limit = user $(username) has reached traffic limit
+
+# radius-timeout
+# User is authenticated by RADIUS server, but no response is received from it,
+# following error will be shown.
+
+radius-timeout = RADIUS server is not responding
+
+# auth-in-progress
+# Authorization in progress. Client already has issued an authorization request
+# which is not yet complete.
+
+auth-in-progress = already authorizing, retry later
+
+# radius-reply
+# Radius server returned some custom error message
+
+radius-reply = $(error-orig)

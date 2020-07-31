@@ -1,6 +1,8 @@
 package org.toughradius.controller;
 
 import com.google.code.kaptcha.impl.DefaultKaptcha;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 
 @Controller
+@Api(hidden = true)
 public class MainController implements Constant {
 
     @Autowired

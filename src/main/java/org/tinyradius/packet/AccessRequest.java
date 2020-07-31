@@ -152,7 +152,7 @@ public class AccessRequest extends RadiusPacket {
 						|| authProtocol.equals(AUTH_MSCHAPV2)))
 			this.authProtocol = authProtocol;
 		else
-			throw new IllegalArgumentException("protocol must be pap or chap");
+			throw new IllegalArgumentException("protocol must be pap or chap / mschapv2");
 	}
 
 	/**
