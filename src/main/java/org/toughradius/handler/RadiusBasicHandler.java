@@ -420,8 +420,10 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
         }
 
         // 刷新 MAC 认证缓存
-        subscribeMacCache.update(accessRequest.getMacAddr(), user.getSubscriber(), radiusConfig.getMacAuthExpire());
-        AccessAccept accept = macAuth ? getAccessAccept(accessRequest, "mac auth ok") : getAccessAccept(accessRequest);
+        if(macAuth){
+            subscribeMacCache.update(accessRequest.getMacAddr(), user.getSubscriber(), radiusConfig.getMacAuthExpire());
+        }
+        AccessAccept accept = macAuth?getAccessAccept(accessRequest,"mac auth ok"):getAccessAccept(accessRequest);
         accept.setPreSessionTimeout(timeout);
         accept.setPreInterim(radiusConfig.getInterimUpdate());
         accept = acceptFilter.doFilter(accept, nas, user);
