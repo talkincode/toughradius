@@ -27,7 +27,7 @@ TOUGHRADIUS is similar in functionality to freeRADIUS, but it is simpler to use 
 ## Links
 
 - [Home](https://www.toughradius.net/)
-- [TOUGHRADIUS WIKI Documentation] (https://github.com/talkincode/ToughRADIUS/wiki)
+- [TOUGHRADIUS WIKI Documentation](https://github.com/talkincode/ToughRADIUS/wiki)
 - [GUI Test Tool](https://github.com/jamiesun/RadiusTester)
 - [Command line testing tool](https://github.com/talkincode/JRadiusTester)
 
