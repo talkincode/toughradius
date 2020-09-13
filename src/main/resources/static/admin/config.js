@@ -30,6 +30,7 @@ toughradius.admin.config.loadPage = function(session){
                                 {view: "counter", name: "radiusInterimIntelval", label: "记账间隔(秒)",  value:300},
                                 {view: "counter", name: "radiusTicketHistoryDays", label: "上网日志保存最大天数",  value:180},
                                 {view: "radio", name: "radiusIgnorePassword", label: "免密码认证:",value:"disabled", options:[{id:"disabled",value:"关闭"},{id:"enabled",value:'开启'}]},
+                                {view: "radio", name: "radiusOverUnlock", label: "并发自动踢线:",value:"disabled", options:[{id:"disabled",value:"关闭"},{id:"enabled",value:'开启'}]},
                                 {view: "text", name: "radiusExpireAddrPool", label: "到期下发地址池"},
                             ]
                         }},

@@ -213,7 +213,7 @@ public class SubsribeController {
         try {
             response.setHeader("Access-Control-Allow-Origin","*");
             response.setHeader("Access-Control-Allow-Methods","POST,GET,OPTIONS,DELETE");
-            response.setHeader("Access-Control-Allow-Headers:","x-requested-with,content-type");
+            response.setHeader("Access-Control-Allow-Headers","x-requested-with,content-type");
             // 发送验证码成功后自动创建临时用户
             if (smscodeCache.values().stream().anyMatch(x -> x.getPhone().equals(mobile) && (new Date().getTime() - x.getSendtime()) < 60000)) {
                 return new RestResult(1, "同一手机号60秒只能发送一次请求");

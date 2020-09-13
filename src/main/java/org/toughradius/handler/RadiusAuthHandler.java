@@ -1,6 +1,7 @@
 package org.toughradius.handler;
 
 import org.toughradius.common.ValidateCache;
+import org.toughradius.component.ConfigService;
 import org.toughradius.component.Memarylogger;
 import org.toughradius.component.RadiusAuthStat;
 import org.toughradius.entity.Bras;
@@ -74,7 +75,6 @@ public class RadiusAuthHandler extends RadiusBasicHandler {
             radiusStat.incrAuthDrop();
             radiusAuthStat.update(RadiusAuthStat.BRAS_LIMIT_ERR);
             logger.error(request.getUsername(), "接入设备认证并发限制超过" + nas.getAuthLimit() + " <" + remoteAddress + " -> " + localAddress + ">", Memarylogger.RADIUSD);
-            return;
         }
 
 

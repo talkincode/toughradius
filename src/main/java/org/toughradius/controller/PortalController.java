@@ -606,6 +606,12 @@ public class PortalController implements Constant {
         });
     }
 
+    @GetMapping("/wlan/welcome")
+    public void wlanWelcomeHandler(HttpServletResponse response) throws IOException {
+        String resultUrl = configService.getStringValue(WLAN_MODULE,WLAN_RESULT_URL);
+        response.sendRedirect(resultUrl);
+    }
+
 
 
 }

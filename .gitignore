@@ -16,3 +16,4 @@ application-wjt.properties
 *.pyc
 release/*
 release1/*
+mikrotik/*

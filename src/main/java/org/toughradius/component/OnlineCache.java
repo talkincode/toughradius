@@ -217,6 +217,24 @@ public class OnlineCache {
         }
     }
 
+    public void unlockLastOnline(String userName) {
+        RadiusOnline last = null;
+        synchronized (cacheData) {
+            for (RadiusOnline online : cacheData.values()) {
+                if (userName.equalsIgnoreCase(online.getUsername())) {
+                    if (last == null) {
+                        last = online;
+                    } else if (DateTimeUtil.compareSecond(online.getAcctStartTime(), last.getAcctStartTime()) > 0) {
+                        last = online;
+                    }
+                }
+            }
+        }
+        if (last != null) {
+            unlockOnline(last.getAcctSessionId());
+        }
+    }
+
     /**
      * 用户上线
      */

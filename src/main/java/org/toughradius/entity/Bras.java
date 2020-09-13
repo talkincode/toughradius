@@ -1,10 +1,7 @@
 package org.toughradius.entity;
 
-import sun.rmi.runtime.Log;
-
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Date;
 
 public class Bras implements Serializable{
 

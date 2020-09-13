@@ -60,6 +60,7 @@ public class ConfigController implements Constant {
             configService.updateConfig(new Config(RADIUS_MODULE,RADIUS_TICKET_HISTORY_DAYS,form.getRadiusTicketHistoryDays()));
             configService.updateConfig(new Config(RADIUS_MODULE,RADIUS_IGNORE_PASSWORD,form.getRadiusIgnorePassword()));
             configService.updateConfig(new Config(RADIUS_MODULE,RADIUS_EXPORE_ADDR_POOL,form.getRadiusExpireAddrPool()));
+            configService.updateConfig(new Config(RADIUS_MODULE,RADIUS_OVER_UNLOCK,form.getRadiusOverUnlock()));
         }catch(Exception e){
             logger.error("update config error",e, Memarylogger.SYSTEM);
         }

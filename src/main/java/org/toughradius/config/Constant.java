@@ -12,6 +12,7 @@ public interface Constant {
     public final static String RADIUS_INTERIM_INTELVAL = "radiusInterimIntelval";
     public final static String RADIUS_TICKET_HISTORY_DAYS = "radiusTicketHistoryDays";
     public final static String RADIUS_EXPORE_ADDR_POOL = "radiusExpireAddrPool";
+    public final static String RADIUS_OVER_UNLOCK = "radiusOverUnlock";
 
     public final static String SYSTEM_MODULE = "system";
     public final static String SYSTEM_USERNAME = "systemUsername";

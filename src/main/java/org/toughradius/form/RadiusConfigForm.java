@@ -6,6 +6,7 @@ public class RadiusConfigForm {
     private String radiusIgnorePassword;
     private String radiusTicketHistoryDays;
     private String radiusExpireAddrPool;
+    private String radiusOverUnlock;
 
 
     public String getRadiusInterimIntelval() {
@@ -38,5 +39,13 @@ public class RadiusConfigForm {
 
     public void setRadiusExpireAddrPool(String radiusExpireAddrPool) {
         this.radiusExpireAddrPool = radiusExpireAddrPool;
+    }
+
+    public String getRadiusOverUnlock() {
+        return radiusOverUnlock;
+    }
+
+    public void setRadiusOverUnlock(String radiusOverUnlock) {
+        this.radiusOverUnlock = radiusOverUnlock;
     }
 }

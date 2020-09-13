@@ -29,10 +29,10 @@ import java.util.*;
 
 public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
-    protected  final String SESSION_CLIENT_IP_KEY = "SESSION_CLIENT_IP_KEY";
-    protected  final String SESSION_TYPE = "SESSION_TYPE";
-    protected  final String SESSION_RADSEC_TYPE = "SESSION_RADSEC_TYPE";
-    protected  final String SESSION_UDP_TYPE = "SESSION_UDP_TYPE";
+    protected final String SESSION_CLIENT_IP_KEY = "SESSION_CLIENT_IP_KEY";
+    protected final String SESSION_TYPE = "SESSION_TYPE";
+    protected final String SESSION_RADSEC_TYPE = "SESSION_RADSEC_TYPE";
+    protected final String SESSION_UDP_TYPE = "SESSION_UDP_TYPE";
 
     @Autowired
     protected RadiusStat radiusStat;
@@ -86,63 +86,66 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * BRAS  Auth 并发限制
+     *
      * @param bras
      * @return
      */
-    protected ValidateCache getAuthBrasValidate(Bras bras){
-        if(authValidateMap.containsKey(bras.getId())){
+    protected ValidateCache getAuthBrasValidate(Bras bras) {
+        if (authValidateMap.containsKey(bras.getId())) {
             ValidateCache vc = authValidateMap.get(bras.getId());
             Integer limit = bras.getAuthLimit();
-            if(limit==null){
+            if (limit == null) {
                 limit = 1000;
             }
-            if(limit !=vc.getMaxTimes()){
+            if (limit != vc.getMaxTimes()) {
                 vc.setMaxTimes(limit);
             }
             return vc;
-        }else{
+        } else {
             Integer limit = bras.getAuthLimit();
-            if(limit==null){
+            if (limit == null) {
                 limit = 1000;
             }
-            ValidateCache vc = new ValidateCache(1000,limit);
-            authValidateMap.put(bras.getId(),vc);
+            ValidateCache vc = new ValidateCache(1000, limit);
+            authValidateMap.put(bras.getId(), vc);
             return vc;
         }
     }
 
 
-    private Map<Long,ValidateCache> acctValidateMap = new HashMap<>();
+    private Map<Long, ValidateCache> acctValidateMap = new HashMap<>();
 
     /**
      * BRAS Acct 并发限制
+     *
      * @param bras
      * @return
      */
-    protected ValidateCache getAcctBrasValidate(Bras bras){
-        if(acctValidateMap.containsKey(bras.getId())){
+    protected ValidateCache getAcctBrasValidate(Bras bras) {
+        if (acctValidateMap.containsKey(bras.getId())) {
             ValidateCache vc = acctValidateMap.get(bras.getId());
             Integer limit = bras.getAcctLimit();
-            if(limit==null){
+            if (limit == null) {
                 limit = 1000;
             }
-            if(limit !=vc.getMaxTimes()){
+            if (limit != vc.getMaxTimes()) {
                 vc.setMaxTimes(limit);
             }
             return vc;
-        }else{
+        } else {
             Integer limit = bras.getAcctLimit();
-            if(limit==null){
+            if (limit == null) {
                 limit = 1000;
             }
-            ValidateCache vc = new ValidateCache(1000,limit);
-            acctValidateMap.put(bras.getId(),vc);
+            ValidateCache vc = new ValidateCache(1000, limit);
+            acctValidateMap.put(bras.getId(), vc);
             return vc;
         }
     }
 
     /**
      * 查询设备信息
+     *
      * @param client
      * @param packet
      * @return
@@ -152,17 +155,18 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
         String ip = client.getAddress().getHostAddress();
         RadiusAttribute nasid = packet.getAttribute(32);
         try {
-            if(nasid==null){
-                return brasService.findBras(ip,null,"default");
+            if (nasid == null) {
+                return brasService.findBras(ip, null, "default");
             }
-            return brasService.findBras(ip,null,nasid.getAttributeValue());
+            return brasService.findBras(ip, null, nasid.getAttributeValue());
         } catch (ServiceException e) {
-            throw  new RadiusException(e.getMessage());
+            throw new RadiusException(e.getMessage());
         }
     }
 
     /**
      * 查询用户信息
+     *
      * @param username
      * @return
      */
@@ -173,16 +177,17 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * 验证用户密码
+     *
      * @param user
      * @param accessRequest
      * @throws RadiusException
      */
     public void authUser(Subscribe user, AccessRequest accessRequest) throws RadiusException {
         String plaintext = user.getPassword();
-        String ignorePwd = configService.getStringValue(ConfigService.RADIUS_MODULE,ConfigService.RADIUS_IGNORE_PASSWORD);
+        String ignorePwd = configService.getStringValue(ConfigService.RADIUS_MODULE, ConfigService.RADIUS_IGNORE_PASSWORD);
 
-        if(!"enabled".equals(ignorePwd)){
-            if (plaintext == null || !accessRequest.verifyPassword(plaintext)){
+        if (!"enabled".equals(ignorePwd)) {
+            if (plaintext == null || !accessRequest.verifyPassword(plaintext)) {
                 radiusAuthStat.update(RadiusAuthStat.PWD_ERR);
                 throw new RadiusException("密码错误");
             }
@@ -191,12 +196,13 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * 拷贝代理状态属性
+     *
      * @param request
      * @param answer
      */
     protected void copyProxyState(RadiusPacket request, RadiusPacket answer) {
         List proxyStateAttrs = request.getAttributes(33);
-        for (Iterator i = proxyStateAttrs.iterator(); i.hasNext();) {
+        for (Iterator i = proxyStateAttrs.iterator(); i.hasNext(); ) {
             RadiusAttribute proxyStateAttr = (RadiusAttribute) i.next();
             answer.addAttribute(proxyStateAttr);
         }
@@ -204,6 +210,7 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * 创建记帐响应包
+     *
      * @param accountingRequest
      * @return
      * @throws RadiusException
@@ -216,40 +223,44 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * 创建认证授权响应
+     *
      * @param accessRequest
      * @return
      */
     public AccessAccept getAccessAccept(AccessRequest accessRequest) {
         AccessAccept answer = new AccessAccept(accessRequest.getPacketIdentifier());
-        answer.addAttribute("Reply-Message","ok");
+        answer.addAttribute("Reply-Message", "ok");
         copyProxyState(accessRequest, answer);
         return answer;
     }
+
     public AccessAccept getAccessAccept(AccessRequest accessRequest, String message) {
         AccessAccept answer = new AccessAccept(accessRequest.getPacketIdentifier());
-        answer.addAttribute("Reply-Message",message);
+        answer.addAttribute("Reply-Message", message);
         copyProxyState(accessRequest, answer);
         return answer;
     }
 
     /**
      * 创建认证拒绝响应
+     *
      * @param accessRequest
      * @param error
      * @return
      */
     public RadiusPacket getAccessReject(AccessRequest accessRequest, String error) {
         RadiusPacket answer = new RadiusPacket(RadiusPacket.ACCESS_REJECT, accessRequest.getPacketIdentifier());
-        if(error==null){
+        if (error == null) {
             error = "Unknow Error";
         }
-        answer.addAttribute("Reply-Message",error);
+        answer.addAttribute("Reply-Message", error);
         copyProxyState(accessRequest, answer);
         return answer;
     }
 
     /**
      * 解码原始数据傲文
+     *
      * @param data
      * @param sharedSecret
      * @param forceType
@@ -264,6 +275,7 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * 数据报文解析
+     *
      * @param session
      * @param message
      * @return
@@ -278,11 +290,12 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
         byte[] data = new byte[buffer.limit()];
         buffer.get(data);
         radiusStat.incrReqBytes(data.length);
-        return  data;
+        return data;
     }
 
     /**
      * 发送正常响应
+     *
      * @param session
      * @param remoteAddress
      * @param secret
@@ -293,13 +306,13 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
     protected void sendResponse(IoSession session, SocketAddress remoteAddress, String secret, RadiusPacket request, RadiusPacket response) throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         response.encodeResponsePacket(bos, secret, request);
-        byte [] data = bos.toByteArray();
+        byte[] data = bos.toByteArray();
         IoBuffer outbuff = IoBuffer.wrap(data);
         radiusStat.incrRespBytes(data.length);
-        if(session.getAttribute(SESSION_TYPE).equals(SESSION_RADSEC_TYPE)){
+        if (session.getAttribute(SESSION_TYPE).equals(SESSION_RADSEC_TYPE)) {
             session.write(outbuff);
-        }else{
-            session.write(outbuff,remoteAddress);
+        } else {
+            session.write(outbuff, remoteAddress);
             session.closeOnFlush();
         }
 
@@ -308,6 +321,7 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
     /**
      * 用户认证请求处理
+     *
      * @param accessRequest
      * @param nas
      * @return
@@ -317,54 +331,59 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
         Subscribe user = null;
         boolean macAuth = false;
         // 判断是否mac 认证 （用户名密码与mac相同）
-        if(accessRequest.getUserName().replaceAll("-",":").equals(accessRequest.getMacAddr())){
+        if (accessRequest.getUserName().replaceAll("-", ":").equals(accessRequest.getMacAddr())) {
             user = subscribeMacCache.findSubscribe(accessRequest.getMacAddr());
             macAuth = true;
-        }else{
+        } else {
             user = getUser(accessRequest.getUserName());
         }
 
-        if(user == null){
+        if (user == null) {
             radiusAuthStat.update(RadiusAuthStat.NOT_EXIST);
             throw new RadiusException("用户 " + accessRequest.getUserName() + " 不存在");
-        }else if("disabled".equals(user.getStatus())){
+        } else if ("disabled".equals(user.getStatus())) {
             radiusAuthStat.update(RadiusAuthStat.STATUS_ERR);
             throw new RadiusException("用户 " + accessRequest.getUserName() + " 已禁用");
-        }else if("pause".equals(user.getStatus())){
+        } else if ("pause".equals(user.getStatus())) {
             radiusAuthStat.update(RadiusAuthStat.STATUS_ERR);
             throw new RadiusException("用户 " + accessRequest.getUserName() + " 已停用");
         }
 
         // mac认证无需验证密码
-        if(!macAuth){
+        if (!macAuth) {
             Integer chkpwd = configService.getIsCheckPwd();
-            if((chkpwd==null ? 1 : chkpwd)!=0)
+            if ((chkpwd == null ? 1 : chkpwd) != 0)
                 authUser(user, accessRequest);
         }
 
 
-        long timeout = (user.getExpireTime().getTime() - new Date().getTime())/1000;
-        if (timeout <= 0 ) {
-            if(radiusConfig.isAllowNegative()){
+        long timeout = (user.getExpireTime().getTime() - new Date().getTime()) / 1000;
+        if (timeout <= 0) {
+            if (radiusConfig.isAllowNegative()) {
                 timeout = -1;
-            }else{
+            } else {
                 timeout = 86400;
             }
         }
 
-        if (onlineCache.isLimitOver(user.getSubscriber(),user.getActiveNum())) {
+        if (onlineCache.isLimitOver(user.getSubscriber(), user.getActiveNum())) {
             radiusAuthStat.update(RadiusAuthStat.LIMIT_ERR);
-            throw new RadiusException("用户在线数超过限制(MAX=" + user.getActiveNum() + ")");
+            // 开启自动踢线处理, 并不能保证一定提现成功, 可能会导致超出并发的用户通过认证
+            String overUnlock = configService.getStringValue(ConfigService.RADIUS_MODULE, ConfigService.RADIUS_OVER_UNLOCK);
+            if (overUnlock == null || "disabled".equals(overUnlock) || "".equals(overUnlock)) {
+                throw new RadiusException("用户在线数超过限制(MAX=" + user.getActiveNum() + ")");
+            }
+            onlineCache.unlockLastOnline(user.getSubscriber());
         }
 
         // mac认证无需验证绑定
-        if(!macAuth){
+        if (!macAuth) {
             //判断MAC绑定
-            if (user.getBindMac()!=null&&user.getBindMac()==1) {
-                if (user.getMacAddr() == null||"".equals(user.getMacAddr())) {
+            if (user.getBindMac() != null && user.getBindMac() == 1) {
+                if (user.getMacAddr() == null || "".equals(user.getMacAddr())) {
                     systaskExecutor.execute(() -> {
                         subscribeService.updateMacAddr(accessRequest.getUserName(), accessRequest.getMacAddr());
-                        if(radiusConfig.isTraceEnabled())
+                        if (radiusConfig.isTraceEnabled())
                             logger.info(accessRequest.getUserName(), "用户MAC绑定更新：" + accessRequest.getMacAddr());
                     });
                 } else if (!user.getMacAddr().equals(accessRequest.getMacAddr())) {
@@ -373,11 +392,11 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
                 }
             }
             //判断invlan绑定
-            if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
+            if (user.getBindVlan() != null && user.getBindVlan() == 1) {
                 if (user.getInVlan() == null || user.getInVlan() == 0) {
                     systaskExecutor.execute(() -> {
                         subscribeService.updateInValn(accessRequest.getUserName(), accessRequest.getInVlanId());
-                        if(radiusConfig.isTraceEnabled())
+                        if (radiusConfig.isTraceEnabled())
                             logger.info(accessRequest.getUserName(), "用户内层VLAN绑定更新：" + accessRequest.getInVlanId());
                     });
                 } else if (user.getInVlan() != accessRequest.getInVlanId()) {
@@ -386,11 +405,11 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
                 }
             }
             //判断outvlan绑定
-            if (user.getBindVlan()!=null&&user.getBindVlan()==1) {
+            if (user.getBindVlan() != null && user.getBindVlan() == 1) {
                 if (user.getOutVlan() == null || user.getOutVlan() == 0) {
                     systaskExecutor.execute(() -> {
                         subscribeService.updateOutValn(accessRequest.getUserName(), accessRequest.getOutVlanId());
-                        if(radiusConfig.isTraceEnabled())
+                        if (radiusConfig.isTraceEnabled())
                             logger.info(accessRequest.getUserName(), "用户外层VLAN绑定更新：" + accessRequest.getOutVlanId());
                     });
                 } else if (user.getOutVlan() != accessRequest.getOutVlanId()) {
@@ -402,11 +421,11 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
 
         // 刷新 MAC 认证缓存
         subscribeMacCache.update(accessRequest.getMacAddr(), user.getSubscriber(), radiusConfig.getMacAuthExpire());
-        AccessAccept accept = macAuth?getAccessAccept(accessRequest,"mac auth ok"):getAccessAccept(accessRequest);
+        AccessAccept accept = macAuth ? getAccessAccept(accessRequest, "mac auth ok") : getAccessAccept(accessRequest);
         accept.setPreSessionTimeout(timeout);
         accept.setPreInterim(radiusConfig.getInterimUpdate());
-        accept =   acceptFilter.doFilter(accept,nas,user);
-        accessRequest.addMSCHAPV2Response(accept,user,nas);
+        accept = acceptFilter.doFilter(accept, nas, user);
+        accessRequest.addMSCHAPV2Response(accept, user, nas);
         return accept;
     }
 
@@ -414,15 +433,15 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
     public RadiusPacket accountingRequestReceived(AccountingRequest accountingRequest, Bras nas) throws RadiusException {
         try {
             Subscribe user = getUser(accountingRequest.getUserName());
-            accountingFilter.doFilter(accountingRequest,nas,user);
+            accountingFilter.doFilter(accountingRequest, nas, user);
         } catch (RadiusException e) {
-            logger.error(accountingRequest.getUserName(),"记账处理错误",e, Memarylogger.RADIUSD);
+            logger.error(accountingRequest.getUserName(), "记账处理错误", e, Memarylogger.RADIUSD);
         }
         return getAccountingResponse(accountingRequest);
     }
 
     @Override
-    public void exceptionCaught(IoSession session, Throwable cause)throws Exception {
+    public void exceptionCaught(IoSession session, Throwable cause) throws Exception {
         cause.printStackTrace();
         session.closeNow();
         sessionSet.remove(session);
@@ -450,11 +469,11 @@ public abstract class RadiusBasicHandler extends IoHandlerAdapter {
     public void sessionOpened(IoSession session) throws Exception {
     }
 
-    protected void addSession(IoSession session){
+    protected void addSession(IoSession session) {
         sessionSet.add(session);
     }
 
-    protected Set<IoSession> getSessionSet(){
+    protected Set<IoSession> getSessionSet() {
         return sessionSet;
     }
 
