@@ -1,4 +1,4 @@
-# About TOUGHRADIUS 
+# 关于 TOUGHRADIUS 
 
 
                  )                        )   (                (       (              (
@@ -16,39 +16,38 @@
                                         .-/
                                        (_/
 
-[中文](README_CN.md)
 
-TOUGHRADIUS is an open source Radius service software that supports standard RADIUS protocol (RFC 2865, RFC 2866) and provides a complete AAA implementation. It supports flexible policy management, supports all major access devices and easily extends with rich billing policy support.
+TOUGHRADIUS 是一个开源的Radius服务软件，支持标准RADIUS协议（RFC 2865, RFC 2866），提供完整的AAA实现。支持灵活的策略管理，支持各种主流接入设备并轻松扩展，具备丰富的计费策略支持。
 
-Redeveloped from version 6.x onwards, based on the Java language. A high-performance RADIUS processing engine is provided, along with a simple and easy-to-use web management interface that is easy to use.
+至 6.x 版本开始，基于Java语言重新开发。提供了一个高性能的 RADIUS 处理引擎，同时提供了一个简洁易用的 WEB管理界面，可以轻松上手。
 
-TOUGHRADIUS is similar in functionality to freeRADIUS, but it is simpler to use and easier to develop by extension.
+TOUGHRADIUS 的功能类似于 freeRADIUS，但它使用起来更简单，更易于扩展开发。
 
-## Links
+## 链接
 
-- [Home](https://www.toughradius.net/)
-- [TOUGHRADIUS WIKI Documentation] (https://github.com/talkincode/ToughRADIUS/wiki)
-- [GUI Test Tool](https://github.com/jamiesun/RadiusTester)
-- [Command line testing tool](https://github.com/talkincode/JRadiusTester)
+- [网站首页](https://www.toughradius.net/)
+- [TOUGHRADIUS WIKI 文档](https://github.com/talkincode/ToughRADIUS/wiki)
+- [GUI 测试工具](https://github.com/jamiesun/RadiusTester)
+- [命令行测试工具](https://github.com/talkincode/JRadiusTester)
 
-## Quick start
+## 快速开始
 
-### System environment dependency
+### 系统环境依赖
 
-- Operating System：Support cross-platform deployment (Linux, Windows, MacOS, etc.)
-- java version: 1.8 or higher
-- Database server: MySQL/MariaDB
+- 操作系统：支持跨平台部署 （Linux，Windows，MacOS等）
+- java 版本: 1.8或更高
+- 数据库服务器：MySQL/MariaDB
 
-### Database initialization
+### 数据库初始化
 
-> Please do the installation and configuration yourself, first make sure your database server is running.
+> 数据库的安装配置请自行完成,首先确保你的数据库服务器已经运行
 
-Running database creation scripts and creating dedicated users
+运行创建数据库脚本以及创建专用用户
 
     create database toughradius DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
     GRANT ALL ON toughradius.* TO raduser@'127.0.0.1' IDENTIFIED BY 'radpwd' WITH GRANT OPTION;FLUSH PRIVILEGES;
 
-Creating Database Tables
+创建数据库表
 
     create table if not exists tr_bras
     (
@@ -129,7 +128,7 @@ Creating Database Tables
         on tr_subscribe (update_time);
     
 
-Inserting test data
+插入测试数据
 
     INSERT INTO toughradius.tr_bras
     (identifier, name, ipaddr, vendor_id, portal_vendor,secret, coa_port,ac_port, auth_limit, acct_limit, STATUS, remark, create_time)
@@ -142,30 +141,30 @@ Inserting test data
     VALUES (0, 'test01', '', '888888',  null, null, null, null, 10, 0, 0, '', '', 0, 0, 10.000, 10.000, 100.000, 100.000,
             '10', '10', 'enabled', '', '2019-03-01 14:13:02', '2019-03-01 14:13:00', '2019-03-01 14:12:59', '2019-03-01 14:12:56');
             
-### Run the main program
+### 运行主程序
 
-    java -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar --spring.profiles.active=prod
+    java -jar -Xms256M -Xmx1024M /opt/toughradius-latest.jar  --spring.profiles.active=prod
     
-> Note the path to the jar file (toughradius-latest.jar).
+> 注意 jar 文件（toughradius-latest.jar）的路径
 
-### Linux systemd service configuration
+### Linux  systemd 服务配置
 
 /opt/application-prod.properties
 
-    # web access port
+    # web访问端口
     server.port = 1816
     
-    # If https is enabled, just cancel the following comment
+    # 如果启用 https， 取消以下注释即可
     #server.security.require-ssl=true
     #server.ssl.key-store-type=PKCS12
     #server.ssl.key-store=classpath:toughradius.p12
     #server.ssl.key-store-password=toughstruct
     #server.ssl.key-alias=toughradius
     
-    # Log configuration, either logback-prod.xml or logback-dev.xml, logging directory /var/toughradius/logs
+    # 日志配置，可选 logback-prod.xml 或 logback-dev.xml， 日志目录为 /var/toughradius/logs
     logging.config=classpath:logback-prod.xml
     
-    # Database configuration
+    # 数据库配置
     spring.datasource.url=${RADIUS_DBURL:jdbc:mysql://127.0.0.1:3306/toughradius?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true}
     spring.datasource.username=${RADIUS_DBUSER:raduser}
     spring.datasource.password=${RADIUS_DBPWD:radpwd}
@@ -190,9 +189,9 @@ Inserting test data
     [Install]
     WantedBy=multi-user.target
 
-> If you understand spring systemd and configuration principles, you can modify it according to your actual needs.
+> 如果了解 spring systemd和配置原理，可以根据自己的实际需要进行修改
 
-Start the service with the following commands
+通过以下指令启动服务
 
     systemctl enable toughradius
     systemctl start toughradius
