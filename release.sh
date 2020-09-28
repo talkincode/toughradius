@@ -1,6 +1,6 @@
 #!/bin/sh
 currdir=$PWD
-version="v6.1.1.4"
+version="v6.1.1.5"
 releasedir=${currdir}/release/toughradius-${version}
 releasefile=toughradius-${version}.zip
 
