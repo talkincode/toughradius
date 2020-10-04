@@ -141,6 +141,26 @@ Inserting test data
      down_peak_rate, up_rate_code,down_rate_code, status, remark, begin_time, expire_time, create_time, update_time)
     VALUES (0, 'test01', '', '888888',  null, null, null, null, 10, 0, 0, '', '', 0, 0, 10.000, 10.000, 100.000, 100.000,
             '10', '10', 'enabled', '', '2019-03-01 14:13:02', '2019-03-01 14:13:00', '2019-03-01 14:12:59', '2019-03-01 14:12:56');
+
+### Run docker container
+    
+    export RADIUS_DBURL="jdbc:mysql://172.17.0.1:3306/toughradius?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true"
+    export RADIUS_DBUSER=raduser
+    export RADIUS_DBPWD=radpwd
+    
+    docker run --name toughradius -d \
+    -v /tradiusdata/vardata:/var/toughradius \
+    --env RADIUS_DBURL \
+    --env RADIUS_DBUSER \
+    --env RADIUS_DBPWD \
+    -p 1816:1816/tcp \
+    -p 1812:1812/udp \
+    -p 1813:1813/udp \
+    talkincode/toughradius:latest
+    
+> [More references to environmental variables](https://github.com/talkincode/ToughRADIUS/wiki/docker_related)     
+>
+> [Run with docker-compose](https://github.com/talkincode/ToughRADIUS/wiki/docker_related)
             
 ### Run the main program
 

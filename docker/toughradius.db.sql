@@ -1,7 +1,7 @@
 create schema if not exists toughradius collate utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS toughradius@'172.%.%.%' identified by 'radpwd';
-GRANT ALL PRIVILEGES ON toughradius.* TO toughradius@'172.%.%.%';
-ALTER USER 'toughradius'@'172.%.%.%' IDENTIFIED WITH mysql_native_password BY 'radpwd';
+CREATE USER IF NOT EXISTS raduser@'172.%.%.%' identified by 'radpwd';
+GRANT ALL PRIVILEGES ON toughradius.* TO raduser@'172.%.%.%';
+ALTER USER 'raduser'@'172.%.%.%' IDENTIFIED WITH mysql_native_password BY 'radpwd';
 
 use toughradius;
 
