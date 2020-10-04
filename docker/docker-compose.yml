@@ -1,0 +1,72 @@
+version: "3"
+services:
+  mysql:
+    image: mysql
+    container_name: "mysql"
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: myroot
+    command:
+      --default-authentication-plugin=mysql_native_password
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --explicit_defaults_for_timestamp=true
+      --lower_case_table_names=1
+      --max_allowed_packet=128M;
+    volumes:
+      - /tradiusdata/mysql_data:/var/lib/mysql
+      - /tradiusdata/vardata/mysql:/var/log/mysql
+    ports:
+      - 127.0.0.1:3306:3306
+    expose:
+      - 3306
+    networks:
+      tradius_network:
+
+  toughradius:
+    depends_on:
+      - 'mysql'
+    image: talkincode/toughradius:latest
+    container_name: "toughradius"
+    restart: always
+    ports:
+      - "1816:1816"
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    expose:
+      - 1816
+      - 1812/udp
+      - 1813/udp
+    volumes:
+      - /tradiusdata/vardata:/var/toughradius
+    environment:
+      - RADIUS_DBURL=jdbc:mysql://mysql:3306/toughradius?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&allowMultiQueries=true
+      - RADIUS_DBUSER=raduser
+      - RADIUS_DBPWD=radpwd
+      - RADIUS_DBPOOL=120
+      - RADIUSD_AUTH_ENABLED=true
+      - RADIUSD_ACCT_ENABLED=true
+      - RADIUSD_AUTH_PORT=1812
+      - RADIUSD_ACCT_PORT=1813
+      - RADIUSD_DEBUG=true
+      - RADIUSD_AUTH_POOL=32
+      - RADIUSD_ACCT_POOL=32
+      - RADIUSD_MAC_AUTH_EXPIRE=86400
+      - RADIUSD_TICKET_DIR=/var/toughradius/data/ticket
+      - RADIUSD_STAT_DIR=/var/toughradius/data/stat
+      - RADIUSD_ALLOW_NAGATIVE=false
+      - RADSEC_ENABLED=true
+      - RADSEC_PORT=2083
+      - RADSEC_POOL=32
+      - PORTAL_ENABLED=true
+      - PORTAL_LISTEN=50100
+      - PORTAL_DEBUG=true
+      - PORTAL_PAPCHAP=1
+      - PORTAL_TIMEOUT=30
+      - PORTAL_POOL=32
+      - PORTAL_TEMPLATE_DIR=classpath:/portal/
+    networks:
+      tradius_network:
+
+networks:
+  tradius_network:
