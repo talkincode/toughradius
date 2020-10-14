@@ -89,6 +89,7 @@ public class SubscribeForm {
         subs.setMacAddr(getMacAddr());
         subs.setInVlan(getInVlan());
         subs.setOutVlan(getOutVlan());
+        subs.setStatus(getStatus());
         subs.setUpRate(getUpRate());
         subs.setDownRate(getDownRate());
         subs.setUpPeakRate(getUpPeakRate());
