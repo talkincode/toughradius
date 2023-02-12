@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    let getColumns = function () {
+        return [
+            {
+                height: 30,
+                cols: [
+                    {
+                        view: "combo", name: "node_id", label: tr("cpe","Node"),
+                        options: "/admin/node/options",
+                        css: "nborder-input",
+                    },
+                    {view: "text", name: "sn", label: tr("cpe","SN"), css: "nborder-input",},
+                ]
+            },
+            {
+                height: 30,
+                cols: [
+                    {
+                        view: "combo", name: "vendor_code", label: tr("cpe", "Vendor"),
+                        options: [
+                            {id: "99999", value: "general"},
+                            {id: "14988", value: "mikrotik"},
+                        ],
+                        css: "nborder-input",
+                    },
+                    {view: "text", name: "name", label: tr("cpe","Name"), css: "nborder-input",},
+                ]
+            },
+            {
+                height: 30,
+                cols: [
+                    {view: "text", name: "model", label: tr("cpe", "Model"), css: "nborder-input",},
+                    {view: "text", name: "software_version", label: tr("cpe","Version"), css: "nborder-input",},
+                ]
+            },
+            {
+                height: 30,
+                cols: [
+                    {view: "text", name: "tags", label: tr("cpe", "Tags"), css: "nborder-input",},
+                    {view: "text", name: "task_tags", label: tr("cpe","Task Tags"), css: "nborder-input",},
+                ]
+            },
+            {
+                height: 30,
+                cols: [
+                    {
+                        view: "combo", name: "factoryreset_id", label: tr("cpe", "Factoryreset settings"),
+                        options: "/admin/cwmp/factoryreset/options", labelWidth: 140,
+                        css: "nborder-input",
+                    }
+                ]
+            },
+            {view: "textarea", name: "remark",labelPosition: "top", label: tr("cpe", "Remark")},
+        ]
+    }
+
+
+    let openDetail = function (item) {
+        let winid = "cpe.detail." + item.id
+        let cwmptaskid = webix.uid().toString()
+        let cpeparamsId = webix.uid().toString()
+        let cpefilterId = webix.uid().toString()
+        wxui.openWindow({
+            width: 720,
+            height: 576,
+            fullscreen: true,
+            winid: winid,
+            title: tr("cpe", "CPE Detail") ,
+            body: {
+                rows: [
+                    {
+                        view: "tabbar",
+                        css: "main-tabs",
+                        animate: false,
+                        bottomOffset: 0,
+                        optionWidth: 140,
+                        height: 36,
+                        align: 'left',
+                        multiview: true,
+                        value: "cpe_detail_tab", // the initially selected tab
+                        options: [
+                            {"id": "cpe_detail_tab", "value": tr("cpe","Information")},
+                            {"id": "cpe_rundata_tab", "value": tr("cpe","TR069 Params")},
+                            {"id": "cpe_cwmptask_tab", "value": tr("cpe","TR069 Task")},
+                        ]
+                    },
+                    {
+                        cells: [
+                            {
+                                id: 'cpe_detail_tab',
+                                rows: [
+                                    {
+                                        view: "form",
+                                        paddingX: 20,
+                                        scroll: "auto",
+                                        elementsConfig: {
+                                            marginY: 0,
+                                            labelWidth: 120,
+                                        },
+                                        css: "detail-form",
+                                        url: '/admin/cpe/get?id=' + item.id,
+                                        elements: [
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {view: "text", name: "name", label: tr("cpe","Name"), readonly: true, css: "nborder-input",},
+                                                    {view: "text", name: "system_name", label: tr("cpe", "System Name"), readonly: true, css: "nborder-input",},
+                                                ]
+                                            },
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {view: "text", name: "sn", label: tr("cpe","SN"), readonly: true, css: "nborder-input",},
+                                                ]
+                                            },
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {view: "text", name: "model", label:tr("cpe","Model"), readonly: true, css: "nborder-input",},
+                                                    {view: "text", name: "software_version", label:tr("cpe","Version"), readonly: true, css: "nborder-input",},
+                                                ]
+                                            },
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {view: "text", name: "uptime", label: tr("cpe","Uptime"), readonly: true, css: "nborder-input",},
+                                                    {view: "text", name: "cpu_usage", label: tr("cpe","CPU Use"), readonly: true, css: "nborder-input",},
+                                                ]
+                                            },
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {view: "text", name: "cwmp_url", label: tr("cpe","Cwmp connection address"), readonly: true, css: "nborder-input",},
+                                                ]
+                                            },
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {
+                                                        view: "text",
+                                                        name: "cwmp_last_inform",
+                                                        label: tr("cpe","Cwmp last inform"),
+                                                        readonly: true,
+                                                        css: "nborder-input",
+                                                    },
+                                                ]
+                                            },
+                                            {
+                                                height: 30,
+                                                cols: [
+                                                    {view: "text", name: "tags", label: tr("cpe","Tags"), readonly: true, css: "nborder-input",},
+                                                ]
+                                            },
+                                            {
+                                                view: "template",
+                                                css: "data-remark",
+                                                template: item.remark,
+                                                borderless: true,
+                                                scroll: "auto"
+                                            },
+                                        ],
+                                    }
+                                ]
+                            },
+                            {
+                                id: 'cpe_rundata_tab',
+                                rows: [
+                                    {
+                                        view: "toolbar",
+                                        elements: [
+                                            {
+                                                view: "combo", id: cpefilterId, width: 320, label: "", labelWidth: 0,
+                                                options: [
+                                                    "Device.DeviceInfo.",
+                                                    "Device.ManagementServer.",
+                                                    "Device.InterfaceStack.",
+                                                    "Device.Cellular.",
+                                                    "Device.Ethernet.",
+                                                    "Device.WiFi.",
+                                                    "Device.PPP.",
+                                                    "Device.IP.",
+                                                    "Device.Routing.",
+                                                    "Device.Hosts.",
+                                                    "Device.DNS.",
+                                                    "Device.DHCPv4.",
+                                                    "Device.Firewall.",
+                                                    "Device.X_MIKROTIK_Interface."
+                                                ],
+                                                on: {
+                                                    onChange: function (newv, oldv) {
+                                                        if (newv) {
+                                                            $$(cpeparamsId).filter("#name#", newv);
+                                                        } else {
+                                                            $$(cpeparamsId).filter();
+                                                        }
+                                                    }
+                                                }
+                                            },
+                                            {
+                                                view: "text", on: {
+                                                    onTimedKeyPress: function () {
+                                                        let prefix = $$(cpefilterId).getValue();
+                                                        let value = this.getValue().toLowerCase(); // input data are derived
+                                                        $$(cpeparamsId).filter("#name#", prefix + value);
+                                                    }
+                                                }
+                                            },
+                                        ]
+                                    },
+                                    {
+                                        id: cpeparamsId,
+                                        view: "unitlist",
+                                        uniteBy: function (obj) {
+                                            return obj.tag;
+                                        },
+                                        select: true,
+                                        borderless: true,
+                                        scroll: "auto",
+                                        type: {height: 36},
+                                        template: function (obj) {
+                                            let result = [];
+                                            if (obj.writable === "1") {
+                                                result.push("<i class='mdi mdi-pencil'></i> ");
+                                            } else {
+                                                result.push("<i class='mdi mdi-tag-outline'></i> ");
+                                            }
+                                            result.push(obj.name);
+                                            result.push(" <span style='float: right'> ");
+                                            result.push(obj.value);
+                                            result.push(" </span> ");
+                                            return result.join("");
+                                        },
+                                        url: "/admin/cpe/params?sn=" + item.sn,
+                                    }
+                                ]
+                            },
+                            {
+                                id: 'cpe_cwmptask_tab',
+                                rows: [
+                                    wxui.getDatatable({
+                                        tableid: cwmptaskid,
+                                        url: "/admin/cwmp/presettask/query?sn=" + item.sn,
+                                        columns: [
+                                            {
+                                                id: "action", header: [tr("cpe","Message")], adjust: true,
+                                                template: "<a class='prese_ttask_detail statuscss_#status#' href='javascript:void(0)'><i class='mdi mdi-eye' ></i></a>",
+                                            },
+                                            {
+                                                id: "status", header: [tr("cpe","Status")], adjust: true, sort: "server",
+                                                template: "<span class=' statuscss_#status#'>#status#</span>",
+                                            },
+                                            {
+                                                id: "preset_id", header: [tr("cpe","Name")],
+                                                options: "/admin/cwmp/preset/options", adjust: true, sort: "server"
+                                            },
+                                            {id: "event", header: [tr("cpe","Event")], adjust: true, sort: "server"},
+                                            {id: "created_at", header: [tr("cpe","Created")], adjust: true, sort: "server"},
+                                            {id: "exec_time", header: [tr("cpe","Execution time")], adjust: true, sort: "server"},
+                                            {id: "resp_time", header: [tr("cpe","Response time")], adjust: true, sort: "server"},
+                                            // {header: {content: "headerMenu"}, headermenu: false, width: 35}
+                                        ],
+                                        leftSplit: 0,
+                                        pager: true,
+                                        on: {
+                                            onItemDblClick: function (id, e, node) {
+                                                let ditem = this.getItem(id)
+                                                let msg = ditem.request + "\n\n" + ditem.response + "\n\nContent: \n\n" + ditem.content
+                                                wxui.displayTableMessage(node, this.$width - 64, 480, msg, "xml")
+                                            }
+                                        },
+                                        onClick: {
+                                            "prese_ttask_detail": function (e, id, node) {
+                                                let ditem = this.getItem(id)
+                                                let msg = ditem.request + "\n\n" + ditem.response + "\n\nContent: \n\n" + ditem.content
+                                                wxui.displayTableMessage(node, this.$width - 64, 520, msg, "xml")
+                                            }
+                                        }
+                                    }),
+                                    wxui.getTableFooterBar({
+                                        tableid: cwmptaskid,
+                                        actions: [],
+                                        callback: function () {
+                                            $$(cwmptaskid).clearAll()
+                                            $$(cwmptaskid).load("/admin/cwmp/presettask/query?sn=" + item.sn)
+                                        }
+                                    }),
+                                ]
+                            },
+                        ]
+                    }
+                ]
+            }
+
+        }).show()
+    }
+
+    let deleteItem = function (ids, callback) {
+        webix.confirm({
+            title: tr("cpe","Operation confirmation"),
+            ok: "Yes", cancel: "No",
+            text: "Confirm to delete? This operation is irreversible.",
+            callback: function (ev) {
+                if (ev) {
+                    webix.ajax().get('/admin/cpe/delete', {ids: ids}).then(function (result) {
+                        let resp = result.json();
+                        webix.message({type: resp.msgtype, text: resp.msg, expire: 2000});
+                        if (callback)
+                            callback()
+                    }).fail(function (xhr) {
+                        webix.message({type: 'error', text: "Delete Failure:" + xhr.statusText, expire: 2000});
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     *  Open management status monitoring
+     */
+    let openSuperviseListen = function (session, devid) {
+        let winid = "supervise.listen." + session
+        let respid = webix.uid().toString()
+        let evtSource = null
+        let listenfunc = function () {
+            evtSource = new EventSource('/admin/supervise/action/listen?session=' + session + "&devid=" + devid);
+            evtSource.onmessage = function (e) {
+                console.log(e.data)
+                $$(respid).setValue($$(respid).getValue() + e.data + "\n")
+            }
+            evtSource.onerror = function (e) {
+                console.log("EventSource failed.");
+                evtSource.close()
+            };
+        }
+        wxui.openWindow({
+            width: 720,
+            height: 576,
+            fullscreen: true,
+            winid: winid,
+            title: "Task monitoring",
+            closeEvent: function () {
+                if (evtSource) {
+                    console.log("close sse")
+                    evtSource.close()
+                }
+            },
+            body: {
+                padding: 7,
+                rows: [
+                    {view: "label", label: tr("cpe","running status information..."),},
+                    {id: respid, name: "script_response", view: "codemirror-editor", mode: "javascript"},
+                ]
+            }
+        }).show()
+        $$(respid).setValue("Listening for status data...\n")
+        listenfunc()
+    }
+
+    let openSupervise = function (item) {
+        let winid = "cpe.supervise." + item.Id
+        let logtableid = webix.uid()
+        let showLog = function (id, node) {
+            let ditem = $$(logtableid).getItem(id)
+            webix.ui({
+                view: "popup", height: 400, width: 720, scroll: "auto", body: {
+                    name: "content", view: "codemirror-editor", mode: "python", value: ditem.message
+                }
+            }).show(node)
+        }
+        let getManageTab = function (tabid, ctype, devid) {
+            return {
+                id: tabid,
+                rows:
+                    [
+                        {
+                            view: "datatable", select: true, rightSplit: 1,
+                            columns: [
+                                {id: "name", header: [tr("cpe","Name")], fillspace: true, sort: "string",},
+                                {id: "type", options: "/admin/supervise/type/options", width: 200, sort: "string", header: ["Type"],},
+                                {
+                                    id: "opt", header: '', width: 110, template: function (obj) {
+                                        return "<span title='execute' class='table-btn do_execute'><i class='mdi mdi-link'></i> Execute</span> "
+                                    }
+                                },
+                            ],
+                            url: "/admin/supervise/action/query?ctype=" + ctype + "&devid=" + devid,
+                            onClick: {
+                                do_execute: function (e, id, node) {
+                                    let session = webix.uid()
+                                    let ditem = this.getItem(id)
+                                    wxui.confirmCall(ditem.level === "major",
+                                        "<span style='color: #9D1E15'>There may be unpredictable risks in the current operation, please confirm that you fully understand the current operation</span><br> Are you sure to continue?？",
+                                        function () {
+                                            webix.ajax().get('/admin/supervise/action/execute', {
+                                                id: ditem.sid,
+                                                devid: item.id,
+                                                session: session,
+                                                type: ditem.type
+                                            }).then(function (result) {
+                                                let resp = result.json();
+                                                webix.message({type: resp.msgtype, text: resp.msg, expire: 5000});
+                                            });
+                                            openSuperviseListen(session)
+                                        })
+                                }
+                            }
+                        }
+                    ]
+            }
+        }
+
+        wxui.openWindow({
+            width: 800,
+            height: 600,
+            fullscreen: true,
+            winid: winid,
+            title: tr("cpe","Remote management"),
+            body: {
+                rows: [
+                    {
+                        view: "tabbar",
+                        css: "main-tabs",
+                        animate: false,
+                        bottomOffset: 0,
+                        optionWidth: 140,
+                        height: 36,
+                        align: 'left',
+                        multiview: true,
+                        value: "device_cwmp_manage_tab", // the initially selected tab
+                        options: [
+                            {"id": "device_cwmp_manage_tab", "value": tr("cpe","TR069 Management")},
+                            {"id": "device_cwmpconfig_manage_tab", "value": tr("cpe","TR069 Config")},
+                        ]
+                    },
+                    {
+                        cells: [
+                            getManageTab("device_cwmp_manage_tab", "cwmp", item.id),
+                            getManageTab("device_cwmpconfig_manage_tab", "cwmpconfig", item.id),
+                        ]
+                    }
+                ]
+            },
+        }).show()
+    }
+
+    let batchUpdateFirmware = function (ids) {
+        let winid = "cpe.supervise.batchUpdateFirmware." + webix.uid()
+        let formid = webix.uid()
+        wxui.openWindow({
+            width: 720,
+            height: 576,
+            winid: winid,
+            title: tr("cpe","Firmware batch update"),
+            body: {
+                rows: [
+                    {
+                        id: formid,
+                        view: "form",
+                        scroll: true,
+                        elementsConfig: {labelWidth: 140},
+                        elements: [
+                            {
+                                rows: [
+                                    {label: tr("cpe","CPE List"), view: "label",},
+                                    {
+                                        view: "list",
+                                        borderless: true,
+                                        template: "<i class='mdi mdi-switch'></i> #value#",
+                                        url: "/admin/cpe/options?ids=" + ids,
+                                    },
+                                ]
+                            },
+                            {
+                                view: "combo",
+                                name: "firmwareid",
+                                label: tr("cpe","firmwareConfig"),
+                                options: "/admin/cwmp/firmwareconfig/options",
+                                css: "nborder-input",
+                            },
+                            {
+                                view: "template", css: "form-desc", height: 100, borderless: true,
+                                template: tr("cpe", "Note that after the firmware is delivered, the device will restart, and the device will automatically upgrade the firmware after restarting，" +
+                                    "The device will be disconnected during the upgrade process, and the device will automatically reconnect after the upgrade is complete. Please do not turn off the power during the upgrade process, otherwise the upgrade will fail。" +
+                                    "The firmware update operation will be performed asynchronously in the background, please pay attention to monitoring the status of the device")
+                            },
+                        ],
+                    },
+                    {
+                        padding: 5,
+                        cols: [{},
+                            {
+                                view: "button",
+                                css: "webix_primary",
+                                value: "Update firmware",
+                                width: 150,
+                                height: 36,
+                                click: function () {
+                                    if (!$$(formid).validate()) {
+                                        webix.message({
+                                            type: "error",
+                                            text: tr("global", "Please fill in the valid data."),
+                                            expire: 1000
+                                        });
+                                        return false;
+                                    }
+                                    webix.confirm({
+                                        title: gtr("Operation confirmation"),
+                                        ok: "Yes", cancel: "No",
+                                        text: "This operation will update the cpe firmware in bulk. Confirm?",
+                                        callback: function (ev) {
+                                            if (ev) {
+                                                let session = webix.uid()
+                                                let param = $$(formid).getValues();
+                                                param.devids = ids
+                                                param.session = session
+                                                webix.ajax().post("/admin/superviselog/firmware/update", param).then(function (result) {
+                                                    let resp = result.json();
+                                                    webix.message({type: resp.msgtype, text: resp.msg, expire: 5000});
+                                                })
+                                                openSuperviseListen(session)
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                        ]
+                    }
+                ]
+            },
+        }).show()
+    }
+
+    let batchExecPreset = function (snlist) {
+        let winid = "cpe.supervise.batchExecPreset." + webix.uid()
+        let formid = webix.uid().toString()
+        wxui.openWindow({
+            width: 720,
+            height: 576,
+            winid: winid,
+            title: tr("cpe","Execute batch tasks"),
+            body: {
+                rows: [
+                    {
+                        id: formid,
+                        view: "form",
+                        scroll: true,
+                        elementsConfig: {labelWidth: 100},
+                        elements: [
+                            {
+                                rows: [
+                                    {label: tr("cpe","CPE List"), view: "label",},
+                                    {
+                                        view: "list",
+                                        borderless: true,
+                                        template: "<i class='mdi mdi-switch'></i> #id# - #value#",
+                                        url: "/admin/cpe/sn/options?snlist=" + snlist,
+                                    },
+                                ]
+                            },
+                            {
+                                view: "combo",
+                                name: "pid",
+                                label: tr("cpe","Preset task"),
+                                options: "/admin/cwmp/preset/options",
+                                css: "nborder-input",
+                            },
+                            {
+                                view: "template", css: "form-desc", height: 100, borderless: true,
+                                template: tr("cpe","Note: that scheduled tasks may contain actions that cause the device to reboot，<br>" +
+                                    "After the execution is complete, the device will automatically reconnect. Do not turn off the power during the execution, otherwise the execution will fail。<br>" +
+                                    "The task operation will be performed asynchronously in the background, please pay attention to monitoring the device status")
+                            },
+
+                        ],
+                    },
+                    {
+                        padding: 5,
+                        cols: [{},
+                            {
+                                view: "button",
+                                css: "webix_primary",
+                                label: tr("cpe","Execute preset"),
+                                width: 150,
+                                height: 36,
+                                click: function () {
+                                    if (!$$(formid).validate()) {
+                                        webix.message({
+                                            type: "error",
+                                            text: tr("global", "Please fill in the valid data."),
+                                            expire: 1000
+                                        });
+                                        return false;
+                                    }
+                                    webix.confirm({
+                                        title:gtr("Operation confirmation"),
+                                        ok: "Yes", cancel: "No",
+                                        text: "This operation will update the cpe firmware in bulk. Confirm?",
+                                        callback: function (ev) {
+                                            if (ev) {
+                                                let session = webix.uid()
+                                                let param = $$(formid).getValues();
+                                                param.snlist = snlist
+                                                webix.ajax().get("/admin/cwmp/preset/execute", param).then(function (result) {
+                                                    let resp = result.json();
+                                                    webix.message({type: resp.msgtype, text: resp.msg, expire: 5000});
+                                                })
+                                            }
+                                        }
+                                    });
+                                }
+                            },
+                        ]
+                    }
+                ]
+            },
+        }).show()
+    }
+
+    webix.ready(function () {
+        let updateipUrl = '/admin/cpe/updateip'
+        let importUrl = '/admin/cpe/import'
+        let exportUrl = '/admin/cpe/export'
+        let tableid = webix.uid().toString();
+        let uploadid = webix.uid();
+        let ipuploadid = webix.uid();
+        let queryid = webix.uid()
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cpe/query", queryid)
+        wxui.initUploadApi(uploadid, importUrl, reloadData);
+        wxui.initUploadApi(ipuploadid, updateipUrl, reloadData);
+        webix.ui({
+            css: "main-panel",
+            padding: 7,
+            rows: [
+                wxui.getPageToolbar({
+                    title: tr("cpe", "CPE device"),
+                    icon: "mdi mdi-switch",
+                    elements: [
+                        wxui.getPrimaryButton(tr("cpe","Exec tr069 preset"), 150, false, function () {
+                            let rows = [];
+                            $$(tableid).eachRow(
+                                function (row) {
+                                    let item = $$(tableid).getItem(row);
+                                    if (item && item.state === 1) {
+                                        rows.push(item.sn)
+                                    }
+                                }
+                            );
+                            if (rows.length === 0) {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            } else {
+                                batchExecPreset(rows.join(","));
+                            }
+                        }),
+                        wxui.getPrimaryButton(tr("cpe","update firmware"), 150, false, function () {
+                            let rows = wxui.getTableCheckedIds(tableid);
+                            if (rows.length === 0) {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            } else {
+                                batchUpdateFirmware(rows.join(","));
+                            }
+                        }),
+                        wxui.getPrimaryButton(gtr("Edit"), 90, false, function () {
+                            let item = $$(tableid).getSelectedItem();
+                            if (item) {
+                                let vitem = webix.copy(item)
+                                vitem.api_pwd = ""
+                                wxui.openFormWindow({
+                                    width: 640,
+                                    height: 640,
+                                    title: tr("cpe","CPE edit"),
+                                    data: vitem,
+                                    post: "/admin/cpe/update",
+                                    callback: reloadData,
+                                    elements: getColumns()
+                                }).show();
+                            } else {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            }
+                        }),
+                        wxui.getPrimaryButton(gtr("Clone"), 90, false, function () {
+                            let item = $$(tableid).getSelectedItem();
+                            if (item) {
+                                let vitem = webix.copy(item)
+                                vitem.id = ""
+                                vitem.api_pwd = ""
+                                wxui.openFormWindow({
+                                    width: 640,
+                                    height: 640,
+                                    title: tr("cpe","CPE clone"),
+                                    data: vitem,
+                                    post: "/admin/cpe/add",
+                                    callback: reloadData,
+                                    elements: getColumns()
+                                }).show();
+                            } else {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            }
+                        }),
+                        wxui.getPrimaryButton(gtr("Create"), 90, false, function () {
+                            wxui.openFormWindow({
+                                width: 640,
+                                height: 640,
+                                title: tr("cpe","CPE create"),
+                                post: "/admin/cpe/add",
+                                callback: reloadData,
+                                elements: getColumns()
+                            }).show();
+                        }),
+                        wxui.getDangerButton(gtr("Remove"), 90, false, function () {
+                            let rows = wxui.getTableCheckedIds(tableid);
+                            if (rows.length === 0) {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            } else {
+                                deleteItem(rows.join(","), reloadData);
+                            }
+                        }),
+                    ],
+                }),
+                wxui.getTableQueryCustomForm(queryid, [
+                    {
+                        cols: [
+                            {
+                                view: "combo",
+                                name: "equal[node_id]",
+                                options: "/admin/node/options",
+                                label: tr("cpe","Node"),
+                                labelWidth: 80,
+                                width: 270
+                            },
+                            {view: "search", id: "keyword", name: "keyword", placeholder: "Keywords SN/name/description", width: 320},
+                            {
+                                view: "button",
+                                label: gtr("Query"),
+                                css: "webix_transparent",
+                                type: "icon",
+                                icon: "mdi mdi-search-web",
+                                borderless: true,
+                                width: 100,
+                                click: function () {
+                                    reloadData()
+                                }
+                            }, {}
+                        ]
+                    }
+                ]),
+                wxui.getDatatable({
+                    tableid: tableid,
+                    url: '/admin/cpe/query',
+                    columns: [
+                        {
+                            id: "state", header: {content: "masterCheckbox", css: "center"}, headermenu: false, adjust: true,
+                            css: "center", template: "{common.checkbox()}", width: 45
+                        },
+                        {
+                            id: "cwmp_status",
+                            header: [tr("cpe","Tr069")],
+                            template: "<i class='mdi mdi-link statuscss_#cwmp_status#'></i>",
+                            width: 70,
+                            sort: "server"
+                        },
+                        {
+                            id: "name", header: [tr("cpe","Name")], adjust: true,
+                            sort: "server", template: "<a class='do_detail' href='javascript:void(0)'>#name#</a>"
+                        },
+                        {
+                            id: "node_id", options: "/admin/node/options", adjust: true, sort: "server",
+                            header: [tr("cpe","Node")],
+                        },
+                        {id: "sn", header: [tr("cpe","SN")], adjust: true, sort: "server"},
+                        {id: "model", header: [tr("cpe","Model")], adjust: true, sort: "server"},
+                        {id: "software_version", header: [tr("cpe","Version")], adjust: true, sort: "server"},
+                        {
+                            id: "uptime", header: [tr("cpe","Uptime")], adjust: true, sort: "server"
+                        },
+                        {id: "tags", header: [tr("cpe","Tags")], adjust: true, sort: "server"},
+                        {id: "none", header: [""], fillspace: true, sort: "server"},
+                        {
+                            id: "opt", header: '', template: function (obj) {
+                                let actions = []
+                                actions.push("<span title='management' class='table-btn do_supervise'><i class='mdi mdi-link'></i> "+tr("cpe","Management")+"</span> ")
+                                return actions.join(" ")
+                            }, width: 140
+                        },
+                        // {header: {content: "headerMenu"}, headermenu: false, width: 35}
+                    ],
+                    leftSplit: 1,
+                    rightSplit: 1,
+                    pager: true,
+                    on: {
+                        onItemDblClick: function (id, e, node) {
+                            openDetail(this.getItem(id))
+                        }
+                    },
+                    onClick: {
+                        do_detail: function (e, id) {
+                            openDetail(this.getItem(id))
+                        },
+                        do_supervise: function (e, id) {
+                            openSupervise(this.getItem(id))
+                        }
+                    },
+                }),
+                wxui.getTableFooterBar({
+                    tableid: tableid,
+                    actions: [
+                        wxui.getIconButton(gtr("Import"), 90, "import", false, function () {
+                            $$(uploadid).fileDialog({});
+                        }),
+                        wxui.getIconButton(gtr("Export"), 90, "download", false, function () {
+                            wxui.exportData(exportUrl, 'cpes.csv')
+                        }),
+                    ],
+                    callback: reloadData
+                }),
+            ]
+        })
+    })
+</script>
+</body>
+</html>

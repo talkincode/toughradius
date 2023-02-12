@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    let params = {
+        "/nbi/v1/ipaddr/fetch": "ip=1.2.3.4",
+        "/nbi/v1/customer/metrics": "fields=*",
+        "/nbi/v1/customer/account/willexpire": "",
+        "/nbi/v1/teamsdns/list": "",
+        "/nbi/v1/teamsdns/status": "node=teamsdns_master",
+        "/nbi/v1/teamsdns/domain/top": "node=teamsdns_master\nlimit=10",
+        "/nbi/v1/teamsdns/matcher/top": "node=teamsdns_master",
+        "/nbi/v1/teamsdns/rcode/top": "node=teamsdns_master",
+        "/nbi/v1/teamsacs/radius/status": "",
+        "/nbi/v1/events": "",
+        "/nbi/v1/ticket/pending": "",
+    }
+    webix.ready(function () {
+            let api_method = webix.uid();
+            let api_url = webix.uid();
+            let api_user = webix.uid();
+            let api_request = webix.uid();
+            let api_response = webix.uid();
+            webix.ui({
+                padding: 15,
+                rows: [
+                    wxui.getPageToolbar({
+                        icon: "cogs",
+                        title: "API 测试",
+                        elements: []
+                    }),
+                    {
+                        cols: [
+                            // {view: "radio", id: api_method, value: "GET", options: ['GET', 'POST'], width: 210, validate: webix.rules.isNotEmpty},
+                            {
+                                view: "richselect",
+                                id: api_url,
+                                label: gtr("API"),
+                                labelWidth: 0,
+                                options: "/admin/apiurls",
+                                on: {
+                                    onChange: function (newv, oldv) {
+                                        $$(api_request).setValue(params[newv])
+                                    }
+                                }
+                            },
+                            wxui.getPrimaryButton("参数模板", 150, false, function () {
+                                $$(api_request).setValue(params[$$(api_url).getValue()])
+                            }),
+                            wxui.getPrimaryButton("发送请求", 150, false, function () {
+                                $$(api_response).setValue("")
+                                let url = $$(api_url).getValue()
+                                let reqlines = $$(api_request).getValue().split("\n")
+                                let params = {}
+                                try {
+                                    for (let i in reqlines) {
+                                        let attrArray = reqlines[i].split("=")
+                                        if (attrArray.length !== 2) {
+                                            continue;
+                                        }
+                                        params[attrArray[0]] = attrArray[1]
+                                    }
+                                } catch (e) {
+                                    console.log(e)
+                                }
+
+                                if (params["export"] === "true") {
+                                    webix.ajax().response("blob").post(url, params, function (text, data) {
+                                        let a = document.createElement('a');
+                                        a.href = window.URL.createObjectURL(data);
+                                        a.download = "apiresult.xlsx";
+                                        a.click();
+                                    });
+                                }
+
+                                webix.ajax().post(url, params).then(function (result) {
+                                    let resp = result.json()
+                                    $$(api_response).setValue(JSON.stringify(resp, null, 2))
+                                    if (url === "/admin/api/token") {
+                                        webix.attachEvent("onBeforeAjax", function (mode, url, data, request, headers, files, promise) {
+                                                headers["Authorization"] = "Bearer " + resp.data.token;
+                                            }
+                                        );
+                                    }
+                                }).fail(function (xh) {
+                                    $$(api_response).setValue(xh.responseText)
+                                });
+
+                            })
+                        ]
+                    },
+                    // {
+                    //     view: "textarea",
+                    //     id: api_request,
+                    //     label: "API 请求数据",
+                    //     labelPosition: "top",
+                    //     height: 240,
+                    //     placeholder: "name1=value1\nname2=value2\n..."
+                    // },
+                    {view: "label", label: "API 请求数据， 参数格式： name={value} 每行一个，支持多行",},
+                    {id: api_request, name: "api_response", view: "codemirror-editor", mode: "javascript", height: 100},
+                    {view: "resizer"},
+                    {view: "label", label: "API 响应数据",},
+                    {id: api_response, name: "api_response", view: "codemirror-editor", mode: "javascript"},
+                ]
+            })
+        }
+    )
+</script>
+</body>
+</html>

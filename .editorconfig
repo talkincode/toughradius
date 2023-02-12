@@ -1,0 +1,23 @@
+root = true
+
+# all files
+[*.go]
+indent_style = tab
+indent_size = 4
+insert_final_newline = true
+
+[*.py]
+indent_style = space
+indent_size = 4
+
+[Makefile]
+indent_style = tab
+
+[*.js]
+charset = utf-8
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2

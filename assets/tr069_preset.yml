@@ -1,0 +1,50 @@
+# TR069 预设描述格式为标准的YAML格式， 可以方便的使用多种数据结构。比如可以使用一组预设来完成新设备上线自动初始化
+
+#	- oid 可以在脚本，出厂设置，固件配置中设置
+#	- enabled 表示是否启用这个任务
+#	- delay  针对下载类型任务，可以让CPE 延时执行
+#	- onfail  如果定义为cancel， 当该任务失败时， 该描述文件所定义的未执行的任务会全部取消， 定义为 ignore 时， 会继续执行未执行的任务
+
+# 执行顺序为  factoryreset -> firmwareconfig -> Downloads ->Uploads -> SetParameterValues -> GetParameterNames, 在一组预设任务中，可以只设定部分操作， 如果该预设被系统定时任务执行，factoryreset， firmwareconfig  会被忽略
+
+
+# 出厂设置脚本描述， 单个定义
+Factoryreset:
+  oid: "test_factory_reset_cfg"
+  enabled: false
+  delay: 0
+  onfail: "ignore"
+
+# 固件配置描述
+Firmwareconfig:
+  oid: "test_firmware_cfg"
+  enabled: false
+  delay: 0
+  onfail: "ignore"
+
+# 常规下载脚本，支持多个顺序执行
+Downloads:
+  - oid: "test_download"
+    enabled: true
+    delay: 0
+    onfail: "ignore"
+  - oid: "test_download2"
+    enabled: true
+    delay: 0
+    onfail: "ignore"
+
+# 常规上传任务，支持多个顺序执行
+Uploads:
+  - filetype: "2 VendorLog File"
+    enabled: false
+    onfail: "ignore"
+
+# 设置参数，多组参数一次下发
+SetParameterValues:
+  - name: "Device.DeviceInfo.X_MIKROTIK_SystemIdentity"
+    type: "string"
+    value: "TestRos"
+
+# 获取参数，支持多个顺序执行
+GetParameterValues:
+  - "Device.DeviceInfo."

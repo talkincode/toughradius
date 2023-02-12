@@ -1,0 +1,12 @@
+<soapenv:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/encoding/'
+                  xmlns:xsd='http://www.w3.org/2001/XMLSchema'
+                  xmlns:cwmp='urn:dslforum-org:cwmp-1-0'
+                  xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'
+                  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+    <soapenv:Body>
+        <cwmp:GetParameterNames>
+            <ParameterPath>InternetGatewayDevice.DeviceInfo.Hello</ParameterPath>
+            <NextLevel>false</NextLevel>
+        </cwmp:GetParameterNames>
+    </soapenv:Body>
+</soapenv:Envelope>

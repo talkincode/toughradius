@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+
+    let getColumns = function () {
+        return [
+            {view: "text", name: "name", label: "Name", css: "nborder-input",},
+            {
+                view: "datepicker",
+                name: "expire",
+                label: "Expire(*)",
+                stringResult: true,
+                format: "%Y-%m-%d",
+                validate: webix.rules.isNotEmpty,
+                css: "nborder-input",
+                editable: true
+            },
+            {view: "textarea", name: "remark", label: "Remark"},
+        ]
+    }
+
+    let deleteItem = function (ids, callback) {
+        webix.confirm({
+            title: "Operation confirmation",
+            ok: "Yes", cancel: "No",
+            text: "Confirm to delete? This operation is irreversible.",
+            callback: function (ev) {
+                if (ev) {
+                    webix.ajax().get('/admin/apitoken/delete', {ids: ids}).then(function (result) {
+                        if (callback)
+                            callback()
+                    }).fail(function (xhr) {
+                        webix.message({type: 'error', text: "Delete Failure:" + xhr.statusText, expire: 2000});
+                    });
+                }
+            }
+        });
+    }
+
+    webix.ready(function () {
+        let tableid = webix.uid().toString();
+        let uploadid = webix.uid();
+        let queryid = webix.uid()
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/apitoken/query", null)
+        let showLog = function (id, node) {
+            let ditem = $$(tableid).getItem(id)
+            webix.ui({
+                view: "popup", height: 360, width: 520, scroll: "auto", body: {
+                    view: "template", css: "log-template", template: ditem.token
+                }
+            }).show(node)
+        }
+        webix.ui({
+            css: "main-panel",
+            padding: 7,
+            rows: [
+                wxui.getPageToolbar({
+                    title: "Api token",
+                    icon: "mdi mdi-server",
+                    elements: [
+                        wxui.getPrimaryButton("Create", 90, false, function () {
+                            wxui.openFormWindow({
+                                width: 640,
+                                height: 640,
+                                title: "Token Create",
+                                post: "/admin/apitoken/add",
+                                callback: reloadData,
+                                elements: getColumns()
+                            }).show();
+                        }),
+                        wxui.getDangerButton("Remove", 90, false, function () {
+                            let rows = wxui.getTableCheckedIds(tableid);
+                            if (rows.length === 0) {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            } else {
+                                deleteItem(rows.join(","), reloadData);
+                            }
+                        }),
+                    ]
+                }),
+                wxui.getDatatable({
+                    tableid: tableid,
+                    url: '/admin/apitoken/query',
+                    subview: function(obj, target) {
+                        return webix.ui({template:"some", autoheight:true}, target);
+                    },
+                    columns: [
+                        {
+                            id: "state",
+                            header: {content: "masterCheckbox", css: "center"},
+                            headermenu: false,
+                            adjust: true, width: 40,
+                            css: "center",
+                            template: "{common.checkbox()}"
+                        },
+                        {
+                            id: "name", header: ["Name"], adjust: true, sort: "server",
+                            template: "<a class='do_detail' href='javascript:void(0)'><i class='mdi mdi-eye' style='color: blue'></i></a> #name#"
+                        },
+                        {id: "expire_time", header: ["Expire"], sort: "string", adjust: true},
+                        {id: "remark", header: ["Remark"], sort: "server", fillspace: true},
+                        // {header: {content: "headerMenu"}, headermenu: false, width: 35}
+                    ],
+                    leftSplit: 1,
+                    pager: true,
+                    on: {},
+                    onClick: {
+                        "do_detail": function (e, id, node) {
+                            showLog(id, node)
+                        }
+                    }
+                }),
+                wxui.getTableFooterBar({
+                    tableid: tableid,
+                    actions: [],
+                    callback: reloadData
+                }),
+            ]
+        })
+    })
+</script>
+</body>
+</html>

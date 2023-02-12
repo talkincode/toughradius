@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    webix.ready(function () {
+        webix.ui({
+            padding: 10,
+            rows: [
+                {
+                    view: "metrics-group",
+                    xCount: 4,
+                    height: 240,
+                    url: "/admin/metrics/radius/data"
+                },
+                {
+                    view: "echarts",
+                    theme: "{{theme}}",
+                    borderless: true,
+                    resize: true,
+                    settings: {
+                        title: {
+                            text: '24h Account online and offline',
+                            subtext: "24h RADIUS Account online and offline count",
+                            left: 'center'
+                        },
+                        tooltip: {
+                            trigger: 'axis',
+                        },
+                        grid: {
+                            left: 50,
+                            right: 50
+                        },
+                        xAxis: {
+                            type: 'time',
+                            boundaryGap: false,
+                        },
+                        yAxis: {
+                            type: 'value',
+                            boundaryGap: [0, '100%'],
+                            splitLine: {
+                                show: true
+                            },
+                        },
+                    },
+                    url: "/admin/metrics/radius/line",
+                },
+            ]
+        })
+    })
+</script>
+</body>
+</html>

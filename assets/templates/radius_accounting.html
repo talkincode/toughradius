@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    webix.ready(function () {
+        let queryid = webix.uid()
+        let tableid = webix.uid()
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/radius/accounting/query", queryid)
+
+        webix.ui({
+            css: "main-panel",
+            padding: 7,
+            rows: [
+                wxui.getPageToolbar({
+                    title: tr("radius","RADIUS Accounting"),
+                    icon: "mdi mdi-card-bulleted-settings",
+                    elements: []
+                }),
+                wxui.getTableQueryCustomForm(queryid, [
+                    {
+                        cols: [
+                            {
+                                view: "datepicker",
+                                timepicker: true,
+                                name: "starttime",
+                                label: gtr("Time From"),
+                                labelWidth: 80,
+                                width:240,
+                                stringResult: true,
+                                format: "%Y-%m-%d %H:%i",
+                                css: "nborder-input",
+                                value: webix.Date.add(new Date(), -8, "hour"),
+                                editable: true
+                            },
+                            {
+                                view: "datepicker",
+                                timepicker: true,
+                                name: "endtime",
+                                label: gtr("to"),
+                                labelWidth: 20,
+                                stringResult: true,
+                                format: "%Y-%m-%d %H:%i",
+                                css: "nborder-input",
+                                value: new Date(),
+                                editable: true
+                            },
+                            {view: "search", id: "keyword", name: "keyword", placeholder: "keywords", width: 320},
+                            {
+                                view: "button",
+                                label: gtr("Query"),
+                                css: "webix_transparent",
+                                type: "icon",
+                                icon: "mdi mdi-search-web",
+                                borderless: true,
+                                width: 100,
+                                click: function () {
+                                    reloadData()
+                                }
+                            }, {}
+                        ]
+                    }
+                ]),
+                wxui.getDatatable({
+                    tableid: tableid,
+                    url: '/admin/radius/accounting/query',
+                    columns: [
+                        {
+                            id: "state",
+                            header: {content: "masterCheckbox", css: "center"},
+                            adjust: true, width: 45,
+                            css: "center",
+                            template: "{common.checkbox()}"
+                        },
+                        {id: "acct_session_id", header: [tr("radius","SessionId")], adjust: true, sort: "string"},
+                        {id: "username", header: [tr("radius","Username")], adjust: true, sort: "string"},
+                        {id: "nas_id", header: [tr("radius","NasId")], adjust: true, sort: "string"},
+                        {id: "nas_addr", header: [tr("radius","NasIp")], adjust: true, sort: "string"},
+                        {id: "framed_ipaddr", header: [tr("radius","UserIP")], adjust: true, sort: "string"},
+                        {id: "mac_addr", header: [tr("radius","Mac")], adjust: true, sort: "string"},
+                        {id: "nas_port_id", header: [tr("radius","NasPortId")], hidden: true, sort: "string"},
+                        {id: "acct_session_time", header: [tr("radius","SessionTime")], adjust: true, sort: "int"},
+                        {id: "acct_input_total", header: [tr("radius","UpTraffic")], adjust: true, sort: "int"},
+                        {id: "acct_output_total", header: [tr("radius","DownTraffic")], adjust: true, sort: "int"},
+                        {id: "acct_input_packets", header: [tr("radius","InputPkts")], adjust: true, sort: "int"},
+                        {id: "acct_output_packets", header: [tr("radius","OutputPkts")], adjust: true, sort: "int"},
+                        {id: "acct_start_time", header: [tr("radius","Starttime")], adjust: true, sort: "int"},
+                        {id: "acct_stop_time", header: [tr("radius","StopTime")], adjust: true, sort: "int"},
+                        {id: "last_update", header: [tr("radius","LastUpdate")], adjust: true, sort: "string"},
+                        {id: "none", header: [""], fillspace: true, headermenu: false},
+                        // {header: {content: "headerMenu"}, headermenu: false, width: 35}
+                    ],
+                    leftSplit: 1,
+                    pager: true,
+                }),
+                wxui.getTableFooterBar({
+                    tableid: tableid,
+                    actions: [],
+                    callback: reloadData
+                }),
+            ]
+        })
+    })
+</script>
+</body>
+</html>

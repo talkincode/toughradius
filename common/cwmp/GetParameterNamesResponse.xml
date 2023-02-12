@@ -1,0 +1,21 @@
+<soap:Envelope
+        xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+        xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+        xmlns:cwmp="urn:dslforum-org:cwmp-1-1">
+    <soap:Header>
+    </soap:Header>
+    <soap:Body>
+        <cwmp:GetParameterNamesResponse>
+            <ParameterList soapenc:arrayType="cwmp:ParameterInfoStruct[2]">
+                <ParameterInfoStruct>
+                    <Name>InternetGatewayDevice.Foo</Name>
+                    <Writable>true</Writable>
+                </ParameterInfoStruct>
+                <ParameterInfoStruct>
+                    <Name>InternetGatewayDevice.Bar</Name>
+                    <Writable>false</Writable>
+                </ParameterInfoStruct>
+            </ParameterList>
+        </cwmp:GetParameterNamesResponse>
+    </soap:Body>
+</soap:Envelope>

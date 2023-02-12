@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    let tableid = webix.uid()
+    let getColumns = function () {
+        return [
+            {view: "text", name: "name", label: "名称", css: "nborder-input",},
+            {view: "text", name: "variable", label: "变量", css: "nborder-input",},
+            {view: "text", name: "symbole", label: "替换符", css: "nborder-input",},
+            {view: "label", label: "变量描述",},
+            {name: "remark", view: "codemirror-editor", mode: "markdown"},
+        ]
+    }
+
+    let deleteItem = function (ids, callback) {
+        webix.confirm({
+            title: "Operation confirmation",
+            ok: "Yes", cancel: "No",
+            text: "Confirm to delete? This operation is irreversible.",
+            callback: function (ev) {
+                if (ev) {
+                    webix.ajax().get('/admin/variable/delete', {ids: ids}).then(function (result) {
+                        let resp = result.json();
+                        webix.message({type: resp.msgtype, text: resp.msg, expire: 2000});
+                        if (callback)
+                            callback()
+                    }).fail(function (xhr) {
+                        webix.message({type: 'error', text: "Delete Failure:" + xhr.statusText, expire: 2000});
+                    });
+                }
+            }
+        });
+    }
+
+    
+    webix.ready(function () {
+        let tableid = webix.uid();
+        let uploadid = webix.uid();
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/variable/query", null)
+        webix.ui({
+            css: "main-panel",
+            padding: 7,
+            rows: [
+                wxui.getPageToolbar({
+                    title: "变量定义",
+                    icon: "mdi mdi-document",
+                    elements: [
+                        wxui.getPrimaryButton("编辑", 90, false, function () {
+                            let item = $$(tableid).getSelectedItem();
+                            if (item) {
+                                let vitem = webix.copy(item)
+                                wxui.openFormWindow({
+                                    fullscreen: true,
+                                    width: 640,
+                                    height: 720,
+                                    title: "修改",
+                                    data: vitem,
+                                    post: "/admin/variable/update",
+                                    callback: reloadData,
+                                    elements: getColumns()
+                                }).show();
+                            } else {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            }
+                        }),
+                        wxui.getPrimaryButton("克隆", 90, false, function () {
+                            let item = $$(tableid).getSelectedItem();
+                            if (item) {
+                                let vitem = webix.copy(item)
+                                vitem._id = ""
+                                vitem.id = ""
+                                wxui.openFormWindow({
+                                    fullscreen: true,
+                                    width: 640,
+                                    height: 720,
+                                    title: "变量克隆",
+                                    data: vitem,
+                                    post: "/admin/variable/add",
+                                    callback: reloadData,
+                                    elements: getColumns()
+                                }).show();
+                            } else {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            }
+                        }),
+                        wxui.getPrimaryButton("创建", 90, false, function () {
+                            wxui.openFormWindow({
+                                fullscreen: true,
+                                width: 640,
+                                height: 720,
+                                title: "变量创建",
+                                post: "/admin/variable/add",
+                                callback: reloadData,
+                                elements: getColumns()
+                            }).show();
+                        }),
+                        wxui.getDangerButton("删除", 90, false, function () {
+                            let rows = wxui.getTableCheckedIds(tableid);
+                            if (rows.length === 0) {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            } else {
+                                deleteItem(rows.join(","), reloadData);
+                            }
+                        }),
+                    ],
+                }),
+                wxui.getDatatable({
+                    tableid: tableid,
+                    url: '/admin/variable/query',
+                    columns: [
+                        {
+                            id: "state",
+                            header: {content: "masterCheckbox", css: "center"},
+                            headermenu: false,
+                            adjust: true,
+                            css: "center",
+                            template: "{common.checkbox()}"
+                        },
+                        {
+                            id: "name",
+                            header: ["名称", {content: "serverFilter"}],
+                            adjust: true,
+                            sort: "server",
+                        },
+                        {
+                            id: "variable",
+                            header: ["变量", {content: "serverFilter"}],
+                            adjust: true,
+                            sort: "server",
+                        },
+                        {
+                            id: "symbole",
+                            header: ["替换符", {content: "serverFilter"}],
+                            adjust: true,
+                            sort: "server",
+                        },
+                        {
+                            id: "remark",
+                            header: ["备注", {content: "serverFilter"}],
+                            fillspace: true,
+                            sort: "server",
+                        },
+                        {header: {content: "headerMenu"}, headermenu: false, width: 35}
+                    ],
+                    rightSplit: 1,
+                    pager: true,
+                }),
+                wxui.getTableFooterBar({
+                    tableid: tableid,
+                    callback: reloadData,
+                    actions: [],
+                }),
+            ]
+        })
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+    <script src="/static/views/settings.min.js?v={{pagever}}" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<script>
+
+    webix.ready(function () {
+        let configlistId = webix.uid().toString();
+        let configViewId = webix.uid().toString();
+        webix.ui({
+            css: "main-panel",
+            // padding: 7,
+            rows: [
+                wxui.getPageToolbar({
+                    title: gtr("Settings"),
+                    icon: "mdi mdi-cogs",
+                    elements: [],
+                }),
+                {
+                    cols: [
+                        {
+                            width: 210,
+                            css: "settings-list",
+                            borderless: true,
+                            rows: [
+                                {
+                                    view: "template", template: "<i class='mdi mdi-cog-outline'></i> " + tr("settings", "Configuration list"),
+                                    type: "header", css:"webix_header webix_dark"
+                                },
+                                {
+                                    id: configlistId,
+                                    view: "list",
+                                    borderless: true,
+                                    css: "settings-members",
+                                    select: true,
+                                    autoheight: true,
+                                    type: {
+                                        height: 40
+                                    },
+                                    url: "/admin/settings/configlist",
+                                    template: function(obj){
+                                        return "<i class='"+obj.icon+"'></i> <span>"+tr("settings", obj.title)+"</span>";
+                                    },
+                                    ready: function () {
+                                        $$(configlistId).select($$(configlistId).getFirstId());
+                                        $$(configViewId).addView(settingsUi.getSystemConfigView(this.getSelectedItem()))
+                                    },
+                                    on: {
+                                        onItemClick: function (id) {
+                                            $$(configViewId).removeView("settings_form_view")
+                                            let item = this.getItem(id);
+                                            $$(configViewId).addView(settingsUi.getConfigView(item))
+                                        }
+                                    },
+                                },{}
+                            ]
+                        },
+                        {
+                            id: configViewId,
+                            css: "settings-form",
+                            rows:[
+
+                            ]
+                        }
+                    ]
+                },
+            ]
+        })
+    })
+</script>
+</body>
+</html>

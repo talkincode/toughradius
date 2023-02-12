@@ -1,0 +1,376 @@
+# -*- text -*-
+##
+##  eap.conf -- Configuration for EAP types (PEAP, TTLS, etc.)
+##
+##	$Id: 2621e183c3d9eafacb03bbea57a4a1fb71bf0383 $
+
+#######################################################################
+#
+#  Whatever you do, do NOT set 'Auth-Type := EAP'.  The server
+#  is smart enough to figure this out on its own.  The most
+#  common side effect of setting 'Auth-Type := EAP' is that the
+#  users then cannot use ANY other authentication method.
+#
+eap {
+	#  Invoke the default supported EAP type when
+	#  EAP-Identity response is received.
+	#
+	#  The incoming EAP messages DO NOT specify which EAP
+	#  type they will be using, so it MUST be set here.
+	#
+	#  For now, only one default EAP type may be used at a time.
+	#
+	#  If the EAP-Type attribute is set by another module,
+	#  then that EAP type takes precedence over the
+	#  default type configured here.
+	#
+	default_eap_type = mschapv2
+
+	#  A list is maintained to correlate EAP-Response
+	#  packets with EAP-Request packets.  After a
+	#  configurable length of time, entries in the list
+	#  expire, and are deleted.
+	#
+	timer_expire     = 60
+
+	#  There are many EAP types, but the server has support
+	#  for only a limited subset.  If the server receives
+	#  a request for an EAP type it does not support, then
+	#  it normally rejects the request.  By setting this
+	#  configuration to "yes", you can tell the server to
+	#  instead keep processing the request.  Another module
+	#  MUST then be configured to proxy the request to
+	#  another RADIUS server which supports that EAP type.
+	#
+	#  If another module is NOT configured to handle the
+	#  request, then the request will still end up being
+	#  rejected.
+	ignore_unknown_eap_types = no
+
+	# Cisco AP1230B firmware 12.2(13)JA1 has a bug.  When given
+	# a User-Name attribute in an Access-Accept, it copies one
+	# more byte than it should.
+	#
+	# We can work around it by configurably adding an extra
+	# zero byte.
+	cisco_accounting_username_bug = no
+
+	#
+	#  Help prevent DoS attacks by limiting the number of
+	#  sessions that the server is tracking.  For simplicity,
+	#  this is taken from the "max_requests" directive in
+	#  radiusd.conf.
+	max_sessions = ${max_requests}
+
+	# Supported EAP-types
+
+	#
+	#  We do NOT recommend using EAP-MD5 authentication
+	#  for wireless connections.  It is insecure, and does
+	#  not provide for dynamic WEP keys.
+	#
+	md5 {
+	}
+
+	#
+	# EAP-pwd -- secure password-based authentication
+	#
+#	pwd {
+#		group = 19
+
+		#
+#		server_id = theserver@example.com
+
+		#  This has the same meaning as for TLS.
+#		fragment_size = 1020
+
+		# The virtual server which determines the
+		# "known good" password for the user.
+		# Note that unlike TLS, only the "authorize"
+		# section is processed.  EAP-PWD requests can be
+		# distinguished by having a User-Name, but
+		# no User-Password, CHAP-Password, EAP-Message, etc.
+#		virtual_server = "inner-tunnel"
+#	}
+
+	# Cisco LEAP
+	#
+	#  We do not recommend using LEAP in new deployments.  See:
+	#  http://www.securiteam.com/tools/5TP012ACKE.html
+	#
+	#  Cisco LEAP uses the MS-CHAP algorithm (but not
+	#  the MS-CHAP attributes) to perform it's authentication.
+	#
+	#  As a result, LEAP *requires* access to the plain-text
+	#  User-Password, or the NT-Password attributes.
+	#  'System' authentication is impossible with LEAP.
+	#
+	leap {
+	}
+
+	#  Generic Token Card.
+	#
+	#  Currently, this is only permitted inside of EAP-TTLS,
+	#  or EAP-PEAP.  The module "challenges" the user with
+	#  text, and the response from the user is taken to be
+	#  the User-Password.
+	#
+	#  Proxying the tunneled EAP-GTC session is a bad idea,
+	#  the users password will go over the wire in plain-text,
+	#  for anyone to see.
+	#
+	gtc {
+		#  The default challenge, which many clients
+		#  ignore..
+		#challenge = "Password: "
+
+		#  The plain-text response which comes back
+		#  is put into a User-Password attribute,
+		#  and passed to another module for
+		#  authentication.  This allows the EAP-GTC
+		#  response to be checked against plain-text,
+		#  or crypt'd passwords.
+		#
+		#  If you say "Local" instead of "PAP", then
+		#  the module will look for a User-Password
+		#  configured for the request, and do the
+		#  authentication itself.
+		#
+		auth_type = PAP
+	}
+
+	## Common TLS configuration for TLS-based EAP types
+	#
+	#  See raddb/certs/README for additional comments
+	#  on certificates.
+	#
+	#  If OpenSSL was not found at the time the server was
+	#  built, the "tls", "ttls", and "peap" sections will
+	#  be ignored.
+	#
+	#  If you do not currently have certificates signed by
+	#  a trusted CA you may use the 'snakeoil' certificates.
+	#  Included with the server in raddb/certs.
+	#
+	#  If these certificates have not been auto-generated:
+	#    cd raddb/certs
+	#    make
+	#
+	#  These test certificates SHOULD NOT be used in a normal
+	#  deployment.  They are created only to make it easier
+	#  to install the server, and to perform some simple
+	#  tests with EAP-TLS, TTLS, or PEAP.
+	#
+	#  See also:
+	#
+	#  http://www.dslreports.com/forum/remark,9286052~mode=flat
+	#
+	#  Note that you should NOT use a globally known CA here!
+	#  e.g. using a Verisign cert as a "known CA" means that
+	#  ANYONE who has a certificate signed by them can
+	#  authenticate via EAP-TLS!  This is likely not what you want.
+
+	## EAP-PEAP
+	#
+
+	##################################################
+	#
+	#  !!!!! WARNINGS for Windows compatibility  !!!!!
+	#
+	##################################################
+	#
+	#  If you see the server send an Access-Challenge,
+	#  and the client never sends another Access-Request,
+	#  then
+	#
+	#		STOP!
+	#
+	#  The server certificate has to have special OID's
+	#  in it, or else the Microsoft clients will silently
+	#  fail.  See the "scripts/xpextensions" file for
+	#  details, and the following page:
+	#
+	#	http://support.microsoft.com/kb/814394/en-us
+	#
+	#  For additional Windows XP SP2 issues, see:
+	#
+	#	http://support.microsoft.com/kb/885453/en-us
+	#
+	#
+	#  If is still doesn't work, and you're using Samba,
+	#  you may be encountering a Samba bug.  See:
+	#
+	#	https://bugzilla.samba.org/show_bug.cgi?id=6563
+	#
+	#  Note that we do not necessarily agree with their
+	#  explanation... but the fix does appear to work.
+	#
+	##################################################
+
+	#
+	#  The tunneled EAP session needs a default EAP type
+	#  which is separate from the one for the non-tunneled
+	#  EAP module.  Inside of the TLS/PEAP tunnel, we
+	#  recommend using EAP-MS-CHAPv2.
+	#
+	#peap {
+		#  Which tls-config section the TLS negotiation parameters
+		#  are in - see EAP-TLS above for an explanation.
+		#
+		#  In the case that an old configuration from FreeRADIUS
+		#  v2.x is being used, all the options of the tls-config
+		#  section may also appear instead in the 'tls' section
+		#  above. If that is done, the tls= option here (and in
+		#  tls above) MUST be commented out.
+		#
+		#tls = tls-common
+
+		#  The tunneled EAP session needs a default
+		#  EAP type which is separate from the one for
+		#  the non-tunneled EAP module.  Inside of the
+		#  PEAP tunnel, we recommend using MS-CHAPv2,
+		#  as that is the default type supported by
+		#  Windows clients.
+		#
+		#default_eap_type = mschapv2
+
+		#  The PEAP module also has these configuration
+		#  items, which are the same as for TTLS.
+		#
+		#copy_request_to_tunnel = no
+
+		#
+		#  As of version 3.0.5, this configuration item
+		#  is deprecated.  Instead, you should use
+		#
+		# 	update outer.session-state {
+		#		...
+		#
+		#	}
+		#
+		#  This will cache attributes for the final Access-Accept.
+		#
+		#use_tunneled_reply = no
+
+		#  When the tunneled session is proxied, the
+		#  home server may not understand EAP-MSCHAP-V2.
+		#  Set this entry to "no" to proxy the tunneled
+		#  EAP-MSCHAP-V2 as normal MSCHAPv2.
+		#
+	#	proxy_tunneled_request_as_eap = yes
+
+		#
+		#  The inner tunneled request can be sent
+		#  through a virtual server constructed
+		#  specifically for this purpose.
+		#
+		#  If this entry is commented out, the inner
+		#  tunneled request will be sent through
+		#  the virtual server that processed the
+		#  outer requests.
+		#
+		#virtual_server = "inner-tunnel"
+
+		# This option enables support for MS-SoH
+		# see doc/SoH.txt for more info.
+		# It is disabled by default.
+		#
+	#	soh = yes
+
+		#
+		# The SoH reply will be turned into a request which
+		# can be sent to a specific virtual server:
+		#
+	#	soh_virtual_server = "soh-server"
+
+		#
+		# Unlike EAP-TLS, PEAP does not require a client certificate.
+		# However, you can require one by setting the following
+		# option. You can also override this option by setting
+		#
+		#	EAP-TLS-Require-Client-Cert = Yes
+		#
+		# in the control items for a request.
+		#
+	#	require_client_cert = yes
+	#}
+
+	#
+	#  This takes no configuration.
+	#
+	#  Note that it is the EAP MS-CHAPv2 sub-module, not
+	#  the main 'mschap' module.
+	#
+	#  Note also that in order for this sub-module to work,
+	#  the main 'mschap' module MUST ALSO be configured.
+	#
+	#  This module is the *Microsoft* implementation of MS-CHAPv2
+	#  in EAP.  There is another (incompatible) implementation
+	#  of MS-CHAPv2 in EAP by Cisco, which FreeRADIUS does not
+	#  currently support.
+	#
+	mschapv2 {
+		#  Prior to version 2.1.11, the module never
+		#  sent the MS-CHAP-Error message to the
+		#  client.  This worked, but it had issues
+		#  when the cached password was wrong.  The
+		#  server *should* send "E=691 R=0" to the
+		#  client, which tells it to prompt the user
+		#  for a new password.
+		#
+		#  The default is to behave as in 2.1.10 and
+		#  earlier, which is known to work.  If you
+		#  set "send_error = yes", then the error
+		#  message will be sent back to the client.
+		#  This *may* help some clients work better,
+		#  but *may* also cause other clients to stop
+		#  working.
+		#
+#		send_error = no
+
+		#  Server identifier to send back in the challenge.
+		#  This should generally be the host name of the
+		#  RADIUS server.  Or, some information to uniquely
+		#  identify it.
+#		identity = "FreeRADIUS"
+	}
+
+	## EAP-FAST
+	#
+	#  The FAST module implements the EAP-FAST protocol
+	#
+#	fast {
+		# Point to the common TLS configuration
+		#
+		# cipher_list though must include "ADH" for anonymous provisioning.
+		# This is not as straight forward as appending "ADH" alongside
+		# "DEFAULT" as "DEFAULT" contains "!aNULL" so instead it is
+		# recommended "ALL:!EXPORT:!eNULL:!SSLv2" is used
+		#
+#		tls = tls-common
+
+		# PAC lifetime in seconds (default: seven days)
+		#
+#		pac_lifetime = 604800
+
+		# Authority ID of the server
+		#
+		# if you are running a cluster of RADIUS servers, you should make
+		# the value chosen here (and for "pac_opaque_key") the same on all
+		# your RADIUS servers.  This value should be unique to your
+		# installation.  We suggest using a domain name.
+		#
+#		authority_identity = "1234"
+
+		# PAC Opaque encryption key (must be exactly 32 bytes in size)
+		#
+		# This value MUST be secret, and MUST be generated using
+		# a secure method, such as via 'openssl rand -hex 32'
+		#
+#		pac_opaque_key = "0123456789abcdef0123456789ABCDEF"
+
+		# Same as for TTLS, PEAP, etc.
+		#
+#		virtual_server = inner-tunnel
+#	}
+}

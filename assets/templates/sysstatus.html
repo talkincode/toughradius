@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    webix.ready(function () {
+        webix.ui({
+            padding: 10,
+            rows: [
+                {
+                    css: "mydashboard",
+                    height: 95,
+                    paddingX: 6,
+                    paddingY: 5,
+                    cols: [
+                        {view: "mytemplate", src: "/admin/metrics/system/cpuusage?sign=teamsacs", borderless: true}, {width: 7},
+                        {view: "mytemplate", src: "/admin/metrics/system/memusage?sign=teamsacs", borderless: true}, {width: 7},
+                        {view: "mytemplate", src: "/admin/metrics/system/uptime?sign=teamsacs", borderless: true},
+                    ]
+                },
+                {
+                    css: "mydashboard",
+                    height: 95,
+                    paddingX: 6,
+                    paddingY: 5,
+                    cols: [
+                        {view: "mytemplate", src: "/admin/metrics/system/main/cpuusage", borderless: true}, {width: 10},
+                        {view: "mytemplate", src: "/admin/metrics/system/main/memusage", borderless: true}, {width: 10},
+                        {view: "mytemplate", src: "/admin/metrics/system/diskuse", borderless: true},
+                    ]
+                },
+                {
+                    rows: [
+                        {
+                            view: "echarts",
+                            theme: "{{theme}}",
+                            borderless: true,
+                            resize: true,
+                            settings: {
+                                title: {
+                                    text: '24H CPU Usage (%)',
+                                    left: 'center'
+                                },
+                                tooltip: {
+                                    trigger: 'axis',
+                                },
+                                grid: [
+                                    {left: 100, right: 50, height: '35%'},
+                                ],
+                                xAxis: {
+                                    type: 'time',
+                                    boundaryGap: false,
+                                },
+                                yAxis: {
+                                    type: 'value',
+                                    boundaryGap: [0, '100%'],
+                                    splitLine: {
+                                        show: true
+                                    },
+                                    axisLabel: {
+                                        show: true,
+                                        interval: 'auto',
+                                        formatter: '{value} %'
+                                    },
+                                },
+                                visualMap: {
+                                    top: 50, right: 10, pieces: [
+                                        {gt: 0, lte: 60, color: 'green'},
+                                        {gt: 60, lte: 80, color: 'orange'},
+                                    ],
+                                    outOfRange: {color: 'red'}
+                                },
+
+                            },
+                            url: "/admin/metrics/cpuuse/line",
+                        },
+                        {
+                            view: "echarts",
+                            theme: "{{theme}}",
+                            borderless: true,
+                            resize: true,
+                            settings: {
+                                title: {
+                                    text: '24h Memory Usage (MB)',
+                                    left: 'center'
+                                },
+                                tooltip: {
+                                    trigger: 'axis',
+                                },
+                                grid: [
+                                    {left: 100, right: 50},
+                                ],
+                                xAxis: {
+                                    type: 'time',
+                                    boundaryGap: false,
+                                },
+                                yAxis: {
+                                    type: 'value',
+                                    boundaryGap: [0, '100%'],
+                                    splitLine: {
+                                        show: true
+                                    },
+                                    axisLabel: {
+                                        show: true,
+                                        interval: 'auto',
+                                        formatter: '{value} MB'
+                                    },
+                                },
+                            },
+                            url: "/admin/metrics/memuse/line",
+                        },
+                    ]
+                }
+            ]
+        })
+    })
+</script>
+</body>
+</html>

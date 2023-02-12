@@ -1,0 +1,13 @@
+.idea
+.vscode
+assets/build.txt
+assets/buildver.txt
+/release/
+release
+__debug_bin
+.DS_Store
+/.fleet/
+/testdatas/
+/toughradius.yml
+/tmp/
+/log_info.log

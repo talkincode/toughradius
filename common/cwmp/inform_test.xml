@@ -1,0 +1,67 @@
+<soapenv:Envelope xmlns:soap='http://schemas.xmlsoap.org/soap/encoding/'
+                  xmlns:xsd='http://www.w3.org/2001/XMLSchema'
+                  xmlns:cwmp='urn:dslforum-org:cwmp-1-0'
+                  xmlns:soapenv='http://schemas.xmlsoap.org/soap/envelope/'
+                  xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+    <soapenv:Body>
+        <cwmp:Inform>
+            <DeviceId>
+                <Manufacturer>MikroTik</Manufacturer>
+                <OUI>E48D8C</OUI>
+                <ProductClass>hAP ac²</ProductClass>
+                <SerialNumber>CDFC0D90E65B</SerialNumber>
+            </DeviceId>
+            <Event soap:arrayType='cwmp:EventStruct[4]'>
+                <EventStruct>
+                    <EventCode>2 PERIODIC</EventCode>
+                    <CommandKey></CommandKey>
+                </EventStruct>
+                <EventStruct>
+                    <EventCode>0 BOOTSTRAP</EventCode>
+                    <CommandKey></CommandKey>
+                </EventStruct>
+                <EventStruct>
+                    <EventCode>1 BOOT</EventCode>
+                    <CommandKey></CommandKey>
+                </EventStruct>
+                <EventStruct>
+                    <EventCode>4 VALUE CHANGE</EventCode>
+                    <CommandKey></CommandKey>
+                </EventStruct>
+            </Event>
+            <MaxEnvelopes>1</MaxEnvelopes>
+            <CurrentTime>2021-11-25T22:20:58+08:00</CurrentTime>
+            <RetryCount>3</RetryCount>
+            <ParameterList soap:arrayType='cwmp:ParameterValueStruct[7]'>
+                <ParameterValueStruct>
+                    <Name>Device.RootDataModelVersion</Name>
+                    <Value xsi:type='xsd:string'>2.11</Value>
+                </ParameterValueStruct>
+                <ParameterValueStruct>
+                    <Name>Device.DeviceInfo.SoftwareVersion</Name>
+                    <Value xsi:type='xsd:string'>6.48.4</Value>
+                </ParameterValueStruct>
+                <ParameterValueStruct>
+                    <Name>Device.DeviceInfo.ProvisioningCode</Name>
+                    <Value xsi:type='xsd:string'></Value>
+                </ParameterValueStruct>
+                <ParameterValueStruct>
+                    <Name>Device.DeviceInfo.HardwareVersion</Name>
+                    <Value xsi:type='xsd:string'>v1.0</Value>
+                </ParameterValueStruct>
+                <ParameterValueStruct>
+                    <Name>Device.ManagementServer.ParameterKey</Name>
+                    <Value xsi:type='xsd:string'></Value>
+                </ParameterValueStruct>
+                <ParameterValueStruct>
+                    <Name>Device.ManagementServer.ConnectionRequestURL</Name>
+                    <Value xsi:type='xsd:string'>http://172.21.66.2:7547/4c6351932105c1e95c121a94c08fadce28cb</Value>
+                </ParameterValueStruct>
+                <ParameterValueStruct>
+                    <Name>Device.ManagementServer.AliasBasedAddressing</Name>
+                    <Value xsi:type='xsd:boolean'>0</Value>
+                </ParameterValueStruct>
+            </ParameterList>
+        </cwmp:Inform>
+    </soapenv:Body>
+</soapenv:Envelope>

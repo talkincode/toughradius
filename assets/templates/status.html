@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+    <link rel="stylesheet" href="/static/myskin/materialdesignicons.min.css" type="text/css" charset="utf-8">
+    <link rel="stylesheet" href="/static/webix/webix.min.css" type="text/css" charset="utf-8">
+    <link rel="stylesheet" href="/static/myskin/index.min.css?v={{pagever}}" type="text/css" charset="utf-8">
+    <link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon">
+    <script src="/static/webix/webix.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="/static/views/wxui.min.js?v={{pagever}}" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+<script>
+    webix.ready(function () {
+        webix.ui({
+            rows: [
+                {
+                    id: "bss.core.edgenode",
+                    css: "main-panel", padding: 15,
+                    rows: [
+                        wxui.getPageToolbar({
+                            icon: "mdi mdi-monitor-dashboard",
+                            title: "System Status",
+                            elements: []
+                        }),
+                        {
+                            view: "property",
+                            id: "sets",
+                            editable:false,
+                            complexData:true,
+                            url: "{{.prefix}}/status/info.json",
+                            elements: [
+                                {label: "Basic Info", type: "label"},
+                                {label: "Software version", type: "text", id: "basic_info.build"},
+                                {label: "Hostname", type: "text", id: "host_info.Hostname"},
+                                {label: "operating system", type: "text", id: "host_info.OS"},
+                                {label: "Status", type: "label"},
+                                {label: "Memary", type: "text", id: "status_info.Memdesc"},
+                                {label: "Uptime", type: "text", id: "host_info.Uptime"},
+                                {label: "CPU", type: "text", id: "status_info.Cpuinfo"},
+                                {label: "Settings", type: "label"},
+                                {label: "Mongodb", type: "text", id: "settings.mongodb_url"},
+                                {label: "Elastic", type: "text", id: "settings.elastic_url"},
+                                {label: "Genieacs", type: "text", id: "settings.genieacs_url"},
+                            ]
+                        }
+                    ]
+                }
+            ]
+        })
+    })
+</script>
+</body>
+</html>

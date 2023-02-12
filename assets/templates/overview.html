@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    webix.ready(function () {
+        webix.ui({
+            padding: 10,
+            rows: [
+                {
+                    view: "metrics-group",
+                    xCount: 3,
+                    height: 160,
+                    url: "/admin/overview/data"
+                },
+                {
+                    cols: [
+                        {
+                            view: "echarts",
+                            theme: "{{theme}}",
+                            borderless: true,
+                            settings: {
+                                title: {
+                                    text: 'CPE Model statistics',
+                                    left: 'center',
+                                },
+                                tooltip: {
+                                    trigger: 'item'
+                                },
+                                legend: {
+                                    top: 'bottom',
+                                    bottom: 15,
+                                    show: false
+                                },
+                                series: [
+                                    {
+                                        type: 'pie',
+                                        radius: ['40%', '60%'],
+                                        roseType: 'radius',
+                                        itemStyle: {
+                                            shadowBlur: 10,
+                                            shadowColor: 'rgba(0,0,0,0.24)'
+                                        },
+                                        labelLine: {show: true},
+                                    }
+                                ]
+                            },
+                            url: "/admin/overview/cpe/model/pie/data"
+                        },
+                        {
+                            view: "echarts",
+                            theme: "{{theme}}",
+                            borderless: true,
+                            settings: {
+                                title: {
+                                    text: 'CPE Version statistics',
+                                    left: 'center',
+                                },
+                                tooltip: {
+                                    trigger: 'item'
+                                },
+                                legend: {
+                                    top: 'bottom',
+                                    bottom: 15,
+                                    show: false
+                                },
+                                series: [
+                                    {
+                                        type: 'pie',
+                                        radius: ['40%', '60%'],
+                                        roseType: 'radius',
+                                        itemStyle: {
+                                            shadowBlur: 10,
+                                            shadowColor: 'rgba(0,0,0,0.24)'
+                                        },
+                                        labelLine: {show: true},
+                                    }
+                                ]
+                            },
+                            url: "/admin/overview/cpe/version/pie/data"
+                        },
+                    ]
+                }
+            ]
+        })
+    })
+</script>
+</body>
+</html>

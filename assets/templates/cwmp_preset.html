@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+    {{template "header"}}
+</head>
+<body>
+<script>
+    let isSuper = "{{.oprlevel}}"==="super";
+    let tableid = webix.uid()
+    let getColumns = function () {
+        return [
+            {
+                cols: [
+                    {view: "text", name: "name", label: gtr("Name"), css: "nborder-input",},
+                    {
+                        view: "combo",
+                        name: "event",
+                        label: gtr("Event"),
+                        options: ["bootstrap", "boot", "periodic", "scheduled", "sys_scheduled", "none"],
+                        css: "nborder-input",
+                    },
+                ]
+            },
+            {
+                cols: [
+                    {
+                        view: "counter", name: "priority", min: 0, max: 1000, label: tr("cwmp", "Priority"), css: "nborder-input",
+                        bottomLabel: tr("cwmp", "The lower the number, the higher the priority"),
+                    },
+                    {
+                        view: "combo", name: "sched_policy", options: "/admin/cwmp/preset/sched/options",
+                        label: tr("cwmp", "Timing strategy"), css: "nborder-input",
+                    },
+                ]
+            },
+            {
+                cols: [
+                    {
+                        view: "text", name: "task_tags", label: "任务标签", css: "nborder-input",
+                        bottomLabel: tr("cwmp", "When setting a task tag, only devices with matching tags will execute the task, not setting this property will match all possible devices"),
+                    },
+                ]
+            },
+            // {
+            //     cols: [
+            //         {view: "text", name: "sched_key", label: "定时任务ID", css: "nborder-input",},
+            //         {view: "text", name: "interval", label: "定时间隔-秒", css: "nborder-input",},
+            //     ]
+            // },
+            {view: "label", label: tr("cwmp", "Config content")},
+            {name: "content", view: "codemirror-editor", mode: "shell"},
+        ]
+    }
+
+    let deleteItem = function (ids, callback) {
+        webix.confirm({
+            title: gtr("Operation confirmation"),
+            ok: gtr("Yes"), cancel: gtr("No"),
+            text: gtr("Confirm to delete? This operation is irreversible."),
+            callback: function (ev) {
+                if (ev) {
+                    webix.ajax().get('/admin/cwmp/preset/delete', {ids: ids}).then(function (result) {
+                        let resp = result.json();
+                        webix.message({type: resp.msgtype, text: resp.msg, expire: 2000});
+                        if (callback)
+                            callback()
+                    }).fail(function (xhr) {
+                        webix.message({type: 'error', text: gtr("Delete Failure:") + xhr.statusText, expire: 2000});
+                    });
+                }
+            }
+        });
+    }
+
+
+    webix.ready(function () {
+        let tableid = webix.uid();
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/preset/query", null)
+        webix.ui({
+            css: "main-panel",
+            padding: 7,
+            rows: [
+                wxui.getPageToolbar({
+                    title: tr("cwmp", "Tr069 preset"),
+                    icon: "mdi mdi-file-cog",
+                    elements: [
+                        wxui.getPrimaryButton(gtr("Edit"), 90, false, function () {
+                            let item = $$(tableid).getSelectedItem();
+                            if (item) {
+                                let vitem = webix.copy(item)
+                                vitem.api_pwd = ""
+                                wxui.openFormWindow({
+                                    fullscreen: true,
+                                    width: 640,
+                                    height: 720,
+                                    title: tr("cwmp", "Edit preset"),
+                                    data: vitem,
+                                    post: "/admin/cwmp/preset/update",
+                                    callback: reloadData,
+                                    elements: getColumns()
+                                }).show();
+                            } else {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            }
+                        }),
+                        wxui.getPrimaryButton(gtr("Clone"), 90, !isSuper, function () {
+                            let item = $$(tableid).getSelectedItem();
+                            if (item) {
+                                let vitem = webix.copy(item)
+                                vitem._id = ""
+                                vitem.id = ""
+                                wxui.openFormWindow({
+                                    fullscreen: true,
+                                    width: 640,
+                                    height: 720,
+                                    title: tr("cwmp", "Clone preset"),
+                                    data: vitem,
+                                    post: "/admin/cwmp/preset/add",
+                                    callback: reloadData,
+                                    elements: getColumns()
+                                }).show();
+                            } else {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            }
+                        }),
+                        wxui.getPrimaryButton(gtr("Create"), 90, !isSuper, function () {
+                            wxui.openFormWindow({
+                                fullscreen: true,
+                                width: 640,
+                                height: 720,
+                                title: tr("cwmp", "Create preset"),
+                                post: "/admin/cwmp/preset/add",
+                                callback: reloadData,
+                                elements: getColumns()
+                            }).show();
+                        }),
+                        wxui.getDangerButton(gtr("Remove"), 90, !isSuper, function () {
+                            let rows = wxui.getTableCheckedIds(tableid);
+                            if (rows.length === 0) {
+                                webix.message({type: 'error', text: "Please select one", expire: 1500});
+                            } else {
+                                deleteItem(rows.join(","), reloadData);
+                            }
+                        }),
+                    ],
+                }),
+                wxui.getDatatable({
+                    tableid: tableid,
+                    url: '/admin/cwmp/preset/query',
+                    columns: [
+                        {
+                            id: "state",
+                            header: {content: "masterCheckbox", css: "center"},
+                            headermenu: false,
+                            width: 45,
+                            css: "center",
+                            template: "{common.checkbox()}"
+                        },
+                        {
+                            id: "name",
+                            header: [gtr("Name")],
+                            fillspace: true,
+                            sort: "server",
+                        },
+                        {
+                            id: "event",
+                            header: [gtr("Event")],
+                            adjust: true,
+                            sort: "server",
+                        },
+                        {
+                            id: "task_tags",
+                            header: [tr("cwmp", "Task tags")],
+                            adjust: true,
+                            sort: "server",
+                        },
+                        {
+                            id: "priority",
+                            header: [tr("cwmp", "Priority")],
+                            adjust: true,
+                            sort: "server",
+                        },
+                        {id: "none", header: [""], fallspace: true},
+                        // {
+                        //     id: "opt", header: '', template: function (obj) {
+                        //         let actions = []
+                        //         actions.push("<span title='trigger task' class='table-btn do_execute'><i class='mdi mdi-link'></i> " + tr("cwmp", "Trigger task") + "</span> ")
+                        //         return actions.join(" ")
+                        //     }, width: 130
+                        // },
+                        // {header: {content: "headerMenu"}, headermenu: false, width: 35}
+                    ],
+                    onClick: {
+                        // do_execute: function (e, id) {
+                        //     let item = this.getItem(id);
+                        //     let w1 = tr("cwmp", "The current operation may have unpredictable results, please confirm that you fully understand the current operation")
+                        //     let w2 = tr("cwmp","Are you sure to continue?")
+                        //     wxui.confirmCall(true,
+                        //         "<span style='color: #ff5346'>"+w1+"</span><br>"+w2,
+                        //         function () {
+                        //             webix.ajax().get('/admin/cwmp/preset/execute', {pid: item.id, snlist: ""}).then(function (result) {
+                        //                 let resp = result.json();
+                        //                 webix.message({type: resp.msgtype, text: resp.msg, expire: 5000});
+                        //             });
+                        //         })
+                        // }
+                    },
+                    leftSplit: 1,
+                    rightSplit:0,
+                    pager: true,
+                }),
+                wxui.getTableFooterBar({
+                    tableid: tableid,
+                    callback: reloadData,
+                    actions: [],
+                }),
+            ]
+        })
+    })
+</script>
+</body>
+</html>

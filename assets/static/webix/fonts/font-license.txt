@@ -1,0 +1,27 @@
+## Font Awesome 5
+	
+	Copyright: 2018 © Fonticons, Inc.
+	Author:    Dave Gandy
+	License:   SIL (http://scripts.sil.org/OFL)
+	Homepage:  http://fortawesome.github.com/Font-Awesome/
+
+## Material Design Icons
+
+	Author:    Austin Andrews
+	License:   Apache License, Version 2.0
+	Homepage:  https://materialdesignicons.com/
+
+## Roboto
+
+	Author:    Christian Robertson
+	License:   Apache License, Version 2.0
+	Homepage:  https://fonts.google.com/specimen/Roboto 
+
+## PT Sans Free
+
+	Copyright: © 2009 ParaType Ltd.
+	License:   Free Font License v1.00
+
+## Open Sans
+	Copyright: 2020 © The Open Sans Project Authors
+	License:   SIL Open Font License, 1.1
