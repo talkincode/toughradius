@@ -45,7 +45,7 @@ jobs:
           # Note: tags has to be all lower-case
           tags: |
             ca17/toughradius:latest-amd64 
-            ghcr.io/ca17/toughradius/toughradius:latest
+            ghcr.io/talkincode/toughradius/toughradius:latest
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
 
