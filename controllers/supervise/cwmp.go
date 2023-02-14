@@ -14,17 +14,42 @@ import (
 	"github.com/talkincode/toughradius/models"
 )
 
-var cwmpCmds = []SuperviseAction{
-	{Name: "Test cpe cwmp connection", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceConnectTest"},
-	{Name: "Get the list of RPC methods", Type: "cwmp", Level: "normal", Sid: "cwmpGetRPCMethods"},
-	{Name: "Get a list of parameter prefixes", Type: "cwmp", Level: "normal", Sid: "cwmpGetParameterNames"},
-	{Name: "Get and update device information", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceInfoUpdate"},
-	{Name: "Configure device authentication information", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceManagementAuthUpdate"},
-	{Name: "Upload device logs", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceUploadLog"},
-	{Name: "Upload device backup (text)", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceBackup"},
-	{Name: "Download the factory configuration", Type: "cwmp", Level: "major", Sid: "cwmpFactoryConfiguration"},
-	{Name: "Factory reset", Type: "cwmp", Level: "major", Sid: "cwmpFactoryReset"},
-	{Name: "Restart the device", Type: "cwmp", Level: "major", Sid: "cwmpReboot"},
+func getCwmpCmds(vendor string) []SuperviseAction {
+	var cwmpCmds = []SuperviseAction{
+		{Name: "Test cpe cwmp connection", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceConnectTest"},
+		{Name: "Get the list of RPC methods", Type: "cwmp", Level: "normal", Sid: "cwmpGetRPCMethods"},
+		{Name: "Get list of parameter prefixes", Type: "cwmp", Level: "normal", Sid: "cwmpGetParameterNames"},
+		{Name: "Get and update device information", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceInfoUpdate"},
+		{Name: "Configure device authentication information", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceManagementAuthUpdate"},
+		{Name: "Upload device logs", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceUploadLog"},
+		{Name: "Upload device backup (text)", Type: "cwmp", Level: "normal", Sid: "cwmpDeviceBackup"},
+		{Name: "Factory reset", Type: "cwmp", Level: "major", Sid: "cwmpFactoryReset"},
+		{Name: "Restart the device", Type: "cwmp", Level: "major", Sid: "cwmpReboot"},
+	}
+	switch vendor {
+	case cwmp.VendorMikrotik:
+		cwmpCmds = append(cwmpCmds, SuperviseAction{
+			Name:  "Download factory configuration",
+			Type:  "cwmp",
+			Level: "major",
+			Sid:   "cwmpMikrotikFactoryConfiguration"},
+		)
+	}
+	return cwmpCmds
+}
+
+func connectDeviceAuth(session string, dev models.NetCpe) {
+	if dev.CwmpUrl == "" {
+		return
+	}
+	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue(app.ConfigCpeConnectionRequestPassword), dev.CwmpUrl)
+	if err != nil {
+		events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 connect device %s failure %s", dev.CwmpUrl, err.Error()))
+	}
+
+	if isok {
+		events.PubSuperviseLog(dev.ID, session, "info", fmt.Sprintf("TR069 connect device %s success", dev.CwmpUrl))
+	}
 }
 
 func execCwmp(c echo.Context, id string, deviceId int64, session string) error {
@@ -35,8 +60,8 @@ func execCwmp(c echo.Context, id string, deviceId int64, session string) error {
 	}
 
 	switch id {
-	case "cwmpFactoryConfiguration":
-		return execCwmpFactoryConfiguration(c, id, deviceId, session)
+	case "cwmpMikrotikFactoryConfiguration":
+		return execCwmpMikrotikFactoryConfiguration(c, id, deviceId, session)
 	case "cwmpReboot":
 		go cwmpDeviceReboot(id, dev, session)
 	case "cwmpFactoryReset":
@@ -78,14 +103,7 @@ func cwmpDeviceInfoUpdate(sid string, dev models.NetCpe, session string) {
 	if err != nil {
 		events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 Update device information push timeout %s", err.Error()))
 	}
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 connect device %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info", fmt.Sprintf("TR069 connect device %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -119,16 +137,7 @@ func cwmpDeviceConnectTest(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("TR069 Update device message push timeout %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device  %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device  %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -150,16 +159,7 @@ func cwmpGetParameterNames(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("CWMP Update device message push timeout %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -179,16 +179,7 @@ func cwmpGetRPCMethods(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("CWMP GetRPCMethods message push timeout %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device  %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device  %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -205,7 +196,8 @@ func cwmpDeviceUploadLog(sid string, dev models.NetCpe, session string) {
 			CommandKey: session,
 			FileType:   "2 Vendor Log File",
 			URL: fmt.Sprintf("%s/cwmpupload/%s/%s/%s.log",
-				app.GApp().GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token, dev.Sn+"_"+time.Now().Format("20060102")),
+				app.GApp().GetTr069SettingsStringValue(app.ConfigTR069AccessAddress),
+				session, token, dev.Sn+"_"+time.Now().Format("20060102")),
 			Username:     "",
 			Password:     "",
 			DelaySeconds: 5,
@@ -216,16 +208,7 @@ func cwmpDeviceUploadLog(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("CWMP Log upload message push timeout %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device  %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device  %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -237,12 +220,12 @@ func cwmpDeviceBackup(sid string, dev models.NetCpe, session string) {
 		Sn:      dev.Sn,
 		Message: &cwmp.Upload{
 			ID:         session,
-			Name:       "Cwmp Backup Task",
 			NoMore:     0,
 			CommandKey: session,
 			FileType:   "1 Vendor Configuration File",
 			URL: fmt.Sprintf("%s/cwmpupload/%s/%s/%s.rsc",
-				app.GApp().GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token, dev.Sn+"_"+time.Now().Format("20060102")),
+				app.GApp().GetTr069SettingsStringValue(app.ConfigTR069AccessAddress),
+				session, token, dev.Sn+"_"+time.Now().Format("20060102")),
 			Username:     "",
 			Password:     "",
 			DelaySeconds: 5,
@@ -253,16 +236,7 @@ func cwmpDeviceBackup(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("CWMP Backup device message push timeout %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device  %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device  %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -283,16 +257,7 @@ func cwmpDeviceReboot(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("Sending CWMP Reboot device information push timed out %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device  %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device  %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }
 
@@ -312,15 +277,6 @@ func cwmpDeviceFactoryReset(sid string, dev models.NetCpe, session string) {
 			fmt.Sprintf("Sending CWMP FactoryReset device information push timed out %s", err.Error()))
 	}
 
-	isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-	if err != nil {
-		events.PubSuperviseLog(dev.ID, session, "error",
-			fmt.Sprintf("CWMP Connected Device  %s failure %s", dev.CwmpUrl, err.Error()))
-	}
-
-	if isok {
-		events.PubSuperviseLog(dev.ID, session, "info",
-			fmt.Sprintf("CWMP Connected Device  %s success", dev.CwmpUrl))
-	}
+	go connectDeviceAuth(session, dev)
 
 }

@@ -17,12 +17,14 @@ import (
 	"github.com/talkincode/toughradius/events"
 	"github.com/talkincode/toughradius/models"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func (s *Tr069Server) initRouter() {
 	s.root.Add(http.MethodPost, "", s.Tr069Index)
 	s.root.Add(http.MethodGet, "/cwmpfiles/:session/:token/:filename", s.Tr069ScriptAlter)
 	s.root.Add(http.MethodGet, "/cwmpfiles/preset/:session/:token/:filename", s.Tr069PresetScriptAlter)
+	s.root.Add(http.MethodGet, "/cwmpfiles/download/:filename", s.Tr069FirmwareDownload)
 	s.root.Add(http.MethodPut, "/cwmpupload/:session/:token/:filename", s.Tr069Upload)
 	s.root.Add(http.MethodPost, "/cwmpupload/:session/:token/:filename", s.Tr069Upload)
 }
@@ -62,7 +64,7 @@ func (s *Tr069Server) Tr069ScriptAlter(c echo.Context) error {
 		return c.String(400, "bad request")
 	}
 	// 文件 token 当日有效
-	if token != common.Md5Hash(session+app.GConfig().Web.Secret+time.Now().Format("20060102")) {
+	if token != common.Md5Hash(session+app.GConfig().Tr069.Secret+time.Now().Format("20060102")) {
 		return c.String(400, "bad token")
 	}
 	var scriptSession models.CwmpConfigSession
@@ -86,7 +88,7 @@ func (s *Tr069Server) Tr069PresetScriptAlter(c echo.Context) error {
 	}
 
 	// 文件 token 当日有效
-	if token != common.Md5Hash(session+app.GConfig().Web.Secret+time.Now().Format("20060102")) {
+	if token != common.Md5Hash(session+app.GConfig().Tr069.Secret+time.Now().Format("20060102")) {
 		return c.String(400, "bad token")
 	}
 	var presetTask models.CwmpPresetTask
@@ -99,6 +101,15 @@ func (s *Tr069Server) Tr069PresetScriptAlter(c echo.Context) error {
 	c.Response().Header().Set("Keep-Alive", "timeout=5")
 	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s", filename))
 	return c.Blob(200, echo.MIMEOctetStream, []byte(presetTask.Content))
+}
+
+func (s *Tr069Server) Tr069FirmwareDownload(c echo.Context) error {
+	filename := c.Param("filename")
+	if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
+		return c.String(http.StatusBadRequest, "bad request")
+	}
+	c.Response().Header().Set("Content-Disposition", "attachment;filename="+filename)
+	return c.File(path.Join(app.GConfig().System.Workdir, "cwmp", filename))
 }
 
 func (s *Tr069Server) Tr069Index(c echo.Context) error {
@@ -157,6 +168,7 @@ func (s *Tr069Server) Tr069Index(c echo.Context) error {
 			log.Info2("recv inform message",
 				zap.String("namespace", "tr069"),
 				zap.String("msgid", msg.GetID()),
+				zap.String("msgtype", msg.GetName()),
 				zap.String("ipaddr", c.RealIP()),
 				zap.String("metrics", app.MetricsTr069Inform),
 			)
@@ -268,12 +280,12 @@ func (s *Tr069Server) processTransferComplete(c echo.Context, msg cwmp.Message) 
 				fmt.Sprintf("Recv Cwmp %s Message %s", msg.GetName(), common.ToJson(msg)))
 
 			err := app.UpdateCwmpPresetTaskStatus(tc)
-			if err != nil {
+			if err != nil && err != gorm.ErrRecordNotFound {
 				log.Error2("UpdateCwmpPresetTaskStatus error", zap.String("namespace", "tr069"), zap.Error(err))
 			}
 
 			err = app.UpdateCwmpConfigSessionStatus(tc)
-			if err != nil {
+			if err != nil && err != gorm.ErrRecordNotFound {
 				log.Error2("UpdateCwmpConfigSessionStatus error", zap.String("namespace", "tr069"), zap.Error(err))
 			}
 		}

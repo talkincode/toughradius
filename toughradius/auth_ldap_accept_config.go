@@ -46,7 +46,7 @@ func ldapConfigDefaultAccept(s *AuthService, user *LdapRadisProfile, radAccept *
 	if timeout > math.MaxInt32 {
 		timeout = math.MaxInt32
 	}
-	var interimTimes = s.GetIntConfig(app.ConfigAcctInterimInterval, 120)
+	var interimTimes = s.GetIntConfig(app.ConfigRadiusAcctInterimInterval, 120)
 	rfc2865.SessionTimeout_Set(radAccept, rfc2865.SessionTimeout(timeout))
 	rfc2869.AcctInterimInterval_Set(radAccept, rfc2869.AcctInterimInterval(interimTimes))
 

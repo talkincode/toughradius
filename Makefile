@@ -11,56 +11,65 @@ COMMIT_USER     := $(shell git show -s --format=%ce )
 COMMIT_SUBJECT     := $(shell git show -s --format=%s )
 
 buildpre:
-	echo "${BUILD_VERSION} ${RELEASE_VERSION} ${BUILD_TIME}" > assets/buildver.txt
-	echo "BuildVersion=${BUILD_VERSION}" > assets/build.txt
-	echo "ReleaseVersion=${RELEASE_VERSION}" >> assets/build.txt
-	echo "BuildTime=${BUILD_TIME}" >> assets/build.txt
-	echo "BuildName=${BUILD_NAME}" >> assets/build.txt
-	echo "CommitID=${COMMIT_SHA1}" >> assets/build.txt
-	echo "CommitDate=${COMMIT_DATE}" >> assets/build.txt
-	echo "CommitUser=${COMMIT_USER}" >> assets/build.txt
-	echo "CommitSubject=${COMMIT_SUBJECT}" >> assets/build.txt
+	echo "BuildVersion=${BUILD_VERSION} ${RELEASE_VERSION} ${BUILD_TIME}" > assets/buildinfo.txt
+	echo "ReleaseVersion=${RELEASE_VERSION}" >> assets/buildinfo.txt
+	echo "BuildTime=${BUILD_TIME}" >> assets/buildinfo.txt
+	echo "BuildName=${BUILD_NAME}" >> assets/buildinfo.txt
+	echo "CommitID=${COMMIT_SHA1}" >> assets/buildinfo.txt
+	echo "CommitDate=${COMMIT_DATE}" >> assets/buildinfo.txt
+	echo "CommitUser=${COMMIT_USER}" >> assets/buildinfo.txt
+	echo "CommitSubject=${COMMIT_SUBJECT}" >> assets/buildinfo.txt
 
 fastpub:
 	make buildpre
 	make build
-	docker build --build-arg BTIME="$(shell date "+%F %T")" -t toughradius . -f docker/toughradius/Dockerfile
+	docker build --build-arg BTIME="$(shell date "+%F %T")" -t toughradius .
 	docker tag toughradius ${BUILD_ORG}/toughradius:latest
 	docker push ${BUILD_ORG}/toughradius:latest
 
 fastpubm1:
 	make buildpre
 	make build
-	docker buildx build --platform=linux/amd64 --build-arg BTIME="$(shell date "+%F %T")" -t toughradius . -f docker/toughradius/Dockerfile
-	docker tag toughradius ${BUILD_ORG}/toughradius:latest
-	docker push ${BUILD_ORG}/toughradius:latest
-
-freeradius-dockerm1:
-	docker buildx build --platform=linux/amd64 --build-arg BTIME="$(shell date "+%F %T")" -t freeradius . -f docker/freeradius/Dockerfile
-	docker tag freeradius ${BUILD_ORG}/freeradius:latest
-	docker push ${BUILD_ORG}/freeradius:latest
+	docker buildx build --platform=linux/amd64 --build-arg BTIME="$(shell date "+%F %T")" -t toughradius . -f Dockerfile.local
+	docker tag toughradius ${BUILD_ORG}/toughradius:latest-amd64
+	docker push ${BUILD_ORG}/toughradius:latest-amd64
+	make buildarm64
+	docker buildx build --platform=linux/arm64 --build-arg BTIME="$(shell date "+%F %T")" -t toughradius . -f Dockerfile.local
+	docker tag toughradius ${BUILD_ORG}/toughradius:latest-arm64
+	docker push ${BUILD_ORG}/toughradius:latest-arm64
+	docker manifest create ${BUILD_ORG}/toughradius:latest ${BUILD_ORG}/toughradius:latest-arm64 ${BUILD_ORG}/toughradius:latest-amd64
+	# 标注不同架构镜像
+	docker manifest annotate ${BUILD_ORG}/toughradius:latest ${BUILD_ORG}/toughradius:latest-amd64 --os linux --arch amd64
+	docker manifest annotate ${BUILD_ORG}/toughradius:latest ${BUILD_ORG}/toughradius:latest-arm64 --os linux --arch arm64
+	# 推送镜像
+	docker manifest push ${BUILD_ORG}/toughradius:latest
 
 build:
 	test -d ./release || mkdir -p ./release
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
 	upx ./release/toughradius
 
+buildarm64:
+	test -d ./release || mkdir -p ./release
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
+	upx ./release/toughradius
 
 syncdev:
-	@read -p "提示:同步操作尽量在完成一个完整功能特性后进行，请输入提交描述 (wjt):  " cimsg; \
-	git commit -am "$(shell date "+%F %T") : $${cimsg}" || echo "no commit"
+	make buildpre
+	@read -p "提示:同步操作尽量在完成一个完整功能特性后进行，请输入提交描述 (develop):  " cimsg; \
+	git commit -am "$(shell date "+%F %T") : $${cimsg}"
 	# 切换主分支并更新
-	git checkout develop
-	git pull origin develop
+	git checkout main
+	git pull origin main
 	# 切换开发分支变基合并提交
-	git checkout wjt
-	git rebase -i develop
-	# 切换回主分支并合并开发者分支，推送主分支到远程，方便其他开发者合并
 	git checkout develop
-	git merge --no-ff wjt
-	git push origin develop
+	git rebase -i main
+	# 切换回主分支并合并开发者分支，推送主分支到远程，方便其他开发者合并
+	git checkout main
+	git merge --no-ff develop
+	git push origin main
 	# 切换回自己的开发分支继续工作
-	git checkout wjt
+	git checkout develop
 
 tr069crt:
 	# 1 Generate CA private key

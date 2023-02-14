@@ -222,3 +222,7 @@
 .webix_el_radio .webix_radio_1 .webix_custom_radio:before {
      content: " ";
 }
+
+.webix_sidebar .webix_tree_branch_1 .webix_tree_item {
+    padding-left: 20px!important;
+}

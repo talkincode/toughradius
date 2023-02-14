@@ -119,12 +119,12 @@ type CwmpPresetSched struct {
 }
 
 type CwmpPresetContent struct {
-	FactoryReset       *CwmpPresetFactoryReset    `json:"FactoryReset"`
-	FirmwareConfig     *CwmpPresetFirmwareConfig  `json:"FirmwareConfig"`
-	Downloads          []CwmpPresetDownload       `yaml:"Downloads"`
-	Uploads            []CwmpPresetUpload         `yaml:"Uploads"`
-	GetParameterValues []string                   `yaml:"GetParameterValues"`
-	SetParameterValues []CwmpPresetParameterValue `yaml:"SetParameterValues"`
+	FactoryResetConfig *CwmpPresetFactoryResetConfig `yaml:"FactoryResetConfig"`
+	FirmwareConfig     *CwmpPresetFirmwareConfig     `yaml:"FirmwareConfig"`
+	Downloads          []CwmpPresetDownload          `yaml:"Downloads"`
+	Uploads            []CwmpPresetUpload            `yaml:"Uploads"`
+	GetParameterValues []string                      `yaml:"GetParameterValues"`
+	SetParameterValues []CwmpPresetParameterValue    `yaml:"SetParameterValues"`
 }
 
 type CwmpPresetDownload struct {
@@ -140,7 +140,7 @@ type CwmpPresetUpload struct {
 	OnFail   string `yaml:"onfail"`
 }
 
-type CwmpPresetFactoryReset struct {
+type CwmpPresetFactoryResetConfig struct {
 	Oid     string `yaml:"oid"`
 	Enabled bool   `yaml:"enabled"`
 	Delay   int    `yaml:"delay"`

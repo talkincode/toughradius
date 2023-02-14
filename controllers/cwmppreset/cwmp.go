@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/app"
+	"github.com/talkincode/toughradius/assets"
 	"github.com/talkincode/toughradius/common"
 	"github.com/talkincode/toughradius/common/web"
 	"github.com/talkincode/toughradius/models"
@@ -21,6 +22,10 @@ func InitRouter() {
 		return c.Render(http.StatusOK, "cwmp_preset", map[string]interface{}{
 			"oprlevel": webserver.GetCurrUserlevel(c),
 		})
+	})
+
+	webserver.GET("/admin/cwmp/preset/template", func(c echo.Context) error {
+		return c.String(http.StatusOK, assets.Tr069PresetTemplate)
 	})
 
 	webserver.GET("/admin/cwmp/preset/task", func(c echo.Context) error {

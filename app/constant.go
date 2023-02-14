@@ -1,11 +1,17 @@
 package app
 
 const (
-	ConfigRadiusIgnorePwd       = "RadiusIgnorePwd"
-	ConfigAccountingHistoryDays = "AccountingHistoryDays"
-	ConfigAcctInterimInterval   = "AcctInterimInterval"
+	ConfigSystemTitle         = "SystemTitle"
+	ConfigSystemTheme         = "SystemTheme"
+	ConfigSystemLoginRemark   = "SystemLoginRemark"
+	ConfigSystemLoginSubtitle = "SystemLoginSubtitle"
 
-	ConfigCwmpDownloadUrlPrefix        = "CwmpDownloadUrlPrefix"
+	ConfigRadiusIgnorePwd             = "RadiusIgnorePwd"
+	ConfigRadiusAccountingHistoryDays = "AccountingHistoryDays"
+	ConfigRadiusAcctInterimInterval   = "AcctInterimInterval"
+
+	ConfigTR069AccessAddress           = "TR069AccessAddress"
+	ConfigTR069AccessPassword          = "TR069AccessPassword"
 	ConfigCpeConnectionRequestPassword = "CpeConnectionRequestPassword"
 	ConfigCpeAutoRegister              = "CpeAutoRegister"
 )
@@ -20,3 +26,17 @@ const (
 	RadiusVendorCisco    = "9"
 	RadiusVendorStandard = "0"
 )
+
+var ConfigConstants = []string{
+	ConfigSystemTitle,
+	ConfigSystemTheme,
+	ConfigSystemLoginRemark,
+	ConfigSystemLoginSubtitle,
+	ConfigTR069AccessAddress,
+	ConfigTR069AccessPassword,
+	ConfigCpeConnectionRequestPassword,
+	ConfigCpeAutoRegister,
+	ConfigRadiusIgnorePwd,
+	ConfigRadiusAccountingHistoryDays,
+	ConfigRadiusAcctInterimInterval,
+}

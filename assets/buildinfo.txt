@@ -1,0 +1,8 @@
+BuildVersion=latest v8.0.1 2023-02-14 21:03:10
+ReleaseVersion=v8.0.1
+BuildTime=2023-02-14 21:03:10
+BuildName=toughradius
+CommitID=a520ec96ecfabba49b1ef6d5091123afd0118d33
+CommitDate=Sun, 12 Feb 2023 18:57:24 +0800
+CommitUser=jamiesun.net@gmail.com
+CommitSubject=init

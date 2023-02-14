@@ -83,7 +83,7 @@ func execCwmpUpdateFirmware(c echo.Context, devids []string, firmwareId, session
 					CommandKey: session,
 					FileType:   "1 Firmware Upgrade Image",
 					URL: fmt.Sprintf("%s/cwmpfiles/%s/%s/latest.xml",
-						app.GApp().GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token),
+						app.GApp().GetTr069SettingsStringValue(app.ConfigTR069AccessPassword), session, token),
 					Username:       "",
 					Password:       "",
 					FileSize:       len([]byte(firmwareCfg.Content)),
@@ -98,17 +98,7 @@ func execCwmpUpdateFirmware(c echo.Context, devids []string, firmwareId, session
 					fmt.Sprintf("TR069 Push firmware configuration timed out %s", err.Error()))
 			}
 
-			isok, err := cwmp.ConnectionRequestAuth(devitem.Sn,
-				app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), devitem.CwmpUrl)
-			if err != nil {
-				events.PubSuperviseLog(devitem.ID, session, "error",
-					fmt.Sprintf("TR069 connect device %s failure %s", devitem.CwmpUrl, err.Error()))
-			}
-
-			if isok {
-				events.PubSuperviseLog(devitem.ID, session, "info",
-					fmt.Sprintf("TR069 connect device %s success", devitem.CwmpUrl))
-			}
+			go connectDeviceAuth(session, devitem)
 
 		}(dev)
 	}

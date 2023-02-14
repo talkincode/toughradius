@@ -156,19 +156,28 @@ settingsUi.getTr069ConfigView = function (citem) {
                 url: "/admin/settings/tr069/query",
                 elements: [
                     {
-                        view: "radio", name: "CpeAutoRegister",labelPosition: "top", label: tr("settings", "Cpe auto register"),
+                        view: "radio", name: "CpeAutoRegister", labelPosition: "top", label: tr("settings", "Cpe auto register"),
                         options: ["enabled", "disabled"],
                         bottomLabel: tr("settings", "Automatic registration of new CPE devices")
                     },
                     {
-                        view: "text", name: "CwmpDownloadUrlPrefix",labelPosition: "top", label: tr("settings", "Tr069 Download Url Prefix"),
-                        bottomLabel: tr("settings", "The CPE downloads the configuration file through this URL")
+                        view: "text", name: "TR069AccessAddress", labelPosition: "top", label: tr("settings", "TR069 access address"),
+                        bottomLabel: tr("settings", "Toughradius TR069 access address, HTTP | https://domain:port")
                     },
                     {
-                        view: "text", name: "CpeConnectionRequestPassword",labelPosition: "top", label: tr("settings", "CPE Connection authentication password"),
+                        view: "text", name: "TR069AccessPassword", labelPosition: "top", label: tr("settings", "TR069 access password"),
+                        bottomLabel: tr("settings", "Toughradius TR069 access password, It is provided to CPE to access TeamsACS")
+                    },
+                    {
+                        view: "text",
+                        name: "CpeConnectionRequestPassword",
+                        labelPosition: "top",
+                        label: tr("settings", "CPE Connection authentication password"),
                         bottomLabel: tr("settings", "tr069 The authentication password used when the server connects to cpe")
                     },
-                    {}
+                    {
+                        view: "template", css: "form-desc", height: 200, borderless: true, src:"/admin/settings/tr069/quickset"
+                    },
                 ],
             }
         ]

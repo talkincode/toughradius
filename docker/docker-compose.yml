@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 services:
   tsdb:
     image: timescale/timescaledb-ha:pg14-latest
@@ -15,7 +15,7 @@ services:
       POSTGRES_USER: toughradius
       POSTGRES_PASSWORD: toughradius
     volumes:
-      - /data/tsdata:/home/postgres/pgdata/data
+      - tsdb-volume:/home/postgres/pgdata/data
     networks:
       tr_network:
 
@@ -33,8 +33,8 @@ services:
     - LANG=zh_CN.UTF-8
     command: -config.file=/etc/loki/config.yml
     volumes:
-      - /data/loki/etc/loki/config.yml:/etc/loki/config.yml
-      - /data/loki:/loki
+      - /etc/loki/config.yml:/etc/loki/config.yml
+      - loki-volume:/loki
     ports:
       - "3100:3100"
     networks:
@@ -60,7 +60,7 @@ services:
       - "1813:1813/udp"
       - "1914:1914/udp"
     volumes:
-      - /data/toughradius:/var/toughradius
+      - toughradius-volume:/var/toughradius
     environment:
       - GODEBUG=x509ignoreCN=0
       - TOUGHRADIUS_SYSTEM_DEBUG=off
@@ -68,11 +68,9 @@ services:
       - TOUGHRADIUS_DB_NAME=toughradius
       - TOUGHRADIUS_DB_USER=toughradius
       - TOUGHRADIUS_DB_PWD=toughradius
-      - TOUGHRADIUS_WEB_SECRET=9b6de5cc-1979-aaf1-zpms-0f568ac9da37
       - TOUGHRADIUS_RADIUS_DEBUG=off
       - TOUGHRADIUS_RADIUS_ENABLED=on
       - TOUGHRADIUS_TR069_WEB_TLS=on
-      - TOUGHRADIUS_TR069_WEB_SECRET=9b6de5cc-1321-3bf1-zpms-0f568ac9da37
       - TOUGHRADIUS_LOKI_JOB=toughradius
       - TOUGHRADIUS_LOKI_SERVER=http://loki:3100
       - TOUGHRADIUS_LOKI_ENABLE=true
@@ -83,3 +81,8 @@ services:
 
 networks:
   tr_network:
+
+volumes:
+  tsdb-volume:
+  loki-volume:
+  toughradius-volume:

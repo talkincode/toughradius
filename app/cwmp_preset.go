@@ -33,30 +33,19 @@ func (c *CwmpCpe) GetLatestCwmpPresetTask() (*models.CwmpPresetTask, error) {
 
 func (c *CwmpCpe) MatchDevice(oui, productClass, softwareVersion string) bool {
 	var ov, pv, sv int
-	if common.InSlice(oui, []string{"", "any", "N/A", "all"}) ||
-		common.InSlice(c.OUI, strings.Split(oui, ",")) {
-		ov = 0
+	if !common.InSlice(oui, []string{"", "any", "N/A", "all"}) &&
+		!common.InSlice(c.OUI, strings.Split(oui, ",")) {
+		ov = 1
 	}
-	if !common.InSlice(productClass, []string{"", "any", "N/A", "all"}) ||
-		common.InSlice(c.ProductClass, strings.Split(productClass, ",")) {
-		pv = 0
+	if !common.InSlice(productClass, []string{"", "any", "N/A", "all"}) &&
+		!common.InSlice(c.ProductClass, strings.Split(productClass, ",")) {
+		pv = 1
 	}
-	if !common.InSlice(softwareVersion, []string{"", "any", "N/A", "all"}) ||
-		common.InSlice(c.SoftwareVersion, strings.Split(softwareVersion, ",")) {
-		sv = 0
+	if !common.InSlice(softwareVersion, []string{"", "any", "N/A", "all"}) &&
+		!common.InSlice(c.SoftwareVersion, strings.Split(softwareVersion, ",")) {
+		sv = 1
 	}
 	return ov+pv+sv == 0
-}
-
-// MatchVersionLevel 匹配版本级别
-func (c *CwmpCpe) MatchVersionLevel(version string) bool {
-	if version == "" {
-		return true
-	}
-	if c.SoftwareVersion == version {
-		return true
-	}
-	return false
 }
 
 func (c *CwmpCpe) MatchTaskTags(tags string) bool {
@@ -135,11 +124,10 @@ func (c *CwmpCpe) CreateCwmpPresetEventTask(event string, pid string) (err error
 		}
 
 		// Create a factory settings delivery task
-		if content.FactoryReset != nil &&
-			content.FactoryReset.Enabled {
-			err = c.creatFactoryResetDownloadTask(preset.ID, content.FactoryReset, batch, event)
+		if content.FactoryResetConfig != nil && content.FactoryResetConfig.Enabled {
+			err = c.creatFactoryResetConfigDownloadTask(preset.ID, content.FactoryResetConfig, batch, event)
 			if err != nil {
-				log.Errorf("creatFactoryResetDownloadTask: %s", err)
+				log.Errorf("creatFactoryResetConfigDownloadTask: %s", err)
 			}
 		}
 
@@ -194,7 +182,7 @@ func (c *CwmpCpe) CreateCwmpPresetEventTask(event string, pid string) (err error
 }
 
 // Factory Settings Download Task
-func (c *CwmpCpe) creatFactoryResetDownloadTask(presetId int64, freset *models.CwmpPresetFactoryReset, batch, event string) error {
+func (c *CwmpCpe) creatFactoryResetConfigDownloadTask(presetId int64, freset *models.CwmpPresetFactoryResetConfig, batch, event string) error {
 	if !freset.Enabled {
 		return nil
 	}
@@ -205,28 +193,32 @@ func (c *CwmpCpe) creatFactoryResetDownloadTask(presetId int64, freset *models.C
 	}
 
 	if !c.MatchDevice(fconfig.OUI, fconfig.ProductClass, fconfig.SoftwareVersion) {
-		return fmt.Errorf("device not match CwmpFactoryReset")
+		return fmt.Errorf("device not match CwmpFactoryResetConfig")
 	}
 
+	content := app.InjectCwmpConfigVars(c.Sn, fconfig.Content, map[string]string{
+		"CacrtContent": app.GetCacrtContent(),
+	})
+
 	session := common.UUID()
-	var token = common.Md5Hash(session + app.appConfig.Web.Secret + time.Now().Format("20060102"))
+	var token = common.Md5Hash(session + app.appConfig.Tr069.Secret + time.Now().Format("20060102"))
 	msg := &cwmp.Download{
 		ID:         session,
 		NoMore:     0,
 		CommandKey: session,
 		FileType:   "X MIKROTIK Factory Configuration File",
 		URL: fmt.Sprintf("%s/cwmpfiles/preset/%s/%s/latest.alter",
-			app.GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token),
+			app.GetTr069SettingsStringValue(ConfigTR069AccessAddress), session, token),
 		Username:       "",
 		Password:       "",
-		FileSize:       len([]byte(fconfig.Content)),
+		FileSize:       len([]byte(content)),
 		TargetFileName: session + ".alter",
 		DelaySeconds:   freset.Delay,
 		SuccessURL:     "",
 		FailureURL:     "",
 	}
 
-	app.gormDB.Create(&models.CwmpPresetTask{
+	return app.gormDB.Create(&models.CwmpPresetTask{
 		ID:        common.UUIDint64(),
 		PresetId:  presetId,
 		Event:     event,
@@ -238,12 +230,12 @@ func (c *CwmpCpe) creatFactoryResetDownloadTask(presetId int64, freset *models.C
 		Sn:        c.Sn,
 		Request:   string(msg.CreateXML()),
 		Response:  "",
-		Content:   fconfig.Content,
+		Content:   content,
 		Status:    "pending",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-	})
-	return nil
+	}).Error
+
 }
 
 // Firmware Download Task
@@ -261,8 +253,10 @@ func (c *CwmpCpe) creatFirmwareConfigDownloadTask(presetId int64, fconfig *model
 		return fmt.Errorf("device not match CwmpFirmwareConfig")
 	}
 
+	content := app.InjectCwmpConfigVars(c.Sn, firmwareCfg.Content, nil)
+
 	session := common.UUID()
-	var token = common.Md5Hash(session + app.appConfig.Web.Secret + time.Now().Format("20060102"))
+	var token = common.Md5Hash(session + app.appConfig.Tr069.Secret + time.Now().Format("20060102"))
 	msg := &cwmp.Download{
 		ID:         session,
 		Name:       fmt.Sprintf("%s FirmwareConfig Task", c.Sn),
@@ -270,17 +264,17 @@ func (c *CwmpCpe) creatFirmwareConfigDownloadTask(presetId int64, fconfig *model
 		CommandKey: session,
 		FileType:   "1 Firmware Upgrade Image",
 		URL: fmt.Sprintf("%s/cwmpfiles/preset/%s/%s/latest.xml",
-			app.GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token),
+			app.GetTr069SettingsStringValue(ConfigTR069AccessAddress), session, token),
 		Username:       "",
 		Password:       "",
-		FileSize:       len([]byte(firmwareCfg.Content)),
+		FileSize:       len([]byte(content)),
 		TargetFileName: session + ".xml",
 		DelaySeconds:   fconfig.Delay,
 		SuccessURL:     "",
 		FailureURL:     "",
 	}
 
-	app.gormDB.Create(&models.CwmpPresetTask{
+	return app.gormDB.Create(&models.CwmpPresetTask{
 		ID:        common.UUIDint64(),
 		PresetId:  presetId,
 		Event:     event,
@@ -292,12 +286,11 @@ func (c *CwmpCpe) creatFirmwareConfigDownloadTask(presetId int64, fconfig *model
 		Sn:        c.Sn,
 		Request:   string(msg.CreateXML()),
 		Response:  "",
-		Content:   firmwareCfg.Content,
+		Content:   content,
 		Status:    "pending",
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
-	})
-	return nil
+	}).Error
 }
 
 // 配置脚本下载任务
@@ -311,25 +304,26 @@ func (c *CwmpCpe) creatDownloadTask(presetId int64, download models.CwmpPresetDo
 		return err
 	}
 
-	if !c.MatchVersionLevel(script.SoftwareVersion) {
-		return fmt.Errorf("device version  %s level not match %s", c.SoftwareVersion, script.SoftwareVersion)
+	if !c.MatchDevice(script.OUI, script.ProductClass, script.SoftwareVersion) {
+		return fmt.Errorf("device not match CwmpConfig")
 	}
+
 	if !c.MatchTaskTags(script.TaskTags) {
 		return fmt.Errorf("device task_tags  %s not match %s", c.TaskTags(), script.TaskTags)
 	}
 
 	// CPE Vars Replace
-	var scontent = script.Content
+	var scontent = app.InjectCwmpConfigVars(c.Sn, script.Content, nil)
 
 	session := common.UUID()
-	var token = common.Md5Hash(session + app.appConfig.Web.Secret + time.Now().Format("20060102"))
+	var token = common.Md5Hash(session + app.appConfig.Tr069.Secret + time.Now().Format("20060102"))
 	msg := &cwmp.Download{
 		ID:         session,
 		NoMore:     0,
 		CommandKey: session,
 		FileType:   "3 Vendor Configuration File",
 		URL: fmt.Sprintf("%s/cwmpfiles/preset/%s/%s/latest.alter",
-			app.GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token),
+			app.GetTr069SettingsStringValue(ConfigTR069AccessAddress), session, token),
 		Username:       "",
 		Password:       "",
 		FileSize:       len([]byte(scontent)),
@@ -364,14 +358,14 @@ func (c *CwmpCpe) creatUploadTask(presetId int64, upload models.CwmpPresetUpload
 		return nil
 	}
 	session := common.UUID()
-	var token = common.Md5Hash(session + app.appConfig.Web.Secret + time.Now().Format("20060102"))
+	var token = common.Md5Hash(session + app.appConfig.Tr069.Secret + time.Now().Format("20060102"))
 	msg := &cwmp.Upload{
 		ID:         session,
 		NoMore:     0,
 		CommandKey: session,
 		FileType:   upload.FileType,
-		URL: fmt.Sprintf("%s/cwmpupload/%s/%s/%s.backup",
-			app.GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token, c.Sn+"_"+time.Now().Format("20060102")),
+		URL: fmt.Sprintf("%s/cwmpupload/%s/%s/%s.rsc",
+			app.GetTr069SettingsStringValue(ConfigTR069AccessAddress), session, token, c.Sn+"_"+time.Now().Format("20060102")),
 		Username:     "",
 		Password:     "",
 		DelaySeconds: 0,

@@ -116,7 +116,6 @@ func (c *CwmpCpe) ActiveCwmpSchedEventTask() (err error) {
 
 		simsg := &cwmp.ScheduleInform{
 			ID:           common.UUID(),
-			Name:         fmt.Sprintf("%s ScheduleInform", c.Sn),
 			NoMore:       0,
 			CommandKey:   preset.SchedKey,
 			DelaySeconds: preset.Interval,

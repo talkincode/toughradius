@@ -63,7 +63,7 @@ func InitRouter() {
 				}
 			}
 		case "cwmp":
-			actions = append(actions, cwmpCmds...)
+			actions = append(actions, getCwmpCmds(dev.VendorCode)...)
 		}
 
 		return c.JSON(http.StatusOK, actions)

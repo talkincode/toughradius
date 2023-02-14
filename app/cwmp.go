@@ -1,14 +1,20 @@
 package app
 
 import (
+	"bytes"
 	"errors"
+	"os"
+	"path"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
+	"github.com/talkincode/toughradius/assets"
 	"github.com/talkincode/toughradius/common"
 	"github.com/talkincode/toughradius/common/cwmp"
 	"github.com/talkincode/toughradius/common/timeutil"
+	"github.com/talkincode/toughradius/common/web"
 	"github.com/talkincode/toughradius/common/zaplog/log"
 	"github.com/talkincode/toughradius/models"
 )
@@ -39,6 +45,10 @@ func NewCwmpEventTable() *CwmpEventTable {
 		cpeLock:  sync.Mutex{},
 	}
 	return et
+}
+
+func GetCwmpCpe(key string) *CwmpCpe {
+	return app.CwmpTable().GetCwmpCpe(key)
 }
 
 func (c *CwmpEventTable) Size() int {
@@ -100,10 +110,18 @@ func (c *CwmpEventTable) UpdateCwmpCpe(key string, msg *cwmp.Inform) {
 func (c *CwmpCpe) UpdateStatus(msg *cwmp.Inform) {
 	c.LastInform = msg
 	c.LastUpdate = time.Now()
-	c.ProductClass = msg.ProductClass
-	c.OUI = msg.OUI
-	c.Manufacturer = msg.Manufacturer
-	c.SoftwareVersion = msg.GetSoftwareVersion()
+	if msg.ProductClass != "" {
+		c.ProductClass = msg.ProductClass
+	}
+	if msg.OUI != "" {
+		c.OUI = msg.OUI
+	}
+	if msg.Manufacturer != "" {
+		c.Manufacturer = msg.Manufacturer
+	}
+	if msg.GetSoftwareVersion() != "" {
+		c.SoftwareVersion = msg.GetSoftwareVersion()
+	}
 }
 
 func (c *CwmpCpe) NotifyDataUpdate(force bool) {
@@ -258,7 +276,6 @@ func (c *CwmpCpe) OnInformUpdate() {
 	setMapValue(valmap, "cwmp_status", "online")
 	setMapValue(valmap, "cwmp_last_inform", time.Now())
 	setMapValue(valmap, "cwmp_url", msg.GetParam("Device.ManagementServer.ConnectionRequestURL"))
-	setMapValue(valmap, "sversion", msg.GetParam("Device.DeviceInfo.SoftwareVersion"))
 	setMapValue(valmap, "software_version", msg.GetParam("Device.DeviceInfo.SoftwareVersion"))
 	setMapValue(valmap, "hardware_version", msg.GetParam("Device.DeviceInfo.HardwareVersion"))
 	setMapValue(valmap, "model", msg.GetParam("Device.DeviceInfo.ModelName"))
@@ -378,4 +395,82 @@ func (a *Application) UpdateCwmpCpeRundata(sn string, vmap map[string]string) {
 	} else {
 		log.Infof("UpdateCwmpCPERundata for %s success, total %d", sn, len(pids))
 	}
+}
+
+func (a *Application) InjectCwmpConfigVars(sn string, src string, extvars map[string]string) string {
+	var cpe models.NetCpe
+	err := a.gormDB.Model(&models.NetCpe{}).Where("sn=?", sn).First(&cpe).Error
+	if err != nil {
+		log.Errorf("InjectCwmpConfigVars: %s", err.Error())
+	}
+	tx := template.Must(template.New("cpe_cwmp_config_content").Parse(src))
+	var bs []byte
+	buff := bytes.NewBuffer(bs)
+
+	token, _ := web.CreateToken(a.appConfig.Tr069.Secret, "cpe", "api", time.Hour*24*365)
+
+	vars := map[string]interface{}{
+		"cpe":                              cpe,
+		"ToughradiusApiToken":              token,
+		ConfigTR069AccessAddress:           a.GetTr069SettingsStringValue(ConfigTR069AccessAddress),
+		ConfigTR069AccessPassword:          a.GetTr069SettingsStringValue(ConfigTR069AccessPassword),
+		ConfigCpeConnectionRequestPassword: a.GetTr069SettingsStringValue(ConfigCpeConnectionRequestPassword),
+	}
+
+	for k, v := range extvars {
+		vars[k] = v
+	}
+
+	err = tx.Execute(buff, vars)
+	if err != nil {
+		log.Errorf("InjectCwmpConfigVars: %s", err.Error())
+		return src
+	}
+	return buff.String()
+}
+
+func (a *Application) GetCacrtContent() string {
+	caCert := path.Join(a.appConfig.System.Workdir, "private/ca.crt")
+	crtdata, err := os.ReadFile(caCert)
+	if err != nil {
+		crtdata = assets.CaCrt
+	}
+	return strings.TrimSpace(string(crtdata))
+}
+
+func MatchDevice(c models.NetCpe, oui, productClass, softwareVersion string) bool {
+	anySlice := []string{"", "any", "N/A", "all"}
+	var ov, pv, sv int
+	if !common.InSlice(oui, anySlice) &&
+		!common.InSlice(c.Oui, strings.Split(oui, ",")) {
+		ov = 1
+	}
+	if !common.InSlice(productClass, anySlice) &&
+		!common.InSlice(c.ProductClass, strings.Split(productClass, ",")) {
+		pv = 1
+	}
+	if !common.InSlice(softwareVersion, anySlice) &&
+		!common.InSlice(c.SoftwareVersion, strings.Split(softwareVersion, ",")) {
+		sv = 1
+	}
+	return ov+pv+sv == 0
+}
+
+func MatchTaskTags(cpeTaskTags, configTaskTags string) bool {
+	if strings.TrimSpace(configTaskTags) == "" {
+		return true
+	}
+	if len(strings.TrimSpace(cpeTaskTags)) == 0 {
+		return false
+	}
+
+	for _, tag := range strings.Split(configTaskTags, ",") {
+		for _, _tag := range strings.Split(cpeTaskTags, ",") {
+			_tag = strings.TrimSpace(_tag)
+			if _tag != "" && _tag == tag {
+				return true
+			}
+		}
+	}
+	return false
 }

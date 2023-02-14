@@ -8,11 +8,11 @@ import (
 // 开发环境初始化数据库
 /**
 
-CREATE USER teamsacs WITH PASSWORD 'teamsacs'
+CREATE USER toughradius WITH PASSWORD 'toughradius'
 
-CREATE DATABASE teamsacs OWNER postgres;
+CREATE DATABASE toughradius OWNER postgres;
 
-GRANT ALL PRIVILEGES ON DATABASE teamsacs TO teamsacs;
+GRANT ALL PRIVILEGES ON DATABASE toughradius TO toughradius;
 
 */
 

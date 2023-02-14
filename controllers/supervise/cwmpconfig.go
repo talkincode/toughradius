@@ -37,14 +37,16 @@ func execCwmpConfig(c echo.Context, id string, deviceId int64, session string) e
 		return c.JSON(http.StatusOK, web.RestError("The current device already has a task running, please wait for the execution to complete"))
 	}
 
-	cpe := app.GApp().CwmpTable().GetCwmpCpe(dev.Sn)
-	if !cpe.MatchVersionLevel(script.SoftwareVersion) {
+	cpe := app.GetCwmpCpe(dev.Sn)
+
+	if !app.MatchDevice(dev, script.OUI, script.ProductClass, script.SoftwareVersion) {
 		return c.JSON(http.StatusOK,
-			web.RestError(fmt.Sprintf("device version %s mismatch %s", cpe.SoftwareVersion, script.SoftwareVersion)))
+			web.RestError(fmt.Sprintf("device version %s mismatch %s", dev.SoftwareVersion, script.SoftwareVersion)))
 	}
-	if !cpe.MatchTaskTags(script.TaskTags) {
+
+	if !app.MatchTaskTags(dev.TaskTags, script.TaskTags) {
 		return c.JSON(http.StatusOK,
-			web.RestError(fmt.Sprintf("Device Task tags %s mismatch %s", cpe.TaskTags(), script.TaskTags)))
+			web.RestError(fmt.Sprintf("Device Task tags %s mismatch %s", dev.TaskTags, script.TaskTags)))
 	}
 
 	go func() {
@@ -54,7 +56,7 @@ func execCwmpConfig(c echo.Context, id string, deviceId int64, session string) e
 		scriptSession := &models.CwmpConfigSession{
 			ID:              common.UUIDint64(),
 			ConfigId:        script.ID,
-			CpeId:           0,
+			CpeId:           dev.ID,
 			Session:         session,
 			Name:            script.Name,
 			Level:           script.Level,
@@ -86,7 +88,7 @@ func execCwmpConfig(c echo.Context, id string, deviceId int64, session string) e
 				CommandKey: session,
 				FileType:   "3 Vendor Configuration File",
 				URL: fmt.Sprintf("%s/cwmpfiles/%s/%s/latest.alter",
-					app.GApp().GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token),
+					app.GApp().GetTr069SettingsStringValue(app.ConfigTR069AccessAddress), session, token),
 				Username:       "",
 				Password:       "",
 				FileSize:       len([]byte(scontent)),
@@ -100,14 +102,7 @@ func execCwmpConfig(c echo.Context, id string, deviceId int64, session string) e
 			events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 Push config timed out %s", err.Error()))
 		}
 
-		isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-		if err != nil {
-			events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 connect device %s failure %s", dev.CwmpUrl, err.Error()))
-		}
-
-		if isok {
-			events.PubSuperviseLog(dev.ID, session, "info", fmt.Sprintf("TR069 connect device %s success", dev.CwmpUrl))
-		}
+		go connectDeviceAuth(session, dev)
 
 	}()
 

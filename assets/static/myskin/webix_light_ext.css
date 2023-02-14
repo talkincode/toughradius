@@ -187,3 +187,7 @@
     background: #f5f5f5;
     border-color: #545454;
 }
+
+.webix_sidebar .webix_tree_branch_1 .webix_tree_item {
+    padding-left: 20px!important;
+}

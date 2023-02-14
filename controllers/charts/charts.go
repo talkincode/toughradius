@@ -47,11 +47,10 @@ func InitRouter() {
 				continue
 			}
 			if name == "" {
-				statdata["unknow"].Incr()
 				continue
 			}
 			if _, ok := statdata[name]; !ok {
-				statdata[name] = &echarts.NameValuePair{Name: name, Value: 0}
+				statdata[name] = &echarts.NameValuePair{Name: name, Value: 1}
 			} else {
 				statdata[name].Incr()
 			}

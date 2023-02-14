@@ -1015,3 +1015,14 @@ button {
 .opr-head img {
     border-radius: 12px;
 }
+
+.codebox {
+    background: #282828 !important;
+    padding: 20px;
+
+}
+
+.codebox {
+    color: #c2c2c2 !important;
+    font: 12px/1.5 Consolas, "Liberation Mono", Menlo, Courier, monospace !important;
+}

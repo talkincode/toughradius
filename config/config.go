@@ -164,7 +164,7 @@ func setEnvIntValue(name string, val *int) {
 
 var DefaultAppConfig = &AppConfig{
 	System: SysConfig{
-		Appid:    "TeamsACS",
+		Appid:    "ToughRADIUS",
 		Location: "Asia/Shanghai",
 		Workdir:  "/var/toughradius",
 		Debug:    true,

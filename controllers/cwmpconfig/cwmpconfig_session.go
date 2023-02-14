@@ -6,6 +6,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/app"
@@ -48,7 +49,13 @@ func InitRouter() {
 
 	webserver.GET("/admin/cwmp/config/session/query", func(c echo.Context) error {
 		var data []models.CwmpConfigSession
-		err := app.GDB().Find(&data).Error
+		prequery := web.NewPreQuery(c).
+			DefaultOrderBy("created_at desc").
+			DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
+			QueryField("cpe_id", "cpe_id").
+			KeyFields("name", "software_version", "product_class", "oui", "task_tags", "content")
+
+		err := prequery.Query(app.GDB()).Find(&data).Error
 		common.Must(err)
 		return c.JSON(http.StatusOK, data)
 	})

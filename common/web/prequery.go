@@ -17,10 +17,15 @@ type PreQuery struct {
 	equalFieldds     []string
 	keyfilterFieldds []string
 	params           map[string]interface{}
+	form             *WebForm
 }
 
 func NewPreQuery(c echo.Context) *PreQuery {
-	return &PreQuery{context: c, params: make(map[string]interface{})}
+	return &PreQuery{
+		context: c,
+		form:    NewWebForm(c),
+		params:  make(map[string]interface{}),
+	}
 }
 
 func (p *PreQuery) DefaultOrderBy(fd string) *PreQuery {
@@ -29,7 +34,7 @@ func (p *PreQuery) DefaultOrderBy(fd string) *PreQuery {
 }
 
 func (p *PreQuery) DateRange(queryfd, timefd string, defaltStart time.Time, defaultEnd time.Time) *PreQuery {
-	daterange, err := NewWebForm(p.context).GetDateRange(queryfd)
+	daterange, err := p.form.GetDateRange(queryfd)
 	if err == nil {
 		p.dateRange = daterange
 		if p.dateRange.Start == "" {
@@ -44,10 +49,9 @@ func (p *PreQuery) DateRange(queryfd, timefd string, defaltStart time.Time, defa
 }
 
 func (p *PreQuery) DateRange2(startfd, endfd, timefd string, defaltStart time.Time, defaultEnd time.Time) *PreQuery {
-	form := NewWebForm(p.context)
 	p.dateRange = DateRange{
-		Start: form.GetVal2(startfd, defaltStart.Format("2006-01-02 15:04:05")),
-		End:   form.GetVal2(endfd, defaultEnd.Format("2006-01-02 15:04:05")),
+		Start: p.form.GetVal2(startfd, defaltStart.Format("2006-01-02 15:04:05")),
+		End:   p.form.GetVal2(endfd, defaultEnd.Format("2006-01-02 15:04:05")),
 	}
 	p.timeField = timefd
 	return p
@@ -60,6 +64,14 @@ func (p *PreQuery) EqualFields(fd ...string) *PreQuery {
 
 func (p *PreQuery) KeyFields(fd ...string) *PreQuery {
 	p.keyfilterFieldds = fd
+	return p
+}
+
+func (p *PreQuery) QueryField(column, qfield string) *PreQuery {
+	value := p.form.GetVal(qfield)
+	if value != "" {
+		p.params[column] = value
+	}
 	return p
 }
 

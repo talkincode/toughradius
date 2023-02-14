@@ -16,7 +16,7 @@ import (
 	"github.com/talkincode/toughradius/models"
 )
 
-func execCwmpFactoryConfiguration(c echo.Context, id string, deviceId int64, session string) error {
+func execCwmpMikrotikFactoryConfiguration(c echo.Context, id string, deviceId int64, session string) error {
 	var dev models.NetCpe
 	common.Must(app.GDB().Where("id=?", deviceId).First(&dev).Error)
 	if common.IsEmptyOrNA(dev.Sn) {
@@ -76,7 +76,7 @@ func execCwmpFactoryConfiguration(c echo.Context, id string, deviceId int64, ses
 				CommandKey: session,
 				FileType:   "X MIKROTIK Factory Configuration File",
 				URL: fmt.Sprintf("%s/cwmpfiles/%s/%s/latest.alter",
-					app.GApp().GetTr069SettingsStringValue("CwmpDownloadUrlPrefix"), session, token),
+					app.GApp().GetTr069SettingsStringValue(app.ConfigTR069AccessAddress), session, token),
 				Username:       "",
 				Password:       "",
 				FileSize:       len([]byte(scontent)),
@@ -90,14 +90,7 @@ func execCwmpFactoryConfiguration(c echo.Context, id string, deviceId int64, ses
 			events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 Push factoryreet configuration timeout %s", err.Error()))
 		}
 
-		isok, err := cwmp.ConnectionRequestAuth(dev.Sn, app.GApp().GetTr069SettingsStringValue("CpeConnectionRequestPassword"), dev.CwmpUrl)
-		if err != nil {
-			events.PubSuperviseLog(dev.ID, session, "error", fmt.Sprintf("TR069 connect device %s failure %s", dev.CwmpUrl, err.Error()))
-		}
-
-		if isok {
-			events.PubSuperviseLog(dev.ID, session, "info", fmt.Sprintf("TR069 connect device %s success", dev.CwmpUrl))
-		}
+		go connectDeviceAuth(session, dev)
 
 	}()
 

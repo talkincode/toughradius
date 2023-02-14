@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
 	"github.com/talkincode/toughradius/app"
+	"github.com/talkincode/toughradius/assets"
 	"github.com/talkincode/toughradius/common"
 	"github.com/talkincode/toughradius/common/web"
 	"github.com/talkincode/toughradius/models"
@@ -107,6 +108,18 @@ func InitRouter() {
 		common.Must(app.GDB().Delete(models.SysConfig{}, strings.Split(ids, ",")).Error)
 		webserver.PubOpLog(c, fmt.Sprintf("Delete setting information：%s", ids))
 		return c.JSON(http.StatusOK, web.RestSucc("success"))
+	})
+
+	webserver.GET("/admin/settings/tr069/quickset", func(c echo.Context) error {
+		return c.Render(http.StatusOK, "cwmp_quickset", nil)
+	})
+
+	webserver.GET("/admin/settings/tr069/quickset/mikrotik_cpe_setup_tr069.rsc", func(c echo.Context) error {
+		ret := app.GApp().InjectCwmpConfigVars("", assets.Tr069Mikrotik, map[string]string{
+			"CacrtContent": app.GApp().GetCacrtContent(),
+		})
+		c.Response().Header().Set("Content-Disposition", "attachment;filename=mikrotik_cpe_setup_tr069.rsc")
+		return c.String(http.StatusOK, ret)
 	})
 
 }

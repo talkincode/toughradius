@@ -5,8 +5,19 @@
 </head>
 <body>
 <script>
-    let isSuper = "{{.oprlevel}}"==="super";
+    let isSuper = "{{.oprlevel}}" === "super";
     let tableid = webix.uid()
+
+    let openTemplate = function () {
+        webix.ajax().get('/admin/cwmp/preset/template').then(function (result) {
+            wxui.openSideWindow({
+                title: "Preset template",
+                width: 720,
+                body: {name: "content", value: result.text(), view: "codemirror-editor", mode: "yaml"},
+            })
+        })
+    }
+
     let getColumns = function () {
         return [
             {
@@ -47,7 +58,12 @@
             //         {view: "text", name: "interval", label: "定时间隔-秒", css: "nborder-input",},
             //     ]
             // },
-            {view: "label", label: tr("cwmp", "Config content")},
+            {
+                view: "label",
+                label: tr("cwmp", "Config content, <a href='javascript:void(0)'>Preset template</a>"),
+                align: "left",
+                click: openTemplate
+            },
             {name: "content", view: "codemirror-editor", mode: "shell"},
         ]
     }
@@ -84,6 +100,12 @@
                     title: tr("cwmp", "Tr069 preset"),
                     icon: "mdi mdi-file-cog",
                     elements: [
+                        {
+                            view: "label", width: 130,
+                            label: tr("cwmp", "<a href='javascript:void(0)'>Preset template</a>"),
+                            align: "left",
+                            click: openTemplate
+                        },
                         wxui.getPrimaryButton(gtr("Edit"), 90, false, function () {
                             let item = $$(tableid).getSelectedItem();
                             if (item) {
@@ -206,7 +228,7 @@
                         // }
                     },
                     leftSplit: 1,
-                    rightSplit:0,
+                    rightSplit: 0,
                     pager: true,
                 }),
                 wxui.getTableFooterBar({

@@ -151,8 +151,6 @@ func (a *Application) InitDb() {
 	if err != nil {
 		log.Error(err)
 	}
-	a.initSettings()
-	a.initOpr()
 }
 
 // checkDefaultPNode check default node
@@ -228,11 +226,11 @@ func (a *Application) BackupDatabase() error {
 
 // checkAppVersion Check version
 func (a *Application) checkAppVersion() {
-	cver := a.GetSettingsStringValue("system", "ToughradiusVersion")
-	if assets.BuildVer != cver {
-		_ = a.gormDB.Exec("UPDATE sys_config SET value = ? WHERE type = ? and name = ?", assets.BuildVer, "system", "ToughradiusVersion")
+	cver := a.GetSettingsStringValue("system", "TeamsacsVersion")
+	buildVersion := assets.BuildVersion()
+	if buildVersion != cver {
+		_ = a.gormDB.Exec("UPDATE sys_config SET value = ? WHERE type = ? and name = ?", buildVersion, "system", "TeamsacsVersion")
 	}
-	// PubNotifyEventlog("info", "system", "", "upgrade", "ToughRADIUS 系统版本更新为："+assets.BuildVer)
 }
 
 func Release() {

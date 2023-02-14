@@ -1006,7 +1006,6 @@ wxui.getForm = function (config) {
     return pageView
 };
 
-
 /**
  * 打开一个侧边栏窗口
  * @param config
@@ -1016,7 +1015,7 @@ wxui.getForm = function (config) {
  * body   窗口UI元素
  */
 wxui.openSideWindow = function (config) {
-    let sideid = config.winid;
+    let sideid = config.winid || webix.uid().toString()
     if ($$(sideid) && $$(sideid).isVisible()) {
         $$(sideid).close();
         return;
@@ -1027,11 +1026,11 @@ wxui.openSideWindow = function (config) {
         width: config.width || 420,
         position: "right",
         // animate:false,
-        state: function (state) {
-            let toolbarHeight = $$(config.parentId).$height;
-            state.top = toolbarHeight;
-            state.height -= toolbarHeight;
-        },
+        // state: function (state) {
+        //     let toolbarHeight = $$(config.parentId).$height;
+        //     state.top = toolbarHeight;
+        //     state.height -= toolbarHeight;
+        // },
         body: {
             rows: [
                 {

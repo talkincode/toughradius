@@ -156,7 +156,7 @@ func DirExists(file string) bool {
 
 // create a file to test the upload and download.
 func CreateTmpFile(data []byte) (*os.File, error) {
-	tmpFile, err := ioutil.TempFile(os.TempDir(), "teamsacs-")
+	tmpFile, err := ioutil.TempFile(os.TempDir(), "toughradius-")
 	if err != nil {
 		return nil, fmt.Errorf("cannot create temporary file, %s", err.Error())
 	}

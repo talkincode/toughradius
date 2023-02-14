@@ -37,11 +37,10 @@ func InitRouter() {
 				continue
 			}
 			if name == "" {
-				statdata["unknow"].Incr()
 				continue
 			}
 			if _, ok := statdata[name]; !ok {
-				statdata[name] = &echarts.NameValuePair{Name: name, Value: 0}
+				statdata[name] = &echarts.NameValuePair{Name: name, Value: 1}
 			} else {
 				statdata[name].Incr()
 			}
@@ -88,13 +87,13 @@ func InitRouter() {
 
 		var deviceOnline int64
 		app.GDB().Model(&models.NetCpe{}).
-			Where("cwmp_status = 'success'").
+			Where("cwmp_status = 'online'").
 			Count(&deviceOnline)
 		data = append(data, counterItem{Icon: "mdi mdi-switch", Name: "Online CPE", Value: float64(deviceOnline)})
 
 		var deviceOffline int64
 		app.GDB().Model(&models.NetCpe{}).
-			Where("cwmp_status <> 'success'").
+			Where("cwmp_status = 'offline'").
 			Count(&deviceOffline)
 		data = append(data, counterItem{Icon: "mdi mdi-switch", Name: "Offline CPE", Value: float64(deviceOffline)})
 
