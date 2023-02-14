@@ -16,6 +16,7 @@ type LokiQueryResult struct {
 				Caller         string    `json:"caller"`
 				Job            string    `json:"job"`
 				Level          string    `json:"level"`
+				Error          string    `json:"Error"`
 				Namespace      string    `json:"namespace,omitempty"`
 				Metrics        string    `json:"metrics,omitempty"`
 				Username       string    `json:"username,omitempty"`

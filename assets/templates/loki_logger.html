@@ -10,14 +10,6 @@
         let queryid = webix.uid().toString()
         let tableid = webix.uid().toString()
         let reloadData = wxui.reloadDataFunc(tableid, "/admin/loki/query", queryid)
-        let showLog = function (id, node) {
-            let ditem = $$(tableid).getItem(id)
-            webix.ui({
-                view: "popup", height: 360, width: 520, scroll: "auto", body: {
-                    view: "template", css: "log-template", template: ditem.msg
-                }
-            }).show(node)
-        }
         webix.ui({
             css: "main-panel",
             padding: 7,
@@ -38,7 +30,7 @@
                                         name: "starttime",
                                         label: gtr("Time From"),
                                         labelWidth: 80,
-                                        width:260,
+                                        width: 260,
                                         stringResult: true,
                                         format: "%Y-%m-%d %H:%i",
                                         css: "nborder-input",
@@ -58,7 +50,7 @@
                                         editable: true
                                     },
                                     {
-                                        view: "combo", name: "job", label: tr("logging","Job"), value: "toughradius",
+                                        view: "combo", name: "job", label: tr("logging", "Job"), value: "toughradius",
                                         options: ["toughradius", "toughedge"], labelWidth: 80,
                                         on: {
                                             onChange: function (newv, oldv) {
@@ -67,28 +59,33 @@
                                         }
                                     },
                                     {
-                                        view: "combo", name: "namespace", labelWidth: 100, label: tr("logging","Namespace"),
-                                        value:"global",options: ["global", "radius", "tr069"]
+                                        view: "combo", name: "namespace", labelWidth: 100, label: tr("logging", "Namespace"),
+                                        value: "global", options: ["global", "radius", "tr069"]
                                     },
                                 ]
                             },
                             {
                                 cols: [
                                     {
-                                        view: "combo", name: "level", label: tr("logging","Level"), labelWidth: 80, value:"info", options: ["info","debug", "error", "warn"]
+                                        view: "combo",
+                                        name: "level",
+                                        label: tr("logging", "Level"),
+                                        labelWidth: 80,
+                                        value: "info",
+                                        options: ["info", "debug", "error", "warn"]
                                     },
                                     {
-                                        view: "search", name: "keyword", placeholder: tr("logging","Keyword")
+                                        view: "search", name: "keyword", placeholder: tr("logging", "Keyword")
                                     },
                                     {
-                                        view: "text", name: "keyreg", placeholder: tr("logging","Regular match")
+                                        view: "text", name: "keyreg", placeholder: tr("logging", "Regular match")
                                     },
                                     {
-                                        view:"counter",name:"limit", label: tr("logging","Limit"), min: 1, max: 10000, value: 1000, step: 100
+                                        view: "counter", name: "limit", label: tr("logging", "Limit"), min: 1, max: 10000, value: 1000, step: 100
                                     },
                                     {
                                         view: "button",
-                                        label: tr("logging","Query"),
+                                        label: tr("logging", "Query"),
                                         css: "webix_transparent",
                                         type: "icon",
                                         icon: "mdi mdi-search-web",
@@ -124,13 +121,13 @@
 
                             }, adjust: true
                         },
-                        {id: "job", header: [tr("logging","Job")], adjust:true},
-                        {id: "caller", header: ["Caller"], adjust:true},
+                        {id: "job", header: [tr("logging", "Job")], adjust: true},
+                        {id: "caller", header: ["Caller"], adjust: true, hidden:true},
                         {id: "timestamp", header: ["Timestamp"], width: 220,},
                         {
-                            id: "msg",
-                            header: [tr("logging","Message")],
-                            template: "<a class='do_detail' href='javascript:void(0)'><i class='mdi mdi-eye' style='color: blue'></i></a> #msg#",
+                            id: "short_message",
+                            header: [tr("logging", "Message")],
+                            template: "<a class='do_detail' href='javascript:void(0)'><i class='mdi mdi-eye' style='color: blue'></i></a> #short_message#",
                             fillspace: true
                         }
                     ],
@@ -138,20 +135,22 @@
                     pager: true,
                     on: {
                         onItemDblClick: function (id, e, node) {
-                            showLog(id, node)
+                            let ditem = this.getItem(id)
+                            let msg = JSON.stringify(ditem, null, 4)
+                            wxui.displayTableMessage(node, this.$width - 64, 240, msg, "javascript")
                         }
                     },
                     onClick: {
                         "do_detail": function (e, id, node) {
-                            showLog(id, node)
+                            let ditem = this.getItem(id)
+                            let msg = JSON.stringify(ditem, null, 4)
+                            wxui.displayTableMessage(node, this.$width - 64, 240, msg, "javascript")
                         }
                     }
                 }),
                 wxui.getTableFooterBar({
                     tableid: tableid,
-                    actions: [
-
-                    ],
+                    actions: [],
                     callback: reloadData
                 }),
             ]

@@ -22,16 +22,18 @@ type LokiQueryForm struct {
 }
 
 type Lokilog struct {
-	Job       string `json:"job"`
-	Level     string `json:"level"`
-	Caller    string `json:"caller"`
-	Msg       string `json:"msg"`
-	Timestamp string `json:"timestamp"`
-	Namespace string `json:"namespace,omitempty"`
-	Metrics   string `json:"metrics,omitempty"`
-	Username  string `json:"username,omitempty"`
-	Result    string `json:"result,omitempty"`
-	Nasip     string `json:"nasip,omitempty"`
+	Job          string `json:"job"`
+	Level        string `json:"level"`
+	Caller       string `json:"caller"`
+	Error        string `json:"error"`
+	Msg          string `json:"msg"`
+	Timestamp    string `json:"timestamp"`
+	Namespace    string `json:"namespace,omitempty"`
+	Metrics      string `json:"metrics,omitempty"`
+	Username     string `json:"username,omitempty"`
+	Result       string `json:"result,omitempty"`
+	Nasip        string `json:"nasip,omitempty"`
+	ShortMessage string `json:"short_message,omitempty"`
 }
 
 func NewLokiQueryForm(lapi, luser, lpwd string) *LokiQueryForm {

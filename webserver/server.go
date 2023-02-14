@@ -28,7 +28,6 @@ import (
 	"github.com/talkincode/toughradius/models"
 
 	"github.com/gorilla/sessions"
-	"github.com/labstack/echo-contrib/prometheus"
 	"github.com/labstack/echo-contrib/session"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -36,9 +35,9 @@ import (
 	"github.com/pkg/errors"
 )
 
-const UserSession = "user_session"
-const UserSessionName = "user_session_name"
-const UserSessionLevel = "user_session_level"
+const UserSession = "toughradius_user_session"
+const UserSessionName = "toughradius_user_session_name"
+const UserSessionLevel = "toughradius_user_session_level"
 const ConstCookieName = "toughradius_cookie"
 
 type Skips struct {
@@ -79,7 +78,7 @@ func NewAdminServer() *AdminServer {
 		Skipper: func(c echo.Context) bool {
 			return strings.HasPrefix(c.Path(), "/metrics")
 		},
-		Level: 9,
+		Level: 1,
 	}))
 	// 失败恢复处理中间件
 	s.root.Use(ServerRecover(appconfig.System.Debug))
@@ -88,8 +87,8 @@ func NewAdminServer() *AdminServer {
 		Format: appconfig.System.Appid + " ${time_rfc3339} ${remote_ip} ${method} ${uri} ${protocol} ${status} ${id} ${user_agent} ${latency} ${bytes_in} ${bytes_out} ${error}\n",
 		Output: os.Stdout,
 	}))
-	p := prometheus.NewPrometheus("toughradius", nil)
-	p.Use(s.root)
+	// p := prometheus.NewPrometheus("toughradius", nil)
+	// p.Use(s.root)
 
 	// session 中间件， 采用 Cookie 存储方式
 	sessStore := sessions.NewCookieStore([]byte(appconfig.Web.Secret))

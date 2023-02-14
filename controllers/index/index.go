@@ -15,10 +15,31 @@ import (
 	"github.com/talkincode/toughradius/webserver"
 )
 
+var pushers = []string{
+	"/static/webix/webix.min.js",
+	"/static/myskin/webix.min.css",
+	"/static/views/widgets.min.js",
+	"/static/views/wxui.min.js",
+	"/static/views/codemirror.js",
+	"/static/views/codemirror.css",
+	"/static/myskin/materialdesignicons.min.css",
+	"static/myskin/fonts/Roboto-Medium-webfont.woff2",
+	"/static/myskin/fonts/materialdesignicons-webfont.woff2?v=7.1.96",
+	"/static/echarts/echarts.min.js",
+}
+
 func InitRouter() {
 
 	// 系统首页
-	webserver.GET("/", func(c echo.Context) error {
+	webserver.GET("/", func(c echo.Context) (err error) {
+		// pusher, ok := c.Response().Writer.(http.Pusher)
+		// if ok {
+		// 	for _, res := range pushers {
+		// 		if err = pusher.Push(res, nil); err != nil {
+		// 			continue
+		// 		}
+		// 	}
+		// }
 		sess, _ := session.Get(webserver.UserSession, c)
 		username := sess.Values[webserver.UserSessionName]
 		if username == nil || username == "" {

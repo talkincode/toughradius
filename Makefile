@@ -21,14 +21,11 @@ buildpre:
 	echo "CommitSubject=${COMMIT_SUBJECT}" >> assets/buildinfo.txt
 
 fastpub:
-	make buildpre
-	make build
-	docker build --build-arg BTIME="$(shell date "+%F %T")" -t toughradius .
+	docker buildx build --platform=linux/amd64 --build-arg BTIME="$(shell date "+%F %T")" -t toughradius .
 	docker tag toughradius ${BUILD_ORG}/toughradius:latest
 	docker push ${BUILD_ORG}/toughradius:latest
 
 fastpubm1:
-	make buildpre
 	make build
 	docker buildx build --platform=linux/amd64 --build-arg BTIME="$(shell date "+%F %T")" -t toughradius . -f Dockerfile.local
 	docker tag toughradius ${BUILD_ORG}/toughradius:latest-amd64

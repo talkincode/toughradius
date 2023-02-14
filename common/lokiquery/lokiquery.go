@@ -43,6 +43,22 @@ func LokiQuery(q *LokiQueryForm) ([]Lokilog, error) {
 		log.Username = v.Stream.Username
 		log.Metrics = v.Stream.Metrics
 		log.Nasip = v.Stream.Nasip
+		log.Error = v.Stream.Error
+		log.ShortMessage = ""
+		if v.Stream.Namespace != "" {
+			log.ShortMessage += "Namespace=" + v.Stream.Namespace + " "
+		}
+
+		if v.Stream.Username != "" {
+			log.ShortMessage += "Username=" + v.Stream.Username + " "
+		}
+
+		log.ShortMessage += "Msg=" + v.Stream.Msg + " "
+
+		if v.Stream.Error != "" {
+			log.ShortMessage += "Error=" + v.Stream.Error + " "
+		}
+
 		result = append(result, log)
 	}
 	sort.Slice(result, func(i, j int) bool {

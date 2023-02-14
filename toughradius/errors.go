@@ -29,7 +29,7 @@ func (s *RadiusService) CheckRadAuthError(username, nasip string, err error) {
 			zap.String("username", username),
 			zap.String("nasip", nasip),
 			zap.String("result", "failure"),
-			zap.Error(err),
+			zap.StackSkip("error", 2),
 		)
 
 		rjuser := s.RejectCache.GetItem(username)

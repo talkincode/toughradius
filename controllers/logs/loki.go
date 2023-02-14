@@ -16,14 +16,6 @@ import (
 
 func initLokiRouter() {
 
-	type lokilog struct {
-		Job       string `json:"job"`
-		Level     string `json:"level"`
-		Caller    string `json:"caller"`
-		Msg       string `json:"msg"`
-		Timestamp string `json:"timestamp"`
-	}
-
 	webserver.GET("/admin/loki", func(c echo.Context) error {
 		return c.Render(http.StatusOK, "loki_logger", map[string]interface{}{})
 	})
