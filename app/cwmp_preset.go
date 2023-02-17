@@ -32,16 +32,17 @@ func (c *CwmpCpe) GetLatestCwmpPresetTask() (*models.CwmpPresetTask, error) {
 }
 
 func (c *CwmpCpe) MatchDevice(oui, productClass, softwareVersion string) bool {
+	anySlice := []string{"", "any", "N/A", "all"}
 	var ov, pv, sv int
-	if !common.InSlice(oui, []string{"", "any", "N/A", "all"}) &&
+	if !common.InSlice(oui, anySlice) &&
 		!common.InSlice(c.OUI, strings.Split(oui, ",")) {
 		ov = 1
 	}
-	if !common.InSlice(productClass, []string{"", "any", "N/A", "all"}) &&
+	if !common.InSlice(productClass, anySlice) &&
 		!common.InSlice(c.ProductClass, strings.Split(productClass, ",")) {
 		pv = 1
 	}
-	if !common.InSlice(softwareVersion, []string{"", "any", "N/A", "all"}) &&
+	if !common.InSlice(softwareVersion, anySlice) &&
 		!common.InSlice(c.SoftwareVersion, strings.Split(softwareVersion, ",")) {
 		sv = 1
 	}

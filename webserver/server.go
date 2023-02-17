@@ -4,6 +4,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"net/http"
 	"os"
 	"path"
@@ -97,7 +98,8 @@ func NewAdminServer() *AdminServer {
 	s.root.Use(sessionCheck())
 
 	// 静态目录映射
-	s.root.GET("/static/*", echo.WrapHandler(http.FileServer(http.FS(assets.StaticFs))))
+	ffs, _ := fs.Sub(assets.StaticFs, "static")
+	s.root.StaticFS("/static/*", ffs)
 	// 模板加载
 	s.root.Renderer = tpl.NewCommonTemplate(assets.TemplatesFs, []string{"templates"}, app.GApp().GetTemplateFuncMap())
 

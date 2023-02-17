@@ -44,8 +44,6 @@ func TestMatchDevice(t *testing.T) {
 		SoftwareVersion: "test-software-version",
 	}
 
-	a := Application{}
-
 	tests := []struct {
 		oui             string
 		productClass    string
@@ -72,7 +70,7 @@ func TestMatchDevice(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		result := a.MatchDevice(c, test.oui, test.productClass, test.softwareVersion)
+		result := MatchDevice(c, test.oui, test.productClass, test.softwareVersion)
 		if result != test.expectedMatch {
 			t.Errorf("MatchDevice(%v, %q, %q, %q) returned %v, but expected %v", c, test.oui, test.productClass, test.softwareVersion, result, test.expectedMatch)
 		}
