@@ -55,11 +55,12 @@
     }
 
     webix.ready(function () {
+        let queryid = webix.uid().toString()
         let importUrl = '/admin/cwmp/config/import'
         let exportUrl = '/admin/cwmp/config/export'
         let tableid = webix.uid().toString();
         let uploadid = webix.uid().toString();
-        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/config/query", null)
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/config/query", queryid)
         wxui.initUploadApi(uploadid, importUrl, reloadData);
         webix.ui({
             css: "main-panel",
@@ -127,6 +128,25 @@
                         }),
                     ]
                 }),
+                wxui.getTableQueryCustomForm(queryid, [
+                    {
+                        cols: [
+                            {view: "search", id: "keyword", name: "keyword", placeholder: "keywords", width: 320},
+                            {
+                                view: "button",
+                                label: gtr("Query"),
+                                css: "webix_transparent",
+                                type: "icon",
+                                icon: "mdi mdi-search-web",
+                                borderless: true,
+                                width: 100,
+                                click: function () {
+                                    reloadData()
+                                }
+                            }, {}
+                        ]
+                    }
+                ]),
                 wxui.getDatatable({
                     tableid: tableid,
                     url: '/admin/cwmp/config/query',

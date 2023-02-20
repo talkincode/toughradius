@@ -15,7 +15,7 @@ type RadsecService struct {
 }
 
 func (s *RadsecService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) ([]byte, error) {
-	return []byte("mysecret"), nil
+	return []byte("radsec"), nil
 }
 
 func NewRadsecService(authService *AuthService, acctService *AcctService) *RadsecService {
