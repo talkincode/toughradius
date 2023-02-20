@@ -29,8 +29,9 @@
     }
 
     webix.ready(function () {
+        let queryid = webix.uid();
         let tableid = webix.uid();
-        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/presettask/query", null)
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/presettask/query", queryid)
         webix.ui({
             css: "main-panel",
             padding: 7,
@@ -49,6 +50,50 @@
                         }),
                     ]
                 }),
+                wxui.getTableQueryCustomForm(queryid, [
+                    {
+                        cols: [
+                            {
+                                view: "datepicker",
+                                timepicker: true,
+                                name: "starttime",
+                                label: gtr("Time From"),
+                                labelWidth: 80,
+                                width: 240,
+                                stringResult: true,
+                                format: "%Y-%m-%d %H:%i",
+                                css: "nborder-input",
+                                value: webix.Date.add(new Date(), -8, "hour"),
+                                editable: true
+                            },
+                            {
+                                view: "datepicker",
+                                timepicker: true,
+                                name: "endtime",
+                                label: gtr("to"),
+                                labelWidth: 20,
+                                stringResult: true,
+                                format: "%Y-%m-%d %H:%i",
+                                css: "nborder-input",
+                                value: new Date(),
+                                editable: true
+                            },
+                            {view: "search", id: "keyword", name: "keyword", placeholder: "keywords", width: 320},
+                            {
+                                view: "button",
+                                label: "Query",
+                                css: "webix_transparent",
+                                type: "icon",
+                                icon: "mdi mdi-search-web",
+                                borderless: true,
+                                width: 100,
+                                click: function () {
+                                    reloadData()
+                                }
+                            }, {}
+                        ]
+                    }
+                ]),
                 wxui.getDatatable({
                     tableid: tableid,
                     url: "/admin/cwmp/presettask/query",

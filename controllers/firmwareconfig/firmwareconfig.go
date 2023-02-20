@@ -34,10 +34,14 @@ func InitRouter() {
 	})
 
 	webserver.GET("/admin/cwmp/firmwareconfig/query", func(c echo.Context) error {
-		var data []models.CwmpFirmwareConfig
-		err := app.GDB().Find(&data).Error
-		common.Must(err)
-		return c.JSON(http.StatusOK, data)
+		prequery := web.NewPreQuery(c).
+			DefaultOrderBy("updated_at desc").
+			KeyFields("oid", "name", "software_version", "product_class", "oui")
+		result, err := web.QueryPageResult[models.CwmpFirmwareConfig](c, app.GDB(), prequery)
+		if err != nil {
+			return c.JSON(http.StatusOK, common.EmptyList)
+		}
+		return c.JSON(http.StatusOK, result)
 	})
 
 	webserver.POST("/admin/cwmp/firmwareconfig/add", func(c echo.Context) error {

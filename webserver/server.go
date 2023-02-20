@@ -2,7 +2,6 @@ package webserver
 
 import (
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -41,17 +40,23 @@ const UserSessionName = "toughradius_user_session_name"
 const UserSessionLevel = "toughradius_user_session_level"
 const ConstCookieName = "toughradius_cookie"
 
-type Skips struct {
-	Paths   []string `json:"paths"`
-	Prefixs []string `json:"prefixs"`
-	Suffixs []string `json:"suffixs"`
-}
-
-//go:embed jwt_skips.json
-var jwtSkipsData []byte
-
-//go:embed session_skip.json
-var SessionSkipsData []byte
+var (
+	SessionSkipPrefix = []string{
+		"/ready",
+		"/realip",
+		"/api",
+		"/login",
+		"/admin/login",
+		"/static",
+	}
+	JwtSkipPrefix = []string{
+		"/ready",
+		"/realip",
+		"/login",
+		"/admin/login",
+		"/static",
+	}
+)
 
 var server *AdminServer
 
@@ -120,7 +125,7 @@ func NewAdminServer() *AdminServer {
 	s.jwtConfig = echojwt.Config{
 		SigningKey:    []byte(appconfig.Web.Secret),
 		SigningMethod: middleware.AlgorithmHS256,
-		Skipper:       skipFUnc(jwtSkipsData),
+		Skipper:       jwtSkipFunc(),
 		ErrorHandler: func(c echo.Context, err error) error {
 			return c.JSON(http.StatusBadRequest, web.RestError("Resource access is limited "+err.Error()))
 		},
@@ -217,28 +222,14 @@ func ServerRecover(debug bool) echo.MiddlewareFunc {
 }
 
 // skipFUnc Web 请求过滤中间件
-func skipFUnc(skipdata []byte) func(c echo.Context) bool {
+func jwtSkipFunc() func(c echo.Context) bool {
 	return func(c echo.Context) bool {
 		if os.Getenv("TEAMSACS_DEVMODE") == "true" {
 			return true
 		}
-		var skip Skips
-		err := json.Unmarshal(skipdata, &skip)
-		if err != nil {
-			common.Must(err)
-		}
 
-		if common.InSlice(c.Request().RequestURI, skip.Paths) {
-			return true
-		}
-
-		for _, prefix := range skip.Prefixs {
+		for _, prefix := range JwtSkipPrefix {
 			if strings.HasPrefix(c.Path(), prefix) {
-				return true
-			}
-		}
-		for _, suffix := range skip.Suffixs {
-			if strings.HasSuffix(c.Path(), suffix) {
 				return true
 			}
 		}
@@ -254,23 +245,8 @@ func sessionCheck() echo.MiddlewareFunc {
 				return next(c)
 			}
 
-			var skip Skips
-			err := json.Unmarshal(SessionSkipsData, &skip)
-			if err != nil {
-				common.Must(err)
-			}
-
-			if common.InSlice(c.Request().RequestURI, skip.Paths) {
-				return next(c)
-			}
-
-			for _, prefix := range skip.Prefixs {
+			for _, prefix := range SessionSkipPrefix {
 				if strings.HasPrefix(c.Path(), prefix) {
-					return next(c)
-				}
-			}
-			for _, suffix := range skip.Suffixs {
-				if strings.HasSuffix(c.Path(), suffix) {
 					return next(c)
 				}
 			}

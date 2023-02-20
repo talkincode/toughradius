@@ -193,7 +193,7 @@ func (c *CwmpCpe) creatFactoryResetConfigDownloadTask(presetId int64, freset *mo
 		return err
 	}
 
-	if !c.MatchDevice(fconfig.OUI, fconfig.ProductClass, fconfig.SoftwareVersion) {
+	if !c.MatchDevice(fconfig.Oui, fconfig.ProductClass, fconfig.SoftwareVersion) {
 		return fmt.Errorf("device not match CwmpFactoryResetConfig")
 	}
 
@@ -250,7 +250,7 @@ func (c *CwmpCpe) creatFirmwareConfigDownloadTask(presetId int64, fconfig *model
 		return err
 	}
 
-	if !c.MatchDevice(firmwareCfg.OUI, firmwareCfg.ProductClass, firmwareCfg.SoftwareVersion) {
+	if !c.MatchDevice(firmwareCfg.Oui, firmwareCfg.ProductClass, firmwareCfg.SoftwareVersion) {
 		return fmt.Errorf("device not match CwmpFirmwareConfig")
 	}
 
@@ -305,7 +305,7 @@ func (c *CwmpCpe) creatDownloadTask(presetId int64, download models.CwmpPresetDo
 		return err
 	}
 
-	if !c.MatchDevice(script.OUI, script.ProductClass, script.SoftwareVersion) {
+	if !c.MatchDevice(script.Oui, script.ProductClass, script.SoftwareVersion) {
 		return fmt.Errorf("device not match CwmpConfig")
 	}
 

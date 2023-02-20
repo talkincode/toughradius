@@ -40,9 +40,10 @@
 
     
     webix.ready(function () {
+        let queryid = webix.uid();
         let tableid = webix.uid();
         let uploadid = webix.uid();
-        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/factoryreset/query", null)
+        let reloadData = wxui.reloadDataFunc(tableid, "/admin/cwmp/factoryreset/query", queryid)
         webix.ui({
             css: "main-panel",
             padding: 7,
@@ -111,6 +112,25 @@
                         }),
                     ],
                 }),
+                wxui.getTableQueryCustomForm(queryid, [
+                    {
+                        cols: [
+                            {view: "search", id: "keyword", name: "keyword", placeholder: "keywords", width: 320},
+                            {
+                                view: "button",
+                                label: gtr("Query"),
+                                css: "webix_transparent",
+                                type: "icon",
+                                icon: "mdi mdi-search-web",
+                                borderless: true,
+                                width: 100,
+                                click: function () {
+                                    reloadData()
+                                }
+                            }, {}
+                        ]
+                    }
+                ]),
                 wxui.getDatatable({
                     tableid: tableid,
                     url: '/admin/cwmp/factoryreset/query',

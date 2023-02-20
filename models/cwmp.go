@@ -13,7 +13,7 @@ type CwmpConfig struct {
 	Level           string    `json:"level" form:"level"` // script level  normal｜major
 	SoftwareVersion string    `json:"software_version" form:"software_version"`
 	ProductClass    string    `json:"product_class" form:"product_class"`
-	OUI             string    `json:"oui" form:"oui"`
+	Oui             string    `json:"oui" form:"oui"`
 	TaskTags        string    `gorm:"index" json:"task_tags" form:"task_tags"` // task label
 	Content         string    `json:"content" form:"content"`                  // script content
 	TargetFilename  string    `json:"target_filename" form:"target_filename"`
@@ -31,7 +31,7 @@ type CwmpConfigSession struct {
 	Level           string    `json:"level" form:"level"`                             // script level  normal｜major
 	SoftwareVersion string    `json:"software_version" form:"software_version"`
 	ProductClass    string    `json:"product_class" form:"product_class"`
-	OUI             string    `json:"oui" form:"oui"`
+	Oui             string    `json:"oui" form:"oui"`
 	TaskTags        string    `gorm:"index" json:"task_tags" form:"task_tags"`     // task label
 	Content         string    `json:"content" form:"content"`                      // script content
 	ExecStatus      string    `gorm:"index" json:"exec_status" form:"exec_status"` // execution state  success | failure
@@ -56,7 +56,7 @@ type CwmpFactoryReset struct {
 	Name            string    `json:"name" form:"name"`
 	SoftwareVersion string    `json:"software_version" form:"software_version"`
 	ProductClass    string    `json:"product_class" form:"product_class"`
-	OUI             string    `json:"oui" form:"oui"`
+	Oui             string    `json:"oui" form:"oui"`
 	Content         string    `json:"content" form:"content"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
@@ -69,7 +69,7 @@ type CwmpFirmwareConfig struct {
 	Name            string    `json:"name" form:"name"`
 	SoftwareVersion string    `json:"software_version" form:"software_version"`
 	ProductClass    string    `json:"product_class" form:"product_class"`
-	OUI             string    `json:"oui" form:"oui"`
+	Oui             string    `json:"oui" form:"oui"`
 	Content         string    `json:"content" form:"content"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`

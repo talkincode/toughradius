@@ -34,7 +34,7 @@ func execCwmpMikrotikFactoryConfiguration(c echo.Context, id string, deviceId in
 	}
 
 	cpe := app.GApp().CwmpTable().GetCwmpCpe(dev.Sn)
-	if !cpe.MatchDevice(factscript.OUI, factscript.ProductClass, factscript.SoftwareVersion) {
+	if !cpe.MatchDevice(factscript.Oui, factscript.ProductClass, factscript.SoftwareVersion) {
 		return c.JSON(http.StatusOK, web.RestError(fmt.Sprintf("Device %s Does not match CwmpFactoryReset", dev.Sn)))
 	}
 
@@ -52,7 +52,7 @@ func execCwmpMikrotikFactoryConfiguration(c echo.Context, id string, deviceId in
 			Level:           "major",
 			SoftwareVersion: factscript.SoftwareVersion,
 			ProductClass:    factscript.ProductClass,
-			OUI:             factscript.OUI,
+			Oui:             factscript.Oui,
 			Content:         factscript.Content,
 			ExecStatus:      "initialize",
 			LastError:       "",

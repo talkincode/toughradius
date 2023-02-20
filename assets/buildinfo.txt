@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-02-20 22:53:17
+BuildVersion=latest v8.0.1 2023-02-21 00:49:13
 ReleaseVersion=v8.0.1
-BuildTime=2023-02-20 22:53:17
+BuildTime=2023-02-21 00:49:13
 BuildName=toughradius
-CommitID=5cb0701c20a1ceeced3577f1683cf0834a7f6099
-CommitDate=Mon, 20 Feb 2023 14:07:24 +0800
+CommitID=fbe5b570896d41f4fe72fa0ae60a9cc5774aa1bd
+CommitDate=Mon, 20 Feb 2023 22:53:50 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2023-02-20 14:07:13 : set lang
+CommitSubject=2023-02-20 22:53:17 : radsec secret cwmpconfig query

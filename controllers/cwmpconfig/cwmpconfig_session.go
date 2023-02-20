@@ -48,16 +48,17 @@ func InitRouter() {
 	})
 
 	webserver.GET("/admin/cwmp/config/session/query", func(c echo.Context) error {
-		var data []models.CwmpConfigSession
 		prequery := web.NewPreQuery(c).
 			DefaultOrderBy("created_at desc").
 			DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
 			QueryField("cpe_id", "cpe_id").
-			KeyFields("name", "software_version", "product_class", "oui", "task_tags", "content")
+			KeyFields("name", "software_version", "product_class", "oui", "task_tags")
 
-		err := prequery.Query(app.GDB()).Find(&data).Error
-		common.Must(err)
-		return c.JSON(http.StatusOK, data)
+		result, err := web.QueryPageResult[models.CwmpConfigSession](c, app.GDB(), prequery)
+		if err != nil {
+			return c.JSON(http.StatusOK, common.EmptyList)
+		}
+		return c.JSON(http.StatusOK, result)
 	})
 
 	webserver.POST("/admin/cwmp/config/session/execute", func(c echo.Context) error {
