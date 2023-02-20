@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-02-17 14:06:31
+BuildVersion=latest v8.0.1 2023-02-20 14:07:13
 ReleaseVersion=v8.0.1
-BuildTime=2023-02-17 14:06:31
+BuildTime=2023-02-20 14:07:13
 BuildName=toughradius
-CommitID=ba8970bd41bd1e97adf34f8ba5208397d59d94c5
-CommitDate=Fri, 17 Feb 2023 14:05:35 +0800
+CommitID=c3196a3e2232b8eeee52b1a1d08057ec2d339817
+CommitDate=Fri, 17 Feb 2023 14:06:33 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=update cwmp test
+CommitSubject=2023-02-17 14:06:31 :
