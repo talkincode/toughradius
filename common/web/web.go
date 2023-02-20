@@ -33,6 +33,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/common"
+	"gorm.io/gorm"
 )
 
 type DateRange struct {
@@ -403,4 +404,30 @@ func CreateToken(secret, uid, level string, exp time.Duration) (string, error) {
 	claims["lvl"] = level
 	claims["exp"] = time.Now().Add(exp).Unix()
 	return token.SignedString([]byte(secret))
+}
+
+func QueryPageResult[T any](c echo.Context, tx *gorm.DB, prequery *PreQuery) (*PageResult, error) {
+	var count, start int
+	NewParamReader(c).
+		ReadInt(&start, "start", 0).
+		ReadInt(&count, "count", 40)
+	var data []T
+	var total int64
+	models := new(T)
+	common.Must(prequery.Query(tx.Model(models)).Count(&total).Error)
+	query := prequery.Query(tx.Debug().Model(models)).Offset(start).Limit(count)
+	if err := query.Find(&data).Error; err != nil {
+		return nil, err
+	}
+	return &PageResult{TotalCount: total, Pos: int64(start), Data: data}, nil
+}
+
+func QueryDataResult[T any](c echo.Context, tx *gorm.DB, prequery *PreQuery) ([]T, error) {
+	var count int
+	NewParamReader(c).ReadInt(&count, "count", 10000)
+	var data []T
+	if err := prequery.Query(tx.Model(new(T))).Limit(count).Find(&data).Error; err != nil {
+		return nil, err
+	}
+	return data, nil
 }

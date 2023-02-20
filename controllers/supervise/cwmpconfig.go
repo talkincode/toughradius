@@ -39,7 +39,7 @@ func execCwmpConfig(c echo.Context, id string, deviceId int64, session string) e
 
 	cpe := app.GetCwmpCpe(dev.Sn)
 
-	if !app.MatchDevice(dev, script.OUI, script.ProductClass, script.SoftwareVersion) {
+	if !app.MatchDevice(dev, script.Oui, script.ProductClass, script.SoftwareVersion) {
 		return c.JSON(http.StatusOK,
 			web.RestError(fmt.Sprintf("device version %s mismatch %s", dev.SoftwareVersion, script.SoftwareVersion)))
 	}
@@ -62,7 +62,7 @@ func execCwmpConfig(c echo.Context, id string, deviceId int64, session string) e
 			Level:           script.Level,
 			SoftwareVersion: script.SoftwareVersion,
 			ProductClass:    script.ProductClass,
-			OUI:             script.OUI,
+			Oui:             script.Oui,
 			TaskTags:        script.TaskTags,
 			Content:         script.Content,
 			ExecStatus:      "initialize",

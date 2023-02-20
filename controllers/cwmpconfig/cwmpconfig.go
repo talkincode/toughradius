@@ -46,24 +46,16 @@ func initTemplateRouter() {
 	})
 
 	webserver.GET("/admin/cwmp/config/query", func(c echo.Context) error {
-		var count, start int
-		web.NewParamReader(c).
-			ReadInt(&start, "start", 0).
-			ReadInt(&count, "count", 40)
-		var data []models.CwmpConfig
 		prequery := web.NewPreQuery(c).
 			DefaultOrderBy("updated_at desc").
 			KeyFields("oid", "name", "software_version",
-				"product_class", "o_ui", "task_tags")
+				"product_class", "oui", "task_tags")
 
-		var total int64
-		common.Must(prequery.Query(app.GDB().Model(&models.CwmpConfig{})).Count(&total).Error)
-
-		query := prequery.Query(app.GDB().Model(&models.CwmpConfig{})).Offset(start).Limit(count)
-		if query.Find(&data).Error != nil {
+		result, err := web.QueryPageResult[models.CwmpConfig](c, app.GDB(), prequery)
+		if err != nil {
 			return c.JSON(http.StatusOK, common.EmptyList)
 		}
-		return c.JSON(http.StatusOK, &web.PageResult{TotalCount: total, Pos: int64(start), Data: data})
+		return c.JSON(http.StatusOK, result)
 	})
 
 	webserver.POST("/admin/cwmp/config/add", func(c echo.Context) error {

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
@@ -64,10 +65,15 @@ func InitRouter() {
 	})
 
 	webserver.GET("/admin/cwmp/preset/query", func(c echo.Context) error {
-		var data []models.CwmpPreset
-		err := app.GDB().Find(&data).Error
-		common.Must(err)
-		return c.JSON(http.StatusOK, data)
+		prequery := web.NewPreQuery(c).
+			DefaultOrderBy("updated_at desc").
+			KeyFields("name", "event", "task_tags", "content")
+
+		result, err := web.QueryPageResult[models.CwmpPreset](c, app.GDB(), prequery)
+		if err != nil {
+			return c.JSON(http.StatusOK, common.EmptyList)
+		}
+		return c.JSON(http.StatusOK, result)
 	})
 
 	webserver.GET("/admin/cwmp/preset/execute", func(c echo.Context) error {
@@ -98,29 +104,17 @@ func InitRouter() {
 	})
 
 	webserver.GET("/admin/cwmp/presettask/query", func(c echo.Context) error {
-		var count, start int
-		var sn string
-		web.NewParamReader(c).
-			ReadInt(&start, "start", 0).
-			ReadInt(&count, "count", 40).
-			ReadString(&sn, "sn")
-		var data []models.CwmpPresetTask
 		prequery := web.NewPreQuery(c).
-			DefaultOrderBy("updated_at desc").
-			KeyFields("name")
+			DefaultOrderBy("created_at desc").
+			DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
+			QueryField("sn", "sn").
+			KeyFields("sn", "name", "batch", "event")
 
-		if sn != "" {
-			prequery = prequery.SetParam("sn", sn)
-		}
-
-		var total int64
-		common.Must(prequery.Query(app.GDB().Model(&models.CwmpPresetTask{})).Count(&total).Error)
-
-		query := prequery.Query(app.GDB().Model(&models.CwmpPresetTask{})).Offset(start).Limit(count)
-		if query.Find(&data).Error != nil {
+		result, err := web.QueryPageResult[models.CwmpPresetTask](c, app.GDB(), prequery)
+		if err != nil {
 			return c.JSON(http.StatusOK, common.EmptyList)
 		}
-		return c.JSON(http.StatusOK, &web.PageResult{TotalCount: total, Pos: int64(start), Data: data})
+		return c.JSON(http.StatusOK, result)
 	})
 
 	webserver.POST("/admin/cwmp/preset/add", func(c echo.Context) error {

@@ -224,5 +224,8 @@
 }
 
 .webix_sidebar .webix_tree_branch_1 .webix_tree_item {
-    padding-left: 30px!important;
+    padding-left: 13px!important;
+}
+.webix_sidebar .webix_tree_branch_2 .webix_tree_item {
+    padding-left: 26px!important;
 }
