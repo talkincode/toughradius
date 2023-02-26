@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"github.com/talkincode/toughradius/controllers/apitoken"
-	"github.com/talkincode/toughradius/controllers/charts"
 	"github.com/talkincode/toughradius/controllers/cpe"
 	"github.com/talkincode/toughradius/controllers/cwmpconfig"
 	"github.com/talkincode/toughradius/controllers/cwmppreset"
@@ -27,7 +26,7 @@ func Init() {
 	opr.InitRouter()
 	settings.InitRouter()
 	dashboard.InitRouter()
-	charts.InitRouter()
+	// charts.InitRouter()
 	vpe.InitRouter()
 	cpe.InitRouter()
 	logs.InitRouter()

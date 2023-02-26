@@ -69,44 +69,21 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	defer s.ReleaseAuthRateLimit(username)
 
+	// s.CheckRequestSecret(r.Packet, []byte(vpe.Secret))
+
 	vendorReq := s.ParseVendor(r, vpe.VendorCode)
 
 	// Ldap acct
 	if vpe.LdapId != 0 {
 		_, err := s.GetLdapServer(vpe.LdapId)
 		common.Must(err)
-		// check ldap auth
-		s.LdapUserAcct(r, vendorReq, username, vpe, nasrip)
-		// if ok
 		s.SendResponse(w, r)
-		return
-	}
+		// check ldap auth
+		common.Must(s.TaskPool.Submit(func() {
+			s.LdapUserAcct(r, vendorReq, username, vpe, nasrip)
+		}))
 
-	switch statusType {
-	case rfc2866.AcctStatusType_Value_Start:
-		log.Info2("radius accounting start",
-			zap.String("namespace", "radius"),
-			zap.String("metrics", app.MetricsRadiusOline),
-		)
-		user, err := s.GetUserForAcct(username)
-		common.Must(err)
-		s.DoAcctStart(r, vendorReq, user.Username, vpe, nasrip)
-	case rfc2866.AcctStatusType_Value_InterimUpdate:
-		user, err := s.GetUserForAcct(username)
-		common.Must(err)
-		s.DoAcctUpdateBefore(r, vendorReq, user, vpe, nasrip)
-	case rfc2866.AcctStatusType_Value_Stop:
-		log.Info2("radius accounting stop",
-			zap.String("namespace", "radius"),
-			zap.String("metrics", app.MetricsRadiusOffline),
-		)
-		user, err := s.GetUserForAcct(username)
-		common.Must(err)
-		s.DoAcctStop(r, vendorReq, user.Username, vpe, nasrip)
-	case rfc2866.AcctStatusType_Value_AccountingOn:
-		s.DoAcctNasOn(r)
-	case rfc2866.AcctStatusType_Value_AccountingOff:
-		s.DoAcctNasOff(r)
+		return
 	}
 
 	s.SendResponse(w, r)
@@ -115,6 +92,36 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		zap.String("namespace", "radius"),
 		zap.String("metrics", app.MetricsRadiusAccounting),
 	)
+
+	// async process accounting
+	common.Must(s.TaskPool.Submit(func() {
+		switch statusType {
+		case rfc2866.AcctStatusType_Value_Start:
+			log.Info2("radius accounting start",
+				zap.String("namespace", "radius"),
+				zap.String("metrics", app.MetricsRadiusOline),
+			)
+			user, err := s.GetUserForAcct(username)
+			common.Must(err)
+			s.DoAcctStart(r, vendorReq, user.Username, vpe, nasrip)
+		case rfc2866.AcctStatusType_Value_InterimUpdate:
+			user, err := s.GetUserForAcct(username)
+			common.Must(err)
+			s.DoAcctUpdateBefore(r, vendorReq, user, vpe, nasrip)
+		case rfc2866.AcctStatusType_Value_Stop:
+			log.Info2("radius accounting stop",
+				zap.String("namespace", "radius"),
+				zap.String("metrics", app.MetricsRadiusOffline),
+			)
+			user, err := s.GetUserForAcct(username)
+			common.Must(err)
+			s.DoAcctStop(r, vendorReq, user.Username, vpe, nasrip)
+		case rfc2866.AcctStatusType_Value_AccountingOn:
+			s.DoAcctNasOn(r)
+		case rfc2866.AcctStatusType_Value_AccountingOff:
+			s.DoAcctNasOff(r)
+		}
+	}))
 }
 
 func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {

@@ -20,7 +20,7 @@ settingsUi.getSystemConfigView = function (citem) {
         id: "settings_form_view",
         rows: [
             {
-                padding: 7,
+                padding: 2,
                 cols: [
                     {
                         view: "label", label: " <i class='" + citem.icon + "'></i> " + citem.title,
@@ -70,7 +70,7 @@ settingsUi.getRadiusConfigView = function (citem) {
         id: "settings_form_view",
         rows: [
             {
-                padding: 7,
+                padding: 2,
                 cols: [
                     {
                         view: "label", label: " <i class='" + citem.icon + "'></i> " + citem.title,
@@ -126,7 +126,7 @@ settingsUi.getTr069ConfigView = function (citem) {
         id: "settings_form_view",
         rows: [
             {
-                padding: 7,
+                padding: 2,
                 cols: [
                     {
                         view: "label", label: " <i class='" + citem.icon + "'></i> " + citem.title,

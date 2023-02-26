@@ -1,14 +1,19 @@
 package toughradius
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
+	"errors"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/panjf2000/ants/v2"
 	"github.com/talkincode/toughradius/app"
 	"github.com/talkincode/toughradius/common"
 	"github.com/talkincode/toughradius/common/zaplog/log"
@@ -49,13 +54,21 @@ type RadiusService struct {
 	App           *app.Application
 	RejectCache   *RejectCache
 	AuthRateCache map[string]AuthRateUser
+	TaskPool      *ants.Pool
 	arclock       sync.Mutex
 }
 
 func NewRadiusService() *RadiusService {
+	poolsize, err := strconv.Atoi(os.Getenv("TOUGHRADIUS_RADIUS_POOL"))
+	if err != nil {
+		poolsize = 1024
+	}
+	pool, err := ants.NewPool(poolsize)
+	common.Must(err)
 	s := &RadiusService{
 		AuthRateCache: make(map[string]AuthRateUser),
 		arclock:       sync.Mutex{},
+		TaskPool:      pool,
 		RejectCache: &RejectCache{
 			Items: make(map[string]*RejectItem),
 			Lock:  sync.Mutex{},
@@ -349,4 +362,33 @@ func (s *RadiusService) BatchClearRadiusOnline(ids string) error {
 func (s *RadiusService) BatchClearRadiusOnlineByNas(nasip, nasid string) {
 	_ = app.GDB().Where("nas_addr = ?", nasip).Delete(&models.RadiusOnline{})
 	_ = app.GDB().Where("nas_id = ?", nasid).Delete(&models.RadiusOnline{})
+}
+
+func (s *RadiusService) Release() {
+	s.TaskPool.Running()
+	_ = s.TaskPool.ReleaseTimeout(time.Second * 5)
+}
+
+var secretError = errors.New("secret error")
+
+func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
+	request, err := r.MarshalBinary()
+	if err != nil {
+		panic(err)
+	}
+
+	if len(secret) == 0 {
+		panic(secretError)
+	}
+
+	hash := md5.New()
+	hash.Write(request[:4])
+	var nul [16]byte
+	hash.Write(nul[:])
+	hash.Write(request[20:])
+	hash.Write(secret)
+	var sum [md5.Size]byte
+	if !bytes.Equal(hash.Sum(sum[:0]), request[4:20]) {
+		panic(secretError)
+	}
 }

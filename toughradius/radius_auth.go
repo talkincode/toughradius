@@ -72,6 +72,9 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	//  setup new packet secret
 	r.Secret = []byte(vpe.Secret)
 	r.Packet.Secret = []byte(vpe.Secret)
+
+	// s.CheckRequestSecret(r.Packet, []byte(vpe.Secret))
+
 	response := r.Response(radius.CodeAccessAccept)
 	vendorReq := s.ParseVendor(r, vpe.VendorCode)
 
