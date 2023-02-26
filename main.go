@@ -124,6 +124,7 @@ func main() {
 	})
 
 	radiusService := toughradius.NewRadiusService()
+	defer radiusService.Release()
 
 	g.Go(func() error {
 		return toughradius.ListenRadiusAuthServer(toughradius.NewAuthService(radiusService))
