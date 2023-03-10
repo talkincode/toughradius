@@ -9019,13 +9019,13 @@ body.webix_print {
   font-family: 'PT Sans';
   font-style: normal;
   font-weight: 400;
-  src: local('PT Sans'), local('PTSans-Regular'), url('./fonts/PTS-webfont.woff') format('woff');
+  src: local('PT Sans'), local('PTSans-Regular'), url('/static/webix/fonts/PTS-webfont.woff') format('woff');
 }
 @font-face {
   font-family: 'PT Sans';
   font-style: normal;
   font-weight: 700;
-  src: local('PT Sans Bold'), local('PTSans-Bold'), url('./fonts/PTS-bold.woff') format('woff');
+  src: local('PT Sans Bold'), local('PTSans-Bold'), url('/static/webix/fonts/PTS-bold.woff') format('woff');
 }
 .mainFont {
   font-family: Roboto, sans-serif;
@@ -10201,7 +10201,7 @@ span.webix_sidebar_dir_icon {
 /* based on MaterialDesignIcons.com */
 @font-face {
   font-family: "Webix Material Icons";
-  src: url('./fonts/webixmdi-webfont.woff2') format('woff2'), url('./fonts/webixmdi-webfont.woff') format('woff');
+  src: url('/static/webix/fonts/webixmdi-webfont.woff2') format('woff2'), url('/static/webix/fonts/webixmdi-webfont.woff') format('woff');
   font-weight: normal;
   font-style: normal;
 }
