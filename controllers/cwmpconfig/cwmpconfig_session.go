@@ -47,19 +47,9 @@ func InitRouter() {
 		return c.File(localfile)
 	})
 
-	webserver.GET("/admin/cwmp/config/session/query", func(c echo.Context) error {
-		prequery := web.NewPreQuery(c).
-			DefaultOrderBy("created_at desc").
-			DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
-			QueryField("cpe_id", "cpe_id").
-			KeyFields("name", "software_version", "product_class", "oui", "task_tags")
+	webserver.GET("/admin/cwmp/config/session/query", queryCwmpConfigSession)
 
-		result, err := web.QueryPageResult[models.CwmpConfigSession](c, app.GDB(), prequery)
-		if err != nil {
-			return c.JSON(http.StatusOK, common.EmptyList)
-		}
-		return c.JSON(http.StatusOK, result)
-	})
+	webserver.ApiGET("/api/cwmp/config/session/query", queryCwmpConfigSession)
 
 	webserver.POST("/admin/cwmp/config/session/execute", func(c echo.Context) error {
 		var item models.CwmpConfigSession
@@ -77,4 +67,28 @@ func InitRouter() {
 
 	initTemplateRouter()
 
+}
+
+//	@Summary		Query cwmp config sessions
+//	@Description	Query cwmp config sessions
+//	@Tags			TR069
+//	@Accept			json
+//	@Produce		json
+//	@Param			cpe_id	query	string	false	"cpe_id"
+//	@Param			keyword	query	string	false	"keyword"
+//	@Security		BearerAuth
+//	@Success		200	{array}	models.CwmpConfigSession
+//	@Router			/api/cwmp/config/session/query [get]
+func queryCwmpConfigSession(c echo.Context) error {
+	prequery := web.NewPreQuery(c).
+		DefaultOrderBy("name asc").
+		DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
+		QueryField("cpe_id", "cpe_id").
+		KeyFields("name", "software_version", "product_class", "oui", "task_tags")
+
+	result, err := web.QueryPageResult[models.CwmpConfigSession](c, app.GDB(), prequery)
+	if err != nil {
+		return c.JSON(http.StatusOK, common.EmptyList)
+	}
+	return c.JSON(http.StatusOK, result)
 }

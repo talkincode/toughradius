@@ -2,6 +2,7 @@ package webserver
 
 import (
 	_ "embed"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"net/http"
@@ -11,6 +12,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	echoSwagger "github.com/swaggo/echo-swagger"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gocarina/gocsv"
@@ -120,6 +123,8 @@ func NewAdminServer() *AdminServer {
 	s.root.GET("/realip", func(c echo.Context) error {
 		return c.String(200, c.RealIP())
 	})
+
+	s.root.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// JWT 中间件
 	s.jwtConfig = echojwt.Config{
@@ -297,7 +302,7 @@ func PubOpLog(c echo.Context, message string) {
 	})
 }
 
-// ImportData 导入文件内容
+// ImportData Import the file contents
 func ImportData(c echo.Context, sheet string) ([]map[string]interface{}, error) {
 	file, err := c.FormFile("upload")
 	if err != nil {
@@ -390,6 +395,15 @@ func ExportCsv(c echo.Context, v interface{}, name string) error {
 	return c.File(filepath)
 }
 
+func ExportJson(c echo.Context, v interface{}, name string) error {
+	bs, err := json.Marshal(v)
+	if err != nil {
+		return err
+	}
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s.json", name))
+	return c.JSONBlob(http.StatusOK, bs)
+}
+
 func GET(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	log.Debugf("Add GET Router %s", path)
 	return server.root.GET(path, h, m...)
@@ -408,4 +422,24 @@ func PUT(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route 
 func DELETE(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
 	log.Debugf("Add DELETE Router %s", path)
 	return server.root.DELETE(path, h, m...)
+}
+
+func ApiGET(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	log.Debugf("Add API GET Router /api%s", path)
+	return server.api.GET(path, h, m...)
+}
+
+func ApiDELETE(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	log.Debugf("Add API DELETE Router /api%s", path)
+	return server.api.DELETE(path, h, m...)
+}
+
+func ApiPOST(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) *echo.Route {
+	log.Debugf("Add API POST Router /api%s", path)
+	return server.api.POST(path, h, m...)
+}
+
+func ApiANY(path string, h echo.HandlerFunc, m ...echo.MiddlewareFunc) []*echo.Route {
+	log.Debugf("Add API POST Router /api%s", path)
+	return server.api.Any(path, h, m...)
 }

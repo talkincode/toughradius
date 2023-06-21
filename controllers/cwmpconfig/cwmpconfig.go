@@ -45,18 +45,9 @@ func initTemplateRouter() {
 		return c.JSON(http.StatusOK, data)
 	})
 
-	webserver.GET("/admin/cwmp/config/query", func(c echo.Context) error {
-		prequery := web.NewPreQuery(c).
-			DefaultOrderBy("updated_at desc").
-			KeyFields("oid", "name", "software_version",
-				"product_class", "oui", "task_tags")
+	webserver.GET("/admin/cwmp/config/query", queryCwmpConfig)
 
-		result, err := web.QueryPageResult[models.CwmpConfig](c, app.GDB(), prequery)
-		if err != nil {
-			return c.JSON(http.StatusOK, common.EmptyList)
-		}
-		return c.JSON(http.StatusOK, result)
-	})
+	webserver.ApiGET("/api/cwmp/config/query", queryCwmpConfig)
 
 	webserver.POST("/admin/cwmp/config/add", func(c echo.Context) error {
 		form := new(models.CwmpConfig)
@@ -104,4 +95,26 @@ func initTemplateRouter() {
 		return webserver.ExportData(c, datas, "cwmpconfig")
 	})
 
+}
+
+//	@Summary		Query cwmp config list
+//	@Description	Query cwmp config list
+//	@Tags			TR069
+//	@Accept			json
+//	@Produce		json
+//	@Param			keyword	query	string	false	"keyword"
+//	@Security		BearerAuth
+//	@Success		200	{array}	models.CwmpConfig
+//	@Router			/api/cwmp/config/query [get]
+func queryCwmpConfig(c echo.Context) error {
+	prequery := web.NewPreQuery(c).
+		DefaultOrderBy("name asc").
+		KeyFields("oid", "name", "software_version",
+			"product_class", "oui", "task_tags")
+
+	result, err := web.QueryPageResult[models.CwmpConfig](c, app.GDB(), prequery)
+	if err != nil {
+		return c.JSON(http.StatusOK, common.EmptyList)
+	}
+	return c.JSON(http.StatusOK, result)
 }

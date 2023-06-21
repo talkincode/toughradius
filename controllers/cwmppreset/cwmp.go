@@ -103,19 +103,9 @@ func InitRouter() {
 				"The task has been triggered, please do not trigger it again in a short time")))
 	})
 
-	webserver.GET("/admin/cwmp/presettask/query", func(c echo.Context) error {
-		prequery := web.NewPreQuery(c).
-			DefaultOrderBy("created_at desc").
-			DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
-			QueryField("sn", "sn").
-			KeyFields("sn", "name", "batch", "event")
+	webserver.GET("/admin/cwmp/presettask/query", queryCwmpPresetTask)
 
-		result, err := web.QueryPageResult[models.CwmpPresetTask](c, app.GDB(), prequery)
-		if err != nil {
-			return c.JSON(http.StatusOK, common.EmptyList)
-		}
-		return c.JSON(http.StatusOK, result)
-	})
+	webserver.ApiGET("/api/cwmp/presettask/query", queryCwmpPresetTask)
 
 	webserver.POST("/admin/cwmp/preset/add", func(c echo.Context) error {
 		form := new(models.CwmpPreset)
@@ -162,4 +152,28 @@ func InitRouter() {
 		return c.JSON(http.StatusOK, web.RestSucc("success"))
 	})
 
+}
+
+//	@Summary		Query cwmp preset task
+//	@Description	Query cwmp preset task
+//	@Tags			TR069
+//	@Accept			json
+//	@Produce		json
+//	@Param			cpe_id	query	string	false	"cpe_id"
+//	@Param			keyword	query	string	false	"keyword"
+//	@Security		BearerAuth
+//	@Success		200	{array}	models.CwmpPresetTask
+//	@Router			/api/cwmp/preset/task/query [get]
+func queryCwmpPresetTask(c echo.Context) error {
+	prequery := web.NewPreQuery(c).
+		DefaultOrderBy("created_at desc").
+		DateRange2("starttime", "endtime", "created_at", time.Now().Add(-time.Hour*24), time.Now()).
+		QueryField("sn", "sn").
+		KeyFields("sn", "name", "batch", "event")
+
+	result, err := web.QueryPageResult[models.CwmpPresetTask](c, app.GDB(), prequery)
+	if err != nil {
+		return c.JSON(http.StatusOK, common.EmptyList)
+	}
+	return c.JSON(http.StatusOK, result)
 }

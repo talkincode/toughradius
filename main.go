@@ -11,6 +11,7 @@ import (
 	"github.com/talkincode/toughradius/common/zaplog/log"
 	"github.com/talkincode/toughradius/config"
 	"github.com/talkincode/toughradius/controllers"
+	"github.com/talkincode/toughradius/docs"
 	"github.com/talkincode/toughradius/freeradius"
 	"github.com/talkincode/toughradius/installer"
 	"github.com/talkincode/toughradius/toughradius"
@@ -64,6 +65,23 @@ func printHelp() {
 	}
 }
 
+//	@title			Toughradius API
+//	@version		1.0
+//	@description	This is Toughradius API
+//	@termsOfService	https://github.com/talkincode/toughradius
+//	@contact.name	Toughradius API Support
+//	@contact.url	https://github.com/talkincode/toughradius
+//	@contact.email	jamiesun.net@gmail.com
+//	@license.name	GPL
+//	@license.url	https://github.com/talkincode/toughradius
+
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
+//	@description				Accesskey based security scheme to secure api
+
+//	@host		127.0.0.1:1816
+//	@BasePath	/
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	flag.Parse()
@@ -106,6 +124,7 @@ func main() {
 	}
 
 	app.InitGlobalApplication(_config)
+	docs.Update()
 
 	app.GApp().MigrateDB(false)
 

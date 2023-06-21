@@ -13,11 +13,11 @@ import (
 	"github.com/talkincode/toughradius/common/web"
 	"github.com/talkincode/toughradius/models"
 	"github.com/talkincode/toughradius/webserver"
-	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
 func InitRouter() {
+
 	webserver.GET("/admin/cpe", func(c echo.Context) error {
 		return c.Render(http.StatusOK, "cpe", nil)
 	})
@@ -58,59 +58,9 @@ func InitRouter() {
 		return c.JSON(http.StatusOK, options)
 	})
 
-	webserver.GET("/admin/cpe/query", func(c echo.Context) error {
-		var count, start int
-		var nodeId string
-		web.NewParamReader(c).
-			ReadInt(&start, "start", 0).
-			ReadInt(&count, "count", 40).
-			ReadString(&nodeId, "node_id")
-		var data []models.NetCpe
-		getQuery := func() *gorm.DB {
-			query := app.GDB().Model(&models.NetCpe{})
+	webserver.ApiGET("/cpe/query", queryCpe)
 
-			if len(web.ParseSortMap(c)) == 0 {
-				query = query.Order("updated_at desc")
-			} else {
-				for name, stype := range web.ParseSortMap(c) {
-					query = query.Order(fmt.Sprintf("%s %s", name, stype))
-				}
-			}
-
-			if nodeId != "" {
-				query = query.Where("node_id = ? ", nodeId)
-			}
-
-			for name, value := range web.ParseEqualMap(c) {
-				query = query.Where(fmt.Sprintf("%s = ?", name), value)
-			}
-
-			for name, value := range web.ParseFilterMap(c) {
-				if common.InSlice(name, []string{"node_id", "customer_id"}) {
-					query = query.Where(fmt.Sprintf("%s = ?", name), value)
-				} else {
-					query = query.Where(fmt.Sprintf("%s like ?", name), "%"+value+"%")
-				}
-			}
-			keyword := c.QueryParam("keyword")
-			if keyword != "" {
-				query = query.Where("name like ?", "%"+keyword+"%").
-					Or("remark like ?", "%"+keyword+"%").
-					Or("sn like ?", "%"+keyword+"%").
-					Or("rd_ipaddr like ?", "%"+keyword+"%").
-					Or("model like ?", "%"+keyword+"%")
-			}
-			return query
-		}
-		var total int64
-		common.Must(getQuery().Count(&total).Error)
-
-		query := getQuery().Offset(start).Limit(count)
-		if query.Find(&data).Error != nil {
-			return c.JSON(http.StatusOK, common.EmptyList)
-		}
-		return c.JSON(http.StatusOK, &web.PageResult{TotalCount: total, Pos: int64(start), Data: data})
-	})
+	webserver.GET("/admin/cpe/query", queryCpe)
 
 	webserver.GET("/admin/cpe/params", func(c echo.Context) error {
 		var sn string
@@ -187,7 +137,40 @@ func InitRouter() {
 	webserver.GET("/admin/cpe/export", func(c echo.Context) error {
 		var data []models.NetCpe
 		common.Must(app.GDB().Find(&data).Error)
-		return webserver.ExportCsv(c, data, "cpe")
+		switch c.QueryParam("fmt") {
+		case "csv":
+			return webserver.ExportCsv(c, data, "cpe")
+		case "json":
+			return webserver.ExportJson(c, data, "cpe")
+		default:
+			return webserver.ExportCsv(c, data, "cpe")
+		}
 	})
 
+}
+
+//	@Summary		Query CPE list
+//	@Description	Query cpe list
+//	@Tags			CPE
+//	@Accept			json
+//	@Produce		json
+//	@Param			node_id		query	string	false	"node_id"
+//	@Param			customer_id	query	string	false	"customer_id"
+//	@Param			keyword		query	string	false	"keyword"
+//	@Security		BearerAuth
+//	@Success		200	{array}	models.NetCpe
+//	@Router			/api/cpe/query [get]
+func queryCpe(c echo.Context) error {
+	prequery := web.NewPreQuery(c).
+		DefaultOrderBy("name asc").
+		QueryField("node_id", "node_id").
+		QueryField("customer_id", "customer_id").
+		QueryField("sn", "sn").
+		KeyFields("sn", "name", "remark", "model")
+
+	result, err := web.QueryPageResult[models.NetCpe](c, app.GDB(), prequery)
+	if err != nil {
+		return c.JSON(http.StatusOK, common.EmptyList)
+	}
+	return c.JSON(http.StatusOK, result)
 }

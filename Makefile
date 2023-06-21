@@ -116,5 +116,9 @@ updev:
 	scp ${RELEASE_DIR}/${BUILD_NAME} trdev-server:/tmp/toughradius
 	ssh trdev-server "systemctl stop toughradius && /tmp/toughradius -install && systemctl start toughradius"
 
+swag:
+	swag fmt && swag init
+
+
 .PHONY: clean build tr069crt radseccrt
 
