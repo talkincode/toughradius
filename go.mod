@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
+	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/c-robinson/iplib v1.0.6

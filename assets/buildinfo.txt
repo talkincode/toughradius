@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-06-21 11:43:37
+BuildVersion=latest v8.0.1 2023-06-21 11:55:13
 ReleaseVersion=v8.0.1
-BuildTime=2023-06-21 11:43:37
+BuildTime=2023-06-21 11:55:13
 BuildName=toughradius
-CommitID=189cfd1d55d68c51c064af8bf29bb7fc146cee41
-CommitDate=Wed, 21 Jun 2023 11:43:31 +0800
+CommitID=3b83bfbd9bba591f0b1f882965e5ef63a405af1c
+CommitDate=Wed, 21 Jun 2023 11:55:07 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=add swagger api config
+CommitSubject=dateparse any timestr
