@@ -149,6 +149,17 @@ func InitRouter() {
 
 }
 
+//	@Summary		Query CPE list
+//	@Description	Query cpe list
+//	@Tags			CPE
+//	@Accept			json
+//	@Produce		json
+//	@Param			node_id		query	string	false	"node_id"
+//	@Param			customer_id	query	string	false	"customer_id"
+//	@Param			keyword		query	string	false	"keyword"
+//	@Security		BearerAuth
+//	@Success		200	{array}	models.NetCpe
+//	@Router			/api/cpe/query [get]
 func queryCpe(c echo.Context) error {
 	prequery := web.NewPreQuery(c).
 		DefaultOrderBy("name asc").

@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	echoSwagger "github.com/swaggo/echo-swagger"
+
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gocarina/gocsv"
 	_ "github.com/gocarina/gocsv"
@@ -121,6 +123,8 @@ func NewAdminServer() *AdminServer {
 	s.root.GET("/realip", func(c echo.Context) error {
 		return c.String(200, c.RealIP())
 	})
+
+	s.root.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// JWT 中间件
 	s.jwtConfig = echojwt.Config{

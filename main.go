@@ -11,6 +11,7 @@ import (
 	"github.com/talkincode/toughradius/common/zaplog/log"
 	"github.com/talkincode/toughradius/config"
 	"github.com/talkincode/toughradius/controllers"
+	"github.com/talkincode/toughradius/docs"
 	"github.com/talkincode/toughradius/freeradius"
 	"github.com/talkincode/toughradius/installer"
 	"github.com/talkincode/toughradius/toughradius"
@@ -79,8 +80,8 @@ func printHelp() {
 //	@name						Authorization
 //	@description				Accesskey based security scheme to secure api
 
-// @host		127.0.0.1:1816
-// @BasePath	/
+//	@host		127.0.0.1:1816
+//	@BasePath	/
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	flag.Parse()
@@ -123,6 +124,7 @@ func main() {
 	}
 
 	app.InitGlobalApplication(_config)
+	docs.Update()
 
 	app.GApp().MigrateDB(false)
 

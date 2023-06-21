@@ -81,6 +81,19 @@
                                                     view: "button",
                                                     css: "nav-item webix_transparent",
                                                     type: "icon",
+                                                    icon: "mdi mdi-link",
+                                                    height: 25,
+                                                    width: 80,
+                                                    borderless: true,
+                                                    label: "API",
+                                                    click: function () {
+                                                        $$(frameid).load("/swagger/index.html");
+                                                    }
+                                                },
+                                                {
+                                                    view: "button",
+                                                    css: "nav-item webix_transparent",
+                                                    type: "icon",
                                                     icon: "mdi mdi-text-search",
                                                     height: 25,
                                                     width: 45,
