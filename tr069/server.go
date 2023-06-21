@@ -125,7 +125,7 @@ func (s *Tr069Server) startTlsServer() error {
 	return ss.ListenAndServeTLS(serverCert, serverKey)
 }
 
-// Start 启动服务器
+// Start the server
 func (s *Tr069Server) Start() (err error) {
 	log.Infof("Start Tr069 API server %s:%d", app.GConfig().Tr069.Host, app.GConfig().Tr069.Port)
 	if app.GConfig().Tr069.Tls {
