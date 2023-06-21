@@ -118,7 +118,7 @@ func main() {
 		return webserver.Listen()
 	})
 
-	// Freeradius API 服务启动
+	// The Freeradius API service starts
 	g.Go(func() error {
 		return freeradius.Listen()
 	})
@@ -137,7 +137,8 @@ func main() {
 	g.Go(func() error {
 		radsec := toughradius.NewRadsecService(
 			toughradius.NewAuthService(radiusService),
-			toughradius.NewAcctService(radiusService))
+			toughradius.NewAcctService(radiusService),
+		)
 		return toughradius.ListenRadsecServer(radsec)
 	})
 
