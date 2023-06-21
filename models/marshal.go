@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/talkincode/toughradius/common/timeutil"
 )
 
@@ -58,8 +59,8 @@ func (d *RadiusUser) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &tmp); err != nil {
 		return err
 	}
-	d.ExpireTime, _ = time.Parse(timeutil.YYYYMMDDHHMMSS_LAYOUT, tmp.ExpireTime[:10]+" 23:59:59")
-	d.LastOnline, _ = time.Parse(timeutil.YYYYMMDDHHMM_LAYOUT, tmp.LastOnline)
+	d.ExpireTime, _ = dateparse.ParseAny(tmp.ExpireTime[:10] + " 23:59:59")
+	d.LastOnline, _ = dateparse.ParseAny(tmp.LastOnline)
 	return nil
 }
 
@@ -94,9 +95,9 @@ func (d *CwmpPresetTask) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &tmp); err != nil {
 		return err
 	}
-	d.CreatedAt, _ = time.Parse(timeutil.YYYYMMDDHHMMSS_LAYOUT, tmp.CreatedAt)
-	d.UpdatedAt, _ = time.Parse(timeutil.YYYYMMDDHHMMSS_LAYOUT, tmp.UpdatedAt)
-	d.ExecTime, _ = time.Parse(timeutil.YYYYMMDDHHMMSS_LAYOUT, tmp.ExecTime)
-	d.RespTime, _ = time.Parse(timeutil.YYYYMMDDHHMMSS_LAYOUT, tmp.RespTime)
+	d.CreatedAt, _ = dateparse.ParseAny(tmp.CreatedAt)
+	d.UpdatedAt, _ = dateparse.ParseAny(tmp.UpdatedAt)
+	d.ExecTime, _ = dateparse.ParseAny(tmp.ExecTime)
+	d.RespTime, _ = dateparse.ParseAny(tmp.RespTime)
 	return nil
 }
