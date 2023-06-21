@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-06-21 09:46:47
+BuildVersion=latest v8.0.1 2023-06-21 11:43:37
 ReleaseVersion=v8.0.1
-BuildTime=2023-06-21 09:46:47
+BuildTime=2023-06-21 11:43:37
 BuildName=toughradius
-CommitID=8fd30de030cbbae8b6df51a0757fe1159f66b456
-CommitDate=Wed, 21 Jun 2023 09:46:33 +0800
+CommitID=189cfd1d55d68c51c064af8bf29bb7fc146cee41
+CommitDate=Wed, 21 Jun 2023 11:43:31 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=main.go update
+CommitSubject=add swagger api config
