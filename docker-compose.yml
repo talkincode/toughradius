@@ -1,0 +1,54 @@
+version: "3"
+services:
+  pgdb:
+    image: timescale/timescaledb:latest-pg14
+    container_name: "pgdb"
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_DB: toughradius
+      POSTGRES_USER: toughradius
+      POSTGRES_PASSWORD: toughradius
+    volumes:
+      - pgdb-volume:/var/lib/postgresql/data
+    networks:
+      toughradius_network:
+
+  toughradius:
+    depends_on:
+      - 'pgdb'
+    image: ca17/toughradius:latest
+    container_name: "toughradius"
+    restart: always
+    ports:
+      - "1816:1816"
+      - "1818:1818"
+      - "1819:1819"
+      - "2083:2083"
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+      - "1914:1914/udp"
+    volumes:
+      - toughradius-volume:/var/toughradius
+    environment:
+      - GODEBUG=x509ignoreCN=0
+      - TOUGHRADIUS_SYSTEM_DEBUG=off
+      - TOUGHRADIUS_DB_HOST=tsdb
+      - TOUGHRADIUS_DB_NAME=toughradius
+      - TOUGHRADIUS_DB_USER=toughradius
+      - TOUGHRADIUS_DB_PWD=toughradius
+      - TOUGHRADIUS_RADIUS_DEBUG=off
+      - TOUGHRADIUS_RADIUS_ENABLED=on
+      - TOUGHRADIUS_TR069_WEB_TLS=on
+      - TOUGHRADIUS_LOKI_ENABLE=false
+      - TOUGHRADIUS_LOGGER_MODE=production
+      - TOUGHRADIUS_LOGGER_FILE_ENABLE=true
+    networks:
+      toughradius_network:
+
+networks:
+  toughradius_network:
+
+volumes:
+  pgdb-volume:
+  toughradius-volume:
