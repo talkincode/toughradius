@@ -3,7 +3,7 @@ package app
 import (
 	"testing"
 
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/models"
 )
 
 func TestMatchTaskTags(t *testing.T) {

@@ -1,7 +1,7 @@
 package toughradius
 
 import (
-	"github.com/talkincode/toughradius/app"
+	"github.com/talkincode/toughradius/v8/app"
 )
 
 func (s *AuthService) CheckOnlineCount(username string, activeNUm int) error {

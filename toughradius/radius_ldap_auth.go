@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/go-ldap/ldap/v3"
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/timeutil"
-	"github.com/talkincode/toughradius/models"
-	"github.com/talkincode/toughradius/toughradius/vendors/microsoft"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/timeutil"
+	"github.com/talkincode/toughradius/v8/models"
+	"github.com/talkincode/toughradius/v8/toughradius/vendors/microsoft"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 )

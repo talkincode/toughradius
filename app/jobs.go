@@ -11,9 +11,9 @@ import (
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/process"
 	"github.com/spf13/cast"
-	"github.com/talkincode/toughradius/common/zaplog"
-	"github.com/talkincode/toughradius/common/zaplog/log"
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/common/zaplog"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/models"
 )
 
 var cronParser = cron.NewParser(

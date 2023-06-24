@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/360EntSecGroup-Skylar/excelize"
-	"github.com/talkincode/toughradius/common/timeutil"
+	"github.com/talkincode/toughradius/v8/common/timeutil"
 )
 
 func WriteToFile(sheet string, records []interface{}, filepath string) error {

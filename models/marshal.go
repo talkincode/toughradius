@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/araddon/dateparse"
-	"github.com/talkincode/toughradius/common/timeutil"
+	"github.com/talkincode/toughradius/v8/common/timeutil"
 )
 
 func (d NetCpe) MarshalJSON() ([]byte, error) {

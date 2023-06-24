@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gosnmp/gosnmp"
-	"github.com/talkincode/toughradius/common/snmp/mibs/hostresmib"
+	"github.com/talkincode/toughradius/v8/common/snmp/mibs/hostresmib"
 )
 
 type DeviceIfOctets struct {

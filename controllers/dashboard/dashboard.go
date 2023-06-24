@@ -4,11 +4,11 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/echarts"
-	"github.com/talkincode/toughradius/models"
-	"github.com/talkincode/toughradius/webserver"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/echarts"
+	"github.com/talkincode/toughradius/v8/models"
+	"github.com/talkincode/toughradius/v8/webserver"
 )
 
 func InitRouter() {

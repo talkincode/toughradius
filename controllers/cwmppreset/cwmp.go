@@ -8,12 +8,12 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/assets"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/web"
-	"github.com/talkincode/toughradius/models"
-	"github.com/talkincode/toughradius/webserver"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/assets"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/web"
+	"github.com/talkincode/toughradius/v8/models"
+	"github.com/talkincode/toughradius/v8/webserver"
 	"gopkg.in/yaml.v2"
 )
 
@@ -154,16 +154,16 @@ func InitRouter() {
 
 }
 
-//	@Summary		Query cwmp preset task
-//	@Description	Query cwmp preset task
-//	@Tags			TR069
-//	@Accept			json
-//	@Produce		json
-//	@Param			cpe_id	query	string	false	"cpe_id"
-//	@Param			keyword	query	string	false	"keyword"
-//	@Security		BearerAuth
-//	@Success		200	{array}	models.CwmpPresetTask
-//	@Router			/api/cwmp/preset/task/query [get]
+// @Summary		Query cwmp preset task
+// @Description	Query cwmp preset task
+// @Tags			TR069
+// @Accept			json
+// @Produce		json
+// @Param			cpe_id	query	string	false	"cpe_id"
+// @Param			keyword	query	string	false	"keyword"
+// @Security		BearerAuth
+// @Success		200	{array}	models.CwmpPresetTask
+// @Router			/api/cwmp/preset/task/query [get]
 func queryCwmpPresetTask(c echo.Context) error {
 	prequery := web.NewPreQuery(c).
 		DefaultOrderBy("created_at desc").

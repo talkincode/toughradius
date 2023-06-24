@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/cwmp"
-	"github.com/talkincode/toughradius/common/zaplog/log"
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/cwmp"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/models"
 	"gopkg.in/yaml.v2"
 )
 

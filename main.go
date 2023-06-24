@@ -7,16 +7,16 @@ import (
 	"runtime"
 	_ "time/tzdata"
 
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/common/zaplog/log"
-	"github.com/talkincode/toughradius/config"
-	"github.com/talkincode/toughradius/controllers"
-	"github.com/talkincode/toughradius/docs"
-	"github.com/talkincode/toughradius/freeradius"
-	"github.com/talkincode/toughradius/installer"
-	"github.com/talkincode/toughradius/toughradius"
-	"github.com/talkincode/toughradius/tr069"
-	"github.com/talkincode/toughradius/webserver"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/config"
+	"github.com/talkincode/toughradius/v8/controllers"
+	"github.com/talkincode/toughradius/v8/docs"
+	"github.com/talkincode/toughradius/v8/freeradius"
+	"github.com/talkincode/toughradius/v8/installer"
+	"github.com/talkincode/toughradius/v8/toughradius"
+	"github.com/talkincode/toughradius/v8/tr069"
+	"github.com/talkincode/toughradius/v8/webserver"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -80,8 +80,8 @@ func printHelp() {
 //	@name						Authorization
 //	@description				Accesskey based security scheme to secure api
 
-//	@host		127.0.0.1:1816
-//	@BasePath	/
+// @host		127.0.0.1:1816
+// @BasePath	/
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	flag.Parse()

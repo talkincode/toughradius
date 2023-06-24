@@ -3,7 +3,7 @@ package zaplog
 import (
 	"testing"
 
-	"github.com/talkincode/toughradius/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
 )
 
 func TestInfo(t *testing.T) {

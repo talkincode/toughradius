@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/talkincode/toughradius/common/timeutil"
+	"github.com/talkincode/toughradius/v8/common/timeutil"
 )
 
 type BenchmarkStat struct {

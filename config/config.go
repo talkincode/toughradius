@@ -5,7 +5,7 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/talkincode/toughradius/common"
+	"github.com/talkincode/toughradius/v8/common"
 	"gopkg.in/yaml.v3"
 )
 

@@ -3,7 +3,7 @@ package toughradius
 import (
 	"errors"
 
-	"github.com/talkincode/toughradius/app"
+	"github.com/talkincode/toughradius/v8/app"
 )
 
 type AuthError struct {

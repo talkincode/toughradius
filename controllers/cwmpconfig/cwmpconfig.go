@@ -6,11 +6,11 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/web"
-	"github.com/talkincode/toughradius/models"
-	"github.com/talkincode/toughradius/webserver"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/web"
+	"github.com/talkincode/toughradius/v8/models"
+	"github.com/talkincode/toughradius/v8/webserver"
 )
 
 func initTemplateRouter() {
@@ -97,15 +97,15 @@ func initTemplateRouter() {
 
 }
 
-//	@Summary		Query cwmp config list
-//	@Description	Query cwmp config list
-//	@Tags			TR069
-//	@Accept			json
-//	@Produce		json
-//	@Param			keyword	query	string	false	"keyword"
-//	@Security		BearerAuth
-//	@Success		200	{array}	models.CwmpConfig
-//	@Router			/api/cwmp/config/query [get]
+// @Summary		Query cwmp config list
+// @Description	Query cwmp config list
+// @Tags			TR069
+// @Accept			json
+// @Produce		json
+// @Param			keyword	query	string	false	"keyword"
+// @Security		BearerAuth
+// @Success		200	{array}	models.CwmpConfig
+// @Router			/api/cwmp/config/query [get]
 func queryCwmpConfig(c echo.Context) error {
 	prequery := web.NewPreQuery(c).
 		DefaultOrderBy("name asc").

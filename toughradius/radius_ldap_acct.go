@@ -1,7 +1,7 @@
 package toughradius
 
 import (
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/models"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2866"
 )

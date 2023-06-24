@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/talkincode/toughradius/common/zaplog/log"
-	"github.com/talkincode/toughradius/toughradius/vendors/h3c"
-	"github.com/talkincode/toughradius/toughradius/vendors/radback"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/toughradius/vendors/h3c"
+	"github.com/talkincode/toughradius/v8/toughradius/vendors/radback"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"

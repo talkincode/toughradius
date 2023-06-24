@@ -11,8 +11,8 @@ import (
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
 	"github.com/shirou/gopsutil/process"
-	"github.com/talkincode/toughradius/common/web"
-	"github.com/talkincode/toughradius/webserver"
+	"github.com/talkincode/toughradius/v8/common/web"
+	"github.com/talkincode/toughradius/v8/webserver"
 )
 
 func InitRouter() {

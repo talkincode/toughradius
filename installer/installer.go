@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/config"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/config"
 	"gopkg.in/yaml.v3"
 )
 

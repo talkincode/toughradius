@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/talkincode/toughradius/common/wfs"
+	"github.com/talkincode/toughradius/v8/common/wfs"
 )
 
 type LocalDrive struct {

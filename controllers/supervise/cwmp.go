@@ -6,12 +6,12 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/cwmp"
-	"github.com/talkincode/toughradius/common/web"
-	"github.com/talkincode/toughradius/events"
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/cwmp"
+	"github.com/talkincode/toughradius/v8/common/web"
+	"github.com/talkincode/toughradius/v8/events"
+	"github.com/talkincode/toughradius/v8/models"
 )
 
 func getCwmpCmds(vendor string) []SuperviseAction {

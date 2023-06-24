@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/config"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/config"
 )
 
 // 开发环境初始化数据库

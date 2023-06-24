@@ -4,7 +4,7 @@ import (
 	"time"
 
 	istats "github.com/montanaflynn/stats"
-	"github.com/talkincode/toughradius/common/zaplog"
+	"github.com/talkincode/toughradius/v8/common/zaplog"
 )
 
 const (

@@ -32,7 +32,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/labstack/echo/v4"
 	"github.com/spf13/cast"
-	"github.com/talkincode/toughradius/common"
+	"github.com/talkincode/toughradius/v8/common"
 	"gorm.io/gorm"
 )
 

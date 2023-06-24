@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/guonaihong/gout"
-	"github.com/talkincode/toughradius/common"
+	"github.com/talkincode/toughradius/v8/common"
 )
 
 func LokiQuery(q *LokiQueryForm) ([]Lokilog, error) {

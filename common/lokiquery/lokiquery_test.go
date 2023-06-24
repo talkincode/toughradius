@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/config"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/config"
 )
 
 func TestLokiQuery_QueryString(t *testing.T) {

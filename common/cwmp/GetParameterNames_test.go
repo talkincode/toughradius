@@ -4,7 +4,7 @@ import (
 	_ "embed"
 	"testing"
 
-	"github.com/talkincode/toughradius/common"
+	"github.com/talkincode/toughradius/v8/common"
 )
 
 //go:embed GetParameterNames.xml

@@ -1,7 +1,7 @@
 package cwmp
 
 import (
-	"github.com/talkincode/toughradius/common/xmlx"
+	"github.com/talkincode/toughradius/v8/common/xmlx"
 )
 
 // ValueChange value change

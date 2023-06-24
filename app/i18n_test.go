@@ -3,8 +3,8 @@ package app
 import (
 	"testing"
 
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/config"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/config"
 )
 
 func TestApplication_Translate(t *testing.T) {

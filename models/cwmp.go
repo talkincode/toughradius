@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/talkincode/toughradius/common/cwmp"
+	"github.com/talkincode/toughradius/v8/common/cwmp"
 )
 
 type CwmpConfig struct {

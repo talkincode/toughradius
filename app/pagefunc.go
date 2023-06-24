@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/talkincode/toughradius/assets"
+	"github.com/talkincode/toughradius/v8/assets"
 )
 
 func (a *Application) GetTemplateFuncMap() map[string]interface{} {

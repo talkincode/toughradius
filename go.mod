@@ -1,4 +1,4 @@
-module github.com/talkincode/toughradius
+module github.com/talkincode/toughradius/v8
 
 go 1.19
 

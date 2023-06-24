@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/app"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/web"
-	"github.com/talkincode/toughradius/models"
-	"github.com/talkincode/toughradius/webserver"
+	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/web"
+	"github.com/talkincode/toughradius/v8/models"
+	"github.com/talkincode/toughradius/v8/webserver"
 )
 
 // Mikrotik 脚本管理
@@ -69,16 +69,16 @@ func InitRouter() {
 
 }
 
-//	@Summary		Query cwmp config sessions
-//	@Description	Query cwmp config sessions
-//	@Tags			TR069
-//	@Accept			json
-//	@Produce		json
-//	@Param			cpe_id	query	string	false	"cpe_id"
-//	@Param			keyword	query	string	false	"keyword"
-//	@Security		BearerAuth
-//	@Success		200	{array}	models.CwmpConfigSession
-//	@Router			/api/cwmp/config/session/query [get]
+// @Summary		Query cwmp config sessions
+// @Description	Query cwmp config sessions
+// @Tags			TR069
+// @Accept			json
+// @Produce		json
+// @Param			cpe_id	query	string	false	"cpe_id"
+// @Param			keyword	query	string	false	"keyword"
+// @Security		BearerAuth
+// @Success		200	{array}	models.CwmpConfigSession
+// @Router			/api/cwmp/config/session/query [get]
 func queryCwmpConfigSession(c echo.Context) error {
 	prequery := web.NewPreQuery(c).
 		DefaultOrderBy("name asc").

@@ -3,8 +3,8 @@ package app
 import (
 	"time"
 
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/models"
 )
 
 func (a *Application) checkSuper() {

@@ -3,7 +3,7 @@ package cwmp
 import (
 	"encoding/xml"
 
-	"github.com/talkincode/toughradius/common/xmlx"
+	"github.com/talkincode/toughradius/v8/common/xmlx"
 )
 
 const (

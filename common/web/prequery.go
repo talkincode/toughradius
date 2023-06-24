@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/common"
+	"github.com/talkincode/toughradius/v8/common"
 	"gorm.io/gorm"
 )
 

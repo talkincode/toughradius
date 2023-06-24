@@ -11,12 +11,12 @@ import (
 
 	"github.com/robfig/cron/v3"
 	"github.com/spf13/cast"
-	"github.com/talkincode/toughradius/assets"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/zaplog"
-	"github.com/talkincode/toughradius/common/zaplog/log"
-	"github.com/talkincode/toughradius/config"
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/assets"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/zaplog"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/config"
+	"github.com/talkincode/toughradius/v8/models"
 	bolt "go.etcd.io/bbolt"
 	"gorm.io/gorm"
 )

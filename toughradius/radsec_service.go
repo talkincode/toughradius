@@ -4,7 +4,7 @@ import (
 	"context"
 	"net"
 
-	"github.com/talkincode/toughradius/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 )

@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/talkincode/toughradius/config"
+	"github.com/talkincode/toughradius/v8/config"
 	"gopkg.in/yaml.v2"
 )
 

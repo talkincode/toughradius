@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/talkincode/toughradius/common/xmlx"
+	"github.com/talkincode/toughradius/v8/common/xmlx"
 )
 
 // Inform tr069 inform (heartbeat)

@@ -10,13 +10,13 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/talkincode/toughradius/assets"
-	"github.com/talkincode/toughradius/common"
-	"github.com/talkincode/toughradius/common/cwmp"
-	"github.com/talkincode/toughradius/common/timeutil"
-	"github.com/talkincode/toughradius/common/web"
-	"github.com/talkincode/toughradius/common/zaplog/log"
-	"github.com/talkincode/toughradius/models"
+	"github.com/talkincode/toughradius/v8/assets"
+	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v8/common/cwmp"
+	"github.com/talkincode/toughradius/v8/common/timeutil"
+	"github.com/talkincode/toughradius/v8/common/web"
+	"github.com/talkincode/toughradius/v8/common/zaplog/log"
+	"github.com/talkincode/toughradius/v8/models"
 )
 
 type CwmpEventTable struct {
