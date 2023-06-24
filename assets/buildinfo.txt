@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-06-24 14:44:15
+BuildVersion=latest v8.0.1 2023-06-24 15:00:26
 ReleaseVersion=v8.0.1
-BuildTime=2023-06-24 14:44:15
+BuildTime=2023-06-24 15:00:26
 BuildName=toughradius
-CommitID=57891460b4b30e61f10dd43145b5657c5359d777
-CommitDate=Sat, 24 Jun 2023 13:35:25 +0800
+CommitID=216df7c6440fe96233e369538a8ced20c9c5df12
+CommitDate=Sat, 24 Jun 2023 14:44:31 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2023-06-24 13:35:20 : update module
+CommitSubject=2023-06-24 14:44:15 : freeradius doc

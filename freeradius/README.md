@@ -15,3 +15,5 @@ Whether you require support for 802.1X, Wi-Fi, VPN, or other network access prot
 - Toughradius starts an HTTP server that listens for Freeradius requests and handles user authentication, billing, device management, and more
 
 > Please refer to [Freeradius Official Documentation](https://networkradius.com/doc/3.0.10/raddb/mods-available/rest.html)
+
+> [FreeRadius configuration case](https://github.com/talkincode/toughradius/tree/main/assets/freeradius)
