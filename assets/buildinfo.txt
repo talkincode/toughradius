@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-06-29 16:23:51
+BuildVersion=latest v8.0.1 2023-06-29 16:57:00
 ReleaseVersion=v8.0.1
-BuildTime=2023-06-29 16:23:51
+BuildTime=2023-06-29 16:57:00
 BuildName=toughradius
-CommitID=42fd7f94f2e4cec5769388a5ce59a42fec38ecf3
-CommitDate=Thu, 29 Jun 2023 16:23:46 +0800
+CommitID=3e42860ebef788c8ce597e7b5e676b6ec8003013
+CommitDate=Thu, 29 Jun 2023 16:56:53 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=fix docker-compose config
+CommitSubject=add testcase
