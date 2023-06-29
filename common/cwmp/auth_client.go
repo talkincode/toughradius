@@ -72,9 +72,9 @@ func ConnectionRequestAuth(username string, password string, uri string) (bool, 
 }
 
 /*
- Parse Authorization header from the http.Request. Returns a map of
- auth parameters or nil if the header is not a valid parsable Digest
- auth header.
+Parse Authorization header from the http.Request. Returns a map of
+auth parameters or nil if the header is not a valid parsable Digest
+auth header.
 */
 func DigestAuthParams(r *http.Response) map[string]string {
 	s := strings.SplitN(r.Header.Get("Www-Authenticate"), " ", 2)
@@ -105,7 +105,7 @@ func RandomKey() string {
 }
 
 /*
- H function for MD5 algorithm (returns a lower-case hex MD5 digest)
+H function for MD5 algorithm (returns a lower-case hex MD5 digest)
 */
 func H(data string) string {
 	digest := md5.New()
