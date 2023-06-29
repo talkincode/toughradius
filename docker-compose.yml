@@ -17,7 +17,7 @@ services:
   toughradius:
     depends_on:
       - 'pgdb'
-    image: ca17/toughradius:latest
+    image: talkincode/toughradius:latest
     container_name: "toughradius"
     restart: always
     ports:
@@ -33,7 +33,7 @@ services:
     environment:
       - GODEBUG=x509ignoreCN=0
       - TOUGHRADIUS_SYSTEM_DEBUG=off
-      - TOUGHRADIUS_DB_HOST=tsdb
+      - TOUGHRADIUS_DB_HOST=pgdb
       - TOUGHRADIUS_DB_NAME=toughradius
       - TOUGHRADIUS_DB_USER=toughradius
       - TOUGHRADIUS_DB_PWD=toughradius
