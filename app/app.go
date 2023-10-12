@@ -12,7 +12,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v8/assets"
-	"github.com/talkincode/toughradius/v8/common"
 	"github.com/talkincode/toughradius/v8/common/zaplog"
 	"github.com/talkincode/toughradius/v8/common/zaplog/log"
 	"github.com/talkincode/toughradius/v8/config"
@@ -101,20 +100,14 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	default:
 		panic("not support database type")
 	}
-	// init time seras database
-	// a.tsdb, err = tstorage.NewStorage(
-	// 	tstorage.WithPartitionDuration(time.Hour),
-	// 	tstorage.WithTimestampPrecision(tstorage.Nanoseconds),
-	// 	tstorage.WithRetention(24*7*time.Hour),
-	// 	tstorage.WithDataPath(path.Join(cfg.System.Workdir, "tstorage")),
-	// 	tstorage.WithWALBufferedSize(1024),
-	// 	tstorage.WithWriteTimeout(60*time.Second),
-	// )
-	common.Must(err)
-	go a.checkSuper()
-	go a.checkSettings()
-	// init default node
-	a.checkDefaultPNode()
+	// wait for database initialization to complete
+	go func() {
+		time.Sleep(3 * time.Second)
+		a.checkSuper()
+		a.checkSettings()
+		a.checkDefaultPNode()
+	}()
+
 	a.cwmpTable = NewCwmpEventTable()
 	a.initJob()
 	a.RenderTranslateFiles()
