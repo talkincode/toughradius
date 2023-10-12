@@ -51,6 +51,12 @@ buildarm64:
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
 	upx ./release/toughradius
 
+build-tradtest:
+	CGO_ENABLED=0 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest commands/benchmark/bmtest.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/lbmtest commands/benchmark/bmtest.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest.exe commands/benchmark/bmtest.go
+
+
 syncdev:
 	make buildpre
 	@read -p "提示:同步操作尽量在完成一个完整功能特性后进行，请输入提交描述 (develop):  " cimsg; \
