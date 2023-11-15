@@ -47,12 +47,3 @@ jobs:
           asset_name: toughradius  # 你的二进制文件名称
           asset_content_type: application/octet-stream
 
-      - name: Upload Release Asset 2
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/toughradius-arm64  # 你的二进制文件路径
-          asset_name: toughradius-arm64  # 你的二进制文件名称
-          asset_content_type: application/octet-stream
