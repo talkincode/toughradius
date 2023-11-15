@@ -20,8 +20,11 @@ jobs:
 
       - name: Build
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./toughradius main.go
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./toughradius-arm64 main.go
+          mkdir -p ./release
+          echo "CGO_ENABLED=0" >> "$GITHUB_ENV"
+          echo "GOOS=linux" >> "$GITHUB_ENV"
+          echo "GOARCH=amd64" >> "$GITHUB_ENV"
+          go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
 
       - name: Create Release
         id: create_release
@@ -40,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./toughradius  # 你的二进制文件路径
+          asset_path: ./release/toughradius  # 你的二进制文件路径
           asset_name: toughradius  # 你的二进制文件名称
           asset_content_type: application/octet-stream
 
@@ -50,6 +53,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./toughradius-arm64  # 你的二进制文件路径
+          asset_path: ./release/toughradius-arm64  # 你的二进制文件路径
           asset_name: toughradius-arm64  # 你的二进制文件名称
           asset_content_type: application/octet-stream
