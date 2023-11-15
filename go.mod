@@ -1,6 +1,6 @@
 module github.com/talkincode/toughradius/v8
 
-go 1.19
+go 1.21
 
 require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
