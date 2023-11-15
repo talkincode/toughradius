@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.1 2023-10-12 21:57:07
+BuildVersion=latest v8.0.1 2023-11-15 20:18:49
 ReleaseVersion=v8.0.1
-BuildTime=2023-10-12 21:57:07
+BuildTime=2023-11-15 20:18:49
 BuildName=toughradius
-CommitID=34814496523b69f26b1b7f41c493f40cb7fd68fd
-CommitDate=Thu, 12 Oct 2023 21:49:01 +0800
+CommitID=7b2b939b203f6efe75cac0612eb6051f764909e9
+CommitDate=Thu, 12 Oct 2023 21:57:22 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2023-10-12 21:48:51 :
+CommitSubject=2023-10-12 21:57:07 : db check delay
