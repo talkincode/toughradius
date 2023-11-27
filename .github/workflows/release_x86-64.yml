@@ -1,0 +1,49 @@
+name: ToughRADIUS Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: '1.21'
+
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: |
+          mkdir -p ./release
+          echo "CGO_ENABLED=0" >> "$GITHUB_ENV"
+          echo "GOOS=linux" >> "$GITHUB_ENV"
+          echo "GOARCH=amd64" >> "$GITHUB_ENV"
+          go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius_x86-64 main.go
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset 1
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./release/toughradius_x86-64  # Your binary path
+          asset_name: toughradius  # The name of your binary
+          asset_content_type: application/octet-stream
+
