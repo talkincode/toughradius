@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.3 2023-11-27 15:38:22
+BuildVersion=latest v8.0.3 2023-11-27 15:45:48
 ReleaseVersion=v8.0.3
-BuildTime=2023-11-27 15:38:22
+BuildTime=2023-11-27 15:45:48
 BuildName=toughradius
-CommitID=d42e8b2202dad1c8cec1ef2ac73e2c9712f34feb
-CommitDate=Wed, 15 Nov 2023 21:43:05 +0800
+CommitID=969ca086c6b9c68ca11dce5c0210779bf40d4f4d
+CommitDate=Mon, 27 Nov 2023 15:45:42 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2023-11-15 21:42:45 : flow update
+CommitSubject=add arm64 flow
