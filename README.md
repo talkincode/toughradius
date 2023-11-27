@@ -9,11 +9,12 @@ Welcome to the TOUGHRADIUS project!
 
 # TOUGHRADIUS
 
-TOUGHRADIUS is dedicated to providing comprehensive and excellent network management solutions to our clients. 
-Our core technology is based on RADIUS and has the capability to extend system functionality to support various network protocols such as TR069 and DNS. 
-TOUGHRADIUS not only offers a user-friendly system interface, but also boasts powerful data analysis and management features such as real-time network monitoring, usage reporting, and automatic billing generation. We strive to provide our clients with secure, reliable, and efficient network management services, enabling them to achieve more efficient network operations.
+TOUGHRADIUS is committed to providing comprehensive and superior network management solutions.
+The core technology is based on RADIUS and can extend the system functions to support various network protocols, such as TR069.
+TOUGHRADIUS not only provides a user-friendly system interface, but also powerful data analysis and management features such as real-time network monitoring, usage reports and automatic billing. TOUGHRADIUS is dedicated to providing secure, reliable and efficient network management services, enabling them to realize more efficient network operations.
 
-TOUGHRADIUS utilizes advanced Golang technology in the development of its system core, delivering exceptional system performance and a convenient deployment experience.
+TOUGHRADIUS uses advanced Golang technology to develop the system core, providing excellent system performance and easy deployment experience.
+
 
 [quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
 
@@ -62,10 +63,9 @@ Standard RADIUS features
 
 ![freeradius-toughradius](https://github.com/talkincode/toughradius/assets/377938/f735d45d-3325-49e5-8b73-21c6205248e3)
 
-
-TOUGHRADIUS integrates the FreeRADIUS API interface, extending its already comprehensive authentication capabilities and providing even more robust solutions to its clients. 
-Our integration of the FreeRADIUS API allows for seamless integration with existing network infrastructures and enables us to offer a wider range of authentication options to meet the unique needs of our clients. 
-Whether you require support for 802.1X, Wi-Fi, VPN, or other network access protocols, TOUGHRADIUS has you covered. With our advanced authentication capabilities and integration with FreeRADIUS, our clients can enjoy a secure, reliable, and efficient network management experience.
+TOUGHRADIUS integrates with the FreeRADIUS API interface, extending its already comprehensive authentication capabilities to provide a more robust solution.
+Integration with the FreeRADIUS API enables seamless integration with existing network infrastructures, providing a wider range of authentication options to meet unique requirements.
+Whether you need to support 802.1X, Wi-Fi, VPNs or other network access protocols, TOUGHRADIUS has you covered. With advanced authentication capabilities and integration with FreeRADIUS, users can enjoy a secure, reliable and efficient network management experience.
 
 ### Northbound Interface
 
