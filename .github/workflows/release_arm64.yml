@@ -23,8 +23,8 @@ jobs:
           mkdir -p ./release
           echo "CGO_ENABLED=0" >> "$GITHUB_ENV"
           echo "GOOS=linux" >> "$GITHUB_ENV"
-          echo "GOARCH=amd64" >> "$GITHUB_ENV"
-          go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
+          echo "GOARCH=arm64" >> "$GITHUB_ENV"
+          go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius_arm64 main.go
 
       - name: Create Release
         id: create_release
@@ -43,7 +43,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/toughradius  # 你的二进制文件路径
-          asset_name: toughradius  # 你的二进制文件名称
+          asset_path: ./release/toughradius_arm64  # Your binary path
+          asset_name: toughradius  # The name of your binary
           asset_content_type: application/octet-stream
 
