@@ -11,7 +11,6 @@ var Tables = []interface{}{
 	&NetCpe{},
 	&NetVpe{},
 	&NetCpeParam{},
-	&NetLdapServer{},
 	// Radius
 	&RadiusAccounting{},
 	&RadiusOnline{},

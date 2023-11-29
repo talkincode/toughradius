@@ -18,7 +18,6 @@ type NetNode struct {
 type NetVpe struct {
 	ID         int64     `json:"id,string" form:"id"`            // 主键 ID
 	NodeId     int64     `json:"node_id,string" form:"node_id"`  // 节点ID
-	LdapId     int64     `json:"ldap_id,string" form:"ldap_id"`  // LDAP ID
 	Name       string    `json:"name" form:"name"`               // 设备名称
 	Identifier string    `json:"identifier" form:"identifier"`   // 设备标识-RADIUS
 	Hostname   string    `json:"hostname" form:"hostname"`       // 设备主机地址
@@ -83,20 +82,4 @@ type NetCpeTaskQue struct {
 	ID     int64  `json:"id,string"` // 主键 ID
 	Sn     string `json:"sn"`        // 设备序列号
 	TaskId string `json:"task_id"`
-}
-
-type NetLdapServer struct {
-	Id         int64     `json:"id,string" form:"id"`
-	Tags       string    `json:"tags" form:"tags"`
-	Name       string    `json:"name" form:"name"`
-	Address    string    `json:"address" form:"address"`
-	Password   string    `json:"password" form:"password"`
-	Searchdn   string    `json:"searchdn" form:"searchdn"`
-	Basedn     string    `json:"basedn" form:"basedn"`
-	UserFilter string    `json:"user_filter" form:"user_filter"`
-	Istls      string    `json:"istls" form:"istls"`
-	Status     string    `json:"status" form:"status"`
-	Remark     string    `json:"remark" form:"remark"`
-	CreateTime time.Time `json:"create_time,string" `
-	UpdateTime time.Time `json:"update_time,string" `
 }
