@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.3 2023-11-29 14:25:44
-ReleaseVersion=v8.0.3
-BuildTime=2023-11-29 14:25:44
+BuildVersion=latest v8.0.4 2023-11-29 14:27:38
+ReleaseVersion=v8.0.4
+BuildTime=2023-11-29 14:27:38
 BuildName=toughradius
-CommitID=a77d8f8c5c21171abb7b5bd992aff0f33de428c7
-CommitDate=Wed, 29 Nov 2023 14:25:14 +0800
+CommitID=9da4db5c09e52abcd943057fb2c4d5711452b92f
+CommitDate=Wed, 29 Nov 2023 14:25:57 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=support eap-md5 and remove ldap code
+CommitSubject=2023-11-29 14:25:44 : eap features
