@@ -50,10 +50,17 @@ type AuthRateUser struct {
 	Starttime time.Time
 }
 
+type EapState struct {
+	Username  string
+	Challenge []byte
+	StateID   string
+}
+
 type RadiusService struct {
 	App           *app.Application
 	RejectCache   *RejectCache
 	AuthRateCache map[string]AuthRateUser
+	EapStateCache map[string]EapState
 	TaskPool      *ants.Pool
 	arclock       sync.Mutex
 }
@@ -67,6 +74,7 @@ func NewRadiusService() *RadiusService {
 	common.Must(err)
 	s := &RadiusService{
 		AuthRateCache: make(map[string]AuthRateUser),
+		EapStateCache: make(map[string]EapState),
 		arclock:       sync.Mutex{},
 		TaskPool:      pool,
 		RejectCache: &RejectCache{
@@ -125,20 +133,6 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	return user, nil
 }
 
-// GetLdapServer 获取Ldap 服务节点新
-func (s *RadiusService) GetLdapServer(id interface{}) (item *models.NetLdapServer, err error) {
-	err = app.GDB().Where("id = ?", id).First(&item).Error
-	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, NewAuthError(app.MetricsRadiusRejectLdapError, "ldap node not exists")
-		}
-		return nil, err
-	}
-	if item.Status == common.DISABLED {
-		return nil, NewAuthError(app.MetricsRadiusRejectLdapError, "ldap status is disabled")
-	}
-	return item, nil
-}
 
 // GetUserForAcct 获取用户, 不判断用户过期等状态
 func (s *RadiusService) GetUserForAcct(username string) (user *models.RadiusUser, err error) {
@@ -391,4 +385,27 @@ func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
 	if !bytes.Equal(hash.Sum(sum[:0]), request[4:20]) {
 		panic(secretError)
 	}
+}
+
+// State add
+func (s *RadiusService) AddEapState(stateid, username string, challenge []byte) {
+	s.EapStateCache[stateid] = EapState{
+		Username: username,
+		StateID:  stateid,
+		Challenge: challenge,
+	}
+}
+
+// State get
+func (s *RadiusService) GetEapState(stateid string) (state *EapState, err error) {
+	val, ok := s.EapStateCache[stateid]
+	if ok {
+		return &val, nil
+	}
+	return nil, errors.New("state not found")
+}
+
+// State delete
+func (s *RadiusService) DeleteEapState(stateid string) {
+	delete(s.EapStateCache, stateid)
 }

@@ -35,6 +35,21 @@ var Ipv4Format = func(src []byte) string {
 	return net.IPv4(src[0], src[1], src[2], src[3]).String()
 }
 
+var EapMessageFormat = func(attr []byte) string {
+	// 解析EAP消息
+	eap := &EAPMessage{
+		Code:       attr[0],
+		Identifier: attr[1],
+		Length:     binary.BigEndian.Uint16(attr[2:4]),
+	}
+	if len(attr) >= 5 {
+		eap.Type = attr[4]
+		eap.Data = attr[5:]
+	}
+
+	return eap.String()
+}
+
 var RadiusTypeMap = map[radius.Type]string{
 	rfc2865.UserName_Type:               "UserName",
 	rfc2865.UserPassword_Type:           "UserPassword",
@@ -193,8 +208,8 @@ var RadiusTypeFmtMap = map[radius.Type]AttrFormatFunc{
 	rfc2869.Prompt_Type:                 HexFormat,
 	rfc2869.ConnectInfo_Type:            StringFormat,
 	rfc2869.ConfigurationToken_Type:     StringFormat,
-	rfc2869.EAPMessage_Type:             StringFormat,
-	rfc2869.MessageAuthenticator_Type:   StringFormat,
+	rfc2869.EAPMessage_Type:             EapMessageFormat,
+	rfc2869.MessageAuthenticator_Type:   HexFormat,
 	rfc2869.ARAPChallengeResponse_Type:  HexFormat,
 	rfc2869.AcctInterimInterval_Type:    UInt32Format,
 	rfc2869.NASPortID_Type:              StringFormat,
@@ -294,7 +309,7 @@ func FmtPacket(p *radius.Packet) string {
 	buff.WriteString("RADIUS Packet: \n")
 	buff.WriteString(fmt.Sprintf("\tIdentifier: %v\n", p.Identifier))
 	buff.WriteString(fmt.Sprintf("\tCode: %v\n", p.Code))
-	buff.WriteString(fmt.Sprintf("\tAuthenticator: %v\n", p.Authenticator))
+	buff.WriteString(fmt.Sprintf("\tAuthenticator: %s\n", HexFormat(p.Authenticator[:])))
 	buff.WriteString("\tAttributes:\n")
 	for _, attribute := range p.Attributes {
 		if attribute.Type != rfc2865.VendorSpecific_Type {

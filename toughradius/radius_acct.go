@@ -73,18 +73,6 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	vendorReq := s.ParseVendor(r, vpe.VendorCode)
 
-	// Ldap acct
-	if vpe.LdapId != 0 {
-		_, err := s.GetLdapServer(vpe.LdapId)
-		common.Must(err)
-		s.SendResponse(w, r)
-		// check ldap auth
-		common.Must(s.TaskPool.Submit(func() {
-			s.LdapUserAcct(r, vendorReq, username, vpe, nasrip)
-		}))
-
-		return
-	}
 
 	s.SendResponse(w, r)
 

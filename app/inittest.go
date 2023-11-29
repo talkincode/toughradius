@@ -75,7 +75,6 @@ func (a *Application) initTestVpe() {
 	a.gormDB.Create(&models.NetVpe{
 		ID:         9999,
 		NodeId:     9999,
-		LdapId:     0,
 		Name:       "test vope",
 		Identifier: "tradtest",
 		Hostname:   "",
