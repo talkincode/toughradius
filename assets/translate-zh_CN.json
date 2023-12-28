@@ -1,0 +1,1766 @@
+[
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPE Detail",
+    "result": "CPE 详细信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPE List",
+    "result": "CPE列表"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPE clone",
+    "result": "CPE 克隆"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPE create",
+    "result": "CPE创建"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPE device",
+    "result": "CPE设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPE edit",
+    "result": "CPE编辑"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "CPU Use",
+    "result": "CPU 使用率"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Created",
+    "result": "创建"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Cwmp connection address",
+    "result": "Cwmp 连接地址"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Cwmp last inform",
+    "result": "Cwmp 上次通知"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Event",
+    "result": "事件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Exec tr069 preset",
+    "result": "Exec tr069 预设"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Execute batch tasks",
+    "result": "执行批处理任务"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Execute preset",
+    "result": "执行预设"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Execution time",
+    "result": "执行时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Factoryreset settings",
+    "result": "恢复出厂设置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Firmware batch update",
+    "result": "固件批量更新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Information",
+    "result": "信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Management",
+    "result": "管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Message",
+    "result": "消息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Model",
+    "result": "型"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Name",
+    "result": "名称"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Node",
+    "result": "节点"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Note that after the firmware is delivered, the device will restart, and the device will automatically upgrade the firmware after restarting，The device will be disconnected during the upgrade process, and the device will automatically reconnect after the upgrade is complete. Please do not turn off the power during the upgrade process, otherwise the upgrade will fail。The firmware update operation will be performed asynchronously in the background, please pay attention to monitoring the status of the device",
+    "result": "请注意，固件交付后，设备会重启，重启后设备会自动升级固件，升级过程中设备会断开连接，升级完成后设备会自动重新连接。升级过程中请不要关闭电源，否则升级会失败。固件更新操作会在后台异步执行，请注意监控设备状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Note: that scheduled tasks may contain actions that cause the device to reboot，\u003cbr\u003eAfter the execution is complete, the device will automatically reconnect. Do not turn off the power during the execution, otherwise the execution will fail。\u003cbr\u003eThe task operation will be performed asynchronously in the background, please pay attention to monitoring the device status",
+    "result": "注意：定时任务可能包含导致设备重启的动作，\u003cbr\u003e执行完成后设备会自动重新连接。执行过程中不要关闭电源，否则执行会失败。\u003cbr\u003e任务操作会在后台异步执行，请注意监控设备状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Operation confirmation",
+    "result": "操作确认"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Preset task",
+    "result": "预设任务"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Remark",
+    "result": "备注"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Remote management",
+    "result": "远程管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Response time",
+    "result": "响应时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "SN",
+    "result": "SN"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Status",
+    "result": "状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "System Name",
+    "result": "系统名称"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "TR069 Config",
+    "result": "TR069 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "TR069 Management",
+    "result": "TR069 管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "TR069 Params",
+    "result": "TR069 参数"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "TR069 Script",
+    "result": "TR069 脚本"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "TR069 Task",
+    "result": "TR069 任务"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Tags",
+    "result": "标签"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Task Tags",
+    "result": "任务标签"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Tr069",
+    "result": "TR069"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Uptime",
+    "result": "正常运行时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Vendor",
+    "result": "供应商"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "Version",
+    "result": "版本"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "firmwareConfig",
+    "result": "firmware配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "running status information...",
+    "result": "运行状态信息..."
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cpe",
+    "source": "update firmware",
+    "result": "更新固件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "\u003ca href='javascript:void(0)'\u003ePreset template\u003c/a\u003e",
+    "result": "\u003ca href='javascript：void（0）'\u003e预设模板\u003c/a\u003e"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Are you sure to continue?",
+    "result": "你确定要继续吗？"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "CPE",
+    "result": "CPE的"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Config content",
+    "result": "配置内容"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Config content, \u003ca href='javascript:void(0)'\u003ePreset template\u003c/a\u003e",
+    "result": "配置内容，\u003ca href='javascript：void（0）'\u003e预设模板\u003c/a\u003e"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Create Factoryreset config",
+    "result": "创建恢复出厂设置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Create firmware config",
+    "result": "创建固件配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Create preset",
+    "result": "创建预设"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Create tr069 config",
+    "result": "创建 tr069 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Edit preset",
+    "result": "编辑预设"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Edit tr069 config",
+    "result": "编辑 tr069 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Event",
+    "result": "事件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Exec Time",
+    "result": "执行时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Exec time",
+    "result": "执行时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Factoryreset config management",
+    "result": "恢复出厂设置配置管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Firmware config management",
+    "result": "固件配置管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Level",
+    "result": "级别"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Name",
+    "result": "名称"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "OID",
+    "result": "OID的"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "OUI",
+    "result": "OUI （英语）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Priority",
+    "result": "优先级"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Product class",
+    "result": "产品分类"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Resp Time",
+    "result": "回复时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Resp time",
+    "result": "回复时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "SN",
+    "result": "SN"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Software version",
+    "result": "软件版本"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Status",
+    "result": "状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Target filename",
+    "result": "目标文件名"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Task tags",
+    "result": "任务标记"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "The current operation may have unpredictable results, please confirm that you fully understand the current operation",
+    "result": "当前操作可能会产生不可预知的结果，请确认您完全了解当前操作"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "The lower the number, the higher the priority",
+    "result": "数字越小，优先级越高"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "The task has been triggered, please do not trigger it again in a short time",
+    "result": "任务已触发，短时间内请勿再次触发"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Timeout",
+    "result": "超时"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Timeout secs",
+    "result": "超时秒数"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Timing strategy",
+    "result": "时机策略"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Tr069 config",
+    "result": "Tr069 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Tr069 config session",
+    "result": "Tr069 配置会话"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Tr069 preset",
+    "result": "Tr069 预设"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Tr069 preset tasks",
+    "result": "Tr069 预设任务"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Trigger task",
+    "result": "触发任务"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Updated",
+    "result": "更新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "Version",
+    "result": "版本"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "cwmp",
+    "source": "When setting a task tag, only devices with matching tags will execute the task, not setting this property will match all possible devices",
+    "result": "设置任务标记时，只有具有匹配标记的设备才会执行该任务，不设置此属性将匹配所有可能的设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "glabal",
+    "source": "My Profile",
+    "result": "我的个人资料"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "CPE Connection authentication password",
+    "result": "CPE连接认证密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Cancel",
+    "result": "取消"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Change Password",
+    "result": "更改密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Clone",
+    "result": "克隆"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Confirm to delete? This operation is irreversible.",
+    "result": "确认删除？此操作是不可逆的。"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Create",
+    "result": "创建"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Created",
+    "result": "创建"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Edit",
+    "result": "编辑"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Email",
+    "result": "电子邮件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Event",
+    "result": "事件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Exit",
+    "result": "退出"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Export",
+    "result": "导出"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Import",
+    "result": "进口"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Language",
+    "result": "语言"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Last login",
+    "result": "上次登录"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Logout",
+    "result": "注销"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Logout Session",
+    "result": "注销会话"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Message",
+    "result": "消息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Mobile",
+    "result": "移动"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Module",
+    "result": "模块"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Name",
+    "result": "名称"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "New Password",
+    "result": "新密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "New password confirmation",
+    "result": "新密码确认"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "No",
+    "result": "否"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "No data loaded",
+    "result": "未加载数据"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Old Password",
+    "result": "旧密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Operation confirmation",
+    "result": "操作确认"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Query",
+    "result": "查询"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Radius accounting logging expire days",
+    "result": "Radius 记帐日志记录过期天数"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Remark",
+    "result": "备注"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Remove",
+    "result": "删除"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Save",
+    "result": "救"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Settings",
+    "result": "设置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Size",
+    "result": "大小"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Source text",
+    "result": "源文本"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Status",
+    "result": "状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Tags",
+    "result": "标签"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Time",
+    "result": "时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Time From",
+    "result": "时间从"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Translate result (click to modify)",
+    "result": "翻译结果（点击修改）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Updated",
+    "result": "更新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Upload failure",
+    "result": "上传失败"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Upload...",
+    "result": "上传。。。"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "Yes",
+    "result": "是的"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "logging",
+    "result": "伐木"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "global",
+    "source": "to",
+    "result": "自"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Job",
+    "result": "工作"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Keyword",
+    "result": "关键词"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Level",
+    "result": "级别"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Limit",
+    "result": "限制"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Message",
+    "result": "消息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Namespace",
+    "result": "命名空间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Query",
+    "result": "查询"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "logging",
+    "source": "Regular match",
+    "result": "常规比赛"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Account",
+    "result": "帐户"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Accounting",
+    "result": "记账"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "CPE Device",
+    "result": "CPE设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Factoryreset",
+    "result": "恢复出厂设置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Firmware Config",
+    "result": "固件配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Monitoring",
+    "result": "监测中心"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Network",
+    "result": "网络管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Node",
+    "result": "节点"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Online",
+    "result": "在线"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Operation Log",
+    "result": "操作日志"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Operator",
+    "result": "操作员"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Overview",
+    "result": "系统总览"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Profile",
+    "result": "Profile"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Radius",
+    "result": "Radius 认证"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Radius Statistics",
+    "result": "Radius统计数据"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Settings",
+    "result": "设置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "System",
+    "result": "系统管理"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "System Log",
+    "result": "系统日志"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "System Status",
+    "result": "系统状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "TR069",
+    "result": "TR069"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "TR069 Config",
+    "result": "TR069 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "TR069 Preset",
+    "result": "TR069 预设"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "TR069 Tasks",
+    "result": "TR069 任务"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Tr069 Session",
+    "result": "Tr069 专场"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Tr069 Statistics",
+    "result": "Tr069统计数据"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "Translate",
+    "result": "翻译"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "menus",
+    "source": "VPE Device",
+    "result": "VPE设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "node",
+    "source": "Name",
+    "result": "名称"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "node",
+    "source": "Node",
+    "result": "节点"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "node",
+    "source": "Node clone",
+    "result": "节点克隆"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "node",
+    "source": "Node create",
+    "result": "节点创建"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "node",
+    "source": "Node edit",
+    "result": "节点编辑"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Clone operator",
+    "result": "克隆运算符"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Create operator",
+    "result": "创建运算符"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Edit operator",
+    "result": "编辑运算符"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Level",
+    "result": "级别"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Operator",
+    "result": "操作员"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Realname",
+    "result": "实名"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Status",
+    "result": "状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "opr",
+    "source": "Username",
+    "result": "用户名"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Account batch update",
+    "result": "账户批量更新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Account static IP, priority is higher than address pool",
+    "result": "账号静态IP，优先级高于地址池"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Active num",
+    "result": "活动编号"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Addr pool",
+    "result": "地址池"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Batch create",
+    "result": "批量创建"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Batch update",
+    "result": "批量更新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Create radius account",
+    "result": "创建 radius 帐户"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Create radius profile",
+    "result": "创建半径配置文件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Default Acctounting interim interval",
+    "result": "默认 Acctounting 临时间隔"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Default Acctounting interim interval, Recommended 120-600 seconds",
+    "result": "默认临时间隔，建议 120-600 秒"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Description",
+    "result": "描述"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "DownRate (Mbps)",
+    "result": "降率 （Mbps）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "DownRate (kbps)",
+    "result": "DownRate （kbps）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "DownTraffic",
+    "result": "量"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Edit radius account",
+    "result": "编辑 radius 帐户"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Edit radius profile",
+    "result": "编辑半径剖面图"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Expire time",
+    "result": "过期时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "IP address",
+    "result": "IP地址"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Ignore Passowrd check",
+    "result": "忽略 Passowrd 检查"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Information",
+    "result": "信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "InputPkts",
+    "result": "输入Pkts"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "LastOnline",
+    "result": "上一篇在线"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "LastUpdate",
+    "result": "上次更新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Mac",
+    "result": "苹果电脑"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "NasId",
+    "result": "纳斯 ID"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "NasIp",
+    "result": "纳斯 Ip"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "NasPortId",
+    "result": "NasPortId"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Node",
+    "result": "节点"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Onlines",
+    "result": "在线咨询"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "OutputPkts",
+    "result": "输出Pkts"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Password",
+    "result": "密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Password authentication is ignored, but does not apply to MsChapv2 authentication mode.",
+    "result": "密码身份验证将被忽略，但不适用于 MsChapv2 身份验证模式。"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Profile",
+    "result": "轮廓"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "RADIUS Account",
+    "result": "RADIUS 帐户"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "RADIUS Accounting",
+    "result": "RADIUS 记帐"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Radius logging expire days, set according to the disk size. ",
+    "result": "Radius 日志记录的到期天数，根据磁盘大小进行设置。"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Radius online session",
+    "result": "Radius 在线会话"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Radius profile",
+    "result": "Radius 配置文件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Radius profile detail",
+    "result": "Radius Profile 详细信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Realname",
+    "result": "实名"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "SessionId",
+    "result": "会话 ID"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "SessionTime",
+    "result": "会话时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Starttime",
+    "result": "开始时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Status",
+    "result": "状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "StopTime",
+    "result": "停止时间"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "The CPE downloads the configuration file through this URL",
+    "result": "CPE通过此URL下载配置文件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "UpRate (Mbps)",
+    "result": "上行速率 （Mbps）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "UpRate (kbps",
+    "result": "UpRate （kbps"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "UpRate (kbps)",
+    "result": "上行速率 （kbps）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "UpTraffic",
+    "result": "上行流量"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "User List",
+    "result": "用户列表"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "User detail",
+    "result": "用户详细信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "UserIP",
+    "result": "用户IP"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "Username",
+    "result": "用户名"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "expiration is less than (day)",
+    "result": "到期时间小于（天）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "tr069 The authentication password used when the server connects to cpe",
+    "result": "tr069 服务器连接到 cpe 时使用的身份验证密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Automatic registration of new CPE devices",
+    "result": "自动注册新的CPE设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "CPE Connection authentication password",
+    "result": "CPE连接认证密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Configuration list",
+    "result": "配置列表"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Configurations",
+    "result": "配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Cpe auto register",
+    "result": "CPE自动注册"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Default Acctounting interim interval",
+    "result": "默认 Acctounting 临时间隔"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Default Acctounting interim interval, Recommended 120-600 seconds",
+    "result": "默认临时间隔，建议 120-600 秒"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Ignore Passowrd check",
+    "result": "忽略 Passowrd 检查"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Login form title",
+    "result": "登录表单标题"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Login screen prompt description",
+    "result": "登录界面提示说明"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Page title (browser title bar)",
+    "result": "页面标题（浏览器标题栏）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Password authentication is ignored, but does not apply to MsChapv2 authentication mode.",
+    "result": "密码身份验证将被忽略，但不适用于 MsChapv2 身份验证模式。"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Radius config",
+    "result": "Radius 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Radius logging expire days, set according to the disk size. ",
+    "result": "Radius 日志记录的到期天数，根据磁盘大小进行设置。"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "System Theme",
+    "result": "系统主题"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "System config",
+    "result": "系统配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "System settings",
+    "result": "系统设置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "TR069 access address",
+    "result": "TR069 访问地址"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "TR069 access password",
+    "result": "TR069 访问密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "The CPE downloads the configuration file through this URL",
+    "result": "CPE通过此URL下载配置文件"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Toughradius TR069 access address, HTTP | https://domain:port",
+    "result": "Toughradius TR069 访问地址，HTTP |https：//domain：端口"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Toughradius TR069 access password, It is provided to CPE to access TeamsACS",
+    "result": "Toughradius TR069 访问密码，提供给 CPE 访问 TeamsACS"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Tr069 Download Url Prefix",
+    "result": "tr069 下载 url 前缀"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "Tr069 config",
+    "result": "Tr069 配置"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "settings",
+    "source": "tr069 The authentication password used when the server connects to cpe",
+    "result": "tr069 服务器连接到 cpe 时使用的身份验证密码"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "tr069",
+    "source": "Tr069 Download Url Prefix",
+    "result": "tr069 下载 url 前缀"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "translate",
+    "source": "Export",
+    "result": "导出"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "translate",
+    "source": "Flush",
+    "result": "刷新"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "translate",
+    "source": "Init",
+    "result": "初始化"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "translate",
+    "source": "Translate",
+    "result": "翻译"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "translate",
+    "source": "Translate All",
+    "result": "全部翻译"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "uiconfig",
+    "source": "Login form title",
+    "result": "登录表单标题"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "uiconfig",
+    "source": "Login screen prompt description",
+    "result": "登录界面提示说明"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "uiconfig",
+    "source": "Page title (browser title bar)",
+    "result": "页面标题（浏览器标题栏）"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "COA Port",
+    "result": "COA端口"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Clone VPE Device",
+    "result": "克隆VPE设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Create VPE Device",
+    "result": "创建 VPE 设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Description",
+    "result": "描述"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Edit VPE Device",
+    "result": "编辑 VPE 设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Hostname",
+    "result": "主机名"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "IP Address",
+    "result": "IP地址"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "IP address",
+    "result": "IP地址"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Identity",
+    "result": "身份"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Information",
+    "result": "信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Name",
+    "result": "名称"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Node",
+    "result": "节点"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "RADIUS Secret",
+    "result": "RADIUS 密钥"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Remark",
+    "result": "备注"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Secret",
+    "result": "秘密"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Status",
+    "result": "状态"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "VPE Detail",
+    "result": "VPE 详细信息"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "VPE Device",
+    "result": "VPE设备"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "vpe",
+    "source": "Vendor",
+    "result": "供应商"
+  }
+]

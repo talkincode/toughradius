@@ -29,10 +29,42 @@
             callback: function (ev) {
                 if (ev) {
                     webix.ajax().headers({
-                        "Content-type":"application/json"
+                        "Content-type": "application/json"
                     }).post('/admin/translate/delete', JSON.stringify(items)).then(function (result) {
                         if (callback)
                             callback()
+                    })
+                }
+            }
+        });
+    }
+
+    let initTranslate = function (callback) {
+        webix.confirm({
+            title: "Operation confirmation",
+            ok: "Yes", cancel: "No",
+            text: "Confirm to init? This operation is irreversible.",
+            callback: function (ev) {
+                if (ev) {
+                    webix.ajax().get('/admin/translate/init').then(function (result) {
+                        if (callback)
+                            callback(result)
+                    })
+                }
+            }
+        });
+    }
+
+    let translateAll = function (lang, callback) {
+        webix.confirm({
+            title: "Operation confirmation",
+            ok: "Yes", cancel: "No",
+            text: "Confirm to trans all? This operation is irreversible.",
+            callback: function (ev) {
+                if (ev) {
+                    webix.ajax().get('/admin/translate/transall', {lang: lang}).then(function (result) {
+                        if (callback)
+                            callback(result)
                     })
                 }
             }
@@ -55,10 +87,44 @@
                     title: "Translate",
                     icon: "mdi mdi-server",
                     elements: [
+                        wxui.getPrimaryButton(tr("translate", "Translate All"), 90, false, function () {
+                            let lang = $$(queryid).elements["lang"].getValue()
+                            if (lang === "") {
+                                webix.message({
+                                    type: 'error',
+                                    text: "Please select a non-English language",
+                                    expire: 1500
+                                });
+                                return
+                            }
+                            let btn = this
+                            btn.disable()
+                            translateAll(function (result) {
+                                btn.enable()
+                                let resp = result.json()
+                                webix.message({type: resp.msgtype, text: resp.msg, expire: 3000});
+                                reloadData()
+                            })
+                        }),
+                        wxui.getPrimaryButton(tr("translate", "Export"), 90, false, function () {
+                            let lang = $$(queryid).elements["lang"].getValue()
+                            if (lang === "") {
+                                webix.message({type: 'error', text: "Please select language", expire: 1500});
+                                return
+                            }
+                            wxui.exportData("/admin/translate/export?lang=" + lang, "translate.json")
+                        }),
                         wxui.getPrimaryButton(tr("translate", "Flush"), 90, false, function () {
                             webix.ajax().get('/admin/translate/flush').then(function (result) {
                                 let resp = result.json();
                                 webix.message({type: resp.msgtype, text: resp.msg, expire: 3000});
+                            })
+                        }),
+                        wxui.getPrimaryButton(tr("translate", "Init"), 90, false, function () {
+                            initTranslate(function (result) {
+                                let resp = result.json();
+                                webix.message({type: resp.msgtype, text: resp.msg, expire: 3000});
+                                reloadData()
                             })
                         }),
                         wxui.getPrimaryButton(gtr("Create"), 90, false, function () {
@@ -100,7 +166,13 @@
                                 labelWidth: 75,
                                 width: 270
                             },
-                            {view: "search", id: "keyword", name: "keyword", placeholder: "Keywords", width: 320},
+                            {
+                                view: "search",
+                                id: "keyword",
+                                name: "keyword",
+                                placeholder: "Keywords",
+                                width: 320
+                            },
                             {
                                 view: "button",
                                 label: gtr("Query"),
@@ -133,18 +205,43 @@
                         {id: "lang", header: [gtr("Language")], adjust: true, sort: "server"},
                         {id: "module", header: [gtr("Module")], adjust: true, sort: "server"},
                         {id: "source", header: [gtr("Source text")], fillspace: true, sort: "server"},
-                        {id: "result", header: [gtr("Translate result (click to modify)")], editor: "popup", fillspace: true, sort: "server"},
+                        {
+                            id: "result",
+                            header: [gtr("Translate result (click to modify)")],
+                            editor: "popup",
+                            fillspace: true,
+                            sort: "server"
+                        },
+                        {
+                            id: "opt", header: '', template: function (obj) {
+                                let actions = []
+                                actions.push("<span title='translate' class='table-btn do_translate'><i class='mdi mdi-link'></i> " + tr("translate", "Translate") + "</span> ")
+                                return actions.join(" ")
+                            }, width: 140
+                        },
                         // {header: {content: "headerMenu"}, headermenu: false, width: 35}
                     ],
                     leftSplit: 1,
+                    rightSplit: 1,
                     pager: true,
                     on: {},
+                    onClick: {
+                        do_translate: function (e, id) {
+                            let item = this.getItem(id)
+                            webix.ajax().get('/admin/translate/transone', {
+                                lang: item.lang,
+                                source: item.source
+                            }).then(function (result) {
+                                let resp = result.json();
+                                webix.message({type: resp.msgtype, text: resp.msg, expire: 3000});
+                                reloadData()
+                            })
+                        },
+                    },
                 }),
                 wxui.getTableFooterBar({
                     tableid: tableid,
-                    actions: [
-
-                    ],
+                    actions: [],
                     callback: reloadData
                 }),
             ]

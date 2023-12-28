@@ -19,44 +19,111 @@ import (
 )
 
 const (
-
-	EAPCodeRequest = 1
-    EAPCodeResponse = 2
-    EAPCodeSuccess = 3
-    EAPCodeFailure = 4
-
-    EAPTypeIdentity = 1
-    EAPTypeNotification = 2
-    EAPTypeNak = 3 // Response only
-    EAPTypeMD5Challenge = 4
-    EAPTypeOTP = 5 // One-Time Password
-    EAPTypeGTC = 6 // Generic Token Card
-    // 7-9 Reserved
-    EAPTypeTLS = 13
+	EAPCodeRequest      = 1  // EAP Request message
+	EAPCodeResponse     = 2  // EAP Response message
+	EAPCodeSuccess      = 3  // Indicates successful authentication
+	EAPCodeFailure      = 4  // Indicates failed authentication
+	EAPCodeNakNak       = 5  // Used by the peer to negotiate the authentication method (Response only)
+	EAPCodeMD5Challenge = 6  // MD5-Challenge EAP method
+	EAPCodeOTP          = 7  // One-Time Password (OTP) EAP method
+	EAPCodeGTC          = 8  // Generic Token Card (GTC) EAP method
+	EAPCodeTLSv1        = 13 // EAP-TLS method, using TLSv1
+	EAPCodeMSCHAPv2     = 26 // EAP method for Microsoft Challenge Handshake Authentication Protocol version 2
+	EAPCodeSIM          = 18 // EAP-SIM method for GSM networks
+	EAPCodeAKA          = 23 // EAP-AKA method for UMTS authentication and key agreement
+	EAPCodePEAP         = 25 // Protected EAP (PEAP), a method that creates an encrypted channel to protect transmitted information
+	EAPCodeTTLS         = 21 // Tunneled Transport Layer Security (TTLS) EAP method
+	EAPCodeFAST         = 43 // Flexible Authentication via Secure Tunneling (EAP-FAST) method
+	EAPCodePAX          = 46 // Password Authenticated Exchange (EAP-PAX) method
+	EAPCodePSK          = 47 // Pre-Shared Key (EAP-PSK) method
+	EAPCodeSAKE         = 48 // SIM Authentication Key Exchange (EAP-SAKE) method
+	EAPCodeIKEv2        = 49 // EAP method based on Internet Key Exchange version 2 (EAP-IKEv2)
 )
+
+const (
+	EAPTypeIdentity     = 1
+	EAPTypeNotification = 2
+	EAPTypeNak          = 3 // Response only
+	EAPTypeMD5Challenge = 4
+	EAPTypeOTP          = 5 // One-Time Password
+	EAPTypeGTC          = 6 // Generic Token Card
+	// EAPTypeTLS 7-9 Reserved
+	EAPTypeTLS      = 13
+	EAPTypeMSCHAPv2 = 26
+)
+
+type EAPData interface {
+	Encode() []byte
+}
 
 type EAPMessage struct {
 	Code       uint8
 	Identifier uint8
 	Length     uint16
 	Type       uint8
-	Data       []byte
+	Data       EAPData
 }
 
+type ByteData struct {
+	Data []byte
+}
+
+func (data *ByteData) Encode() []byte {
+	return data.Data
+}
+
+// MsChapV2EAPChallengeData 表示 MSCHAPv2 挑战数据
+type MsChapV2EAPChallengeData struct {
+	Challenge []byte // MSCHAPv2 挑战值
+	Name      string // 服务器名称或标识符
+}
+
+// MsChapV2EAPResponseData 表示 MSCHAPv2 响应数据
+type MsChapV2EAPResponseData struct {
+	PeerChallenge []byte // MSCHAPv2 Peer 挑战值
+	NtResponse    []byte // MSCHAPv2 NT-Response
+	Flags         uint8  // MSCHAPv2 Flags
+	Name          string // 客户端的用户名
+}
+
+// Encode 方法实现了 EAPData 接口
+func (d MsChapV2EAPChallengeData) Encode() []byte {
+	buffer := bytes.NewBuffer(d.Challenge)
+	buffer.WriteString(d.Name)
+	return buffer.Bytes()
+}
+
+// Encode 方法实现了 EAPData 接口
+func (d MsChapV2EAPResponseData) Encode() []byte {
+	buffer := bytes.NewBuffer(d.PeerChallenge)
+	buffer.Write(d.NtResponse)
+	buffer.WriteByte(d.Flags)
+	buffer.WriteString(d.Name)
+	return buffer.Bytes()
+}
+
+// Encode 编码 EAP 消息为字节切片
 func (msg *EAPMessage) Encode() []byte {
-    length := 5 // Code, Identifier, Length, Type 字段总共占用 5 字节
-    if msg.Data != nil {
-        length += len(msg.Data)
-    }
-    buffer := make([]byte, length)
-    buffer[0] = msg.Code
-    buffer[1] = msg.Identifier
-    binary.BigEndian.PutUint16(buffer[2:4], uint16(length)) // Length 字段是 16 位的，所以我们使用 binary.BigEndian.PutUint16 来写入它
-    buffer[4] = msg.Type
-    if msg.Data != nil {
-        copy(buffer[5:], msg.Data)
-    }
-    return buffer
+	// 初始化 EAP 消息的基础长度
+	length := 5 // Code, Identifier, Length, Type 字段总共占用 5 字节
+
+	var data []byte
+	if msg.Data != nil {
+		data = msg.Data.Encode()
+		length += len(data)
+	}
+
+	buffer := make([]byte, length)
+	buffer[0] = msg.Code
+	buffer[1] = msg.Identifier
+	binary.BigEndian.PutUint16(buffer[2:4], uint16(length))
+	buffer[4] = msg.Type
+
+	if len(data) > 0 {
+		copy(buffer[5:], data)
+	}
+
+	return buffer
 }
 
 // String()
@@ -78,7 +145,6 @@ func (e *EAPMessage) String() string {
 	return buff.String()
 }
 
-
 func parseEAPMessage(r *radius.Request) (*EAPMessage, error) {
 	// 从RADIUS请求中获取EAP-Message属性
 	attr, err := rfc2869.EAPMessage_Lookup(r.Packet)
@@ -92,28 +158,39 @@ func parseEAPMessage(r *radius.Request) (*EAPMessage, error) {
 		Identifier: attr[1],
 		Length:     binary.BigEndian.Uint16(attr[2:4]),
 		Type:       attr[4],
-		Data:       attr[5:],
+		Data:       &ByteData{attr[5:]},
 	}
-
 	return eap, nil
 }
 
-const ChallengeLength = 16
-
-func createMD5Challenge() ([]byte, error) {
-	challenge := make([]byte, ChallengeLength)
-	_, err := rand.Read(challenge)
+// GenerateRandomBytes 生成一个指定长度的随机字节数组
+func generateRandomBytes(n int) ([]byte, error) {
+	b := make([]byte, n)
+	_, err := rand.Read(b)
+	// 注意这里返回的 n 是读取的字节数
 	if err != nil {
 		return nil, err
 	}
-	return challenge, nil
+	return b, nil
 }
 
-func (s *AuthService) sendEAPRequest(w radius.ResponseWriter, r *radius.Request,  secret string) error {
+func generateMessageAuthenticator(r *radius.Packet, secret string) []byte {
+	// 创建一个新的MD5哈希
+	b, _ := r.MarshalBinary()
+	// 创建一个新的MD5哈希
+	mac := hmac.New(md5.New, []byte(secret))
+	// 写入RADIUS包
+	mac.Write(b)
+	// 计算Message-Authenticator属性的值
+	authenticator := mac.Sum(nil)
+	return authenticator
+}
+
+func (s *AuthService) sendEapMD5ChallengeRequest(w radius.ResponseWriter, r *radius.Request, secret string) error {
 	// 创建一个新的RADIUS响应
 	var resp = r.Response(radius.CodeAccessChallenge)
 
-	eapChallenge, err := createMD5Challenge()
+	eapChallenge, err := generateRandomBytes(16)
 	if err != nil {
 		return err
 	}
@@ -131,7 +208,7 @@ func (s *AuthService) sendEAPRequest(w radius.ResponseWriter, r *radius.Request,
 	rfc2869.EAPMessage_Set(resp, eapMessage)
 	rfc2869.MessageAuthenticator_Set(resp, make([]byte, 16))
 
-	authenticator := genMessageAuthenticator(resp, secret)
+	authenticator := generateMessageAuthenticator(resp, secret)
 	// 设置Message-Authenticator属性
 	rfc2869.MessageAuthenticator_Set(resp, authenticator)
 
@@ -144,24 +221,11 @@ func (s *AuthService) sendEAPRequest(w radius.ResponseWriter, r *radius.Request,
 	return w.Write(resp)
 }
 
-func genMessageAuthenticator(r *radius.Packet, secret string) []byte {
-	// 创建一个新的MD5哈希
-	b, _ := r.MarshalBinary()
-	// 创建一个新的MD5哈希
-	mac := hmac.New(md5.New, []byte(secret))
-	// 写入RADIUS包
-	mac.Write(b)
-	// 计算Message-Authenticator属性的值
-	authenticator := mac.Sum(nil)
-	return authenticator
-}
-
-
-func (s *AuthService)  verifyMD5Response(eapid uint8, password string, challenge, response []byte) bool {
-    hash := md5.New()
+func (s *AuthService) verifyEapMD5Response(eapid uint8, password string, challenge, response []byte) bool {
+	hash := md5.New()
 	hash.Write([]byte{eapid})
-    hash.Write([]byte(password))
-    hash.Write(challenge)
-    expectedResponse := hash.Sum(nil)
+	hash.Write([]byte(password))
+	hash.Write(challenge)
+	expectedResponse := hash.Sum(nil)
 	return bytes.Equal(expectedResponse, response[1:])
 }

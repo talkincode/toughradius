@@ -44,7 +44,7 @@ var EapMessageFormat = func(attr []byte) string {
 	}
 	if len(attr) >= 5 {
 		eap.Type = attr[4]
-		eap.Data = attr[5:]
+		eap.Data = &ByteData{attr[5:]}
 	}
 
 	return eap.String()
