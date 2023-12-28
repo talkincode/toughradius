@@ -1,11 +1,15 @@
 package translate
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/assets"
 	"github.com/talkincode/toughradius/v8/common"
 	"github.com/talkincode/toughradius/v8/common/web"
 	"github.com/talkincode/toughradius/v8/webserver"
@@ -75,6 +79,59 @@ func InitRouter() {
 
 	webserver.GET("/admin/translate/flush", func(c echo.Context) error {
 		app.GApp().RenderTranslateFiles()
+		return c.JSON(http.StatusOK, web.RestSucc("success"))
+	})
+
+	webserver.GET("/admin/translate/export", func(c echo.Context) error {
+		lang := c.QueryParam("lang")
+		result := app.GApp().ListTranslateTable(lang)
+		bs, _ := json.MarshalIndent(result, "", "  ")
+		c.Response().Header().Set("Content-Disposition", fmt.Sprintf("attachment;filename=%s.json", lang))
+		return c.JSONBlob(200, bs)
+	})
+
+	webserver.GET("/admin/translate/transall", func(c echo.Context) error {
+		lang := c.QueryParam("lang")
+		result := app.GApp().ListTranslateTable(lang)
+		for _, t := range result {
+			if t.Lang == app.EnUS {
+				continue
+			}
+			trs, err := common.Translate(t.Source, app.EnUS, lang)
+			if err != nil {
+				time.Sleep(time.Millisecond * 200)
+			}
+			t.Result = trs
+			app.GApp().TranslateUpdate(lang, t.Module, t.Source, trs)
+		}
+		return c.JSON(http.StatusOK, web.RestSucc("success"))
+	})
+
+	webserver.GET("/admin/translate/transone", func(c echo.Context) error {
+		var lang, module, source string
+		err := web.NewParamReader(c).
+			ReadRequiedString(&lang, "lang").
+			ReadRequiedString(&source, "source").LastError
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, web.RestError(err.Error()))
+		}
+		trs, err := common.Translate(source, app.EnUS, lang)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, web.RestError(err.Error()))
+		}
+		app.GApp().TranslateUpdate(lang, module, source, trs)
+		return c.JSON(http.StatusOK, web.RestSucc("success"))
+	})
+
+	webserver.GET("/admin/translate/init", func(c echo.Context) error {
+		var items []app.TransTable
+		err := json.Unmarshal(assets.I18nZhCNResources, &items)
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, web.RestError(err.Error()))
+		}
+		for _, t := range items {
+			app.GApp().TranslateUpdate(t.Lang, t.Module, t.Source, t.Result)
+		}
 		return c.JSON(http.StatusOK, web.RestSucc("success"))
 	})
 

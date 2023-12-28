@@ -141,9 +141,47 @@ func (a *Application) QueryTranslateTable(lang string, module, keyword string) [
 				if module != "" && module != string(k) {
 					return nil
 				}
-				if keyword != "" && !strings.Contains(string(kk), keyword) {
+				if keyword != "" && !strings.Contains(string(kk), keyword) && !strings.Contains(string(vv), keyword) {
 					return nil
 				}
+				result = append(result, TransTable{
+					Lang:   lang,
+					Module: string(k),
+					Source: string(kk),
+					Result: string(vv),
+				})
+				return nil
+			})
+			return nil
+		})
+
+		return nil
+	})
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Module < result[j].Module
+	})
+
+	return result
+}
+
+func (a *Application) ListTranslateTable(lang string) []TransTable {
+	transdb, err := a.TransDB()
+	if err != nil {
+		return nil
+	}
+	var result = make([]TransTable, 0)
+	_ = transdb.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(lang))
+		if b == nil {
+			return nil
+		}
+
+		_ = b.ForEach(func(k, v []byte) error {
+			if v != nil {
+				return nil
+			}
+			sub := b.Bucket(k)
+			_ = sub.ForEach(func(kk, vv []byte) error {
 				result = append(result, TransTable{
 					Lang:   lang,
 					Module: string(k),

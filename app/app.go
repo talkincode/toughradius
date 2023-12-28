@@ -127,9 +127,9 @@ func (a *Application) MigrateDB(track bool) (err error) {
 		}
 	}()
 	if track {
-		_ = a.gormDB.Debug().Migrator().AutoMigrate(models.Tables...)
+		log.ErrorIf(a.gormDB.Debug().Migrator().AutoMigrate(models.Tables...))
 	} else {
-		_ = a.gormDB.Migrator().AutoMigrate(models.Tables...)
+		log.ErrorIf(a.gormDB.Migrator().AutoMigrate(models.Tables...))
 	}
 	return nil
 }

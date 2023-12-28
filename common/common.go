@@ -31,6 +31,7 @@ import (
 	"io/ioutil"
 	"math"
 	mathrand "math/rand"
+	"net/http"
 	"net/url"
 	"os"
 	"path"
@@ -709,4 +710,54 @@ func Utf8ToGbk(s []byte) ([]byte, error) {
 		return nil, e
 	}
 	return d, nil
+}
+
+func Translate(text, from, to string) (string, error) {
+	translateEndpoint := "https://translate.toughradius.net/translate" // 你的翻译服务端点
+	// 构建请求URL
+	u, err := url.Parse(translateEndpoint)
+	if err != nil {
+		return "", err
+	}
+	q := u.Query()
+	q.Set("text", text)
+	q.Set("from", strings.ReplaceAll(from, "_", "-"))
+	q.Set("to", strings.ReplaceAll(to, "_", "-"))
+	u.RawQuery = q.Encode()
+
+	// 创建HTTP请求
+	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return "", err
+	}
+
+	// 发送请求
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	// 检查响应状态
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.New("unexpected status: " + resp.Status)
+	}
+
+	// 解析响应
+	var result []struct {
+		Translations []struct {
+			Text string `json:"text"`
+		} `json:"translations"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return "", err
+	}
+
+	// 获取翻译结果
+	if len(result) > 0 && len(result[0].Translations) > 0 {
+		return result[0].Translations[0].Text, nil
+	}
+
+	return "", errors.New("no translation found")
 }

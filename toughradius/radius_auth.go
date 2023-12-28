@@ -84,7 +84,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	if isEap && eapmsg.Code == EAPCodeResponse && eapmsg.Type == EAPTypeIdentity {
 		// 发送EAP-Request/MD5-Challenge消息
-		err = s.sendEAPRequest(w, r, vpe.Secret)
+		err = s.sendEapMD5ChallengeRequest(w, r, vpe.Secret)
 		if err != nil {
 			s.CheckRadAuthError(username, ip, fmt.Errorf("eap: send eap request error: %s", err))
 		}
@@ -110,7 +110,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		if err != nil {
 			s.CheckRadAuthError(username, ip, fmt.Errorf("eap: get local password error: %s", err))
 		}
-		if !s.verifyMD5Response(eapmsg.Identifier, localpwd, eapState.Challenge, eapmsg.Data) {
+		if !s.verifyEapMD5Response(eapmsg.Identifier, localpwd, eapState.Challenge, eapmsg.Data.(*ByteData).Data) {
 			s.CheckRadAuthError(username, ip, fmt.Errorf("eap: verify md5 response error"))
 		}
 	}
@@ -147,7 +147,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		// 设置EAP-Message属性
 		rfc2869.EAPMessage_Set(response, eapMessage)
 		rfc2869.MessageAuthenticator_Set(response, make([]byte, 16))
-		authenticator := genMessageAuthenticator(response, vpe.Secret)
+		authenticator := generateMessageAuthenticator(response, vpe.Secret)
 		// 设置Message-Authenticator属性
 		rfc2869.MessageAuthenticator_Set(response, authenticator)
 	}

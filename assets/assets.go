@@ -14,6 +14,9 @@ var TemplatesFs embed.FS
 //go:embed buildinfo.txt
 var BuildInfo string
 
+//go:embed translate-zh_CN.json
+var I18nZhCNResources []byte
+
 //go:embed menu-admin.json
 var AdminMenudata []byte
 
