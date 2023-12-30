@@ -108,6 +108,11 @@ settingsUi.getRadiusConfigView = function (citem) {
                         bottomLabel: tr("settings", "Radius logging expire days, set according to the disk size. ")
                     },
                     {
+                        view: "radio", name: "RadiusEapMethod", labelPosition: "top", label: tr("settings", "EAP certification methodology"),
+                        options: ["noeap","eap-md5", "eap-mschapv2"],
+                        bottomLabel: tr("settings", "eap certification methodology")
+                    },
+                    {
                         view: "radio", name: "RadiusIgnorePwd", labelPosition: "top", label: tr("settings", "Ignore Passowrd check"),
                         options: [{id: 'enabled', value: gtr("Yes")}, {id: 'disabled', value: gtr("No")}],
                         bottomLabel: tr("settings", "Password authentication is ignored, but does not apply to MsChapv2 authentication mode.")

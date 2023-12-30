@@ -38,13 +38,15 @@ var Ipv4Format = func(src []byte) string {
 var EapMessageFormat = func(attr []byte) string {
 	// 解析EAP消息
 	eap := &EAPMessage{
-		Code:       attr[0],
-		Identifier: attr[1],
-		Length:     binary.BigEndian.Uint16(attr[2:4]),
+		EAPHeader: EAPHeader{
+			Code:       attr[0],
+			Identifier: attr[1],
+			Length:     binary.BigEndian.Uint16(attr[2:4]),
+		},
 	}
 	if len(attr) >= 5 {
 		eap.Type = attr[4]
-		eap.Data = &ByteData{attr[5:]}
+		eap.Data = attr[5:]
 	}
 
 	return eap.String()
