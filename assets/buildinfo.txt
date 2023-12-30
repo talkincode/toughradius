@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.4 2023-12-31 03:10:51
+BuildVersion=latest v8.0.4 2023-12-31 03:36:45
 ReleaseVersion=v8.0.4
-BuildTime=2023-12-31 03:10:51
+BuildTime=2023-12-31 03:36:45
 BuildName=toughradius
-CommitID=8add7ca3ca44fb2c53d130115854f0e5f2e2b032
-CommitDate=Thu, 28 Dec 2023 23:06:09 +0800
+CommitID=f871aea6d9c0c3eda4f50423d44c241822bf3154
+CommitDate=Sun, 31 Dec 2023 03:11:03 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2023-12-28 23:05:59 : translate
+CommitSubject=2023-12-31 03:10:51 : mschapv2 auth

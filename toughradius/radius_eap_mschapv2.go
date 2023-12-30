@@ -27,11 +27,13 @@ const (
 // EAPMSCHAPv2Challenge represents an EAP-MSCHAPv2 Challenge message.
 type EAPMSCHAPv2Challenge struct {
 	EAPHeader
-	Type      uint8
-	OpCode    uint8
-	ValueSize uint8
-	Challenge [MSCHAPChallengeSize]byte
-	Name      []byte
+	Type           uint8
+	OpCode         uint8
+	MsIdentifier   uint8
+	MsChapV2Length uint16
+	ValueSize      uint8
+	Challenge      [MSCHAPChallengeSize]byte
+	Name           []byte
 }
 
 // NewEAPMSCHAPv2Challenge creates a new EAP-MSCHAPv2 Challenge packet with a random challenge.
@@ -46,14 +48,21 @@ func NewEAPMSCHAPv2Challenge(identifier uint8, name string) *EAPMSCHAPv2Challeng
 			Identifier: identifier,
 			Length:     0, // Will be set later
 		},
-		Type:      EAPTypeMSCHAPv2,
-		OpCode:    MSCHAPv2Challenge,
-		ValueSize: MSCHAPChallengeSize,
-		Challenge: challenge,
-		Name:      []byte(name),
+		Type:           EAPTypeMSCHAPv2,
+		OpCode:         MSCHAPv2Challenge,
+		MsIdentifier:   identifier, // Assuming the same as EAP Identifier
+		MsChapV2Length: 0,          // Will be set later
+		ValueSize:      MSCHAPChallengeSize,
+		Challenge:      challenge,
+		Name:           []byte(name),
 	}
 
-	eap.Length = uint16(5 + MSCHAPChallengeSize + len(eap.Name)) // EAP header (4 bytes) + Type (1 byte) + Challenge + Name
+	// Calculate the MS-CHAPv2 Length
+	msChapV2Length := uint16(1 + 1 + 2 + 1 + MSCHAPChallengeSize + len(eap.Name)) // OpCode (1 byte) + MsIdentifier (1 byte) + MsChapV2Length (2 bytes) + ValueSize (1 byte) + Challenge + Name
+	eap.MsChapV2Length = msChapV2Length
+
+	// Calculate the EAP Length
+	eap.Length = uint16(4 + msChapV2Length) // EAP header (4 bytes) + MS-CHAPv2 data
 	return eap
 }
 
@@ -64,12 +73,14 @@ func (eap *EAPMSCHAPv2Challenge) Serialize() []byte {
 	// Write EAP header
 	_ = binary.Write(buffer, binary.BigEndian, eap.EAPHeader)
 
-	// Write Type, OpCode, and ValueSize
+	// Write Type, OpCode, MsIdentifier, and MsChapV2Length
 	buffer.WriteByte(eap.Type)
 	buffer.WriteByte(eap.OpCode)
-	buffer.WriteByte(eap.ValueSize)
+	buffer.WriteByte(eap.MsIdentifier)
+	_ = binary.Write(buffer, binary.BigEndian, eap.MsChapV2Length)
 
-	// Write Challenge
+	// Write ValueSize and Challenge
+	buffer.WriteByte(eap.ValueSize)
 	buffer.Write(eap.Challenge[:])
 
 	// Write Name
@@ -286,17 +297,12 @@ func (s *AuthService) sendEapMsChapV2Request(w radius.ResponseWriter, r *radius.
 	var resp = r.Response(radius.CodeAccessChallenge)
 
 	name := "toughradius"
-	eapChallenge, err := generateRandomBytes(16)
-	if err != nil {
-		return err
-	}
+	eapMessage := NewEAPMSCHAPv2Challenge(r.Identifier, name)
 
 	state := common.UUID()
-	s.AddEapState(state, rfc2865.UserName_GetString(r.Packet), eapChallenge, EapMschapv2Method)
+	s.AddEapState(state, rfc2865.UserName_GetString(r.Packet), eapMessage.Challenge[:], EapMschapv2Method)
 
 	rfc2865.State_SetString(resp, state)
-
-	eapMessage := NewEAPMSCHAPv2Challenge(r.Identifier, name)
 
 	// 设置EAP-Message属性
 	_ = rfc2869.EAPMessage_Set(resp, eapMessage.Serialize())
