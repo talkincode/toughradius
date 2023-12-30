@@ -54,6 +54,8 @@ type EapState struct {
 	Username  string
 	Challenge []byte
 	StateID   string
+	EapMethad string
+	Success   bool
 }
 
 type RadiusService struct {
@@ -133,7 +135,6 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	return user, nil
 }
 
-
 // GetUserForAcct 获取用户, 不判断用户过期等状态
 func (s *RadiusService) GetUserForAcct(username string) (user *models.RadiusUser, err error) {
 	err = app.GDB().
@@ -191,6 +192,14 @@ func (s *RadiusService) GetStringConfig(name string, defval string) string {
 	val := app.GApp().GetSettingsStringValue("radius", name)
 	if val == "" {
 		return defval
+	}
+	return val
+}
+
+func (s *RadiusService) GetEapMethod() string {
+	val := app.GApp().GetSettingsStringValue("radius", app.ConfigRadiusEapMethod)
+	if val == "" {
+		return "eap-md5"
 	}
 	return val
 }
@@ -388,11 +397,13 @@ func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
 }
 
 // State add
-func (s *RadiusService) AddEapState(stateid, username string, challenge []byte) {
+func (s *RadiusService) AddEapState(stateid, username string, challenge []byte, eapMethad string) {
 	s.EapStateCache[stateid] = EapState{
-		Username: username,
-		StateID:  stateid,
+		Username:  username,
+		StateID:   stateid,
 		Challenge: challenge,
+		EapMethad: eapMethad,
+		Success:   false,
 	}
 }
 

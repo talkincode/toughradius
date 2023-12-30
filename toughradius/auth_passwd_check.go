@@ -74,51 +74,72 @@ func (s *AuthService) CheckPassword(r *radius.Request, username, localpassword s
 	return nil
 }
 
-func (s *AuthService) CheckMsChapPassword(username, password string, challenge, response []byte, radAccept *radius.Packet) error {
-	if len(challenge) == 16 && len(response) == 50 {
-		ident := response[0]
-		peerChallenge := response[2:18]
-		peerResponse := response[26:50]
-		byteUser := []byte(username)
-		bytePwd := []byte(password)
-		ntResponse, err := rfc2759.GenerateNTResponse(challenge, peerChallenge, byteUser, bytePwd)
+// CheckMsChapPassword 非 EAP 模式的验证
+func (s *AuthService) CheckMsChapPassword(
+	username, password string,
+	challenge, response []byte,
+	radAccept *radius.Packet,
+) error {
+	if len(challenge) != 16 || len(response) != 50 {
+		return NewAuthError(app.MetricsRadiusRejectPasswdError,
+			"user mschap access reject challenge len or response len error")
+	}
+	ident := response[0]
+	peerChallenge := response[2:18]
+	peerResponse := response[26:50]
+	return s.CheckMsChapV2Password(username, password, challenge, ident, peerChallenge, peerResponse, radAccept)
+}
+
+// CheckMsChapV2Password EAP 模式的验证
+func (s *AuthService) CheckMsChapV2Password(
+	username,
+	password string,
+	challenge []byte,
+	ident byte,
+	peerChallenge,
+	peerResponse []byte,
+	radAccept *radius.Packet,
+) error {
+	byteUser := []byte(username)
+	bytePwd := []byte(password)
+	ntResponse, err := rfc2759.GenerateNTResponse(challenge, peerChallenge, byteUser, bytePwd)
+	if err != nil {
+		return NewAuthError(app.MetricsRadiusRejectPasswdError,
+			"user mschap access mschap access cannot generate ntResponse")
+	}
+
+	if bytes.Equal(ntResponse, peerResponse) {
+		recvKey, err := rfc3079.MakeKey(ntResponse, bytePwd, false)
 		if err != nil {
 			return NewAuthError(app.MetricsRadiusRejectPasswdError,
-				"user mschap access mschap access cannot generate ntResponse")
+				"user mschap access cannot make recvKey")
 		}
 
-		if bytes.Equal(ntResponse, peerResponse) {
-			recvKey, err := rfc3079.MakeKey(ntResponse, bytePwd, false)
-			if err != nil {
-				return NewAuthError(app.MetricsRadiusRejectPasswdError,
-					"user mschap access cannot make recvKey")
-			}
-
-			sendKey, err := rfc3079.MakeKey(ntResponse, bytePwd, true)
-			if err != nil {
-				return NewAuthError(app.MetricsRadiusRejectPasswdError,
-					"user mschap access cannot make sendKey")
-			}
-
-			authenticatorResponse, err := rfc2759.GenerateAuthenticatorResponse(challenge, peerChallenge, ntResponse, byteUser, bytePwd)
-			if err != nil {
-				return NewAuthError(app.MetricsRadiusRejectPasswdError,
-					"user mschap access  cannot generate authenticator response")
-			}
-
-			success := make([]byte, 43)
-			success[0] = ident
-			copy(success[1:], authenticatorResponse)
-
-			microsoft.MSCHAP2Success_Add(radAccept, []byte(success))
-			microsoft.MSMPPERecvKey_Add(radAccept, recvKey)
-			microsoft.MSMPPESendKey_Add(radAccept, sendKey)
-			microsoft.MSMPPEEncryptionPolicy_Add(radAccept, microsoft.MSMPPEEncryptionPolicy_Value_EncryptionAllowed)
-			microsoft.MSMPPEEncryptionTypes_Add(radAccept, microsoft.MSMPPEEncryptionTypes_Value_RC440or128BitAllowed)
-			return nil
+		sendKey, err := rfc3079.MakeKey(ntResponse, bytePwd, true)
+		if err != nil {
+			return NewAuthError(app.MetricsRadiusRejectPasswdError,
+				"user mschap access cannot make sendKey")
 		}
+
+		authenticatorResponse, err := rfc2759.GenerateAuthenticatorResponse(challenge, peerChallenge, ntResponse, byteUser, bytePwd)
+		if err != nil {
+			return NewAuthError(app.MetricsRadiusRejectPasswdError,
+				"user mschap access  cannot generate authenticator response")
+		}
+
+		success := make([]byte, 43)
+		success[0] = ident
+		copy(success[1:], authenticatorResponse)
+
+		microsoft.MSCHAP2Success_Add(radAccept, []byte(success))
+		microsoft.MSMPPERecvKey_Add(radAccept, recvKey)
+		microsoft.MSMPPESendKey_Add(radAccept, sendKey)
+		microsoft.MSMPPEEncryptionPolicy_Add(radAccept, microsoft.MSMPPEEncryptionPolicy_Value_EncryptionAllowed)
+		microsoft.MSMPPEEncryptionTypes_Add(radAccept, microsoft.MSMPPEEncryptionTypes_Value_RC440or128BitAllowed)
+		return nil
 	}
+
 	return NewAuthError(app.MetricsRadiusRejectPasswdError,
-		"user mschap access reject challenge len or response len error")
+		"user mschap access reject password error")
 
 }

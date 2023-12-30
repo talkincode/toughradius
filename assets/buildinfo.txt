@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.4 2023-12-28 23:05:59
+BuildVersion=latest v8.0.4 2023-12-31 03:10:51
 ReleaseVersion=v8.0.4
-BuildTime=2023-12-28 23:05:59
+BuildTime=2023-12-31 03:10:51
 BuildName=toughradius
-CommitID=735a24489c73b3a4c530610412ef8404f2f93ccc
-CommitDate=Wed, 29 Nov 2023 14:28:20 +0800
+CommitID=8add7ca3ca44fb2c53d130115854f0e5f2e2b032
+CommitDate=Thu, 28 Dec 2023 23:06:09 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2023-11-29 14:27:38 : v8.0.4  #159  eap support
+CommitSubject=2023-12-28 23:05:59 : translate

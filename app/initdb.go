@@ -59,6 +59,8 @@ func (a *Application) checkSettings() {
 			checkConfig(sortid, "radius", ConfigRadiusAccountingHistoryDays, "disabled", "Radius accounting logging expire days")
 		case ConfigRadiusAcctInterimInterval:
 			checkConfig(sortid, "radius", ConfigRadiusAcctInterimInterval, "disabled", "Radius default Acctounting interim interval")
+		case ConfigRadiusEapMethod:
+			checkConfig(sortid, "radius", ConfigRadiusEapMethod, "eap-md5", "Radius eap method")
 
 		}
 	}

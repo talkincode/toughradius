@@ -19,6 +19,23 @@ import (
 )
 
 const (
+	EapMd5Method      = "eap-md5"
+	EapMschapv2Method = "eap-mschapv2"
+	EapTlsMethod      = "eap-tls"
+	EapPeapMethod     = "eap-peap"
+	EapTtlsMethod     = "eap-ttls"
+	EapGtcMethod      = "eap-gtc"
+	EapSimMethod      = "eap-sim"
+	EapAkaMethod      = "eap-aka"
+	EapFastMethod     = "eap-fast"
+	EapPaxMethod      = "eap-pax"
+	EapPskMethod      = "eap-psk"
+	EapSakeMethod     = "eap-sake"
+	EapIkev2Method    = "eap-ikev2"
+	EapTncMethod      = "eap-tnc"
+)
+
+const (
 	EAPCodeRequest      = 1  // EAP Request message
 	EAPCodeResponse     = 2  // EAP Response message
 	EAPCodeSuccess      = 3  // Indicates successful authentication
@@ -52,67 +69,55 @@ const (
 	EAPTypeMSCHAPv2 = 26
 )
 
-type EAPData interface {
-	Encode() []byte
-}
-
-type EAPMessage struct {
+type EAPHeader struct {
 	Code       uint8
 	Identifier uint8
 	Length     uint16
-	Type       uint8
-	Data       EAPData
 }
 
-type ByteData struct {
+// NewEAPSuccess creates a new EAP-Success packet.
+func NewEAPSuccess(identifier uint8) *EAPHeader {
+	return &EAPHeader{
+		Code:       EAPCodeSuccess,
+		Identifier: identifier,
+		Length:     4, // EAP header is always 4 bytes for Success/Failure
+	}
+}
+
+// NewEAPFailure creates a new EAP-Failure packet.
+func NewEAPFailure(identifier uint8) *EAPHeader {
+	return &EAPHeader{
+		Code:       EAPCodeFailure,
+		Identifier: identifier,
+		Length:     4, // EAP header is always 4 bytes for Success/Failure
+	}
+}
+
+// Serialize serializes the EAP-Success or EAP-Failure packet to bytes.
+func (eap *EAPHeader) Serialize() []byte {
+	buffer := bytes.NewBuffer(nil)
+
+	// Write EAP header
+	binary.Write(buffer, binary.BigEndian, eap)
+
+	return buffer.Bytes()
+}
+
+type EAPMessage struct {
+	EAPHeader
+	Type uint8
 	Data []byte
-}
-
-func (data *ByteData) Encode() []byte {
-	return data.Data
-}
-
-// MsChapV2EAPChallengeData 表示 MSCHAPv2 挑战数据
-type MsChapV2EAPChallengeData struct {
-	Challenge []byte // MSCHAPv2 挑战值
-	Name      string // 服务器名称或标识符
-}
-
-// MsChapV2EAPResponseData 表示 MSCHAPv2 响应数据
-type MsChapV2EAPResponseData struct {
-	PeerChallenge []byte // MSCHAPv2 Peer 挑战值
-	NtResponse    []byte // MSCHAPv2 NT-Response
-	Flags         uint8  // MSCHAPv2 Flags
-	Name          string // 客户端的用户名
-}
-
-// Encode 方法实现了 EAPData 接口
-func (d MsChapV2EAPChallengeData) Encode() []byte {
-	buffer := bytes.NewBuffer(d.Challenge)
-	buffer.WriteString(d.Name)
-	return buffer.Bytes()
-}
-
-// Encode 方法实现了 EAPData 接口
-func (d MsChapV2EAPResponseData) Encode() []byte {
-	buffer := bytes.NewBuffer(d.PeerChallenge)
-	buffer.Write(d.NtResponse)
-	buffer.WriteByte(d.Flags)
-	buffer.WriteString(d.Name)
-	return buffer.Bytes()
 }
 
 // Encode 编码 EAP 消息为字节切片
 func (msg *EAPMessage) Encode() []byte {
 	// 初始化 EAP 消息的基础长度
 	length := 5 // Code, Identifier, Length, Type 字段总共占用 5 字节
-
 	var data []byte
 	if msg.Data != nil {
-		data = msg.Data.Encode()
+		data = msg.Data
 		length += len(data)
 	}
-
 	buffer := make([]byte, length)
 	buffer[0] = msg.Code
 	buffer[1] = msg.Identifier
@@ -122,43 +127,44 @@ func (msg *EAPMessage) Encode() []byte {
 	if len(data) > 0 {
 		copy(buffer[5:], data)
 	}
-
 	return buffer
 }
 
 // String()
 // Returns a string representation of the EAP message.
-func (e *EAPMessage) String() string {
+func (msg *EAPMessage) String() string {
 	buff := strings.Builder{}
 	buff.WriteString("EAPMessage{")
 	buff.WriteString("Code=")
-	buff.WriteString(strconv.FormatUint(uint64(e.Code), 10))
+	buff.WriteString(strconv.FormatUint(uint64(msg.Code), 10))
 	buff.WriteString(", Identifier=")
-	buff.WriteString(strconv.FormatUint(uint64(e.Identifier), 10))
+	buff.WriteString(strconv.FormatUint(uint64(msg.Identifier), 10))
 	buff.WriteString(", Length=")
-	buff.WriteString(strconv.FormatUint(uint64(e.Length), 10))
+	buff.WriteString(strconv.FormatUint(uint64(msg.Length), 10))
 	buff.WriteString(", Type=")
-	buff.WriteString(strconv.FormatUint(uint64(e.Type), 10))
+	buff.WriteString(strconv.FormatUint(uint64(msg.Type), 10))
 	buff.WriteString(", Data=")
-	buff.WriteString(fmt.Sprintf("%x", e.Data))
+	buff.WriteString(fmt.Sprintf("%x", msg.Data))
 	buff.WriteString("}")
 	return buff.String()
 }
 
-func parseEAPMessage(r *radius.Request) (*EAPMessage, error) {
+func parseEAPMessage(packet *radius.Packet) (*EAPMessage, error) {
 	// 从RADIUS请求中获取EAP-Message属性
-	attr, err := rfc2869.EAPMessage_Lookup(r.Packet)
+	attr, err := rfc2869.EAPMessage_Lookup(packet)
 	if err != nil {
 		return nil, err
 	}
 
 	// 解析EAP消息
 	eap := &EAPMessage{
-		Code:       attr[0],
-		Identifier: attr[1],
-		Length:     binary.BigEndian.Uint16(attr[2:4]),
-		Type:       attr[4],
-		Data:       &ByteData{attr[5:]},
+		EAPHeader: EAPHeader{
+			Code:       attr[0],
+			Identifier: attr[1],
+			Length:     binary.BigEndian.Uint16(attr[2:4]),
+		},
+		Type: attr[4],
+		Data: attr[5:],
 	}
 	return eap, nil
 }
@@ -196,7 +202,7 @@ func (s *AuthService) sendEapMD5ChallengeRequest(w radius.ResponseWriter, r *rad
 	}
 
 	state := common.UUID()
-	s.AddEapState(state, rfc2865.UserName_GetString(r.Packet), eapChallenge)
+	s.AddEapState(state, rfc2865.UserName_GetString(r.Packet), eapChallenge, EapMd5Method)
 
 	rfc2865.State_SetString(resp, state)
 
