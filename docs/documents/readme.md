@@ -18,12 +18,6 @@ TOUGHRADIUS uses advanced Golang technology to develop the system core, providin
 
 [quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
 
-## QABOT
-
-ToughRadius provides an AI-based technical service bot that we hope can help you solve some technical problems.
-
-[QABOT Link](https://qa.toughradius.net/)
-
 ## System structure
 
 ![architecture](assets/architecture.png)
@@ -43,6 +37,7 @@ TR069 ACS can provide real-time monitoring and maintenance of CPE devices in the
 ### Radius Server
 
 TOUGHRADIUS is a RADIUS server that supports the RADIUS protocol and the RADIUS over TLS (RadSec) protocol.
+Also supports some EAP authentication methods
 
 Standard RADIUS features
 
@@ -50,6 +45,8 @@ Standard RADIUS features
 - Authentication PAP authentication method
 - Authentication CHAP authentication method
 - Authentication MS-CHAPv2 authentication method
+- Authentication EAP-MD5 authentication method
+- Authentication EAP-MS-CHAPv2 authentication method
 - Authorization message
 
   > After receiving the BAS Authentication request message, the RADIUS Server encapsulates the user authorization information according to the user information resources, and authorizes the user bandwidth limit, maximum duration, IP and other information to the BAS through the Authentication response message.
