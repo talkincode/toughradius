@@ -1,4 +1,4 @@
-name: Build and Publish
+name: toughradius docker build and publish
 
 on:
   # run it on push to the default repository branch

@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.4 2024-01-10 01:01:08
+BuildVersion=latest v8.0.4 2024-01-18 15:23:34
 ReleaseVersion=v8.0.4
-BuildTime=2024-01-10 01:01:08
+BuildTime=2024-01-18 15:23:34
 BuildName=toughradius
-CommitID=5564f4a00f2aa7d38e90a83f29a3a8f1fdab5b24
-CommitDate=Tue, 2 Jan 2024 02:00:21 +0800
+CommitID=48ea29e6eddf11ce25e586beee529f51e5b5e85f
+CommitDate=Wed, 10 Jan 2024 01:01:19 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2024-01-02 02:00:12 :
+CommitSubject=2024-01-10 01:01:08 : readme
