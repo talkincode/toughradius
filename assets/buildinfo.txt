@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.4 2024-01-18 15:23:34
+BuildVersion=latest v8.0.4 2024-01-27 21:39:08
 ReleaseVersion=v8.0.4
-BuildTime=2024-01-18 15:23:34
+BuildTime=2024-01-27 21:39:08
 BuildName=toughradius
-CommitID=48ea29e6eddf11ce25e586beee529f51e5b5e85f
-CommitDate=Wed, 10 Jan 2024 01:01:19 +0800
+CommitID=b67f7f938db96309ea71963e43aab88b2cc0c4d3
+CommitDate=Sat, 27 Jan 2024 21:37:48 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2024-01-10 01:01:08 : readme
+CommitSubject=add installer.sh

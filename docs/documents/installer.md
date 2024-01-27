@@ -28,7 +28,7 @@ Download the software distribution from [Releases Page](https://github.com/talki
 > If you have some development skills, you can compile your own version
 
 ```
-curl https://github.com/talkincode/toughradius/releases/download/v8.0.4/toughradius_x86-64 -O /tmp/toughradius
+curl https://github.com/talkincode/toughradius/releases/download/v8.0.6/toughradius_amd64 -O /tmp/toughradius
 
 chmod +x /tmp/toughradius && /tmp/toughradius -install
 
@@ -39,10 +39,10 @@ Before proceeding, make sure that you have created the database and that the dat
 Modifying configuration file [/etc/toughradius.yml](Configuration.md)
 
 
-> The following installation method will download and build the latest toughradius version (Support for v8.0.4 and later)
+> The following installation method will download and build the latest toughradius version 
 
 ```bash
-go install github.com/talkincode/toughradius/v8@v8.0.4
+go install github.com/talkincode/toughradius/v8@latest
 
 toughradius -install
 ```

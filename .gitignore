@@ -12,3 +12,4 @@ __debug_bin
 /tmp/
 /log_info.log
 __debug_bin*
+.log
