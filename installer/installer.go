@@ -50,7 +50,10 @@ func InitConfig(config *config.AppConfig) error {
 
 func Install() error {
 	if !common.FileExists("/etc/toughradius.yml") {
-		_ = InitConfig(config.DefaultAppConfig)
+		err := InitConfig(config.DefaultAppConfig)
+		if err != nil {
+			return err
+		}
 	}
 	// Get the absolute path of the currently executing file
 	file, _ := exec.LookPath(os.Args[0])
