@@ -44,7 +44,7 @@ var Tr069Mikrotik string
 //go:embed tr069_preset.yml
 var Tr069PresetTemplate string
 
-var defaultBuildVer = "Latest Build 2023"
+var defaultBuildVer = "Latest Build 2024"
 
 func BuildVersion() string {
 	re, err := regexp.Compile(`BuildVersion=(.+?)\n`)
@@ -57,4 +57,20 @@ func BuildVersion() string {
 		return match[1]
 	}
 	return defaultBuildVer
+}
+
+func BuildInfoMap() map[string]string {
+	re, err := regexp.Compile(`(.+?)=(.+?)\n`)
+	if err != nil {
+		return nil
+	}
+	match := re.FindAllStringSubmatch(BuildInfo, -1)
+	if len(match) > 0 {
+		m := make(map[string]string)
+		for _, v := range match {
+			m[v[1]] = v[2]
+		}
+		return m
+	}
+	return nil
 }
