@@ -136,6 +136,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		s.AcceptAcceptConfig(user, vpe.VendorCode, response)
 		s.SendAccept(w, r, response)
 		s.UpdateBind(user, vendorReq)
+		s.UpdateUserLastOnline(user.Username)
 		log.Info2("radius auth sucess",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),

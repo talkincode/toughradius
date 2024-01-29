@@ -58,7 +58,7 @@ func InitUserRouter() {
 			query := app.GDB().Model(&models.RadiusUser{}).Select("radius_user.*, coalesce(ro.count, 0) as online_count").
 				Joins("left join (select username, count(1) as count from radius_online  group by username) ro on radius_user.username = ro.username")
 			if len(web.ParseSortMap(c)) == 0 {
-				query = query.Order("radius_user.updated_at desc")
+				query = query.Order("radius_user.username asc")
 			} else {
 				mobj := models.RadiusUser{}
 				for name, stype := range web.ParseSortMap(c) {

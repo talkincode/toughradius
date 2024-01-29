@@ -393,13 +393,13 @@
     "lang": "zh_CN",
     "module": "cwmp",
     "source": "OID",
-    "result": "OID的"
+    "result": "OID"
   },
   {
     "lang": "zh_CN",
     "module": "cwmp",
     "source": "OUI",
-    "result": "OUI （英语）"
+    "result": "OUI"
   },
   {
     "lang": "zh_CN",
@@ -1239,7 +1239,7 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "LastOnline",
-    "result": "上一篇在线"
+    "result": "最后在线"
   },
   {
     "lang": "zh_CN",

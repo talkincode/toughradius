@@ -179,6 +179,16 @@ func (s *RadiusService) UpdateUserVlanid2(username string, vlanid2 int) {
 	}
 }
 
+func (s *RadiusService) UpdateUserLastOnline(username string) {
+	err := app.GDB().
+		Model(&models.RadiusUser{}).
+		Where("username = ?", username).
+		Update("last_online", time.Now()).Error
+	if err != nil {
+		log.Error2("update user last online error", zap.Error(err), zap.String("namespace", "radius"))
+	}
+}
+
 func (s *RadiusService) GetIntConfig(name string, defval int64) int64 {
 	cval := app.GApp().GetSettingsStringValue("radius", name)
 	ival, err := strconv.ParseInt(cval, 10, 64)
