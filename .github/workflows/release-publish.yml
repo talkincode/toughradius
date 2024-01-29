@@ -101,7 +101,7 @@ jobs:
             talkincode/toughradius:${{ github.ref_name }} 
             ghcr.io/talkincode/toughradius:${{ github.ref_name }}
           # build on feature branches, push only on main branch
-          push: ${{ github.ref == 'refs/heads/main' }}
+          push: ${{ startsWith(github.ref, 'refs/tags/') }}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
