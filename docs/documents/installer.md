@@ -1,6 +1,18 @@
 ## Quick start
 
-[中文](quickstart_cn)
+### Quick Install
+
+- Use curl 
+
+```bash
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh)"
+```
+
+- Use wget
+
+```bash
+sudo bash -c "$(wget https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh -O -)"
+```
 
 ### System environment dependencies
 
@@ -21,7 +33,7 @@ GRANT ALL PRIVILEGES ON DATABASE toughradius TO toughradius;
 
 ### Installation and Configuration
 
-Let's take v8.0.4 as an example
+Let's take v8.0.6 as an example
 
 Download the software distribution from [Releases Page](https://github.com/talkincode/toughradius/releases)
 
