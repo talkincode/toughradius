@@ -22,12 +22,13 @@ else
     echo "Go is not installed. Installing Go 1.21.6..."
     wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
     sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
+    sudo ln -s /usr/local/go/bin/go /usr/local/bin/go
 fi
 
 # SET GOROOT AND GOPATH
 GOROOT_LINE="export GOROOT=/usr/local/go"
 GOPATH_LINE="export GOPATH=\$HOME/go"
-PATH_LINE="export PATH=\$PATH:\$GOROOT/bin:\$GOPATH/bin"
+PATH_LINE="export PATH=\$PATH:\$GOROOT/bin"
 
 # Check if GOROOT, GOPATH and PATH are already set in /etc/profile
 if ! grep -q "$GOROOT_LINE" /etc/profile; then
