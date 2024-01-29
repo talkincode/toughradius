@@ -46,6 +46,10 @@ fi
 # Apply changes
 source /etc/profile
 
+echo "Removing old ToughRADIUS executable..."
+test -f $GOPATH/bin/toughradius && rm -f $GOPATH/bin/toughradius
+test -f /usr/local/bin/toughradius && rm -f /usr/local/bin/toughradius
+
 # Installation ToughRADIUS
 echo "Installing ToughRADIUS..."
 go clean -modcache
@@ -53,6 +57,7 @@ go install github.com/talkincode/toughradius/v8@latest
 
 # Execute the ToughRADIUS installation command
 echo "Running ToughRADIUS install command..."
-toughradius -install
+$GOPATH/bin/toughradius -install
 
-echo "ToughRADIUS installation completed."
+echo "ToughRADIUS installation completed. Please to configure your database"
+echo "start the toughradius service with: sudo systemctl start toughradius "
