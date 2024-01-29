@@ -15,11 +15,22 @@ TOUGHRADIUS not only provides a user-friendly system interface, but also powerfu
 
 TOUGHRADIUS uses advanced Golang technology to develop the system core, providing excellent system performance and easy deployment experience.
 
+## Quick Install
+
+[quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
+
+- Use curl 
+
 ```bash
 sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh)"
 ```
 
-[quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
+- Use wget
+
+```bash
+sudo bash -c "$(wget https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh -O -)"
+```
+
 
 ## QABOT
 
