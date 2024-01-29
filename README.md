@@ -32,12 +32,12 @@ sudo bash -c "$(wget https://raw.githubusercontent.com/talkincode/toughradius/ma
 ```
 
 
-## QABOT
+## Q&A AiBot
 
 ToughRadius provides an AI-based technical service bot that we hope can help you solve some technical problems.
 <img width="1236" alt="image" src="https://github.com/talkincode/toughradius/assets/377938/b6dafb49-6850-4906-b69f-2c18196459c0">
 
-[QABOT Link](https://qa.toughradius.net/)
+[A&A AiBot Link](https://qa.toughradius.net/)
 
 ## System structure
 

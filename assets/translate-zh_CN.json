@@ -393,13 +393,13 @@
     "lang": "zh_CN",
     "module": "cwmp",
     "source": "OID",
-    "result": "OID的"
+    "result": "OID"
   },
   {
     "lang": "zh_CN",
     "module": "cwmp",
     "source": "OUI",
-    "result": "OUI （英语）"
+    "result": "OUI"
   },
   {
     "lang": "zh_CN",
@@ -735,7 +735,7 @@
     "lang": "zh_CN",
     "module": "global",
     "source": "Save",
-    "result": "救"
+    "result": "保存"
   },
   {
     "lang": "zh_CN",
@@ -825,7 +825,7 @@
     "lang": "zh_CN",
     "module": "logging",
     "source": "Job",
-    "result": "工作"
+    "result": "Job"
   },
   {
     "lang": "zh_CN",
@@ -867,19 +867,19 @@
     "lang": "zh_CN",
     "module": "logging",
     "source": "Regular match",
-    "result": "常规比赛"
+    "result": "正则匹配"
   },
   {
     "lang": "zh_CN",
     "module": "menus",
     "source": "Account",
-    "result": "帐户"
+    "result": "帐号管理"
   },
   {
     "lang": "zh_CN",
     "module": "menus",
     "source": "Accounting",
-    "result": "记账"
+    "result": "记帐日志"
   },
   {
     "lang": "zh_CN",
@@ -921,7 +921,7 @@
     "lang": "zh_CN",
     "module": "menus",
     "source": "Online",
-    "result": "在线"
+    "result": "在线帐号"
   },
   {
     "lang": "zh_CN",
@@ -957,13 +957,13 @@
     "lang": "zh_CN",
     "module": "menus",
     "source": "Radius Statistics",
-    "result": "Radius统计数据"
+    "result": "Radius 统计数据"
   },
   {
     "lang": "zh_CN",
     "module": "menus",
     "source": "Settings",
-    "result": "设置"
+    "result": "系统设置"
   },
   {
     "lang": "zh_CN",
@@ -1011,19 +1011,19 @@
     "lang": "zh_CN",
     "module": "menus",
     "source": "Tr069 Session",
-    "result": "Tr069 专场"
+    "result": "Tr069 会话"
   },
   {
     "lang": "zh_CN",
     "module": "menus",
     "source": "Tr069 Statistics",
-    "result": "Tr069统计数据"
+    "result": "Tr069 统计数据"
   },
   {
     "lang": "zh_CN",
     "module": "menus",
     "source": "Translate",
-    "result": "翻译"
+    "result": "翻译管理"
   },
   {
     "lang": "zh_CN",
@@ -1065,19 +1065,19 @@
     "lang": "zh_CN",
     "module": "opr",
     "source": "Clone operator",
-    "result": "克隆运算符"
+    "result": "克隆操作员"
   },
   {
     "lang": "zh_CN",
     "module": "opr",
     "source": "Create operator",
-    "result": "创建运算符"
+    "result": "创建操作员"
   },
   {
     "lang": "zh_CN",
     "module": "opr",
     "source": "Edit operator",
-    "result": "编辑运算符"
+    "result": "编辑操作员"
   },
   {
     "lang": "zh_CN",
@@ -1125,7 +1125,7 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "Active num",
-    "result": "活动编号"
+    "result": "最大在线数"
   },
   {
     "lang": "zh_CN",
@@ -1179,19 +1179,19 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "DownRate (Mbps)",
-    "result": "降率 （Mbps）"
+    "result": "下行速率 （Mbps）"
   },
   {
     "lang": "zh_CN",
     "module": "radius",
     "source": "DownRate (kbps)",
-    "result": "DownRate （kbps）"
+    "result": "下行速率 （kbps）"
   },
   {
     "lang": "zh_CN",
     "module": "radius",
     "source": "DownTraffic",
-    "result": "量"
+    "result": "下行流量"
   },
   {
     "lang": "zh_CN",
@@ -1233,13 +1233,13 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "InputPkts",
-    "result": "输入Pkts"
+    "result": "输入包"
   },
   {
     "lang": "zh_CN",
     "module": "radius",
     "source": "LastOnline",
-    "result": "上一篇在线"
+    "result": "最后在线"
   },
   {
     "lang": "zh_CN",
@@ -1251,19 +1251,19 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "Mac",
-    "result": "苹果电脑"
+    "result": "MAC 地址"
   },
   {
     "lang": "zh_CN",
     "module": "radius",
     "source": "NasId",
-    "result": "纳斯 ID"
+    "result": "NAS ID"
   },
   {
     "lang": "zh_CN",
     "module": "radius",
     "source": "NasIp",
-    "result": "纳斯 Ip"
+    "result": "NAS IP"
   },
   {
     "lang": "zh_CN",
@@ -1287,7 +1287,7 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "OutputPkts",
-    "result": "输出Pkts"
+    "result": "输出包"
   },
   {
     "lang": "zh_CN",
@@ -1305,7 +1305,7 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "Profile",
-    "result": "轮廓"
+    "result": "Profile"
   },
   {
     "lang": "zh_CN",
@@ -1389,19 +1389,19 @@
     "lang": "zh_CN",
     "module": "radius",
     "source": "UpRate (Mbps)",
-    "result": "上行速率 （Mbps）"
-  },
-  {
-    "lang": "zh_CN",
-    "module": "radius",
-    "source": "UpRate (kbps",
-    "result": "UpRate （kbps"
+    "result": "上行速率 (Mbps)"
   },
   {
     "lang": "zh_CN",
     "module": "radius",
     "source": "UpRate (kbps)",
-    "result": "上行速率 （kbps）"
+    "result": "上行速率 (kbps)"
+  },
+  {
+    "lang": "zh_CN",
+    "module": "radius",
+    "source": "UpRate (kbps)",
+    "result": "上行速率 (kbps)"
   },
   {
     "lang": "zh_CN",
