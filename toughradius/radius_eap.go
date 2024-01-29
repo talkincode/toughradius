@@ -33,6 +33,7 @@ const (
 	EapSakeMethod     = "eap-sake"
 	EapIkev2Method    = "eap-ikev2"
 	EapTncMethod      = "eap-tnc"
+	EapOTPMethod      = "eap-otp"
 )
 
 const (
@@ -207,7 +208,7 @@ func (s *AuthService) sendEapMD5ChallengeRequest(w radius.ResponseWriter, r *rad
 	rfc2865.State_SetString(resp, state)
 
 	// 创建EAP-Request/MD5-Challenge消息
-	eapMessage := []byte{0x01, r.Identifier, 0x00, 0x16, 0x04, 0x10}
+	eapMessage := []byte{0x01, r.Identifier, 0x00, 0x16, EAPTypeMD5Challenge, 0x10}
 	eapMessage = append(eapMessage, eapChallenge...)
 
 	// 设置EAP-Message属性
@@ -234,4 +235,43 @@ func (s *AuthService) verifyEapMD5Response(eapid uint8, password string, challen
 	hash.Write(challenge)
 	expectedResponse := hash.Sum(nil)
 	return bytes.Equal(expectedResponse, response[1:])
+}
+
+
+// sendEapOTPChallengeRequest
+func (s *AuthService) sendEapOTPChallengeRequest(w radius.ResponseWriter, r *radius.Request, secret string) error {
+	// 创建一个新的RADIUS响应
+	var resp = r.Response(radius.CodeAccessChallenge)
+
+	eapChallenge := []byte("Please enter a one-time password")
+
+	state := common.UUID()
+	s.AddEapState(state, rfc2865.UserName_GetString(r.Packet), eapChallenge, EapOTPMethod)
+
+	rfc2865.State_SetString(resp, state)
+
+	// 创建EAP-Request/OTP-Challenge消息
+	eapMessage := []byte{0x01, r.Identifier}
+	eapMessage = append(eapMessage, []byte{0x00, 0x00}...) // Length, will be set later
+	eapMessage = append(eapMessage, EAPTypeOTP) // Type for EAP-OTP
+	eapMessage = append(eapMessage, eapChallenge...)
+	
+	// Set the length
+	binary.BigEndian.PutUint16(eapMessage[2:4], uint16(len(eapMessage)))
+
+	// 设置EAP-Message属性
+	rfc2869.EAPMessage_Set(resp, eapMessage)
+	rfc2869.MessageAuthenticator_Set(resp, make([]byte, 16))
+
+	authenticator := generateMessageAuthenticator(resp, secret)
+	// 设置Message-Authenticator属性
+	rfc2869.MessageAuthenticator_Set(resp, authenticator)
+
+	// debug message
+	if app.GConfig().Radiusd.Debug {
+		log.Info(FmtResponse(resp, r.RemoteAddr))
+	}
+
+	// 发送RADIUS响应
+	return w.Write(resp)
 }

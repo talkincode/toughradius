@@ -83,23 +83,64 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		s.CheckRadAuthError(username, ip, s.CheckAuthRateLimit(username))
 	}
 
-	if isEap && eapmsg.Code == EAPCodeResponse && eapmsg.Type == EAPTypeIdentity {
-		switch eapMethod {
-		case EapMd5Method:
+	processEapType := func(eaptype byte) error {
+		switch eaptype {
+		case EAPTypeMD5Challenge:
 			// 发送EAP-Request/MD5-Challenge消息
 			err = s.sendEapMD5ChallengeRequest(w, r, vpe.Secret)
 			if err != nil {
-				s.CheckRadAuthError(username, ip, fmt.Errorf("eap: send eap request error: %s", err))
+				return fmt.Errorf("eap: sendEapMD5ChallengeRequest error: %s", err)
 			}
-			return
-		case EapMschapv2Method:
+		case EAPTypeMSCHAPv2:
 			// 发送EAP-Request/MSCHAPv2-Challenge消息
 			err = s.sendEapMsChapV2Request(w, r, vpe.Secret)
 			if err != nil {
-				s.CheckRadAuthError(username, ip, fmt.Errorf("eap: send eap request error: %s", err))
+				return fmt.Errorf("eap: sendEapMsChapV2Request error: %s", err)
 			}
-			return
+		case EAPTypeOTP:
+			// 发送 EAP-Request/OTP-Challenge
+			err = s.sendEapOTPChallengeRequest(w, r, vpe.Secret)
+			if err != nil {
+				return fmt.Errorf("eap: sendEapOTPChallengeRequest error: %s", err)
+			}
+		default:
+			return fmt.Errorf("eap: unsupported eap type: %d", eaptype)
+		}
+		return nil
+	}
 
+	// process EAP-Response/Identity
+	if isEap && eapmsg.Code == EAPCodeResponse && eapmsg.Type == EAPTypeIdentity {
+		eaptype := byte(0x00)
+		switch eapMethod {
+		case EapMd5Method:
+			eaptype = EAPTypeMD5Challenge
+		case EapMschapv2Method:
+			eaptype = EAPTypeMSCHAPv2
+		case EapOTPMethod:
+			eaptype = EAPTypeOTP
+		}
+		err := processEapType(eaptype)
+		if err != nil {
+			s.CheckRadAuthError(username, ip, fmt.Errorf("eap: processEapType error: %s", err))
+		} else {
+			return
+		}
+	}
+
+	// Process EAPTypeNak
+	if isEap && eapmsg.Type == EAPTypeNak {
+		if len(eapmsg.Data) == 0 {
+			fmt.Println("No alternative EAP methods suggested.")
+			return
+		}
+		for _, eapMethod := range eapmsg.Data {
+			err := processEapType(eapMethod)
+			if err != nil {
+				s.CheckRadAuthError(username, ip, fmt.Errorf("eap: processEapType error: %s", err))
+			} else {
+				return
+			}
 		}
 	}
 
@@ -162,6 +203,22 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			}
 			if !s.verifyEapMD5Response(eapmsg.Identifier, localpwd, eapState.Challenge, eapmsg.Data) {
 				s.SendEapFailureReject(w, r, vpe.Secret, fmt.Errorf("eap: verify eap md5 response error"))
+				return
+			}
+			eapState.Success = true
+			sendAccept()
+
+		case EAPTypeOTP:
+			stateid := rfc2865.State_GetString(r.Packet)
+			eapState, err := s.GetEapState(stateid)
+			if err != nil {
+				s.SendEapFailureReject(w, r, vpe.Secret, fmt.Errorf("eap: get eap state error"))
+				return
+			}
+
+			otpPassword := "123456"
+			if string(eapmsg.Data) != otpPassword {
+				s.SendEapFailureReject(w, r, vpe.Secret, fmt.Errorf("eap: verify otp response error"))
 				return
 			}
 			eapState.Success = true
