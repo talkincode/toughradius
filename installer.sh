@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Apply changes
+source /etc/profile
+
 # Check if Golang is installed
 if command -v go &> /dev/null
 then
@@ -11,20 +14,36 @@ then
     then
         echo "Detected Go version $GO_VERSION. Upgrading to Go 1.21.6..."
         wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
-        rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
+        sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
     else
         echo "Detected Go version $GO_VERSION. No upgrade needed."
     fi
 else
     echo "Go is not installed. Installing Go 1.21.6..."
     wget https://go.dev/dl/go1.21.6.linux-amd64.tar.gz
-    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
+    sudo rm -rf /usr/local/go && sudo tar -C /usr/local -xzf go1.21.6.linux-amd64.tar.gz
 fi
 
 # SET GOROOT AND GOPATH
-export GOROOT=/usr/local/go
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+GOROOT_LINE="export GOROOT=/usr/local/go"
+GOPATH_LINE="export GOPATH=\$HOME/go"
+PATH_LINE="export PATH=\$PATH:\$GOROOT/bin:\$GOPATH/bin"
+
+# Check if GOROOT, GOPATH and PATH are already set in /etc/profile
+if ! grep -q "$GOROOT_LINE" /etc/profile; then
+    echo "$GOROOT_LINE" | sudo tee -a /etc/profile
+fi
+
+if ! grep -q "$GOPATH_LINE" /etc/profile; then
+    echo "$GOPATH_LINE" | sudo tee -a /etc/profile
+fi
+
+if ! grep -q "$PATH_LINE" /etc/profile; then
+    echo "$PATH_LINE" | sudo tee -a /etc/profile
+fi
+
+# Apply changes
+source /etc/profile
 
 # Installation ToughRADIUS
 echo "Installing ToughRADIUS..."

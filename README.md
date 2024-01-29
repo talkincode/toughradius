@@ -15,6 +15,9 @@ TOUGHRADIUS not only provides a user-friendly system interface, but also powerfu
 
 TOUGHRADIUS uses advanced Golang technology to develop the system core, providing excellent system performance and easy deployment experience.
 
+```bash
+sudo sh -c "$(curl -fsSL https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh)"
+```
 
 [quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
 

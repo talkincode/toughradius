@@ -8,6 +8,8 @@ import (
 	_ "time/tzdata"
 
 	"github.com/talkincode/toughradius/v8/app"
+	"github.com/talkincode/toughradius/v8/assets"
+	"github.com/talkincode/toughradius/v8/common"
 	"github.com/talkincode/toughradius/v8/common/zaplog/log"
 	"github.com/talkincode/toughradius/v8/config"
 	"github.com/talkincode/toughradius/v8/controllers"
@@ -22,15 +24,6 @@ import (
 
 var (
 	g errgroup.Group
-
-	BuildVersion   string
-	ReleaseVersion string
-	BuildTime      string
-	BuildName      string
-	CommitID       string
-	CommitDate     string
-	CommitUser     string
-	CommitSubject  string
 )
 
 // 命令行定义
@@ -42,23 +35,27 @@ var (
 	install   = flag.Bool("install", false, "run install")
 	uninstall = flag.Bool("uninstall", false, "run uninstall")
 	initcfg   = flag.Bool("initcfg", false, "write default config > /etc/toughradius.yml")
+	printcfg  = flag.Bool("printcfg", false, "print config")
 )
 
 // PrintVersion Print version information
 func PrintVersion() {
-	_, _ = fmt.Fprintf(os.Stdout, "build name:\t%s\n", BuildName)
-	_, _ = fmt.Fprintf(os.Stdout, "build version:\t%s\n", BuildVersion)
-	_, _ = fmt.Fprintf(os.Stdout, "build time:\t%s\n", BuildTime)
-	_, _ = fmt.Fprintf(os.Stdout, "release version:\t%s\n", ReleaseVersion)
-	_, _ = fmt.Fprintf(os.Stdout, "Commit ID:\t%s\n", CommitID)
-	_, _ = fmt.Fprintf(os.Stdout, "Commit Date:\t%s\n", CommitDate)
-	_, _ = fmt.Fprintf(os.Stdout, "Commit Username:\t%s\n", CommitUser)
-	_, _ = fmt.Fprintf(os.Stdout, "Commit Subject:\t%s\n", CommitSubject)
+	buildinfo := assets.BuildInfoMap()
+	_, _ = fmt.Fprintf(os.Stdout, "build name:\t%s\n", buildinfo["BuildName"])
+	_, _ = fmt.Fprintf(os.Stdout, "build version:\t%s\n", buildinfo["BuildVersion"])
+	_, _ = fmt.Fprintf(os.Stdout, "build time:\t%s\n", buildinfo["BuildTime"])
+	_, _ = fmt.Fprintf(os.Stdout, "release version:\t%s\n", buildinfo["ReleaseVersion"])
+	_, _ = fmt.Fprintf(os.Stdout, "Commit ID:\t%s\n", buildinfo["CommitID"])
+	_, _ = fmt.Fprintf(os.Stdout, "Commit Date:\t%s\n", buildinfo["CommitDate"])
+	_, _ = fmt.Fprintf(os.Stdout, "Commit Username:\t%s\n", buildinfo["CommitUsername"])
+	_, _ = fmt.Fprintf(os.Stdout, "Commit Subject:\t%s\n", buildinfo["CommitSubject"])
 }
 
 func printHelp() {
 	if *h {
-		ustr := fmt.Sprintf("%s version: %s, Usage:%s -h\nOptions:", BuildName, BuildVersion, BuildName)
+		buildinfo := assets.BuildInfoMap()
+		ustr := fmt.Sprintf("%s version: %s, Usage:%s -h\nOptions:",
+			buildinfo["BuildName"], buildinfo["BuildVersion"], os.Args[0])
 		_, _ = fmt.Fprintf(os.Stderr, ustr)
 		flag.PrintDefaults()
 		os.Exit(0)
@@ -99,6 +96,11 @@ func main() {
 		if err != nil {
 			log.Error(err)
 		}
+		return
+	}
+
+	if *printcfg {
+		fmt.Printf("%+v\n", common.ToJson(_config))
 		return
 	}
 
