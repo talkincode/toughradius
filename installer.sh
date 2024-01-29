@@ -47,6 +47,7 @@ source /etc/profile
 
 # Installation ToughRADIUS
 echo "Installing ToughRADIUS..."
+go clean -modcache
 go install github.com/talkincode/toughradius/v8@latest
 
 # Execute the ToughRADIUS installation command
