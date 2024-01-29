@@ -2,7 +2,7 @@ BUILD_ORG   := talkincode
 BUILD_VERSION   := latest
 BUILD_TIME      := $(shell date "+%F %T")
 BUILD_NAME      := toughradius
-RELEASE_VERSION := v8.0.6
+RELEASE_VERSION := v8.0.7
 SOURCE          := main.go
 RELEASE_DIR     := ./release
 COMMIT_SHA1     := $(shell git show -s --format=%H )
