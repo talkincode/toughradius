@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.4 2024-01-29 11:27:03
+BuildVersion=latest v8.0.4 2024-01-29 11:27:34
 ReleaseVersion=v8.0.4
-BuildTime=2024-01-29 11:27:03
+BuildTime=2024-01-29 11:27:34
 BuildName=toughradius
-CommitID=d928fdb2d13cc5594bd10b67bc3691b9d6f2ba8f
-CommitDate=Sat, 27 Jan 2024 21:39:20 +0800
+CommitID=d34e70c40d8d513a0391684ff78118cf80ad67e7
+CommitDate=Mon, 29 Jan 2024 11:27:18 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2024-01-27 21:39:08 :
+CommitSubject=2024-01-29 11:27:03 : install script update
