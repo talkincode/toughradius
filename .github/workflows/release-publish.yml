@@ -98,8 +98,8 @@ jobs:
           context: ./
           # Note: tags has to be all lower-case
           tags: |
-            talkincode/toughradius:${{ github.ref }} 
-            ghcr.io/talkincode/toughradius:${{ github.ref }}
+            talkincode/toughradius:${{ github.ref_name }} 
+            ghcr.io/talkincode/toughradius:${{ github.ref_name }}
           # build on feature branches, push only on main branch
           push: ${{ github.ref == 'refs/heads/main' }}
 
