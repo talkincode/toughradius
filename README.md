@@ -102,7 +102,16 @@ Whether you need to support 802.1X, Wi-Fi, VPNs or other network access protocol
 - [TLS encryption for RADIUS over TCP (RadSec) 05](https://tools.ietf.org/html/draft-ietf-radext-radsec-05)
 - [mikrotik RADIUS Client](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
 
-# Contribute
+
+## sponsors
+
+Thanks to [JetBrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png) 
+for supporting this project!
+
+
+![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png)
+
+## Contribute
 
 We welcome contributions of any kind, including but not limited to issues, pull requests, documentation, examples, etc.
 

@@ -10,6 +10,6 @@ __debug_bin
 /testdatas/
 /toughradius.yml
 /tmp/
-/log_info.log
+log_info.log
 __debug_bin*
 .log
