@@ -105,11 +105,10 @@ Whether you need to support 802.1X, Wi-Fi, VPNs or other network access protocol
 
 ## sponsors
 
-Thanks to [JetBrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png) 
+Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) 
 for supporting this project!
 
-
-![JetBrains Logo (Main) logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png)
+<img alt="JetBrains Logo (Main) logo" height="64" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="64"/>
 
 ## Contribute
 
