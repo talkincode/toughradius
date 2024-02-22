@@ -1,4 +1,4 @@
-## freeRADIUS integration
+# freeRADIUS integration
 
 
 ![freeradius-toughradius](https://github.com/talkincode/toughradius/assets/377938/f735d45d-3325-49e5-8b73-21c6205248e3)

@@ -1,4 +1,4 @@
-## Quick start
+## ToughRADIUS Quick start
 
 ### Quick Install
 
