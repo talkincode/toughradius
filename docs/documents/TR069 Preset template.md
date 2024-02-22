@@ -1,4 +1,4 @@
-## ToughRADIUS 定义的 TR069 预置模板
+## ToughRADIUS Defined TR069 Preset Template
 
 The description format of presets is the standard YAML format, which can facilitate the use of various data structures. For example, online automatic initialization of new devices can be done using a set of presets
 

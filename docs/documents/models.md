@@ -1,4 +1,6 @@
-## CPE 的数据结构定义
+# ToughRADIUS Data Model
+
+## Data Structure Definition for CPEs
 
 ```sql
 create table net_cpe
@@ -32,27 +34,27 @@ create table net_cpe
     cwmp_last_inform timestamp with time zone,
     created_at       timestamp with time zone,
     updated_at       timestamp with time zone
-);
+); 
 
 alter table public.net_cpe
-    owner to postgres;
+    owner to postgres; 
 
 create index idx_net_cpe_task_tags
-    on public.net_cpe (task_tags);
+    on public.net_cpe (task_tags); 
 
 create index idx_net_cpe_status
-    on public.net_cpe (status);
+    on public.net_cpe (status); 
 
 create unique index idx_net_cpe_sn
-    on public.net_cpe (sn);
+    on public.net_cpe (sn); 
 
 create index idx_net_cpe_cwmp_status
-    on public.net_cpe (cwmp_status);
+    on public.net_cpe (cwmp_status); 
 
 ```
 
 
-## 节点的数据结构定义
+## Node Data Structure Definition
 
 ```sql
 create table net_node (
@@ -62,11 +64,11 @@ create table net_node (
   tags text,
   created_at timestamp with time zone,
   updated_at timestamp with time zone
-);
+); 
 ```
 
 
-## VPE(Bras)的数据结构定义
+## Data Structure Definition of VPE(Bras)
 
 ```sql
 create table public.net_vpe
@@ -87,15 +89,15 @@ create table public.net_vpe
     remark      text,
     created_at  timestamp with time zone,
     updated_at  timestamp with time zone
-);
+); 
 
 alter table public.net_vpe
-    owner to postgres;
+    owner to postgres; 
 
 ```
 
 
-## radius profile 的数据结构定义
+## Data Structure Definition of the Radius Profile
 
 ```sql
 create table public.radius_profile (
@@ -110,13 +112,13 @@ create table public.radius_profile (
   remark text,
   created_at timestamp with time zone,
   updated_at timestamp with time zone
-);
-create index idx_radius_profile_status on radius_profile using btree (status);
+); 
+create index idx_radius_profile_status on radius_profile using btree (status); 
 ```
 
 
 
-## 用户的数据结构定义
+## User's Data Structure Definition
 
 ```sql
 create table public.radius_user
@@ -145,28 +147,28 @@ create table public.radius_user
     last_online timestamp with time zone,
     created_at  timestamp with time zone,
     updated_at  timestamp with time zone
-);
+); 
 
 alter table public.radius_user
-    owner to postgres;
+    owner to postgres; 
 
 create unique index idx_radius_user_username
-    on public.radius_user (username);
+    on public.radius_user (username); 
 
 create index idx_radius_user_profile_id
-    on public.radius_user (profile_id);
+    on public.radius_user (profile_id); 
 
 create index idx_radius_user_created_at
-    on public.radius_user (created_at);
+    on public.radius_user (created_at); 
 
 create index idx_radius_user_status
-    on public.radius_user (status);
+    on public.radius_user (status); 
 
 create index idx_radius_user_expire_time
-    on public.radius_user (expire_time);
+    on public.radius_user (expire_time); 
 
 create index idx_radius_user_active_num
-    on public.radius_user (active_num);
+    on public.radius_user (active_num); 
 
 
 ```
@@ -201,22 +203,22 @@ create table public.radius_accounting
     last_update         timestamp with time zone,
     acct_start_time     timestamp with time zone,
     acct_stop_time      timestamp with time zone
-);
+); 
 
 alter table public.radius_accounting
-    owner to postgres;
+    owner to postgres; 
 
 create index idx_radius_accounting_acct_stop_time
-    on public.radius_accounting (acct_stop_time);
+    on public.radius_accounting (acct_stop_time); 
 
 create index idx_radius_accounting_acct_start_time
-    on public.radius_accounting (acct_start_time);
+    on public.radius_accounting (acct_start_time); 
 
 create index idx_radius_accounting_acct_session_id
-    on public.radius_accounting (acct_session_id);
+    on public.radius_accounting (acct_session_id); 
 
 create index idx_radius_accounting_username
-    on public.radius_accounting (username);
+    on public.radius_accounting (username); 
 
 
 ```

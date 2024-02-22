@@ -1,4 +1,4 @@
-## Mikrotik TR069 Client Setup for ToughRADIUS
+# Mikrotik TR069 Client Setup for ToughRADIUS
 
 Here is the guide to configure ROUTEROS to integrate with TOUGHRADIUS:
 

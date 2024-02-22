@@ -1,51 +1,50 @@
-事件类型（EVENT CODE对应的含义）
+# Event type (meaning corresponding to EVENT CODE)
 
-“0 BOOTSTAP” 指出由于CPE第一次安装或是ACS的URL改变而引起会话建立。这种特殊的情况有：
+"0 BOOTSTAP" indicates that the session was established due to the first installation of the CPE or a change in the ACS URL. Such special situations are:
 
-1）出厂后CWMP端第一次与ACS连接；
-2）出厂设置后，CWMP端第一次与ACS连接；
-3）由于某种原因ACS的URL改变后CWMP端第一次与ACS连接。
-注意，BOOTSTARP可能和其他事件代码一起组成是事件代码组，例如，在出厂后CPE初始启动时，CPE发送BOOTSTARP和BOOT事件代码。
+1) The CWMP terminal is connected to the ACS for the first time after leaving the factory;
+2) After factory setting, the CWMP terminal connects to ACS for the first time;
+3) For some reason, the CWMP side connects to ACS for the first time after the ACS URL changes.
+Note that BOOTSTARP may form an event code group together with other event codes. For example, when the CPE is initially started after leaving the factory, the CPE sends BOOTSTARP and BOOT event codes.
 
-“1 BOOT” 当给电或是复位时引起的会话建立，这包括初始系统启动或是由于其他原因的再启动，包括用Reboot方法，但是不是从待机状态醒来。
+"1 BOOT" Session establishment caused by power-on or reset. This includes initial system startup or restart due to other reasons, including using the Reboot method, but not waking up from standby.
 
-“2 PERIODIC” 在周期通知间隔时会话建立
+"2 PERIODIC" session established at periodic notification interval
 
-“3 SCHEDULED” 由于调用ScheduleInform 方法会话建立，这种事件必须只能用“M ScheduleInform”。
+"3 SCHEDULED" Since the session is established by calling the ScheduleInform method, this event must only be used with "M ScheduleInform".
 
-“4 VALUE CHANGE” 指出从上次成功的Inform后，具有Passive和Active通知属性的一个或多个参数的值发生了改变，如果这个事件代码在事件组中，所有修改的参数必须被包含在Inform的参数列表中，如果这个事件被丢弃，那么这些修改的参数也应该同时被丢弃。
+"4 VALUE CHANGE" indicates that the value of one or more parameters with Passive and Active notification properties has changed since the last successful Inform. If this event code is in the event group, all modified parameters must be included in the Inform In the parameter list, if this event is discarded, then these modified parameters should also be discarded at the same time.
 
-“5 KICKED” 指出会话建立的目的是网页验证，并且Kicked 方法会在这个会话中调用一次或多次。
+"5 KICKED" indicates that the purpose of session establishment is web page verification, and the Kicked method will be called one or more times in this session.
 
-“6 CONNECTION REQUEST” 由于ACS 发送了连接请求而使会话建立。
+"6 CONNECTION REQUEST" The session is established due to a connection request sent by ACS.
 
-“7 TRANSFER COMPLETE” 由于先前请求的下载或上传完成而引起会话建立，TransferComplete方法会在这个会话中调用一次或多次。这个事件代码必须用“M Download”，“M ScheduleDownload”，或者是"M Upload" etc。
+"7 TRANSFER COMPLETE" The TransferComplete method will be called one or more times in this session due to the completion of a previously requested download or upload. This event code must use "M Download", "M ScheduleDownload", or "M Upload" etc.
 
-“8 DIAGNOSTICS COMPLETE” 当完成了一个或多个由ACS启动的诊断，CPE会用该事件码重新建立起一个连接。
+"8 DIAGNOSTICS COMPLETE" When one or more diagnostics initiated by the ACS are completed, the CPE will use this event code to re-establish a connection.
 
-“9 REQUEST DOWNLOAD” 为了调用RequestDownload方法二发起的会话。
+"9 REQUEST DOWNLOAD" is a session initiated by calling RequestDownload method two.
 
-“10 AUTONOMOUS TRANSFER COMPLETE” 当不是由ACS请求的上传或下载完成而引起的会话建立（成功或是不成功），Autonmous TransferComplete 方法会在这个会话中调用一次或多次。
+"10 AUTONOMOUS TRANSFER COMPLETE" When a session is established (successfully or unsuccessfully) that is not caused by the completion of an upload or download requested by ACS, the Autonmous TransferComplete method will be called one or more times in this session.
 
-“11 DU STATE CHANGE COMPLETE”, 为了表明先前请求的DU state改变完成而建立的会话，不管成功与否，DUStateChangeComplete方法会在这个会话中调用。这个方法必须用“M ChangeDUState”
+"11 DU STATE CHANGE COMPLETE", a session established to indicate the completion of the previously requested DU state change. Regardless of success or failure, the DUStateChangeComplete method will be called in this session. This method must use "M ChangeDUState"
 
-“12 AUTONMOUS DU STATE CHANGE COMPLETE” 会话建立是要通知ACS DU state改变完成了， 而这个改变不是由于调用ChangeDUState 方法的请求，DUStateChangeComplete方法会在这个会话中调用。
+"12 AUTONMOUS DU STATE CHANGE COMPLETE" Session establishment is to notify ACS that the DU state change is completed, and this change is not due to a request to call the ChangeDUState method. The DUStateChangeComplete method will be called in this session.
 
-“13 WAKE UP” 由于CPE从待机中苏醒而建立的会话。
+"13 WAKE UP" Session established due to CPE waking up from standby.
 
-“M Reboot” 由于ACS调用了Reboot RPC，而促使CPE 重新启动，重叠的事件会引起“1 BOOT”事件代码。
+"M Reboot" Since the ACS calls the Reboot RPC, prompting the CPE to restart, the overlapping event will cause a "1 BOOT" event code.
 
-“M ScheduleInform” ACS 请求了一个安排通知。
+"M ScheduleInform" ACS requested a schedule notification.
 
-“M Download ” ACS 请求下载
+“M Download” ACS request download
 
-“M ScheduleDownload” ACS请求计划下载
+"M ScheduleDownload" ACS requests schedule download
 
-“M Upload” ACS 请求上传
+“M Upload” ACS request upload
 
-”M ChangeDUState” ACS用ChangeDUState方法请求DU 状态改变。
+"M ChangeDUState" ACS uses the ChangeDUState method to request a DU state change.
 
-“M” <vendor specific method>
+"M" 
 
-“X”<VENDOR>" "<event>
-
+"X"" "

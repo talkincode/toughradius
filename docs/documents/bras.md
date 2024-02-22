@@ -1,4 +1,4 @@
-## Introduction to BRAS
+# Introduction to BRAS
 
 Broadband Remote Access Server (BRAS) is a high-capacity network device typically located in a service provider's (ISP's) network. It plays a crucial role in delivering high-speed internet access services, particularly in DSL or cable internet services.
 

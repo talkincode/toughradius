@@ -1,4 +1,4 @@
-## FreeRadius rest module Configuration
+# FreeRadius rest module Configuration
 
 [FreeRadius configuration case](https://github.com/talkincode/toughradius/tree/main/assets/freeradius)
 
