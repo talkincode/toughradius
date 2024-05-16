@@ -146,7 +146,7 @@ func updateRadiusOnline(form *web.WebForm) error {
 		return app.GDB().Where("acct_session_id=?", sessionId).
 			Delete(&models.RadiusOnline{}).Error
 	case "Accounting-On", "Accounting-Off":
-		// app.GDB().Raw("truncate table radius_online")
+		app.GDB().Raw("truncate table radius_online")
 	}
 
 	return nil

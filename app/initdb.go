@@ -48,9 +48,9 @@ func (a *Application) checkSettings() {
 		case ConfigCpeAutoRegister:
 			checkConfig(sortid, "tr069", ConfigCpeAutoRegister, "enabled", "Auto register CPE device")
 		case ConfigTR069AccessAddress:
-			checkConfig(sortid, "tr069", ConfigTR069AccessAddress, "http://127.0.0.1:2999", "Teamsacs TR069 access address, HTTP | https://domain:port")
+			checkConfig(sortid, "tr069", ConfigTR069AccessAddress, "http://127.0.0.1:2999", "Toughradius TR069 access address, HTTP | https://domain:port")
 		case ConfigTR069AccessPassword:
-			checkConfig(sortid, "tr069", ConfigTR069AccessPassword, "touighradiustr069password", "Teamsacs TR069 access password, It is provided to CPE to access TeamsACS")
+			checkConfig(sortid, "tr069", ConfigTR069AccessPassword, "touighradiustr069password", "Toughradius TR069 access password, It is provided to CPE to access TeamsACS")
 		case ConfigCpeConnectionRequestPassword:
 			checkConfig(sortid, "tr069", ConfigCpeConnectionRequestPassword, "toughradiuscpepassword", "CPE Connection authentication password, It is provided to TeamsACS to access CPE")
 		case ConfigRadiusIgnorePwd:
