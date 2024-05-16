@@ -18,9 +18,9 @@ func InitRouter() {
 		statname := stype
 		switch stype {
 		case "model":
-			statname = "TeamsBox 型号统计"
+			statname = "CPE 型号统计"
 		case "version":
-			statname = "TeamsBox 版本统计"
+			statname = "CPE 版本统计"
 		}
 
 		return c.Render(http.StatusOK, "cpe_stat_pie", map[string]string{

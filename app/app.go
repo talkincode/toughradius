@@ -208,7 +208,9 @@ func (a *Application) BackupDatabase() error {
 	scriptsh = strings.ReplaceAll(scriptsh, "{dbpwd}", a.appConfig.Database.Passwd)
 	scriptsh = strings.ReplaceAll(scriptsh, "{dbname}", a.appConfig.Database.Name)
 	_ = os.WriteFile("/tmp/databackup.sh", []byte(scriptsh), 0777)
-	defer os.Remove("/tmp/databackup.sh")
+	defer func() {
+		_ = os.Remove("/tmp/databackup.sh")
+	}()
 	rbs, err := exec.Command("/bin/sh", "/tmp/databackup.sh").CombinedOutput()
 	log.Info(string(rbs))
 	if err != nil {
@@ -219,10 +221,10 @@ func (a *Application) BackupDatabase() error {
 
 // checkAppVersion Check version
 func (a *Application) checkAppVersion() {
-	cver := a.GetSettingsStringValue("system", "TeamsacsVersion")
+	cver := a.GetSettingsStringValue("system", "ToughradiusVersion")
 	buildVersion := assets.BuildVersion()
 	if buildVersion != cver {
-		_ = a.gormDB.Exec("UPDATE sys_config SET value = ? WHERE type = ? and name = ?", buildVersion, "system", "TeamsacsVersion")
+		_ = a.gormDB.Exec("UPDATE sys_config SET value = ? WHERE type = ? and name = ?", buildVersion, "system", "ToughradiusVersion")
 	}
 }
 
