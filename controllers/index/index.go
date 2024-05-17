@@ -2,6 +2,7 @@ package index
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -29,6 +30,16 @@ var pushers = []string{
 	"/static/echarts/echarts.min.js",
 }
 
+const (
+	LoginPasswdErr = "wrong password"
+	LoginUserErr   = "user does not exist"
+	LoginDbErr     = "database connection failed"
+	LoginInputErr  = "username and password cannot be empty"
+	LoginExpired   = "User not logged in or login expired"
+)
+
+var LoginErrors = []string{LoginPasswdErr, LoginUserErr, LoginDbErr, LoginInputErr, LoginExpired}
+
 func InitRouter() {
 
 	// 系统首页
@@ -44,7 +55,7 @@ func InitRouter() {
 		sess, _ := session.Get(webserver.UserSession, c)
 		username := sess.Values[webserver.UserSessionName]
 		if username == nil || username == "" {
-			return c.Redirect(http.StatusTemporaryRedirect, "/login?errmsg=User not logged in or login expired")
+			return c.Redirect(http.StatusTemporaryRedirect, fmt.Sprintf("/login?errmsg=%s", LoginExpired))
 		}
 		return c.Render(http.StatusOK, "index", map[string]interface{}{})
 	})
@@ -94,6 +105,10 @@ func InitRouter() {
 	// 登录页面
 	webserver.GET("/login", func(c echo.Context) error {
 		errmsg := c.QueryParam("errmsg")
+		// errmsg must in LoginErrors
+		if !common.InSlice(errmsg, LoginErrors) {
+			errmsg = ""
+		}
 		return c.Render(http.StatusOK, "login", map[string]interface{}{
 			"errmsg":    errmsg,
 			"LoginLogo": "/static/images/login-logo.png",
@@ -104,7 +119,7 @@ func InitRouter() {
 		isdark := c.Param("isdark")
 		if isdark == "1" {
 			app.GApp().SetSystemTheme("dark")
-		} else {
+		} else if isdark == "0" {
 			app.GApp().SetSystemTheme("light")
 		}
 		return c.JSON(http.StatusOK, web.RestSucc("success"))
@@ -123,19 +138,19 @@ func InitRouter() {
 		username := c.FormValue("username")
 		password := c.FormValue("password")
 		if username == "" || password == "" {
-			return c.Redirect(http.StatusMovedPermanently, "/login?errmsg=Username and password cannot be empty")
+			return c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/login?errmsg=%s", LoginInputErr))
 		}
 		var user models.SysOpr
 		err := app.GDB().Where("username=?", username).First(&user).Error
 		if err != nil {
 			if strings.Contains(err.Error(), "dial error") {
-				return c.Redirect(http.StatusMovedPermanently, "/login?errmsg=Database connection failed")
+				return c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/login?errmsg=%s", LoginDbErr))
 			}
-			return c.Redirect(http.StatusMovedPermanently, "/login?errmsg=User does not exist")
+			return c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/login?errmsg=%s", LoginUserErr))
 		}
 
 		if common.Sha256HashWithSalt(password, common.SecretSalt) != user.Password {
-			return c.Redirect(http.StatusMovedPermanently, "/login?errmsg=wrong password")
+			return c.Redirect(http.StatusMovedPermanently, fmt.Sprintf("/login?errmsg=%s", LoginPasswdErr))
 		}
 
 		sess, _ := session.Get(webserver.UserSession, c)
