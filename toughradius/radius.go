@@ -357,9 +357,22 @@ func (s *RadiusService) EndRadiusAccounting(online models.RadiusOnline) error {
 		"acct_output_packets": online.AcctOutputPackets,
 		"acct_session_time":   online.AcctSessionTime,
 	}
-	return app.GDB().Model(&models.RadiusOnline{}).
-		Where("acct_session_id= ?", online.AcctSessionId).
-		Updates(&param).Error
+
+	result := app.GDB().Model(&models.RadiusAccounting{}).
+		Where("acct_session_id = ?", online.AcctSessionId).
+		Updates(&param)
+
+	if result.Error != nil {
+		// 处理错误
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		// 没有记录被更新，记录可能不存在
+		return fmt.Errorf("no records found with acct_session_id = %v", online.AcctSessionId)
+	}
+
+	return nil
 }
 
 func (s *RadiusService) RemoveRadiusOnline(sessionId string) error {
