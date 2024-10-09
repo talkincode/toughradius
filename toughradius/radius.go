@@ -82,7 +82,7 @@ func NewRadiusService() *RadiusService {
 		TaskPool:      pool,
 		RejectCache: &RejectCache{
 			Items: make(map[string]*RejectItem),
-			Lock:  sync.Mutex{},
+			Lock:  sync.RWMutex{},
 		}}
 	return s
 }
