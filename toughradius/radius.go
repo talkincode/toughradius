@@ -65,6 +65,7 @@ type RadiusService struct {
 	EapStateCache map[string]EapState
 	TaskPool      *ants.Pool
 	arclock       sync.Mutex
+	eaplock       sync.Mutex
 }
 
 func NewRadiusService() *RadiusService {
@@ -149,44 +150,30 @@ func (s *RadiusService) GetUserForAcct(username string) (user *models.RadiusUser
 	return user, nil
 }
 
+func (s *RadiusService) UpdateUserField(username string, field string, value interface{}) {
+    err := app.GDB().
+        Model(&models.RadiusUser{}).
+        Where("username = ?", username).
+        Update(field, value).Error
+    if err != nil {
+        log.Error2(fmt.Sprintf("update user %s error", field), zap.Error(err), zap.String("namespace", "radius"))
+    }
+}
+
 func (s *RadiusService) UpdateUserMac(username string, macaddr string) {
-	err := app.GDB().
-		Model(&models.RadiusUser{}).
-		Where("username = ?", username).
-		Update("mac_addr", macaddr).Error
-	if err != nil {
-		log.Error2("update user mac error", zap.Error(err), zap.String("namespace", "radius"))
-	}
+    s.UpdateUserField(username, "mac_addr", macaddr)
 }
 
 func (s *RadiusService) UpdateUserVlanid1(username string, vlanid1 int) {
-	err := app.GDB().
-		Model(&models.RadiusUser{}).
-		Where("username = ?", username).
-		Update("vlanid1", vlanid1).Error
-	if err != nil {
-		log.Error2("update user vlanid1 error", zap.Error(err), zap.String("namespace", "radius"))
-	}
+    s.UpdateUserField(username, "vlanid1", vlanid1)
 }
 
 func (s *RadiusService) UpdateUserVlanid2(username string, vlanid2 int) {
-	err := app.GDB().
-		Model(&models.RadiusUser{}).
-		Where("username = ?", username).
-		Update("vlanid2", vlanid2).Error
-	if err != nil {
-		log.Error2("update user vlanid2 error", zap.Error(err), zap.String("namespace", "radius"))
-	}
+    s.UpdateUserField(username, "vlanid2", vlanid2)
 }
 
 func (s *RadiusService) UpdateUserLastOnline(username string) {
-	err := app.GDB().
-		Model(&models.RadiusUser{}).
-		Where("username = ?", username).
-		Update("last_online", time.Now()).Error
-	if err != nil {
-		log.Error2("update user last online error", zap.Error(err), zap.String("namespace", "radius"))
-	}
+    s.UpdateUserField(username, "last_online", time.Now())
 }
 
 func (s *RadiusService) GetIntConfig(name string, defval int64) int64 {
@@ -421,6 +408,8 @@ func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
 
 // State add
 func (s *RadiusService) AddEapState(stateid, username string, challenge []byte, eapMethad string) {
+	s.eaplock.Lock()
+    defer s.eaplock.Unlock()
 	s.EapStateCache[stateid] = EapState{
 		Username:  username,
 		StateID:   stateid,
@@ -432,6 +421,8 @@ func (s *RadiusService) AddEapState(stateid, username string, challenge []byte, 
 
 // State get
 func (s *RadiusService) GetEapState(stateid string) (state *EapState, err error) {
+	s.eaplock.Lock()
+    defer s.eaplock.Unlock()
 	val, ok := s.EapStateCache[stateid]
 	if ok {
 		return &val, nil
@@ -441,5 +432,7 @@ func (s *RadiusService) GetEapState(stateid string) (state *EapState, err error)
 
 // State delete
 func (s *RadiusService) DeleteEapState(stateid string) {
+	s.eaplock.Lock()
+    defer s.eaplock.Unlock()
 	delete(s.EapStateCache, stateid)
 }
