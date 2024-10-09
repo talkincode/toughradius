@@ -60,7 +60,7 @@ func parseVendorDefault(r *radius.Request) *VendorRequest {
 	if macval != "" {
 		attrs.MacAddr = strings.ReplaceAll(macval, "-", ":")
 	} else {
-		log.Warn2("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
+		log.WarnDetail("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
 	}
 	nasportid := rfc2869.NASPortID_GetString(r.Packet)
 	if nasportid == "" {
@@ -83,12 +83,12 @@ func parseVendorH3c(r *radius.Request) *VendorRequest {
 			attrs.MacAddr = ipha
 		}
 	} else {
-		log.Warn2("h3c.H3CIPHostAddr is empty", zap.String("namespace", "radius"))
+		log.WarnDetail("h3c.H3CIPHostAddr is empty", zap.String("namespace", "radius"))
 		macval := rfc2865.CallingStationID_GetString(r.Packet)
 		if macval != "" {
 			attrs.MacAddr = strings.ReplaceAll(macval, "-", ":")
 		} else {
-			log.Warn2("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
+			log.WarnDetail("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
 		}
 	}
 
@@ -109,10 +109,10 @@ func parseVendorZte(r *radius.Request) *VendorRequest {
 		if len(macval) > 12 {
 			attrs.MacAddr = fmt.Sprintf("%s:%s:%s:%s:%s:%s", macval[0:2], macval[2:4], macval[4:6], macval[6:8], macval[8:10], macval[10:12])
 		} else {
-			log.Warn2("rfc2865.CallingStationID length < 12", zap.String("namespace", "radius"))
+			log.WarnDetail("rfc2865.CallingStationID length < 12", zap.String("namespace", "radius"))
 		}
 	} else {
-		log.Warn2("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
+		log.WarnDetail("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
 	}
 	nasportid := rfc2869.NASPortID_GetString(r.Packet)
 	if nasportid == "" {
@@ -130,7 +130,7 @@ func parseVendorRadback(r *radius.Request) *VendorRequest {
 	if macval != "" {
 		attrs.MacAddr = strings.ReplaceAll(macval, "-", ":")
 	} else {
-		log.Warn2("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
+		log.WarnDetail("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
 	}
 	nasportid := rfc2869.NASPortID_GetString(r.Packet)
 	if nasportid == "" {
