@@ -29,7 +29,7 @@ func Warn(args ...interface{}) {
 	zap.S().Warn(args...)
 }
 
-func Warn2(msg string, fields ...zap.Field) {
+func WarnDetail(msg string, fields ...zap.Field) {
 	defer zap.L().Sync()
 	zap.L().Warn(msg, fields...)
 }
@@ -40,7 +40,7 @@ func Error(args ...interface{}) {
 	zap.S().Error(args...)
 }
 
-func Error2(msg string, fields ...zap.Field) {
+func ErrorDetail(msg string, fields ...zap.Field) {
 	defer zap.L().Sync()
 	zap.L().Error(msg, fields...)
 }

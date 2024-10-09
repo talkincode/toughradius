@@ -27,7 +27,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		if ret := recover(); ret != nil {
 			err, ok := ret.(error)
 			if ok {
-				log.Error2("radius accounting error",
+				log.ErrorDetail("radius accounting error",
 					zap.Error(err),
 					zap.String("namespace", "radius"),
 					zap.String("metrics", app.MetricsRadiusAcctDrop),
@@ -73,7 +73,6 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	vendorReq := s.ParseVendor(r, vpe.VendorCode)
 
-
 	s.SendResponse(w, r)
 
 	log.Info2("radius accounting",
@@ -116,7 +115,7 @@ func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
 	resp := r.Response(radius.CodeAccountingResponse)
 	err := w.Write(resp)
 	if err != nil {
-		log.Error2("radius accounting response error",
+		log.ErrorDetail("radius accounting response error",
 			zap.Error(err),
 			zap.String("namespace", "radius"),
 			zap.String("metrics", app.MetricsRadiusAcctDrop),

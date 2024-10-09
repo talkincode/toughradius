@@ -11,7 +11,7 @@ func (s *AcctService) DoAcctStart(r *radius.Request, vr *VendorRequest, username
 	online := GetNetRadiusOnlineFromRequest(r, vr, vpe, nasrip)
 	err := s.AddRadiusOnline(online)
 	if err != nil {
-		log.Error2("add radius online error",
+		log.ErrorDetail("add radius online error",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),
 			zap.Error(err),
@@ -19,7 +19,7 @@ func (s *AcctService) DoAcctStart(r *radius.Request, vr *VendorRequest, username
 	}
 
 	if err = s.AddRadiusAccounting(online, true); err != nil {
-		log.Error2("add radius accounting error",
+		log.ErrorDetail("add radius accounting error",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),
 			zap.Error(err),

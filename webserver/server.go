@@ -269,7 +269,7 @@ func GetCurrUser(c echo.Context) *models.SysOpr {
 	sess, _ := session.Get(UserSession, c)
 	username := sess.Values[UserSessionName]
 	if username == nil || username == "" {
-		panic("用户未登录")
+		panic("user not login")
 	}
 	user := models.SysOpr{}
 	err := app.GApp().DB().Where("username = ?", username).First(&user).Error
@@ -281,7 +281,7 @@ func GetCurrUserlevel(c echo.Context) string {
 	sess, _ := session.Get(UserSession, c)
 	level := sess.Values[UserSessionLevel]
 	if level == nil || level == "" {
-		panic("用户未登录")
+		panic("user not login")
 	}
 	return level.(string)
 }

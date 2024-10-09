@@ -36,7 +36,7 @@ func (s *AcctService) DoAcctDisconnect(r *radius.Request, vpe *models.NetVpe, us
 	_ = rfc2866.AcctSessionID_Set(packet, []byte(sessionid))
 	response, err := radius.Exchange(context.Background(), packet, fmt.Sprintf("%s:%d", nasrip, vpe.CoaPort))
 	if err != nil {
-		log.Error2("radius disconnect error",
+		log.ErrorDetail("radius disconnect error",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),
 			zap.Error(err),

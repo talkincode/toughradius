@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.7 2024-10-09 12:43:22
+BuildVersion=latest v8.0.7 2024-10-09 14:12:13
 ReleaseVersion=v8.0.7
-BuildTime=2024-10-09 12:43:22
+BuildTime=2024-10-09 14:12:13
 BuildName=toughradius
-CommitID=7a0e1adf0260dd93bb0ad92d9d30c6ce13594984
-CommitDate=Fri, 24 May 2024 12:10:21 +0800
+CommitID=f33f34d9a034dd98d3c86db4da716be2b3db96e0
+CommitDate=Wed, 9 Oct 2024 14:11:52 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2024-05-24 12:10:02 : fix radius account update bug
+CommitSubject=Refactor panic messages in GetCurrUser and GetCurrUserlevel functions

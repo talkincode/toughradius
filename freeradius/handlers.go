@@ -60,7 +60,7 @@ func (s *FreeradiusServer) FreeradiusAuthorize(c echo.Context) error {
 	var user models.RadiusUser
 	err := app.GDB().Where("username=?", username).First(&user).Error
 	if err != nil {
-		log.Error2("radius auth error",
+		log.ErrorDetail("radius auth error",
 			zap.String("namespace", "freeradius"),
 			zap.String("username", username),
 			zap.String("nasip", nasip),
@@ -72,7 +72,7 @@ func (s *FreeradiusServer) FreeradiusAuthorize(c echo.Context) error {
 
 	// Check user status
 	if user.Status == common.DISABLED {
-		log.Error2("radius auth error",
+		log.ErrorDetail("radius auth error",
 			zap.String("namespace", "freeradius"),
 			zap.String("username", username),
 			zap.String("nasip", nasip),
@@ -84,7 +84,7 @@ func (s *FreeradiusServer) FreeradiusAuthorize(c echo.Context) error {
 	var expireTime = time.Time(user.ExpireTime)
 	// Check user expiration
 	if expireTime.Before(time.Now()) {
-		log.Error2("radius auth error",
+		log.ErrorDetail("radius auth error",
 			zap.String("namespace", "freeradius"),
 			zap.String("username", username),
 			zap.String("nasip", nasip),
@@ -97,7 +97,7 @@ func (s *FreeradiusServer) FreeradiusAuthorize(c echo.Context) error {
 	// Current number online
 	count, err := getOnlineCount(username)
 	if err != nil {
-		log.Error2("radius auth error",
+		log.ErrorDetail("radius auth error",
 			zap.String("namespace", "freeradius"),
 			zap.String("username", username),
 			zap.String("nasip", nasip),
@@ -108,7 +108,7 @@ func (s *FreeradiusServer) FreeradiusAuthorize(c echo.Context) error {
 	}
 	var activeNum = user.ActiveNum
 	if count > 0 && activeNum > 0 && count >= int64(activeNum) {
-		log.Error2("radius auth error",
+		log.ErrorDetail("radius auth error",
 			zap.String("namespace", "freeradius"),
 			zap.String("username", username),
 			zap.String("nasip", nasip),
@@ -176,7 +176,7 @@ func (s *FreeradiusServer) FreeradiusAccounting(c echo.Context) error {
 	nasip := webform.GetVal("nasip")
 	err := updateRadiusOnline(webform)
 	if err != nil {
-		log.Error2("radius accounting error",
+		log.ErrorDetail("radius accounting error",
 			zap.String("namespace", "freeradius"),
 			zap.String("username", username),
 			zap.String("nasip", nasip),

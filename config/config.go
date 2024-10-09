@@ -47,12 +47,13 @@ type FreeradiusConfig struct {
 }
 
 type RadiusdConfig struct {
-	Enabled    bool   `yaml:"enabled" json:"enabled"`
-	Host       string `yaml:"host" json:"host"`
-	AuthPort   int    `yaml:"auth_port" json:"auth_port"`
-	AcctPort   int    `yaml:"acct_port" json:"acct_port"`
-	RadsecPort int    `yaml:"radsec_port" json:"radsec_port"`
-	Debug      bool   `yaml:"debug" json:"debug"`
+	Enabled      bool   `yaml:"enabled" json:"enabled"`
+	Host         string `yaml:"host" json:"host"`
+	AuthPort     int    `yaml:"auth_port" json:"auth_port"`
+	AcctPort     int    `yaml:"acct_port" json:"acct_port"`
+	RadsecPort   int    `yaml:"radsec_port" json:"radsec_port"`
+	RadsecWorker int    `yaml:"radsec_worker" json:"radsec_worker"`
+	Debug        bool   `yaml:"debug" json:"debug"`
 }
 
 // Tr069Config tr069 API 配置
@@ -211,6 +212,7 @@ var DefaultAppConfig = &AppConfig{
 		AuthPort:   1812,
 		AcctPort:   1813,
 		RadsecPort: 2083,
+		RadsecWorker: 100,
 		Debug:      true,
 	},
 	Logger: LogConfig{
@@ -269,6 +271,7 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvIntValue("TOUGHRADIUS_RADIUS_AUTHPORT", &cfg.Radiusd.AuthPort)
 	setEnvIntValue("TOUGHRADIUS_RADIUS_ACCTPORT", &cfg.Radiusd.AcctPort)
 	setEnvIntValue("TOUGHRADIUS_RADIUS_RADSEC_PORT", &cfg.Radiusd.RadsecPort)
+	setEnvIntValue("TOUGHRADIUS_RADIUS_RADSEC_WORKER", &cfg.Radiusd.RadsecWorker)
 	setEnvBoolValue("TOUGHRADIUS_RADIUS_DEBUG", &cfg.Radiusd.Debug)
 	setEnvBoolValue("TOUGHRADIUS_RADIUS_ENABLED", &cfg.Radiusd.Enabled)
 
