@@ -27,7 +27,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			switch ret.(type) {
 			case error:
 				err := ret.(error)
-				log.Error2("radius auth error",
+				log.ErrorDetail("radius auth error",
 					zap.Error(err),
 					zap.String("namespace", "radius"),
 					zap.String("metrics", app.MetricsRadiusAuthDrop),
@@ -35,7 +35,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 				s.SendReject(w, r, err)
 			case AuthError:
 				err := ret.(AuthError)
-				log.Error2("radius auth error",
+				log.ErrorDetail("radius auth error",
 					zap.String("namespace", "radius"),
 					zap.String("metrics", err.Type),
 					zap.Error(err.Err),
@@ -284,7 +284,7 @@ func (s *AuthService) SendAccept(w radius.ResponseWriter, r *radius.Request, res
 		if ret := recover(); ret != nil {
 			err2, ok := ret.(error)
 			if ok {
-				log.Error2("radius write accept error",
+				log.ErrorDetail("radius write accept error",
 					zap.String("namespace", "radius"),
 					zap.String("metrics", app.MetricsRadiusAuthDrop),
 					zap.Error(err2),
@@ -311,7 +311,7 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 		if ret := recover(); ret != nil {
 			err2, ok := ret.(error)
 			if ok {
-				log.Error2("radius write reject response error",
+				log.ErrorDetail("radius write reject response error",
 					zap.String("namespace", "radius"),
 					zap.String("metrics", app.MetricsRadiusAuthDrop),
 					zap.Error(err2),
@@ -348,7 +348,7 @@ func (s *AuthService) SendEapFailureReject(w radius.ResponseWriter, r *radius.Re
 		if ret := recover(); ret != nil {
 			err2, ok := ret.(error)
 			if ok {
-				log.Error2("radius write eap reject response error",
+				log.ErrorDetail("radius write eap reject response error",
 					zap.String("namespace", "radius"),
 					zap.String("metrics", app.MetricsRadiusAuthDrop),
 					zap.Error(err2),

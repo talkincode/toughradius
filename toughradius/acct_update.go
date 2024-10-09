@@ -33,7 +33,7 @@ func (s *AcctService) DoAcctUpdate(r *radius.Request, vr *VendorRequest, usernam
 	if !exists {
 		err := s.AddRadiusOnline(online)
 		if err != nil {
-			log.Error2("add radius online error",
+			log.ErrorDetail("add radius online error",
 				zap.String("namespace", "radius"),
 				zap.String("username", username),
 				zap.Error(err),
@@ -44,7 +44,7 @@ func (s *AcctService) DoAcctUpdate(r *radius.Request, vr *VendorRequest, usernam
 	// 更新在线信息
 	err := s.UpdateRadiusOnlineData(online)
 	if err != nil {
-		log.Error2("update radius online error",
+		log.ErrorDetail("update radius online error",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),
 			zap.Error(err),

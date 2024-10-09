@@ -151,29 +151,29 @@ func (s *RadiusService) GetUserForAcct(username string) (user *models.RadiusUser
 }
 
 func (s *RadiusService) UpdateUserField(username string, field string, value interface{}) {
-    err := app.GDB().
-        Model(&models.RadiusUser{}).
-        Where("username = ?", username).
-        Update(field, value).Error
-    if err != nil {
-        log.Error2(fmt.Sprintf("update user %s error", field), zap.Error(err), zap.String("namespace", "radius"))
-    }
+	err := app.GDB().
+		Model(&models.RadiusUser{}).
+		Where("username = ?", username).
+		Update(field, value).Error
+	if err != nil {
+		log.ErrorDetail(fmt.Sprintf("update user %s error", field), zap.Error(err), zap.String("namespace", "radius"))
+	}
 }
 
 func (s *RadiusService) UpdateUserMac(username string, macaddr string) {
-    s.UpdateUserField(username, "mac_addr", macaddr)
+	s.UpdateUserField(username, "mac_addr", macaddr)
 }
 
 func (s *RadiusService) UpdateUserVlanid1(username string, vlanid1 int) {
-    s.UpdateUserField(username, "vlanid1", vlanid1)
+	s.UpdateUserField(username, "vlanid1", vlanid1)
 }
 
 func (s *RadiusService) UpdateUserVlanid2(username string, vlanid2 int) {
-    s.UpdateUserField(username, "vlanid2", vlanid2)
+	s.UpdateUserField(username, "vlanid2", vlanid2)
 }
 
 func (s *RadiusService) UpdateUserLastOnline(username string) {
-    s.UpdateUserField(username, "last_online", time.Now())
+	s.UpdateUserField(username, "last_online", time.Now())
 }
 
 func (s *RadiusService) GetIntConfig(name string, defval int64) int64 {
@@ -409,7 +409,7 @@ func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
 // State add
 func (s *RadiusService) AddEapState(stateid, username string, challenge []byte, eapMethad string) {
 	s.eaplock.Lock()
-    defer s.eaplock.Unlock()
+	defer s.eaplock.Unlock()
 	s.EapStateCache[stateid] = EapState{
 		Username:  username,
 		StateID:   stateid,
@@ -422,7 +422,7 @@ func (s *RadiusService) AddEapState(stateid, username string, challenge []byte, 
 // State get
 func (s *RadiusService) GetEapState(stateid string) (state *EapState, err error) {
 	s.eaplock.Lock()
-    defer s.eaplock.Unlock()
+	defer s.eaplock.Unlock()
 	val, ok := s.EapStateCache[stateid]
 	if ok {
 		return &val, nil
@@ -433,6 +433,6 @@ func (s *RadiusService) GetEapState(stateid string) (state *EapState, err error)
 // State delete
 func (s *RadiusService) DeleteEapState(stateid string) {
 	s.eaplock.Lock()
-    defer s.eaplock.Unlock()
+	defer s.eaplock.Unlock()
 	delete(s.EapStateCache, stateid)
 }

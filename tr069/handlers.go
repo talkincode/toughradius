@@ -137,7 +137,7 @@ func (s *Tr069Server) Tr069Index(c echo.Context) error {
 	if bodyLen > 0 {
 		msg, err = cwmp.ParseXML(requestBody)
 		if err != nil {
-			log.Error2("cwmp read xml error", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("cwmp read xml error", zap.String("namespace", "tr069"), zap.Error(err))
 			return c.String(http.StatusBadRequest, fmt.Sprintf("cwmp read xml error %s", err.Error()))
 		}
 
@@ -196,7 +196,7 @@ func (s *Tr069Server) Tr069Index(c echo.Context) error {
 					fmt.Sprintf("Recv Cwmp %s Message %s", msg.GetName(), common.ToJson(msg)))
 				err := app.UpdateCwmpPresetTaskStatus(msg)
 				if err != nil {
-					log.Error2("UpdateCwmpPresetTaskStatus error",
+					log.ErrorDetail("UpdateCwmpPresetTaskStatus error",
 						zap.String("namespace", "tr069"), zap.Error(err))
 				}
 			}
@@ -281,12 +281,12 @@ func (s *Tr069Server) processTransferComplete(c echo.Context, msg cwmp.Message) 
 
 			err := app.UpdateCwmpPresetTaskStatus(tc)
 			if err != nil && err != gorm.ErrRecordNotFound {
-				log.Error2("UpdateCwmpPresetTaskStatus error", zap.String("namespace", "tr069"), zap.Error(err))
+				log.ErrorDetail("UpdateCwmpPresetTaskStatus error", zap.String("namespace", "tr069"), zap.Error(err))
 			}
 
 			err = app.UpdateCwmpConfigSessionStatus(tc)
 			if err != nil && err != gorm.ErrRecordNotFound {
-				log.Error2("UpdateCwmpConfigSessionStatus error", zap.String("namespace", "tr069"), zap.Error(err))
+				log.ErrorDetail("UpdateCwmpConfigSessionStatus error", zap.String("namespace", "tr069"), zap.Error(err))
 			}
 		}
 	}()
@@ -329,34 +329,34 @@ func (s *Tr069Server) processInformEvent(c echo.Context, lastInform *cwmp.Inform
 	case lastInform.IsEvent(cwmp.EventBootStrap) && lastInform.RetryCount == 0:
 		err := cpe.CreateCwmpPresetEventTask(app.BootStrapEvent, "")
 		if err != nil {
-			log.Error2("CreateCwmpPresetEventTask error", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("CreateCwmpPresetEventTask error", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 		err = cpe.UpdateManagementAuthInfo("bootstrap-session-"+common.UUID(), 1000, false)
 		if err != nil {
-			log.Error2("UpdateManagementAuthInfo error", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("UpdateManagementAuthInfo error", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 	case lastInform.IsEvent(cwmp.EventBoot) && lastInform.RetryCount == 0:
 		err := cpe.ActiveCwmpSchedEventTask()
 		if err != nil {
-			log.Error2("ActiveCwmpSchedEventTask error ", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("ActiveCwmpSchedEventTask error ", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 		err = cpe.CreateCwmpPresetEventTask(app.BootEvent, "")
 		if err != nil {
-			log.Error2("CreateCwmpPresetEventTask error ", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("CreateCwmpPresetEventTask error ", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 		err = cpe.UpdateManagementAuthInfo("bootstrap-session-"+common.UUID(), 1000, false)
 		if err != nil {
-			log.Error2("UpdateManagementAuthInfo error ", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("UpdateManagementAuthInfo error ", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 	case lastInform.IsEvent(cwmp.EventPeriodic) && lastInform.RetryCount == 0:
 		err := cpe.CreateCwmpPresetEventTask(app.PeriodicEvent, "")
 		if err != nil {
-			log.Error2("CreateCwmpPresetEventTask error ", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("CreateCwmpPresetEventTask error ", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 	case lastInform.IsEvent(cwmp.EventScheduled) && lastInform.RetryCount == 0:
 		err := cpe.CreateCwmpSchedEventTask(lastInform.CommandKey)
 		if err != nil {
-			log.Error2("CreateCwmpSchedEventTask error", zap.String("namespace", "tr069"), zap.Error(err))
+			log.ErrorDetail("CreateCwmpSchedEventTask error", zap.String("namespace", "tr069"), zap.Error(err))
 		}
 	case lastInform.IsEvent(cwmp.EventValueChange) && lastInform.RetryCount == 0:
 		cpe.NotifyDataUpdate(true)
