@@ -64,6 +64,7 @@ func ListenRadsecServer(service *RadsecService) error {
 		Handler:            service,
 		SecretSource:       service,
 		InsecureSkipVerify: true,
+		RadsecWorker:       app.GConfig().Radiusd.RadsecWorker,
 	}
 
 	log.Infof("Starting Radius Resec server on %s", server.Addr)

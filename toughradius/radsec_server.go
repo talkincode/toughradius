@@ -64,6 +64,8 @@ type RadsecPacketServer struct {
 	// This should only be set to true for debugging purposes.
 	InsecureSkipVerify bool
 
+	RadsecWorker int
+
 	// ErrorLog specifies an optional logger for errors
 	// around packet accepting, processing, and validation.
 	// If nil, logging is done via the log package's standard logger.
@@ -77,6 +79,7 @@ type RadsecPacketServer struct {
 	listeners   map[net.Conn]uint
 	lastActive  chan struct{} // closed when the last active item finishes
 	activeCount int32
+	workerPool chan struct{}
 }
 
 func (s *RadsecPacketServer) initLocked() {
@@ -84,6 +87,7 @@ func (s *RadsecPacketServer) initLocked() {
 		s.ctx, s.ctxDone = context.WithCancel(context.Background())
 		s.listeners = make(map[net.Conn]uint)
 		s.lastActive = make(chan struct{})
+		s.workerPool = make(chan struct{}, s.RadsecWorker)
 	}
 }
 
@@ -202,6 +206,9 @@ func (s *RadsecPacketServer) Serve(conn net.Conn) error {
 		go func(packet *radius.Packet, conn net.Conn) {
 			defer s.activeDone()
 
+			s.workerPool <- struct{}{} 
+            defer func() { <-s.workerPool }() 
+
 			key := requestKey{
 				IP:         conn.RemoteAddr().String(),
 				Identifier: packet.Identifier,
@@ -237,24 +244,35 @@ func (s *RadsecPacketServer) Serve(conn net.Conn) error {
 	}
 }
 
+// initTLSConfig initializes a tls.Config with the given certificate and key
+func (s *RadsecPacketServer) initTLSConfig(capath, crtfile, keyfile string) (*tls.Config, error) {
+    crt, err := tls.LoadX509KeyPair(crtfile, keyfile)
+    if err != nil {
+        return nil, err
+    }
+
+    tlsConfig := &tls.Config{
+        Certificates: []tls.Certificate{crt},
+        Time:         time.Now,
+        Rand:         rand.Reader,
+        ClientAuth:   tls.VerifyClientCertIfGiven,
+    }
+
+    if common.FileExists(capath) {
+        cabytes, _ := os.ReadFile(capath)
+        pool := x509.NewCertPool()
+        pool.AppendCertsFromPEM(cabytes)
+        tlsConfig.ClientCAs = pool
+    }
+
+    return tlsConfig, nil
+}
+
 // ListenAndServe starts a RADIUS server on the address given in s.
 func (s *RadsecPacketServer) ListenAndServe(capath, crtfile, keyfile string) error {
-	crt, err := tls.LoadX509KeyPair(crtfile, keyfile)
+	tlsConfig, err := s.initTLSConfig(capath, crtfile, keyfile)
 	if err != nil {
 		return err
-	}
-
-	tlsConfig := &tls.Config{}
-	tlsConfig.Certificates = []tls.Certificate{crt}
-	tlsConfig.Time = time.Now
-	tlsConfig.Rand = rand.Reader
-	tlsConfig.ClientAuth = tls.VerifyClientCertIfGiven
-
-	if common.FileExists(capath) {
-		cabytes, _ := os.ReadFile(capath)
-		pool := x509.NewCertPool()
-		pool.AppendCertsFromPEM(cabytes)
-		tlsConfig.ClientCAs = pool
 	}
 
 	if s.Handler == nil {
