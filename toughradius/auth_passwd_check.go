@@ -65,10 +65,10 @@ func (s *AuthService) CheckPassword(r *radius.Request, username, localpassword s
 		return nil
 	}
 
-	if password != "" && !ignoreChk && !isMacAuth {
-		if strings.TrimSpace(password) != localpassword {
-			return NewAuthError(app.MetricsRadiusRejectPasswdError, "user pap password is not match")
-		}
+	if strings.TrimSpace(password) != "" &&
+		!ignoreChk && !isMacAuth &&
+		strings.TrimSpace(password) != localpassword {
+		return NewAuthError(app.MetricsRadiusRejectPasswdError, "user pap password is not match")
 	}
 
 	return nil
