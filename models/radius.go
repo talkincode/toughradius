@@ -52,54 +52,60 @@ type RadiusUser struct {
 // RadiusOnline
 // Radius RadiusOnline Recode
 type RadiusOnline struct {
-	ID                int64     `json:"id,string"` // 主键 ID
-	Username          string    `gorm:"index" json:"username"`
-	NasId             string    `json:"nas_id"`
-	NasAddr           string    `json:"nas_addr"`
-	NasPaddr          string    `json:"nas_paddr"`
-	SessionTimeout    int       `json:"session_timeout"`
-	FramedIpaddr      string    `json:"framed_ipaddr"`
-	FramedNetmask     string    `json:"framed_netmask"`
-	MacAddr           string    `json:"mac_addr"`
-	NasPort           int64     `json:"nas_port,string"`
-	NasClass          string    `json:"nas_class"`
-	NasPortId         string    `json:"nas_port_id"`
-	NasPortType       int       `json:"nas_port_type"`
-	ServiceType       int       `json:"service_type"`
-	AcctSessionId     string    `gorm:"index" json:"acct_session_id"`
-	AcctSessionTime   int       `json:"acct_session_time"`
-	AcctInputTotal    int64     `json:"acct_input_total,string"`
-	AcctOutputTotal   int64     `json:"acct_output_total,string"`
-	AcctInputPackets  int       `json:"acct_input_packets"`
-	AcctOutputPackets int       `json:"acct_output_packets"`
-	AcctStartTime     time.Time `gorm:"index" json:"acct_start_time"`
-	LastUpdate        time.Time `json:"last_update"`
+	ID                  int64     `json:"id,string"` // 主键 ID
+	Username            string    `gorm:"index" json:"username"`
+	NasId               string    `json:"nas_id"`
+	NasAddr             string    `json:"nas_addr"`
+	NasPaddr            string    `json:"nas_paddr"`
+	SessionTimeout      int       `json:"session_timeout"`
+	FramedIpaddr        string    `json:"framed_ipaddr"`
+	FramedNetmask       string    `json:"framed_netmask"`
+	FramedIpv6Prefix    string    `json:"framed_ipv6_prefix"`
+	FramedIpv6Address   string    `json:"framed_ipv6_address"`
+	DelegatedIpv6Prefix string    `json:"delegated_ipv6_prefix"`
+	MacAddr             string    `json:"mac_addr"`
+	NasPort             int64     `json:"nas_port,string"`
+	NasClass            string    `json:"nas_class"`
+	NasPortId           string    `json:"nas_port_id"`
+	NasPortType         int       `json:"nas_port_type"`
+	ServiceType         int       `json:"service_type"`
+	AcctSessionId       string    `gorm:"index" json:"acct_session_id"`
+	AcctSessionTime     int       `json:"acct_session_time"`
+	AcctInputTotal      int64     `json:"acct_input_total,string"`
+	AcctOutputTotal     int64     `json:"acct_output_total,string"`
+	AcctInputPackets    int       `json:"acct_input_packets"`
+	AcctOutputPackets   int       `json:"acct_output_packets"`
+	AcctStartTime       time.Time `gorm:"index" json:"acct_start_time"`
+	LastUpdate          time.Time `json:"last_update"`
 }
 
 // RadiusAccounting
 // Radius Accounting Recode
 type RadiusAccounting struct {
-	ID                int64     `json:"id,string"` // 主键 ID
-	Username          string    `gorm:"index" json:"username"`
-	AcctSessionId     string    `gorm:"index" json:"acct_session_id"`
-	NasId             string    `json:"nas_id"`
-	NasAddr           string    `json:"nas_addr"`
-	NasPaddr          string    `json:"nas_paddr"`
-	SessionTimeout    int       `json:"session_timeout"`
-	FramedIpaddr      string    `json:"framed_ipaddr"`
-	FramedNetmask     string    `json:"framed_netmask"`
-	MacAddr           string    `json:"mac_addr"`
-	NasPort           int64     `json:"nas_port,string"`
-	NasClass          string    `json:"nas_class"`
-	NasPortId         string    `json:"nas_port_id"`
-	NasPortType       int       `json:"nas_port_type"`
-	ServiceType       int       `json:"service_type"`
-	AcctSessionTime   int       `json:"acct_session_time"`
-	AcctInputTotal    int64     `json:"acct_input_total,string"`
-	AcctOutputTotal   int64     `json:"acct_output_total,string"`
-	AcctInputPackets  int       `json:"acct_input_packets"`
-	AcctOutputPackets int       `json:"acct_output_packets"`
-	LastUpdate        time.Time `json:"last_update"`
-	AcctStartTime     time.Time `gorm:"index" json:"acct_start_time"`
-	AcctStopTime      time.Time `gorm:"index" json:"acct_stop_time"`
+	ID                  int64     `json:"id,string"` // 主键 ID
+	Username            string    `gorm:"index" json:"username"`
+	AcctSessionId       string    `gorm:"index" json:"acct_session_id"`
+	NasId               string    `json:"nas_id"`
+	NasAddr             string    `json:"nas_addr"`
+	NasPaddr            string    `json:"nas_paddr"`
+	SessionTimeout      int       `json:"session_timeout"`
+	FramedIpaddr        string    `json:"framed_ipaddr"`
+	FramedNetmask       string    `json:"framed_netmask"`
+	FramedIpv6Prefix    string    `json:"framed_ipv6_prefix"`
+	FramedIpv6Address   string    `json:"framed_ipv6_address"`
+	DelegatedIpv6Prefix string    `json:"delegated_ipv6_prefix"`
+	MacAddr             string    `json:"mac_addr"`
+	NasPort             int64     `json:"nas_port,string"`
+	NasClass            string    `json:"nas_class"`
+	NasPortId           string    `json:"nas_port_id"`
+	NasPortType         int       `json:"nas_port_type"`
+	ServiceType         int       `json:"service_type"`
+	AcctSessionTime     int       `json:"acct_session_time"`
+	AcctInputTotal      int64     `json:"acct_input_total,string"`
+	AcctOutputTotal     int64     `json:"acct_output_total,string"`
+	AcctInputPackets    int       `json:"acct_input_packets"`
+	AcctOutputPackets   int       `json:"acct_output_packets"`
+	LastUpdate          time.Time `json:"last_update"`
+	AcctStartTime       time.Time `gorm:"index" json:"acct_start_time"`
+	AcctStopTime        time.Time `gorm:"index" json:"acct_stop_time"`
 }

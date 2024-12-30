@@ -18,12 +18,15 @@ import (
 	"github.com/talkincode/toughradius/v8/common"
 	"github.com/talkincode/toughradius/v8/common/zaplog/log"
 	"github.com/talkincode/toughradius/v8/models"
+	"github.com/talkincode/toughradius/v8/toughradius/vendors/huawei"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
 	"layeh.com/radius/rfc2869"
+	"layeh.com/radius/rfc3162"
+	"layeh.com/radius/rfc4818"
 )
 
 const (
@@ -201,6 +204,15 @@ func (s *RadiusService) GetEapMethod() string {
 	return val
 }
 
+func GetFramedIpv6Address(r *radius.Request, vpe *models.NetVpe) string {
+	switch vpe.VendorCode {
+	case VendorHuawei:
+		return common.IfEmptyStr(huawei.HuaweiFramedIPv6Address_Get(r.Packet).String(), common.NA)
+	default:
+		return ""
+	}
+}
+
 func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, vpe *models.NetVpe, nasrip string) models.RadiusOnline {
 	acctInputOctets := int(rfc2866.AcctInputOctets_Get(r.Packet))
 	acctInputGigawords := int(rfc2869.AcctInputGigawords_Get(r.Packet))
@@ -212,28 +224,31 @@ func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, vpe *mo
 		return time.Now().Add(m)
 	}
 	return models.RadiusOnline{
-		ID:                0,
-		Username:          rfc2865.UserName_GetString(r.Packet),
-		NasId:             common.IfEmptyStr(rfc2865.NASIdentifier_GetString(r.Packet), common.NA),
-		NasAddr:           vpe.Ipaddr,
-		NasPaddr:          nasrip,
-		SessionTimeout:    int(rfc2865.SessionTimeout_Get(r.Packet)),
-		FramedIpaddr:      common.IfEmptyStr(rfc2865.FramedIPAddress_Get(r.Packet).String(), common.NA),
-		FramedNetmask:     common.IfEmptyStr(rfc2865.FramedIPNetmask_Get(r.Packet).String(), common.NA),
-		MacAddr:           common.IfEmptyStr(vr.MacAddr, common.NA),
-		NasPort:           0,
-		NasClass:          common.NA,
-		NasPortId:         common.IfEmptyStr(rfc2869.NASPortID_GetString(r.Packet), common.NA),
-		NasPortType:       0,
-		ServiceType:       0,
-		AcctSessionId:     rfc2866.AcctSessionID_GetString(r.Packet),
-		AcctSessionTime:   int(rfc2866.AcctSessionTime_Get(r.Packet)),
-		AcctInputTotal:    int64(acctInputOctets) + int64(acctInputGigawords)*4*1024*1024*1024,
-		AcctOutputTotal:   int64(acctOutputOctets) + int64(acctOutputGigawords)*4*1024*1024*1024,
-		AcctInputPackets:  int(rfc2866.AcctInputPackets_Get(r.Packet)),
-		AcctOutputPackets: int(rfc2866.AcctInputPackets_Get(r.Packet)),
-		AcctStartTime:     getAcctStartTime(int(rfc2866.AcctSessionTime_Get(r.Packet))),
-		LastUpdate:        time.Now(),
+		ID:                  0,
+		Username:            rfc2865.UserName_GetString(r.Packet),
+		NasId:               common.IfEmptyStr(rfc2865.NASIdentifier_GetString(r.Packet), common.NA),
+		NasAddr:             vpe.Ipaddr,
+		NasPaddr:            nasrip,
+		SessionTimeout:      int(rfc2865.SessionTimeout_Get(r.Packet)),
+		FramedIpaddr:        common.IfEmptyStr(rfc2865.FramedIPAddress_Get(r.Packet).String(), common.NA),
+		FramedNetmask:       common.IfEmptyStr(rfc2865.FramedIPNetmask_Get(r.Packet).String(), common.NA),
+		FramedIpv6Address:   GetFramedIpv6Address(r, vpe),
+		FramedIpv6Prefix:    common.IfEmptyStr(rfc3162.FramedIPv6Prefix_Get(r.Packet).String(), common.NA),
+		DelegatedIpv6Prefix: common.IfEmptyStr(rfc4818.DelegatedIPv6Prefix_Get(r.Packet).String(), common.NA),
+		MacAddr:             common.IfEmptyStr(vr.MacAddr, common.NA),
+		NasPort:             0,
+		NasClass:            common.NA,
+		NasPortId:           common.IfEmptyStr(rfc2869.NASPortID_GetString(r.Packet), common.NA),
+		NasPortType:         0,
+		ServiceType:         0,
+		AcctSessionId:       rfc2866.AcctSessionID_GetString(r.Packet),
+		AcctSessionTime:     int(rfc2866.AcctSessionTime_Get(r.Packet)),
+		AcctInputTotal:      int64(acctInputOctets) + int64(acctInputGigawords)*4*1024*1024*1024,
+		AcctOutputTotal:     int64(acctOutputOctets) + int64(acctOutputGigawords)*4*1024*1024*1024,
+		AcctInputPackets:    int(rfc2866.AcctInputPackets_Get(r.Packet)),
+		AcctOutputPackets:   int(rfc2866.AcctInputPackets_Get(r.Packet)),
+		AcctStartTime:       getAcctStartTime(int(rfc2866.AcctSessionTime_Get(r.Packet))),
+		LastUpdate:          time.Now(),
 	}
 
 }
@@ -274,29 +289,32 @@ func (s *RadiusService) AddRadiusOnline(ol models.RadiusOnline) error {
 
 func (s *RadiusService) AddRadiusAccounting(ol models.RadiusOnline, start bool) error {
 	accounting := models.RadiusAccounting{
-		ID:                common.UUIDint64(),
-		Username:          ol.Username,
-		AcctSessionId:     ol.AcctSessionId,
-		NasId:             ol.NasId,
-		NasAddr:           ol.NasAddr,
-		NasPaddr:          ol.NasPaddr,
-		SessionTimeout:    ol.SessionTimeout,
-		FramedIpaddr:      ol.FramedIpaddr,
-		FramedNetmask:     ol.FramedNetmask,
-		MacAddr:           ol.MacAddr,
-		NasPort:           ol.NasPort,
-		NasClass:          ol.NasClass,
-		NasPortId:         ol.NasPortId,
-		NasPortType:       ol.NasPortType,
-		ServiceType:       ol.ServiceType,
-		AcctSessionTime:   ol.AcctSessionTime,
-		AcctInputTotal:    ol.AcctInputTotal,
-		AcctOutputTotal:   ol.AcctOutputTotal,
-		AcctInputPackets:  ol.AcctInputPackets,
-		AcctOutputPackets: ol.AcctOutputPackets,
-		LastUpdate:        time.Now(),
-		AcctStartTime:     ol.AcctStartTime,
-		AcctStopTime:      time.Time{},
+		ID:                  common.UUIDint64(),
+		Username:            ol.Username,
+		AcctSessionId:       ol.AcctSessionId,
+		NasId:               ol.NasId,
+		NasAddr:             ol.NasAddr,
+		NasPaddr:            ol.NasPaddr,
+		SessionTimeout:      ol.SessionTimeout,
+		FramedIpaddr:        ol.FramedIpaddr,
+		FramedNetmask:       ol.FramedNetmask,
+		FramedIpv6Prefix:    ol.FramedIpv6Prefix,
+		FramedIpv6Address:   ol.FramedIpv6Address,
+		DelegatedIpv6Prefix: ol.DelegatedIpv6Prefix,
+		MacAddr:             ol.MacAddr,
+		NasPort:             ol.NasPort,
+		NasClass:            ol.NasClass,
+		NasPortId:           ol.NasPortId,
+		NasPortType:         ol.NasPortType,
+		ServiceType:         ol.ServiceType,
+		AcctSessionTime:     ol.AcctSessionTime,
+		AcctInputTotal:      ol.AcctInputTotal,
+		AcctOutputTotal:     ol.AcctOutputTotal,
+		AcctInputPackets:    ol.AcctInputPackets,
+		AcctOutputPackets:   ol.AcctOutputPackets,
+		LastUpdate:          time.Now(),
+		AcctStartTime:       ol.AcctStartTime,
+		AcctStopTime:        time.Time{},
 	}
 
 	if !start {
