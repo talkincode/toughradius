@@ -36,23 +36,6 @@ build-tradtest:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest.exe commands/benchmark/bmtest.go
 
 
-syncdev:
-	make buildpre
-	@read -p "提示:同步操作尽量在完成一个完整功能特性后进行，请输入提交描述 (develop):  " cimsg; \
-	git commit -am "$(shell date "+%F %T") : $${cimsg}"
-	# 切换主分支并更新
-	git checkout main
-	git pull origin main
-	# 切换开发分支变基合并提交
-	git checkout develop
-	git rebase -i main
-	# 切换回主分支并合并开发者分支，推送主分支到远程，方便其他开发者合并
-	git checkout main
-	git merge --no-ff develop
-	git push origin main
-	# 切换回自己的开发分支继续工作
-	git checkout develop
-
 tr069crt:
 	# 1 Generate CA private key
 	test -f assets/ca.key || openssl genrsa -out assets/ca.key 4096
@@ -104,7 +87,6 @@ updev:
 swag:
 	swag fmt && swag init
 
-
 syncdev:
 	@echo "🚀 开始执行同步流程（develop → main）..."
 	@./scripts/syncdev.sh
@@ -113,5 +95,8 @@ tag:
 	@echo "🏷️  开始标签创建流程..."
 	@./scripts/tag.sh
 
-.PHONY: clean build tr069crt radseccrt
+release:
+	@./scripts/release-text.sh
+
+.PHONY: clean build tr069crt radseccrt release
 
