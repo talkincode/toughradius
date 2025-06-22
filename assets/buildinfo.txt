@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.7 2024-12-30 21:10:20
+BuildVersion=latest v8.0.7 2025-06-22 20:31:15
 ReleaseVersion=v8.0.7
-BuildTime=2024-12-30 21:10:20
+BuildTime=2025-06-22 20:31:15
 BuildName=toughradius
-CommitID=339021aeea126bd15b5c492341d30c3b48393c80
-CommitDate=Wed, 9 Oct 2024 14:12:21 +0800
+CommitID=c8c3cd2e0948a2ca3b6811fff30c5d622e6076c5
+CommitDate=Sun, 22 Jun 2025 20:31:06 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=2024-10-09 14:12:13 :
+CommitSubject=添加同步和标签创建脚本，简化开发流程
