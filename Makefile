@@ -105,5 +105,13 @@ swag:
 	swag fmt && swag init
 
 
+syncdev:
+	@echo "🚀 开始执行同步流程（develop → main）..."
+	@./scripts/syncdev.sh
+
+tag:
+	@echo "🏷️  开始标签创建流程..."
+	@./scripts/tag.sh
+
 .PHONY: clean build tr069crt radseccrt
 
