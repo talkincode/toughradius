@@ -1,8 +1,8 @@
-BuildVersion=latest v8.0.7 2025-06-22 20:31:38
+BuildVersion=latest v8.0.7 2025-06-22 21:20:49
 ReleaseVersion=v8.0.7
-BuildTime=2025-06-22 20:31:38
+BuildTime=2025-06-22 21:20:49
 BuildName=toughradius
-CommitID=a27911b2e8deddff8bbbc04d02d1dad03f3243c4
-CommitDate=Sun, 22 Jun 2025 20:31:38 +0800
+CommitID=1827ee72018c651c53db0b21e4d103e59d2093bc
+CommitDate=Sun, 22 Jun 2025 21:20:49 +0800
 CommitUser=jamiesun.net@gmail.com
-CommitSubject=优化构建脚本: 🔀 合并 develop (2025-06-22 20:31:38)
+CommitSubject=删除本地 Dockerfile
