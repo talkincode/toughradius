@@ -20,7 +20,7 @@ services:
   toughradius:
     depends_on:
       - 'pgdb'
-    image: ca17/toughradius:latest
+    image: talkincode/toughradius:latest
     container_name: "toughradius"
     restart: always
     ports:
