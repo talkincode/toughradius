@@ -31,14 +31,6 @@ sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/talkincode/toughrad
 sudo bash -c "$(wget https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh -O -)"
 ```
 
-
-## Q&A AiBot
-
-ToughRadius provides an AI-based technical service bot that we hope can help you solve some technical problems.
-<img width="1236" alt="image" src="https://github.com/talkincode/toughradius/assets/377938/b6dafb49-6850-4906-b69f-2c18196459c0">
-
-[Q&A AiBot Link](https://qa.toughradius.net/)
-
 ## System structure
 
 ![architecture](assets/architecture.png)
