@@ -10,7 +10,7 @@ require (
 	github.com/c-robinson/iplib v1.0.6
 	github.com/go-gota/gota v0.12.0
 	github.com/gocarina/gocsv v0.0.0-20230616125104-99d496ca653d
-	github.com/golang-jwt/jwt/v4 v4.5.0
+	github.com/golang-jwt/jwt/v4 v4.5.1
 	github.com/google/btree v1.1.2
 	github.com/gorilla/sessions v1.2.1
 	github.com/gosnmp/gosnmp v1.35.0
