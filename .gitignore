@@ -13,4 +13,4 @@ __debug_bin
 log_info.log
 __debug_bin*
 .log
-debian
+debiantoughradius/main
