@@ -21,17 +21,19 @@ func (ri *RejectItem) Incr() {
 
 func (ri *RejectItem) IsOver(max int64) bool {
     ri.Lock.RLock()
-    defer ri.Lock.RUnlock()
+
     if time.Since(ri.LastReject).Seconds() > 10 {
-        ri.Lock.RUnlock()
+        ri.Lock.RUnlock()              // Upgrade: explicitly release read lock
         ri.Lock.Lock()
-        defer ri.Lock.Unlock()
         if time.Since(ri.LastReject).Seconds() > 10 {
             atomic.StoreInt64(&ri.Rejects, 0)
         }
+        ri.Lock.Unlock()
         return false
     }
-    return atomic.LoadInt64(&ri.Rejects) > max
+    over := atomic.LoadInt64(&ri.Rejects) > max
+    ri.Lock.RUnlock()
+    return over
 }
 
 type RejectCache struct {
@@ -41,17 +43,18 @@ type RejectCache struct {
 
 func (rc *RejectCache) GetItem(username string) *RejectItem {
     rc.Lock.RLock()
-    defer rc.Lock.RUnlock()
     if len(rc.Items) >= 65535 {
-        rc.Lock.RUnlock()
+        rc.Lock.RUnlock()              // Upgrade: explicitly release read lock
         rc.Lock.Lock()
-        defer rc.Lock.Unlock()
         if len(rc.Items) >= 65535 {
             rc.Items = make(map[string]*RejectItem, 0)
         }
+        rc.Lock.Unlock()
         return nil
     }
-    return rc.Items[username]
+    item := rc.Items[username]
+    rc.Lock.RUnlock()
+    return item
 }
 
 func (rc *RejectCache) SetItem(username string) {
