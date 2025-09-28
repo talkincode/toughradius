@@ -16,6 +16,7 @@ import (
 	"github.com/talkincode/toughradius/v8/toughradius/vendors/zte"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
+	"layeh.com/radius/rfc2868"
 	"layeh.com/radius/rfc2869"
 )
 
@@ -52,6 +53,16 @@ func configDefaultAccept(s *AuthService, user *models.RadiusUser, radAccept *rad
 
 	if common.IsNotEmptyAndNA(user.IpAddr) {
 		rfc2865.FramedIPAddress_Set(radAccept, net.ParseIP(user.IpAddr))
+	}
+
+	// Configure VLAN assignment using tunnel attributes
+	// Use primary VLAN ID if configured
+	if user.Vlanid1 > 0 {
+		configVlanTunnelAttributes(radAccept, user.Vlanid1)
+	}
+	// Use secondary VLAN ID as fallback if primary is not set
+	if user.Vlanid1 == 0 && user.Vlanid2 > 0 {
+		configVlanTunnelAttributes(radAccept, user.Vlanid2)
 	}
 }
 
@@ -131,4 +142,20 @@ func configZteAccept(user *models.RadiusUser, radAccept *radius.Packet) {
 	}
 	zte.ZTERateCtrlSCRUp_Set(radAccept, zte.ZTERateCtrlSCRUp(up))
 	zte.ZTERateCtrlSCRDown_Set(radAccept, zte.ZTERateCtrlSCRDown(down))
+}
+
+// configVlanTunnelAttributes 配置VLAN隧道属性
+// 使用RFC 2868隧道属性为交换机下发VLAN ID
+func configVlanTunnelAttributes(radAccept *radius.Packet, vlanId int) {
+	// Tag 0 is typically used for single tunnel
+	tag := byte(0)
+	
+	// Tunnel-Type = VLAN (13) - RFC 2868 standard value for VLAN
+	rfc2868.TunnelType_Set(radAccept, tag, rfc2868.TunnelType(13))
+	
+	// Tunnel-Medium-Type = IEEE-802 (6) for Ethernet
+	rfc2868.TunnelMediumType_Set(radAccept, tag, rfc2868.TunnelMediumType(6))
+	
+	// Tunnel-Private-Group-ID = VLAN ID (as string)
+	rfc2868.TunnelPrivateGroupID_SetString(radAccept, tag, fmt.Sprintf("%d", vlanId))
 }

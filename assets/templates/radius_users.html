@@ -23,6 +23,24 @@
                 css: "nborder-input"
             },
             {
+                cols: [
+                    {
+                        view: "text",
+                        name: "vlanid1",
+                        label: tr("radius","VLAN ID 1"),
+                        placeholder: tr("radius","Primary VLAN ID for VLAN assignment"),
+                        css: "nborder-input"
+                    },
+                    {
+                        view: "text",
+                        name: "vlanid2",
+                        label: tr("radius","VLAN ID 2"),
+                        placeholder: tr("radius","Secondary VLAN ID for VLAN assignment"),
+                        css: "nborder-input"
+                    }
+                ]
+            },
+            {
                 view: "combo", name: "profile_id", label: tr("radius","Profile"), validate: webix.rules.isNotEmpty,
                 options: "/admin/radius/profile/options",
                 css: "nborder-input",
@@ -149,6 +167,24 @@
                                                 readonly: true,
                                                 placeholder: tr("radius","Account static IP, priority is higher than address pool"),
                                                 css: "nborder-input"
+                                            },
+                                            {
+                                                cols: [
+                                                    {
+                                                        view: "text",
+                                                        name: "vlanid1",
+                                                        label: tr("radius","VLAN ID 1"),
+                                                        readonly: true,
+                                                        css: "nborder-input"
+                                                    },
+                                                    {
+                                                        view: "text",
+                                                        name: "vlanid2", 
+                                                        label: tr("radius","VLAN ID 2"),
+                                                        readonly: true,
+                                                        css: "nborder-input"
+                                                    }
+                                                ]
                                             },
                                             {
                                                 cols: [
@@ -527,6 +563,8 @@
                         },
                         {id: "online_count", header: [tr("radius","Onlines")], sort: "server", adjust: true},
                         {id: "addr_pool", header: [tr("radius","Addr pool")], sort: "server", adjust: true},
+                        {id: "vlanid1", header: [tr("radius","VLAN ID 1")], sort: "server", adjust: true},
+                        {id: "vlanid2", header: [tr("radius","VLAN ID 2")], sort: "server", adjust: true},
                         {id: "active_num", header: [tr("radius","Active num")], adjust: true, sort: "server"},
                         {
                             id: "up_rate", header: [tr("radius","UpRate (Mbps)")], template: function (obj) {
