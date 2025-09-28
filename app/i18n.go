@@ -15,6 +15,7 @@ const (
 	TransLateSettings = "settings"
 	ZhCN              = "zh_CN"
 	EnUS              = "en_US"
+	FrFR              = "fr_FR"
 )
 
 func (a *Application) TransDB() (*bolt.DB, error) {
@@ -38,6 +39,10 @@ func (a *Application) TransDB() (*bolt.DB, error) {
 			_, err = tx.CreateBucketIfNotExists([]byte(EnUS)) // ③
 			if err != nil {
 				log.Errorf("create en_US bucket: %s", err)
+			}
+			_, err = tx.CreateBucketIfNotExists([]byte(FrFR)) // ③
+			if err != nil {
+				log.Errorf("create fr_FR bucket: %s", err)
 			}
 			return nil
 		})
@@ -66,7 +71,7 @@ func (a *Application) GetTranslateLang() string {
 }
 
 func (a *Application) SetTranslateLang(lang string) {
-	if !common.InSlice(lang, []string{ZhCN, EnUS}) {
+	if !common.InSlice(lang, []string{ZhCN, EnUS, FrFR}) {
 		return
 	}
 	transdb, err := a.TransDB()
@@ -272,7 +277,7 @@ func (a *Application) TranslateUpdate(lang, module, src, value string) string {
 }
 
 func (a *Application) RenderTranslateFiles() {
-	langs := []string{ZhCN, EnUS}
+	langs := []string{ZhCN, EnUS, FrFR}
 	for _, lang := range langs {
 		r := a.LoadTranslateDict(lang)
 		os.WriteFile(path.Join(a.appConfig.System.Workdir, "data", "trans_"+lang+".js"), []byte("window.GlobalTrans="+common.ToJson(r)), 0666)
@@ -289,7 +294,7 @@ func (a *Application) RemoveTranslateItems(items []TransTable) {
 		return
 	}
 	defer tx.Rollback()
-	langs := []string{ZhCN, EnUS}
+	langs := []string{ZhCN, EnUS, FrFR}
 	for _, lang := range langs {
 		b := tx.Bucket([]byte(lang))
 		if b == nil {

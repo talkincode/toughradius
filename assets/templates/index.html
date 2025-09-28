@@ -117,14 +117,23 @@
                                                     }
                                                 },
                                                 {
-                                                    view: "switch", onLabel: "中文", offLabel: "English", value: "{{zhlang}}", width: 100,
+                                                    view: "richselect", 
+                                                    value: "{{currentlang}}", 
+                                                    width: 100,
+                                                    options: [
+                                                        { id: "en_US", value: "English" },
+                                                        { id: "zh_CN", value: "中文" },
+                                                        { id: "fr_FR", value: "Français" }
+                                                    ],
                                                     on: {
                                                         onChange: function (newValue, oldValue, config) {
-                                                            webix.delay(function () {
-                                                                webix.ajax().get("/admin/translate/switch/" + newValue).then(function (resp) {
-                                                                    window.location.reload()
+                                                            if (newValue !== oldValue) {
+                                                                webix.delay(function () {
+                                                                    webix.ajax().get("/admin/translate/switch/" + newValue).then(function (resp) {
+                                                                        window.location.reload()
+                                                                    })
                                                                 })
-                                                            })
+                                                            }
                                                         }
                                                     }
                                                 },

@@ -68,11 +68,17 @@ func InitRouter() {
 		return c.File(lfile)
 	})
 
-	webserver.GET("/admin/translate/switch/:iszh", func(c echo.Context) error {
-		if c.Param("iszh") == "1" {
-			app.GApp().SetTranslateLang(app.ZhCN)
-		} else {
-			app.GApp().SetTranslateLang(app.EnUS)
+	webserver.GET("/admin/translate/switch/:lang", func(c echo.Context) error {
+		lang := c.Param("lang")
+		// Handle legacy binary switch for backward compatibility
+		if lang == "1" {
+			lang = app.ZhCN
+		} else if lang == "0" {
+			lang = app.EnUS
+		}
+		// Validate the language code
+		if lang == app.ZhCN || lang == app.EnUS || lang == app.FrFR {
+			app.GApp().SetTranslateLang(lang)
 		}
 		return c.JSON(http.StatusOK, web.RestSucc("success"))
 	})
@@ -156,6 +162,7 @@ func InitRouter() {
 
 		app.GApp().Translate(app.ZhCN, form.Module, form.Key, form.Value)
 		app.GApp().Translate(app.EnUS, form.Module, form.Key, form.Value)
+		app.GApp().Translate(app.FrFR, form.Module, form.Key, form.Value)
 		return c.JSON(http.StatusOK, web.RestSucc("success"))
 	})
 

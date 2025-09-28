@@ -29,6 +29,9 @@ func (a *Application) GetTemplateFuncMap() map[string]interface{} {
 			}
 			return "0"
 		},
+		"currentlang": func() string {
+			return a.GetTranslateLang()
+		},
 		"moontheme": func() string {
 			theme := a.GetSystemTheme()
 			if theme == "dark" {
