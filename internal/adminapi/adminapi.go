@@ -6,4 +6,7 @@ func Init() {
 	registerUserRoutes()
 	registerDashboardRoutes()
 	registerProfileRoutes()
+	registerAccountingRoutes()
+	registerSessionRoutes()
+	registerNASRoutes()
 }
