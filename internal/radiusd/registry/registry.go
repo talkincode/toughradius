@@ -23,15 +23,19 @@ type Registry struct {
 	mu                 sync.RWMutex
 }
 
-var globalRegistry = &Registry{
-	passwordValidators: make(map[string]auth.PasswordValidator),
-	policyCheckers:     make([]auth.PolicyChecker, 0),
-	responseEnhancers:  make([]auth.ResponseEnhancer, 0),
-	authGuards:         make([]auth.Guard, 0),
-	vendorParsers:      make(map[string]vendorparserspkg.VendorParser),
-	vendorBuilders:     make(map[string]vendorparserspkg.VendorResponseBuilder),
-	acctHandlers:       make([]accounting.AccountingHandler, 0),
-	eapHandlers:        make(map[uint8]eap.EAPHandler),
+var globalRegistry = newRegistry()
+
+func newRegistry() *Registry {
+	return &Registry{
+		passwordValidators: make(map[string]auth.PasswordValidator),
+		policyCheckers:     make([]auth.PolicyChecker, 0),
+		responseEnhancers:  make([]auth.ResponseEnhancer, 0),
+		authGuards:         make([]auth.Guard, 0),
+		vendorParsers:      make(map[string]vendorparserspkg.VendorParser),
+		vendorBuilders:     make(map[string]vendorparserspkg.VendorResponseBuilder),
+		acctHandlers:       make([]accounting.AccountingHandler, 0),
+		eapHandlers:        make(map[uint8]eap.EAPHandler),
+	}
 }
 
 // RegisterPasswordValidator 注册密码验证器
@@ -203,4 +207,9 @@ func (r *Registry) GetHandler(eapType uint8) (eap.EAPHandler, bool) {
 // 用于实现 eap.HandlerRegistry 接口
 func GetGlobalRegistry() *Registry {
 	return globalRegistry
+}
+
+// ResetForTest clears the registry. Test helper only.
+func ResetForTest() {
+	globalRegistry = newRegistry()
 }
