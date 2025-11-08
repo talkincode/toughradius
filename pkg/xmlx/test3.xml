@@ -1,0 +1,8 @@
+<root xmlns:foo='http:/example.org/foo'>
+  <child foo:bar='1'>
+    <grandchild xmlns:foo=''>
+      <great-grandchild foo:bar='2'>
+      </great-grandchild>
+    </grandchild>
+  </child>
+</root>
