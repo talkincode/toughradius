@@ -5,21 +5,22 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/talkincode/toughradius/v8/common"
+	"github.com/talkincode/toughradius/v9/pkg/common"
 	"gopkg.in/yaml.v3"
 )
 
-// DBConfig 数据库(PostgreSQL)配置
+// DBConfig 数据库配置
+// 支持的数据库类型: postgres, sqlite
 type DBConfig struct {
-	Type     string `yaml:"type"`
-	Host     string `yaml:"host"`
-	Port     int    `yaml:"port"`
-	Name     string `yaml:"name"`
-	User     string `yaml:"user"`
-	Passwd   string `yaml:"passwd"`
-	MaxConn  int    `yaml:"max_conn"`
-	IdleConn int    `yaml:"idle_conn"`
-	Debug    bool   `yaml:"debug"`
+	Type     string `yaml:"type"`      // 数据库类型: postgres 或 sqlite
+	Host     string `yaml:"host"`      // PostgreSQL 主机地址
+	Port     int    `yaml:"port"`      // PostgreSQL 端口
+	Name     string `yaml:"name"`      // 数据库名称或 SQLite 文件路径
+	User     string `yaml:"user"`      // PostgreSQL 用户名
+	Passwd   string `yaml:"passwd"`    // PostgreSQL 密码
+	MaxConn  int    `yaml:"max_conn"`  // 最大连接数
+	IdleConn int    `yaml:"idle_conn"` // 空闲连接数
+	Debug    bool   `yaml:"debug"`     // 调试模式
 }
 
 // SysConfig 系统配置
@@ -56,35 +57,10 @@ type RadiusdConfig struct {
 	Debug        bool   `yaml:"debug" json:"debug"`
 }
 
-// Tr069Config tr069 API 配置
-type Tr069Config struct {
-	Host   string `yaml:"host" json:"host"`
-	Port   int    `yaml:"port" json:"port"`
-	Tls    bool   `yaml:"tls" json:"tls"`
-	Secret string `yaml:"secret" json:"secret"`
-	Debug  bool   `yaml:"debug" json:"debug"`
-}
-
-type MqttConfig struct {
-	Server   string `yaml:"server" json:"server"`
-	Username string `yaml:"username" json:"username"`
-	Password string `yaml:"password" json:"password"`
-	Debug    bool   `yaml:"debug" json:"debug"`
-}
-
 type LogConfig struct {
-	Mode           string `yaml:"mode"`
-	ConsoleEnable  bool   `yaml:"console_enable"`
-	LokiEnable     bool   `yaml:"loki_enable"`
-	FileEnable     bool   `yaml:"file_enable"`
-	Filename       string `yaml:"filename"`
-	QueueSize      int    `yaml:"queue_size"`
-	LokiApi        string `yaml:"loki_api"`
-	LokiUser       string `yaml:"loki_user"`
-	LokiPwd        string `yaml:"loki_pwd"`
-	LokiJob        string `yaml:"loki_job"`
-	MetricsStorage string `yaml:"metrics_storage"`
-	MetricsHistory int    `yaml:"metrics_history"`
+	Mode       string `yaml:"mode"`
+	FileEnable bool   `yaml:"file_enable"`
+	Filename   string `yaml:"filename"`
 }
 
 type AppConfig struct {
@@ -93,8 +69,6 @@ type AppConfig struct {
 	Database   DBConfig         `yaml:"database" json:"database"`
 	Freeradius FreeradiusConfig `yaml:"freeradius" json:"freeradius"`
 	Radiusd    RadiusdConfig    `yaml:"radiusd" json:"radiusd"`
-	Tr069      Tr069Config      `yaml:"tr069" json:"tr069"`
-	Mqtt       MqttConfig       `yaml:"mqtt" json:"mqtt"`
 	Logger     LogConfig        `yaml:"logger" json:"logger"`
 }
 
@@ -177,27 +151,14 @@ var DefaultAppConfig = &AppConfig{
 		Secret:  "9b6de5cc-0731-1203-xxtt-0f568ac9da37",
 	},
 	Database: DBConfig{
-		Type:     "postgres",
-		Host:     "127.0.0.1",
+		Type:     "sqlite",    // 默认使用 SQLite，适合开发和测试
+		Host:     "127.0.0.1", // PostgreSQL 配置（当 type 为 postgres 时使用）
 		Port:     5432,
-		Name:     "toughradius_v8",
+		Name:     "toughradius.db", // SQLite: 数据库文件名；PostgreSQL: 数据库名
 		User:     "postgres",
 		Passwd:   "myroot",
 		MaxConn:  100,
 		IdleConn: 10,
-		Debug:    false,
-	},
-	Tr069: Tr069Config{
-		Host:   "0.0.0.0",
-		Tls:    true,
-		Port:   1819,
-		Secret: "9b6de5cc-0731-1203-xxtt-0f568ac9da37",
-		Debug:  true,
-	},
-	Mqtt: MqttConfig{
-		Server:   "",
-		Username: "",
-		Password: "",
 		Debug:    false,
 	},
 	Freeradius: FreeradiusConfig{
@@ -207,27 +168,18 @@ var DefaultAppConfig = &AppConfig{
 		Debug:   true,
 	},
 	Radiusd: RadiusdConfig{
-		Enabled:    true,
-		Host:       "0.0.0.0",
-		AuthPort:   1812,
-		AcctPort:   1813,
-		RadsecPort: 2083,
+		Enabled:      true,
+		Host:         "0.0.0.0",
+		AuthPort:     1812,
+		AcctPort:     1813,
+		RadsecPort:   2083,
 		RadsecWorker: 100,
-		Debug:      true,
+		Debug:        true,
 	},
 	Logger: LogConfig{
-		Mode:           "development",
-		ConsoleEnable:  true,
-		LokiEnable:     false,
-		FileEnable:     true,
-		Filename:       "/var/toughradius/toughradius.log",
-		QueueSize:      4096,
-		LokiApi:        "http://127.0.0.1:3100",
-		LokiUser:       "toughradius",
-		LokiPwd:        "toughradius",
-		LokiJob:        "toughradius",
-		MetricsStorage: "/var/toughradius/data/metrics",
-		MetricsHistory: 24 * 7,
+		Mode:       "development",
+		FileEnable: true,
+		Filename:   "/var/toughradius/toughradius.log",
 	},
 }
 
@@ -259,6 +211,7 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvIntValue("TOUGHRADIUS_WEB_TLS_PORT", &cfg.Web.TlsPort)
 
 	// DB
+	setEnvValue("TOUGHRADIUS_DB_TYPE", &cfg.Database.Type)
 	setEnvValue("TOUGHRADIUS_DB_HOST", &cfg.Database.Host)
 	setEnvValue("TOUGHRADIUS_DB_NAME", &cfg.Database.Name)
 	setEnvValue("TOUGHRADIUS_DB_USER", &cfg.Database.User)
@@ -281,25 +234,8 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvBoolValue("TOUGHRADIUS_FREERADIUS_WEB_DEBUG", &cfg.Freeradius.Debug)
 	setEnvBoolValue("TOUGHRADIUS_FREERADIUS_WEB_ENABLED", &cfg.Freeradius.Enabled)
 
-	// TR069 Config
-	setEnvValue("TOUGHRADIUS_TR069_WEB_HOST", &cfg.Tr069.Host)
-	setEnvValue("TOUGHRADIUS_TR069_WEB_SECRET", &cfg.Tr069.Secret)
-	setEnvBoolValue("TOUGHRADIUS_TR069_WEB_TLS", &cfg.Tr069.Tls)
-	setEnvBoolValue("TOUGHRADIUS_TR069_WEB_DEBUG", &cfg.Tr069.Debug)
-	setEnvIntValue("TOUGHRADIUS_TR069_WEB_PORT", &cfg.Tr069.Port)
-
-	setEnvValue("TOUGHRADIUS_LOKI_JOB", &cfg.Logger.LokiJob)
-	setEnvValue("TOUGHRADIUS_LOKI_SERVER", &cfg.Logger.LokiApi)
-	setEnvValue("TOUGHRADIUS_LOKI_USERNAME", &cfg.Logger.LokiUser)
-	setEnvValue("TOUGHRADIUS_LOKI_PASSWORD", &cfg.Logger.LokiPwd)
 	setEnvValue("TOUGHRADIUS_LOGGER_MODE", &cfg.Logger.Mode)
-	setEnvBoolValue("TOUGHRADIUS_LOKI_ENABLE", &cfg.Logger.LokiEnable)
 	setEnvBoolValue("TOUGHRADIUS_LOGGER_FILE_ENABLE", &cfg.Logger.FileEnable)
-
-	setEnvValue("TOUGHRADIUS_MQTT_SERVER", &cfg.Mqtt.Server)
-	setEnvValue("TOUGHRADIUS_MQTT_USERNAME", &cfg.Mqtt.Username)
-	setEnvValue("TOUGHRADIUS_MQTT_PASSWORD", &cfg.Mqtt.Password)
-	setEnvBoolValue("TOUGHRADIUS_MQTT_DEBUG", &cfg.Mqtt.Debug)
 
 	return cfg
 }
