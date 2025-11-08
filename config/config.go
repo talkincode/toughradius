@@ -97,7 +97,7 @@ func (c *AppConfig) initDirs() {
 	os.MkdirAll(path.Join(c.System.Workdir, "data"), 0755)
 	os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0755)
 	os.MkdirAll(path.Join(c.System.Workdir, "private"), 0644)
-	os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0644)
+	os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0755)
 }
 
 func setEnvValue(name string, val *string) {
