@@ -16,6 +16,10 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"golang.org/x/sync/errgroup"
+
+	// Import vendor parsers for auto-registration via init()
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins"
+	_ "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers/parsers"
 )
 
 var g errgroup.Group
@@ -80,6 +84,9 @@ func main() {
 
 	radiusService := radiusd.NewRadiusService()
 	defer radiusService.Release()
+
+	// Initialize plugin system after RadiusService is created
+	plugins.InitPlugins(radiusService.SessionRepo, radiusService.AccountingRepo)
 
 	g.Go(func() error {
 		return radiusd.ListenRadiusAuthServer(radiusd.NewAuthService(radiusService))

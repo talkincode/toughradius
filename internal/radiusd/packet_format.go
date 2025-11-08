@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
@@ -36,20 +37,23 @@ var Ipv4Format = func(src []byte) string {
 }
 
 var EapMessageFormat = func(attr []byte) string {
-	// 解析EAP消息
-	eap := &EAPMessage{
-		EAPHeader: EAPHeader{
-			Code:       attr[0],
-			Identifier: attr[1],
-			Length:     binary.BigEndian.Uint16(attr[2:4]),
-		},
-	}
-	if len(attr) >= 5 {
-		eap.Type = attr[4]
-		eap.Data = attr[5:]
+	if len(attr) < 4 {
+		return fmt.Sprintf("%x", attr)
 	}
 
-	return eap.String()
+	msg := &eap.EAPMessage{
+		Code:       attr[0],
+		Identifier: attr[1],
+		Length:     binary.BigEndian.Uint16(attr[2:4]),
+	}
+	if len(attr) >= 5 {
+		msg.Type = attr[4]
+	}
+	if len(attr) > 5 {
+		msg.Data = attr[5:]
+	}
+
+	return msg.String()
 }
 
 var RadiusTypeMap = map[radius.Type]string{

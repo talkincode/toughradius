@@ -1,17 +1,12 @@
 package radiusd
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
-	"strings"
 
-	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/h3c"
-	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/radback"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"go.uber.org/zap"
 	"layeh.com/radius"
-	"layeh.com/radius/rfc2865"
-	"layeh.com/radius/rfc2869"
 )
 
 var (
@@ -37,104 +32,41 @@ func ParseVlanIds(nasportid string) (int64, int64) {
 	return vlanid1, vlanid2
 }
 
-// ParseVendor 解析厂商私有属性
+// ParseVendor 使用插件系统解析厂商私有属性
 func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *VendorRequest {
-	switch vendorCode {
-	case VendorH3c:
-		return parseVendorH3c(r)
-	case VendorRadback:
-		return parseVendorRadback(r)
-	case VendorZte:
-		return parseVendorZte(r)
-	default:
-		return parseVendorDefault(r)
-	}
-}
-
-// 解析标准属性
-func parseVendorDefault(r *radius.Request) *VendorRequest {
-	var attrs = new(VendorRequest)
-	// 解析 MAC 地址
-	macval := rfc2865.CallingStationID_GetString(r.Packet)
-	if macval != "" {
-		attrs.MacAddr = strings.ReplaceAll(macval, "-", ":")
-	} else {
-		zap.L().Warn("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
-	}
-	nasportid := rfc2869.NASPortID_GetString(r.Packet)
-	if nasportid == "" {
-		attrs.Vlanid1 = 0
-		attrs.Vlanid2 = 0
-	}
-	return attrs
-}
-
-// 解析 H3C 属性
-func parseVendorH3c(r *radius.Request) *VendorRequest {
-	var attrs = new(VendorRequest)
-	// 解析 MAC 地址
-	ipha := h3c.H3CIPHostAddr_GetString(r.Packet)
-	if ipha != "" {
-		iphalen := len(ipha)
-		if len(ipha) > 17 {
-			attrs.MacAddr = ipha[iphalen-17:]
-		} else {
-			attrs.MacAddr = ipha
-		}
-	} else {
-		zap.L().Warn("h3c.H3CIPHostAddr is empty", zap.String("namespace", "radius"))
-		macval := rfc2865.CallingStationID_GetString(r.Packet)
-		if macval != "" {
-			attrs.MacAddr = strings.ReplaceAll(macval, "-", ":")
-		} else {
-			zap.L().Warn("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
+	// 从registry获取对应的VendorParser
+	parser, ok := registry.GetVendorParser(vendorCode)
+	if !ok {
+		zap.L().Warn("vendor parser not found, using default parser",
+			zap.String("namespace", "radius"),
+			zap.String("vendor_code", vendorCode),
+		)
+		// 如果没找到，尝试获取默认parser
+		parser, ok = registry.GetVendorParser("default")
+		if !ok {
+			// 如果连默认parser都没有，返回空结果
+			zap.L().Error("default vendor parser not found",
+				zap.String("namespace", "radius"),
+			)
+			return &VendorRequest{}
 		}
 	}
 
-	nasportid := rfc2869.NASPortID_GetString(r.Packet)
-	if nasportid == "" {
-		attrs.Vlanid1 = 0
-		attrs.Vlanid2 = 0
+	// 使用插件解析
+	vendorReq, err := parser.Parse(r)
+	if err != nil {
+		zap.L().Error("vendor parser error",
+			zap.String("namespace", "radius"),
+			zap.String("vendor_code", vendorCode),
+			zap.Error(err),
+		)
+		return &VendorRequest{}
 	}
-	return attrs
-}
 
-// 解析 ZTE 属性
-func parseVendorZte(r *radius.Request) *VendorRequest {
-	var attrs = new(VendorRequest)
-	// 解析 MAC 地址
-	macval := rfc2865.CallingStationID_GetString(r.Packet)
-	if macval != "" {
-		if len(macval) > 12 {
-			attrs.MacAddr = fmt.Sprintf("%s:%s:%s:%s:%s:%s", macval[0:2], macval[2:4], macval[4:6], macval[6:8], macval[8:10], macval[10:12])
-		} else {
-			zap.L().Warn("rfc2865.CallingStationID length < 12", zap.String("namespace", "radius"))
-		}
-	} else {
-		zap.L().Warn("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
+	// 转换为VendorRequest
+	return &VendorRequest{
+		MacAddr: vendorReq.MacAddr,
+		Vlanid1: vendorReq.Vlanid1,
+		Vlanid2: vendorReq.Vlanid2,
 	}
-	nasportid := rfc2869.NASPortID_GetString(r.Packet)
-	if nasportid == "" {
-		attrs.Vlanid1 = 0
-		attrs.Vlanid2 = 0
-	}
-	return attrs
-}
-
-// 解析标准属性
-func parseVendorRadback(r *radius.Request) *VendorRequest {
-	var attrs = new(VendorRequest)
-	// 解析 MAC 地址
-	macval := radback.MacAddr_GetString(r.Packet)
-	if macval != "" {
-		attrs.MacAddr = strings.ReplaceAll(macval, "-", ":")
-	} else {
-		zap.L().Warn("rfc2865.CallingStationID is empty", zap.String("namespace", "radius"))
-	}
-	nasportid := rfc2869.NASPortID_GetString(r.Packet)
-	if nasportid == "" {
-		attrs.Vlanid1 = 0
-		attrs.Vlanid2 = 0
-	}
-	return attrs
 }

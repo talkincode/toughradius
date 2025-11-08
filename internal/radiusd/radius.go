@@ -16,6 +16,9 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
+	repogorm "github.com/talkincode/toughradius/v9/internal/radiusd/repository/gorm"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
@@ -26,6 +29,11 @@ import (
 	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3162"
 	"layeh.com/radius/rfc4818"
+
+	// Import vendor parsers for auto-registration
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	_ "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers/parsers"
 )
 
 const (
@@ -62,12 +70,18 @@ type EapState struct {
 
 type RadiusService struct {
 	App           *app.Application
-	RejectCache   *RejectCache
 	AuthRateCache map[string]AuthRateUser
 	EapStateCache map[string]EapState
 	TaskPool      *ants.Pool
 	arclock       sync.Mutex
 	eaplock       sync.Mutex
+
+	// New Repository Layer (v9 refactoring)
+	UserRepo       repository.UserRepository
+	SessionRepo    repository.SessionRepository
+	AccountingRepo repository.AccountingRepository
+	NasRepo        repository.NasRepository
+	ConfigRepo     repository.ConfigRepository
 }
 
 func NewRadiusService() *RadiusService {
@@ -77,15 +91,25 @@ func NewRadiusService() *RadiusService {
 	}
 	pool, err := ants.NewPool(poolsize)
 	common.Must(err)
+
+	// Initialize all repositories
+	db := app.GDB()
 	s := &RadiusService{
 		AuthRateCache: make(map[string]AuthRateUser),
 		EapStateCache: make(map[string]EapState),
 		arclock:       sync.Mutex{},
 		TaskPool:      pool,
-		RejectCache: &RejectCache{
-			Items: make(map[string]*RejectItem),
-			Lock:  sync.RWMutex{},
-		}}
+		// Initialize repository layer
+		UserRepo:       repogorm.NewGormUserRepository(db),
+		SessionRepo:    repogorm.NewGormSessionRepository(db),
+		AccountingRepo: repogorm.NewGormAccountingRepository(db),
+		NasRepo:        repogorm.NewGormNasRepository(db),
+		ConfigRepo:     repogorm.NewGormConfigRepository(db),
+	}
+
+	// Note: Plugin initialization is done externally after service creation
+	// to avoid circular dependency. Call plugins.InitPlugins() from main.go.
+
 	return s
 }
 
@@ -94,10 +118,10 @@ func (s *RadiusService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) (
 }
 
 // GetNas 查询 NAS 设备, 优先查询IP, 然后ID
+// Deprecated: Use NasRepo.GetByIPOrIdentifier instead
 func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err error) {
-	err = app.GDB().
-		Where("ipaddr = ? or identifier = ?", ip, identifier).
-		First(&nas).Error
+	// Adapter: delegate to repository layer
+	nas, err = s.NasRepo.GetByIPOrIdentifier(context.Background(), ip, identifier)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, NewAuthError(app.MetricsRadiusRejectUnauthorized,
@@ -110,15 +134,14 @@ func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err e
 }
 
 // GetValidUser 获取有效用户, 初步判断用户有效性
+// Deprecated: Use UserRepo methods with plugin-based validation instead
 func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *domain.RadiusUser, err error) {
+	// Adapter: delegate to repository layer
+	ctx := context.Background()
 	if macauth {
-		err = app.GDB().
-			Where("mac_addr = ?", usernameOrMac).
-			First(&user).Error
+		user, err = s.UserRepo.GetByMacAddr(ctx, usernameOrMac)
 	} else {
-		err = app.GDB().
-			Where("username = ?", usernameOrMac).
-			First(&user).Error
+		user, err = s.UserRepo.GetByUsername(ctx, usernameOrMac)
 	}
 
 	if err != nil {
@@ -128,6 +151,7 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 		return nil, err
 	}
 
+	// Keep original validation logic for backward compatibility
 	if user.Status == common.DISABLED {
 		return nil, NewAuthError(app.MetricsRadiusRejectDisable, "user status is disabled")
 	}
@@ -139,10 +163,10 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 }
 
 // GetUserForAcct 获取用户, 不判断用户过期等状态
+// Deprecated: Use UserRepo.GetByUsername instead
 func (s *RadiusService) GetUserForAcct(username string) (user *domain.RadiusUser, err error) {
-	err = app.GDB().
-		Where("username = ?", username).
-		First(&user).Error
+	// Adapter: delegate to repository layer
+	user, err = s.UserRepo.GetByUsername(context.Background(), username)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, NewAuthError(app.MetricsRadiusRejectNotExists, "user not exists")
@@ -152,30 +176,32 @@ func (s *RadiusService) GetUserForAcct(username string) (user *domain.RadiusUser
 	return user, nil
 }
 
+// Deprecated: Use UserRepo.UpdateField instead
 func (s *RadiusService) UpdateUserField(username string, field string, value interface{}) {
-	err := app.GDB().
-		Model(&domain.RadiusUser{}).
-		Where("username = ?", username).
-		Update(field, value).Error
+	err := s.UserRepo.UpdateField(context.Background(), username, field, value)
 	if err != nil {
 		zap.L().Error(fmt.Sprintf("update user %s error", field), zap.Error(err), zap.String("namespace", "radius"))
 	}
 }
 
+// Deprecated: Use UserRepo.UpdateMacAddr instead
 func (s *RadiusService) UpdateUserMac(username string, macaddr string) {
-	s.UpdateUserField(username, "mac_addr", macaddr)
+	_ = s.UserRepo.UpdateMacAddr(context.Background(), username, macaddr)
 }
 
+// Deprecated: Use UserRepo.UpdateVlanId instead
 func (s *RadiusService) UpdateUserVlanid1(username string, vlanid1 int) {
-	s.UpdateUserField(username, "vlanid1", vlanid1)
+	_ = s.UserRepo.UpdateVlanId(context.Background(), username, vlanid1, 0)
 }
 
+// Deprecated: Use UserRepo.UpdateVlanId instead
 func (s *RadiusService) UpdateUserVlanid2(username string, vlanid2 int) {
-	s.UpdateUserField(username, "vlanid2", vlanid2)
+	_ = s.UserRepo.UpdateVlanId(context.Background(), username, 0, vlanid2)
 }
 
+// Deprecated: Use UserRepo.UpdateLastOnline instead
 func (s *RadiusService) UpdateUserLastOnline(username string) {
-	s.UpdateUserField(username, "last_online", time.Now())
+	_ = s.UserRepo.UpdateLastOnline(context.Background(), username)
 }
 
 func (s *RadiusService) GetIntConfig(name string, defval int64) int64 {
@@ -277,15 +303,13 @@ func (s *RadiusService) ReleaseAuthRateLimit(username string) {
 	delete(s.AuthRateCache, username)
 }
 
+// Deprecated: Use SessionRepo.Create instead
 func (s *RadiusService) AddRadiusOnline(ol domain.RadiusOnline) error {
 	ol.ID = common.UUIDint64()
-	err := app.GDB().Create(&ol).Error
-	if err != nil {
-		return err
-	}
-	return nil
+	return s.SessionRepo.Create(context.Background(), &ol)
 }
 
+// Deprecated: Use AccountingRepo.Create instead
 func (s *RadiusService) AddRadiusAccounting(ol domain.RadiusOnline, start bool) error {
 	accounting := domain.RadiusAccounting{
 		ID:                  common.UUIDint64(),
@@ -319,79 +343,52 @@ func (s *RadiusService) AddRadiusAccounting(ol domain.RadiusOnline, start bool) 
 	if !start {
 		accounting.AcctStopTime = time.Now()
 	}
-	return app.GDB().Create(&accounting).Error
+	return s.AccountingRepo.Create(context.Background(), &accounting)
 }
 
+// Deprecated: Use SessionRepo.CountByUsername instead
 func (s *RadiusService) GetRadiusOnlineCount(username string) int {
-	var count int64
-	app.GDB().Model(&domain.RadiusOnline{}).
-		Where("username = ?", username).
-		Count(&count)
-	return int(count)
+	count, _ := s.SessionRepo.CountByUsername(context.Background(), username)
+	return count
 }
 
+// Deprecated: Use SessionRepo.Exists instead
 func (s *RadiusService) ExistRadiusOnline(sessionId string) bool {
-	var count int64
-	app.GDB().Model(&domain.RadiusOnline{}).
-		Where("acct_session_id = ?", sessionId).
-		Count(&count)
-	return count > 0
+	exists, _ := s.SessionRepo.Exists(context.Background(), sessionId)
+	return exists
 }
 
+// Deprecated: Use SessionRepo.Update instead
 func (s *RadiusService) UpdateRadiusOnlineData(data domain.RadiusOnline) error {
-	param := map[string]interface{}{
-		"acct_input_total":    data.AcctInputTotal,
-		"acct_output_total":   data.AcctOutputTotal,
-		"acct_input_packets":  data.AcctInputPackets,
-		"acct_output_packets": data.AcctOutputPackets,
-		"acct_session_time":   data.AcctSessionTime,
-		"last_update":         time.Now(),
-	}
-	return app.GDB().Model(&domain.RadiusOnline{}).
-		Where("acct_session_id= ?", data.AcctSessionId).
-		Updates(&param).Error
+	return s.SessionRepo.Update(context.Background(), &data)
 }
 
+// Deprecated: Use AccountingRepo.UpdateStop instead
 func (s *RadiusService) EndRadiusAccounting(online domain.RadiusOnline) error {
-	param := map[string]interface{}{
-		"acct_stop_time":      time.Now(),
-		"acct_input_total":    online.AcctInputTotal,
-		"acct_output_total":   online.AcctOutputTotal,
-		"acct_input_packets":  online.AcctInputPackets,
-		"acct_output_packets": online.AcctOutputPackets,
-		"acct_session_time":   online.AcctSessionTime,
+	accounting := domain.RadiusAccounting{
+		AcctSessionId:     online.AcctSessionId,
+		AcctSessionTime:   online.AcctSessionTime,
+		AcctInputTotal:    online.AcctInputTotal,
+		AcctOutputTotal:   online.AcctOutputTotal,
+		AcctInputPackets:  online.AcctInputPackets,
+		AcctOutputPackets: online.AcctOutputPackets,
 	}
-
-	result := app.GDB().Model(&domain.RadiusAccounting{}).
-		Where("acct_session_id = ?", online.AcctSessionId).
-		Updates(&param)
-
-	if result.Error != nil {
-		// 处理错误
-		return result.Error
-	}
-
-	if result.RowsAffected == 0 {
-		// 没有记录被更新，记录可能不存在
-		return fmt.Errorf("no records found with acct_session_id = %v", online.AcctSessionId)
-	}
-
-	return nil
+	return s.AccountingRepo.UpdateStop(context.Background(), online.AcctSessionId, &accounting)
 }
 
+// Deprecated: Use SessionRepo.Delete instead
 func (s *RadiusService) RemoveRadiusOnline(sessionId string) error {
-	return app.GDB().
-		Where("acct_session_id = ?", sessionId).
-		Delete(&domain.RadiusOnline{}).Error
+	return s.SessionRepo.Delete(context.Background(), sessionId)
 }
 
+// Deprecated: Use SessionRepo.BatchDelete instead
 func (s *RadiusService) BatchClearRadiusOnline(ids string) error {
-	return app.GDB().Where("id in (?)", strings.Split(ids, ",")).Delete(&domain.RadiusOnline{}).Error
+	return s.SessionRepo.BatchDelete(context.Background(), strings.Split(ids, ","))
 }
 
+// Deprecated: Use SessionRepo.BatchDeleteByNas instead
 func (s *RadiusService) BatchClearRadiusOnlineByNas(nasip, nasid string) {
-	_ = app.GDB().Where("nas_addr = ?", nasip).Delete(&domain.RadiusOnline{})
-	_ = app.GDB().Where("nas_id = ?", nasid).Delete(&domain.RadiusOnline{})
+	_ = s.SessionRepo.BatchDeleteByNas(context.Background(), nasip, nasid)
 }
 
 func (s *RadiusService) Release() {
@@ -452,4 +449,77 @@ func (s *RadiusService) DeleteEapState(stateid string) {
 	s.eaplock.Lock()
 	defer s.eaplock.Unlock()
 	delete(s.EapStateCache, stateid)
+}
+
+func (s *AuthService) GetLocalPassword(user *domain.RadiusUser, isMacAuth bool) (string, error) {
+	if isMacAuth {
+		return user.MacAddr, nil
+	}
+	return user.Password, nil
+}
+
+func (s *AuthService) UpdateBind(user *domain.RadiusUser, vendorReq *VendorRequest) {
+	if user.MacAddr != vendorReq.MacAddr {
+		s.UpdateUserMac(user.Username, vendorReq.MacAddr)
+	}
+	reqvid1 := int(vendorReq.Vlanid1)
+	reqvid2 := int(vendorReq.Vlanid2)
+	if user.Vlanid1 != reqvid1 {
+		s.UpdateUserVlanid2(user.Username, reqvid1)
+	}
+	if user.Vlanid2 != reqvid2 {
+		s.UpdateUserVlanid2(user.Username, reqvid2)
+	}
+}
+
+// ApplyAcceptEnhancers 用户属性策略下发配置（插件化）
+func (s *AuthService) ApplyAcceptEnhancers(
+	user *domain.RadiusUser,
+	nas *domain.NetNas,
+	vendorReq *vendorparsers.VendorRequest,
+	radAccept *radius.Packet,
+) {
+	authCtx := &auth.AuthContext{
+		User:          user,
+		Nas:           nas,
+		VendorRequest: vendorReq,
+		Response:      radAccept,
+	}
+
+	ctx := context.Background()
+	for _, enhancer := range registry.GetResponseEnhancers() {
+		if err := enhancer.Enhance(ctx, authCtx); err != nil {
+			zap.L().Warn("response enhancer failed",
+				zap.String("enhancer", enhancer.Name()),
+				zap.Error(err))
+		}
+	}
+}
+
+
+
+func (s *RadiusService) DoAcctDisconnect(r *radius.Request, nas *domain.NetNas, username, nasrip string) {
+	packet := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
+	sessionid := rfc2866.AcctSessionID_GetString(r.Packet)
+	if sessionid == "" {
+		return
+	}
+	_ = rfc2865.UserName_SetString(packet, username)
+	_ = rfc2866.AcctSessionID_Set(packet, []byte(sessionid))
+	response, err := radius.Exchange(context.Background(), packet, fmt.Sprintf("%s:%d", nasrip, nas.CoaPort))
+	if err != nil {
+		zap.L().Error("radius disconnect error",
+			zap.String("namespace", "radius"),
+			zap.String("username", username),
+			zap.Error(err),
+		)
+		return
+	}
+	zap.L().Info("radius disconnect done",
+		zap.String("namespace", "radius"),
+		zap.String("nasip", nasrip),
+		zap.Int("coaport", nas.CoaPort),
+		zap.String("request", FmtPacket(packet)),
+		zap.String("response", FmtPacket(response)),
+	)
 }

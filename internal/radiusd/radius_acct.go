@@ -1,10 +1,12 @@
 package radiusd
 
 import (
+	"context"
 	"errors"
 	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
+	vendorparserspkg "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
@@ -81,31 +83,23 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	// async process accounting
 	common.Must(s.TaskPool.Submit(func() {
-		switch statusType {
-		case rfc2866.AcctStatusType_Value_Start:
-			zap.L().Info("radius accounting start",
+		// 将vendorReq转换为vendorparsers.VendorRequest用于插件
+		vendorReqForPlugin := &vendorparserspkg.VendorRequest{
+			MacAddr: vendorReq.MacAddr,
+			Vlanid1: vendorReq.Vlanid1,
+			Vlanid2: vendorReq.Vlanid2,
+		}
+
+		// 使用插件系统处理计费请求
+		ctx := context.Background()
+		err := s.HandleAccountingWithPlugins(ctx, r, vendorReqForPlugin, username, nas, nasrip)
+		if err != nil {
+			zap.L().Error("accounting plugin processing error",
 				zap.String("namespace", "radius"),
-				zap.String("metrics", app.MetricsRadiusOline),
+				zap.String("username", username),
+				zap.Int("status_type", int(statusType)),
+				zap.Error(err),
 			)
-			user, err := s.GetUserForAcct(username)
-			common.Must(err)
-			s.DoAcctStart(r, vendorReq, user.Username, nas, nasrip)
-		case rfc2866.AcctStatusType_Value_InterimUpdate:
-			user, err := s.GetUserForAcct(username)
-			common.Must(err)
-			s.DoAcctUpdateBefore(r, vendorReq, user, nas, nasrip)
-		case rfc2866.AcctStatusType_Value_Stop:
-			zap.L().Info("radius accounting stop",
-				zap.String("namespace", "radius"),
-				zap.String("metrics", app.MetricsRadiusOffline),
-			)
-			user, err := s.GetUserForAcct(username)
-			common.Must(err)
-			s.DoAcctStop(r, vendorReq, user.Username, nas, nasrip)
-		case rfc2866.AcctStatusType_Value_AccountingOn:
-			s.DoAcctNasOn(r)
-		case rfc2866.AcctStatusType_Value_AccountingOff:
-			s.DoAcctNasOff(r)
 		}
 	}))
 }

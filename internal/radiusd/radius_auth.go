@@ -1,23 +1,31 @@
 package radiusd
 
 import (
-	"fmt"
+	"context"
 	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
+	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
+	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
-	"layeh.com/radius/rfc2869"
 )
 
 type AuthService struct {
 	*RadiusService
+	eapHelper *EAPAuthHelper
 }
 
 func NewAuthService(radiusService *RadiusService) *AuthService {
-	return &AuthService{RadiusService: radiusService}
+	return &AuthService{
+		RadiusService: radiusService,
+		eapHelper:     NewEAPAuthHelper(),
+	}
 }
 
 func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
@@ -53,9 +61,8 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	}
 
 	var eapMethod = s.GetEapMethod()
-	var isEap = false
-	eapmsg, err := parseEAPMessage(r.Packet)
-	if err == nil {
+	var isEap bool
+	if _, err := eap.ParseEAPMessage(r.Packet); err == nil {
 		isEap = true
 	}
 
@@ -68,79 +75,19 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	// Username empty  check
 	if username == "" {
-		s.CheckRadAuthError(callingStationID, ip, NewAuthError(app.MetricsRadiusRejectNotExists, "username is empty of client mac"))
+		s.handleAuthError("validate_username", r, nil, nil, nil, false, callingStationID, ip,
+			NewAuthError(app.MetricsRadiusRejectNotExists, "username is empty of client mac"))
 	}
 
 	nas, err := s.GetNas(ip, identifier)
-	s.CheckRadAuthError(username, ip, err)
+	s.handleAuthError("load_nas", r, nil, nil, nil, false, username, ip, err)
 
 	//  setup new packet secret
 	r.Secret = []byte(nas.Secret)
 	r.Packet.Secret = []byte(nas.Secret)
 
 	if !isEap {
-		s.CheckRadAuthError(username, ip, s.CheckAuthRateLimit(username))
-	}
-
-	processEapType := func(eaptype byte) error {
-		switch eaptype {
-		case EAPTypeMD5Challenge:
-			// 发送EAP-Request/MD5-Challenge消息
-			err = s.sendEapMD5ChallengeRequest(w, r, nas.Secret)
-			if err != nil {
-				return fmt.Errorf("eap: sendEapMD5ChallengeRequest error: %s", err)
-			}
-		case EAPTypeMSCHAPv2:
-			// 发送EAP-Request/MSCHAPv2-Challenge消息
-			err = s.sendEapMsChapV2Request(w, r, nas.Secret)
-			if err != nil {
-				return fmt.Errorf("eap: sendEapMsChapV2Request error: %s", err)
-			}
-		case EAPTypeOTP:
-			// 发送 EAP-Request/OTP-Challenge
-			err = s.sendEapOTPChallengeRequest(w, r, nas.Secret)
-			if err != nil {
-				return fmt.Errorf("eap: sendEapOTPChallengeRequest error: %s", err)
-			}
-		default:
-			return fmt.Errorf("eap: unsupported eap type: %d", eaptype)
-		}
-		return nil
-	}
-
-	// process EAP-Response/Identity
-	if isEap && eapmsg.Code == EAPCodeResponse && eapmsg.Type == EAPTypeIdentity {
-		eaptype := byte(0x00)
-		switch eapMethod {
-		case EapMd5Method:
-			eaptype = EAPTypeMD5Challenge
-		case EapMschapv2Method:
-			eaptype = EAPTypeMSCHAPv2
-		case EapOTPMethod:
-			eaptype = EAPTypeOTP
-		}
-		err := processEapType(eaptype)
-		if err != nil {
-			s.CheckRadAuthError(username, ip, fmt.Errorf("eap: processEapType error: %s", err))
-		} else {
-			return
-		}
-	}
-
-	// Process EAPTypeNak
-	if isEap && eapmsg.Type == EAPTypeNak {
-		if len(eapmsg.Data) == 0 {
-			fmt.Println("No alternative EAP methods suggested.")
-			return
-		}
-		for _, eapMethod := range eapmsg.Data {
-			err := processEapType(eapMethod)
-			if err != nil {
-				s.CheckRadAuthError(username, ip, fmt.Errorf("eap: processEapType error: %s", err))
-			} else {
-				return
-			}
-		}
+		s.handleAuthError("auth_rate_limit", r, nil, nas, nil, false, username, ip, s.CheckAuthRateLimit(username))
 	}
 
 	response := r.Response(radius.CodeAccessAccept)
@@ -150,130 +97,79 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	// Fetch validate user
 	isMacAuth := vendorReq.MacAddr == username
 	user, err := s.GetValidUser(username, isMacAuth)
-	s.CheckRadAuthError(username, ip, err)
+	s.handleAuthError("load_user", r, nil, nas, nil, isMacAuth, username, ip, err)
 
-	if !isMacAuth {
-		// check subscribe active num
-		s.CheckRadAuthError(username, ip, s.CheckOnlineCount(username, user.ActiveNum))
+	// 注意：策略检查（在线数、MAC绑定、VLAN绑定）现在由插件系统处理
+	// 在 AuthenticateUserWithPlugins() 中执行
 
-		// Username Mac bind check
-		s.CheckRadAuthError(username, ip, s.CheckMacBind(user, vendorReq))
-
-		// Username vlanid check
-		s.CheckRadAuthError(username, ip, s.CheckVlanBind(user, vendorReq))
+	vendorReqForPlugin := &vendorparsers.VendorRequest{
+		MacAddr: vendorReq.MacAddr,
+		Vlanid1: vendorReq.Vlanid1,
+		Vlanid2: vendorReq.Vlanid2,
 	}
 
-	sendAccept := func() {
-		if isEap {
-			eapSuccess := NewEAPSuccess(r.Identifier)
-			// 设置EAP-Message属性
-			rfc2869.EAPMessage_Set(response, eapSuccess.Serialize())
-			rfc2869.MessageAuthenticator_Set(response, make([]byte, 16))
-			authenticator := generateMessageAuthenticator(response, nas.Secret)
-			// 设置Message-Authenticator属性
-			rfc2869.MessageAuthenticator_Set(response, authenticator)
+	sendAccept := func(isEapFlow bool) {
+		s.ApplyAcceptEnhancers(user, nas, vendorReqForPlugin, response)
+
+		if isEapFlow && s.eapHelper != nil {
+			if err := s.eapHelper.SendEAPSuccess(w, r, response, nas.Secret); err != nil {
+				zap.L().Error("send eap success failed",
+					zap.String("namespace", "radius"),
+					zap.Error(err),
+				)
+			}
+			s.eapHelper.CleanupState(r)
+		} else {
+			s.SendAccept(w, r, response)
 		}
-		s.AcceptAcceptConfig(user, nas.VendorCode, response)
-		s.SendAccept(w, r, response)
+
 		s.UpdateBind(user, vendorReq)
 		s.UpdateUserLastOnline(user.Username)
 		zap.L().Info("radius auth sucess",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),
 			zap.String("nasip", ip),
+			zap.Bool("is_eap", isEapFlow),
 			zap.String("result", "success"),
 			zap.String("metrics", app.MetricsRadiusAccept),
 		)
 	}
 
-	if isEap && eapmsg.Code == EAPCodeResponse {
-		switch eapmsg.Type {
-		case EAPTypeMD5Challenge:
-			stateid := rfc2865.State_GetString(r.Packet)
-			eapState, err := s.GetEapState(stateid)
-			if err != nil {
-				s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: get eap state error"))
-				return
-			}
-			localpwd, err := s.GetLocalPassword(user, isMacAuth)
-			if err != nil {
-				s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: get local password error: %s", err))
-				return
-			}
-			if !s.verifyEapMD5Response(eapmsg.Identifier, localpwd, eapState.Challenge, eapmsg.Data) {
-				s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: verify eap md5 response error"))
-				return
-			}
-			eapState.Success = true
-			sendAccept()
+	ctx := context.Background()
 
-		case EAPTypeOTP:
-			stateid := rfc2865.State_GetString(r.Packet)
-			eapState, err := s.GetEapState(stateid)
-			if err != nil {
-				s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: get eap state error"))
-				return
-			}
+	if isEap && s.eapHelper != nil {
+		handled, success, eapErr := s.eapHelper.HandleEAPAuthentication(
+			w, r, user, nas, vendorReqForPlugin, response, eapMethod,
+		)
 
-			otpPassword := "123456"
-			if string(eapmsg.Data) != otpPassword {
-				s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: verify otp response error"))
-				return
-			}
-			eapState.Success = true
-			sendAccept()
-
-		case EAPTypeMSCHAPv2:
-			opcode, err := parseEAPMSCHAPv2OpCode(r.Packet)
-			if err != nil {
-				s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: parse eap mschapv2 opcode error"))
-				return
-			}
-
-			switch opcode {
-			case MSCHAPv2Response:
-				stateid := rfc2865.State_GetString(r.Packet)
-				eapState, err := s.GetEapState(stateid)
-				if err != nil {
-					s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: get eap state error"))
-					return
-				}
-				localpwd, err := s.GetLocalPassword(user, isMacAuth)
-				if err != nil {
-					s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: get local password error: %s", err))
-					return
-				}
-				eapMv2Message, err := ParseEAPMSCHAPv2Response(r.Packet)
-				if err != nil {
-					s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: parse eap mschapv2 response error"))
-					return
-				}
-				err = s.CheckMsChapV2Password(
-					username, localpwd, eapState.Challenge,
-					eapMv2Message.Identifier,
-					eapMv2Message.PeerChallenge[:],
-					eapMv2Message.Response[:],
-					response,
-				)
-				if err != nil {
-					s.SendEapFailureReject(w, r, nas.Secret, fmt.Errorf("eap: verify mschapv2 response error"))
-					return
-				}
-				eapState.Success = true
-				sendAccept()
-			case MSCHAPv2Success:
-				sendAccept()
-			}
+		if eapErr != nil {
+			zap.L().Warn("eap handling failed",
+				zap.String("namespace", "radius"),
+				zap.Error(eapErr),
+			)
+			_ = s.eapHelper.SendEAPFailure(w, r, nas.Secret, eapErr)
+			s.eapHelper.CleanupState(r)
+			return
 		}
 
-	} else {
-		localpwd, err := s.GetLocalPassword(user, isMacAuth)
-		if err != nil {
-			s.CheckRadAuthError(username, ip, fmt.Errorf("user local password error: %s", err))
+		if handled {
+			if success {
+				err = s.AuthenticateUserWithPlugins(ctx, r, response, user, nas, vendorReqForPlugin, isMacAuth, SkipPasswordValidation())
+				if err != nil {
+					_ = s.eapHelper.SendEAPFailure(w, r, nas.Secret, err)
+					s.eapHelper.CleanupState(r)
+					return
+				}
+				sendAccept(true)
+			}
+			return
 		}
-		s.CheckRadAuthError(username, ip, s.CheckPassword(r, user.Username, localpwd, response, isMacAuth))
-		sendAccept()
 	}
+
+	err = s.AuthenticateUserWithPlugins(ctx, r, response, user, nas, vendorReqForPlugin, isMacAuth)
+	s.handleAuthError("plugin_auth", r, user, nas, vendorReqForPlugin, isMacAuth, username, ip, err)
+
+	sendAccept(false)
 
 	// s.CheckRequestSecret(r.Packet, []byte(nas.Secret))
 }
@@ -294,9 +190,8 @@ func (s *AuthService) SendAccept(w radius.ResponseWriter, r *radius.Request, res
 
 	common.Must(w.Write(resp))
 
-	state := rfc2865.State_GetString(r.Packet)
-	if state != "" {
-		s.DeleteEapState(state)
+	if s.eapHelper != nil {
+		s.eapHelper.CleanupState(r)
 	}
 
 	if app.GConfig().Radiusd.Debug {
@@ -331,9 +226,8 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 
 	_ = w.Write(resp)
 
-	state := rfc2865.State_GetString(r.Packet)
-	if state != "" {
-		s.DeleteEapState(state)
+	if s.eapHelper != nil {
+		s.eapHelper.CleanupState(r)
 	}
 
 	// debug message
@@ -342,45 +236,50 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 	}
 }
 
-func (s *AuthService) SendEapFailureReject(w radius.ResponseWriter, r *radius.Request, secret string, err error) {
-	defer func() {
-		if ret := recover(); ret != nil {
-			err2, ok := ret.(error)
-			if ok {
-				zap.L().Error("radius write eap reject response error",
-					zap.String("namespace", "radius"),
-					zap.String("metrics", app.MetricsRadiusAuthDrop),
-					zap.Error(err2),
-				)
-			}
+func (s *AuthService) handleAuthError(
+	stage string,
+	r *radius.Request,
+	user interface{},
+	nas *domain.NetNas,
+	vendorReq *vendorparsers.VendorRequest,
+	isMacAuth bool,
+	username string,
+	nasip string,
+	err error,
+) {
+	if err == nil {
+		return
+	}
+
+	var radiusUser *domain.RadiusUser
+	if u, ok := user.(*domain.RadiusUser); ok {
+		radiusUser = u
+	}
+
+	metadata := map[string]interface{}{
+		"stage": stage,
+	}
+	if username != "" {
+		metadata["username"] = username
+	}
+	if nasip != "" {
+		metadata["nas_ip"] = nasip
+	}
+
+	authCtx := &auth.AuthContext{
+		Request:       r,
+		User:          radiusUser,
+		Nas:           nas,
+		VendorRequest: vendorReq,
+		IsMacAuth:     isMacAuth,
+		Metadata:      metadata,
+	}
+
+	for _, guard := range registry.GetAuthGuards() {
+		if guardErr := guard.OnError(context.Background(), authCtx, stage, err); guardErr != nil {
+			panic(guardErr)
 		}
-	}()
-
-	var code = radius.CodeAccessReject
-	var resp = r.Response(code)
-	if err != nil {
-		msg := err.Error()
-		if len(msg) > 253 {
-			msg = msg[:253]
-		}
-		_ = rfc2865.ReplyMessage_SetString(resp, msg)
 	}
 
-	eapFailure := NewEAPFailure(r.Identifier)
-	rfc2869.EAPMessage_Set(resp, eapFailure.Serialize())
-	rfc2869.MessageAuthenticator_Set(resp, make([]byte, 16))
-	authenticator := generateMessageAuthenticator(resp, secret)
-	rfc2869.MessageAuthenticator_Set(resp, authenticator)
-
-	_ = w.Write(resp)
-
-	state := rfc2865.State_GetString(r.Packet)
-	if state != "" {
-		s.DeleteEapState(state)
-	}
-
-	// debug message
-	if app.GConfig().Radiusd.Debug {
-		zap.S().Info(FmtResponse(resp, r.RemoteAddr))
-	}
+	panic(err)
 }
