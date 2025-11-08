@@ -20,7 +20,7 @@
    - 精简 `scripts/`、`Makefile`、CI 任务，仅保留 `build`, `test`, `release`.
 2. **后端重构阶段**
    - 重新梳理 `cmd/toughradius` 启动逻辑，确保仅加载 RADIUS 所需组件。
-   - 划分 `internal/adminapi`（新 API）、`internal/radius`, `internal/storage`.
+   - 划分 `internal/adminapi`（新 API）、`internal/radiusd`, `internal/storage`.
    - 统一配置（`config/` + `toughradius.yml`）仅暴露 RADIUS 与 Admin API 相关字段。
    - 引入版本化的 migration 与种子数据，确保 Admin UI 初始可登陆。
 3. **前端重构阶段**

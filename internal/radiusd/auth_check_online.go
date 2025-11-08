@@ -1,4 +1,4 @@
-package toughradius
+package radiusd
 
 import (
 	"github.com/talkincode/toughradius/v9/internal/app"

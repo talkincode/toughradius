@@ -1,4 +1,4 @@
-package toughradius
+package radiusd
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 	"github.com/panjf2000/ants/v2"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/huawei"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"gorm.io/gorm"

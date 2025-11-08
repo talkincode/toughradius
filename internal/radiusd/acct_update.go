@@ -1,4 +1,4 @@
-package toughradius
+package radiusd
 
 import (
 	"time"

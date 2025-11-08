@@ -15,6 +15,11 @@ type SysConfig struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// TableName 指定表名
+func (SysConfig) TableName() string {
+	return "sys_config"
+}
+
 type SysOpr struct {
 	ID        int64     `json:"id,string" form:"id"`
 	Realname  string    `json:"realname" form:"realname"`
@@ -30,6 +35,11 @@ type SysOpr struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// TableName 指定表名
+func (SysOpr) TableName() string {
+	return "sys_opr"
+}
+
 type SysOprLog struct {
 	ID        int64     `json:"id,string"`
 	OprName   string    `json:"opr_name"`
@@ -37,4 +47,9 @@ type SysOprLog struct {
 	OptAction string    `json:"opt_action"`
 	OptDesc   string    `json:"opt_desc"`
 	OptTime   time.Time `json:"opt_time"`
+}
+
+// TableName 指定表名
+func (SysOprLog) TableName() string {
+	return "sys_opr_log"
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/adminapi"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/freeradius"
-	toughradius "github.com/talkincode/toughradius/v9/internal/radius"
+	"github.com/talkincode/toughradius/v9/internal/radiusd"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"golang.org/x/sync/errgroup"
@@ -78,23 +78,23 @@ func main() {
 		return freeradius.Listen()
 	})
 
-	radiusService := toughradius.NewRadiusService()
+	radiusService := radiusd.NewRadiusService()
 	defer radiusService.Release()
 
 	g.Go(func() error {
-		return toughradius.ListenRadiusAuthServer(toughradius.NewAuthService(radiusService))
+		return radiusd.ListenRadiusAuthServer(radiusd.NewAuthService(radiusService))
 	})
 
 	g.Go(func() error {
-		return toughradius.ListenRadiusAcctServer(toughradius.NewAcctService(radiusService))
+		return radiusd.ListenRadiusAcctServer(radiusd.NewAcctService(radiusService))
 	})
 
 	g.Go(func() error {
-		radsec := toughradius.NewRadsecService(
-			toughradius.NewAuthService(radiusService),
-			toughradius.NewAcctService(radiusService),
+		radsec := radiusd.NewRadsecService(
+			radiusd.NewAuthService(radiusService),
+			radiusd.NewAcctService(radiusService),
 		)
-		return toughradius.ListenRadsecServer(radsec)
+		return radiusd.ListenRadsecServer(radsec)
 	})
 
 	if err := g.Wait(); err != nil {

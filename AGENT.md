@@ -48,20 +48,20 @@
 
    ```bash
    # 创建测试文件
-   touch internal/radius/new_feature_test.go
+   touch internal/radiusd/new_feature_test.go
 
    # 运行测试（应该失败）
-   go test ./internal/radius/new_feature_test.go -v
+   go test ./internal/radiusd/new_feature_test.go -v
    ```
 
 2. **绿灯阶段** - 编写最小实现使测试通过
 
    ```bash
    # 实现功能代码
-   vim internal/radius/new_feature.go
+   vim internal/radiusd/new_feature.go
 
    # 再次运行测试（应该通过）
-   go test ./internal/radius/new_feature_test.go -v
+   go test ./internal/radiusd/new_feature_test.go -v
    ```
 
 3. **重构阶段** - 优化代码同时保持测试通过
@@ -82,14 +82,14 @@ go test ./... -coverprofile=coverage.out
 go tool cover -html=coverage.out
 
 # 查看覆盖率统计
-go test ./internal/radius -coverprofile=coverage.out
+go test ./internal/radiusd -coverprofile=coverage.out
 go tool cover -func=coverage.out
 ```
 
 #### 测试文件组织
 
 ```
-internal/radius/
+internal/radiusd/
 ├── auth_passwd_check.go          # 实现文件
 ├── auth_passwd_check_test.go     # 单元测试（同包）
 ├── radius_auth.go
@@ -173,19 +173,19 @@ git checkout -b feature/add-cisco-vendor
 
 ```bash
 # 1️⃣ 先写测试
-vim internal/radius/vendors/cisco/cisco_test.go
+vim internal/radiusd/vendors/cisco/cisco_test.go
 
 # 2️⃣ 运行测试（红灯）
-go test ./internal/radius/vendors/cisco -v
+go test ./internal/radiusd/vendors/cisco -v
 
 # 3️⃣ 实现功能
-vim internal/radius/vendors/cisco/cisco.go
+vim internal/radiusd/vendors/cisco/cisco.go
 
 # 4️⃣ 运行测试（绿灯）
-go test ./internal/radius/vendors/cisco -v
+go test ./internal/radiusd/vendors/cisco -v
 
 # 5️⃣ 提交原子化的变更
-git add internal/radius/vendors/cisco/
+git add internal/radiusd/vendors/cisco/
 git commit -m "test: add Cisco vendor attribute parsing tests"
 git commit -m "feat: implement Cisco vendor attribute parsing"
 ```
@@ -401,7 +401,7 @@ Title: [Feature] 添加 Cisco RADIUS 厂商支持
 git checkout -b feature/cisco-vendor-mvp1 v9dev
 
 # 2️⃣ 先写测试（红灯）
-cat > internal/radius/vendors/cisco/cisco_test.go << 'EOF'
+cat > internal/radiusd/vendors/cisco/cisco_test.go << 'EOF'
 package cisco
 
 import "testing"
@@ -425,10 +425,10 @@ func TestParseCiscoAVPair(t *testing.T) {
 EOF
 
 # 3️⃣ 运行测试（应该失败）
-go test ./internal/radius/vendors/cisco -v
+go test ./internal/radiusd/vendors/cisco -v
 
 # 4️⃣ 实现最小可用代码（绿灯）
-cat > internal/radius/vendors/cisco/cisco.go << 'EOF'
+cat > internal/radiusd/vendors/cisco/cisco.go << 'EOF'
 package cisco
 
 func ParseAVPair(input string) map[string]string {
@@ -438,13 +438,13 @@ func ParseAVPair(input string) map[string]string {
 EOF
 
 # 5️⃣ 运行测试（应该通过）
-go test ./internal/radius/vendors/cisco -v
+go test ./internal/radiusd/vendors/cisco -v
 
 # 6️⃣ 重构优化
 # 改进实现，持续确保测试通过
 
 # 7️⃣ 检查覆盖率
-go test ./internal/radius/vendors/cisco -coverprofile=coverage.out
+go test ./internal/radiusd/vendors/cisco -coverprofile=coverage.out
 go tool cover -func=coverage.out | grep total
 ```
 
@@ -452,10 +452,10 @@ go tool cover -func=coverage.out | grep total
 
 ```bash
 # 原子化提交
-git add internal/radius/vendors/cisco/cisco_test.go
+git add internal/radiusd/vendors/cisco/cisco_test.go
 git commit -m "test(radius): add Cisco AVPair parsing tests"
 
-git add internal/radius/vendors/cisco/cisco.go
+git add internal/radiusd/vendors/cisco/cisco.go
 git commit -m "feat(radius): implement Cisco AVPair parsing (MVP-1)"
 
 git add docs/radius/cisco-vendor.md

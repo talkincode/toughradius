@@ -154,7 +154,7 @@ toughradius/
 go test ./...
 
 # 运行基准测试
-go test -bench=. ./internal/radius/
+go test -bench=. ./internal/radiusd/
 
 # 启动开发模式
 go run main.go -c toughradius.yml

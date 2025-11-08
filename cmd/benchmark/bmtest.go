@@ -17,7 +17,7 @@ import (
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/host"
 	"github.com/shirou/gopsutil/v4/mem"
-	toughradius "github.com/talkincode/toughradius/v9/internal/radius"
+	"github.com/talkincode/toughradius/v9/internal/radiusd"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"github.com/talkincode/toughradius/v9/pkg/timeutil"
 	"layeh.com/radius"
@@ -481,14 +481,14 @@ func sendAuth() error {
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stdout, toughradius.FmtPacket(radreq))
+	fmt.Fprintln(os.Stdout, radiusd.FmtPacket(radreq))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 	defer cancel()
 	radresp, err := radius.Exchange(ctx, radreq, fmt.Sprintf("%s:%d", *server, *authport))
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(os.Stdout, toughradius.FmtPacket(radresp))
+	fmt.Fprintln(os.Stdout, radiusd.FmtPacket(radresp))
 	return nil
 }
 
@@ -496,36 +496,36 @@ func sendAcct() error {
 	sessionid, _ := common.UUIDBase32()
 	if *acctstart {
 		startreq := getAcctRequest(*user, *userip, *usermac, sessionid, rfc2866.AcctStatusType_Value_Start)
-		fmt.Fprintln(os.Stdout, toughradius.FmtPacket(startreq))
+		fmt.Fprintln(os.Stdout, radiusd.FmtPacket(startreq))
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 		defer cancel()
 		radresp, err := radius.Exchange(ctx, startreq, fmt.Sprintf("%s:%d", *server, *acctport))
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stdout, toughradius.FmtPacket(radresp))
+		fmt.Fprintln(os.Stdout, radiusd.FmtPacket(radresp))
 	}
 	if *acctupdate {
 		startreq := getAcctRequest(*user, *userip, *usermac, sessionid, rfc2866.AcctStatusType_Value_InterimUpdate)
-		fmt.Fprintln(os.Stdout, toughradius.FmtPacket(startreq))
+		fmt.Fprintln(os.Stdout, radiusd.FmtPacket(startreq))
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 		defer cancel()
 		radresp, err := radius.Exchange(ctx, startreq, fmt.Sprintf("%s:%d", *server, *acctport))
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stdout, toughradius.FmtPacket(radresp))
+		fmt.Fprintln(os.Stdout, radiusd.FmtPacket(radresp))
 	}
 	if *acctstop {
 		startreq := getAcctRequest(*user, *userip, *usermac, sessionid, rfc2866.AcctStatusType_Value_Stop)
-		fmt.Fprintln(os.Stdout, toughradius.FmtPacket(startreq))
+		fmt.Fprintln(os.Stdout, radiusd.FmtPacket(startreq))
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 		defer cancel()
 		radresp, err := radius.Exchange(ctx, startreq, fmt.Sprintf("%s:%d", *server, *acctport))
 		if err != nil {
 			return err
 		}
-		fmt.Fprintln(os.Stdout, toughradius.FmtPacket(radresp))
+		fmt.Fprintln(os.Stdout, radiusd.FmtPacket(radresp))
 	}
 	return nil
 }
@@ -552,12 +552,12 @@ func TransBenchmarkAuth(user *User, bmtask *BenchmarkTask) {
 		return
 	}
 
-	bmtask.IncrReqBytes(int64(toughradius.Length(radreq)))
+	bmtask.IncrReqBytes(int64(radiusd.Length(radreq)))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 	defer cancel()
 	stattime := time.Now()
 	radresp, err := client.Exchange(ctx, radreq, fmt.Sprintf("%s:%d", *server, *authport))
-	bmtask.IncrRespBytes(int64(toughradius.Length(radresp)))
+	bmtask.IncrRespBytes(int64(radiusd.Length(radresp)))
 	bmtask.IncrAuthCast(time.Since(stattime).Milliseconds())
 	if err != nil || radresp == nil {
 		bmtask.IncrCounter("AuthDrop")
@@ -568,7 +568,7 @@ func TransBenchmarkAuth(user *User, bmtask *BenchmarkTask) {
 		return
 	}
 
-	bmtask.IncrReqBytes(int64(toughradius.Length(radresp)))
+	bmtask.IncrReqBytes(int64(radiusd.Length(radresp)))
 
 	switch radresp.Code {
 	case radius.CodeAccessReject:
@@ -582,12 +582,12 @@ func TransBenchmarkAuth(user *User, bmtask *BenchmarkTask) {
 	// accounting start
 	startreq := getAcctRequest(user.Username, user.Password, user.Macaddr, sessionid, rfc2866.AcctStatusType_Value_Start)
 	bmtask.IncrCounter("AcctStart")
-	bmtask.IncrReqBytes(int64(toughradius.Length(startreq)))
+	bmtask.IncrReqBytes(int64(radiusd.Length(startreq)))
 	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 	defer cancel2()
 	stattime = time.Now()
 	startresp, err := client.Exchange(ctx2, startreq, fmt.Sprintf("%s:%d", *server, *acctport))
-	bmtask.IncrRespBytes(int64(toughradius.Length(startresp)))
+	bmtask.IncrRespBytes(int64(radiusd.Length(startresp)))
 	bmtask.IncrAcctCast(time.Since(stattime).Milliseconds())
 	if err != nil || startresp == nil {
 		if err == context.DeadlineExceeded {
@@ -601,13 +601,13 @@ func TransBenchmarkAuth(user *User, bmtask *BenchmarkTask) {
 	// time.Sleep(time.Second * 10)
 	// accounting update
 	upreq := getAcctRequest(user.Username, user.Password, user.Macaddr, sessionid, rfc2866.AcctStatusType_Value_InterimUpdate)
-	bmtask.IncrReqBytes(int64(toughradius.Length(upreq)))
+	bmtask.IncrReqBytes(int64(radiusd.Length(upreq)))
 	bmtask.IncrCounter("AcctUpdate")
 	ctx3, cancel3 := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 	defer cancel3()
 	stattime = time.Now()
 	upresp, err := client.Exchange(ctx3, upreq, fmt.Sprintf("%s:%d", *server, *acctport))
-	bmtask.IncrRespBytes(int64(toughradius.Length(upresp)))
+	bmtask.IncrRespBytes(int64(radiusd.Length(upresp)))
 	bmtask.IncrAcctCast(time.Since(stattime).Milliseconds())
 	if err != nil || upresp == nil {
 		if err == context.DeadlineExceeded {
@@ -620,13 +620,13 @@ func TransBenchmarkAuth(user *User, bmtask *BenchmarkTask) {
 	// time.Sleep(time.Second * 10)
 	// accounting update
 	stopreq := getAcctRequest(user.Username, user.Password, user.Macaddr, sessionid, rfc2866.AcctStatusType_Value_Stop)
-	bmtask.IncrReqBytes(int64(toughradius.Length(stopreq)))
+	bmtask.IncrReqBytes(int64(radiusd.Length(stopreq)))
 	bmtask.IncrCounter("AcctStop")
 	ctx4, cancel4 := context.WithTimeout(context.Background(), time.Second*time.Duration(*timeout))
 	defer cancel4()
 	stattime = time.Now()
 	stopresp, err := client.Exchange(ctx4, stopreq, fmt.Sprintf("%s:%d", *server, *acctport))
-	bmtask.IncrRespBytes(int64(toughradius.Length(stopresp)))
+	bmtask.IncrRespBytes(int64(radiusd.Length(stopresp)))
 	bmtask.IncrAcctCast(time.Since(stattime).Milliseconds())
 	if err != nil || stopresp == nil {
 		if err == context.DeadlineExceeded {

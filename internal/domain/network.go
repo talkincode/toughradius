@@ -14,6 +14,11 @@ type NetNode struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// TableName 指定表名
+func (NetNode) TableName() string {
+	return "net_node"
+}
+
 // NetNas NAS 设备数据模型，通常是网关类型的设备，可作为 BRAS 设备
 type NetNas struct {
 	ID         int64     `json:"id,string" form:"id"`            // 主键 ID
@@ -35,5 +40,5 @@ type NetNas struct {
 
 // TableName 指定表名
 func (NetNas) TableName() string {
-	return "net_vpe"
+	return "net_nas"
 }

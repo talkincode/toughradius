@@ -1,4 +1,4 @@
-package toughradius
+package radiusd
 
 import (
 	"fmt"
@@ -8,11 +8,11 @@ import (
 
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/h3c"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/huawei"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/ikuai"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/mikrotik"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/zte"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/h3c"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/ikuai"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/mikrotik"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/zte"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"

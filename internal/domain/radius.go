@@ -21,6 +21,11 @@ type RadiusProfile struct {
 	UpdatedAt time.Time `json:"updated_at" form:"updated_at"`
 }
 
+// TableName 指定表名
+func (RadiusProfile) TableName() string {
+	return "radius_profile"
+}
+
 // RadiusUser RADIUS Authentication account
 type RadiusUser struct {
 	ID          int64     `json:"id,string" form:"id"`                              // 主键 ID
@@ -47,6 +52,11 @@ type RadiusUser struct {
 	LastOnline  time.Time `json:"last_online"`
 	CreatedAt   time.Time `gorm:"index" json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// TableName 指定表名
+func (RadiusUser) TableName() string {
+	return "radius_user"
 }
 
 // RadiusOnline
@@ -79,6 +89,11 @@ type RadiusOnline struct {
 	LastUpdate          time.Time `json:"last_update"`
 }
 
+// TableName 指定表名
+func (RadiusOnline) TableName() string {
+	return "radius_online"
+}
+
 // RadiusAccounting
 // Radius Accounting Recode
 type RadiusAccounting struct {
@@ -108,4 +123,9 @@ type RadiusAccounting struct {
 	LastUpdate          time.Time `json:"last_update"`
 	AcctStartTime       time.Time `gorm:"index" json:"acct_start_time"`
 	AcctStopTime        time.Time `gorm:"index" json:"acct_stop_time"`
+}
+
+// TableName 指定表名
+func (RadiusAccounting) TableName() string {
+	return "radius_accounting"
 }

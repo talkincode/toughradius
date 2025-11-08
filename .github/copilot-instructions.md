@@ -12,9 +12,9 @@ ToughRADIUS 是一个用 Go 语言开发的企业级 RADIUS 服务器，支持�
 
 - **Web/Admin API** - Echo 框架，端口 1816（`internal/webserver` + `internal/adminapi`）
 - **FreeRADIUS API** - REST 集成服务，端口 1818（`internal/freeradius`）
-- **RADIUS Auth** - 认证服务，UDP 1812（`internal/radius`）
-- **RADIUS Acct** - 计费服务，UDP 1813（`internal/radius`）
-- **RadSec** - TLS 加密的 RADIUS over TCP，端口 2083（`internal/radius`）
+- **RADIUS Auth** - 认证服务，UDP 1812（`internal/radiusd`）
+- **RADIUS Acct** - 计费服务，UDP 1813（`internal/radiusd`）
+- **RadSec** - TLS 加密的 RADIUS over TCP，端口 2083（`internal/radiusd`）
 
 ### 项目结构模式
 
@@ -48,7 +48,7 @@ type Service struct { DB *gorm.DB }
 
 RADIUS 协议支持多厂商特性，通过 `VendorCode` 字段区分：
 
-- Huawei (2011) - `internal/radius/vendors/huawei/`
+- Huawei (2011) - `internal/radiusd/vendors/huawei/`
 - Mikrotik (14988) - 见 `auth_accept_config.go`
 - Cisco (9) / Ikuai (10055) / ZTE (3902) / H3C (25506)
 
@@ -89,7 +89,7 @@ npm run build    # 生产构建，输出到 dist/
 
 ### 测试规范
 
-- RADIUS 协议测试：`internal/radius/*_test.go`
+- RADIUS 协议测试：`internal/radiusd/*_test.go`
 - 基准测试：`cmd/benchmark/bmtest.go`（独立工具）
 - 前端测试：`web/` 中使用 Playwright
 
@@ -97,7 +97,7 @@ npm run build    # 生产构建，输出到 dist/
 
 ```bash
 go test ./...                    # 全部单元测试
-go test -bench=. ./internal/radius/  # 基准测试
+go test -bench=. ./internal/radiusd/  # 基准测试
 ```
 
 ## 常见模式与约定

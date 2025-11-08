@@ -1,4 +1,4 @@
-package toughradius
+package radiusd
 
 import (
 	"fmt"
@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/h3c"
-	"github.com/talkincode/toughradius/v9/internal/radius/vendors/radback"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/h3c"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/radback"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
