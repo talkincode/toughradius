@@ -2,12 +2,8 @@ package radiusd
 
 import (
 	"fmt"
-	"os"
-	"path"
 
-	"github.com/talkincode/toughradius/v9/assets"
 	"github.com/talkincode/toughradius/v9/internal/app"
-	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 )
@@ -46,18 +42,9 @@ func ListenRadsecServer(service *RadsecService) error {
 	if !app.GConfig().Radiusd.Enabled {
 		return nil
 	}
-	caCert := path.Join(app.GConfig().System.Workdir, "private/ca.crt")
-	serverCert := path.Join(app.GConfig().System.Workdir, "private/radsec.tls.crt")
-	serverKey := path.Join(app.GConfig().System.Workdir, "private/radsec.tls.key")
-	if !common.FileExists(caCert) {
-		os.WriteFile(caCert, assets.CaCrt, 0644)
-	}
-	if !common.FileExists(serverCert) {
-		os.WriteFile(serverCert, assets.RadsecCert, 0644)
-	}
-	if !common.FileExists(serverKey) {
-		os.WriteFile(serverKey, assets.RadsecKey, 0644)
-	}
+	caCert := app.GConfig().GetRadsecCaCertPath()
+	serverCert := app.GConfig().GetRadsecCertPath()
+	serverKey := app.GConfig().GetRadsecKeyPath()
 
 	server := RadsecPacketServer{
 		Addr:               fmt.Sprintf("%s:%d", app.GConfig().Radiusd.Host, app.GConfig().Radiusd.RadsecPort),

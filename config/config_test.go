@@ -125,7 +125,27 @@ func TestAppConfigGetters(t *testing.T) {
 			getter:   cfg.GetBackupDir,
 			expected: "/test/workdir/backup",
 		},
+		{
+			name:     "GetRadsecCaCertPath",
+			getter:   cfg.GetRadsecCaCertPath,
+			expected: "/test/workdir/private/ca.crt",
+		},
+		{
+			name:     "GetRadsecCertPath",
+			getter:   cfg.GetRadsecCertPath,
+			expected: "/test/workdir/private/radsec.tls.crt",
+		},
+		{
+			name:     "GetRadsecKeyPath",
+			getter:   cfg.GetRadsecKeyPath,
+			expected: "/test/workdir/private/radsec.tls.key",
+		},
 	}
+
+	// 设置 RadSec 证书路径（相对路径）
+	cfg.Radiusd.RadsecCaCert = "private/ca.crt"
+	cfg.Radiusd.RadsecCert = "private/radsec.tls.crt"
+	cfg.Radiusd.RadsecKey = "private/radsec.tls.key"
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -814,5 +834,74 @@ logger:
 		if _, err := os.Stat(dir); os.IsNotExist(err) {
 			t.Errorf("Directory %s was not created", dir)
 		}
+	}
+}
+
+func TestRadsecCertPathsAbsolute(t *testing.T) {
+	cfg := &AppConfig{
+		System: SysConfig{
+			Workdir: "/test/workdir",
+		},
+		Radiusd: RadiusdConfig{
+			RadsecCaCert: "/etc/ssl/certs/ca.crt",
+			RadsecCert:   "/etc/ssl/certs/server.crt",
+			RadsecKey:    "/etc/ssl/private/server.key",
+		},
+	}
+
+	// 测试绝对路径不会被拼接
+	if cfg.GetRadsecCaCertPath() != "/etc/ssl/certs/ca.crt" {
+		t.Errorf("Expected absolute path '/etc/ssl/certs/ca.crt', got '%s'", cfg.GetRadsecCaCertPath())
+	}
+
+	if cfg.GetRadsecCertPath() != "/etc/ssl/certs/server.crt" {
+		t.Errorf("Expected absolute path '/etc/ssl/certs/server.crt', got '%s'", cfg.GetRadsecCertPath())
+	}
+
+	if cfg.GetRadsecKeyPath() != "/etc/ssl/private/server.key" {
+		t.Errorf("Expected absolute path '/etc/ssl/private/server.key', got '%s'", cfg.GetRadsecKeyPath())
+	}
+}
+
+func TestRadsecCertPathsRelative(t *testing.T) {
+	cfg := &AppConfig{
+		System: SysConfig{
+			Workdir: "/var/toughradius",
+		},
+		Radiusd: RadiusdConfig{
+			RadsecCaCert: "certs/ca.crt",
+			RadsecCert:   "certs/server.crt",
+			RadsecKey:    "certs/server.key",
+		},
+	}
+
+	// 测试相对路径会被拼接到 workdir
+	if cfg.GetRadsecCaCertPath() != "/var/toughradius/certs/ca.crt" {
+		t.Errorf("Expected path '/var/toughradius/certs/ca.crt', got '%s'", cfg.GetRadsecCaCertPath())
+	}
+
+	if cfg.GetRadsecCertPath() != "/var/toughradius/certs/server.crt" {
+		t.Errorf("Expected path '/var/toughradius/certs/server.crt', got '%s'", cfg.GetRadsecCertPath())
+	}
+
+	if cfg.GetRadsecKeyPath() != "/var/toughradius/certs/server.key" {
+		t.Errorf("Expected path '/var/toughradius/certs/server.key', got '%s'", cfg.GetRadsecKeyPath())
+	}
+}
+
+func TestDefaultRadsecCertPaths(t *testing.T) {
+	cfg := DefaultAppConfig
+
+	// 验证默认配置中的 RadSec 证书路径
+	if cfg.Radiusd.RadsecCaCert != "private/ca.crt" {
+		t.Errorf("Expected default RadsecCaCert 'private/ca.crt', got '%s'", cfg.Radiusd.RadsecCaCert)
+	}
+
+	if cfg.Radiusd.RadsecCert != "private/radsec.tls.crt" {
+		t.Errorf("Expected default RadsecCert 'private/radsec.tls.crt', got '%s'", cfg.Radiusd.RadsecCert)
+	}
+
+	if cfg.Radiusd.RadsecKey != "private/radsec.tls.key" {
+		t.Errorf("Expected default RadsecKey 'private/radsec.tls.key', got '%s'", cfg.Radiusd.RadsecKey)
 	}
 }

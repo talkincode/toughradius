@@ -23,3 +23,4 @@ toughradius
 *.db-shm
 *.db-wal
 rundata/
+bin/

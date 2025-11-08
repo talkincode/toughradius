@@ -54,6 +54,9 @@ type RadiusdConfig struct {
 	AcctPort     int    `yaml:"acct_port" json:"acct_port"`
 	RadsecPort   int    `yaml:"radsec_port" json:"radsec_port"`
 	RadsecWorker int    `yaml:"radsec_worker" json:"radsec_worker"`
+	RadsecCaCert string `yaml:"radsec_ca_cert" json:"radsec_ca_cert"` // RadSec CA 证书路径
+	RadsecCert   string `yaml:"radsec_cert" json:"radsec_cert"`       // RadSec 服务器证书路径
+	RadsecKey    string `yaml:"radsec_key" json:"radsec_key"`         // RadSec 服务器私钥路径
 	Debug        bool   `yaml:"debug" json:"debug"`
 }
 
@@ -89,6 +92,30 @@ func (c *AppConfig) GetDataDir() string {
 }
 func (c *AppConfig) GetBackupDir() string {
 	return path.Join(c.System.Workdir, "backup")
+}
+
+// GetRadsecCaCertPath 获取 RadSec CA 证书的完整路径
+func (c *AppConfig) GetRadsecCaCertPath() string {
+	if path.IsAbs(c.Radiusd.RadsecCaCert) {
+		return c.Radiusd.RadsecCaCert
+	}
+	return path.Join(c.System.Workdir, c.Radiusd.RadsecCaCert)
+}
+
+// GetRadsecCertPath 获取 RadSec 服务器证书的完整路径
+func (c *AppConfig) GetRadsecCertPath() string {
+	if path.IsAbs(c.Radiusd.RadsecCert) {
+		return c.Radiusd.RadsecCert
+	}
+	return path.Join(c.System.Workdir, c.Radiusd.RadsecCert)
+}
+
+// GetRadsecKeyPath 获取 RadSec 服务器私钥的完整路径
+func (c *AppConfig) GetRadsecKeyPath() string {
+	if path.IsAbs(c.Radiusd.RadsecKey) {
+		return c.Radiusd.RadsecKey
+	}
+	return path.Join(c.System.Workdir, c.Radiusd.RadsecKey)
 }
 
 func (c *AppConfig) initDirs() {
@@ -174,6 +201,9 @@ var DefaultAppConfig = &AppConfig{
 		AcctPort:     1813,
 		RadsecPort:   2083,
 		RadsecWorker: 100,
+		RadsecCaCert: "private/ca.crt",
+		RadsecCert:   "private/radsec.tls.crt",
+		RadsecKey:    "private/radsec.tls.key",
 		Debug:        true,
 	},
 	Logger: LogConfig{
@@ -225,6 +255,9 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvIntValue("TOUGHRADIUS_RADIUS_ACCTPORT", &cfg.Radiusd.AcctPort)
 	setEnvIntValue("TOUGHRADIUS_RADIUS_RADSEC_PORT", &cfg.Radiusd.RadsecPort)
 	setEnvIntValue("TOUGHRADIUS_RADIUS_RADSEC_WORKER", &cfg.Radiusd.RadsecWorker)
+	setEnvValue("TOUGHRADIUS_RADIUS_RADSEC_CA_CERT", &cfg.Radiusd.RadsecCaCert)
+	setEnvValue("TOUGHRADIUS_RADIUS_RADSEC_CERT", &cfg.Radiusd.RadsecCert)
+	setEnvValue("TOUGHRADIUS_RADIUS_RADSEC_KEY", &cfg.Radiusd.RadsecKey)
 	setEnvBoolValue("TOUGHRADIUS_RADIUS_DEBUG", &cfg.Radiusd.Debug)
 	setEnvBoolValue("TOUGHRADIUS_RADIUS_ENABLED", &cfg.Radiusd.Enabled)
 
