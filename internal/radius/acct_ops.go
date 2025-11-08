@@ -25,15 +25,15 @@ func (s *AcctService) DoAcctNasOff(r *radius.Request) {
 	)
 }
 
-func (s *AcctService) DoAcctDisconnect(r *radius.Request, vpe *domain.NetVpe, username, nasrip string) {
-	packet := radius.New(radius.CodeDisconnectRequest, []byte(vpe.Secret))
+func (s *AcctService) DoAcctDisconnect(r *radius.Request, nas *domain.NetNas, username, nasrip string) {
+	packet := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
 	sessionid := rfc2866.AcctSessionID_GetString(r.Packet)
 	if sessionid == "" {
 		return
 	}
 	_ = rfc2865.UserName_SetString(packet, username)
 	_ = rfc2866.AcctSessionID_Set(packet, []byte(sessionid))
-	response, err := radius.Exchange(context.Background(), packet, fmt.Sprintf("%s:%d", nasrip, vpe.CoaPort))
+	response, err := radius.Exchange(context.Background(), packet, fmt.Sprintf("%s:%d", nasrip, nas.CoaPort))
 	if err != nil {
 		zap.L().Error("radius disconnect error",
 			zap.String("namespace", "radius"),
@@ -45,7 +45,7 @@ func (s *AcctService) DoAcctDisconnect(r *radius.Request, vpe *domain.NetVpe, us
 	zap.L().Info("radius disconnect done",
 		zap.String("namespace", "radius"),
 		zap.String("nasip", nasrip),
-		zap.Int("coaport", vpe.CoaPort),
+		zap.Int("coaport", nas.CoaPort),
 		zap.String("request", FmtPacket(packet)),
 		zap.String("response", FmtPacket(response)),
 	)

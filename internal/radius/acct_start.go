@@ -6,8 +6,8 @@ import (
 	"layeh.com/radius"
 )
 
-func (s *AcctService) DoAcctStart(r *radius.Request, vr *VendorRequest, username string, vpe *domain.NetVpe, nasrip string) {
-	online := GetNetRadiusOnlineFromRequest(r, vr, vpe, nasrip)
+func (s *AcctService) DoAcctStart(r *radius.Request, vr *VendorRequest, username string, nas *domain.NetNas, nasrip string) {
+	online := GetNetRadiusOnlineFromRequest(r, vr, nas, nasrip)
 	err := s.AddRadiusOnline(online)
 	if err != nil {
 		zap.L().Error("add radius online error",

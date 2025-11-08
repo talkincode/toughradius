@@ -43,9 +43,9 @@ func ListNAS(c echo.Context) error {
 	}
 
 	var total int64
-	var devices []domain.NetVpe
+	var devices []domain.NetNas
 
-	query := db.Model(&domain.NetVpe{})
+	query := db.Model(&domain.NetNas{})
 
 	// 按名称过滤
 	if name := c.QueryParam("name"); name != "" {
@@ -77,7 +77,7 @@ func ListNAS(c echo.Context) error {
 // @Summary 获取 NAS 设备详情
 // @Tags NAS
 // @Param id path int true "NAS ID"
-// @Success 200 {object} domain.NetVpe
+// @Success 200 {object} domain.NetNas
 // @Router /api/v1/nas/{id} [get]
 func GetNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -85,7 +85,7 @@ func GetNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 NAS ID", nil)
 	}
 
-	var device domain.NetVpe
+	var device domain.NetNas
 	if err := app.GDB().First(&device, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS 设备不存在", nil)
 	}
@@ -96,11 +96,11 @@ func GetNAS(c echo.Context) error {
 // CreateNAS 创建 NAS 设备
 // @Summary 创建 NAS 设备
 // @Tags NAS
-// @Param nas body domain.NetVpe true "NAS 设备信息"
-// @Success 201 {object} domain.NetVpe
+// @Param nas body domain.NetNas true "NAS 设备信息"
+// @Success 201 {object} domain.NetNas
 // @Router /api/v1/nas [post]
 func CreateNAS(c echo.Context) error {
-	var device domain.NetVpe
+	var device domain.NetNas
 	if err := c.Bind(&device); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
@@ -118,7 +118,7 @@ func CreateNAS(c echo.Context) error {
 
 	// 检查 IP 地址是否已存在
 	var count int64
-	app.GDB().Model(&domain.NetVpe{}).Where("ipaddr = ?", device.Ipaddr).Count(&count)
+	app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ?", device.Ipaddr).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
 	}
@@ -142,8 +142,8 @@ func CreateNAS(c echo.Context) error {
 // @Summary 更新 NAS 设备
 // @Tags NAS
 // @Param id path int true "NAS ID"
-// @Param nas body domain.NetVpe true "NAS 设备信息"
-// @Success 200 {object} domain.NetVpe
+// @Param nas body domain.NetNas true "NAS 设备信息"
+// @Success 200 {object} domain.NetNas
 // @Router /api/v1/nas/{id} [put]
 func UpdateNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
@@ -151,12 +151,12 @@ func UpdateNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 NAS ID", nil)
 	}
 
-	var device domain.NetVpe
+	var device domain.NetNas
 	if err := app.GDB().First(&device, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS 设备不存在", nil)
 	}
 
-	var updateData domain.NetVpe
+	var updateData domain.NetNas
 	if err := c.Bind(&updateData); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
@@ -164,7 +164,7 @@ func UpdateNAS(c echo.Context) error {
 	// 验证 IP 唯一性
 	if updateData.Ipaddr != "" && updateData.Ipaddr != device.Ipaddr {
 		var count int64
-		app.GDB().Model(&domain.NetVpe{}).Where("ipaddr = ? AND id != ?", updateData.Ipaddr, id).Count(&count)
+		app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", updateData.Ipaddr, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
 		}
@@ -240,7 +240,7 @@ func DeleteNAS(c echo.Context) error {
 		})
 	}
 
-	if err := app.GDB().Delete(&domain.NetVpe{}, id).Error; err != nil {
+	if err := app.GDB().Delete(&domain.NetNas{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "删除 NAS 设备失败", err.Error())
 	}
 

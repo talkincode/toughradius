@@ -6,8 +6,8 @@ import (
 	"layeh.com/radius"
 )
 
-func (s *AcctService) DoAcctStop(r *radius.Request, vr *VendorRequest, username string, vpe *domain.NetVpe, nasrip string) {
-	online := GetNetRadiusOnlineFromRequest(r, vr, vpe, nasrip)
+func (s *AcctService) DoAcctStop(r *radius.Request, vr *VendorRequest, username string, nas *domain.NetNas, nasrip string) {
+	online := GetNetRadiusOnlineFromRequest(r, vr, nas, nasrip)
 	if err := s.EndRadiusAccounting(online); err != nil {
 		err := s.AddRadiusAccounting(online, false)
 		if err != nil {

@@ -69,11 +69,11 @@ func (a *Application) initTestNode() {
 }
 
 func (a *Application) initTestVpe() {
-	a.gormDB.Where("1 = 1").Delete(&domain.NetVpe{})
-	a.gormDB.Create(&domain.NetVpe{
+	a.gormDB.Where("1 = 1").Delete(&domain.NetNas{})
+	a.gormDB.Create(&domain.NetNas{
 		ID:         9999,
 		NodeId:     9999,
-		Name:       "test vope",
+		Name:       "test nas",
 		Identifier: "tradtest",
 		Hostname:   "",
 		Ipaddr:     "127.0.0.2",
@@ -83,7 +83,7 @@ func (a *Application) initTestVpe() {
 		VendorCode: "14988",
 		Status:     "enabled",
 		Tags:       "",
-		Remark:     "test vpe",
+		Remark:     "test nas",
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	})

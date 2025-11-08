@@ -47,12 +47,12 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	raddrstr := r.RemoteAddr.String()
 	nasrip := raddrstr[:strings.Index(raddrstr, ":")]
 	var identifier = rfc2865.NASIdentifier_GetString(r.Packet)
-	vpe, err := s.GetNas(nasrip, identifier)
+	nas, err := s.GetNas(nasrip, identifier)
 	common.Must(err)
 
 	// 重新设置数据报文秘钥
-	r.Secret = []byte(vpe.Secret)
-	r.Packet.Secret = []byte(vpe.Secret)
+	r.Secret = []byte(nas.Secret)
+	r.Packet.Secret = []byte(nas.Secret)
 
 	statusType := rfc2866.AcctStatusType_Get(r.Packet)
 
@@ -68,9 +68,9 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	defer s.ReleaseAuthRateLimit(username)
 
-	// s.CheckRequestSecret(r.Packet, []byte(vpe.Secret))
+	// s.CheckRequestSecret(r.Packet, []byte(nas.Secret))
 
-	vendorReq := s.ParseVendor(r, vpe.VendorCode)
+	vendorReq := s.ParseVendor(r, nas.VendorCode)
 
 	s.SendResponse(w, r)
 
@@ -89,11 +89,11 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			)
 			user, err := s.GetUserForAcct(username)
 			common.Must(err)
-			s.DoAcctStart(r, vendorReq, user.Username, vpe, nasrip)
+			s.DoAcctStart(r, vendorReq, user.Username, nas, nasrip)
 		case rfc2866.AcctStatusType_Value_InterimUpdate:
 			user, err := s.GetUserForAcct(username)
 			common.Must(err)
-			s.DoAcctUpdateBefore(r, vendorReq, user, vpe, nasrip)
+			s.DoAcctUpdateBefore(r, vendorReq, user, nas, nasrip)
 		case rfc2866.AcctStatusType_Value_Stop:
 			zap.L().Info("radius accounting stop",
 				zap.String("namespace", "radius"),
@@ -101,7 +101,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			)
 			user, err := s.GetUserForAcct(username)
 			common.Must(err)
-			s.DoAcctStop(r, vendorReq, user.Username, vpe, nasrip)
+			s.DoAcctStop(r, vendorReq, user.Username, nas, nasrip)
 		case rfc2866.AcctStatusType_Value_AccountingOn:
 			s.DoAcctNasOn(r)
 		case rfc2866.AcctStatusType_Value_AccountingOff:

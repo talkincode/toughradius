@@ -14,8 +14,8 @@ type NetNode struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// NetVpe VPE data model, VPE is usually a gateway-type device that can act as a BRAS device
-type NetVpe struct {
+// NetNas NAS 设备数据模型，通常是网关类型的设备，可作为 BRAS 设备
+type NetNas struct {
 	ID         int64     `json:"id,string" form:"id"`            // 主键 ID
 	NodeId     int64     `json:"node_id,string" form:"node_id"`  // 节点ID
 	Name       string    `json:"name" form:"name"`               // 设备名称
@@ -31,4 +31,9 @@ type NetVpe struct {
 	Remark     string    `json:"remark" form:"remark"`           // 备注
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// TableName 指定表名
+func (NetNas) TableName() string {
+	return "net_vpe"
 }

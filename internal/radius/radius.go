@@ -94,10 +94,10 @@ func (s *RadiusService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) (
 }
 
 // GetNas 查询 NAS 设备, 优先查询IP, 然后ID
-func (s *RadiusService) GetNas(ip, identifier string) (vpe *domain.NetVpe, err error) {
+func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err error) {
 	err = app.GDB().
 		Where("ipaddr = ? or identifier = ?", ip, identifier).
-		First(&vpe).Error
+		First(&nas).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, NewAuthError(app.MetricsRadiusRejectUnauthorized,
@@ -106,7 +106,7 @@ func (s *RadiusService) GetNas(ip, identifier string) (vpe *domain.NetVpe, err e
 		}
 		return nil, err
 	}
-	return vpe, nil
+	return nas, nil
 }
 
 // GetValidUser 获取有效用户, 初步判断用户有效性
@@ -203,8 +203,8 @@ func (s *RadiusService) GetEapMethod() string {
 	return val
 }
 
-func GetFramedIpv6Address(r *radius.Request, vpe *domain.NetVpe) string {
-	switch vpe.VendorCode {
+func GetFramedIpv6Address(r *radius.Request, nas *domain.NetNas) string {
+	switch nas.VendorCode {
 	case VendorHuawei:
 		return common.IfEmptyStr(huawei.HuaweiFramedIPv6Address_Get(r.Packet).String(), common.NA)
 	default:
@@ -212,7 +212,7 @@ func GetFramedIpv6Address(r *radius.Request, vpe *domain.NetVpe) string {
 	}
 }
 
-func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, vpe *domain.NetVpe, nasrip string) domain.RadiusOnline {
+func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, nas *domain.NetNas, nasrip string) domain.RadiusOnline {
 	acctInputOctets := int(rfc2866.AcctInputOctets_Get(r.Packet))
 	acctInputGigawords := int(rfc2869.AcctInputGigawords_Get(r.Packet))
 	acctOutputOctets := int(rfc2866.AcctOutputOctets_Get(r.Packet))
@@ -226,12 +226,12 @@ func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, vpe *do
 		ID:                  0,
 		Username:            rfc2865.UserName_GetString(r.Packet),
 		NasId:               common.IfEmptyStr(rfc2865.NASIdentifier_GetString(r.Packet), common.NA),
-		NasAddr:             vpe.Ipaddr,
+		NasAddr:             nas.Ipaddr,
 		NasPaddr:            nasrip,
 		SessionTimeout:      int(rfc2865.SessionTimeout_Get(r.Packet)),
 		FramedIpaddr:        common.IfEmptyStr(rfc2865.FramedIPAddress_Get(r.Packet).String(), common.NA),
 		FramedNetmask:       common.IfEmptyStr(rfc2865.FramedIPNetmask_Get(r.Packet).String(), common.NA),
-		FramedIpv6Address:   GetFramedIpv6Address(r, vpe),
+		FramedIpv6Address:   GetFramedIpv6Address(r, nas),
 		FramedIpv6Prefix:    common.IfEmptyStr(rfc3162.FramedIPv6Prefix_Get(r.Packet).String(), common.NA),
 		DelegatedIpv6Prefix: common.IfEmptyStr(rfc4818.DelegatedIPv6Prefix_Get(r.Packet).String(), common.NA),
 		MacAddr:             common.IfEmptyStr(vr.MacAddr, common.NA),

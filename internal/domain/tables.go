@@ -7,7 +7,7 @@ var Tables = []interface{}{
 	&SysOprLog{},
 	// Network
 	&NetNode{},
-	&NetVpe{},
+	&NetNas{},
 	// Radius
 	&RadiusAccounting{},
 	&RadiusOnline{},

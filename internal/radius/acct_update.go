@@ -10,23 +10,23 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-func (s *AcctService) DoAcctUpdateBefore(r *radius.Request, vr *VendorRequest, user *domain.RadiusUser, vpe *domain.NetVpe, nasrip string) {
+func (s *AcctService) DoAcctUpdateBefore(r *radius.Request, vr *VendorRequest, user *domain.RadiusUser, nas *domain.NetNas, nasrip string) {
 	// 用户状态变更为停用后触发下线
 	if user.Status == common.DISABLED {
-		s.DoAcctDisconnect(r, vpe, user.Username, nasrip)
+		s.DoAcctDisconnect(r, nas, user.Username, nasrip)
 	}
 
 	// 用户过期后触发下线
 	if user.ExpireTime.Before(time.Now()) {
-		go s.DoAcctDisconnect(r, vpe, user.Username, nasrip)
+		go s.DoAcctDisconnect(r, nas, user.Username, nasrip)
 	}
 
-	s.DoAcctUpdate(r, vr, user.Username, vpe, nasrip)
+	s.DoAcctUpdate(r, vr, user.Username, nas, nasrip)
 }
 
-func (s *AcctService) DoAcctUpdate(r *radius.Request, vr *VendorRequest, username string, vpe *domain.NetVpe, nasrip string) {
+func (s *AcctService) DoAcctUpdate(r *radius.Request, vr *VendorRequest, username string, nas *domain.NetNas, nasrip string) {
 
-	online := GetNetRadiusOnlineFromRequest(r, vr, vpe, nasrip)
+	online := GetNetRadiusOnlineFromRequest(r, vr, nas, nasrip)
 	// 如果在线用户不存在立即新增
 	exists := s.ExistRadiusOnline(rfc2866.AcctSessionID_GetString(r.Packet))
 	if !exists {
