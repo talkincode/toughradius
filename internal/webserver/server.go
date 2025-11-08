@@ -12,8 +12,6 @@ import (
 	"strings"
 	"time"
 
-	echoSwagger "github.com/swaggo/echo-swagger"
-
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gocarina/gocsv"
 	_ "github.com/gocarina/gocsv"
@@ -116,7 +114,6 @@ func NewAdminServer() *AdminServer {
 		})
 	})
 
-	s.root.GET("/swagger/*", echoSwagger.WrapHandler)
 
 	// JWT 中间件
 	s.jwtConfig = echojwt.Config{
@@ -290,7 +287,7 @@ func ServerRecover(debug bool) echo.MiddlewareFunc {
 // skipFUnc Web 请求过滤中间件
 func jwtSkipFunc() func(c echo.Context) bool {
 	return func(c echo.Context) bool {
-		if os.Getenv("TEAMSACS_DEVMODE") == "true" {
+		if os.Getenv("TOUGHRADIUS_DEVMODE") == "true" {
 			return true
 		}
 
