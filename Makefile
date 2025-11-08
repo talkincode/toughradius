@@ -20,10 +20,21 @@ buildpre:
 	echo "CommitUser=${COMMIT_USER}" >> assets/buildinfo.txt
 	echo "CommitSubject=${COMMIT_SUBJECT}" >> assets/buildinfo.txt
 
+# 本地构建（支持 SQLite，需要 CGO）
+build-local:
+	CGO_ENABLED=1 go build -o toughradius main.go
+
+# PostgreSQL 版本构建（静态编译，不含 SQLite）
 build:
 	test -d ./release || mkdir -p ./release
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
 	upx ./release/toughradius
+
+# SQLite 版本构建（需要 CGO）
+build-sqlite:
+	test -d ./release || mkdir -p ./release
+	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w' -o ./release/toughradius-sqlite main.go
+	upx ./release/toughradius-sqlite
 
 buildarm64:
 	test -d ./release || mkdir -p ./release
@@ -35,22 +46,6 @@ build-tradtest:
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/lbmtest commands/benchmark/bmtest.go
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest.exe commands/benchmark/bmtest.go
 
-
-tr069crt:
-	# 1 Generate CA private key
-	test -f assets/ca.key || openssl genrsa -out assets/ca.key 4096
-	# 2 Generate CA certificate
-	test -f assets/ca.crt || openssl req -x509 -new -nodes -key assets/ca.key -days 3650 -out assets/ca.crt -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=ToughradiusCA/emailAddress=master@toughstruct.net"
-	# 3 Generate server private key
-	openssl genrsa -out assets/server.key 2048
-	# 4 Generate a certificate request file
-	openssl req -new -key assets/server.key -out assets/server.csr -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=*.toughstruct.net/emailAddress=master@toughstruct.net"
-	# 5 Generate a server certificate based on the CA's private key and the above certificate request file
-	openssl x509 -req -in assets/server.csr -CA assets/ca.crt -CAkey assets/ca.key -CAcreateserial -out assets/server.crt -days 7300
-	mv assets/server.key assets/cwmp.tls.key
-	mv assets/server.crt assets/cwmp.tls.crt
 
 radseccrt:
 	# 1 Generate CA private key
@@ -78,18 +73,9 @@ clicrt:
 	mv assets/client.key assets/client.tls.key
 	mv assets/client.crt assets/client.tls.crt
 
-updev:
-	make buildpre
-	make build
-	scp ${RELEASE_DIR}/${BUILD_NAME} trdev-server:/tmp/toughradius
-	ssh trdev-server "systemctl stop toughradius && /tmp/toughradius -install && systemctl start toughradius"
-
 swag:
 	swag fmt && swag init
 
-syncdev:
-	@echo "🚀 开始执行同步流程（develop → main）..."
-	@./scripts/syncdev.sh
 
 tag:
 	@echo "🏷️  开始标签创建流程..."
@@ -98,5 +84,4 @@ tag:
 release:
 	@./scripts/release-text.sh
 
-.PHONY: clean build tr069crt radseccrt release
-
+.PHONY: clean build radseccrt release
