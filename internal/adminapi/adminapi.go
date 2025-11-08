@@ -4,4 +4,5 @@ package adminapi
 func Init() {
 	registerAuthRoutes()
 	registerUserRoutes()
+	registerDashboardRoutes()
 }

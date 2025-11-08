@@ -2,29 +2,48 @@ import { useEffect, useState } from 'react';
 import ReactECharts from 'echarts-for-react';
 
 interface DashboardStats {
-  totalUsers: number;
-  onlineUsers: number;
-  todayAuth: number;
-  todayAcct: number;
+  total_users: number;
+  online_users: number;
+  today_auth_count: number;
+  today_acct_count: number;
+  total_profiles: number;
+  disabled_users: number;
+  expired_users: number;
+  today_input_gb: number;
+  today_output_gb: number;
 }
 
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats>({
-    totalUsers: 0,
-    onlineUsers: 0,
-    todayAuth: 0,
-    todayAcct: 0,
+    total_users: 0,
+    online_users: 0,
+    today_auth_count: 0,
+    today_acct_count: 0,
+    total_profiles: 0,
+    disabled_users: 0,
+    expired_users: 0,
+    today_input_gb: 0,
+    today_output_gb: 0,
   });
 
   useEffect(() => {
     // 获取统计数据
-    // TODO: 从 API 获取实际数据
-    setStats({
-      totalUsers: 1250,
-      onlineUsers: 86,
-      todayAuth: 542,
-      todayAcct: 2380,
-    });
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/v1/dashboard/stats', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+          },
+        });
+        const data = await response.json();
+        if (data) {
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard stats:', error);
+      }
+    };
+    fetchStats();
   }, []);
 
   // 认证趋势图配置
@@ -132,7 +151,10 @@ const Dashboard = () => {
         <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '14px', color: '#999' }}>总用户数</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px' }}>{stats.totalUsers}</div>
+            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px' }}>{stats.total_users}</div>
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
+              禁用: {stats.disabled_users} | 过期: {stats.expired_users}
+            </div>
           </div>
         </div>
 
@@ -140,7 +162,10 @@ const Dashboard = () => {
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '14px', color: '#999' }}>在线用户</div>
             <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px', color: '#52c41a' }}>
-              {stats.onlineUsers}
+              {stats.online_users}
+            </div>
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
+              策略总数: {stats.total_profiles}
             </div>
           </div>
         </div>
@@ -149,16 +174,22 @@ const Dashboard = () => {
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '14px', color: '#999' }}>今日认证</div>
             <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px', color: '#1890ff' }}>
-              {stats.todayAuth}
+              {stats.today_auth_count}
+            </div>
+            <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
+              计费记录: {stats.today_acct_count}
             </div>
           </div>
         </div>
 
         <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#999' }}>今日计费</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px', color: '#722ed1' }}>
-              {stats.todayAcct}
+            <div style={{ fontSize: '14px', color: '#999' }}>今日流量</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '10px', color: '#722ed1' }}>
+              ↑ {stats.today_input_gb.toFixed(2)} GB
+            </div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '5px', color: '#eb2f96' }}>
+              ↓ {stats.today_output_gb.toFixed(2)} GB
             </div>
           </div>
         </div>
