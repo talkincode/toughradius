@@ -5,4 +5,5 @@ func Init() {
 	registerAuthRoutes()
 	registerUserRoutes()
 	registerDashboardRoutes()
+	registerProfileRoutes()
 }
