@@ -24,3 +24,4 @@ toughradius
 *.db-wal
 rundata/
 bin/
+.playwright-mcp/

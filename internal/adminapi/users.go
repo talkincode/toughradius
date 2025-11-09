@@ -53,7 +53,8 @@ func listRadiusUsers(c echo.Context) error {
 	base = applyUserFilters(base, c)
 
 	var total int64
-	if err := base.Session(&gorm.Session{NewDB: true}).Count(&total).Error; err != nil {
+	countQuery := base.Session(&gorm.Session{NewDB: true})
+	if err := countQuery.Model(&domain.RadiusUser{}).Count(&total).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询用户失败", err.Error())
 	}
 

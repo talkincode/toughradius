@@ -60,10 +60,7 @@ func ListProfiles(c echo.Context) error {
 	offset := (page - 1) * perPage
 	query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&profiles)
 
-	return ok(c, map[string]interface{}{
-		"data":  profiles,
-		"total": total,
-	})
+	return paged(c, profiles, total, page, perPage)
 }
 
 // GetProfile 获取单个 RADIUS Profile

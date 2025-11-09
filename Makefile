@@ -1,87 +1,134 @@
-BUILD_ORG   := talkincode
-BUILD_VERSION   := latest
-BUILD_TIME      := $(shell date "+%F %T")
-BUILD_NAME      := toughradius
-RELEASE_VERSION := v8.0.7
-SOURCE          := main.go
-RELEASE_DIR     := ./release
-COMMIT_SHA1     := $(shell git show -s --format=%H )
-COMMIT_DATE     := $(shell git show -s --format=%cD )
-COMMIT_USER     := $(shell git show -s --format=%ce )
-COMMIT_SUBJECT     := $(shell git show -s --format=%s )
+PHONY: help build runs runf dev clean test initdb killfs
 
-buildpre:
-	echo "BuildVersion=${BUILD_VERSION} ${RELEASE_VERSION} ${BUILD_TIME}" > assets/buildinfo.txt
-	echo "ReleaseVersion=${RELEASE_VERSION}" >> assets/buildinfo.txt
-	echo "BuildTime=${BUILD_TIME}" >> assets/buildinfo.txt
-	echo "BuildName=${BUILD_NAME}" >> assets/buildinfo.txt
-	echo "CommitID=${COMMIT_SHA1}" >> assets/buildinfo.txt
-	echo "CommitDate=${COMMIT_DATE}" >> assets/buildinfo.txt
-	echo "CommitUser=${COMMIT_USER}" >> assets/buildinfo.txt
-	echo "CommitSubject=${COMMIT_SUBJECT}" >> assets/buildinfo.txt
+# 默认目标
+help:
+	@echo "ToughRADIUS v9 Makefile Commands"
+	@echo "================================="
+	@echo "Development:"
+	@echo "  make runs       - 启动后端服务 (支持 SQLite)"
+	@echo "  make runf       - 启动前端开发服务"
+	@echo "  make dev        - 同时启动前后端服务"
+	@echo "  make killfs     - 停止前后端所有服务"
+	@echo ""
+	@echo "Build:"
+	@echo "  make build      - 构建生产版本 (PostgreSQL only)"
+	@echo "  make buildf     - 构建前端生产版本"
+	@echo ""
+	@echo "Database:"
+	@echo "  make initdb     - 初始化数据库（危险操作，会删除所有数据）"
+	@echo ""
+	@echo "Maintenance:"
+	@echo "  make test       - 运行测试"
+	@echo "  make clean      - 清理构建文件"
+	@echo ""
 
-# 本地构建（支持 SQLite，需要 CGO）
-build-local:
-	CGO_ENABLED=1 go build -o toughradius main.go
+# 启动后端服务（开发模式，支持 SQLite）
+runs:
+	@echo "🚀 启动 ToughRADIUS 后端服务..."
+	@echo "📝 配置文件: toughradius.yml"
+	@echo "🔧 SQLite 支持: 已启用 (CGO_ENABLED=1)"
+	@echo ""
+	CGO_ENABLED=1 go run main.go -c toughradius.yml
 
-# PostgreSQL 版本构建（静态编译，不含 SQLite）
+# 启动前端开发服务
+runf:
+	@echo "🎨 启动前端开发服务..."
+	@echo "📂 工作目录: web/"
+	@echo "🌐 访问地址: http://localhost:3000/admin"
+	@echo ""
+	cd web && npm run dev
+
+# 同时启动前后端（需要 tmux 或在不同终端运行）
+dev:
+	@echo "⚠️  请在两个不同的终端窗口运行："
+	@echo "   终端1: make runs"
+	@echo "   终端2: make runf"
+	@echo ""
+	@echo "或使用以下命令在后台运行："
+	@echo "   make runs > /tmp/toughradius-backend.log 2>&1 &"
+	@echo "   make runf > /tmp/toughradius-frontend.log 2>&1 &"
+
+# 构建生产版本（仅 PostgreSQL，静态编译）
 build:
-	test -d ./release || mkdir -p ./release
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
-	upx ./release/toughradius
+	@echo "🔨 构建生产版本..."
+	@echo "⚠️  PostgreSQL only (CGO_ENABLED=0)"
+	@bash scripts/build-backend.sh
 
-# SQLite 版本构建（需要 CGO）
-build-sqlite:
-	test -d ./release || mkdir -p ./release
-	CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w' -o ./release/toughradius-sqlite main.go
-	upx ./release/toughradius-sqlite
+# 构建前端生产版本
+buildf:
+	@echo "🔨 构建前端生产版本..."
+	@cd web && npm run build
+	@echo "✅ 前端构建完成: web/dist/"
 
-buildarm64:
-	test -d ./release || mkdir -p ./release
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
-	upx ./release/toughradius
+# 初始化数据库（危险操作）
+initdb:
+	@echo "⚠️  警告：此操作将删除并重建所有数据库表！"
+	@read -p "确认继续？(yes/no): " confirm && [ "$$confirm" = "yes" ] || (echo "已取消"; exit 1)
+	@echo "🗄️  初始化数据库..."
+	CGO_ENABLED=1 go run main.go -initdb -c toughradius.yml
 
-build-tradtest:
-	CGO_ENABLED=0 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest commands/benchmark/bmtest.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/lbmtest commands/benchmark/bmtest.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest.exe commands/benchmark/bmtest.go
+# 运行测试
+test:
+	@echo "🧪 运行测试..."
+	go test ./...
+	@echo ""
+	@echo "前端测试:"
+	cd web && npm test
 
+# 清理构建文件
+clean:
+	@echo "🧹 清理构建文件..."
+	rm -rf release/
+	rm -rf web/dist/
+	rm -f /tmp/toughradius-test
+	@echo "✅ 清理完成"
 
-radseccrt:
-	# 1 Generate CA private key
-	test -f assets/ca.key || openssl genrsa -out assets/ca.key 4096
-	# 2 Generate CA certificate
-	test -f assets/ca.crt || openssl req -x509 -new -nodes -key assets/ca.key -days 3650 -out assets/ca.crt -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=ToughradiusCA/emailAddress=master@toughstruct.net"
-	# 3 Generate server private key
-	openssl genrsa -out assets/server.key 2048
-	# 4 Generate a certificate request file
-	openssl req -new -key assets/server.key -out assets/server.csr -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=*.toughstruct.net/emailAddress=master@toughstruct.net"
-	# 5 Generate a server certificate based on the CA's private key and the above certificate request file
-	openssl x509 -req -in assets/server.csr -CA assets/ca.crt -CAkey assets/ca.key -CAcreateserial -out assets/server.crt -days 7300
-	mv assets/server.key assets/radsec.tls.key
-	mv assets/server.crt assets/radsec.tls.crt
+# 安装前端依赖
+install-frontend:
+	@echo "📦 安装前端依赖..."
+	cd web && npm install
 
-clicrt:
-	# 1 生成client私钥
-	openssl genrsa -out assets/client.key 2048
-	# 2 生成client请求文件
-	openssl req -new -key assets/client.key -subj "/CN=*.toughstruct.net" -out assets/client.csr
-	# 3 生成client证书
-	openssl x509 -req -in assets/client.csr -CA assets/ca.crt -CAkey assets/ca.key -CAcreateserial -out assets/client.crt -days 7300
-	mv assets/client.key assets/client.tls.key
-	mv assets/client.crt assets/client.tls.crt
+# 检查代码格式
+fmt:
+	@echo "📝 格式化 Go 代码..."
+	go fmt ./...
+	@echo "📝 格式化前端代码..."
+	cd web && npm run format || echo "提示: 如需格式化前端代码，请在 package.json 中添加 format 脚本"
 
-swag:
-	swag fmt && swag init
+# 查看后端日志
+logs:
+	@tail -f /tmp/toughradius.log
 
+# 查看前端日志
+logsf:
+	@tail -f /tmp/frontend.log
 
-tag:
-	@echo "🏷️  开始标签创建流程..."
-	@./scripts/tag.sh
+# 停止前后端所有服务
+killfs:
+	@echo "🛑 停止前后端所有服务..."
+	@pkill -f "go run main.go" 2>/dev/null || true
+	@pkill -f "toughradius" 2>/dev/null || true
+	@pkill -f "vite" 2>/dev/null || true
+	@pkill -f "npm run dev" 2>/dev/null || true
+	@echo "✅ 所有服务已停止"
 
-release:
-	@./scripts/release-text.sh
+# 重启后端服务
+restart-backend: killfs
+	@echo "🔄 重启后端服务..."
+	@make runs
 
-.PHONY: clean build radseccrt release
+# 快速启动（后台运行前后端）
+quick-start: killfs
+	@echo "🚀 快速启动前后端服务（后台运行）..."
+	@make runs > /tmp/toughradius-backend.log 2>&1 &
+	@sleep 3
+	@make runf > /tmp/toughradius-frontend.log 2>&1 &
+	@sleep 2
+	@echo ""
+	@echo "✅ 服务已启动！"
+	@echo "📊 后端: http://localhost:1816"
+	@echo "🎨 前端: http://localhost:3000/admin"
+	@echo "📝 后端日志: tail -f /tmp/toughradius-backend.log"
+	@echo "📝 前端日志: tail -f /tmp/toughradius-frontend.log"
+	@echo ""
+	@echo "🛑 停止服务: make killfs"
