@@ -11,6 +11,9 @@ const httpClient = (url: string, options: fetchUtils.Options = {}) => {
   const token = localStorage.getItem('token');
   if (token) {
     (options.headers as Headers).set('Authorization', `Bearer ${token}`);
+    console.log('✓ Token 已添加到请求:', url);
+  } else {
+    console.warn('✗ 未找到 token，请求:', url);
   }
   return fetchUtils.fetchJson(url, options);
 };

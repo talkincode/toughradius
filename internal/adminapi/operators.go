@@ -30,6 +30,11 @@ type operatorPayload struct {
 
 // 注册操作员管理路由
 func registerOperatorsRoutes() {
+	// 个人账号设置路由 - 必须在 :id 路由之前注册
+	webserver.ApiGET("/system/operators/me", getCurrentOperator)
+	webserver.ApiPUT("/system/operators/me", updateCurrentOperator)
+
+	// 操作员管理路由
 	webserver.ApiGET("/system/operators", listOperators)
 	webserver.ApiGET("/system/operators/:id", getOperator)
 	webserver.ApiPOST("/system/operators", createOperator)
@@ -37,8 +42,91 @@ func registerOperatorsRoutes() {
 	webserver.ApiDELETE("/system/operators/:id", deleteOperator)
 }
 
-// 获取操作员列表
+// 获取当前登录操作员信息
+func getCurrentOperator(c echo.Context) error {
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+	return ok(c, currentOpr)
+} // 更新当前登录操作员信息（不包括权限和状态）
+func updateCurrentOperator(c echo.Context) error {
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+
+	var payload operatorPayload
+	if err := c.Bind(&payload); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析操作员参数", nil)
+	}
+
+	// 更新允许的字段（不包括 level 和 status）
+	if payload.Username != "" {
+		username := strings.TrimSpace(payload.Username)
+		if len(username) < 3 || len(username) > 30 {
+			return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "用户名长度必须在3-30个字符之间", nil)
+		}
+		// 检查用户名是否已被其他账号使用
+		if username != currentOpr.Username {
+			var exists int64
+			app.GDB().Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, currentOpr.ID).Count(&exists)
+			if exists > 0 {
+				return fail(c, http.StatusConflict, "USERNAME_EXISTS", "用户名已存在", nil)
+			}
+		}
+		currentOpr.Username = username
+	}
+	if payload.Password != "" {
+		password := strings.TrimSpace(payload.Password)
+		if len(password) < 6 || len(password) > 50 {
+			return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "密码长度必须在6-50个字符之间", nil)
+		}
+		if !validutil.CheckPassword(password) {
+			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "密码必须包含字母和数字", nil)
+		}
+		currentOpr.Password = common.Sha256HashWithSalt(password, common.SecretSalt)
+	}
+	if payload.Realname != "" {
+		currentOpr.Realname = payload.Realname
+	}
+	if payload.Mobile != "" {
+		if !validutil.IsCnMobile(payload.Mobile) {
+			return fail(c, http.StatusBadRequest, "INVALID_MOBILE", "手机号格式不正确", nil)
+		}
+		currentOpr.Mobile = payload.Mobile
+	}
+	if payload.Email != "" {
+		if !validutil.IsEmail(payload.Email) {
+			return fail(c, http.StatusBadRequest, "INVALID_EMAIL", "邮箱格式不正确", nil)
+		}
+		currentOpr.Email = payload.Email
+	}
+	if payload.Remark != "" {
+		currentOpr.Remark = payload.Remark
+	}
+	currentOpr.UpdatedAt = time.Now()
+
+	if err := app.GDB().Save(&currentOpr).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新操作员失败", err.Error())
+	}
+
+	currentOpr.Password = ""
+	return ok(c, currentOpr)
+}
+
+// 获取操作员列表（仅超级管理员和管理员可访问）
 func listOperators(c echo.Context) error {
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+
+	// 只有超级管理员和管理员可以查看操作员列表
+	if currentOpr.Level != "super" && currentOpr.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "没有权限访问操作员列表", nil)
+	}
+
 	page, pageSize := parsePagination(c)
 
 	base := app.GDB().Model(&domain.SysOpr{})
@@ -66,8 +154,18 @@ func listOperators(c echo.Context) error {
 	return paged(c, operators, total, page, pageSize)
 }
 
-// 获取单个操作员
+// 获取单个操作员（仅超级管理员和管理员可访问）
 func getOperator(c echo.Context) error {
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+
+	// 只有超级管理员和管理员可以查看操作员详情
+	if currentOpr.Level != "super" && currentOpr.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "没有权限访问操作员详情", nil)
+	}
+
 	id, err := parseIDParam(c, "id")
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的操作员 ID", nil)
@@ -85,8 +183,18 @@ func getOperator(c echo.Context) error {
 	return ok(c, operator)
 }
 
-// 创建操作员
+// 创建操作员（仅超级管理员可操作）
 func createOperator(c echo.Context) error {
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+
+	// 只有超级管理员可以创建操作员
+	if currentOpr.Level != "super" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "只有超级管理员可以创建操作员", nil)
+	}
+
 	var payload operatorPayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析操作员参数", nil)
@@ -182,6 +290,17 @@ func createOperator(c echo.Context) error {
 
 // 更新操作员
 func updateOperator(c echo.Context) error {
+	// 权限检查：获取当前登录的操作员
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+
+	// 只有超级管理员和管理员可以更新操作员
+	if currentOpr.Level != "super" && currentOpr.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "只有超级管理员和管理员可以更新操作员", nil)
+	}
+
 	id, err := parseIDParam(c, "id")
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的操作员 ID", nil)
@@ -190,6 +309,14 @@ func updateOperator(c echo.Context) error {
 	var payload operatorPayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析操作员参数", nil)
+	}
+
+	// 判断是否修改自己
+	isEditingSelf := currentOpr.ID == id
+
+	// 如果是修改自己，不允许修改权限和状态
+	if isEditingSelf && (payload.Level != "" || payload.Status != "") {
+		return fail(c, http.StatusForbidden, "CANNOT_MODIFY_SELF_PERMISSION", "不能修改自己的权限和状态", nil)
 	}
 
 	var operator domain.SysOpr
@@ -274,15 +401,20 @@ func updateOperator(c echo.Context) error {
 
 // 删除操作员
 func deleteOperator(c echo.Context) error {
-	id, err := parseIDParam(c, "id")
-	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的操作员 ID", nil)
-	}
-
 	// 权限检查：获取当前登录的操作员
 	currentOpr, err := resolveOperatorFromContext(c)
 	if err != nil {
 		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "无法获取当前用户信息", nil)
+	}
+
+	// 只有超级管理员和管理员可以删除操作员
+	if currentOpr.Level != "super" && currentOpr.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "只有超级管理员和管理员可以删除操作员", nil)
+	}
+
+	id, err := parseIDParam(c, "id")
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的操作员 ID", nil)
 	}
 
 	// 不能删除自己

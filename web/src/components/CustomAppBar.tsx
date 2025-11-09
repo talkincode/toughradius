@@ -1,15 +1,18 @@
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
+import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import { Box, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
-import { AppBar, AppBarProps, TitlePortal, ToggleThemeButton, useRedirect } from 'react-admin';
+import { AppBar, AppBarProps, TitlePortal, ToggleThemeButton, useRedirect, useGetIdentity } from 'react-admin';
 
 export const CustomAppBar = (props: AppBarProps) => {
   const redirect = useRedirect();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const { data: identity } = useGetIdentity();
 
   return (
     <AppBar
       {...props}
+      toolbar={false}
       elevation={0}
       sx={{
         // 浅色主题使用浅灰色背景，深色主题使用深色背景
@@ -72,10 +75,34 @@ export const CustomAppBar = (props: AppBarProps) => {
               <ToggleThemeButton />
             </Box>
           </Tooltip>
-          <Tooltip title="系统设置">
+          
+          {/* 只对超级管理员和管理员显示系统设置按钮 */}
+          {identity?.level === 'super' || identity?.level === 'admin' ? (
+            <Tooltip title="系统设置">
+              <IconButton 
+                size="large" 
+                onClick={() => redirect('/system/settings')}
+                sx={{
+                  color: isDark ? '#f1f5f9' : '#475569',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                    backgroundColor: isDark 
+                      ? 'rgba(255, 255, 255, 0.1)'
+                      : 'rgba(0, 0, 0, 0.05)',
+                  },
+                }}
+              >
+                <SettingsOutlinedIcon />
+              </IconButton>
+            </Tooltip>
+          ) : null}
+
+          {/* 账号设置按钮 - 所有用户都可见 */}
+          <Tooltip title="账号设置">
             <IconButton 
               size="large" 
-              onClick={() => redirect('/system/settings')}
+              onClick={() => redirect('/account/settings')}
               sx={{
                 color: isDark ? '#f1f5f9' : '#475569',
                 transition: 'all 0.2s ease',
@@ -87,7 +114,7 @@ export const CustomAppBar = (props: AppBarProps) => {
                 },
               }}
             >
-              <SettingsOutlinedIcon />
+              <AccountCircleOutlinedIcon />
             </IconButton>
           </Tooltip>
         </Stack>

@@ -7,7 +7,7 @@ import RouterOutlinedIcon from '@mui/icons-material/RouterOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import { Box, useTheme } from '@mui/material';
-import { MenuItemLink, MenuProps } from 'react-admin';
+import { MenuItemLink, MenuProps, useGetIdentity } from 'react-admin';
 
 const menuItems = [
   { to: '/', label: '控制台', icon: <DashboardOutlinedIcon /> },
@@ -17,13 +17,21 @@ const menuItems = [
   { to: '/radius/profiles', label: '策略管理', icon: <SettingsSuggestOutlinedIcon /> },
   { to: '/radius/online', label: '在线会话', icon: <SensorsOutlinedIcon /> },
   { to: '/radius/accounting', label: '计费日志', icon: <ReceiptLongOutlinedIcon /> },
-  { to: '/system/operators', label: '操作员管理', icon: <AdminPanelSettingsOutlinedIcon /> },
+  { to: '/system/operators', label: '操作员管理', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
   const currentYear = new Date().getFullYear();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const { data: identity } = useGetIdentity();
+
+  // 根据用户权限过滤菜单项
+  const filteredMenuItems = menuItems.filter(item => {
+    if (!item.permissions) return true; // 无权限限制的菜单项对所有人可见
+    if (!identity?.level) return false; // 未登录用户不显示需要权限的菜单
+    return item.permissions.includes(identity.level); // 检查用户权限是否在允许列表中
+  });
 
   return (
     <Box
@@ -39,7 +47,7 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
       }}
     >
       <Box sx={{ flexGrow: 1, overflowY: 'auto', pt: 1, marginTop: 2 }}>
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <MenuItemLink
             key={item.to}
             to={item.to}

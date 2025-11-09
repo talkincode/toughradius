@@ -1,7 +1,10 @@
-import { Admin, Resource } from 'react-admin';
+import { Admin, Resource, CustomRoutes } from 'react-admin';
+import { Route } from 'react-router-dom';
 import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
 import Dashboard from './pages/Dashboard';
+import { AccountSettings } from './pages/AccountSettings';
+import { LoginPage } from './pages/LoginPage';
 import { CustomLayout } from './components';
 import { theme, darkTheme } from './theme';
 
@@ -50,11 +53,13 @@ const App = () => (
     dataProvider={dataProvider}
     authProvider={authProvider}
     dashboard={Dashboard}
+    loginPage={LoginPage}
     title="ToughRADIUS v9"
     theme={theme}
     darkTheme={darkTheme}
     defaultTheme="light"
     layout={CustomLayout}
+    requireAuth
   >
     {/* RADIUS 用户管理 */}
     <Resource
@@ -131,6 +136,11 @@ const App = () => (
       show={OperatorShow}
       options={{ label: '操作员管理' }}
     />
+
+    {/* 自定义路由 - 账号设置 */}
+    <CustomRoutes>
+      <Route path="/account/settings" element={<AccountSettings />} />
+    </CustomRoutes>
   </Admin>
 );
 

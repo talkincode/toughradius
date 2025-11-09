@@ -209,6 +209,9 @@ export const OperatorEdit = () => {
   // 检查是否是编辑自己的账号
   const isEditingSelf = identity && record && String(identity.id) === String(record.id);
   
+  // 检查用户权限 - 只有超级管理员和管理员可以看到权限设置
+  const canManagePermissions = identity?.level === 'super' || identity?.level === 'admin';
+  
   return (
     <Edit>
       <SimpleForm sx={{ maxWidth: 800 }}>
@@ -258,35 +261,38 @@ export const OperatorEdit = () => {
           </FieldGrid>
         </FormSection>
 
-        <FormSection title="权限设置" description="操作员的权限级别和状态">
-          <FieldGrid>
-            <SelectInput
-              source="level"
-              label="权限级别"
-              validate={required('请选择权限级别')}
-              disabled={isEditingSelf}
-              choices={[
-                { id: 'super', name: '超级管理员' },
-                { id: 'admin', name: '管理员' },
-                { id: 'operator', name: '操作员' },
-              ]}
-              helperText={isEditingSelf ? "不能修改自己的权限级别" : "超级管理员拥有所有权限"}
-              fullWidth
-            />
-            <SelectInput
-              source="status"
-              label="状态"
-              validate={required('请选择状态')}
-              disabled={isEditingSelf}
-              choices={[
-                { id: 'enabled', name: '启用' },
-                { id: 'disabled', name: '禁用' },
-              ]}
-              helperText={isEditingSelf ? "不能修改自己的状态" : "禁用后将无法登录"}
-              fullWidth
-            />
-          </FieldGrid>
-        </FormSection>
+        {/* 只有超级管理员和管理员可以看到权限设置 */}
+        {canManagePermissions && (
+          <FormSection title="权限设置" description="操作员的权限级别和状态">
+            <FieldGrid>
+              <SelectInput
+                source="level"
+                label="权限级别"
+                validate={required('请选择权限级别')}
+                disabled={isEditingSelf}
+                choices={[
+                  { id: 'super', name: '超级管理员' },
+                  { id: 'admin', name: '管理员' },
+                  { id: 'operator', name: '操作员' },
+                ]}
+                helperText={isEditingSelf ? "不能修改自己的权限级别" : "超级管理员拥有所有权限"}
+                fullWidth
+              />
+              <SelectInput
+                source="status"
+                label="状态"
+                validate={required('请选择状态')}
+                disabled={isEditingSelf}
+                choices={[
+                  { id: 'enabled', name: '启用' },
+                  { id: 'disabled', name: '禁用' },
+                ]}
+                helperText={isEditingSelf ? "不能修改自己的状态" : "禁用后将无法登录"}
+                fullWidth
+              />
+            </FieldGrid>
+          </FormSection>
+        )}
 
         <FormSection title="备注信息">
           <TextInput 

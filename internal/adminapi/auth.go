@@ -2,12 +2,13 @@ package adminapi
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
@@ -102,9 +103,14 @@ func issueToken(op domain.SysOpr) (string, error) {
 }
 
 func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
-	token, ok := c.Get("user").(*jwt.Token)
+	userVal := c.Get("user")
+	if userVal == nil {
+		return nil, errors.New("no user in context")
+	}
+
+	token, ok := userVal.(*jwt.Token)
 	if !ok {
-		return nil, errors.New("missing token context")
+		return nil, errors.New(fmt.Sprintf("invalid token type, got: %T", userVal))
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {

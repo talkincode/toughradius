@@ -125,7 +125,9 @@ func NewAdminServer() *AdminServer {
 		SigningMethod: echojwt.AlgorithmHS256,
 		Skipper:       jwtSkipFunc(),
 		ErrorHandler: func(c echo.Context, err error) error {
-			return c.JSON(http.StatusBadRequest, web.RestError("Resource access is limited "+err.Error()))
+			zap.S().Warnf("JWT 验证失败: %v, Path: %s, Auth Header: %s",
+				err, c.Path(), c.Request().Header.Get("Authorization"))
+			return c.JSON(http.StatusUnauthorized, web.RestError("认证失败: "+err.Error()))
 		},
 	}
 
