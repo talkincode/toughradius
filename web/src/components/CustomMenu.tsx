@@ -11,12 +11,12 @@ import { MenuItemLink, MenuProps } from 'react-admin';
 
 const menuItems = [
   { to: '/', label: '控制台', icon: <DashboardOutlinedIcon /> },
+  { to: '/network/nodes', label: '网络节点', icon: <AccountTreeOutlinedIcon /> },
+  { to: '/network/nas', label: 'NAS设备', icon: <RouterOutlinedIcon /> },
   { to: '/radius/users', label: '用户管理', icon: <PeopleAltOutlinedIcon /> },
   { to: '/radius/profiles', label: '策略管理', icon: <SettingsSuggestOutlinedIcon /> },
   { to: '/radius/online', label: '在线会话', icon: <SensorsOutlinedIcon /> },
   { to: '/radius/accounting', label: '计费日志', icon: <ReceiptLongOutlinedIcon /> },
-  { to: '/network/nas', label: 'NAS设备', icon: <RouterOutlinedIcon /> },
-  { to: '/network/nodes', label: '网络节点', icon: <AccountTreeOutlinedIcon /> },
   { to: '/system/operators', label: '操作员管理', icon: <AdminPanelSettingsOutlinedIcon /> },
 ];
 

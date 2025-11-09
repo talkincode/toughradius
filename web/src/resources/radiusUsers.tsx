@@ -8,14 +8,12 @@ import {
   SelectInput,
   Create,
   Show,
-  SimpleShowLayout,
   EmailField,
   BooleanInput,
   required,
   minLength,
   maxLength,
   email,
-  regex,
   useRecordContext,
   Toolbar,
   SaveButton,
@@ -23,13 +21,28 @@ import {
   SimpleForm,
   ToolbarProps,
   ReferenceInput,
-  ReferenceField
+  ReferenceField,
+  TopToolbar,
+  EditButton,
+  ListButton,
+  FilterButton,
+  CreateButton,
+  ExportButton
 } from 'react-admin';
 import {
   Box,
   Chip,
   Typography,
-  Paper
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Card,
+  CardContent,
+  Divider,
+  Stack
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode } from 'react';
@@ -229,11 +242,39 @@ const UserFormToolbar = (props: ToolbarProps) => (
   </Toolbar>
 );
 
+// RADIUS 用户列表操作栏
+const UserListActions = () => (
+  <TopToolbar>
+    <FilterButton />
+    <CreateButton />
+    <ExportButton />
+  </TopToolbar>
+);
+
+// RADIUS 用户过滤器
+const userFilters = [
+  <TextInput key="username" label="用户名" source="username" alwaysOn />,
+  <TextInput key="realname" label="真实姓名" source="realname" />,
+  <TextInput key="email" label="邮箱" source="email" />,
+  <TextInput key="mobile" label="手机号" source="mobile" />,
+  <SelectInput
+    key="status"
+    label="状态"
+    source="status"
+    choices={[
+      { id: 'enabled', name: '启用' },
+      { id: 'disabled', name: '禁用' },
+    ]}
+  />,
+  <ReferenceInput key="profile_id" source="profile_id" reference="radius/profiles">
+    <SelectInput label="计费策略" optionText="name" />
+  </ReferenceInput>,
+];
+
 // RADIUS 用户列表
 export const RadiusUserList = () => (
-  <List>
-    <Datagrid rowClick="edit">
-      <TextField source="id" label="ID" />
+  <List actions={<UserListActions />} filters={userFilters}>
+    <Datagrid rowClick="show">
       <TextField source="username" label="用户名" />
       <TextField source="realname" label="真实姓名" />
       <EmailField source="email" label="邮箱" />
@@ -326,8 +367,8 @@ export const RadiusUserEdit = () => {
               <TextInput
                 source="mobile"
                 label="手机号"
-                validate={[regex(/^1[3-9]\d{9}$/, '请输入有效的手机号码')]}
-                helperText="11位中国大陆手机号"
+                validate={[maxLength(20)]}
+                helperText="手机号码（可选），最多20个字符"
                 autoComplete="tel"
                 fullWidth
                 size="small"
@@ -503,8 +544,8 @@ export const RadiusUserCreate = () => (
               <TextInput
                 source="mobile"
                 label="手机号"
-                validate={[regex(/^1[3-9]\d{9}$/, '请输入有效的手机号码')]}
-                helperText="11位中国大陆手机号"
+                validate={[maxLength(20)]}
+                helperText="手机号码（可选），最多20个字符"
                 autoComplete="tel"
                 fullWidth
                 size="small"
@@ -613,25 +654,218 @@ export const RadiusUserCreate = () => (
   </Create>
 );
 
-// RADIUS 用户详情
-export const RadiusUserShow = () => (
-  <Show>
-    <SimpleShowLayout>
-      <TextField source="id" label="ID" />
-      <TextField source="username" label="用户名" />
-      <TextField source="realname" label="真实姓名" />
-      <EmailField source="email" label="邮箱" />
-      <TextField source="mobile" label="手机号" />
-      <TextField source="address" label="地址" />
-      <StatusField />
-      <ReferenceField source="profile_id" reference="radius/profiles" label="计费策略">
-        <TextField source="name" />
-      </ReferenceField>
-      <TextField source="ip_addr" label="IPv4地址" />
-      <TextField source="ipv6_addr" label="IPv6地址" />
-      <DateField source="created_at" label="创建时间" showTime />
-      <DateField source="expire_time" label="过期时间" showTime />
-      <TextField source="remark" label="备注" />
-    </SimpleShowLayout>
-  </Show>
+// 详情页工具栏
+const UserShowActions = () => (
+  <TopToolbar>
+    <ListButton />
+    <EditButton />
+    <DeleteButton mutationMode="pessimistic" />
+  </TopToolbar>
 );
+
+// 详情信息行组件
+const DetailRow = ({ label, value }: { label: string; value: ReactNode }) => (
+  <TableRow>
+    <TableCell
+      component="th"
+      scope="row"
+      sx={{
+        fontWeight: 600,
+        backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+        width: '30%',
+        py: 1.5,
+        px: 2
+      }}
+    >
+      {label}
+    </TableCell>
+    <TableCell sx={{ py: 1.5, px: 2 }}>
+      {value}
+    </TableCell>
+  </TableRow>
+);
+
+// 状态显示组件（用于详情页）
+const StatusDisplay = () => {
+  const record = useRecordContext();
+  if (!record) return null;
+
+  return (
+    <Chip
+      label={record.status === 'enabled' ? '启用' : '禁用'}
+      color={record.status === 'enabled' ? 'success' : 'default'}
+      size="small"
+      sx={{ fontWeight: 500 }}
+    />
+  );
+};
+
+// RADIUS 用户详情
+export const RadiusUserShow = () => {
+  return (
+    <Show actions={<UserShowActions />}>
+      <Box sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 } }}>
+        <Stack spacing={3}>
+          {/* 基本信息卡片 */}
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                基本信息
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <TableContainer>
+                <Table>
+                  <TableBody>
+                    <DetailRow
+                      label="用户ID"
+                      value={<TextField source="id" />}
+                    />
+                    <DetailRow
+                      label="用户名"
+                      value={<TextField source="username" />}
+                    />
+                    <DetailRow
+                      label="真实姓名"
+                      value={<TextField source="realname" emptyText="-" />}
+                    />
+                    <DetailRow
+                      label="启用状态"
+                      value={<StatusDisplay />}
+                    />
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* 联系方式和服务配置 */}
+          <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  联系方式
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer>
+                  <Table>
+                    <TableBody>
+                      <DetailRow
+                        label="邮箱"
+                        value={<EmailField source="email" emptyText="-" />}
+                      />
+                      <DetailRow
+                        label="手机号"
+                        value={<TextField source="mobile" emptyText="-" />}
+                      />
+                      <DetailRow
+                        label="地址"
+                        value={<TextField source="address" emptyText="-" />}
+                      />
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  服务配置
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer>
+                  <Table>
+                    <TableBody>
+                      <DetailRow
+                        label="计费策略"
+                        value={
+                          <ReferenceField source="profile_id" reference="radius/profiles" link="show">
+                            <TextField source="name" />
+                          </ReferenceField>
+                        }
+                      />
+                      <DetailRow
+                        label="过期时间"
+                        value={<DateField source="expire_time" showTime emptyText="永不过期" />}
+                      />
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* 网络配置 */}
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                网络配置
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <TableContainer>
+                <Table>
+                  <TableBody>
+                    <DetailRow
+                      label="IPv4地址"
+                      value={<TextField source="ip_addr" emptyText="-" />}
+                    />
+                    <DetailRow
+                      label="IPv6地址"
+                      value={<TextField source="ipv6_addr" emptyText="-" />}
+                    />
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* 时间信息 */}
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                时间信息
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <TableContainer>
+                <Table>
+                  <TableBody>
+                    <DetailRow
+                      label="创建时间"
+                      value={<DateField source="created_at" showTime />}
+                    />
+                    <DetailRow
+                      label="更新时间"
+                      value={<DateField source="updated_at" showTime />}
+                    />
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* 备注信息卡片 */}
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                备注信息
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ p: 2, backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)', borderRadius: 1 }}>
+                <TextField
+                  source="remark"
+                  emptyText="无备注信息"
+                  sx={{
+                    '& .RaTextField-root': {
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word'
+                    }
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Box>
+    </Show>
+  );
+};

@@ -42,12 +42,16 @@ func parseTimeInput(value string, fallback time.Time) (time.Time, error) {
 		return fallback, nil
 	}
 	layouts := []string{
-		time.RFC3339,
-		"2006-01-02 15:04:05",
-		"2006-01-02",
+		time.RFC3339,          // 2006-01-02T15:04:05Z07:00
+		"2006-01-02T15:04:05", // ISO 8601 with seconds
+		"2006-01-02T15:04",    // HTML5 datetime-local format (no seconds)
+		"2006-01-02 15:04:05", // Common format with space
+		"2006-01-02 15:04",    // Common format without seconds
+		"2006-01-02",          // Date only
 	}
 	for _, layout := range layouts {
 		if ts, err := time.ParseInLocation(layout, value, time.Local); err == nil {
+			// 如果只有日期，设置为当天的最后一秒
 			if layout == "2006-01-02" {
 				return ts.Add(23*time.Hour + 59*time.Minute + 59*time.Second), nil
 			}

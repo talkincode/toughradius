@@ -20,7 +20,11 @@ import {
   ToolbarProps,
   TopToolbar,
   EditButton,
-  ListButton
+  ListButton,
+  FilterButton,
+  CreateButton,
+  ExportButton,
+  SelectInput
 } from 'react-admin';
 import {
   Box,
@@ -226,11 +230,35 @@ const ProfileFormToolbar = (props: ToolbarProps) => (
   </Toolbar>
 );
 
+// RADIUS 计费策略列表操作栏
+const ProfileListActions = () => (
+  <TopToolbar>
+    <FilterButton />
+    <CreateButton />
+    <ExportButton />
+  </TopToolbar>
+);
+
+// RADIUS 计费策略过滤器
+const profileFilters = [
+  <TextInput key="name" label="策略名称" source="name" alwaysOn />,
+  <TextInput key="addr_pool" label="地址池" source="addr_pool" />,
+  <TextInput key="domain" label="域" source="domain" />,
+  <SelectInput
+    key="status"
+    label="状态"
+    source="status"
+    choices={[
+      { id: 'enabled', name: '启用' },
+      { id: 'disabled', name: '禁用' },
+    ]}
+  />,
+];
+
 // RADIUS 计费策略列表
 export const RadiusProfileList = () => (
-  <List>
+  <List actions={<ProfileListActions />} filters={profileFilters}>
     <Datagrid rowClick="show">
-      <TextField source="id" label="ID" />
       <TextField source="name" label="策略名称" />
       <StatusField />
       <TextField source="active_num" label="并发数" />
