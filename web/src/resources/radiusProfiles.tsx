@@ -7,7 +7,6 @@ import {
   TextInput,
   Create,
   Show,
-  SimpleShowLayout,
   BooleanInput,
   NumberInput,
   required,
@@ -18,13 +17,25 @@ import {
   SaveButton,
   DeleteButton,
   SimpleForm,
-  ToolbarProps
+  ToolbarProps,
+  TopToolbar,
+  EditButton,
+  ListButton
 } from 'react-admin';
 import {
   Box,
   Chip,
   Typography,
-  Paper
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableRow,
+  Card,
+  CardContent,
+  Divider,
+  Stack
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode } from 'react';
@@ -218,7 +229,7 @@ const ProfileFormToolbar = (props: ToolbarProps) => (
 // RADIUS 计费策略列表
 export const RadiusProfileList = () => (
   <List>
-    <Datagrid rowClick="edit">
+    <Datagrid rowClick="show">
       <TextField source="id" label="ID" />
       <TextField source="name" label="策略名称" />
       <StatusField />
@@ -554,24 +565,246 @@ export const RadiusProfileCreate = () => (
   </Create>
 );
 
-// RADIUS 计费策略详情
-export const RadiusProfileShow = () => (
-  <Show>
-    <SimpleShowLayout>
-      <TextField source="id" label="ID" />
-      <TextField source="name" label="策略名称" />
-      <StatusField />
-      <TextField source="active_num" label="并发数" />
-      <TextField source="up_rate" label="上行速率(Kbps)" />
-      <TextField source="down_rate" label="下行速率(Kbps)" />
-      <TextField source="addr_pool" label="地址池" />
-      <TextField source="ipv6_prefix" label="IPv6前缀" />
-      <TextField source="domain" label="域" />
-      <TextField source="bind_mac" label="绑定MAC" />
-      <TextField source="bind_vlan" label="绑定VLAN" />
-      <TextField source="remark" label="备注" />
-      <DateField source="created_at" label="创建时间" showTime />
-      <DateField source="updated_at" label="更新时间" showTime />
-    </SimpleShowLayout>
-  </Show>
+// 详情页工具栏
+const ProfileShowActions = () => (
+  <TopToolbar>
+    <ListButton />
+    <EditButton />
+    <DeleteButton mutationMode="pessimistic" />
+  </TopToolbar>
 );
+
+// 详情信息行组件
+const DetailRow = ({ label, value }: { label: string; value: ReactNode }) => (
+  <TableRow>
+    <TableCell
+      component="th"
+      scope="row"
+      sx={{
+        fontWeight: 600,
+        backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+        width: '30%',
+        py: 1.5,
+        px: 2
+      }}
+    >
+      {label}
+    </TableCell>
+    <TableCell sx={{ py: 1.5, px: 2 }}>
+      {value}
+    </TableCell>
+  </TableRow>
+);
+
+// 状态显示组件（用于详情页）
+const StatusDisplay = () => {
+  const record = useRecordContext();
+  if (!record) return null;
+
+  return (
+    <Chip
+      label={record.status === 'enabled' ? '启用' : '禁用'}
+      color={record.status === 'enabled' ? 'success' : 'default'}
+      size="small"
+      sx={{ fontWeight: 500 }}
+    />
+  );
+};
+
+// 布尔值显示组件
+const BooleanDisplay = ({ source }: { source: string }) => {
+  const record = useRecordContext();
+  if (!record) return null;
+
+  const value = record[source];
+  return (
+    <Chip
+      label={value ? '是' : '否'}
+      color={value ? 'success' : 'default'}
+      size="small"
+      variant="outlined"
+    />
+  );
+};
+
+// RADIUS 计费策略详情
+export const RadiusProfileShow = () => {
+  return (
+    <Show actions={<ProfileShowActions />}>
+      <Box sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 } }}>
+        <Stack spacing={3}>
+          {/* 基本信息卡片 */}
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                基本信息
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <TableContainer>
+                <Table>
+                  <TableBody>
+                    <DetailRow
+                      label="策略ID"
+                      value={<TextField source="id" />}
+                    />
+                    <DetailRow
+                      label="策略名称"
+                      value={<TextField source="name" />}
+                    />
+                    <DetailRow
+                      label="启用状态"
+                      value={<StatusDisplay />}
+                    />
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+
+          {/* 并发和速率控制卡片 */}
+          <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  并发和速率控制
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer>
+                  <Table>
+                    <TableBody>
+                      <DetailRow
+                        label="并发数"
+                        value={<TextField source="active_num" />}
+                      />
+                      <DetailRow
+                        label="上行速率"
+                        value={
+                          <Box>
+                            <TextField source="up_rate" />
+                            <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                              Kbps
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                      <DetailRow
+                        label="下行速率"
+                        value={
+                          <Box>
+                            <TextField source="down_rate" />
+                            <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
+                              Kbps
+                            </Typography>
+                          </Box>
+                        }
+                      />
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+
+            {/* 网络配置卡片 */}
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  网络配置
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer>
+                  <Table>
+                    <TableBody>
+                      <DetailRow
+                        label="地址池"
+                        value={<TextField source="addr_pool" emptyText="-" />}
+                      />
+                      <DetailRow
+                        label="IPv6前缀"
+                        value={<TextField source="ipv6_prefix" emptyText="-" />}
+                      />
+                      <DetailRow
+                        label="域"
+                        value={<TextField source="domain" emptyText="-" />}
+                      />
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* 绑定策略和时间信息 */}
+          <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  绑定策略
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer>
+                  <Table>
+                    <TableBody>
+                      <DetailRow
+                        label="绑定MAC"
+                        value={<BooleanDisplay source="bind_mac" />}
+                      />
+                      <DetailRow
+                        label="绑定VLAN"
+                        value={<BooleanDisplay source="bind_vlan" />}
+                      />
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+
+            <Card elevation={2}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                  时间信息
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+                <TableContainer>
+                  <Table>
+                    <TableBody>
+                      <DetailRow
+                        label="创建时间"
+                        value={<DateField source="created_at" showTime />}
+                      />
+                      <DetailRow
+                        label="更新时间"
+                        value={<DateField source="updated_at" showTime />}
+                      />
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Box>
+
+          {/* 备注信息卡片 */}
+          <Card elevation={2}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
+                备注信息
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              <Box sx={{ p: 2, backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)', borderRadius: 1 }}>
+                <TextField
+                  source="remark"
+                  emptyText="无备注信息"
+                  sx={{
+                    '& .RaTextField-root': {
+                      whiteSpace: 'pre-wrap',
+                      wordBreak: 'break-word'
+                    }
+                  }}
+                />
+              </Box>
+            </CardContent>
+          </Card>
+        </Stack>
+      </Box>
+    </Show>
+  );
+};
