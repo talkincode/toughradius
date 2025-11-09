@@ -1,5 +1,20 @@
-import { useEffect, useState } from 'react';
+import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
+import OnlinePredictionOutlinedIcon from '@mui/icons-material/OnlinePredictionOutlined';
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
+import SwapVertOutlinedIcon from '@mui/icons-material/SwapVertOutlined';
+import Grid from '@mui/material/GridLegacy';
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  LinearProgress,
+  Stack,
+  Typography,
+} from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import ReactECharts from 'echarts-for-react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface DashboardStats {
   total_users: number;
@@ -13,221 +28,398 @@ interface DashboardStats {
   today_output_gb: number;
 }
 
+const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+const weeklyAuthData = [320, 432, 401, 534, 590, 530, 520];
+const connectionSources = [
+  { value: 45, name: 'PPPoE' },
+  { value: 30, name: 'IPoE' },
+  { value: 15, name: 'WiFi' },
+  { value: 10, name: '其他' },
+];
+const trafficHours = Array.from({ length: 24 }, (_, hour) => `${hour}:00`);
+const trafficUpload = [18, 16, 20, 24, 26, 33, 37, 40, 42, 45, 48, 52, 54, 60, 64, 71, 74, 70, 60, 52, 45, 36, 28, 22];
+const trafficDownload = [42, 48, 50, 56, 64, 72, 80, 90, 102, 118, 128, 138, 146, 154, 162, 170, 168, 158, 140, 128, 118, 102, 80, 60];
+const numberFormatter = new Intl.NumberFormat('zh-CN');
+
+const defaultStats: DashboardStats = {
+  total_users: 0,
+  online_users: 0,
+  today_auth_count: 0,
+  today_acct_count: 0,
+  total_profiles: 0,
+  disabled_users: 0,
+  expired_users: 0,
+  today_input_gb: 0,
+  today_output_gb: 0,
+};
+
 const Dashboard = () => {
-  const [stats, setStats] = useState<DashboardStats>({
-    total_users: 0,
-    online_users: 0,
-    today_auth_count: 0,
-    today_acct_count: 0,
-    total_profiles: 0,
-    disabled_users: 0,
-    expired_users: 0,
-    today_input_gb: 0,
-    today_output_gb: 0,
-  });
+  const theme = useTheme();
+  const [stats, setStats] = useState<DashboardStats>(defaultStats);
 
   useEffect(() => {
-    // 获取统计数据
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/v1/dashboard/stats', {
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         });
-        const data = await response.json();
-        if (data) {
-          setStats(data);
+
+        if (!response.ok) {
+          throw new Error(`Request failed with status ${response.status}`);
         }
+
+        const data = await response.json();
+        setStats((prev) => ({ ...prev, ...data }));
       } catch (error) {
         console.error('Failed to fetch dashboard stats:', error);
       }
     };
+
     fetchStats();
   }, []);
 
-  // 认证趋势图配置
-  const authTrendOption = {
-    title: {
-      text: '认证趋势（近7天）',
-      left: 'center',
-    },
-    tooltip: {
-      trigger: 'axis',
-    },
-    xAxis: {
-      type: 'category',
-      data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-    },
-    yAxis: {
-      type: 'value',
-    },
-    series: [
-      {
-        name: '认证次数',
-        type: 'line',
-        smooth: true,
-        data: [320, 432, 401, 534, 590, 530, 520],
-      },
-    ],
-  };
+  const onlineRatio =
+    stats.total_users > 0 ? Math.min((stats.online_users / stats.total_users) * 100, 100) : 0;
 
-  // 在线用户分布图配置
-  const onlineDistributionOption = {
-    title: {
-      text: '在线用户分布',
-      left: 'center',
+  const statCards = [
+    {
+      title: '总用户数',
+      value: numberFormatter.format(stats.total_users),
+      icon: <PeopleAltOutlinedIcon fontSize="large" />,
+      accent: theme.palette.primary.main,
+      highlights: [
+        { label: '禁用', value: stats.disabled_users },
+        { label: '过期', value: stats.expired_users },
+      ],
     },
-    tooltip: {
-      trigger: 'item',
+    {
+      title: '在线用户',
+      value: numberFormatter.format(stats.online_users),
+      icon: <OnlinePredictionOutlinedIcon fontSize="large" />,
+      accent: '#34d399',
+      highlights: [{ label: '策略总数', value: stats.total_profiles }],
     },
-    legend: {
-      orient: 'vertical',
-      left: 'left',
+    {
+      title: '今日认证',
+      value: numberFormatter.format(stats.today_auth_count),
+      icon: <VerifiedUserOutlinedIcon fontSize="large" />,
+      accent: theme.palette.secondary.main,
+      highlights: [{ label: '计费记录', value: stats.today_acct_count }],
     },
-    series: [
-      {
-        name: '在线用户',
-        type: 'pie',
-        radius: '50%',
-        data: [
-          { value: 35, name: 'PPPoE' },
-          { value: 28, name: 'IPoE' },
-          { value: 15, name: 'WiFi' },
-          { value: 8, name: '其他' },
-        ],
-        emphasis: {
-          itemStyle: {
-            shadowBlur: 10,
-            shadowOffsetX: 0,
-            shadowColor: 'rgba(0, 0, 0, 0.5)',
-          },
+    {
+      title: '今日流量',
+      value: `↑ ${stats.today_input_gb.toFixed(2)} GB`,
+      secondaryValue: `↓ ${stats.today_output_gb.toFixed(2)} GB`,
+      icon: <SwapVertOutlinedIcon fontSize="large" />,
+      accent: '#f97316',
+      highlights: [{ label: '单位', value: 'GB' }],
+    },
+  ];
+
+  const authTrendOption = useMemo(
+    () => ({
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis' },
+      textStyle: { color: alpha(theme.palette.text.primary, 0.7) },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: weekDays,
+        boundaryGap: false,
+        axisLine: {
+          lineStyle: { color: alpha(theme.palette.text.secondary, 0.25) },
+        },
+        axisLabel: {
+          color: alpha(theme.palette.text.primary, 0.6),
         },
       },
-    ],
-  };
+      yAxis: {
+        type: 'value',
+        splitLine: {
+          lineStyle: { color: alpha(theme.palette.text.secondary, 0.15) },
+        },
+        axisLabel: {
+          color: alpha(theme.palette.text.secondary, 0.65),
+        },
+      },
+      series: [
+        {
+          name: '认证次数',
+          type: 'line',
+          smooth: true,
+          symbol: 'circle',
+          symbolSize: 10,
+          data: weeklyAuthData,
+          lineStyle: { width: 4 },
+          itemStyle: { color: theme.palette.primary.main },
+          areaStyle: {
+            color: alpha(theme.palette.primary.main, 0.18),
+          },
+        },
+      ],
+    }),
+    [theme],
+  );
 
-  // 流量统计图配置
-  const trafficOption = {
-    title: {
-      text: '流量统计（近24小时）',
-      left: 'center',
-    },
-    tooltip: {
-      trigger: 'axis',
-    },
-    legend: {
-      data: ['上传', '下载'],
-      top: 30,
-    },
-    xAxis: {
-      type: 'category',
-      data: Array.from({ length: 24 }, (_, i) => `${i}:00`),
-    },
-    yAxis: {
-      type: 'value',
-      name: 'GB',
-    },
-    series: [
-      {
-        name: '上传',
-        type: 'bar',
-        data: Array.from({ length: 24 }, () => Math.random() * 100),
+  const onlineDistributionOption = useMemo(
+    () => ({
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
       },
-      {
-        name: '下载',
-        type: 'bar',
-        data: Array.from({ length: 24 }, () => Math.random() * 200),
+      legend: {
+        orient: 'vertical',
+        left: 0,
+        textStyle: { color: alpha(theme.palette.text.primary, 0.75) },
       },
-    ],
-  };
+      series: [
+        {
+          name: '在线用户',
+          type: 'pie',
+          radius: ['35%', '70%'],
+          avoidLabelOverlap: false,
+          itemStyle: {
+            borderRadius: 8,
+            borderColor: '#fff',
+            borderWidth: 2,
+          },
+          label: {
+            formatter: '{b}\n{d}%',
+            color: theme.palette.text.primary,
+          },
+          labelLine: {
+            smooth: true,
+            length: 20,
+          },
+          data: connectionSources,
+          color: [
+            theme.palette.primary.main,
+            theme.palette.secondary.main,
+            '#34d399',
+            '#facc15',
+          ],
+        },
+      ],
+    }),
+    [theme],
+  );
+
+  const trafficOption = useMemo(
+    () => ({
+      backgroundColor: 'transparent',
+      tooltip: { trigger: 'axis' },
+      legend: {
+        data: ['上传', '下载'],
+        top: 0,
+        textStyle: { color: alpha(theme.palette.text.primary, 0.7) },
+      },
+      grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
+      xAxis: {
+        type: 'category',
+        data: trafficHours,
+        axisLine: {
+          lineStyle: { color: alpha(theme.palette.text.secondary, 0.2) },
+        },
+        axisLabel: {
+          color: alpha(theme.palette.text.primary, 0.6),
+        },
+      },
+      yAxis: {
+        type: 'value',
+        name: 'GB',
+        nameTextStyle: {
+          color: alpha(theme.palette.text.secondary, 0.7),
+        },
+        splitLine: {
+          lineStyle: { color: alpha(theme.palette.text.secondary, 0.1) },
+        },
+      },
+      series: [
+        {
+          name: '上传',
+          type: 'bar',
+          stack: 'traffic',
+          emphasis: { focus: 'series' },
+          data: trafficUpload,
+          color: alpha(theme.palette.secondary.main, 0.7),
+        },
+        {
+          name: '下载',
+          type: 'bar',
+          stack: 'traffic',
+          emphasis: { focus: 'series' },
+          data: trafficDownload,
+          color: theme.palette.primary.main,
+        },
+      ],
+    }),
+    [theme],
+  );
 
   return (
-    <div style={{ padding: '20px' }}>
-      <h1>欢迎使用 ToughRADIUS v9</h1>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <Card
+        sx={{
+          borderRadius: 4,
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg, #eef2ff, #fdf2f8)',
+          border: '1px solid rgba(255, 255, 255, 0.6)',
+        }}
+      >
+        <CardContent>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            spacing={3}
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Box>
+              <Chip label="RADIUS 系统总览" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
+              <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 520 }}>
+                通过实时洞察快速掌握系统动态，精准控制 RADIUS 用户、会话及策略配置，保障网络稳定运行。
+              </Typography>
 
-      {/* 统计卡片 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '20px' }}>
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#999' }}>总用户数</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px' }}>{stats.total_users}</div>
-            <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-              禁用: {stats.disabled_users} | 过期: {stats.expired_users}
-            </div>
-          </div>
-        </div>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mt: 3 }}>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    今日认证
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                    {numberFormatter.format(stats.today_auth_count)}
+                  </Typography>
+                </Box>
+                <Box>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    今日计费记录
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                    {numberFormatter.format(stats.today_acct_count)}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Box>
 
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#999' }}>在线用户</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px', color: '#52c41a' }}>
-              {stats.online_users}
-            </div>
-            <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-              策略总数: {stats.total_profiles}
-            </div>
-          </div>
-        </div>
+            <Box sx={{ minWidth: 260 }}>
+              <Typography variant="subtitle2" color="text.secondary">
+                在线用户占比
+              </Typography>
+              <Typography variant="h3" sx={{ fontWeight: 700, my: 1 }}>
+                {onlineRatio.toFixed(1)}%
+              </Typography>
+              <LinearProgress
+                variant="determinate"
+                value={onlineRatio}
+                sx={{
+                  height: 10,
+                  borderRadius: 999,
+                  backgroundColor: alpha(theme.palette.primary.main, 0.15),
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: 999,
+                  },
+                }}
+              />
+              <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  在线 {stats.online_users}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  总数 {stats.total_users}
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
+        </CardContent>
+      </Card>
 
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#999' }}>今日认证</div>
-            <div style={{ fontSize: '32px', fontWeight: 'bold', marginTop: '10px', color: '#1890ff' }}>
-              {stats.today_auth_count}
-            </div>
-            <div style={{ fontSize: '12px', color: '#999', marginTop: '5px' }}>
-              计费记录: {stats.today_acct_count}
-            </div>
-          </div>
-        </div>
+      <Grid container spacing={3}>
+        {statCards.map((card) => (
+          <Grid item xs={12} sm={6} lg={3} key={card.title}>
+            <Card
+              sx={{
+                height: '100%',
+                borderRadius: 4,
+              }}
+            >
+              <CardContent>
+                <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      {card.title}
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 700, my: 1 }}>
+                      {card.value}
+                    </Typography>
+                    {card.secondaryValue && (
+                      <Typography variant="h6" sx={{ color: alpha(theme.palette.text.primary, 0.65) }}>
+                        {card.secondaryValue}
+                      </Typography>
+                    )}
+                  </Box>
+                  <Box
+                    sx={{
+                      width: 56,
+                      height: 56,
+                      borderRadius: 3,
+                      display: 'grid',
+                      placeItems: 'center',
+                      backgroundColor: alpha(card.accent, 0.15),
+                      color: card.accent,
+                    }}
+                  >
+                    {card.icon}
+                  </Box>
+                </Stack>
+                <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
+                  {card.highlights.map((item) => (
+                    <Chip key={item.label} label={`${item.label}: ${item.value}`} size="small" />
+                  ))}
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
 
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '14px', color: '#999' }}>今日流量</div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '10px', color: '#722ed1' }}>
-              ↑ {stats.today_input_gb.toFixed(2)} GB
-            </div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', marginTop: '5px', color: '#eb2f96' }}>
-              ↓ {stats.today_output_gb.toFixed(2)} GB
-            </div>
-          </div>
-        </div>
-      </div>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 4, height: '100%' }}>
+            <CardContent sx={{ height: '100%' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                认证趋势（近 7 天）
+              </Typography>
+              <ReactECharts option={authTrendOption} style={{ height: 320 }} />
+            </CardContent>
+          </Card>
+        </Grid>
 
-      {/* 图表 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <ReactECharts option={authTrendOption} style={{ height: '400px' }} />
-        </div>
+        <Grid item xs={12} md={6}>
+          <Card sx={{ borderRadius: 4, height: '100%' }}>
+            <CardContent sx={{ height: '100%' }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                在线用户分布
+              </Typography>
+              <ReactECharts option={onlineDistributionOption} style={{ height: 320 }} />
+            </CardContent>
+          </Card>
+        </Grid>
 
-        <div style={{ padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <ReactECharts option={onlineDistributionOption} style={{ height: '400px' }} />
-        </div>
+        <Grid item xs={12}>
+          <Card sx={{ borderRadius: 4 }}>
+            <CardContent>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
+                流量统计（近 24 小时）
+              </Typography>
+              <ReactECharts option={trafficOption} style={{ height: 360 }} />
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
-        <div style={{ gridColumn: '1 / -1', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-          <ReactECharts option={trafficOption} style={{ height: '400px' }} />
-        </div>
-      </div>
-
-      {/* 系统信息 */}
-      <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#fff', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h2>系统信息</h2>
-        <div style={{ padding: '10px' }}>
-          <p><strong>版本:</strong> ToughRADIUS v9.0.0</p>
-          <p><strong>架构:</strong> React Admin + Go Backend</p>
-          <p><strong>主要功能:</strong></p>
-          <ul>
-            <li>RADIUS 用户管理 - 支持用户增删改查、批量操作</li>
-            <li>在线会话监控 - 实时查看在线用户和会话状态</li>
-            <li>计费记录查询 - 支持多条件筛选和统计分析</li>
-            <li>RADIUS 配置管理 - 灵活的配置文件和策略管理</li>
-            <li>数据可视化 - 丰富的图表和统计报表</li>
-          </ul>
-        </div>
-      </div>
-    </div>
+    </Box>
   );
 };
+
 
 export default Dashboard;

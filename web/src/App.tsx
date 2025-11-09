@@ -2,6 +2,8 @@ import { Admin, Resource } from 'react-admin';
 import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
 import Dashboard from './pages/Dashboard';
+import { CustomLayout } from './components';
+import { theme } from './theme';
 
 // 导入资源组件
 import {
@@ -25,6 +27,8 @@ const App = () => (
     authProvider={authProvider}
     dashboard={Dashboard}
     title="ToughRADIUS v9"
+    theme={theme}
+    layout={CustomLayout}
   >
     {/* RADIUS 用户管理 */}
     <Resource
