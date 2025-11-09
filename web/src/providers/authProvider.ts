@@ -19,6 +19,10 @@ export const authProvider: AuthProvider = {
       localStorage.setItem('token', auth.token);
       localStorage.setItem('username', username);
       localStorage.setItem('permissions', JSON.stringify(auth.permissions || []));
+      // 存储完整的用户信息
+      if (auth.user) {
+        localStorage.setItem('user', JSON.stringify(auth.user));
+      }
       return Promise.resolve();
     } catch (error) {
       return Promise.reject(error);
@@ -30,6 +34,7 @@ export const authProvider: AuthProvider = {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('permissions');
+    localStorage.removeItem('user');
     return Promise.resolve();
   },
 
@@ -40,6 +45,7 @@ export const authProvider: AuthProvider = {
       localStorage.removeItem('token');
       localStorage.removeItem('username');
       localStorage.removeItem('permissions');
+      localStorage.removeItem('user');
       return Promise.reject();
     }
     return Promise.resolve();
@@ -58,10 +64,22 @@ export const authProvider: AuthProvider = {
 
   // 获取用户身份信息
   getIdentity: async () => {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      return Promise.resolve({
+        id: user.id,
+        fullName: user.realname || user.username,
+        username: user.username,
+        level: user.level,
+        ...user,
+      });
+    }
     const username = localStorage.getItem('username');
     return Promise.resolve({
       id: username || 'anonymous',
       fullName: username || 'Anonymous',
+      username: username || 'anonymous',
     });
   },
 };

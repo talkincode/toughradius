@@ -13,6 +13,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
+	"github.com/talkincode/toughradius/v9/pkg/validutil"
 )
 
 // 操作员请求结构
@@ -94,8 +95,40 @@ func createOperator(c echo.Context) error {
 	payload.Username = strings.TrimSpace(payload.Username)
 	payload.Password = strings.TrimSpace(payload.Password)
 
-	if payload.Username == "" || payload.Password == "" || payload.Realname == "" {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "username、password、realname 不能为空", nil)
+	// 验证必填字段
+	if payload.Username == "" {
+		return fail(c, http.StatusBadRequest, "MISSING_USERNAME", "用户名不能为空", nil)
+	}
+	if payload.Password == "" {
+		return fail(c, http.StatusBadRequest, "MISSING_PASSWORD", "密码不能为空", nil)
+	}
+	if payload.Realname == "" {
+		return fail(c, http.StatusBadRequest, "MISSING_REALNAME", "真实姓名不能为空", nil)
+	}
+
+	// 验证用户名格式（3-30个字符，字母、数字、下划线）
+	if len(payload.Username) < 3 || len(payload.Username) > 30 {
+		return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "用户名长度必须在3-30个字符之间", nil)
+	}
+
+	// 验证密码长度
+	if len(payload.Password) < 6 || len(payload.Password) > 50 {
+		return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "密码长度必须在6-50个字符之间", nil)
+	}
+
+	// 验证密码强度（至少包含字母和数字）
+	if !validutil.CheckPassword(payload.Password) {
+		return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "密码必须包含字母和数字", nil)
+	}
+
+	// 验证邮箱格式（如果提供）
+	if payload.Email != "" && !validutil.IsEmail(payload.Email) {
+		return fail(c, http.StatusBadRequest, "INVALID_EMAIL", "邮箱格式不正确", nil)
+	}
+
+	// 验证手机号格式（如果提供）
+	if payload.Mobile != "" && !validutil.IsCnMobile(payload.Mobile) {
+		return fail(c, http.StatusBadRequest, "INVALID_MOBILE", "手机号格式不正确", nil)
 	}
 
 	// 验证权限级别
@@ -168,19 +201,49 @@ func updateOperator(c echo.Context) error {
 
 	// 更新字段
 	if payload.Username != "" {
-		operator.Username = strings.TrimSpace(payload.Username)
+		username := strings.TrimSpace(payload.Username)
+		// 验证用户名格式
+		if len(username) < 3 || len(username) > 30 {
+			return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "用户名长度必须在3-30个字符之间", nil)
+		}
+		// 检查用户名是否已被其他账号使用
+		if username != operator.Username {
+			var exists int64
+			app.GDB().Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, id).Count(&exists)
+			if exists > 0 {
+				return fail(c, http.StatusConflict, "USERNAME_EXISTS", "用户名已存在", nil)
+			}
+		}
+		operator.Username = username
 	}
 	if payload.Password != "" {
 		// 如果提供了新密码，则加密后更新
-		operator.Password = common.Sha256HashWithSalt(strings.TrimSpace(payload.Password), common.SecretSalt)
+		password := strings.TrimSpace(payload.Password)
+		// 验证密码长度
+		if len(password) < 6 || len(password) > 50 {
+			return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "密码长度必须在6-50个字符之间", nil)
+		}
+		// 验证密码强度
+		if !validutil.CheckPassword(password) {
+			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "密码必须包含字母和数字", nil)
+		}
+		operator.Password = common.Sha256HashWithSalt(password, common.SecretSalt)
 	}
 	if payload.Realname != "" {
 		operator.Realname = payload.Realname
 	}
 	if payload.Mobile != "" {
+		// 验证手机号格式
+		if !validutil.IsCnMobile(payload.Mobile) {
+			return fail(c, http.StatusBadRequest, "INVALID_MOBILE", "手机号格式不正确", nil)
+		}
 		operator.Mobile = payload.Mobile
 	}
 	if payload.Email != "" {
+		// 验证邮箱格式
+		if !validutil.IsEmail(payload.Email) {
+			return fail(c, http.StatusBadRequest, "INVALID_EMAIL", "邮箱格式不正确", nil)
+		}
 		operator.Email = payload.Email
 	}
 	if payload.Level != "" {
@@ -251,11 +314,11 @@ func deleteOperator(c echo.Context) error {
 // 筛选条件
 func applyOperatorFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
-		db = db.Where("username ILIKE ?", "%"+username+"%")
+		db = db.Where("username LIKE ?", "%"+username+"%")
 	}
 
 	if realname := strings.TrimSpace(c.QueryParam("realname")); realname != "" {
-		db = db.Where("realname ILIKE ?", "%"+realname+"%")
+		db = db.Where("realname LIKE ?", "%"+realname+"%")
 	}
 
 	if status := strings.TrimSpace(c.QueryParam("status")); status != "" {
