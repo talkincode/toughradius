@@ -48,7 +48,7 @@ export const dataProvider: DataProvider = {
       sort: field,
       order,
       page,
-      pageSize: perPage,
+      perPage,
       ...params.filter,
     };
 
@@ -83,7 +83,7 @@ export const dataProvider: DataProvider = {
       sort: field,
       order: order,
       page: page,
-      pageSize: perPage,
+      perPage,
       ...params.filter,
       [params.target]: params.id,
     };

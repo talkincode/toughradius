@@ -21,7 +21,7 @@ import (
 
 // setupTestEcho 创建带验证器的 Echo 实例
 func setupTestEcho() *echo.Echo {
-	e := setupTestEcho()
+	e := echo.New()
 	e.Validator = customValidator.NewValidator()
 	return e
 }
@@ -32,7 +32,12 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	require.NoError(t, err)
 
 	// 自动迁移表结构
-	err = db.AutoMigrate(&domain.RadiusProfile{}, &domain.RadiusUser{})
+	err = db.AutoMigrate(
+		&domain.RadiusProfile{},
+		&domain.RadiusUser{},
+		&domain.NetNode{},
+		&domain.NetNas{},
+	)
 	require.NoError(t, err)
 
 	return db

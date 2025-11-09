@@ -17,9 +17,9 @@ import (
 
 // 网络节点请求结构
 type nodePayload struct {
-	Name   string `json:"name"`
-	Tags   string `json:"tags"`
-	Remark string `json:"remark"`
+	Name   string `json:"name" validate:"required,min=1,max=100"`
+	Tags   string `json:"tags" validate:"omitempty,max=200"`
+	Remark string `json:"remark" validate:"omitempty,max=500"`
 }
 
 // 注册网络节点路由
@@ -79,10 +79,12 @@ func createNode(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析节点参数", nil)
 	}
 
-	payload.Name = strings.TrimSpace(payload.Name)
-	if payload.Name == "" {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "name 不能为空", nil)
+	// 使用验证器验证请求参数
+	if err := c.Validate(&payload); err != nil {
+		return err
 	}
+
+	payload.Name = strings.TrimSpace(payload.Name)
 
 	// 检查节点名称是否已存在
 	var exists int64
@@ -119,6 +121,11 @@ func updateNode(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析节点参数", nil)
 	}
 
+	// 使用验证器验证请求参数
+	if err := c.Validate(&payload); err != nil {
+		return err
+	}
+
 	var node domain.NetNode
 	if err := app.GDB().Where("id = ?", id).First(&node).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "NODE_NOT_FOUND", "节点不存在", nil)
@@ -126,10 +133,18 @@ func updateNode(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询网络节点失败", err.Error())
 	}
 
-	// 更新字段
-	if payload.Name != "" {
-		node.Name = strings.TrimSpace(payload.Name)
+	// 如果更新名称，检查名称是否已被其他节点使用
+	if payload.Name != "" && payload.Name != node.Name {
+		payload.Name = strings.TrimSpace(payload.Name)
+		var exists int64
+		app.GDB().Model(&domain.NetNode{}).Where("name = ? AND id != ?", payload.Name, id).Count(&exists)
+		if exists > 0 {
+			return fail(c, http.StatusConflict, "NODE_EXISTS", "节点名称已存在", nil)
+		}
+		node.Name = payload.Name
 	}
+
+	// 更新其他字段
 	if payload.Tags != "" {
 		node.Tags = payload.Tags
 	}

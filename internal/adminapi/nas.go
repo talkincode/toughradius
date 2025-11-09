@@ -10,6 +10,22 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
+// NAS 设备请求结构
+type nasPayload struct {
+	NodeId     int64  `json:"node_id,string" validate:"gte=0"`
+	Name       string `json:"name" validate:"required,min=1,max=100"`
+	Identifier string `json:"identifier" validate:"omitempty,max=100"`
+	Hostname   string `json:"hostname" validate:"omitempty,max=100"`
+	Ipaddr     string `json:"ipaddr" validate:"required,ip"`
+	Secret     string `json:"secret" validate:"required,min=6,max=100"`
+	CoaPort    int    `json:"coa_port" validate:"omitempty,port"`
+	Model      string `json:"model" validate:"omitempty,max=50"`
+	VendorCode string `json:"vendor_code" validate:"omitempty,max=20"`
+	Status     string `json:"status" validate:"omitempty,oneof=enabled disabled"`
+	Tags       string `json:"tags" validate:"omitempty,max=200"`
+	Remark     string `json:"remark" validate:"omitempty,max=500"`
+}
+
 // ListNAS 获取 NAS 设备列表
 // @Summary 获取 NAS 设备列表
 // @Tags NAS
@@ -20,7 +36,7 @@ import (
 // @Param name query string false "设备名称"
 // @Param status query string false "设备状态"
 // @Success 200 {object} ListResponse
-// @Router /api/v1/nas [get]
+// @Router /api/v1/network/nas [get]
 func ListNAS(c echo.Context) error {
 	db := app.GDB()
 
@@ -67,7 +83,7 @@ func ListNAS(c echo.Context) error {
 	offset := (page - 1) * perPage
 	query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&devices)
 
-	return ok(c, map[string]interface{}{
+	return c.JSON(http.StatusOK, map[string]interface{}{
 		"data":  devices,
 		"total": total,
 	})
@@ -78,7 +94,7 @@ func ListNAS(c echo.Context) error {
 // @Tags NAS
 // @Param id path int true "NAS ID"
 // @Success 200 {object} domain.NetNas
-// @Router /api/v1/nas/{id} [get]
+// @Router /api/v1/network/nas/{id} [get]
 func GetNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -96,39 +112,48 @@ func GetNAS(c echo.Context) error {
 // CreateNAS 创建 NAS 设备
 // @Summary 创建 NAS 设备
 // @Tags NAS
-// @Param nas body domain.NetNas true "NAS 设备信息"
+// @Param nas body nasPayload true "NAS 设备信息"
 // @Success 201 {object} domain.NetNas
-// @Router /api/v1/nas [post]
+// @Router /api/v1/network/nas [post]
 func CreateNAS(c echo.Context) error {
-	var device domain.NetNas
-	if err := c.Bind(&device); err != nil {
+	var payload nasPayload
+	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 验证必填字段
-	if device.Name == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_NAME", "设备名称不能为空", nil)
-	}
-	if device.Ipaddr == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_IPADDR", "设备 IP 地址不能为空", nil)
-	}
-	if device.Secret == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_SECRET", "RADIUS 秘钥不能为空", nil)
+	// 使用验证器验证请求参数
+	if err := c.Validate(&payload); err != nil {
+		return err
 	}
 
 	// 检查 IP 地址是否已存在
 	var count int64
-	app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ?", device.Ipaddr).Count(&count)
+	app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ?", payload.Ipaddr).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
 	}
 
 	// 设置默认值
-	if device.Status == "" {
-		device.Status = "enabled"
+	if payload.Status == "" {
+		payload.Status = "enabled"
 	}
-	if device.CoaPort == 0 {
-		device.CoaPort = 3799
+	if payload.CoaPort == 0 {
+		payload.CoaPort = 3799
+	}
+
+	device := domain.NetNas{
+		NodeId:     payload.NodeId,
+		Name:       payload.Name,
+		Identifier: payload.Identifier,
+		Hostname:   payload.Hostname,
+		Ipaddr:     payload.Ipaddr,
+		Secret:     payload.Secret,
+		CoaPort:    payload.CoaPort,
+		Model:      payload.Model,
+		VendorCode: payload.VendorCode,
+		Status:     payload.Status,
+		Tags:       payload.Tags,
+		Remark:     payload.Remark,
 	}
 
 	if err := app.GDB().Create(&device).Error; err != nil {
@@ -142,9 +167,9 @@ func CreateNAS(c echo.Context) error {
 // @Summary 更新 NAS 设备
 // @Tags NAS
 // @Param id path int true "NAS ID"
-// @Param nas body domain.NetNas true "NAS 设备信息"
+// @Param nas body nasPayload true "NAS 设备信息"
 // @Success 200 {object} domain.NetNas
-// @Router /api/v1/nas/{id} [put]
+// @Router /api/v1/network/nas/{id} [put]
 func UpdateNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -156,65 +181,64 @@ func UpdateNAS(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS 设备不存在", nil)
 	}
 
-	var updateData domain.NetNas
-	if err := c.Bind(&updateData); err != nil {
+	var payload nasPayload
+	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 验证 IP 唯一性
-	if updateData.Ipaddr != "" && updateData.Ipaddr != device.Ipaddr {
+	// 使用验证器验证请求参数
+	if err := c.Validate(&payload); err != nil {
+		return err
+	}
+
+	// 验证 IP 唯一性（如果 IP 被修改）
+	if payload.Ipaddr != "" && payload.Ipaddr != device.Ipaddr {
 		var count int64
-		app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", updateData.Ipaddr, id).Count(&count)
+		app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", payload.Ipaddr, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
 		}
+		device.Ipaddr = payload.Ipaddr
 	}
 
 	// 更新字段
-	updates := map[string]interface{}{}
-	if updateData.Name != "" {
-		updates["name"] = updateData.Name
+	if payload.Name != "" {
+		device.Name = payload.Name
 	}
-	if updateData.Identifier != "" {
-		updates["identifier"] = updateData.Identifier
+	if payload.Identifier != "" {
+		device.Identifier = payload.Identifier
 	}
-	if updateData.Hostname != "" {
-		updates["hostname"] = updateData.Hostname
+	if payload.Hostname != "" {
+		device.Hostname = payload.Hostname
 	}
-	if updateData.Ipaddr != "" {
-		updates["ipaddr"] = updateData.Ipaddr
+	if payload.Secret != "" {
+		device.Secret = payload.Secret
 	}
-	if updateData.Secret != "" {
-		updates["secret"] = updateData.Secret
+	if payload.CoaPort > 0 {
+		device.CoaPort = payload.CoaPort
 	}
-	if updateData.CoaPort > 0 {
-		updates["coa_port"] = updateData.CoaPort
+	if payload.Model != "" {
+		device.Model = payload.Model
 	}
-	if updateData.Model != "" {
-		updates["model"] = updateData.Model
+	if payload.VendorCode != "" {
+		device.VendorCode = payload.VendorCode
 	}
-	if updateData.VendorCode != "" {
-		updates["vendor_code"] = updateData.VendorCode
+	if payload.Status != "" {
+		device.Status = payload.Status
 	}
-	if updateData.Status != "" {
-		updates["status"] = updateData.Status
+	if payload.Tags != "" {
+		device.Tags = payload.Tags
 	}
-	if updateData.Tags != "" {
-		updates["tags"] = updateData.Tags
+	if payload.Remark != "" {
+		device.Remark = payload.Remark
 	}
-	if updateData.Remark != "" {
-		updates["remark"] = updateData.Remark
-	}
-	if updateData.NodeId > 0 {
-		updates["node_id"] = updateData.NodeId
+	if payload.NodeId > 0 {
+		device.NodeId = payload.NodeId
 	}
 
-	if err := app.GDB().Model(&device).Updates(updates).Error; err != nil {
+	if err := app.GDB().Save(&device).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "更新 NAS 设备失败", err.Error())
 	}
-
-	// 重新查询最新数据
-	app.GDB().First(&device, id)
 
 	return ok(c, device)
 }
@@ -224,7 +248,7 @@ func UpdateNAS(c echo.Context) error {
 // @Tags NAS
 // @Param id path int true "NAS ID"
 // @Success 200 {object} SuccessResponse
-// @Router /api/v1/nas/{id} [delete]
+// @Router /api/v1/network/nas/{id} [delete]
 func DeleteNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
@@ -251,9 +275,9 @@ func DeleteNAS(c echo.Context) error {
 
 // registerNASRoutes 注册 NAS 路由
 func registerNASRoutes() {
-	webserver.ApiGET("/nas", ListNAS)
-	webserver.ApiGET("/nas/:id", GetNAS)
-	webserver.ApiPOST("/nas", CreateNAS)
-	webserver.ApiPUT("/nas/:id", UpdateNAS)
-	webserver.ApiDELETE("/nas/:id", DeleteNAS)
+	webserver.ApiGET("/network/nas", ListNAS)
+	webserver.ApiGET("/network/nas/:id", GetNAS)
+	webserver.ApiPOST("/network/nas", CreateNAS)
+	webserver.ApiPUT("/network/nas/:id", UpdateNAS)
+	webserver.ApiDELETE("/network/nas/:id", DeleteNAS)
 }
