@@ -3,6 +3,9 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import SettingsSuggestOutlinedIcon from '@mui/icons-material/SettingsSuggestOutlined';
+import RouterOutlinedIcon from '@mui/icons-material/RouterOutlined';
+import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
+import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import { Box } from '@mui/material';
 import { MenuItemLink, MenuProps } from 'react-admin';
 
@@ -12,6 +15,9 @@ const menuItems = [
   { to: '/radius/profiles', label: '策略管理', icon: <SettingsSuggestOutlinedIcon /> },
   { to: '/radius/online', label: '在线会话', icon: <SensorsOutlinedIcon /> },
   { to: '/radius/accounting', label: '计费日志', icon: <ReceiptLongOutlinedIcon /> },
+  { to: '/network/nas', label: 'NAS设备', icon: <RouterOutlinedIcon /> },
+  { to: '/network/nodes', label: '网络节点', icon: <AccountTreeOutlinedIcon /> },
+  { to: '/system/operators', label: '操作员管理', icon: <AdminPanelSettingsOutlinedIcon /> },
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {

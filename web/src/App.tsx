@@ -20,6 +20,30 @@ import {
   RadiusProfileCreate,
   RadiusProfileShow,
 } from './resources/radiusProfiles';
+import {
+  SystemSettingsList,
+  SystemSettingsEdit,
+  SystemSettingsCreate,
+  SystemSettingsShow,
+} from './resources/systemSettings';
+import {
+  NASList,
+  NASEdit,
+  NASCreate,
+  NASShow,
+} from './resources/nas';
+import {
+  NodeList,
+  NodeEdit,
+  NodeCreate,
+  NodeShow,
+} from './resources/nodes';
+import {
+  OperatorList,
+  OperatorEdit,
+  OperatorCreate,
+  OperatorShow,
+} from './resources/operators';
 
 const App = () => (
   <Admin
@@ -64,6 +88,46 @@ const App = () => (
       create={RadiusProfileCreate}
       show={RadiusProfileShow}
       options={{ label: 'RADIUS配置' }}
+    />
+
+    {/* 系统设置 */}
+    <Resource
+      name="system/settings"
+      list={SystemSettingsList}
+      edit={SystemSettingsEdit}
+      create={SystemSettingsCreate}
+      show={SystemSettingsShow}
+      options={{ label: '系统设置' }}
+    />
+
+    {/* NAS 设备管理 */}
+    <Resource
+      name="network/nas"
+      list={NASList}
+      edit={NASEdit}
+      create={NASCreate}
+      show={NASShow}
+      options={{ label: 'NAS设备' }}
+    />
+
+    {/* 网络节点 */}
+    <Resource
+      name="network/nodes"
+      list={NodeList}
+      edit={NodeEdit}
+      create={NodeCreate}
+      show={NodeShow}
+      options={{ label: '网络节点' }}
+    />
+
+    {/* 操作员管理 */}
+    <Resource
+      name="system/operators"
+      list={OperatorList}
+      edit={OperatorEdit}
+      create={OperatorCreate}
+      show={OperatorShow}
+      options={{ label: '操作员管理' }}
     />
   </Admin>
 );

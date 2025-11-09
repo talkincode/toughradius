@@ -9,4 +9,7 @@ func Init() {
 	registerAccountingRoutes()
 	registerSessionRoutes()
 	registerNASRoutes()
+	registerSettingsRoutes()
+	registerNodesRoutes()
+	registerOperatorsRoutes()
 }
