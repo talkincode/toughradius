@@ -6,7 +6,7 @@ import SettingsSuggestOutlinedIcon from '@mui/icons-material/SettingsSuggestOutl
 import RouterOutlinedIcon from '@mui/icons-material/RouterOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps } from 'react-admin';
 
 const menuItems = [
@@ -22,6 +22,8 @@ const menuItems = [
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
   const currentYear = new Date().getFullYear();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
 
   return (
     <Box
@@ -29,12 +31,13 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        backgroundColor: '#efefefff',
-        color: '#373737ff',
+        // 侧边栏根据主题使用不同背景色
+        backgroundColor: isDark ? '#1e293b' : '#1e40af',
+        color: '#ffffff',
         pt: 0,
+        transition: 'background-color 0.3s ease',
       }}
     >
-
       <Box sx={{ flexGrow: 1, overflowY: 'auto', pt: 1, marginTop: 2 }}>
         {menuItems.map((item) => (
           <MenuItemLink
@@ -50,15 +53,16 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
 
       <Box
         sx={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.08)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
           textAlign: 'center',
           px: 2,
           py: 3,
           fontSize: 12,
-          color: 'rgba(72, 72, 72, 0.65)',
+          color: 'rgba(255, 255, 255, 0.6)',
+          transition: 'all 0.3s ease',
         }}
       >
-        <div>ToughRADIUS v9</div>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>ToughRADIUS v9</div>
         <div>© {currentYear} ALL RIGHTS RESERVED</div>
         {logout && <Box sx={{ mt: 2 }}>{logout}</Box>}
       </Box>

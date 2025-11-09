@@ -19,7 +19,7 @@ const resourcePathMap: Record<string, string> = {
   'radius/users': 'users',
   'radius/online': 'sessions',
   'radius/accounting': 'accounting',
-  'radius/profiles': 'profiles',
+  'radius/profiles': 'radius-profiles',
 };
 
 const resolveResource = (resource: string) =>

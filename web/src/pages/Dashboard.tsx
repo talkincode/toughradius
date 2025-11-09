@@ -55,6 +55,7 @@ const defaultStats: DashboardStats = {
 
 const Dashboard = () => {
   const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const [stats, setStats] = useState<DashboardStats>(defaultStats);
 
   useEffect(() => {
@@ -285,8 +286,10 @@ const Dashboard = () => {
         sx={{
           borderRadius: 4,
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, #eef2ff, #fdf2f8)',
-          border: '1px solid rgba(255, 255, 255, 0.6)',
+          background: isDark 
+            ? 'linear-gradient(135deg, #1e293b, #334155)' 
+            : 'linear-gradient(135deg, #eef2ff, #fdf2f8)',
+          border: `1px solid ${isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(255, 255, 255, 0.6)'}`,
         }}
       >
         <CardContent>
@@ -299,7 +302,7 @@ const Dashboard = () => {
             <Box>
               <Chip label="RADIUS 系统总览" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
               <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 520 }}>
-                通过实时洞察快速掌握系统动态，精准控制 RADIUS 用户、会话及策略配置，保障网络稳定运行。
+                通过实时洞察快速掌握系统动态,精准控制 RADIUS 用户、会话及策略配置，保障网络稳定运行。
               </Typography>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mt: 3 }}>

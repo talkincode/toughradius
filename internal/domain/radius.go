@@ -8,17 +8,21 @@ import (
 
 // RadiusProfile RADIUS 策略
 type RadiusProfile struct {
-	ID        int64     `json:"id,string" form:"id"`               // 主键 ID
-	NodeId    int64     `json:"node_id,string" form:"node_id"`     // 节点ID
-	Name      string    `json:"name" form:"name"`                  // 策略名称
-	Status    string    `gorm:"index" json:"status" form:"status"` // 策略状态 0：禁用 1：正常
-	AddrPool  string    `json:"addr_pool" form:"addr_pool"`        // 策略地址池
-	ActiveNum int       `json:"active_num" form:"active_num"`      // 并发数
-	UpRate    int       `json:"up_rate" form:"up_rate"`            // 上行速率
-	DownRate  int       `json:"down_rate" form:"down_rate"`        // 下行速率
-	Remark    string    `json:"remark" form:"remark"`              // 备注
-	CreatedAt time.Time `json:"created_at" form:"created_at"`
-	UpdatedAt time.Time `json:"updated_at" form:"updated_at"`
+	ID         int64     `json:"id,string" form:"id"`               // 主键 ID
+	NodeId     int64     `json:"node_id,string" form:"node_id"`     // 节点ID
+	Name       string    `json:"name" form:"name"`                  // 策略名称
+	Status     string    `gorm:"index" json:"status" form:"status"` // 策略状态 0：禁用 1：正常
+	AddrPool   string    `json:"addr_pool" form:"addr_pool"`        // 策略地址池
+	ActiveNum  int       `json:"active_num" form:"active_num"`      // 并发数
+	UpRate     int       `json:"up_rate" form:"up_rate"`            // 上行速率 Kb
+	DownRate   int       `json:"down_rate" form:"down_rate"`        // 下行速率 Kb
+	Domain     string    `json:"domain" form:"domain"`              // 域， 对应 NAS 设备域属性， 比如华为 domain_code
+	IPv6Prefix string    `json:"ipv6_prefix" form:"ipv6_prefix"`    // IPv6前缀，如 2001:db8::/64
+	BindMac    int       `json:"bind_mac" form:"bind_mac"`          // 绑定MAC
+	BindVlan   int       `json:"bind_vlan" form:"bind_vlan"`        // 绑定VLAN
+	Remark     string    `json:"remark" form:"remark"`              // 备注
+	CreatedAt  time.Time `json:"created_at" form:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at" form:"updated_at"`
 }
 
 // TableName 指定表名
@@ -42,6 +46,7 @@ type RadiusUser struct {
 	Vlanid1     int       `json:"vlanid1" form:"vlanid1"`                           // VLAN ID 1
 	Vlanid2     int       `json:"vlanid2" form:"vlanid2"`                           // VLAN ID 2
 	IpAddr      string    `json:"ip_addr" form:"ip_addr"`                           // 静态IP
+	IpV6Addr    string    `json:"ipv6_addr" form:"ipv6_addr"`                       // 静态 IPv6地址
 	MacAddr     string    `json:"mac_addr" form:"mac_addr"`                         // MAC
 	BindVlan    int       `json:"bind_vlan" form:"bind_vlan"`                       // 绑定VLAN
 	BindMac     int       `json:"bind_mac" form:"bind_mac"`                         // 绑定MAC

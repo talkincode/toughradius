@@ -3,7 +3,7 @@ import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
 import Dashboard from './pages/Dashboard';
 import { CustomLayout } from './components';
-import { theme } from './theme';
+import { theme, darkTheme } from './theme';
 
 // 导入资源组件
 import {
@@ -52,6 +52,8 @@ const App = () => (
     dashboard={Dashboard}
     title="ToughRADIUS v9"
     theme={theme}
+    darkTheme={darkTheme}
+    defaultTheme="light"
     layout={CustomLayout}
   >
     {/* RADIUS 用户管理 */}

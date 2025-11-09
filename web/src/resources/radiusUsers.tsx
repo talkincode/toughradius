@@ -21,7 +21,9 @@ import {
   SaveButton,
   DeleteButton,
   SimpleForm,
-  ToolbarProps
+  ToolbarProps,
+  ReferenceInput,
+  ReferenceField
 } from 'react-admin';
 import {
   Box,
@@ -166,11 +168,12 @@ const FieldGridItem = ({
   );
 };
 
-const profileChoices = [
-  { id: 'default', name: '默认配置' },
-  { id: 'premium', name: '高级配置' },
-  { id: 'business', name: '企业配置' },
-];
+// 删除硬编码的配置选项
+// const profileChoices = [
+//   { id: 'default', name: '默认配置' },
+//   { id: 'premium', name: '高级配置' },
+//   { id: 'business', name: '企业配置' },
+// ];
 
 const controlWrapperSx = {
   border: (theme: Theme) => `1px solid ${theme.palette.divider}`,
@@ -237,7 +240,9 @@ export const RadiusUserList = () => (
       <TextField source="mobile" label="手机号" />
       <TextField source="address" label="地址" />
       <StatusField />
-      <TextField source="profile" label="配置文件" />
+      <ReferenceField source="profile_id" reference="radius/profiles" label="计费策略">
+        <TextField source="name" />
+      </ReferenceField>
       <DateField source="created_at" label="创建时间" showTime />
       <DateField source="expire_time" label="过期时间" showTime />
     </Datagrid>
@@ -358,14 +363,15 @@ export const RadiusUserEdit = () => {
               </Box>
             </FieldGridItem>
             <FieldGridItem>
-              <SelectInput
-                source="profile"
-                label="配置文件"
-                choices={profileChoices}
-                helperText="选择用户的RADIUS配置模板"
-                fullWidth
-                size="small"
-              />
+              <ReferenceInput source="profile_id" reference="radius/profiles">
+                <SelectInput
+                  label="计费策略"
+                  optionText="name"
+                  helperText="选择用户的RADIUS计费策略"
+                  fullWidth
+                  size="small"
+                />
+              </ReferenceInput>
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
               <TextInput
@@ -376,6 +382,32 @@ export const RadiusUserEdit = () => {
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
+
+        <FormSection
+          title="网络配置"
+          description="IP地址分配设置"
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <TextInput
+                source="ip_addr"
+                label="IPv4地址"
+                helperText="静态IPv4地址，如 192.168.1.100"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="ipv6_addr"
+                label="IPv6地址"
+                helperText="静态IPv6地址，如 2001:db8::1"
+                fullWidth
+                size="small"
               />
             </FieldGridItem>
           </FieldGrid>
@@ -509,15 +541,15 @@ export const RadiusUserCreate = () => (
             </Box>
           </FieldGridItem>
           <FieldGridItem>
-            <SelectInput
-              source="profile"
-              label="配置文件"
-              choices={profileChoices}
-              defaultValue="default"
-              helperText="选择用户的RADIUS配置模板"
-              fullWidth
-              size="small"
-            />
+            <ReferenceInput source="profile_id" reference="radius/profiles">
+              <SelectInput
+                label="计费策略"
+                optionText="name"
+                helperText="选择用户的RADIUS计费策略"
+                fullWidth
+                size="small"
+              />
+            </ReferenceInput>
           </FieldGridItem>
           <FieldGridItem span={{ xs: 1, sm: 2 }}>
             <TextInput
@@ -528,6 +560,32 @@ export const RadiusUserCreate = () => (
               fullWidth
               size="small"
               InputLabelProps={{ shrink: true }}
+            />
+          </FieldGridItem>
+        </FieldGrid>
+      </FormSection>
+
+      <FormSection
+        title="网络配置"
+        description="IP地址分配设置"
+      >
+        <FieldGrid columns={{ xs: 1, sm: 2 }}>
+          <FieldGridItem>
+            <TextInput
+              source="ip_addr"
+              label="IPv4地址"
+              helperText="静态IPv4地址，如 192.168.1.100"
+              fullWidth
+              size="small"
+            />
+          </FieldGridItem>
+          <FieldGridItem>
+            <TextInput
+              source="ipv6_addr"
+              label="IPv6地址"
+              helperText="静态IPv6地址，如 2001:db8::1"
+              fullWidth
+              size="small"
             />
           </FieldGridItem>
         </FieldGrid>
@@ -566,7 +624,11 @@ export const RadiusUserShow = () => (
       <TextField source="mobile" label="手机号" />
       <TextField source="address" label="地址" />
       <StatusField />
-      <TextField source="profile" label="配置文件" />
+      <ReferenceField source="profile_id" reference="radius/profiles" label="计费策略">
+        <TextField source="name" />
+      </ReferenceField>
+      <TextField source="ip_addr" label="IPv4地址" />
+      <TextField source="ipv6_addr" label="IPv6地址" />
       <DateField source="created_at" label="创建时间" showTime />
       <DateField source="expire_time" label="过期时间" showTime />
       <TextField source="remark" label="备注" />

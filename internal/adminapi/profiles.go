@@ -83,24 +83,106 @@ func GetProfile(c echo.Context) error {
 	return ok(c, profile)
 }
 
+// ProfileRequest 用于处理前端发送的混合类型 JSON
+type ProfileRequest struct {
+	Name       string      `json:"name" validate:"required,min=1,max=100"`
+	Status     interface{} `json:"status"` // 可以是 string 或 boolean
+	AddrPool   string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	ActiveNum  int         `json:"active_num" validate:"gte=0,lte=100"`
+	UpRate     int         `json:"up_rate" validate:"gte=0,lte=10000000"`
+	DownRate   int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	Domain     string      `json:"domain" validate:"omitempty,max=50"`
+	IPv6Prefix string      `json:"ipv6_prefix" validate:"omitempty"`
+	BindMac    interface{} `json:"bind_mac"`  // 可以是 int 或 boolean
+	BindVlan   interface{} `json:"bind_vlan"` // 可以是 int 或 boolean
+	Remark     string      `json:"remark" validate:"omitempty,max=500"`
+	NodeId     interface{} `json:"node_id"` // 可以是 int64 或 string
+}
+
+// toRadiusProfile 将 ProfileRequest 转换为 RadiusProfile
+func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
+	profile := &domain.RadiusProfile{
+		Name:       pr.Name,
+		AddrPool:   pr.AddrPool,
+		ActiveNum:  pr.ActiveNum,
+		UpRate:     pr.UpRate,
+		DownRate:   pr.DownRate,
+		Domain:     pr.Domain,
+		IPv6Prefix: pr.IPv6Prefix,
+		Remark:     pr.Remark,
+	}
+
+	// 处理 status 字段：boolean true -> "enabled", false -> "disabled", string 保持不变
+	switch v := pr.Status.(type) {
+	case bool:
+		if v {
+			profile.Status = "enabled"
+		} else {
+			profile.Status = "disabled"
+		}
+	case string:
+		profile.Status = v
+	}
+
+	// 处理 bind_mac 字段：boolean -> int (true=1, false=0)
+	switch v := pr.BindMac.(type) {
+	case bool:
+		if v {
+			profile.BindMac = 1
+		} else {
+			profile.BindMac = 0
+		}
+	case float64:
+		profile.BindMac = int(v)
+	}
+
+	// 处理 bind_vlan 字段：boolean -> int (true=1, false=0)
+	switch v := pr.BindVlan.(type) {
+	case bool:
+		if v {
+			profile.BindVlan = 1
+		} else {
+			profile.BindVlan = 0
+		}
+	case float64:
+		profile.BindVlan = int(v)
+	}
+
+	// 处理 node_id 字段
+	switch v := pr.NodeId.(type) {
+	case float64:
+		profile.NodeId = int64(v)
+	case string:
+		if v != "" {
+			nodeId, _ := strconv.ParseInt(v, 10, 64)
+			profile.NodeId = nodeId
+		}
+	}
+
+	return profile
+}
+
 // CreateProfile 创建 RADIUS Profile
 // @Summary 创建 RADIUS Profile
 // @Tags RadiusProfile
-// @Param profile body domain.RadiusProfile true "Profile 信息"
+// @Param profile body ProfileRequest true "Profile 信息"
 // @Success 201 {object} domain.RadiusProfile
 // @Router /api/v1/radius-profiles [post]
 func CreateProfile(c echo.Context) error {
-	var profile domain.RadiusProfile
-	if err := c.Bind(&profile); err != nil {
+	var req ProfileRequest
+	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 验证必填字段
-	if profile.Name == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_NAME", "Profile 名称不能为空", nil)
+	// 自动验证请求参数
+	if err := c.Validate(&req); err != nil {
+		return err // 验证错误已经格式化
 	}
 
-	// 检查名称是否已存在
+	// 转换为 RadiusProfile
+	profile := req.toRadiusProfile()
+
+	// 检查名称是否已存在（业务逻辑验证）
 	var count int64
 	app.GDB().Model(&domain.RadiusProfile{}).Where("name = ?", profile.Name).Count(&count)
 	if count > 0 {
@@ -112,7 +194,7 @@ func CreateProfile(c echo.Context) error {
 		profile.Status = "enabled"
 	}
 
-	if err := app.GDB().Create(&profile).Error; err != nil {
+	if err := app.GDB().Create(profile).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "创建 Profile 失败", err.Error())
 	}
 
@@ -123,7 +205,7 @@ func CreateProfile(c echo.Context) error {
 // @Summary 更新 RADIUS Profile
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
-// @Param profile body domain.RadiusProfile true "Profile 信息"
+// @Param profile body ProfileRequest true "Profile 信息"
 // @Success 200 {object} domain.RadiusProfile
 // @Router /api/v1/radius-profiles/{id} [put]
 func UpdateProfile(c echo.Context) error {
@@ -137,12 +219,19 @@ func UpdateProfile(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile 不存在", nil)
 	}
 
-	var updateData domain.RadiusProfile
-	if err := c.Bind(&updateData); err != nil {
+	var req ProfileRequest
+	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 验证名称唯一性
+	// 自动验证请求参数
+	if err := c.Validate(&req); err != nil {
+		return err // 验证错误已经格式化
+	}
+
+	updateData := req.toRadiusProfile()
+
+	// 验证名称唯一性（业务逻辑验证）
 	if updateData.Name != "" && updateData.Name != profile.Name {
 		var count int64
 		app.GDB().Model(&domain.RadiusProfile{}).Where("name = ? AND id != ?", updateData.Name, id).Count(&count)
@@ -162,7 +251,7 @@ func UpdateProfile(c echo.Context) error {
 	if updateData.AddrPool != "" {
 		updates["addr_pool"] = updateData.AddrPool
 	}
-	if updateData.ActiveNum > 0 {
+	if updateData.ActiveNum >= 0 {
 		updates["active_num"] = updateData.ActiveNum
 	}
 	if updateData.UpRate >= 0 {
@@ -170,6 +259,18 @@ func UpdateProfile(c echo.Context) error {
 	}
 	if updateData.DownRate >= 0 {
 		updates["down_rate"] = updateData.DownRate
+	}
+	if updateData.Domain != "" {
+		updates["domain"] = updateData.Domain
+	}
+	if updateData.IPv6Prefix != "" {
+		updates["ipv6_prefix"] = updateData.IPv6Prefix
+	}
+	if updateData.BindMac >= 0 {
+		updates["bind_mac"] = updateData.BindMac
+	}
+	if updateData.BindVlan >= 0 {
+		updates["bind_vlan"] = updateData.BindVlan
 	}
 	if updateData.Remark != "" {
 		updates["remark"] = updateData.Remark

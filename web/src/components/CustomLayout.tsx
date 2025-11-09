@@ -13,11 +13,10 @@ export const CustomLayout = ({ sx, ...rest }: CustomLayoutProps) => (
     menu={CustomMenu}
     sx={[
       {
-        backgroundColor: '#f5f7fa',
         '& .RaLayout-content': {
-          backgroundColor: '#f5f7fa',
           padding: { xs: 2, md: 3, lg: 4 },
           minHeight: 'calc(100vh - 64px)',
+          transition: 'background-color 0.3s ease',
         },
       },
       ...(Array.isArray(sx) ? sx : sx ? [sx] : []),

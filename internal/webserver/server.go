@@ -19,6 +19,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v9/internal/app"
+	customValidator "github.com/talkincode/toughradius/v9/internal/pkg/validator"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"github.com/talkincode/toughradius/v9/pkg/excel"
 	"github.com/talkincode/toughradius/v9/pkg/web"
@@ -68,6 +69,10 @@ func NewAdminServer() *AdminServer {
 		},
 		Level: 1,
 	}))
+
+	// 注册自定义验证器
+	s.root.Validator = customValidator.NewValidator()
+
 	// 失败恢复处理中间件
 	s.root.Use(ServerRecover(appconfig.System.Debug))
 	// 日志处理中间件
@@ -113,7 +118,6 @@ func NewAdminServer() *AdminServer {
 			},
 		})
 	})
-
 
 	// JWT 中间件
 	s.jwtConfig = echojwt.Config{
