@@ -22,6 +22,7 @@ import {
   FilterButton,
   CreateButton,
   ExportButton,
+  useTranslate
 } from 'react-admin';
 import {
   Box,
@@ -221,9 +222,12 @@ const DetailRow = ({ label, value }: { label: string; value: ReactNode }) => (
 // ============ 列表相关 ============
 
 // 筛选器
-const nodeFilters = [
-  <TextInput key="name" label="节点名称" source="name" alwaysOn />,
-];
+const useNodeFilters = () => {
+  const translate = useTranslate();
+  return [
+    <TextInput key="name" label={translate('resources.network/nodes.fields.name')} source="name" alwaysOn />,
+  ];
+};
 
 // 网络节点列表操作栏
 const NodesListActions = () => (
@@ -235,35 +239,42 @@ const NodesListActions = () => (
 );
 
 // 网络节点列表
-export const NodeList = () => (
-  <List actions={<NodesListActions />} filters={nodeFilters}>
-    <Datagrid rowClick="show">
-      <TextField source="name" label="节点名称" />
-      <TextField source="tags" label="标签" />
-      <TextField source="remark" label="备注" />
-      <DateField source="created_at" label="创建时间" showTime />
-      <DateField source="updated_at" label="更新时间" showTime />
-    </Datagrid>
-  </List>
-);
+export const NodeList = () => {
+  const translate = useTranslate();
+  const nodeFilters = useNodeFilters();
+  
+  return (
+    <List actions={<NodesListActions />} filters={nodeFilters}>
+      <Datagrid rowClick="show">
+        <TextField source="name" label={translate('resources.network/nodes.fields.name')} />
+        <TextField source="tags" label={translate('resources.network/nodes.fields.tags')} />
+        <TextField source="remark" label={translate('resources.network/nodes.fields.remark')} />
+        <DateField source="created_at" label={translate('resources.network/nodes.fields.created_at')} showTime />
+        <DateField source="updated_at" label={translate('resources.network/nodes.fields.updated_at')} showTime />
+      </Datagrid>
+    </List>
+  );
+};
 
 // ============ 编辑页面 ============
 
 export const NodeEdit = () => {
+  const translate = useTranslate();
+  
   return (
     <Edit>
       <SimpleForm toolbar={<NodeFormToolbar />} sx={formLayoutSx}>
         <FormSection
-          title="基本信息"
-          description="节点的基本配置信息"
+          title={translate('resources.network/nodes.sections.basic')}
+          description={translate('resources.network/nodes.sections.basic_desc')}
         >
           <FieldGrid columns={{ xs: 1, sm: 2 }}>
             <FieldGridItem>
               <TextInput
                 source="id"
                 disabled
-                label="节点ID"
-                helperText="系统自动生成的唯一标识"
+                label={translate('resources.network/nodes.fields.id')}
+                helperText={translate('resources.network/nodes.helpers.id')}
                 fullWidth
                 size="small"
               />
@@ -271,9 +282,9 @@ export const NodeEdit = () => {
             <FieldGridItem>
               <TextInput
                 source="name"
-                label="节点名称"
+                label={translate('resources.network/nodes.fields.name')}
                 validate={[required(), minLength(1), maxLength(100)]}
-                helperText="1-100个字符"
+                helperText={translate('resources.network/nodes.helpers.name')}
                 fullWidth
                 size="small"
               />
@@ -281,9 +292,9 @@ export const NodeEdit = () => {
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
               <TextInput
                 source="tags"
-                label="标签"
+                label={translate('resources.network/nodes.fields.tags')}
                 validate={[maxLength(200)]}
-                helperText="多个标签用逗号分隔，最多200个字符"
+                helperText={translate('resources.network/nodes.helpers.tags')}
                 fullWidth
                 size="small"
               />
@@ -292,20 +303,20 @@ export const NodeEdit = () => {
         </FormSection>
 
         <FormSection
-          title="备注信息"
-          description="额外的说明和备注"
+          title={translate('resources.network/nodes.sections.remark')}
+          description={translate('resources.network/nodes.sections.remark_desc')}
         >
           <FieldGrid columns={{ xs: 1 }}>
             <FieldGridItem>
               <TextInput
                 source="remark"
-                label="备注"
+                label={translate('resources.network/nodes.fields.remark')}
                 validate={[maxLength(500)]}
                 multiline
                 minRows={3}
                 fullWidth
                 size="small"
-                helperText="可选的备注信息，最多500个字符"
+                helperText={translate('resources.network/nodes.helpers.remark')}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -317,59 +328,63 @@ export const NodeEdit = () => {
 
 // ============ 创建页面 ============
 
-export const NodeCreate = () => (
-  <Create>
-    <SimpleForm sx={formLayoutSx}>
-      <FormSection
-        title="基本信息"
-        description="节点的基本配置信息"
-      >
-        <FieldGrid columns={{ xs: 1, sm: 2 }}>
-          <FieldGridItem>
-            <TextInput
-              source="name"
-              label="节点名称"
-              validate={[required(), minLength(1), maxLength(100)]}
-              helperText="1-100个字符"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-          <FieldGridItem>
-            <TextInput
-              source="tags"
-              label="标签"
-              validate={[maxLength(200)]}
-              helperText="多个标签用逗号分隔，最多200个字符"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-        </FieldGrid>
-      </FormSection>
+export const NodeCreate = () => {
+  const translate = useTranslate();
+  
+  return (
+    <Create>
+      <SimpleForm sx={formLayoutSx}>
+        <FormSection
+          title={translate('resources.network/nodes.sections.basic')}
+          description={translate('resources.network/nodes.sections.basic_desc')}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <TextInput
+                source="name"
+                label={translate('resources.network/nodes.fields.name')}
+                validate={[required(), minLength(1), maxLength(100)]}
+                helperText={translate('resources.network/nodes.helpers.name')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="tags"
+                label={translate('resources.network/nodes.fields.tags')}
+                validate={[maxLength(200)]}
+                helperText={translate('resources.network/nodes.helpers.tags')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
 
-      <FormSection
-        title="备注信息"
-        description="额外的说明和备注"
-      >
-        <FieldGrid columns={{ xs: 1 }}>
-          <FieldGridItem>
-            <TextInput
-              source="remark"
-              label="备注"
-              validate={[maxLength(500)]}
-              multiline
-              minRows={3}
-              fullWidth
-              size="small"
-              helperText="可选的备注信息，最多500个字符"
-            />
-          </FieldGridItem>
-        </FieldGrid>
-      </FormSection>
-    </SimpleForm>
-  </Create>
-);
+        <FormSection
+          title={translate('resources.network/nodes.sections.remark')}
+          description={translate('resources.network/nodes.sections.remark_desc')}
+        >
+          <FieldGrid columns={{ xs: 1 }}>
+            <FieldGridItem>
+              <TextInput
+                source="remark"
+                label={translate('resources.network/nodes.fields.remark')}
+                validate={[maxLength(500)]}
+                multiline
+                minRows={3}
+                fullWidth
+                size="small"
+                helperText={translate('resources.network/nodes.helpers.remark')}
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
+      </SimpleForm>
+    </Create>
+  );
+};
 
 // ============ 详情页面 ============
 
@@ -409,6 +424,8 @@ const TagsField = () => {
 };
 
 export const NodeShow = () => {
+  const translate = useTranslate();
+  
   return (
     <Show actions={<NodeShowActions />}>
       <Box sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 } }}>
@@ -417,22 +434,22 @@ export const NodeShow = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                基本信息
+                {translate('resources.network/nodes.sections.basic')}
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <TableContainer>
                 <Table>
                   <TableBody>
                     <DetailRow
-                      label="节点ID"
+                      label={translate('resources.network/nodes.fields.id')}
                       value={<TextField source="id" />}
                     />
                     <DetailRow
-                      label="节点名称"
+                      label={translate('resources.network/nodes.fields.name')}
                       value={<TextField source="name" />}
                     />
                     <DetailRow
-                      label="标签"
+                      label={translate('resources.network/nodes.fields.tags')}
                       value={<TagsField />}
                     />
                   </TableBody>
@@ -445,18 +462,18 @@ export const NodeShow = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                时间信息
+                {translate('resources.radius/users.sections.time')}
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <TableContainer>
                 <Table>
                   <TableBody>
                     <DetailRow
-                      label="创建时间"
+                      label={translate('resources.network/nodes.fields.created_at')}
                       value={<DateField source="created_at" showTime />}
                     />
                     <DetailRow
-                      label="更新时间"
+                      label={translate('resources.network/nodes.fields.updated_at')}
                       value={<DateField source="updated_at" showTime />}
                     />
                   </TableBody>
@@ -469,13 +486,13 @@ export const NodeShow = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                备注信息
+                {translate('resources.network/nodes.sections.remark')}
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ p: 2, backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)', borderRadius: 1 }}>
                 <TextField
                   source="remark"
-                  emptyText="无备注信息"
+                  emptyText={translate('resources.radius/users.empty_text.no_remark')}
                   sx={{
                     '& .RaTextField-root': {
                       whiteSpace: 'pre-wrap',

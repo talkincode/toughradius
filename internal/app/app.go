@@ -10,7 +10,6 @@ import (
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
-	bolt "go.etcd.io/bbolt"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
@@ -27,7 +26,6 @@ type Application struct {
 	appConfig     *config.AppConfig
 	gormDB        *gorm.DB
 	sched         *cron.Cron
-	transDB       *bolt.DB
 	configManager *ConfigManager
 }
 
@@ -202,11 +200,11 @@ func (a *Application) checkDefaultPNode() {
 	}
 }
 
-
-
 func Release() {
-	app.sched.Stop()
-	_ = app.transDB.Close()
+	if app.sched != nil {
+		app.sched.Stop()
+	}
+
 	_ = metrics.Close()
 	_ = zap.L().Sync()
 }

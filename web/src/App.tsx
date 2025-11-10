@@ -3,6 +3,7 @@ import { Route } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
 import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
+import { i18nProvider } from './i18n';
 import Dashboard from './pages/Dashboard';
 import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
@@ -68,6 +69,7 @@ const App = () => (
   <Admin
     dataProvider={dataProvider}
     authProvider={authProvider}
+    i18nProvider={i18nProvider}
     dashboard={Dashboard}
     loginPage={LoginPage}
     title="ToughRADIUS v9"
@@ -85,7 +87,6 @@ const App = () => (
       edit={RadiusUserEdit}
       create={RadiusUserCreate}
       show={RadiusUserShow}
-      options={{ label: 'RADIUS用户' }}
     />
 
     {/* 在线会话 */}
@@ -93,7 +94,6 @@ const App = () => (
       name="radius/online"
       list={OnlineSessionList}
       show={OnlineSessionShow}
-      options={{ label: '在线会话' }}
     />
 
     {/* 计费记录 */}
@@ -101,7 +101,6 @@ const App = () => (
       name="radius/accounting"
       list={AccountingList}
       show={AccountingShow}
-      options={{ label: '计费记录' }}
     />
 
     {/* RADIUS 配置 */}
@@ -111,7 +110,6 @@ const App = () => (
       edit={RadiusProfileEdit}
       create={RadiusProfileCreate}
       show={RadiusProfileShow}
-      options={{ label: 'RADIUS配置' }}
     />
 
     {/* NAS 设备管理 */}
@@ -121,7 +119,6 @@ const App = () => (
       edit={NASEdit}
       create={NASCreate}
       show={NASShow}
-      options={{ label: 'NAS设备' }}
     />
 
     {/* 网络节点 */}
@@ -131,7 +128,6 @@ const App = () => (
       edit={NodeEdit}
       create={NodeCreate}
       show={NodeShow}
-      options={{ label: '网络节点' }}
     />
 
     {/* 操作员管理 */}
@@ -141,7 +137,6 @@ const App = () => (
       edit={OperatorEdit}
       create={OperatorCreate}
       show={OperatorShow}
-      options={{ label: '操作员管理' }}
     />
 
     {/* 自定义路由 */}

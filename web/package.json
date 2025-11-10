@@ -17,7 +17,10 @@
   "dependencies": {
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
+    "node-polyglot": "^2.6.0",
     "ra-data-simple-rest": "^5.0.0",
+    "ra-language-chinese": "^2.0.10",
+    "ra-language-english": "^5.12.3",
     "react": "^18.3.1",
     "react-admin": "^5.0.0",
     "react-dom": "^18.3.1"

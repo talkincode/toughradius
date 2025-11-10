@@ -1,10 +1,13 @@
 package app
 
 import (
+	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/common"
+	"go.uber.org/zap"
 )
 
 func (a *Application) checkSuper() {
@@ -27,33 +30,44 @@ func (a *Application) checkSuper() {
 }
 
 func (a *Application) checkSettings() {
-	var checkConfig = func(sortid int, stype, cname, value, remark string) {
-		var count int64
-		a.gormDB.Model(&domain.SysConfig{}).Where("type = ? and name = ?", stype, cname).Count(&count)
-		if count == 0 {
-			a.gormDB.Create(&domain.SysConfig{ID: 0, Sort: sortid, Type: stype, Name: cname, Value: value, Remark: remark})
-		}
+	// 从嵌入的 JSON 文件加载配置定义
+	var schemasData ConfigSchemasJSON
+	if err := json.Unmarshal(configSchemasData, &schemasData); err != nil {
+		zap.L().Error("failed to load config schemas from JSON", zap.Error(err))
+		return
 	}
 
-	for sortid, name := range ConfigConstants {
-		switch name {
-		case ConfigSystemTitle:
-			checkConfig(sortid, "system", ConfigSystemTitle, "Toughradius Management System", "System title")
-		case ConfigSystemTheme:
-			checkConfig(sortid, "system", ConfigSystemTheme, "light", "System theme")
-		case ConfigSystemLoginRemark:
-			checkConfig(sortid, "system", ConfigSystemLoginRemark, "Recommended browser: Chrome/Edge", "Login page description")
-		case ConfigSystemLoginSubtitle:
-			checkConfig(sortid, "system", ConfigSystemLoginSubtitle, "TeamsACS Community Edition", "Login form title")
-		case ConfigRadiusIgnorePwd:
-			checkConfig(sortid, "radius", ConfigRadiusIgnorePwd, "disabled", "Radius ignore Passowrd check")
-		case ConfigRadiusAccountingHistoryDays:
-			checkConfig(sortid, "radius", ConfigRadiusAccountingHistoryDays, "disabled", "Radius accounting logging expire days")
-		case ConfigRadiusAcctInterimInterval:
-			checkConfig(sortid, "radius", ConfigRadiusAcctInterimInterval, "disabled", "Radius default Acctounting interim interval")
-		case ConfigRadiusEapMethod:
-			checkConfig(sortid, "radius", ConfigRadiusEapMethod, "eap-md5", "Radius eap method")
+	// 遍历所有配置定义，检查并初始化缺失的配置
+	for sortid, schema := range schemasData.Schemas {
+		// 解析 key: "category.name" -> category, name
+		parts := strings.SplitN(schema.Key, ".", 2)
+		if len(parts) != 2 {
+			zap.L().Warn("invalid config key format", zap.String("key", schema.Key))
+			continue
+		}
 
+		category := parts[0]
+		name := parts[1]
+
+		// 检查配置是否存在
+		var count int64
+		a.gormDB.Model(&domain.SysConfig{}).
+			Where("type = ? and name = ?", category, name).
+			Count(&count)
+
+		// 如果配置不存在，创建默认配置
+		if count == 0 {
+			a.gormDB.Create(&domain.SysConfig{
+				ID:     0,
+				Sort:   sortid,
+				Type:   category,
+				Name:   name,
+				Value:  schema.Default,
+				Remark: schema.Description,
+			})
+			zap.L().Info("initialized config",
+				zap.String("key", schema.Key),
+				zap.String("default", schema.Default))
 		}
 	}
 }

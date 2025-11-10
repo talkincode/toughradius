@@ -15,6 +15,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import ReactECharts from 'echarts-for-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslate } from 'react-admin';
 
 interface DashboardStats {
   total_users: number;
@@ -28,18 +29,11 @@ interface DashboardStats {
   today_output_gb: number;
 }
 
-const weekDays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+// 模拟数据 - 移到组件外部避免 useMemo 警告
 const weeklyAuthData = [320, 432, 401, 534, 590, 530, 520];
-const connectionSources = [
-  { value: 45, name: 'PPPoE' },
-  { value: 30, name: 'IPoE' },
-  { value: 15, name: 'WiFi' },
-  { value: 10, name: '其他' },
-];
 const trafficHours = Array.from({ length: 24 }, (_, hour) => `${hour}:00`);
 const trafficUpload = [18, 16, 20, 24, 26, 33, 37, 40, 42, 45, 48, 52, 54, 60, 64, 71, 74, 70, 60, 52, 45, 36, 28, 22];
 const trafficDownload = [42, 48, 50, 56, 64, 72, 80, 90, 102, 118, 128, 138, 146, 154, 162, 170, 168, 158, 140, 128, 118, 102, 80, 60];
-const numberFormatter = new Intl.NumberFormat('zh-CN');
 
 const defaultStats: DashboardStats = {
   total_users: 1250,
@@ -56,7 +50,28 @@ const defaultStats: DashboardStats = {
 const Dashboard = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
+  const translate = useTranslate();
   const [stats, setStats] = useState<DashboardStats>(defaultStats);
+
+  // 使用 useMemo 包裹翻译数据避免每次渲染都重新创建
+  const weekDays = useMemo(() => [
+    translate('dashboard.week_days.monday'),
+    translate('dashboard.week_days.tuesday'),
+    translate('dashboard.week_days.wednesday'),
+    translate('dashboard.week_days.thursday'),
+    translate('dashboard.week_days.friday'),
+    translate('dashboard.week_days.saturday'),
+    translate('dashboard.week_days.sunday'),
+  ], [translate]);
+  
+  const connectionSources = useMemo(() => [
+    { value: 45, name: translate('dashboard.connection_types.pppoe') },
+    { value: 30, name: translate('dashboard.connection_types.ipoe') },
+    { value: 15, name: translate('dashboard.connection_types.wifi') },
+    { value: 10, name: translate('dashboard.connection_types.other') },
+  ], [translate]);
+  
+  const numberFormatter = useMemo(() => new Intl.NumberFormat(), []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -107,36 +122,36 @@ const Dashboard = () => {
 
   const statCards = [
     {
-      title: '总用户数',
+      title: translate('dashboard.total_users'),
       value: numberFormatter.format(stats.total_users),
       icon: <PeopleAltOutlinedIcon fontSize="large" />,
       accent: theme.palette.primary.main,
       highlights: [
-        { label: '禁用', value: stats.disabled_users },
-        { label: '过期', value: stats.expired_users },
+        { label: translate('dashboard.disabled'), value: stats.disabled_users },
+        { label: translate('dashboard.expired'), value: stats.expired_users },
       ],
     },
     {
-      title: '在线用户',
+      title: translate('dashboard.online_users'),
       value: numberFormatter.format(stats.online_users),
       icon: <OnlinePredictionOutlinedIcon fontSize="large" />,
       accent: '#34d399',
-      highlights: [{ label: '策略总数', value: stats.total_profiles }],
+      highlights: [{ label: translate('dashboard.total_profiles'), value: stats.total_profiles }],
     },
     {
-      title: '今日认证',
+      title: translate('dashboard.today_auth'),
       value: numberFormatter.format(stats.today_auth_count),
       icon: <VerifiedUserOutlinedIcon fontSize="large" />,
       accent: theme.palette.secondary.main,
-      highlights: [{ label: '计费记录', value: stats.today_acct_count }],
+      highlights: [{ label: translate('dashboard.acct_records'), value: stats.today_acct_count }],
     },
     {
-      title: '今日流量',
+      title: translate('dashboard.today_traffic'),
       value: `↑ ${stats.today_input_gb.toFixed(2)} GB`,
       secondaryValue: `↓ ${stats.today_output_gb.toFixed(2)} GB`,
       icon: <SwapVertOutlinedIcon fontSize="large" />,
       accent: '#f97316',
-      highlights: [{ label: '单位', value: 'GB' }],
+      highlights: [{ label: translate('dashboard.unit_gb'), value: 'GB' }],
     },
   ];
 
@@ -168,7 +183,7 @@ const Dashboard = () => {
       },
       series: [
         {
-          name: '认证次数',
+          name: translate('dashboard.auth_trend').replace(/（.*?）/, '').replace(/ \(.*?\)/, ''),
           type: 'line',
           smooth: true,
           symbol: 'circle',
@@ -182,7 +197,7 @@ const Dashboard = () => {
         },
       ],
     }),
-    [theme],
+    [theme, weekDays, translate],
   );
 
   const onlineDistributionOption = useMemo(
@@ -198,7 +213,7 @@ const Dashboard = () => {
       },
       series: [
         {
-          name: '在线用户',
+          name: translate('dashboard.online_users'),
           type: 'pie',
           radius: ['35%', '70%'],
           avoidLabelOverlap: false,
@@ -225,7 +240,7 @@ const Dashboard = () => {
         },
       ],
     }),
-    [theme],
+    [theme, connectionSources, translate],
   );
 
   const trafficOption = useMemo(
@@ -233,7 +248,7 @@ const Dashboard = () => {
       backgroundColor: 'transparent',
       tooltip: { trigger: 'axis' },
       legend: {
-        data: ['上传', '下载'],
+        data: [translate('dashboard.upload'), translate('dashboard.download')],
         top: 0,
         textStyle: { color: alpha(theme.palette.text.primary, 0.7) },
       },
@@ -260,7 +275,7 @@ const Dashboard = () => {
       },
       series: [
         {
-          name: '上传',
+          name: translate('dashboard.upload'),
           type: 'bar',
           stack: 'traffic',
           emphasis: { focus: 'series' },
@@ -268,7 +283,7 @@ const Dashboard = () => {
           color: alpha(theme.palette.secondary.main, 0.7),
         },
         {
-          name: '下载',
+          name: translate('dashboard.download'),
           type: 'bar',
           stack: 'traffic',
           emphasis: { focus: 'series' },
@@ -277,7 +292,7 @@ const Dashboard = () => {
         },
       ],
     }),
-    [theme],
+    [theme, translate],
   );
 
   return (
@@ -300,15 +315,15 @@ const Dashboard = () => {
             justifyContent="space-between"
           >
             <Box>
-              <Chip label="RADIUS 系统总览" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
+              <Chip label={translate('dashboard.title')} color="primary" sx={{ mb: 2, fontWeight: 600 }} />
               <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 520 }}>
-                通过实时洞察快速掌握系统动态,精准控制 RADIUS 用户、会话及策略配置，保障网络稳定运行。
+                {translate('dashboard.subtitle')}
               </Typography>
 
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={4} sx={{ mt: 3 }}>
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary">
-                    今日认证
+                    {translate('dashboard.today_auth')}
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
                     {numberFormatter.format(stats.today_auth_count)}
@@ -316,7 +331,7 @@ const Dashboard = () => {
                 </Box>
                 <Box>
                   <Typography variant="subtitle2" color="text.secondary">
-                    今日计费记录
+                    {translate('dashboard.today_acct')}
                   </Typography>
                   <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
                     {numberFormatter.format(stats.today_acct_count)}
@@ -327,7 +342,7 @@ const Dashboard = () => {
 
             <Box sx={{ minWidth: 260 }}>
               <Typography variant="subtitle2" color="text.secondary">
-                在线用户占比
+                {translate('dashboard.online_ratio')}
               </Typography>
               <Typography variant="h3" sx={{ fontWeight: 700, my: 1 }}>
                 {onlineRatio.toFixed(1)}%
@@ -346,10 +361,10 @@ const Dashboard = () => {
               />
               <Stack direction="row" justifyContent="space-between" sx={{ mt: 2 }}>
                 <Typography variant="body2" color="text.secondary">
-                  在线 {stats.online_users}
+                  {translate('dashboard.online_count')} {stats.online_users}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  总数 {stats.total_users}
+                  {translate('dashboard.total_count')} {stats.total_users}
                 </Typography>
               </Stack>
             </Box>
@@ -411,7 +426,7 @@ const Dashboard = () => {
           <Card sx={{ borderRadius: 4, height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                认证趋势（近 7 天）
+                {translate('dashboard.auth_trend')}
               </Typography>
               <ReactECharts option={authTrendOption} style={{ height: 320 }} />
             </CardContent>
@@ -422,7 +437,7 @@ const Dashboard = () => {
           <Card sx={{ borderRadius: 4, height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                在线用户分布
+                {translate('dashboard.online_distribution')}
               </Typography>
               <ReactECharts option={onlineDistributionOption} style={{ height: 320 }} />
             </CardContent>
@@ -433,7 +448,7 @@ const Dashboard = () => {
           <Card sx={{ borderRadius: 4 }}>
             <CardContent>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
-                流量统计（近 24 小时）
+                {translate('dashboard.traffic_stats')}
               </Typography>
               <ReactECharts option={trafficOption} style={{ height: 360 }} />
             </CardContent>

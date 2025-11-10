@@ -22,6 +22,7 @@ import {
   regex,
   useRecordContext,
   useGetIdentity,
+  useTranslate,
 } from 'react-admin';
 import {
   Box,
@@ -36,37 +37,40 @@ import {
 } from '@mui/material';
 import { ReactNode } from 'react';
 
-// 验证规则
-const validateUsername = [
-  required('用户名不能为空'),
-  minLength(3, '用户名长度至少3个字符'),
-  maxLength(30, '用户名长度最多30个字符'),
-  regex(/^[a-zA-Z0-9_]+$/, '用户名只能包含字母、数字和下划线'),
-];
+// 验证规则工厂函数
+const useValidationRules = () => {
+  const translate = useTranslate();
 
-const validatePassword = [
-  required('密码不能为空'),
-  minLength(6, '密码长度至少6个字符'),
-  maxLength(50, '密码长度最多50个字符'),
-  regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, '密码必须包含字母和数字'),
-];
-
-const validatePasswordOptional = [
-  minLength(6, '密码长度至少6个字符'),
-  maxLength(50, '密码长度最多50个字符'),
-  regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, '密码必须包含字母和数字'),
-];
-
-const validateEmail = [email('请输入有效的邮箱地址')];
-
-const validateMobile = [
-  regex(
-    /^(0|\+?86)?(13[0-9]|14[57]|15[0-35-9]|17[0678]|18[0-9])[0-9]{8}$/,
-    '请输入有效的中国手机号'
-  ),
-];
-
-const validateRealname = [required('真实姓名不能为空')];
+  return {
+    validateUsername: [
+      required(translate('resources.system/operators.validation.username_required')),
+      minLength(3, translate('resources.system/operators.validation.username_min')),
+      maxLength(30, translate('resources.system/operators.validation.username_max')),
+      regex(/^[a-zA-Z0-9_]+$/, translate('resources.system/operators.validation.username_format')),
+    ],
+    validatePassword: [
+      required(translate('resources.system/operators.validation.password_required')),
+      minLength(6, translate('resources.system/operators.validation.password_min')),
+      maxLength(50, translate('resources.system/operators.validation.password_max')),
+      regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, translate('resources.system/operators.validation.password_format')),
+    ],
+    validatePasswordOptional: [
+      minLength(6, translate('resources.system/operators.validation.password_min')),
+      maxLength(50, translate('resources.system/operators.validation.password_max')),
+      regex(/^(?=.*[A-Za-z])(?=.*\d).+$/, translate('resources.system/operators.validation.password_format')),
+    ],
+    validateEmail: [email(translate('resources.system/operators.validation.email_invalid'))],
+    validateMobile: [
+      regex(
+        /^(0|\+?86)?(13[0-9]|14[57]|15[0-35-9]|17[0678]|18[0-9])[0-9]{8}$/,
+        translate('resources.system/operators.validation.mobile_invalid')
+      ),
+    ],
+    validateRealname: [required(translate('resources.system/operators.validation.realname_required'))],
+    validateLevel: [required(translate('resources.system/operators.validation.level_required'))],
+    validateStatus: [required(translate('resources.system/operators.validation.status_required'))],
+  };
+};
 
 // 表单分区组件
 interface FormSectionProps {
@@ -125,11 +129,12 @@ const FieldGrid = ({ children, columns = 2 }: FieldGridProps) => (
 // 状态显示组件
 const StatusField = () => {
   const record = useRecordContext();
+  const translate = useTranslate();
   if (!record) return null;
 
   return (
     <Chip
-      label={record.status === 'enabled' ? '启用' : '禁用'}
+      label={translate(`resources.system/operators.status_${record.status}`)}
       color={record.status === 'enabled' ? 'success' : 'default'}
       size="small"
     />
@@ -139,17 +144,19 @@ const StatusField = () => {
 // 权限级别显示组件
 const LevelField = () => {
   const record = useRecordContext();
+  const translate = useTranslate();
   if (!record) return null;
 
-  const levelMap: Record<string, { label: string; color: 'error' | 'warning' | 'info' }> = {
-    super: { label: '超级管理员', color: 'error' },
-    admin: { label: '管理员', color: 'warning' },
-    operator: { label: '操作员', color: 'info' },
+  const levelMap: Record<string, { color: 'error' | 'warning' | 'info' }> = {
+    super: { color: 'error' },
+    admin: { color: 'warning' },
+    operator: { color: 'info' },
   };
 
-  const levelInfo = levelMap[record.level] || { label: record.level, color: 'info' };
+  const levelInfo = levelMap[record.level] || { color: 'info' };
+  const label = translate(`resources.system/operators.levels.${record.level}`, { _: record.level });
 
-  return <Chip label={levelInfo.label} color={levelInfo.color} size="small" />;
+  return <Chip label={label} color={levelInfo.color} size="small" />;
 };
 
 // 操作员列表操作栏
@@ -161,50 +168,71 @@ const OperatorsListActions = () => (
   </TopToolbar>
 );
 
-// 操作员列表
-export const OperatorList = () => (
-  <List actions={<OperatorsListActions />} filters={operatorFilters}>
-    <Datagrid rowClick="show">
-      <TextField source="id" label="ID" />
-      <TextField source="username" label="用户名" />
-      <TextField source="realname" label="真实姓名" />
-      <EmailField source="email" label="邮箱" />
-      <TextField source="mobile" label="手机号" />
-      <LevelField />
-      <StatusField />
-      <DateField source="last_login" label="最后登录" showTime />
-      <DateField source="created_at" label="创建时间" showTime />
-    </Datagrid>
-  </List>
-);
-
 // 筛选器
-const operatorFilters = [
-  <TextInput label="用户名" source="username" alwaysOn />,
-  <TextInput label="真实姓名" source="realname" />,
-  <SelectInput
-    label="状态"
-    source="status"
-    choices={[
-      { id: 'enabled', name: '启用' },
-      { id: 'disabled', name: '禁用' },
-    ]}
-  />,
-  <SelectInput
-    label="权限级别"
-    source="level"
-    choices={[
-      { id: 'super', name: '超级管理员' },
-      { id: 'admin', name: '管理员' },
-      { id: 'operator', name: '操作员' },
-    ]}
-  />,
-];
+const useOperatorFilters = () => {
+  const translate = useTranslate();
+  
+  return [
+    <TextInput 
+      key="username" 
+      source="username" 
+      label={translate('resources.system/operators.fields.username')} 
+      alwaysOn 
+    />,
+    <TextInput 
+      key="realname" 
+      source="realname" 
+      label={translate('resources.system/operators.fields.realname')} 
+    />,
+    <SelectInput
+      key="status"
+      source="status"
+      label={translate('resources.system/operators.fields.status')}
+      choices={[
+        { id: 'enabled', name: translate('resources.system/operators.status.enabled') },
+        { id: 'disabled', name: translate('resources.system/operators.status.disabled') },
+      ]}
+    />,
+    <SelectInput
+      key="level"
+      source="level"
+      label={translate('resources.system/operators.fields.level')}
+      choices={[
+        { id: 'super', name: translate('resources.system/operators.levels.super') },
+        { id: 'admin', name: translate('resources.system/operators.levels.admin') },
+        { id: 'operator', name: translate('resources.system/operators.levels.operator') },
+      ]}
+    />,
+  ];
+};
+
+// 操作员列表
+export const OperatorList = () => {
+  const translate = useTranslate();
+  
+  return (
+    <List actions={<OperatorsListActions />} filters={useOperatorFilters()}>
+      <Datagrid rowClick="show">
+        <TextField source="id" label={translate('resources.system/operators.fields.id')} />
+        <TextField source="username" label={translate('resources.system/operators.fields.username')} />
+        <TextField source="realname" label={translate('resources.system/operators.fields.realname')} />
+        <EmailField source="email" label={translate('resources.system/operators.fields.email')} />
+        <TextField source="mobile" label={translate('resources.system/operators.fields.mobile')} />
+        <LevelField />
+        <StatusField />
+        <DateField source="last_login" label={translate('resources.system/operators.fields.last_login')} showTime />
+        <DateField source="created_at" label={translate('resources.system/operators.fields.created_at')} showTime />
+      </Datagrid>
+    </List>
+  );
+};
 
 // 操作员编辑
 export const OperatorEdit = () => {
   const { identity } = useGetIdentity();
   const record = useRecordContext();
+  const translate = useTranslate();
+  const validation = useValidationRules();
   
   // 检查是否是编辑自己的账号
   const isEditingSelf = identity && record && String(identity.id) === String(record.id);
@@ -215,47 +243,53 @@ export const OperatorEdit = () => {
   return (
     <Edit>
       <SimpleForm sx={{ maxWidth: 800 }}>
-        <FormSection title="基本信息" description="操作员的基本登录信息">
+        <FormSection 
+          title={translate('resources.system/operators.sections.basic.title')} 
+          description={translate('resources.system/operators.sections.basic.description')}
+        >
           <FieldGrid>
-            <TextInput source="id" label="ID" disabled fullWidth />
+            <TextInput source="id" label={translate('resources.system/operators.fields.id')} disabled fullWidth />
             <TextInput 
               source="username" 
-              label="用户名" 
-              validate={validateUsername}
-              helperText="3-30个字符，只能包含字母、数字和下划线"
+              label={translate('resources.system/operators.fields.username')} 
+              validate={validation.validateUsername}
+              helperText={translate('resources.system/operators.helpers.username')}
               fullWidth
             />
             <PasswordInput 
               source="password" 
-              label="密码" 
-              validate={validatePasswordOptional}
-              helperText="留空则不修改密码，至少6个字符，必须包含字母和数字" 
+              label={translate('resources.system/operators.fields.password')} 
+              validate={validation.validatePasswordOptional}
+              helperText={translate('resources.system/operators.helpers.password_optional')} 
               fullWidth
             />
           </FieldGrid>
         </FormSection>
 
-        <FormSection title="个人信息" description="操作员的个人联系信息">
+        <FormSection 
+          title={translate('resources.system/operators.sections.personal.title')} 
+          description={translate('resources.system/operators.sections.personal.description')}
+        >
           <FieldGrid>
             <TextInput 
               source="realname" 
-              label="真实姓名" 
-              validate={validateRealname}
+              label={translate('resources.system/operators.fields.realname')} 
+              validate={validation.validateRealname}
               fullWidth
             />
             <TextInput 
               source="email" 
-              label="邮箱" 
+              label={translate('resources.system/operators.fields.email')} 
               type="email" 
-              validate={validateEmail}
-              helperText="请输入有效的邮箱地址"
+              validate={validation.validateEmail}
+              helperText={translate('resources.system/operators.helpers.email')}
               fullWidth
             />
             <TextInput 
               source="mobile" 
-              label="手机号" 
-              validate={validateMobile}
-              helperText="请输入11位中国手机号"
+              label={translate('resources.system/operators.fields.mobile')} 
+              validate={validation.validateMobile}
+              helperText={translate('resources.system/operators.helpers.mobile')}
               fullWidth
             />
           </FieldGrid>
@@ -263,45 +297,48 @@ export const OperatorEdit = () => {
 
         {/* 只有超级管理员和管理员可以看到权限设置 */}
         {canManagePermissions && (
-          <FormSection title="权限设置" description="操作员的权限级别和状态">
+          <FormSection 
+            title={translate('resources.system/operators.sections.permissions.title')} 
+            description={translate('resources.system/operators.sections.permissions.description')}
+          >
             <FieldGrid>
               <SelectInput
                 source="level"
-                label="权限级别"
-                validate={required('请选择权限级别')}
+                label={translate('resources.system/operators.fields.level')}
+                validate={validation.validateLevel}
                 disabled={isEditingSelf}
                 choices={[
-                  { id: 'super', name: '超级管理员' },
-                  { id: 'admin', name: '管理员' },
-                  { id: 'operator', name: '操作员' },
+                  { id: 'super', name: translate('resources.system/operators.levels.super') },
+                  { id: 'admin', name: translate('resources.system/operators.levels.admin') },
+                  { id: 'operator', name: translate('resources.system/operators.levels.operator') },
                 ]}
-                helperText={isEditingSelf ? "不能修改自己的权限级别" : "超级管理员拥有所有权限"}
+                helperText={isEditingSelf ? translate('resources.system/operators.helpers.cannot_change_own_level') : translate('resources.system/operators.helpers.level')}
                 fullWidth
               />
               <SelectInput
                 source="status"
-                label="状态"
-                validate={required('请选择状态')}
+                label={translate('resources.system/operators.fields.status')}
+                validate={validation.validateStatus}
                 disabled={isEditingSelf}
                 choices={[
-                  { id: 'enabled', name: '启用' },
-                  { id: 'disabled', name: '禁用' },
+                  { id: 'enabled', name: translate('resources.system/operators.status.enabled') },
+                  { id: 'disabled', name: translate('resources.system/operators.status.disabled') },
                 ]}
-                helperText={isEditingSelf ? "不能修改自己的状态" : "禁用后将无法登录"}
+                helperText={isEditingSelf ? translate('resources.system/operators.helpers.cannot_change_own_status') : translate('resources.system/operators.helpers.status')}
                 fullWidth
               />
             </FieldGrid>
           </FormSection>
         )}
 
-        <FormSection title="备注信息">
+        <FormSection title={translate('resources.system/operators.sections.remark.title')}>
           <TextInput 
             source="remark" 
-            label="备注" 
+            label={translate('resources.system/operators.fields.remark')} 
             multiline 
             rows={3} 
             fullWidth
-            helperText="可选，记录操作员的其他信息"
+            helperText={translate('resources.system/operators.helpers.remark')}
           />
         </FormSection>
       </SimpleForm>
@@ -310,181 +347,199 @@ export const OperatorEdit = () => {
 };
 
 // 操作员创建
-export const OperatorCreate = () => (
-  <Create>
-    <SimpleForm sx={{ maxWidth: 800 }}>
-      <FormSection title="基本信息" description="操作员的基本登录信息">
-        <FieldGrid>
-          <TextInput 
-            source="username" 
-            label="用户名" 
-            validate={validateUsername}
-            helperText="3-30个字符，只能包含字母、数字和下划线"
-            fullWidth
-          />
-          <PasswordInput 
-            source="password" 
-            label="密码" 
-            validate={validatePassword}
-            helperText="至少6个字符，必须包含字母和数字"
-            fullWidth
-          />
-        </FieldGrid>
-      </FormSection>
+export const OperatorCreate = () => {
+  const translate = useTranslate();
+  const validation = useValidationRules();
+  
+  return (
+    <Create>
+      <SimpleForm sx={{ maxWidth: 800 }}>
+        <FormSection 
+          title={translate('resources.system/operators.sections.basic.title')} 
+          description={translate('resources.system/operators.sections.basic.description')}
+        >
+          <FieldGrid>
+            <TextInput 
+              source="username" 
+              label={translate('resources.system/operators.fields.username')} 
+              validate={validation.validateUsername}
+              helperText={translate('resources.system/operators.helpers.username')}
+              fullWidth
+            />
+            <PasswordInput 
+              source="password" 
+              label={translate('resources.system/operators.fields.password')} 
+              validate={validation.validatePassword}
+              helperText={translate('resources.system/operators.helpers.password')}
+              fullWidth
+            />
+          </FieldGrid>
+        </FormSection>
 
-      <FormSection title="个人信息" description="操作员的个人联系信息">
-        <FieldGrid>
-          <TextInput 
-            source="realname" 
-            label="真实姓名" 
-            validate={validateRealname}
-            fullWidth
-          />
-          <TextInput 
-            source="email" 
-            label="邮箱" 
-            type="email" 
-            validate={validateEmail}
-            helperText="请输入有效的邮箱地址"
-            fullWidth
-          />
-          <TextInput 
-            source="mobile" 
-            label="手机号" 
-            validate={validateMobile}
-            helperText="请输入11位中国手机号"
-            fullWidth
-          />
-        </FieldGrid>
-      </FormSection>
+        <FormSection 
+          title={translate('resources.system/operators.sections.personal.title')} 
+          description={translate('resources.system/operators.sections.personal.description')}
+        >
+          <FieldGrid>
+            <TextInput 
+              source="realname" 
+              label={translate('resources.system/operators.fields.realname')} 
+              validate={validation.validateRealname}
+              fullWidth
+            />
+            <TextInput 
+              source="email" 
+              label={translate('resources.system/operators.fields.email')} 
+              type="email" 
+              validate={validation.validateEmail}
+              helperText={translate('resources.system/operators.helpers.email')}
+              fullWidth
+            />
+            <TextInput 
+              source="mobile" 
+              label={translate('resources.system/operators.fields.mobile')} 
+              validate={validation.validateMobile}
+              helperText={translate('resources.system/operators.helpers.mobile')}
+              fullWidth
+            />
+          </FieldGrid>
+        </FormSection>
 
-      <FormSection title="权限设置" description="操作员的权限级别和状态">
-        <FieldGrid>
-          <SelectInput
-            source="level"
-            label="权限级别"
-            validate={required('请选择权限级别')}
-            defaultValue="operator"
-            choices={[
-              { id: 'super', name: '超级管理员' },
-              { id: 'admin', name: '管理员' },
-              { id: 'operator', name: '操作员' },
-            ]}
-            helperText="超级管理员拥有所有权限"
-            fullWidth
-          />
-          <SelectInput
-            source="status"
-            label="状态"
-            validate={required('请选择状态')}
-            defaultValue="enabled"
-            choices={[
-              { id: 'enabled', name: '启用' },
-              { id: 'disabled', name: '禁用' },
-            ]}
-            helperText="禁用后将无法登录"
-            fullWidth
-          />
-        </FieldGrid>
-      </FormSection>
+        <FormSection 
+          title={translate('resources.system/operators.sections.permissions.title')} 
+          description={translate('resources.system/operators.sections.permissions.description')}
+        >
+          <FieldGrid>
+            <SelectInput
+              source="level"
+              label={translate('resources.system/operators.fields.level')}
+              validate={validation.validateLevel}
+              defaultValue="operator"
+              choices={[
+                { id: 'super', name: translate('resources.system/operators.levels.super') },
+                { id: 'admin', name: translate('resources.system/operators.levels.admin') },
+                { id: 'operator', name: translate('resources.system/operators.levels.operator') },
+              ]}
+              helperText={translate('resources.system/operators.helpers.level')}
+              fullWidth
+            />
+            <SelectInput
+              source="status"
+              label={translate('resources.system/operators.fields.status')}
+              validate={validation.validateStatus}
+              defaultValue="enabled"
+              choices={[
+                { id: 'enabled', name: translate('resources.system/operators.status.enabled') },
+                { id: 'disabled', name: translate('resources.system/operators.status.disabled') },
+              ]}
+              helperText={translate('resources.system/operators.helpers.status')}
+              fullWidth
+            />
+          </FieldGrid>
+        </FormSection>
 
-      <FormSection title="备注信息">
-        <TextInput 
-          source="remark" 
-          label="备注" 
-          multiline 
-          rows={3} 
-          fullWidth
-          helperText="可选，记录操作员的其他信息"
-        />
-      </FormSection>
-    </SimpleForm>
-  </Create>
-);
+        <FormSection title={translate('resources.system/operators.sections.remark.title')}>
+          <TextInput 
+            source="remark" 
+            label={translate('resources.system/operators.fields.remark')} 
+            multiline 
+            rows={3} 
+            fullWidth
+            helperText={translate('resources.system/operators.helpers.remark')}
+          />
+        </FormSection>
+      </SimpleForm>
+    </Create>
+  );
+};
 
 // 操作员详情
-export const OperatorShow = () => (
-  <Show>
-    <Box sx={{ p: 2 }}>
-      <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-          基本信息
-        </Typography>
-        <TableContainer>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600, width: '30%' }}>ID</TableCell>
-                <TableCell><TextField source="id" /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>用户名</TableCell>
-                <TableCell><TextField source="username" /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>真实姓名</TableCell>
-                <TableCell><TextField source="realname" /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>邮箱</TableCell>
-                <TableCell><EmailField source="email" /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>手机号</TableCell>
-                <TableCell><TextField source="mobile" /></TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+export const OperatorShow = () => {
+  const translate = useTranslate();
+  
+  return (
+    <Show>
+      <Box sx={{ p: 2 }}>
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            {translate('resources.system/operators.sections.basic.title')}
+          </Typography>
+          <TableContainer>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, width: '30%' }}>{translate('resources.system/operators.fields.id')}</TableCell>
+                  <TableCell><TextField source="id" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.username')}</TableCell>
+                  <TableCell><TextField source="username" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.realname')}</TableCell>
+                  <TableCell><TextField source="realname" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.email')}</TableCell>
+                  <TableCell><EmailField source="email" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.mobile')}</TableCell>
+                  <TableCell><TextField source="mobile" /></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
 
-      <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-          权限信息
-        </Typography>
-        <TableContainer>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600, width: '30%' }}>权限级别</TableCell>
-                <TableCell><LevelField /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>状态</TableCell>
-                <TableCell><StatusField /></TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            {translate('resources.system/operators.sections.permissions.title')}
+          </Typography>
+          <TableContainer>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, width: '30%' }}>{translate('resources.system/operators.fields.level')}</TableCell>
+                  <TableCell><LevelField /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.status')}</TableCell>
+                  <TableCell><StatusField /></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
 
-      <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
-        <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-          其他信息
-        </Typography>
-        <TableContainer>
-          <Table>
-            <TableBody>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600, width: '30%' }}>备注</TableCell>
-                <TableCell><TextField source="remark" /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>最后登录</TableCell>
-                <TableCell><DateField source="last_login" showTime /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>创建时间</TableCell>
-                <TableCell><DateField source="created_at" showTime /></TableCell>
-              </TableRow>
-              <TableRow>
-                <TableCell sx={{ fontWeight: 600 }}>更新时间</TableCell>
-                <TableCell><DateField source="updated_at" showTime /></TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-    </Box>
-  </Show>
-);
+        <Paper elevation={0} sx={{ p: 3, mb: 3, borderRadius: 2 }}>
+          <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+            {translate('resources.system/operators.sections.other.title')}
+          </Typography>
+          <TableContainer>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, width: '30%' }}>{translate('resources.system/operators.fields.remark')}</TableCell>
+                  <TableCell><TextField source="remark" /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.last_login')}</TableCell>
+                  <TableCell><DateField source="last_login" showTime /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.created_at')}</TableCell>
+                  <TableCell><DateField source="created_at" showTime /></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600 }}>{translate('resources.system/operators.fields.updated_at')}</TableCell>
+                  <TableCell><DateField source="updated_at" showTime /></TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
+    </Show>
+  );
+};

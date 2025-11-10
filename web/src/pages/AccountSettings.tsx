@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNotify } from 'react-admin';
+import { useNotify, useTranslate } from 'react-admin';
+import { clearAuthStorage } from '../utils/storage';
 import {
   Card,
   CardContent,
@@ -20,27 +21,28 @@ import {
   Info as InfoIcon,
 } from '@mui/icons-material';
 
-// 账号设置分组配置
-const ACCOUNT_GROUPS = {
-  profile: {
-    title: '个人信息',
-    description: '基本个人信息和账号详情',
-    icon: <PersonIcon />,
-    color: '#1976d2',
-  },
-  password: {
-    title: '密码修改',
-    description: '修改登录密码',
-    icon: <LockIcon />,
-    color: '#d32f2f',
-  },
-};
-
 export default function AccountSettings() {
   const notify = useNotify();
+  const translate = useTranslate();
   const [profileLoading, setProfileLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['profile']);
+  
+  // 账号设置分组配置（使用国际化）
+  const ACCOUNT_GROUPS = {
+    profile: {
+      title: translate('pages.account_settings.basic_info'),
+      description: translate('pages.account_settings.basic_info_desc'),
+      icon: <PersonIcon />,
+      color: '#1976d2',
+    },
+    password: {
+      title: translate('pages.account_settings.security'),
+      description: translate('pages.account_settings.security_desc'),
+      icon: <LockIcon />,
+      color: '#d32f2f',
+    },
+  };
   
   // 用户信息表单状态
   const [profileForm, setProfileForm] = useState({
@@ -113,7 +115,7 @@ export default function AccountSettings() {
         if (!response.ok) {
           if (response.status === 401) {
             notify('认证已过期，请重新登录', { type: 'error' });
-            localStorage.clear();
+            clearAuthStorage();
             window.location.href = '/login';
             return;
           }
@@ -251,7 +253,7 @@ export default function AccountSettings() {
         
         if (response.status === 401) {
           notify('认证已过期，请重新登录', { type: 'error' });
-          localStorage.clear();
+          clearAuthStorage();
           window.location.href = '/login';
           return;
         }
@@ -340,7 +342,7 @@ export default function AccountSettings() {
         if (!response.ok) {
           if (response.status === 401) {
             notify('认证已过期，请重新登录', { type: 'error' });
-            localStorage.clear();
+            clearAuthStorage();
             window.location.href = '/login';
             return;
           }
@@ -433,7 +435,7 @@ export default function AccountSettings() {
       if (!response.ok) {
         if (response.status === 401) {
           notify('认证已过期，请重新登录', { type: 'error' });
-          localStorage.clear();
+          clearAuthStorage();
           window.location.href = '/login';
           return;
         }
@@ -471,20 +473,13 @@ export default function AccountSettings() {
   };
 
   const getLevelLabel = (level: string) => {
-    switch (level) {
-      case 'super':
-        return '超级管理员';
-      case 'admin':
-        return '管理员';
-      case 'operator':
-        return '普通操作员';
-      default:
-        return level;
-    }
+    const key = `pages.account_settings.level.${level}` as const;
+    return translate(key, { _: level });
   };
 
   const getStatusLabel = (status: string) => {
-    return status === 'enabled' ? '启用' : '禁用';
+    const key = status === 'enabled' ? 'pages.account_settings.status.enabled' : 'pages.account_settings.status.disabled';
+    return translate(key);
   };
 
   return (
@@ -492,7 +487,7 @@ export default function AccountSettings() {
       <Card>
         <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
           <Typography variant="h5" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
-            账号设置
+            {translate('pages.account_settings.title')}
           </Typography>
 
           {/* 个人信息组 */}
@@ -537,16 +532,16 @@ export default function AccountSettings() {
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
                   <TextField
                     fullWidth
-                    label="用户名"
+                    label={translate('pages.account_settings.fields.username')}
                     value={profileForm.username}
                     onChange={(e) => setProfileForm({ ...profileForm, username: e.target.value })}
                     required
-                    helperText="3-30个字符，只能包含字母、数字和下划线"
+                    helperText={translate('pages.account_settings.fields.username_helper')}
                     size="medium"
                   />
                   <TextField
                     fullWidth
-                    label="真实姓名"
+                    label={translate('pages.account_settings.fields.realname')}
                     value={profileForm.realname}
                     onChange={(e) => setProfileForm({ ...profileForm, realname: e.target.value })}
                     required
@@ -554,24 +549,24 @@ export default function AccountSettings() {
                   />
                   <TextField
                     fullWidth
-                    label="手机号"
+                    label={translate('pages.account_settings.fields.mobile')}
                     value={profileForm.mobile}
                     onChange={(e) => setProfileForm({ ...profileForm, mobile: e.target.value })}
-                    helperText="请输入11位中国大陆手机号"
+                    helperText={translate('pages.account_settings.fields.mobile_helper')}
                     size="medium"
                   />
                   <TextField
                     fullWidth
-                    label="邮箱"
+                    label={translate('pages.account_settings.fields.email')}
                     type="email"
                     value={profileForm.email}
                     onChange={(e) => setProfileForm({ ...profileForm, email: e.target.value })}
-                    helperText="用于接收通知和找回密码"
+                    helperText={translate('pages.account_settings.fields.email_helper')}
                     size="medium"
                   />
                   <TextField
                     fullWidth
-                    label="备注"
+                    label={translate('pages.account_settings.fields.remark')}
                     multiline
                     rows={3}
                     value={profileForm.remark}
@@ -586,7 +581,7 @@ export default function AccountSettings() {
                     icon={<InfoIcon />}
                   >
                     <Typography variant="subtitle2" sx={{ mb: 1, fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                      当前权限信息（不可修改）
+                      {translate('pages.account_settings.permission_info')}
                     </Typography>
                     <Box sx={{ 
                       display: 'flex', 
@@ -594,7 +589,7 @@ export default function AccountSettings() {
                       gap: { xs: 1, sm: 3 } 
                     }}>
                       <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                        <strong>权限级别：</strong>
+                        <strong>{translate('pages.account_settings.permission_level')}：</strong>
                         <span
                           style={{
                             color:
@@ -609,7 +604,7 @@ export default function AccountSettings() {
                         </span>
                       </Typography>
                       <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                        <strong>账号状态：</strong>
+                        <strong>{translate('pages.account_settings.account_status')}：</strong>
                         <span style={{ color: userInfo.status === 'enabled' ? '#2e7d32' : '#757575' }}>
                           {getStatusLabel(userInfo.status)}
                         </span>
@@ -629,7 +624,7 @@ export default function AccountSettings() {
                         py: { xs: 1.5, sm: 1 }
                       }}
                     >
-                      {profileLoading ? '保存中...' : '保存个人信息'}
+                      {profileLoading ? translate('pages.account_settings.saving') : translate('pages.account_settings.save_profile')}
                     </Button>
                   </Box>
                 </Box>
@@ -679,7 +674,7 @@ export default function AccountSettings() {
                   {/* 提示块独占一行 */}
                   <Alert severity="warning">
                     <Typography variant="body2" sx={{ fontSize: { xs: '0.875rem', sm: '1rem' } }}>
-                      密码长度至少6位，建议包含字母、数字和特殊字符
+                      {translate('pages.account_settings.password_requirement')}
                     </Typography>
                   </Alert>
 
@@ -687,7 +682,7 @@ export default function AccountSettings() {
                   <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
                     <TextField
                       fullWidth
-                      label="新密码"
+                      label={translate('pages.account_settings.new_password')}
                       type="password"
                       value={passwordForm.newPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
@@ -697,7 +692,7 @@ export default function AccountSettings() {
 
                     <TextField
                       fullWidth
-                      label="确认新密码"
+                      label={translate('pages.account_settings.confirm_password')}
                       type="password"
                       value={passwordForm.confirmPassword}
                       onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
@@ -705,7 +700,7 @@ export default function AccountSettings() {
                       error={passwordForm.confirmPassword !== '' && passwordForm.newPassword !== passwordForm.confirmPassword}
                       helperText={
                         passwordForm.confirmPassword !== '' && passwordForm.newPassword !== passwordForm.confirmPassword
-                          ? '密码不一致'
+                          ? translate('pages.account_settings.password_mismatch')
                           : ''
                       }
                       size="medium"
@@ -724,7 +719,7 @@ export default function AccountSettings() {
                         py: { xs: 1.5, sm: 1 }
                       }}
                     >
-                      {passwordLoading ? '修改中...' : '修改密码'}
+                      {passwordLoading ? translate('pages.account_settings.changing') : translate('pages.account_settings.change_password')}
                     </Button>
                   </Box>
                 </Box>

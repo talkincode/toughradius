@@ -1,4 +1,5 @@
 import { AuthProvider } from 'react-admin';
+import { clearAuthStorage } from '../utils/storage';
 
 export const authProvider: AuthProvider = {
   // 登录
@@ -49,10 +50,7 @@ export const authProvider: AuthProvider = {
 
   // 登出
   logout: async () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    localStorage.removeItem('permissions');
-    localStorage.removeItem('user');
+    clearAuthStorage();
     return Promise.resolve();
   },
 
@@ -62,10 +60,7 @@ export const authProvider: AuthProvider = {
     
     // 401 表示未认证，需要重新登录
     if (status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      localStorage.removeItem('permissions');
-      localStorage.removeItem('user');
+      clearAuthStorage();
       return Promise.reject({ message: '认证已过期，请重新登录' });
     }
     
@@ -90,10 +85,7 @@ export const authProvider: AuthProvider = {
     // 简单验证 token 格式（避免明显无效的 token）
     if (token.length < 10) {
       // 清除无效的认证信息
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      localStorage.removeItem('permissions');
-      localStorage.removeItem('user');
+      clearAuthStorage();
       return Promise.reject({ message: 'Invalid token format', logoutUser: true });
     }
     

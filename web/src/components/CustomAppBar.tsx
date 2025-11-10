@@ -1,13 +1,32 @@
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
-import { Box, IconButton, Stack, Tooltip, Typography, useTheme } from '@mui/material';
-import { AppBar, AppBarProps, TitlePortal, ToggleThemeButton, useRedirect, useGetIdentity } from 'react-admin';
+import LanguageIcon from '@mui/icons-material/Language';
+import { Box, IconButton, Stack, Tooltip, Typography, useTheme, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
+import { AppBar, AppBarProps, TitlePortal, ToggleThemeButton, useRedirect, useGetIdentity, useSetLocale, useLocaleState, useTranslate } from 'react-admin';
+import { useState } from 'react';
 
 export const CustomAppBar = (props: AppBarProps) => {
   const redirect = useRedirect();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { data: identity } = useGetIdentity();
+  const setLocale = useSetLocale();
+  const [locale] = useLocaleState();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const translate = useTranslate();
+
+  const handleLanguageClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleLanguageClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleLanguageSelect = (newLocale: string) => {
+    setLocale(newLocale);
+    handleLanguageClose();
+  };
 
   return (
     <AppBar
@@ -55,7 +74,58 @@ export const CustomAppBar = (props: AppBarProps) => {
         </Stack>
 
         <Stack direction="row" spacing={1.5} alignItems="center">
-          <Tooltip title="切换主题">
+          <Tooltip title={translate('appbar.switch_language')}>
+            <IconButton 
+              size="large"
+              onClick={handleLanguageClick}
+              sx={{
+                color: isDark ? '#f1f5f9' : '#6b7280',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  transform: 'scale(1.05)',
+                  backgroundColor: isDark 
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(0, 0, 0, 0.05)',
+                },
+              }}
+            >
+              <LanguageIcon />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleLanguageClose}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'right',
+            }}
+            transformOrigin={{
+              vertical: 'top',
+              horizontal: 'right',
+            }}
+          >
+            <MenuItem 
+              onClick={() => handleLanguageSelect('zh-CN')}
+              selected={locale === 'zh-CN'}
+            >
+              <ListItemIcon>
+                {locale === 'zh-CN' && '✓'}
+              </ListItemIcon>
+              <ListItemText>{translate('appbar.language.zh_CN')}</ListItemText>
+            </MenuItem>
+            <MenuItem 
+              onClick={() => handleLanguageSelect('en-US')}
+              selected={locale === 'en-US'}
+            >
+              <ListItemIcon>
+                {locale === 'en-US' && '✓'}
+              </ListItemIcon>
+              <ListItemText>{translate('appbar.language.en_US')}</ListItemText>
+            </MenuItem>
+          </Menu>
+
+          <Tooltip title={translate('appbar.toggle_theme')}>
             <Box 
               sx={{ 
                 '& svg': { 
@@ -80,7 +150,7 @@ export const CustomAppBar = (props: AppBarProps) => {
           
           {/* 只对超级管理员和管理员显示系统设置按钮 */}
           {identity?.level === 'super' || identity?.level === 'admin' ? (
-            <Tooltip title="系统设置">
+            <Tooltip title={translate('appbar.system_settings')}>
               <IconButton 
                 size="large" 
                 onClick={() => redirect('/system/config')}
@@ -101,7 +171,7 @@ export const CustomAppBar = (props: AppBarProps) => {
           ) : null}
 
           {/* 账号设置按钮 - 所有用户都可见 */}
-          <Tooltip title="账号设置">
+          <Tooltip title={translate('appbar.account_settings')}>
             <IconButton 
               size="large" 
               onClick={() => redirect('/account/settings')}

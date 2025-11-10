@@ -8,18 +8,18 @@ import RouterOutlinedIcon from '@mui/icons-material/RouterOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
 import { Box, useTheme } from '@mui/material';
-import { MenuItemLink, MenuProps, useGetIdentity } from 'react-admin';
+import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
 
 const menuItems = [
-  { to: '/', label: '控制台', icon: <DashboardOutlinedIcon /> },
-  { to: '/network/nodes', label: '网络节点', icon: <AccountTreeOutlinedIcon /> },
-  { to: '/network/nas', label: 'NAS设备', icon: <RouterOutlinedIcon /> },
-  { to: '/radius/users', label: '用户管理', icon: <PeopleAltOutlinedIcon /> },
-  { to: '/radius/profiles', label: '策略管理', icon: <SettingsSuggestOutlinedIcon /> },
-  { to: '/radius/online', label: '在线会话', icon: <SensorsOutlinedIcon /> },
-  { to: '/radius/accounting', label: '计费日志', icon: <ReceiptLongOutlinedIcon /> },
-  { to: '/system/config', label: '系统配置', icon: <SettingsOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/system/operators', label: '操作员管理', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon /> },
+  { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon /> },
+  { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon /> },
+  { to: '/radius/users', labelKey: 'menu.radius_users', icon: <PeopleAltOutlinedIcon /> },
+  { to: '/radius/profiles', labelKey: 'menu.radius_profiles', icon: <SettingsSuggestOutlinedIcon /> },
+  { to: '/radius/online', labelKey: 'menu.online_sessions', icon: <SensorsOutlinedIcon /> },
+  { to: '/radius/accounting', labelKey: 'menu.accounting', icon: <ReceiptLongOutlinedIcon /> },
+  { to: '/system/config', labelKey: 'menu.system_config', icon: <SettingsOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/system/operators', labelKey: 'menu.operators', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
@@ -27,6 +27,7 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { data: identity } = useGetIdentity();
+  const translate = useTranslate();
 
   // 根据用户权限过滤菜单项
   const filteredMenuItems = menuItems.filter(item => {
@@ -53,7 +54,7 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
           <MenuItemLink
             key={item.to}
             to={item.to}
-            primaryText={item.label}
+            primaryText={translate(item.labelKey)}
             leftIcon={item.icon}
             dense={dense}
             onClick={onMenuClick}

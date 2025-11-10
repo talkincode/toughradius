@@ -32,7 +32,7 @@ import {
   Security as SecurityIcon,
   Router as RouterIcon,
 } from '@mui/icons-material';
-import { useDataProvider, useNotify } from 'react-admin';
+import { useDataProvider, useNotify, useTranslate } from 'react-admin';
 
 // 配置项类型定义
 interface ConfigSchema {
@@ -65,28 +65,6 @@ interface ApiSchemaData {
   description: string;
 }
 
-// 配置分组定义
-const CONFIG_GROUPS = {
-  radius: {
-    title: 'RADIUS 配置',
-    description: 'RADIUS 认证和计费相关配置',
-    icon: <RouterIcon />,
-    color: '#1976d2',
-  },
-  system: {
-    title: '系统配置',
-    description: '系统基础设置和维护配置',
-    icon: <SettingsIcon />,
-    color: '#2e7d32',
-  },
-  security: {
-    title: '安全配置',
-    description: '安全策略和认证相关配置',
-    icon: <SecurityIcon />,
-    color: '#d32f2f',
-  },
-};
-
 export const SystemConfigPage: React.FC = () => {
   const [configs, setConfigs] = useState<Record<string, ConfigValue>>({});
   const [schemas, setSchemas] = useState<ConfigSchema[]>([]);
@@ -97,6 +75,29 @@ export const SystemConfigPage: React.FC = () => {
   
   const dataProvider = useDataProvider();
   const notify = useNotify();
+  const translate = useTranslate();
+
+  // 配置分组定义（使用国际化）
+  const CONFIG_GROUPS = {
+    radius: {
+      title: translate('pages.system_config.groups.radius.title'),
+      description: translate('pages.system_config.groups.radius.description'),
+      icon: <RouterIcon />,
+      color: '#1976d2',
+    },
+    system: {
+      title: translate('pages.system_config.groups.system.title'),
+      description: translate('pages.system_config.groups.system.description'),
+      icon: <SettingsIcon />,
+      color: '#2e7d32',
+    },
+    security: {
+      title: translate('pages.system_config.groups.security.title'),
+      description: translate('pages.system_config.groups.security.description'),
+      icon: <SecurityIcon />,
+      color: '#d32f2f',
+    },
+  };
 
   // 加载配置数据
   const loadConfigs = useCallback(async () => {
@@ -372,10 +373,10 @@ export const SystemConfigPage: React.FC = () => {
       {/* 页面标题 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" gutterBottom>
-          系统配置
+          {translate('pages.system_config.title')}
         </Typography>
         <Typography variant="body1" color="textSecondary">
-          管理系统的各项配置参数，配置修改后立即生效
+          {translate('pages.system_config.subtitle')}
         </Typography>
       </Box>
 
@@ -388,7 +389,7 @@ export const SystemConfigPage: React.FC = () => {
           disabled={saving || loading}
           sx={{ mr: 2 }}
         >
-          {saving ? '保存中...' : '保存配置'}
+          {saving ? translate('pages.system_config.saving') : translate('pages.system_config.save')}
         </Button>
         <Button
           variant="outlined"
@@ -397,7 +398,7 @@ export const SystemConfigPage: React.FC = () => {
           disabled={saving || loading}
           sx={{ mr: 2 }}
         >
-          重置默认值
+          {translate('pages.system_config.reset')}
         </Button>
         <Button
           variant="text"
@@ -405,7 +406,7 @@ export const SystemConfigPage: React.FC = () => {
           onClick={loadConfigs}
           disabled={loading}
         >
-          {loading ? '加载中...' : '重新加载'}
+          {loading ? translate('pages.system_config.loading') : translate('pages.system_config.reload')}
         </Button>
       </Box>
 
@@ -413,7 +414,7 @@ export const SystemConfigPage: React.FC = () => {
       {!loading && schemas.length > 0 && (
         <Box sx={{ mb: 2 }}>
           <Alert severity="info" sx={{ mb: 2 }}>
-            配置项按功能模块分组显示，点击展开/收起分组。修改配置后请点击"保存配置"按钮。
+            {translate('pages.system_config.info_message')}
           </Alert>
 
           {Object.entries(groupedSchemas).map(([groupKey, groupSchemas]) => {
@@ -449,7 +450,7 @@ export const SystemConfigPage: React.FC = () => {
                       {groupConfig.title}
                     </Typography>
                     <Typography variant="body2" color="textSecondary">
-                      {groupConfig.description} ({groupSchemas.length} 项配置)
+                      {groupConfig.description} ({groupSchemas.length} {translate('pages.system_config.config_items')})
                     </Typography>
                   </Box>
                 </Box>
@@ -479,14 +480,14 @@ export const SystemConfigPage: React.FC = () => {
                         {renderConfigInput(schema)}
                         {schema.enum && (
                           <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                            可选值: {schema.enum.join(', ')}
+                            {translate('pages.system_config.available_values')}: {schema.enum.join(', ')}
                           </Typography>
                         )}
                         {(schema.min !== undefined || schema.max !== undefined) && (
                           <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                            范围: {schema.min !== undefined ? `最小 ${schema.min}` : ''} 
+                            {translate('pages.system_config.value_range')}: {schema.min !== undefined ? `${translate('pages.system_config.min')} ${schema.min}` : ''} 
                             {schema.min !== undefined && schema.max !== undefined ? ', ' : ''}
-                            {schema.max !== undefined ? `最大 ${schema.max}` : ''}
+                            {schema.max !== undefined ? `${translate('pages.system_config.max')} ${schema.max}` : ''}
                           </Typography>
                         )}
                       </Box>
@@ -502,15 +503,15 @@ export const SystemConfigPage: React.FC = () => {
 
       {loading && (
         <Alert severity="info">
-          加载配置中，请稍候...
+          {translate('pages.system_config.loading_message')}
           <br />
-          正在从后端API获取配置定义和当前配置值。
+          {translate('pages.system_config.loading_detail')}
         </Alert>
       )}
 
       {!loading && schemas.length === 0 && (
         <Alert severity="warning">
-          没有找到配置项，请检查后端API是否正常工作。
+          {translate('pages.system_config.no_config_warning')}
           <br />
           <strong>调试信息：</strong>
           <br />
@@ -526,7 +527,7 @@ export const SystemConfigPage: React.FC = () => {
 
       {!loading && schemas.length > 0 && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          ✓ 成功加载 {schemas.length} 个配置定义，{Object.keys(configs).length} 个配置值
+          ✓ {translate('pages.system_config.success_message', { schemaCount: schemas.length, configCount: Object.keys(configs).length })}
         </Alert>
       )}
 
@@ -538,11 +539,11 @@ export const SystemConfigPage: React.FC = () => {
       aria-describedby="reset-dialog-description"
     >
       <DialogTitle id="reset-dialog-title">
-        确认重置配置
+        {translate('pages.system_config.confirm_reset')}
       </DialogTitle>
       <DialogContent>
         <DialogContentText id="reset-dialog-description">
-          确定要将所有配置项重置为默认值吗？
+          {translate('pages.system_config.reset_warning')}
           <br />
           <br />
           <strong>注意：</strong>此操作将清除您对以下配置项的自定义设置：
@@ -554,15 +555,15 @@ export const SystemConfigPage: React.FC = () => {
             </span>
           ))}
           <br />
-          重置后需要点击"保存配置"才会生效。
+          {translate('pages.system_config.reset_notice')}
         </DialogContentText>
       </DialogContent>
       <DialogActions>
         <Button onClick={() => setResetDialogOpen(false)}>
-          取消
+          {translate('pages.system_config.cancel')}
         </Button>
         <Button onClick={handleResetConfigs} color="warning" variant="contained">
-          确认重置
+          {translate('pages.system_config.confirm')}
         </Button>
       </DialogActions>
     </Dialog>

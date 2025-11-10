@@ -7,48 +7,45 @@ import {
   FunctionField,
   Show,
   SimpleShowLayout,
-  Filter,
   TextInput,
   DateInput,
 } from 'react-admin';
 
+interface OnlineSession {
+  acct_session_time?: number;
+}
+
 // 在线会话过滤器
-const SessionFilter = (props: any) => (
-  <Filter {...props}>
-    <TextInput label="用户名" source="username" alwaysOn />
-    <TextInput label="IP地址" source="framed_ipaddr" />
-    <TextInput label="NAS IP" source="nas_addr" />
-    <DateInput label="开始时间" source="start_time_gte" />
-  </Filter>
-);
+const onlineFilters = [
+  <TextInput key="username" source="username" alwaysOn />,
+  <TextInput key="framed_ipaddr" source="framed_ipaddr" />,
+  <TextInput key="nas_addr" source="nas_addr" />,
+  <DateInput key="start_time_gte" source="start_time_gte" />,
+];
 
 // 在线会话列表
 export const OnlineSessionList = () => (
-  <List filters={<SessionFilter />}>
-    <Datagrid rowClick="show">
-      <TextField source="acct_session_id" label="会话ID" />
-      <TextField source="username" label="用户名" />
-      <TextField source="nas_addr" label="NAS地址" />
-      <TextField source="framed_ipaddr" label="用户IP" />
-      <TextField source="mac_addr" label="MAC地址" />
-      <NumberField source="session_timeout" label="超时时间(秒)" />
-      <DateField source="acct_start_time" label="开始时间" showTime />
+  <List filters={onlineFilters} sort={{ field: 'acct_start_time', order: 'DESC' }}>
+    <Datagrid rowClick="show" bulkActionButtons={false}>
+      <TextField source="acct_session_id" />
+      <TextField source="username" />
+      <TextField source="nas_addr" />
+      <TextField source="framed_ipaddr" />
+      <TextField source="mac_addr" />
+      <NumberField source="session_timeout" />
+      <DateField source="acct_start_time" showTime />
       <FunctionField
-        label="在线时长"
-        render={(record: any) => {
-          if (record.acct_start_time) {
-            const duration = Math.floor(
-              (Date.now() - new Date(record.acct_start_time).getTime()) / 1000
-            );
-            const hours = Math.floor(duration / 3600);
-            const minutes = Math.floor((duration % 3600) / 60);
-            return `${hours}小时${minutes}分钟`;
-          }
-          return '-';
+        source="acct_session_time"
+        render={(record: OnlineSession) => {
+          if (!record || !record.acct_session_time) return '-';
+          const hours = Math.floor(record.acct_session_time / 3600);
+          const minutes = Math.floor((record.acct_session_time % 3600) / 60);
+          const seconds = record.acct_session_time % 60;
+          return `${hours}h ${minutes}m ${seconds}s`;
         }}
       />
-      <NumberField source="acct_input_octets" label="上传流量(B)" />
-      <NumberField source="acct_output_octets" label="下载流量(B)" />
+      <NumberField source="acct_input_octets" />
+      <NumberField source="acct_output_octets" />
     </Datagrid>
   </List>
 );
@@ -57,21 +54,21 @@ export const OnlineSessionList = () => (
 export const OnlineSessionShow = () => (
   <Show>
     <SimpleShowLayout>
-      <TextField source="acct_session_id" label="会话ID" />
-      <TextField source="username" label="用户名" />
-      <TextField source="nas_addr" label="NAS地址" />
-      <TextField source="nas_port" label="NAS端口" />
-      <TextField source="service_type" label="服务类型" />
-      <TextField source="framed_ipaddr" label="用户IP" />
-      <TextField source="framed_netmask" label="子网掩码" />
-      <TextField source="mac_addr" label="MAC地址" />
-      <NumberField source="session_timeout" label="超时时间(秒)" />
-      <DateField source="acct_start_time" label="开始时间" showTime />
-      <NumberField source="acct_session_time" label="会话时长(秒)" />
-      <NumberField source="acct_input_octets" label="上传流量(B)" />
-      <NumberField source="acct_output_octets" label="下载流量(B)" />
-      <NumberField source="acct_input_packets" label="上传包数" />
-      <NumberField source="acct_output_packets" label="下载包数" />
+      <TextField source="acct_session_id" />
+      <TextField source="username" />
+      <TextField source="nas_addr" />
+      <TextField source="nas_port" />
+      <TextField source="service_type" />
+      <TextField source="framed_ipaddr" />
+      <TextField source="framed_netmask" />
+      <TextField source="mac_addr" />
+      <NumberField source="session_timeout" />
+      <DateField source="acct_start_time" showTime />
+      <NumberField source="acct_session_time" />
+      <NumberField source="acct_input_octets" />
+      <NumberField source="acct_output_octets" />
+      <NumberField source="acct_input_packets" />
+      <NumberField source="acct_output_packets" />
     </SimpleShowLayout>
   </Show>
 );

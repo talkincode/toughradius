@@ -24,7 +24,8 @@ import {
   FilterButton,
   CreateButton,
   ExportButton,
-  SelectInput
+  SelectInput,
+  useTranslate
 } from 'react-admin';
 import {
   Box,
@@ -47,11 +48,12 @@ import { ReactNode } from 'react';
 // 状态显示组件
 const StatusField = () => {
   const record = useRecordContext();
+  const translate = useTranslate();
   if (!record) return null;
 
   return (
     <Chip
-      label={record.status === 'enabled' ? '启用' : '禁用'}
+      label={translate(`resources.radius/profiles.status.${record.status}`)}
       color={record.status === 'enabled' ? 'success' : 'default'}
       size="small"
     />
@@ -240,53 +242,63 @@ const ProfileListActions = () => (
 );
 
 // RADIUS 计费策略过滤器
-const profileFilters = [
-  <TextInput key="name" label="策略名称" source="name" alwaysOn />,
-  <TextInput key="addr_pool" label="地址池" source="addr_pool" />,
-  <TextInput key="domain" label="域" source="domain" />,
-  <SelectInput
-    key="status"
-    label="状态"
-    source="status"
-    choices={[
-      { id: 'enabled', name: '启用' },
-      { id: 'disabled', name: '禁用' },
-    ]}
-  />,
-];
+const useProfileFilters = () => {
+  const translate = useTranslate();
+  
+  return [
+    <TextInput key="name" label={translate('resources.radius/profiles.fields.name')} source="name" alwaysOn />,
+    <TextInput key="addr_pool" label={translate('resources.radius/profiles.fields.addr_pool')} source="addr_pool" />,
+    <TextInput key="domain" label={translate('resources.radius/profiles.fields.domain')} source="domain" />,
+    <SelectInput
+      key="status"
+      label={translate('resources.radius/profiles.fields.status')}
+      source="status"
+      choices={[
+        { id: 'enabled', name: translate('resources.radius/profiles.status.enabled') },
+        { id: 'disabled', name: translate('resources.radius/profiles.status.disabled') },
+      ]}
+    />,
+  ];
+};
 
 // RADIUS 计费策略列表
-export const RadiusProfileList = () => (
-  <List actions={<ProfileListActions />} filters={profileFilters}>
-    <Datagrid rowClick="show">
-      <TextField source="name" label="策略名称" />
-      <StatusField />
-      <TextField source="active_num" label="并发数" />
-      <TextField source="up_rate" label="上行速率(Kbps)" />
-      <TextField source="down_rate" label="下行速率(Kbps)" />
-      <TextField source="addr_pool" label="地址池" />
-      <TextField source="domain" label="域" />
-      <DateField source="created_at" label="创建时间" showTime />
-    </Datagrid>
-  </List>
-);
+export const RadiusProfileList = () => {
+  const translate = useTranslate();
+  
+  return (
+    <List actions={<ProfileListActions />} filters={useProfileFilters()}>
+      <Datagrid rowClick="show">
+        <TextField source="name" label={translate('resources.radius/profiles.fields.name')} />
+        <StatusField />
+        <TextField source="active_num" label={translate('resources.radius/profiles.fields.active_num')} />
+        <TextField source="up_rate" label={translate('resources.radius/profiles.fields.up_rate')} />
+        <TextField source="down_rate" label={translate('resources.radius/profiles.fields.down_rate')} />
+        <TextField source="addr_pool" label={translate('resources.radius/profiles.fields.addr_pool')} />
+        <TextField source="domain" label={translate('resources.radius/profiles.fields.domain')} />
+        <DateField source="created_at" label={translate('resources.radius/profiles.fields.created_at')} showTime />
+      </Datagrid>
+    </List>
+  );
+};
 
 // RADIUS 计费策略编辑
 export const RadiusProfileEdit = () => {
+  const translate = useTranslate();
+  
   return (
     <Edit>
       <SimpleForm toolbar={<ProfileFormToolbar />} sx={formLayoutSx}>
         <FormSection
-          title="基本信息"
-          description="策略的基本配置信息"
+          title={translate('resources.radius/profiles.sections.basic.title')}
+          description={translate('resources.radius/profiles.sections.basic.description')}
         >
           <FieldGrid columns={{ xs: 1, sm: 2 }}>
             <FieldGridItem>
               <TextInput
                 source="id"
                 disabled
-                label="策略ID"
-                helperText="系统自动生成的唯一标识"
+                label={translate('resources.radius/profiles.fields.id')}
+                helperText={translate('resources.radius/profiles.helpers.id')}
                 fullWidth
                 size="small"
               />
@@ -294,9 +306,9 @@ export const RadiusProfileEdit = () => {
             <FieldGridItem>
               <TextInput
                 source="name"
-                label="策略名称"
+                label={translate('resources.radius/profiles.fields.name')}
                 validate={[required(), minLength(2), maxLength(50)]}
-                helperText="2-50个字符"
+                helperText={translate('resources.radius/profiles.helpers.name')}
                 fullWidth
                 size="small"
               />
@@ -305,8 +317,8 @@ export const RadiusProfileEdit = () => {
               <Box sx={controlWrapperSx}>
                 <BooleanInput
                   source="status"
-                  label="启用状态"
-                  helperText="是否启用此策略"
+                  label={translate('resources.radius/profiles.fields.status_enabled')}
+                  helperText={translate('resources.radius/profiles.helpers.status')}
                 />
               </Box>
             </FieldGridItem>
@@ -314,16 +326,16 @@ export const RadiusProfileEdit = () => {
         </FormSection>
 
         <FormSection
-          title="并发和速率控制"
-          description="并发数和带宽速率限制"
+          title={translate('resources.radius/profiles.sections.rate_control.title')}
+          description={translate('resources.radius/profiles.sections.rate_control.description')}
         >
           <FieldGrid columns={{ xs: 1, sm: 2, md: 3 }}>
             <FieldGridItem>
               <NumberInput
                 source="active_num"
-                label="并发数"
+                label={translate('resources.radius/profiles.fields.active_num')}
                 min={0}
-                helperText="允许的最大并发在线数，0表示不限制"
+                helperText={translate('resources.radius/profiles.helpers.active_num')}
                 fullWidth
                 size="small"
               />
@@ -331,9 +343,9 @@ export const RadiusProfileEdit = () => {
             <FieldGridItem>
               <NumberInput
                 source="up_rate"
-                label="上行速率(Kbps)"
+                label={translate('resources.radius/profiles.fields.up_rate')}
                 min={0}
-                helperText="上传带宽限制"
+                helperText={translate('resources.radius/profiles.helpers.up_rate')}
                 fullWidth
                 size="small"
               />
@@ -341,9 +353,9 @@ export const RadiusProfileEdit = () => {
             <FieldGridItem>
               <NumberInput
                 source="down_rate"
-                label="下行速率(Kbps)"
+                label={translate('resources.radius/profiles.fields.down_rate')}
                 min={0}
-                helperText="下载带宽限制"
+                helperText={translate('resources.radius/profiles.helpers.down_rate')}
                 fullWidth
                 size="small"
               />
@@ -352,15 +364,15 @@ export const RadiusProfileEdit = () => {
         </FormSection>
 
         <FormSection
-          title="网络配置"
-          description="IP地址池和IPv6配置"
+          title={translate('resources.radius/profiles.sections.network.title')}
+          description={translate('resources.radius/profiles.sections.network.description')}
         >
           <FieldGrid columns={{ xs: 1, sm: 2 }}>
             <FieldGridItem>
               <TextInput
                 source="addr_pool"
-                label="地址池"
-                helperText="IP地址池名称"
+                label={translate('resources.radius/profiles.fields.addr_pool')}
+                helperText={translate('resources.radius/profiles.helpers.addr_pool')}
                 fullWidth
                 size="small"
               />
@@ -368,8 +380,8 @@ export const RadiusProfileEdit = () => {
             <FieldGridItem>
               <TextInput
                 source="ipv6_prefix"
-                label="IPv6前缀"
-                helperText="如 2001:db8::/64"
+                label={translate('resources.radius/profiles.fields.ipv6_prefix')}
+                helperText={translate('resources.radius/profiles.helpers.ipv6_prefix')}
                 fullWidth
                 size="small"
               />
@@ -377,8 +389,8 @@ export const RadiusProfileEdit = () => {
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
               <TextInput
                 source="domain"
-                label="域"
-                helperText="对应NAS设备域属性，如华为domain_code"
+                label={translate('resources.radius/profiles.fields.domain')}
+                helperText={translate('resources.radius/profiles.helpers.domain')}
                 fullWidth
                 size="small"
               />
@@ -387,16 +399,16 @@ export const RadiusProfileEdit = () => {
         </FormSection>
 
         <FormSection
-          title="绑定策略"
-          description="MAC和VLAN绑定控制"
+          title={translate('resources.radius/profiles.sections.binding.title')}
+          description={translate('resources.radius/profiles.sections.binding.description')}
         >
           <FieldGrid columns={{ xs: 1, sm: 2 }}>
             <FieldGridItem>
               <Box sx={controlWrapperSx}>
                 <BooleanInput
                   source="bind_mac"
-                  label="绑定MAC"
-                  helperText="是否启用MAC地址绑定"
+                  label={translate('resources.radius/profiles.fields.bind_mac')}
+                  helperText={translate('resources.radius/profiles.helpers.bind_mac')}
                 />
               </Box>
             </FieldGridItem>
@@ -404,8 +416,8 @@ export const RadiusProfileEdit = () => {
               <Box sx={controlWrapperSx}>
                 <BooleanInput
                   source="bind_vlan"
-                  label="绑定VLAN"
-                  helperText="是否启用VLAN绑定"
+                  label={translate('resources.radius/profiles.fields.bind_vlan')}
+                  helperText={translate('resources.radius/profiles.helpers.bind_vlan')}
                 />
               </Box>
             </FieldGridItem>
@@ -413,19 +425,19 @@ export const RadiusProfileEdit = () => {
         </FormSection>
 
         <FormSection
-          title="备注信息"
-          description="额外的说明和备注"
+          title={translate('resources.radius/profiles.sections.remark.title')}
+          description={translate('resources.radius/profiles.sections.remark.description')}
         >
           <FieldGrid columns={{ xs: 1, sm: 2 }}>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
               <TextInput
                 source="remark"
-                label="备注"
+                label={translate('resources.radius/profiles.fields.remark')}
                 multiline
                 minRows={3}
                 fullWidth
                 size="small"
-                helperText="可选的备注信息，最多1000个字符"
+                helperText={translate('resources.radius/profiles.helpers.remark')}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -436,162 +448,166 @@ export const RadiusProfileEdit = () => {
 };
 
 // RADIUS 计费策略创建
-export const RadiusProfileCreate = () => (
-  <Create>
-    <SimpleForm sx={formLayoutSx}>
-      <FormSection
-        title="基本信息"
-        description="策略的基本配置信息"
-      >
-        <FieldGrid columns={{ xs: 1, sm: 2 }}>
-          <FieldGridItem>
-            <TextInput
-              source="name"
-              label="策略名称"
-              validate={[required(), minLength(2), maxLength(50)]}
-              helperText="2-50个字符"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-          <FieldGridItem>
-            <Box sx={controlWrapperSx}>
-              <BooleanInput
-                source="status"
-                label="启用状态"
-                defaultValue={true}
-                helperText="是否启用此策略"
+export const RadiusProfileCreate = () => {
+  const translate = useTranslate();
+  
+  return (
+    <Create>
+      <SimpleForm sx={formLayoutSx}>
+        <FormSection
+          title={translate('resources.radius/profiles.sections.basic.title')}
+          description={translate('resources.radius/profiles.sections.basic.description')}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <TextInput
+                source="name"
+                label={translate('resources.radius/profiles.fields.name')}
+                validate={[required(), minLength(2), maxLength(50)]}
+                helperText={translate('resources.radius/profiles.helpers.name')}
+                fullWidth
+                size="small"
               />
-            </Box>
-          </FieldGridItem>
-        </FieldGrid>
-      </FormSection>
+            </FieldGridItem>
+            <FieldGridItem>
+              <Box sx={controlWrapperSx}>
+                <BooleanInput
+                  source="status"
+                  label={translate('resources.radius/profiles.fields.status_enabled')}
+                  defaultValue={true}
+                  helperText={translate('resources.radius/profiles.helpers.status')}
+                />
+              </Box>
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
 
-      <FormSection
-        title="并发和速率控制"
-        description="并发数和带宽速率限制"
-      >
-        <FieldGrid columns={{ xs: 1, sm: 2, md: 3 }}>
-          <FieldGridItem>
-            <NumberInput
-              source="active_num"
-              label="并发数"
-              min={0}
-              defaultValue={1}
-              helperText="允许的最大并发在线数，0表示不限制"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-          <FieldGridItem>
-            <NumberInput
-              source="up_rate"
-              label="上行速率(Kbps)"
-              min={0}
-              defaultValue={1024}
-              helperText="上传带宽限制"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-          <FieldGridItem>
-            <NumberInput
-              source="down_rate"
-              label="下行速率(Kbps)"
-              min={0}
-              defaultValue={1024}
-              helperText="下载带宽限制"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-        </FieldGrid>
-      </FormSection>
-
-      <FormSection
-        title="网络配置"
-        description="IP地址池和IPv6配置"
-      >
-        <FieldGrid columns={{ xs: 1, sm: 2 }}>
-          <FieldGridItem>
-            <TextInput
-              source="addr_pool"
-              label="地址池"
-              helperText="IP地址池名称"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-          <FieldGridItem>
-            <TextInput
-              source="ipv6_prefix"
-              label="IPv6前缀"
-              helperText="如 2001:db8::/64"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-          <FieldGridItem span={{ xs: 1, sm: 2 }}>
-            <TextInput
-              source="domain"
-              label="域"
-              helperText="对应NAS设备域属性，如华为domain_code"
-              fullWidth
-              size="small"
-            />
-          </FieldGridItem>
-        </FieldGrid>
-      </FormSection>
-
-      <FormSection
-        title="绑定策略"
-        description="MAC和VLAN绑定控制"
-      >
-        <FieldGrid columns={{ xs: 1, sm: 2 }}>
-          <FieldGridItem>
-            <Box sx={controlWrapperSx}>
-              <BooleanInput
-                source="bind_mac"
-                label="绑定MAC"
-                defaultValue={false}
-                helperText="是否启用MAC地址绑定"
+        <FormSection
+          title={translate('resources.radius/profiles.sections.rate_control.title')}
+          description={translate('resources.radius/profiles.sections.rate_control.description')}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2, md: 3 }}>
+            <FieldGridItem>
+              <NumberInput
+                source="active_num"
+                label={translate('resources.radius/profiles.fields.active_num')}
+                min={0}
+                defaultValue={1}
+                helperText={translate('resources.radius/profiles.helpers.active_num')}
+                fullWidth
+                size="small"
               />
-            </Box>
-          </FieldGridItem>
-          <FieldGridItem>
-            <Box sx={controlWrapperSx}>
-              <BooleanInput
-                source="bind_vlan"
-                label="绑定VLAN"
-                defaultValue={false}
-                helperText="是否启用VLAN绑定"
+            </FieldGridItem>
+            <FieldGridItem>
+              <NumberInput
+                source="up_rate"
+                label={translate('resources.radius/profiles.fields.up_rate')}
+                min={0}
+                defaultValue={1024}
+                helperText={translate('resources.radius/profiles.helpers.up_rate')}
+                fullWidth
+                size="small"
               />
-            </Box>
-          </FieldGridItem>
-        </FieldGrid>
-      </FormSection>
+            </FieldGridItem>
+            <FieldGridItem>
+              <NumberInput
+                source="down_rate"
+                label={translate('resources.radius/profiles.fields.down_rate')}
+                min={0}
+                defaultValue={1024}
+                helperText={translate('resources.radius/profiles.helpers.down_rate')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
 
-      <FormSection
-        title="备注信息"
-        description="额外的说明和备注"
-      >
-        <FieldGrid columns={{ xs: 1, sm: 2 }}>
-          <FieldGridItem span={{ xs: 1, sm: 2 }}>
-            <TextInput
-              source="remark"
-              label="备注"
-              multiline
-              minRows={3}
-              fullWidth
-              size="small"
-              helperText="可选的备注信息，最多1000个字符"
-            />
+        <FormSection
+          title={translate('resources.radius/profiles.sections.network.title')}
+          description={translate('resources.radius/profiles.sections.network.description')}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <TextInput
+                source="addr_pool"
+                label={translate('resources.radius/profiles.fields.addr_pool')}
+                helperText={translate('resources.radius/profiles.helpers.addr_pool')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="ipv6_prefix"
+                label={translate('resources.radius/profiles.fields.ipv6_prefix')}
+                helperText={translate('resources.radius/profiles.helpers.ipv6_prefix')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+              <TextInput
+                source="domain"
+                label={translate('resources.radius/profiles.fields.domain')}
+                helperText={translate('resources.radius/profiles.helpers.domain')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
+
+        <FormSection
+          title={translate('resources.radius/profiles.sections.binding.title')}
+          description={translate('resources.radius/profiles.sections.binding.description')}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <Box sx={controlWrapperSx}>
+                <BooleanInput
+                  source="bind_mac"
+                  label={translate('resources.radius/profiles.fields.bind_mac')}
+                  defaultValue={false}
+                  helperText={translate('resources.radius/profiles.helpers.bind_mac')}
+                />
+              </Box>
+            </FieldGridItem>
+            <FieldGridItem>
+              <Box sx={controlWrapperSx}>
+                <BooleanInput
+                  source="bind_vlan"
+                  label={translate('resources.radius/profiles.fields.bind_vlan')}
+                  defaultValue={false}
+                  helperText={translate('resources.radius/profiles.helpers.bind_vlan')}
+                />
+              </Box>
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
+
+        <FormSection
+          title={translate('resources.radius/profiles.sections.remark.title')}
+          description={translate('resources.radius/profiles.sections.remark.description')}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+              <TextInput
+                source="remark"
+                label={translate('resources.radius/profiles.fields.remark')}
+                multiline
+                minRows={3}
+                fullWidth
+                size="small"
+                helperText={translate('resources.radius/profiles.helpers.remark')}
+              />
           </FieldGridItem>
         </FieldGrid>
       </FormSection>
     </SimpleForm>
   </Create>
 );
+};
 
 // 详情页工具栏
 const ProfileShowActions = () => (
@@ -627,11 +643,12 @@ const DetailRow = ({ label, value }: { label: string; value: ReactNode }) => (
 // 状态显示组件（用于详情页）
 const StatusDisplay = () => {
   const record = useRecordContext();
+  const translate = useTranslate();
   if (!record) return null;
 
   return (
     <Chip
-      label={record.status === 'enabled' ? '启用' : '禁用'}
+      label={translate(`resources.radius/profiles.status.${record.status}`)}
       color={record.status === 'enabled' ? 'success' : 'default'}
       size="small"
       sx={{ fontWeight: 500 }}
@@ -642,12 +659,13 @@ const StatusDisplay = () => {
 // 布尔值显示组件
 const BooleanDisplay = ({ source }: { source: string }) => {
   const record = useRecordContext();
+  const translate = useTranslate();
   if (!record) return null;
 
   const value = record[source];
   return (
     <Chip
-      label={value ? '是' : '否'}
+      label={translate(value ? 'common.yes' : 'common.no')}
       color={value ? 'success' : 'default'}
       size="small"
       variant="outlined"
@@ -657,6 +675,10 @@ const BooleanDisplay = ({ source }: { source: string }) => {
 
 // RADIUS 计费策略详情
 export const RadiusProfileShow = () => {
+  const translate = useTranslate();
+  const kbpsUnit = translate('resources.radius/profiles.units.kbps');
+  const noRemark = translate('resources.radius/profiles.helpers.no_remark');
+  
   return (
     <Show actions={<ProfileShowActions />}>
       <Box sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 } }}>
@@ -665,22 +687,22 @@ export const RadiusProfileShow = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                基本信息
+                {translate('resources.radius/profiles.sections.basic.title')}
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <TableContainer>
                 <Table>
                   <TableBody>
                     <DetailRow
-                      label="策略ID"
+                      label={translate('resources.radius/profiles.fields.id')}
                       value={<TextField source="id" />}
                     />
                     <DetailRow
-                      label="策略名称"
+                      label={translate('resources.radius/profiles.fields.name')}
                       value={<TextField source="name" />}
                     />
                     <DetailRow
-                      label="启用状态"
+                      label={translate('resources.radius/profiles.fields.status')}
                       value={<StatusDisplay />}
                     />
                   </TableBody>
@@ -694,34 +716,34 @@ export const RadiusProfileShow = () => {
             <Card elevation={2}>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                  并发和速率控制
+                  {translate('resources.radius/profiles.sections.rate_control.title')}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <TableContainer>
                   <Table>
                     <TableBody>
                       <DetailRow
-                        label="并发数"
+                        label={translate('resources.radius/profiles.fields.active_num')}
                         value={<TextField source="active_num" />}
                       />
                       <DetailRow
-                        label="上行速率"
+                        label={translate('resources.radius/profiles.fields.up_rate')}
                         value={
                           <Box>
                             <TextField source="up_rate" />
                             <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                              Kbps
+                              {kbpsUnit}
                             </Typography>
                           </Box>
                         }
                       />
                       <DetailRow
-                        label="下行速率"
+                        label={translate('resources.radius/profiles.fields.down_rate')}
                         value={
                           <Box>
                             <TextField source="down_rate" />
                             <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                              Kbps
+                              {kbpsUnit}
                             </Typography>
                           </Box>
                         }
@@ -736,22 +758,22 @@ export const RadiusProfileShow = () => {
             <Card elevation={2}>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                  网络配置
+                  {translate('resources.radius/profiles.sections.network.title')}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <TableContainer>
                   <Table>
                     <TableBody>
                       <DetailRow
-                        label="地址池"
+                        label={translate('resources.radius/profiles.fields.addr_pool')}
                         value={<TextField source="addr_pool" emptyText="-" />}
                       />
                       <DetailRow
-                        label="IPv6前缀"
+                        label={translate('resources.radius/profiles.fields.ipv6_prefix')}
                         value={<TextField source="ipv6_prefix" emptyText="-" />}
                       />
                       <DetailRow
-                        label="域"
+                        label={translate('resources.radius/profiles.fields.domain')}
                         value={<TextField source="domain" emptyText="-" />}
                       />
                     </TableBody>
@@ -766,18 +788,18 @@ export const RadiusProfileShow = () => {
             <Card elevation={2}>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                  绑定策略
+                  {translate('resources.radius/profiles.sections.binding.title')}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <TableContainer>
                   <Table>
                     <TableBody>
                       <DetailRow
-                        label="绑定MAC"
+                        label={translate('resources.radius/profiles.fields.bind_mac')}
                         value={<BooleanDisplay source="bind_mac" />}
                       />
                       <DetailRow
-                        label="绑定VLAN"
+                        label={translate('resources.radius/profiles.fields.bind_vlan')}
                         value={<BooleanDisplay source="bind_vlan" />}
                       />
                     </TableBody>
@@ -789,18 +811,18 @@ export const RadiusProfileShow = () => {
             <Card elevation={2}>
               <CardContent>
                 <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                  时间信息
+                  {translate('resources.radius/profiles.sections.timestamps.title')}
                 </Typography>
                 <Divider sx={{ mb: 2 }} />
                 <TableContainer>
                   <Table>
                     <TableBody>
                       <DetailRow
-                        label="创建时间"
+                        label={translate('resources.radius/profiles.fields.created_at')}
                         value={<DateField source="created_at" showTime />}
                       />
                       <DetailRow
-                        label="更新时间"
+                        label={translate('resources.radius/profiles.fields.updated_at')}
                         value={<DateField source="updated_at" showTime />}
                       />
                     </TableBody>
@@ -814,13 +836,13 @@ export const RadiusProfileShow = () => {
           <Card elevation={2}>
             <CardContent>
               <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 600, color: 'primary.main' }}>
-                备注信息
+                {translate('resources.radius/profiles.sections.remark.title')}
               </Typography>
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ p: 2, backgroundColor: theme => theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.01)', borderRadius: 1 }}>
                 <TextField
                   source="remark"
-                  emptyText="无备注信息"
+                  emptyText={noRemark}
                   sx={{
                     '& .RaTextField-root': {
                       whiteSpace: 'pre-wrap',

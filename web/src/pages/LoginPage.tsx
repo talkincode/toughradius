@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLogin, useNotify } from 'react-admin';
+import { useLogin, useNotify, useTranslate } from 'react-admin';
 import {
   Box,
   Card,
@@ -20,12 +20,13 @@ export const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const login = useLogin();
   const notify = useNotify();
+  const translate = useTranslate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!username || !password) {
-      notify('请输入用户名和密码', { type: 'warning' });
+      notify(translate('validation.required'), { type: 'warning' });
       return;
     }
 
@@ -33,7 +34,7 @@ export const LoginPage = () => {
     try {
       await login({ username, password });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '登录失败，请检查用户名和密码';
+      const errorMessage = error instanceof Error ? error.message : translate('auth.login_error');
       notify(errorMessage, { type: 'error' });
       setLoading(false);
     }
@@ -54,10 +55,10 @@ export const LoginPage = () => {
         <CardContent sx={{ p: 4 }}>
           <Box sx={{ mb: 4, textAlign: 'center' }}>
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e40af', mb: 1 }}>
-              ToughRADIUS
+              {translate('app.title')}
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-              企业级 RADIUS 服务器管理平台
+              {translate('app.subtitle')}
             </Typography>
           </Box>
 
@@ -65,7 +66,7 @@ export const LoginPage = () => {
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
-                label="用户名"
+                label={translate('auth.username')}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={loading}
@@ -83,7 +84,7 @@ export const LoginPage = () => {
             <Box sx={{ mb: 3 }}>
               <TextField
                 fullWidth
-                label="密码"
+                label={translate('auth.password')}
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -127,7 +128,7 @@ export const LoginPage = () => {
               {loading ? (
                 <CircularProgress size={24} color="inherit" />
               ) : (
-                '登录'
+                translate('auth.sign_in')
               )}
             </Button>
           </form>
