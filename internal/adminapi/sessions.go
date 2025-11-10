@@ -67,10 +67,7 @@ func ListOnlineSessions(c echo.Context) error {
 	offset := (page - 1) * perPage
 	query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&sessions)
 
-	return ok(c, map[string]interface{}{
-		"data":  sessions,
-		"total": total,
-	})
+	return paged(c, sessions, total, page, perPage)
 }
 
 // GetOnlineSession 获取单个在线会话
