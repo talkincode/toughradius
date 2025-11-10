@@ -11,7 +11,6 @@ import (
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/adminapi"
 	"github.com/talkincode/toughradius/v9/internal/app"
-	"github.com/talkincode/toughradius/v9/internal/freeradius"
 	"github.com/talkincode/toughradius/v9/internal/radiusd"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -76,10 +75,6 @@ func main() {
 		webserver.Init()
 		adminapi.Init()
 		return webserver.Listen()
-	})
-
-	g.Go(func() error {
-		return freeradius.Listen()
 	})
 
 	radiusService := radiusd.NewRadiusService()

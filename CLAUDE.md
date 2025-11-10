@@ -4,14 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-ToughRADIUS is an enterprise-grade RADIUS server built in Go with React Admin frontend, supporting standard RADIUS protocols (RFC 2865/2866), RadSec (RADIUS over TLS), and FreeRADIUS REST API integration.
+ToughRADIUS is an enterprise-grade RADIUS server built in Go with React Admin frontend, supporting standard RADIUS protocols (RFC 2865/2866) and RadSec (RADIUS over TLS).
 
 ## Architecture
 
 The application runs multiple concurrent services using errgroup - if any service crashes, the entire application exits:
 
 - **Web/Admin API** - Echo framework, port 1816 (`internal/webserver` + `internal/adminapi`)
-- **FreeRADIUS API** - REST integration service, port 1818 (`internal/freeradius`)
 - **RADIUS Auth** - Authentication service, UDP 1812 (`internal/radiusd`)
 - **RADIUS Acct** - Accounting service, UDP 1813 (`internal/radiusd`)
 - **RadSec** - TLS-encrypted RADIUS over TCP, port 2083 (`internal/radiusd`)
@@ -87,11 +86,9 @@ toughradius/
 │   ├── app/         # Global application instance (DB, config, tasks)
 │   ├── domain/      # Unified data models (all GORM models)
 │   ├── radiusd/     # RADIUS service core implementation
-│   ├── freeradius/  # FreeRADIUS integration layer
 │   └── webserver/   # Web server and API handlers
 ├── pkg/             # Public packages (utilities, crypto, Excel)
 ├── web/             # React Admin frontend (TypeScript + Vite)
-├── migrations/      # Database migrations
 └── docs/           # Documentation
 ```
 
@@ -222,13 +219,14 @@ func Init() {
 Main config file: `toughradius.yml`
 
 Key ports:
+
 - RADIUS Auth: 1812 (UDP)
 - RADIUS Acct: 1813 (UDP)
 - RadSec: 2083 (TCP)
 - Web/Admin API: 1816
-- FreeRADIUS Integration: 1818
 
 Environment variables:
+
 - `TOUGHRADIUS_RADIUS_POOL` - RADIUS request pool size (default: 1024)
 
 ## Frontend Architecture
@@ -244,6 +242,7 @@ API proxy configuration in `vite.config.ts` forwards `/api` requests to `http://
 ## Key Dependencies
 
 **Backend:**
+
 - Echo v4 (web framework)
 - GORM v2 (ORM)
 - zap (logging)
@@ -251,6 +250,7 @@ API proxy configuration in `vite.config.ts` forwards `/api` requests to `http://
 - ants (goroutine pool)
 
 **Frontend:**
+
 - React 18.3.1
 - React Admin 5.0
 - TypeScript 5.5.3

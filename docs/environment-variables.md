@@ -91,15 +91,6 @@ export TOUGHRADIUS_DB_NAME=toughradius.db
 | `TOUGHRADIUS_RADIUS_RADSEC_WORKER` | RadSec 工作线程 | `100`     |
 | `TOUGHRADIUS_RADIUS_DEBUG`         | RADIUS 调试     | `true`    |
 
-### FreeRADIUS API
-
-| 环境变量                             | 说明     | 默认值    |
-| ------------------------------------ | -------- | --------- |
-| `TOUGHRADIUS_FREERADIUS_WEB_ENABLED` | 启用 API | `true`    |
-| `TOUGHRADIUS_FREERADIUS_WEB_HOST`    | 监听地址 | `0.0.0.0` |
-| `TOUGHRADIUS_FREERADIUS_WEB_PORT`    | API 端口 | `1818`    |
-| `TOUGHRADIUS_FREERADIUS_WEB_DEBUG`   | API 调试 | `true`    |
-
 ### 日志配置
 
 | 环境变量                         | 说明         | 默认值        |

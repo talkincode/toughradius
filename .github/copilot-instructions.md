@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-ToughRADIUS 是一个用 Go 语言开发的企业级 RADIUS 服务器，支持标准 RADIUS 协议（RFC 2865/2866）、RadSec（RADIUS over TLS）以及 FreeRADIUS REST API 集成。前端使用 React Admin 框架构建管理界面。
+ToughRADIUS 是一个用 Go 语言开发的企业级 RADIUS 服务器，支持标准 RADIUS 协议（RFC 2865/2866）、RadSec（RADIUS over TLS）。前端使用 React Admin 框架构建管理界面。
 
 ## 架构要点
 
@@ -11,7 +11,6 @@ ToughRADIUS 是一个用 Go 语言开发的企业级 RADIUS 服务器，支持�
 `main.go` 使用 `errgroup` 并发启动多个独立服务，任一服务崩溃会导致整个应用退出：
 
 - **Web/Admin API** - Echo 框架，端口 1816（`internal/webserver` + `internal/adminapi`）
-- **FreeRADIUS API** - REST 集成服务，端口 1818（`internal/freeradius`）
 - **RADIUS Auth** - 认证服务，UDP 1812（`internal/radiusd`）
 - **RADIUS Acct** - 计费服务，UDP 1813（`internal/radiusd`）
 - **RadSec** - TLS 加密的 RADIUS over TCP，端口 2083（`internal/radiusd`）
@@ -23,8 +22,7 @@ ToughRADIUS 是一个用 Go 语言开发的企业级 RADIUS 服务器，支持�
 - `internal/` - 私有代码，外部不可导入
   - `domain/` - **统一数据模型**（所有 GORM 模型定义在 `domain/tables.go` 列出）
   - `adminapi/` - 新版管理 API 路由（v9 重构）
-  - `radius/` - RADIUS 协议核心实现
-  - `freeradius/` - FreeRADIUS REST API 适配层
+  - `radiusd/` - RADIUS 协议核心实现
   - `app/` - 全局应用实例（数据库、配置、定时任务）
 - `pkg/` - 可复用公共库（工具函数、加密、Excel 等）
 - `web/` - React Admin 前端（TypeScript + Vite）
@@ -166,8 +164,3 @@ func Init() {
 - **GORM** - ORM，自动迁移通过 `domain.Tables` 列表控制
 - **layeh.com/radius** - RADIUS 协议库，不要与其他 RADIUS 包混用
 - **React Admin 5.0** - 前端框架，REST 数据提供者在 `web/src/dataProvider.ts`
-
-FreeRADIUS 集成通过 HTTP REST 接口（端口 1818），FreeRADIUS 配置示例在 `assets/freeradius/`。
-
-
-

@@ -19,19 +19,17 @@ toughradius/
 │   │   ├── radius.go       # RADIUS 相关模型
 │   │   ├── network.go      # 网络设备模型
 │   │   └── system.go       # 系统管理模型
-│   ├── freeradius/          # FreeRADIUS 集成服务
-│   │   ├── freeradius.go   # 业务逻辑
-│   │   ├── handlers.go     # REST API 处理器
-│   │   └── server.go       # HTTP 服务器
-│   ├── handler/             # Web API 处理器 (统一的 Controllers)
-│   │   ├── radius.go       # RADIUS 管理 API
-│   │   ├── user.go         # 用户管理 API
-│   │   ├── node.go         # 网络节点管理
-│   │   ├── vpe.go          # VPE 管理
-│   │   ├── opr.go          # 操作员管理
+│   ├── adminapi/            # Admin API 处理器
+│   │   ├── users.go        # 用户管理 API
+│   │   ├── nodes.go        # 网络节点管理
+│   │   ├── operators.go    # 操作员管理
 │   │   ├── settings.go     # 系统设置
-│   │   ├── dashboard.go    # 仪表盘
-│   │   └── metrics.go      # 监控指标
+│   │   └── ...             # 其他 API
+│   ├── radiusd/             # RADIUS 服务核心
+│   │   ├── server.go       # RADIUS 服务器
+│   │   ├── auth_*.go       # 认证逻辑
+│   │   ├── acct_*.go       # 计费逻辑
+│   │   └── vendors/        # 厂商扩展
 │   ├── middleware/          # HTTP 中间件
 │   └── webserver/           # Web 服务器
 │       └── server.go       # Echo 服务器配置
@@ -76,17 +74,16 @@ toughradius/
 
 ### 3. 统一的 Web Controller
 
-所有 HTTP API 处理器统一放在 `internal/handler/`:
+所有 HTTP API 处理器统一放在 `internal/adminapi/`:
 
-- 按功能模块组织文件(radius, user, node, vpe, settings 等)
+- 按功能模块组织文件(users, nodes, operators, settings 等)
 - 避免了按 domain 分散导致的代码查找困难
 - 便于统一管理路由和中间件
 
 ### 4. 服务模块化
 
-- `internal/freeradius/` - FreeRADIUS 集成服务
 - `internal/webserver/` - Web 管理服务
-- `pkg/radius/` - RADIUS 协议核心实现
+- `internal/radiusd/` - RADIUS 协议核心实现
 
 每个服务都是独立的模块,可以单独测试和维护。
 
@@ -96,20 +93,20 @@ toughradius/
 cmd/toughradius
     ├─> internal/app          (应用初始化)
     ├─> internal/webserver    (Web 服务)
-    ├─> internal/freeradius   (FreeRADIUS 服务)
-    └─> pkg/radius           (RADIUS 服务)
+    ├─> internal/adminapi     (Admin API)
+    └─> internal/radiusd      (RADIUS 服务)
 
 internal/webserver
-    ├─> internal/handler      (API 处理器)
+    ├─> internal/adminapi     (API 处理器)
     ├─> internal/domain       (数据模型)
     └─> pkg/*                (公共库)
 
-internal/handler
+internal/adminapi
     ├─> internal/app          (访问数据库等)
     ├─> internal/domain       (使用模型)
     └─> pkg/*                (使用工具库)
 
-pkg/radius
+internal/radiusd
     ├─> internal/domain       (使用模型)
     ├─> internal/app          (访问数据库)
     └─> pkg/logger           (日志)

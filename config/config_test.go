@@ -69,15 +69,6 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Errorf("Expected Radiusd.RadsecPort 2083, got %d", cfg.Radiusd.RadsecPort)
 	}
 
-	// 测试 FreeRADIUS 配置
-	if !cfg.Freeradius.Enabled {
-		t.Error("Expected Freeradius.Enabled to be true")
-	}
-
-	if cfg.Freeradius.Port != 1818 {
-		t.Errorf("Expected Freeradius.Port 1818, got %d", cfg.Freeradius.Port)
-	}
-
 	// 测试日志配置
 	if cfg.Logger.Mode != "development" {
 		t.Errorf("Expected Logger.Mode 'development', got '%s'", cfg.Logger.Mode)
@@ -186,12 +177,6 @@ database:
   idle_conn: 5
   debug: true
 
-freeradius:
-  enabled: false
-  host: 192.168.1.1
-  port: 9000
-  debug: false
-
 radiusd:
   enabled: false
   host: 10.0.0.1
@@ -275,15 +260,6 @@ logger:
 		t.Errorf("Expected Radiusd.RadsecWorker 50, got %d", cfg.Radiusd.RadsecWorker)
 	}
 
-	// 验证 FreeRADIUS 配置
-	if cfg.Freeradius.Enabled {
-		t.Error("Expected Freeradius.Enabled to be false")
-	}
-
-	if cfg.Freeradius.Port != 9000 {
-		t.Errorf("Expected Freeradius.Port 9000, got %d", cfg.Freeradius.Port)
-	}
-
 	// 验证日志配置
 	if cfg.Logger.Mode != "production" {
 		t.Errorf("Expected Logger.Mode 'production', got '%s'", cfg.Logger.Mode)
@@ -340,12 +316,6 @@ radiusd:
   acct_port: 1813
   debug: false
 
-freeradius:
-  enabled: false
-  host: 0.0.0.0
-  port: 1818
-  debug: false
-
 logger:
   mode: development
   file_enable: false
@@ -358,25 +328,22 @@ logger:
 
 	// 设置环境变量
 	testEnvVars := map[string]string{
-		"TOUGHRADIUS_SYSTEM_DEBUG":           "true",
-		"TOUGHRADIUS_WEB_HOST":               "192.168.1.1",
-		"TOUGHRADIUS_WEB_PORT":               "9090",
-		"TOUGHRADIUS_WEB_SECRET":             "env-secret",
-		"TOUGHRADIUS_DB_TYPE":                "postgres",
-		"TOUGHRADIUS_DB_HOST":                "db.server.com",
-		"TOUGHRADIUS_DB_PORT":                "5433",
-		"TOUGHRADIUS_DB_DEBUG":               "true",
-		"TOUGHRADIUS_RADIUS_ENABLED":         "true",
-		"TOUGHRADIUS_RADIUS_AUTHPORT":        "1912",
-		"TOUGHRADIUS_RADIUS_ACCTPORT":        "1913",
-		"TOUGHRADIUS_RADIUS_DEBUG":           "true",
-		"TOUGHRADIUS_FREERADIUS_WEB_ENABLED": "true",
-		"TOUGHRADIUS_FREERADIUS_WEB_PORT":    "9000",
-		"TOUGHRADIUS_FREERADIUS_WEB_DEBUG":   "true",
-		"TOUGHRADIUS_LOGGER_MODE":            "production",
-		"TOUGHRADIUS_LOGGER_FILE_ENABLE":     "true",
-		"TOUGHRADIUS_RADIUS_RADSEC_PORT":     "2084",
-		"TOUGHRADIUS_RADIUS_RADSEC_WORKER":   "200",
+		"TOUGHRADIUS_SYSTEM_DEBUG":         "true",
+		"TOUGHRADIUS_WEB_HOST":             "192.168.1.1",
+		"TOUGHRADIUS_WEB_PORT":             "9090",
+		"TOUGHRADIUS_WEB_SECRET":           "env-secret",
+		"TOUGHRADIUS_DB_TYPE":              "postgres",
+		"TOUGHRADIUS_DB_HOST":              "db.server.com",
+		"TOUGHRADIUS_DB_PORT":              "5433",
+		"TOUGHRADIUS_DB_DEBUG":             "true",
+		"TOUGHRADIUS_RADIUS_ENABLED":       "true",
+		"TOUGHRADIUS_RADIUS_AUTHPORT":      "1912",
+		"TOUGHRADIUS_RADIUS_ACCTPORT":      "1913",
+		"TOUGHRADIUS_RADIUS_DEBUG":         "true",
+		"TOUGHRADIUS_LOGGER_MODE":          "production",
+		"TOUGHRADIUS_LOGGER_FILE_ENABLE":   "true",
+		"TOUGHRADIUS_RADIUS_RADSEC_PORT":   "2084",
+		"TOUGHRADIUS_RADIUS_RADSEC_WORKER": "200",
 	}
 
 	// 保存原始环境变量
@@ -459,18 +426,6 @@ logger:
 
 	if !cfg.Radiusd.Debug {
 		t.Error("Expected Radiusd.Debug to be true (from env)")
-	}
-
-	if !cfg.Freeradius.Enabled {
-		t.Error("Expected Freeradius.Enabled to be true (from env)")
-	}
-
-	if cfg.Freeradius.Port != 9000 {
-		t.Errorf("Expected Freeradius.Port 9000 (from env), got %d", cfg.Freeradius.Port)
-	}
-
-	if !cfg.Freeradius.Debug {
-		t.Error("Expected Freeradius.Debug to be true (from env)")
 	}
 
 	if cfg.Logger.Mode != "production" {
@@ -771,12 +726,6 @@ database:
   max_conn: 100
   idle_conn: 10
   debug: false
-
-freeradius:
-  enabled: true
-  host: 0.0.0.0
-  port: 1818
-  debug: true
 
 radiusd:
   enabled: true

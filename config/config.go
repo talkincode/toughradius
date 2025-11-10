@@ -39,14 +39,6 @@ type WebConfig struct {
 	Secret  string `yaml:"secret"`
 }
 
-// FreeradiusConfig Freeradius API 配置
-type FreeradiusConfig struct {
-	Enabled bool   `yaml:"enabled" json:"enabled"`
-	Host    string `yaml:"host" json:"host"`
-	Port    int    `yaml:"port" json:"port"`
-	Debug   bool   `yaml:"debug" json:"debug"`
-}
-
 type RadiusdConfig struct {
 	Enabled      bool   `yaml:"enabled" json:"enabled"`
 	Host         string `yaml:"host" json:"host"`
@@ -67,12 +59,11 @@ type LogConfig struct {
 }
 
 type AppConfig struct {
-	System     SysConfig        `yaml:"system" json:"system"`
-	Web        WebConfig        `yaml:"web" json:"web"`
-	Database   DBConfig         `yaml:"database" json:"database"`
-	Freeradius FreeradiusConfig `yaml:"freeradius" json:"freeradius"`
-	Radiusd    RadiusdConfig    `yaml:"radiusd" json:"radiusd"`
-	Logger     LogConfig        `yaml:"logger" json:"logger"`
+	System   SysConfig     `yaml:"system" json:"system"`
+	Web      WebConfig     `yaml:"web" json:"web"`
+	Database DBConfig      `yaml:"database" json:"database"`
+	Radiusd  RadiusdConfig `yaml:"radiusd" json:"radiusd"`
+	Logger   LogConfig     `yaml:"logger" json:"logger"`
 }
 
 func (c *AppConfig) GetLogDir() string {
@@ -188,12 +179,6 @@ var DefaultAppConfig = &AppConfig{
 		IdleConn: 10,
 		Debug:    false,
 	},
-	Freeradius: FreeradiusConfig{
-		Enabled: true,
-		Host:    "0.0.0.0",
-		Port:    1818,
-		Debug:   true,
-	},
 	Radiusd: RadiusdConfig{
 		Enabled:      true,
 		Host:         "0.0.0.0",
@@ -260,12 +245,6 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvValue("TOUGHRADIUS_RADIUS_RADSEC_KEY", &cfg.Radiusd.RadsecKey)
 	setEnvBoolValue("TOUGHRADIUS_RADIUS_DEBUG", &cfg.Radiusd.Debug)
 	setEnvBoolValue("TOUGHRADIUS_RADIUS_ENABLED", &cfg.Radiusd.Enabled)
-
-	// FreeRADIUS Config
-	setEnvValue("TOUGHRADIUS_FREERADIUS_WEB_HOST", &cfg.Freeradius.Host)
-	setEnvIntValue("TOUGHRADIUS_FREERADIUS_WEB_PORT", &cfg.Freeradius.Port)
-	setEnvBoolValue("TOUGHRADIUS_FREERADIUS_WEB_DEBUG", &cfg.Freeradius.Debug)
-	setEnvBoolValue("TOUGHRADIUS_FREERADIUS_WEB_ENABLED", &cfg.Freeradius.Enabled)
 
 	setEnvValue("TOUGHRADIUS_LOGGER_MODE", &cfg.Logger.Mode)
 	setEnvBoolValue("TOUGHRADIUS_LOGGER_FILE_ENABLE", &cfg.Logger.FileEnable)
