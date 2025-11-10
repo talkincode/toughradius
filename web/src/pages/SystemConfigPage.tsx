@@ -46,9 +46,12 @@ interface ConfigSchema {
 }
 
 interface ConfigValue {
+  id?: string;  // 数据库ID
   type: string;
   name: string;
   value: string;
+  sort?: number;
+  remark?: string;
   updated_at?: string;
 }
 
@@ -183,40 +186,44 @@ export const SystemConfigPage: React.FC = () => {
   const saveConfigs = async () => {
     setSaving(true);
     try {
-      const updates = [];
-
+      console.log('开始保存配置...');
+      
       for (const schema of schemas) {
         const [type, name] = schema.key.split('.');
         const currentConfig = configs[schema.key];
         const currentValue = currentConfig?.value || schema.default;
 
-        updates.push({
+        console.log(`保存配置 ${schema.key}: ${currentValue}`, currentConfig);
+
+        const updateData = {
           type,
           name,
           value: currentValue,
-        });
-      }
+          sort: currentConfig?.sort || 0,
+          remark: currentConfig?.remark || schema.description,
+        };
 
-      // 批量更新配置
-      await Promise.all(
-        updates.map(async (update) => {
-          const existing = configs[`${update.type}.${update.name}`];
-          
-          if (existing) {
-            // 更新现有配置
-            return dataProvider.update('system/settings', {
-              id: existing.type + '.' + existing.name,
-              data: update,
-              previousData: existing,
+        try {
+          if (currentConfig?.id) {
+            // 配置已存在，使用真实的数据库ID更新
+            await dataProvider.update('system/settings', {
+              id: currentConfig.id,
+              data: updateData,
+              previousData: currentConfig,
             });
+            console.log(`✓ 更新配置成功: ${schema.key} (ID: ${currentConfig.id})`);
           } else {
-            // 创建新配置
-            return dataProvider.create('system/settings', {
-              data: update,
+            // 配置不存在，创建新配置
+            await dataProvider.create('system/settings', {
+              data: updateData,
             });
+            console.log(`✓ 创建配置成功: ${schema.key}`);
           }
-        })
-      );
+        } catch (error) {
+          console.error(`✗ 保存配置失败: ${schema.key}`, error);
+          throw new Error(`保存配置 ${schema.key} 失败: ${(error as Error).message}`);
+        }
+      }
 
       notify('配置保存成功', { type: 'success' });
       await loadConfigs();
