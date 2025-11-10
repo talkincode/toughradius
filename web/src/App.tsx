@@ -1,13 +1,34 @@
 import { Admin, Resource, CustomRoutes } from 'react-admin';
 import { Route } from 'react-router-dom';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
 import Dashboard from './pages/Dashboard';
-import { AccountSettings } from './pages/AccountSettings';
+import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
 import { LoginPage } from './pages/LoginPage';
 import { CustomLayout } from './components';
 import { theme, darkTheme } from './theme';
+
+// 自定义加载组件，避免闪烁
+const CustomLoading = () => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '100vh',
+      backgroundColor: '#f8fafc',
+      gap: 2,
+    }}
+  >
+    <CircularProgress size={40} sx={{ color: '#2563eb' }} />
+    <Typography variant="body1" color="text.secondary" sx={{ color: '#64748b' }}>
+      正在加载...
+    </Typography>
+  </Box>
+);
 
 // 导入资源组件
 import {
@@ -54,6 +75,7 @@ const App = () => (
     darkTheme={darkTheme}
     defaultTheme="light"
     layout={CustomLayout}
+    loading={CustomLoading}
     requireAuth
   >
     {/* RADIUS 用户管理 */}
@@ -127,7 +149,7 @@ const App = () => (
       <Route path="/account/settings" element={<AccountSettings />} />
       <Route path="/system/config" element={<SystemConfigPage />} />
     </CustomRoutes>
-  </Admin>
+    </Admin>
 );
 
 export default App;

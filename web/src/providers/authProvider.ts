@@ -19,7 +19,7 @@ export const authProvider: AuthProvider = {
         throw new Error(errorMessage);
       }
       
-      const auth = result.data || result; // 兼容包装和非包装格式
+      const auth = result.data || result; // 兼容包装格式
       
       if (!auth.token) {
         throw new Error('登录响应中缺少 token');
@@ -78,9 +78,26 @@ export const authProvider: AuthProvider = {
     return Promise.resolve();
   },
 
-  // 检查认证状态
-  checkAuth: async () => {
-    return localStorage.getItem('token') ? Promise.resolve() : Promise.reject();
+  // 检查认证状态 - 快速同步检查以避免闪烁
+  checkAuth: () => {
+    const token = localStorage.getItem('token');
+    
+    // 立即同步返回，避免异步延迟导致的闪烁
+    if (!token) {
+      return Promise.reject({ message: 'No token found', logoutUser: true });
+    }
+    
+    // 简单验证 token 格式（避免明显无效的 token）
+    if (token.length < 10) {
+      // 清除无效的认证信息
+      localStorage.removeItem('token');
+      localStorage.removeItem('username');
+      localStorage.removeItem('permissions');
+      localStorage.removeItem('user');
+      return Promise.reject({ message: 'Invalid token format', logoutUser: true });
+    }
+    
+    return Promise.resolve();
   },
 
   // 获取权限

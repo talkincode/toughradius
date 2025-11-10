@@ -279,13 +279,15 @@ export const createAppTheme = (mode: PaletteMode) => {
       MuiAppBar: {
         styleOverrides: {
           root: {
-            // 浅色主题使用浅灰色，深色主题使用深色
-            backgroundColor: isDark ? '#1e293b' : '#f1f5f9',
-            color: isDark ? '#f1f5f9' : '#0f172a',
+            // 浅色主题使用纯白背景，深色主题使用深色
+            backgroundColor: isDark ? '#1e293b' : '#ffffff',
+            color: isDark ? '#f1f5f9' : '#1f2937',
             borderBottom: isDark 
               ? '1px solid rgba(148, 163, 184, 0.2)' 
-              : '1px solid rgba(100, 116, 139, 0.12)',
-            boxShadow: 'none',
+              : '1px solid rgba(229, 231, 235, 0.8)',
+            boxShadow: isDark 
+              ? 'none' 
+              : '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
             transition: 'all 0.3s ease',
           },
         },
@@ -293,7 +295,7 @@ export const createAppTheme = (mode: PaletteMode) => {
       MuiDrawer: {
         styleOverrides: {
           paper: {
-            // 侧边栏根据主题使用不同的背景色
+            // 浅色主题使用深蓝色系，深色主题保持深灰
             backgroundColor: isDark ? '#1e293b' : '#1e40af',
             borderRight: 'none',
             transition: 'all 0.3s ease',
