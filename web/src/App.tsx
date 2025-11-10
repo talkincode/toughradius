@@ -4,6 +4,7 @@ import { dataProvider } from './providers/dataProvider';
 import { authProvider } from './providers/authProvider';
 import Dashboard from './pages/Dashboard';
 import { AccountSettings } from './pages/AccountSettings';
+import { SystemConfigPage } from './pages/SystemConfigPage';
 import { LoginPage } from './pages/LoginPage';
 import { CustomLayout } from './components';
 import { theme, darkTheme } from './theme';
@@ -23,12 +24,6 @@ import {
   RadiusProfileCreate,
   RadiusProfileShow,
 } from './resources/radiusProfiles';
-import {
-  SystemSettingsList,
-  SystemSettingsEdit,
-  SystemSettingsCreate,
-  SystemSettingsShow,
-} from './resources/systemSettings';
 import {
   NASList,
   NASEdit,
@@ -97,16 +92,6 @@ const App = () => (
       options={{ label: 'RADIUS配置' }}
     />
 
-    {/* 系统设置 */}
-    <Resource
-      name="system/settings"
-      list={SystemSettingsList}
-      edit={SystemSettingsEdit}
-      create={SystemSettingsCreate}
-      show={SystemSettingsShow}
-      options={{ label: '系统设置' }}
-    />
-
     {/* NAS 设备管理 */}
     <Resource
       name="network/nas"
@@ -137,9 +122,10 @@ const App = () => (
       options={{ label: '操作员管理' }}
     />
 
-    {/* 自定义路由 - 账号设置 */}
+    {/* 自定义路由 */}
     <CustomRoutes>
       <Route path="/account/settings" element={<AccountSettings />} />
+      <Route path="/system/config" element={<SystemConfigPage />} />
     </CustomRoutes>
   </Admin>
 );

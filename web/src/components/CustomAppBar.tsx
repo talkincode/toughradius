@@ -81,7 +81,7 @@ export const CustomAppBar = (props: AppBarProps) => {
             <Tooltip title="系统设置">
               <IconButton 
                 size="large" 
-                onClick={() => redirect('/system/settings')}
+                onClick={() => redirect('/system/config')}
                 sx={{
                   color: isDark ? '#f1f5f9' : '#475569',
                   transition: 'all 0.2s ease',

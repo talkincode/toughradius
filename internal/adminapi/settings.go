@@ -28,6 +28,7 @@ type settingsPayload struct {
 func registerSettingsRoutes() {
 	webserver.ApiGET("/system/settings", listSettings)
 	webserver.ApiGET("/system/settings/:id", getSettings)
+	webserver.ApiGET("/system/config/schemas", getConfigSchemas)
 	webserver.ApiPOST("/system/settings", createSettings)
 	webserver.ApiPUT("/system/settings/:id", updateSettings)
 	webserver.ApiDELETE("/system/settings/:id", deleteSettings)
@@ -73,6 +74,58 @@ func getSettings(c echo.Context) error {
 	}
 
 	return ok(c, setting)
+}
+
+// 获取配置schemas
+func getConfigSchemas(c echo.Context) error {
+	if app.GApp().ConfigMgr() == nil {
+		return fail(c, http.StatusInternalServerError, "CONFIG_MANAGER_NOT_FOUND", "配置管理器未初始化", nil)
+	}
+
+	schemas := app.GApp().ConfigMgr().GetAllSchemas()
+
+	// 转换为前端友好的格式
+	var result []map[string]interface{}
+	for key, schema := range schemas {
+		schemaData := map[string]interface{}{
+			"key":         key,
+			"type":        getConfigTypeName(schema.Type),
+			"default":     schema.Default,
+			"description": schema.Description,
+		}
+
+		if len(schema.Enum) > 0 {
+			schemaData["enum"] = schema.Enum
+		}
+		if schema.Min != nil {
+			schemaData["min"] = *schema.Min
+		}
+		if schema.Max != nil {
+			schemaData["max"] = *schema.Max
+		}
+
+		result = append(result, schemaData)
+	}
+
+	return ok(c, result)
+}
+
+// 获取配置类型名称
+func getConfigTypeName(configType app.ConfigType) string {
+	switch configType {
+	case app.TypeString:
+		return "string"
+	case app.TypeInt:
+		return "int"
+	case app.TypeBool:
+		return "bool"
+	case app.TypeDuration:
+		return "duration"
+	case app.TypeJSON:
+		return "json"
+	default:
+		return "string"
+	}
 }
 
 // 创建系统设置

@@ -3,6 +3,7 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import SettingsSuggestOutlinedIcon from '@mui/icons-material/SettingsSuggestOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import RouterOutlinedIcon from '@mui/icons-material/RouterOutlined';
 import AccountTreeOutlinedIcon from '@mui/icons-material/AccountTreeOutlined';
 import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettingsOutlined';
@@ -17,6 +18,7 @@ const menuItems = [
   { to: '/radius/profiles', label: '策略管理', icon: <SettingsSuggestOutlinedIcon /> },
   { to: '/radius/online', label: '在线会话', icon: <SensorsOutlinedIcon /> },
   { to: '/radius/accounting', label: '计费日志', icon: <ReceiptLongOutlinedIcon /> },
+  { to: '/system/config', label: '系统配置', icon: <SettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/operators', label: '操作员管理', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
 ];
 
