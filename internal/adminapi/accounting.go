@@ -77,10 +77,7 @@ func ListAccounting(c echo.Context) error {
 	offset := (page - 1) * perPage
 	query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&records)
 
-	return ok(c, map[string]interface{}{
-		"data":  records,
-		"total": total,
-	})
+	return paged(c, records, total, page, perPage)
 }
 
 // GetAccounting 获取单条 Accounting 记录

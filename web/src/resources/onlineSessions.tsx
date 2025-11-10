@@ -5,7 +5,6 @@ import {
   DateField,
   FunctionField,
   Show,
-  SimpleShowLayout,
   Filter,
   TextInput,
   DateInput,
@@ -80,7 +79,7 @@ const formatTimestamp = (value?: string | number): string => {
   return date.toLocaleString();
 };
 
-const OnlineSessionFilter = (props: FilterProps) => {
+const OnlineSessionFilter = (props: Omit<FilterProps, 'children'>) => {
   const translate = useTranslate();
   return (
     <Filter {...props}>
@@ -189,41 +188,42 @@ const DetailSection = ({ title, description, rows }: DetailSectionProps) => (
   <Paper
     elevation={0}
     sx={{
-      borderRadius: 2,
+      borderRadius: 1.5,
       border: theme => `1px solid ${theme.palette.divider}`,
-      backgroundColor: theme.palette.background.paper,
-      p: { xs: 2, md: 3 },
+      backgroundColor: theme => theme.palette.background.paper,
+      p: { xs: 1.5, md: 2 },
       width: '100%',
     }}
   >
     <Box>
-      <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
         {title}
       </Typography>
       {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: '0.8rem' }}>
           {description}
         </Typography>
       )}
     </Box>
     <Box
       sx={{
-        mt: 2,
+        mt: 1.5,
         display: 'grid',
-        gap: 2,
+        gap: 1.5,
         gridTemplateColumns: {
           xs: 'repeat(1, minmax(0, 1fr))',
           sm: 'repeat(2, minmax(0, 1fr))',
           md: 'repeat(3, minmax(0, 1fr))',
+          lg: 'repeat(4, minmax(0, 1fr))',
         },
       }}
     >
       {rows.map(row => (
         <Box key={row.label}>
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
             {row.label}
           </Typography>
-          <Typography variant="body1" sx={{ mt: 0.5, fontWeight: 500, wordBreak: 'break-word' }}>
+          <Typography variant="body2" sx={{ mt: 0.25, fontWeight: 500, wordBreak: 'break-word', fontSize: '0.85rem' }}>
             {row.value ?? '-'}
           </Typography>
         </Box>
@@ -315,7 +315,7 @@ const OnlineSessionDetails = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%', mt: 1 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, width: '100%', mt: 0.5 }}>
       {sections.map(section => (
         <DetailSection
           key={section.title}
@@ -376,8 +376,6 @@ export const OnlineSessionList = () => {
 
 export const OnlineSessionShow = () => (
   <Show>
-    <SimpleShowLayout>
-      <OnlineSessionDetails />
-    </SimpleShowLayout>
+    <OnlineSessionDetails />
   </Show>
 );
