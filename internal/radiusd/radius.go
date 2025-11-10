@@ -81,7 +81,6 @@ type RadiusService struct {
 	SessionRepo    repository.SessionRepository
 	AccountingRepo repository.AccountingRepository
 	NasRepo        repository.NasRepository
-	ConfigRepo     repository.ConfigRepository
 }
 
 func NewRadiusService() *RadiusService {
@@ -104,7 +103,6 @@ func NewRadiusService() *RadiusService {
 		SessionRepo:    repogorm.NewGormSessionRepository(db),
 		AccountingRepo: repogorm.NewGormAccountingRepository(db),
 		NasRepo:        repogorm.NewGormNasRepository(db),
-		ConfigRepo:     repogorm.NewGormConfigRepository(db),
 	}
 
 	// Note: Plugin initialization is done externally after service creation
@@ -204,29 +202,9 @@ func (s *RadiusService) UpdateUserLastOnline(username string) {
 	_ = s.UserRepo.UpdateLastOnline(context.Background(), username)
 }
 
-func (s *RadiusService) GetIntConfig(name string, defval int64) int64 {
-	cval := app.GApp().GetSettingsStringValue("radius", name)
-	ival, err := strconv.ParseInt(cval, 10, 64)
-	if err != nil {
-		return defval
-	}
-	return ival
-}
-
-func (s *RadiusService) GetStringConfig(name string, defval string) string {
-	val := app.GApp().GetSettingsStringValue("radius", name)
-	if val == "" {
-		return defval
-	}
-	return val
-}
-
 func (s *RadiusService) GetEapMethod() string {
-	val := app.GApp().GetSettingsStringValue("radius", app.ConfigRadiusEapMethod)
-	if val == "" {
-		return "eap-md5"
-	}
-	return val
+	// 直接从 ConfigManager 读取(已在内存)
+	return app.GApp().ConfigMgr().GetString("radius", "EapMethod")
 }
 
 func GetFramedIpv6Address(r *radius.Request, nas *domain.NetNas) string {
@@ -495,8 +473,6 @@ func (s *AuthService) ApplyAcceptEnhancers(
 		}
 	}
 }
-
-
 
 func (s *RadiusService) DoAcctDisconnect(r *radius.Request, nas *domain.NetNas, username, nasrip string) {
 	packet := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))

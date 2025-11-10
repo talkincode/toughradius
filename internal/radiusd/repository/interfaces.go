@@ -74,15 +74,3 @@ type NasRepository interface {
 	// GetByIPOrIdentifier 根据IP或标识符查询NAS
 	GetByIPOrIdentifier(ctx context.Context, ip, identifier string) (*domain.NetNas, error)
 }
-
-// ConfigRepository 配置访问接口
-type ConfigRepository interface {
-	// GetString 获取字符串配置
-	GetString(ctx context.Context, category, key string) string
-
-	// GetInt 获取整数配置
-	GetInt(ctx context.Context, category, key string, defaultVal int64) int64
-
-	// GetBool 获取布尔配置
-	GetBool(ctx context.Context, category, key string) bool
-}

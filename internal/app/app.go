@@ -7,7 +7,6 @@ import (
 	_ "time/tzdata"
 
 	"github.com/robfig/cron/v3"
-	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
@@ -25,10 +24,11 @@ const (
 var app *Application
 
 type Application struct {
-	appConfig *config.AppConfig
-	gormDB    *gorm.DB
-	sched     *cron.Cron
-	transDB   *bolt.DB
+	appConfig     *config.AppConfig
+	gormDB        *gorm.DB
+	sched         *cron.Cron
+	transDB       *bolt.DB
+	configManager *ConfigManager
 }
 
 func GApp() *Application {
@@ -140,6 +140,9 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		a.checkDefaultPNode()
 	}()
 
+	// 初始化配置管理器
+	a.configManager = NewConfigManager(a)
+
 	a.initJob()
 }
 
@@ -173,11 +176,16 @@ func (a *Application) DropAll() {
 }
 
 func (a *Application) InitDb() {
-	err := a.gormDB.Migrator().DropTable(domain.Tables...)
-	err = a.gormDB.Migrator().AutoMigrate(domain.Tables...)
+	_ = a.gormDB.Migrator().DropTable(domain.Tables...)
+	err := a.gormDB.Migrator().AutoMigrate(domain.Tables...)
 	if err != nil {
 		zap.S().Error(err)
 	}
+}
+
+// ConfigMgr 获取配置管理器
+func (a *Application) ConfigMgr() *ConfigManager {
+	return a.configManager
 }
 
 // checkDefaultPNode check default node
@@ -194,39 +202,7 @@ func (a *Application) checkDefaultPNode() {
 	}
 }
 
-// GetSettingsStringValue Get settings string value
-func (a *Application) GetSettingsStringValue(stype string, name string) string {
-	var value string
-	a.gormDB.Raw("SELECT value FROM sys_config WHERE type = ? and name = ? limit 1", stype, name).Scan(&value)
-	return value
-}
 
-func (a *Application) GetSettingsInt64Value(stype string, name string) int64 {
-	var value = a.GetSettingsStringValue(stype, name)
-	return cast.ToInt64(value)
-}
-
-func (a *Application) GetSystemTheme() string {
-	var value string
-	a.gormDB.Raw("SELECT value FROM sys_config WHERE type = 'system' and name = 'SystemTheme' limit 1").Scan(&value)
-	if value == "" {
-		a.SetSystemTheme("light")
-		return "light"
-	}
-	return value
-}
-
-func (a *Application) SetSystemTheme(value string) {
-	a.gormDB.Exec("UPDATE sys_config set value = ? WHERE type = 'system' and name = 'SystemTheme'", value)
-}
-
-func (a *Application) GetRadiusSettingsStringValue(name string) string {
-	return a.GetSettingsStringValue("radius", name)
-}
-
-func (a *Application) GetSystemSettingsStringValue(name string) string {
-	return a.GetSettingsStringValue("system", name)
-}
 
 func Release() {
 	app.sched.Stop()

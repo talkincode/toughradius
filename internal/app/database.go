@@ -32,9 +32,9 @@ func getDatabase(config config.DBConfig) *gorm.DB {
 
 // getSqliteDatabase 获取 SQLite 数据库连接
 func getSqliteDatabase(config config.DBConfig) *gorm.DB {
-	// 如果 Name 不是绝对路径，则放在 workdir/data 目录下
+	// 如果 Name 不是绝对路径且不是内存数据库,则放在 workdir/data 目录下
 	dbPath := config.Name
-	if !path.IsAbs(dbPath) {
+	if dbPath != ":memory:" && !path.IsAbs(dbPath) {
 		dbPath = path.Join(GConfig().System.Workdir, "data", dbPath)
 	}
 

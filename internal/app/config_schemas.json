@@ -1,0 +1,47 @@
+{
+  "schemas": [
+    {
+      "key": "radius.EapMethod",
+      "type": "string",
+      "default": "eap-md5",
+      "enum": ["eap-md5", "eap-mschapv2"],
+      "description": "EAP authentication method"
+    },
+    {
+      "key": "radius.IgnorePassword",
+      "type": "bool",
+      "default": "false",
+      "description": "Ignore password check"
+    },
+    {
+      "key": "radius.AccountingHistoryDays",
+      "type": "int",
+      "default": "90",
+      "min": 0,
+      "description": "Accounting log retention days (0=disabled)"
+    },
+    {
+      "key": "radius.AcctInterimInterval",
+      "type": "int",
+      "default": "300",
+      "min": 60,
+      "max": 3600,
+      "description": "Accounting interim interval in seconds"
+    },
+    {
+      "key": "radius.SessionTimeout",
+      "type": "int",
+      "default": "3600",
+      "min": 300,
+      "max": 86400,
+      "description": "Default session timeout in seconds"
+    },
+    {
+      "key": "radius.LogLevel",
+      "type": "string",
+      "default": "info",
+      "enum": ["debug", "info", "warn", "error"],
+      "description": "RADIUS service log level"
+    }
+  ]
+}

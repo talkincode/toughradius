@@ -9,7 +9,6 @@ import (
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/process"
-	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 	"go.uber.org/zap"
@@ -155,8 +154,7 @@ func (a *Application) SchedClearExpireData() {
 		Delete(&domain.RadiusOnline{})
 
 	// Clean up accounting logs
-	hdays := a.GetSettingsStringValue("radius", ConfigRadiusAccountingHistoryDays)
-	idays := cast.ToInt(hdays)
+	idays := a.ConfigMgr().GetInt("radius", "AccountingHistoryDays")
 	if idays == 0 {
 		idays = 90
 	}

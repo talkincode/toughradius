@@ -4,7 +4,6 @@ import (
 	"context"
 	"math"
 	"net"
-	"strconv"
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
@@ -57,12 +56,9 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 }
 
 func getIntConfig(name string, def int64) int64 {
-	val := app.GApp().GetSettingsStringValue("radius", name)
-	if val == "" {
+	val := app.GApp().ConfigMgr().GetInt64("radius", name)
+	if val == 0 {
 		return def
 	}
-	if parsed, err := strconv.ParseInt(val, 10, 64); err == nil {
-		return parsed
-	}
-	return def
+	return val
 }

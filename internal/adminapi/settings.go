@@ -31,6 +31,7 @@ func registerSettingsRoutes() {
 	webserver.ApiPOST("/system/settings", createSettings)
 	webserver.ApiPUT("/system/settings/:id", updateSettings)
 	webserver.ApiDELETE("/system/settings/:id", deleteSettings)
+	webserver.ApiPOST("/system/config/reload", reloadConfig)
 }
 
 // 获取系统设置列表
@@ -112,6 +113,11 @@ func createSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "创建系统设置失败", err.Error())
 	}
 
+	// 同步到 ConfigManager 内存缓存
+	if app.GApp().ConfigMgr() != nil {
+		app.GApp().ConfigMgr().ReloadAll()
+	}
+
 	return ok(c, setting)
 }
 
@@ -156,6 +162,11 @@ func updateSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新系统设置失败", err.Error())
 	}
 
+	// 同步到 ConfigManager 内存缓存
+	if app.GApp().ConfigMgr() != nil {
+		app.GApp().ConfigMgr().ReloadAll()
+	}
+
 	return ok(c, setting)
 }
 
@@ -168,6 +179,11 @@ func deleteSettings(c echo.Context) error {
 
 	if err := app.GDB().Where("id = ?", id).Delete(&domain.SysConfig{}).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "删除系统设置失败", err.Error())
+	}
+
+	// 同步到 ConfigManager 内存缓存
+	if app.GApp().ConfigMgr() != nil {
+		app.GApp().ConfigMgr().ReloadAll()
 	}
 
 	return ok(c, map[string]interface{}{
@@ -186,4 +202,15 @@ func applySettingsFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	}
 
 	return db
+}
+
+// 重载配置
+func reloadConfig(c echo.Context) error {
+	// 重新加载所有配置
+	app.GApp().ConfigMgr().ReloadAll()
+
+	return ok(c, map[string]interface{}{
+		"message": "配置已重新加载",
+		"time":    time.Now(),
+	})
 }
