@@ -14,7 +14,7 @@ var (
 	vlanStdRegexp2 = regexp.MustCompile(`vlanid=(\d+);(vlanid2=?(\d+);)?`)
 )
 
-// ParseVlanIds 解析标准 VLANID 值
+// ParseVlanIds parses standard VLAN ID values
 func ParseVlanIds(nasportid string) (int64, int64) {
 	var vlanid1 int64 = 0
 	var vlanid2 int64 = 0
@@ -32,19 +32,19 @@ func ParseVlanIds(nasportid string) (int64, int64) {
 	return vlanid1, vlanid2
 }
 
-// ParseVendor 使用插件系统解析厂商私有属性
+// ParseVendor uses the plugin system to parse vendor-specific attributes
 func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *VendorRequest {
-	// 从registry获取对应的VendorParser
+		// Retrieve the corresponding VendorParser from the registry
 	parser, ok := registry.GetVendorParser(vendorCode)
 	if !ok {
 		zap.L().Warn("vendor parser not found, using default parser",
 			zap.String("namespace", "radius"),
 			zap.String("vendor_code", vendorCode),
 		)
-		// 如果没找到，尝试获取默认parser
+		// e.g., if not found, try the default parser
 		parser, ok = registry.GetVendorParser("default")
 		if !ok {
-			// 如果连默认parser都没有，返回空结果
+			// e.g., if even the default parser is missing, return an empty result
 			zap.L().Error("default vendor parser not found",
 				zap.String("namespace", "radius"),
 			)
@@ -52,7 +52,7 @@ func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *Vendo
 		}
 	}
 
-	// 使用插件解析
+// Use the plugin to parse
 	vendorReq, err := parser.Parse(r)
 	if err != nil {
 		zap.L().Error("vendor parser error",
@@ -63,7 +63,7 @@ func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *Vendo
 		return &VendorRequest{}
 	}
 
-	// 转换为VendorRequest
+	// Convert toVendorRequest
 	return &VendorRequest{
 		MacAddr: vendorReq.MacAddr,
 		Vlanid1: vendorReq.Vlanid1,

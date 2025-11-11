@@ -5,23 +5,23 @@ import (
 	"testing"
 )
 
-// 开启二次认证
+// Enable two-factor authentication
 func _initAuth(user string) (secret, code string) {
 
 	ng := NewGoogleAuth()
-	// 秘钥
+	// Secret
 	secret = ng.GetSecret()
 	fmt.Println("Secret:", secret)
 
-	// 动态码(每隔30s会动态生成一个6位数的数字)
+	// Dynamic code(Every30sdynamically generate a6digit number)
 	code, err := ng.GetCode(secret)
 	fmt.Println("Code:", code, err)
 
-	// 用户名
+	// Username
 	qrCode := ng.GetQrcode(user, code, "ToughDemo")
 	fmt.Println("Qrcode", qrCode)
 
-	// 打印二维码地址
+	// Print QR code URL
 	qrCodeUrl := ng.GetQrcodeUrl(user, secret, "ToughDemo")
 	fmt.Println("QrcodeUrl", qrCodeUrl)
 
@@ -29,15 +29,15 @@ func _initAuth(user string) (secret, code string) {
 }
 
 func TestOTP(t *testing.T) {
-	// fmt.Println("-----------------开启二次认证----------------------")
+	// fmt.Println("-----------------Enable two-factor authentication----------------------")
 	user := "testxxx@qq.com"
 	secret, code := _initAuth(user)
 	fmt.Println(secret, code)
 
-	fmt.Println("-----------------信息校验----------------------")
+	fmt.Println("-----------------Info validation----------------------")
 
-	// secret最好持久化保存在
-	// 验证,动态码(从谷歌验证器获取或者freeotp获取)
+	// secretBest to persist in
+	// Validate,Dynamic code(Get from Google Authenticator orfreeotpget)
 	bool, err := NewGoogleAuth().VerifyCode(secret, code)
 	if bool {
 		fmt.Println("√")

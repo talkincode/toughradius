@@ -15,7 +15,7 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// 系统设置请求结构
+// settingsPayload defines the system setting request structure
 type settingsPayload struct {
 	Type   string `json:"type"`
 	Name   string `json:"name"`
@@ -24,7 +24,7 @@ type settingsPayload struct {
 	Remark string `json:"remark"`
 }
 
-// 注册系统设置路由
+// registerSettingsRoutes registers system setting routes
 func registerSettingsRoutes() {
 	webserver.ApiGET("/system/settings", listSettings)
 	webserver.ApiGET("/system/settings/:id", getSettings)
@@ -35,7 +35,7 @@ func registerSettingsRoutes() {
 	webserver.ApiPOST("/system/config/reload", reloadConfig)
 }
 
-// 获取系统设置列表
+// listSettings retrieves the system settings list
 func listSettings(c echo.Context) error {
 	page, pageSize := parsePagination(c)
 
@@ -59,7 +59,7 @@ func listSettings(c echo.Context) error {
 	return paged(c, settings, total, page, pageSize)
 }
 
-// 获取单个系统设置
+// getSettings retrieves a single system setting
 func getSettings(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
@@ -76,7 +76,7 @@ func getSettings(c echo.Context) error {
 	return ok(c, setting)
 }
 
-// 获取配置schemas
+// getconfigurationschemas
 func getConfigSchemas(c echo.Context) error {
 	if app.GApp().ConfigMgr() == nil {
 		return fail(c, http.StatusInternalServerError, "CONFIG_MANAGER_NOT_FOUND", "配置管理器未初始化", nil)
@@ -84,7 +84,7 @@ func getConfigSchemas(c echo.Context) error {
 
 	schemas := app.GApp().ConfigMgr().GetAllSchemas()
 
-	// 转换为前端友好的格式
+	// Convert to a frontend-friendly format
 	var result []map[string]interface{}
 	for key, schema := range schemas {
 		schemaData := map[string]interface{}{
@@ -110,7 +110,7 @@ func getConfigSchemas(c echo.Context) error {
 	return ok(c, result)
 }
 
-// 获取配置类型名称
+// getConfigTypeName resolves configuration type names
 func getConfigTypeName(configType app.ConfigType) string {
 	switch configType {
 	case app.TypeString:
@@ -128,7 +128,7 @@ func getConfigTypeName(configType app.ConfigType) string {
 	}
 }
 
-// 创建系统设置
+// createSettings creates a system setting
 func createSettings(c echo.Context) error {
 	var payload settingsPayload
 	if err := c.Bind(&payload); err != nil {
@@ -142,7 +142,7 @@ func createSettings(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "type、name、value 不能为空", nil)
 	}
 
-	// 检查是否已存在相同类型和名称的配置
+	// Check whether a setting with the same type and name already exists (unique constraint)
 	var exists int64
 	app.GDB().Model(&domain.SysConfig{}).
 		Where("type = ? AND name = ?", payload.Type, payload.Name).
@@ -166,7 +166,7 @@ func createSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "创建系统设置失败", err.Error())
 	}
 
-	// 同步到 ConfigManager 内存缓存
+	// Sync to the ConfigManager cache
 	if app.GApp().ConfigMgr() != nil {
 		app.GApp().ConfigMgr().ReloadAll()
 	}
@@ -174,7 +174,7 @@ func createSettings(c echo.Context) error {
 	return ok(c, setting)
 }
 
-// 更新系统设置
+// updateSettings updates a system setting
 func updateSettings(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
@@ -193,7 +193,7 @@ func updateSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询系统设置失败", err.Error())
 	}
 
-	// 更新字段
+	// Update fields
 	if payload.Type != "" {
 		setting.Type = strings.TrimSpace(payload.Type)
 	}
@@ -215,7 +215,7 @@ func updateSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新系统设置失败", err.Error())
 	}
 
-	// 同步到 ConfigManager 内存缓存
+	// Sync to the ConfigManager cache
 	if app.GApp().ConfigMgr() != nil {
 		app.GApp().ConfigMgr().ReloadAll()
 	}
@@ -223,7 +223,7 @@ func updateSettings(c echo.Context) error {
 	return ok(c, setting)
 }
 
-// 删除系统设置
+// deleteSettings deletes a system setting
 func deleteSettings(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
@@ -234,7 +234,7 @@ func deleteSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "删除系统设置失败", err.Error())
 	}
 
-	// 同步到 ConfigManager 内存缓存
+	// Sync to the ConfigManager cache
 	if app.GApp().ConfigMgr() != nil {
 		app.GApp().ConfigMgr().ReloadAll()
 	}
@@ -244,7 +244,7 @@ func deleteSettings(c echo.Context) error {
 	})
 }
 
-// 筛选条件
+// Filter conditions
 func applySettingsFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	if settingType := strings.TrimSpace(c.QueryParam("type")); settingType != "" {
 		db = db.Where("type = ?", settingType)
@@ -257,9 +257,9 @@ func applySettingsFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	return db
 }
 
-// 重载配置
+// reloadConfig reloads the configuration
 func reloadConfig(c echo.Context) error {
-	// 重新加载所有配置
+	// Reload all configuration
 	app.GApp().ConfigMgr().ReloadAll()
 
 	return ok(c, map[string]interface{}{

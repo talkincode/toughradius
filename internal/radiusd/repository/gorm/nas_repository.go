@@ -8,12 +8,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// GormNasRepository GORM实现的NAS仓储
+// GormNasRepository is the GORM implementation of the NAS repository
 type GormNasRepository struct {
 	db *gorm.DB
 }
 
-// NewGormNasRepository 创建NAS仓储实例
+// NewGormNasRepository creates a NAS repository instance
 func NewGormNasRepository(db *gorm.DB) repository.NasRepository {
 	return &GormNasRepository{db: db}
 }

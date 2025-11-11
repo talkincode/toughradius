@@ -2,7 +2,7 @@ package eap
 
 import "errors"
 
-// EAP 相关错误
+// EAP-related errors
 var (
 	ErrInvalidEAPMessage    = errors.New("invalid EAP message")
 	ErrStateNotFound        = errors.New("EAP state not found")

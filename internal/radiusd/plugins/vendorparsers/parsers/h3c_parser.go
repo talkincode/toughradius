@@ -11,7 +11,7 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// H3CParser H3C 厂商属性解析器
+// H3CParser parses H3C vendor attributes
 type H3CParser struct{}
 
 func (p *H3CParser) VendorCode() string {
@@ -25,7 +25,7 @@ func (p *H3CParser) VendorName() string {
 func (p *H3CParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, error) {
 	vr := &vendorparsers.VendorRequest{}
 
-	// 解析 MAC 地址 - H3C 使用 H3C-IP-Host-Addr
+	// Parse MAC addresses - H3C Using H3C-IP-Host-Addr
 	ipha := h3c.H3CIPHostAddr_GetString(r.Packet)
 	if ipha != "" {
 		iphalen := len(ipha)
@@ -35,7 +35,7 @@ func (p *H3CParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, erro
 			vr.MacAddr = ipha
 		}
 	} else {
-		// 备用方案：使用标准 CallingStationID
+		// Fallback: use the standard CallingStationID
 		macval := rfc2865.CallingStationID_GetString(r.Packet)
 		if macval != "" {
 			vr.MacAddr = strings.ReplaceAll(macval, "-", ":")
@@ -44,7 +44,7 @@ func (p *H3CParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, erro
 		}
 	}
 
-	// H3C 的 VLAN 解析
+	// H3C VLAN parsing
 	nasportid := rfc2869.NASPortID_GetString(r.Packet)
 	if nasportid == "" {
 		vr.Vlanid1 = 0

@@ -12,12 +12,12 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// UpdateHandler 计费更新处理器
+// UpdateHandler Accounting Update handler
 type UpdateHandler struct {
 	sessionRepo repository.SessionRepository
 }
 
-// NewUpdateHandler 创建计费更新处理器
+// NewUpdateHandler CreateAccounting Update handler
 func NewUpdateHandler(sessionRepo repository.SessionRepository) *UpdateHandler {
 	return &UpdateHandler{sessionRepo: sessionRepo}
 }
@@ -36,10 +36,10 @@ func (h *UpdateHandler) Handle(acctCtx *accounting.AccountingContext) error {
 		vendorReq = &vendorparserspkg.VendorRequest{}
 	}
 
-	// 构建在线会话数据
+	// Build online session data
 	online := buildOnlineFromRequest(acctCtx, vendorReq)
 
-	// 更新在线会话
+	// Update the online session record
 	err := h.sessionRepo.Update(acctCtx.Context, &online)
 	if err != nil {
 		zap.L().Error("update radius online error",
@@ -53,7 +53,7 @@ func (h *UpdateHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	return nil
 }
 
-// buildOnlineFromRequest 从请求构建在线会话数据（用于Update）
+// buildOnlineFromRequest Build online session data from request（used for Update）
 func buildOnlineFromRequest(acctCtx *accounting.AccountingContext, vr *vendorparserspkg.VendorRequest) domain.RadiusOnline {
 	r := acctCtx.Request
 	acctInputOctets := int(rfc2866.AcctInputOctets_Get(r.Packet))

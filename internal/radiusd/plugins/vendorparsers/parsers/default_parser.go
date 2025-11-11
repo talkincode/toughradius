@@ -8,7 +8,7 @@ import (
 	"layeh.com/radius/rfc2865"
 )
 
-// DefaultParser 默认厂商属性解析器
+// DefaultParser is the default vendor attribute parser
 type DefaultParser struct{}
 
 func (p *DefaultParser) VendorCode() string {
@@ -22,13 +22,13 @@ func (p *DefaultParser) VendorName() string {
 func (p *DefaultParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, error) {
 	vr := &vendorparsers.VendorRequest{}
 
-	// 解析MAC地址
+	// ParseMACaddresses
 	macval := rfc2865.CallingStationID_GetString(r.Packet)
 	if macval != "" {
 		vr.MacAddr = strings.ReplaceAll(macval, "-", ":")
 	}
 
-	// 默认解析器不解析VLAN
+		// The default parser does not parse VLAN attributes
 	vr.Vlanid1 = 0
 	vr.Vlanid2 = 0
 

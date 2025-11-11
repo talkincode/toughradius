@@ -99,8 +99,8 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	user, err := s.GetValidUser(username, isMacAuth)
 	s.handleAuthError("load_user", r, nil, nas, nil, isMacAuth, username, ip, err)
 
-	// 注意：策略检查（在线数、MAC绑定、VLAN绑定）现在由插件系统处理
-	// 在 AuthenticateUserWithPlugins() 中执行
+	// Note: Policy checks（online count、MACBind、VLANBind）now handled by plugin system
+	// in AuthenticateUserWithPlugins() executed
 
 	vendorReqForPlugin := &vendorparsers.VendorRequest{
 		MacAddr: vendorReq.MacAddr,

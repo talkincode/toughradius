@@ -20,32 +20,32 @@ func TestStringType(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "UserName 类型",
+			name:     "UserName type",
 			attrType: rfc2865.UserName_Type,
 			expected: "UserName",
 		},
 		{
-			name:     "UserPassword 类型",
+			name:     "UserPassword type",
 			attrType: rfc2865.UserPassword_Type,
 			expected: "UserPassword",
 		},
 		{
-			name:     "NASIPAddress 类型",
+			name:     "NASIPAddress type",
 			attrType: rfc2865.NASIPAddress_Type,
 			expected: "NASIPAddress",
 		},
 		{
-			name:     "AcctStatusType 类型",
+			name:     "AcctStatusType type",
 			attrType: rfc2866.AcctStatusType_Type,
 			expected: "AcctStatusType",
 		},
 		{
-			name:     "EAPMessage 类型",
+			name:     "EAPMessage type",
 			attrType: rfc2869.EAPMessage_Type,
 			expected: "EAPMessage",
 		},
 		{
-			name:     "未知类型",
+			name:     "Unknown type",
 			attrType: radius.Type(255),
 			expected: "255",
 		},
@@ -69,19 +69,19 @@ func TestFormatType(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "字符串格式",
+			name:     "String format",
 			attrType: rfc2865.UserName_Type,
 			data:     []byte("testuser"),
 			expected: "testuser",
 		},
 		{
-			name:     "IPv4 格式",
+			name:     "IPv4 format",
 			attrType: rfc2865.NASIPAddress_Type,
 			data:     []byte{192, 168, 1, 1},
 			expected: "192.168.1.1",
 		},
 		{
-			name:     "UInt32 格式",
+			name:     "UInt32 format",
 			attrType: rfc2865.SessionTimeout_Type,
 			data: func() []byte {
 				b := make([]byte, 4)
@@ -91,7 +91,7 @@ func TestFormatType(t *testing.T) {
 			expected: "3600",
 		},
 		{
-			name:     "十六进制格式（未知类型）",
+			name:     "Hex format (unknown type)",
 			attrType: radius.Type(255),
 			data:     []byte{0xde, 0xad, 0xbe, 0xef},
 			expected: "deadbeef",
@@ -136,7 +136,7 @@ func TestEapMessageFormat(t *testing.T) {
 			contains: []string{"Code=2", "Type=1"},
 		},
 		{
-			name:     "短数据",
+			name:     "Short data",
 			data:     []byte{0x01, 0x02},
 			contains: []string{},
 		},
@@ -155,7 +155,7 @@ func TestEapMessageFormat(t *testing.T) {
 }
 
 func TestFmtRequest(t *testing.T) {
-	// 创建测试 RADIUS 请求
+	// CreateTest RADIUS request
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, "testuser")
 	rfc2865.NASIPAddress_Set(packet, net.IPv4(192, 168, 1, 1))
@@ -168,7 +168,7 @@ func TestFmtRequest(t *testing.T) {
 
 	result := FmtRequest(req)
 
-	// 验证输出包含关键信息
+	// Validate the output contains key information
 	expectedStrings := []string{
 		"RADIUS Request",
 		"10.0.0.1",
@@ -194,7 +194,7 @@ func TestFmtRequestNil(t *testing.T) {
 }
 
 func TestFmtResponse(t *testing.T) {
-	// 创建测试 RADIUS 响应
+	// CreateTest RADIUS response
 	packet := radius.New(radius.CodeAccessAccept, []byte("secret"))
 	rfc2865.SessionTimeout_Set(packet, 3600)
 	rfc2865.ReplyMessage_SetString(packet, "Welcome")
@@ -203,7 +203,7 @@ func TestFmtResponse(t *testing.T) {
 
 	result := FmtResponse(packet, remoteAddr)
 
-	// 验证输出包含关键信息
+	// Validate the output contains key information
 	expectedStrings := []string{
 		"RADIUS Response",
 		"10.0.0.1",
@@ -230,14 +230,14 @@ func TestFmtResponseNil(t *testing.T) {
 }
 
 func TestFmtPacket(t *testing.T) {
-	// 创建测试包
+	// Create a test packet
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, "testuser")
 	rfc2866.AcctSessionID_SetString(packet, "session123")
 
 	result := FmtPacket(packet)
 
-	// 验证输出
+	// Validate the output
 	expectedStrings := []string{
 		"RADIUS Packet",
 		"Identifier",
@@ -269,19 +269,19 @@ func TestLength(t *testing.T) {
 		minLen int
 	}{
 		{
-			name:   "空包",
+			name:   "Empty packet",
 			packet: radius.New(radius.CodeAccessRequest, []byte("secret")),
-			minLen: 20, // 基础头部长度
+			minLen: 20, // Basic header length
 		},
 		{
-			name: "带属性的包",
+			name: "Packet with attributes",
 			packet: func() *radius.Packet {
 				p := radius.New(radius.CodeAccessRequest, []byte("secret"))
 				rfc2865.UserName_SetString(p, "testuser")
 				rfc2865.NASIPAddress_Set(p, net.IPv4(192, 168, 1, 1))
 				return p
 			}(),
-			minLen: 20, // 至少是头部长度
+			minLen: 20, // At least the header length
 		},
 	}
 
@@ -303,7 +303,7 @@ func TestLengthNil(t *testing.T) {
 }
 
 func TestFmtRequestWithAcctStatusType(t *testing.T) {
-	// 测试带有 AcctStatusType 的请求（特殊格式化）
+	// Test requests with AcctStatusType (special formatting)
 	packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
 	rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start)
 	rfc2865.UserName_SetString(packet, "testuser")
@@ -316,7 +316,7 @@ func TestFmtRequestWithAcctStatusType(t *testing.T) {
 
 	result := FmtRequest(req)
 
-	// 验证 AcctStatusType 被特殊格式化
+	// Validate the AcctStatusType is specially formatted
 	if !strings.Contains(result, "AcctStatusType") {
 		t.Errorf("expected output to contain AcctStatusType, got:\n%s", result)
 	}
@@ -326,10 +326,10 @@ func TestFmtRequestWithAcctStatusType(t *testing.T) {
 }
 
 func TestFmtRequestWithVendorSpecific(t *testing.T) {
-	// 测试带有厂商特定属性的请求
+	// Test requests with vendor-specific attributes
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 
-	// 创建厂商特定属性
+	// Create a vendor-specific attribute
 	vendorAttr := make([]byte, 10)
 	binary.BigEndian.PutUint16(vendorAttr[2:4], 9) // Vendor ID (Cisco)
 	vendorAttr[4] = 1                              // Vendor Type
@@ -346,7 +346,7 @@ func TestFmtRequestWithVendorSpecific(t *testing.T) {
 
 	result := FmtRequest(req)
 
-	// 验证厂商特定属性被正确格式化
+	// Validate the vendor-specific attribute is formatted correctly
 	if !strings.Contains(result, "VendorSpecific") {
 		t.Errorf("expected output to contain VendorSpecific, got:\n%s", result)
 	}

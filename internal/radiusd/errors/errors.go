@@ -7,7 +7,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app"
 )
 
-// AuthError RADIUS认证错误
+// AuthError represents a RADIUS authentication error
 type AuthError struct {
 	MetricsType string
 	Message     string
@@ -17,8 +17,8 @@ func (e *AuthError) Error() string {
 	return e.Message
 }
 
-// NewAuthError 创建认证错误
-// 注意：不在这里记录metrics，由调用方决定
+// NewAuthError creates an authentication error
+// Note: metrics are not recorded here; the caller decides
 func NewAuthError(metricsType string, message string) error {
 	return &AuthError{
 		MetricsType: metricsType,
@@ -26,13 +26,13 @@ func NewAuthError(metricsType string, message string) error {
 	}
 }
 
-// IsAuthError 判断是否为认证错误
+// IsAuthError checks whether the error is an authentication error
 func IsAuthError(err error) bool {
 	_, ok := err.(*AuthError)
 	return ok
 }
 
-// GetAuthError 获取认证错误详情
+// GetAuthError retrieves authentication error details
 func GetAuthError(err error) (*AuthError, bool) {
 	authErr, ok := err.(*AuthError)
 	return authErr, ok
@@ -74,7 +74,7 @@ func NewUnauthorizedNasError(ip, identifier string, err error) error {
 			ip, identifier, err.Error()))
 }
 
-// WrapError 将普通error包装为AuthError
+// WrapError converts a general error into an AuthError
 func WrapError(metricsType string, err error) error {
 	if err == nil {
 		return nil
@@ -85,7 +85,7 @@ func WrapError(metricsType string, err error) error {
 	return NewAuthError(metricsType, err.Error())
 }
 
-// NewError 创建普通错误（非AuthError）
+// NewError creates a generic non-auth error
 func NewError(message string) error {
 	return errors.New(message)
 }

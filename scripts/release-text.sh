@@ -1,29 +1,29 @@
 #!/bin/bash
 
-# release-text.sh - 生成发布信息脚本
-# 该脚本从最后一个标签开始生成提交日志清单
+# release-text.sh - Generate release notes
+# This script generates a changelog starting from the latest tag
 
-# 检查是否在git仓库中
+# Check if running inside a git repository
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
     echo "❌ 错误: 当前目录不是git仓库"
     exit 1
 fi
 
-# 获取最新标签
+# Get the latest tag
 latest_tag=$(git tag --sort=-version:refname | head -n 1)
 current_commit=$(git rev-parse HEAD)
 
-# 设置提交范围
+# Set the commit range
 if [ -z "$latest_tag" ]; then
     echo "⚠️  未找到任何标签，显示所有提交记录"
     commit_range="HEAD"
     version_info="初始提交 → HEAD"
 else
-    # 检查当前HEAD是否就是最新标签
+    # Check if HEAD is already at the latest tag
     latest_tag_commit=$(git rev-parse "$latest_tag" 2>/dev/null || echo "")
     
     if [ "$current_commit" = "$latest_tag_commit" ]; then
-        # 如果当前HEAD就是最新标签，则从倒数第二个标签开始
+        # If so, use the previous tag as the starting point
         prev_tag=$(git tag --sort=-version:refname | sed -n '2p')
         if [ -n "$prev_tag" ]; then
             echo "📋  $prev_tag —— $latest_tag "
@@ -44,7 +44,7 @@ fi
 
 echo ""
 
-# 统计信息
+# Statistics
 total_commits=$(git rev-list --count $commit_range 2>/dev/null || echo "0")
 files_changed=$(git diff --name-only $commit_range 2>/dev/null | wc -l | tr -d ' ')
 authors=$(git log $commit_range --format='%an' 2>/dev/null | sort -u | wc -l | tr -d ' ')
@@ -55,18 +55,18 @@ echo "   • 文件变更: $files_changed"
 echo "   • 参与作者: $authors"
 echo ""
 
-# 显示变更清单
+# Display the changelog
 echo "📝 变更清单:"
 echo ""
 
-# 分类显示提交
+# Categorize commits
 git log $commit_range --format='%h|%s|%an|%ad' --date=short 2>/dev/null | {
     feat_count=0
     fix_count=0
     refactor_count=0
     other_count=0
     
-    # 创建临时数组
+    # Build temporary arrays
     feat_commits=""
     fix_commits=""
     refactor_commits=""
@@ -95,7 +95,7 @@ git log $commit_range --format='%h|%s|%an|%ad' --date=short 2>/dev/null | {
         esac
     done
     
-    # 显示分类结果
+    # Display categorized results
     if [ $feat_count -gt 0 ]; then
         echo "🚀 新功能 ($feat_count):"
         echo -e "$feat_commits"
@@ -117,14 +117,14 @@ git log $commit_range --format='%h|%s|%an|%ad' --date=short 2>/dev/null | {
     fi
 }
 
-# 显示文件变更统计（仅前10行）
+# Display file change stats (top 10 lines)
 if [ "$files_changed" -gt 0 ]; then
     echo "📄 主要文件变更:"
     git diff --stat $commit_range 2>/dev/null | head -10 | sed 's/^/   /'
     echo ""
 fi
 
-# 显示贡献者
+# Display contributors
 if [ "$authors" -gt 0 ]; then
     echo "👥 贡献者:"
     git log $commit_range --format='%an <%ae>' 2>/dev/null | sort -u | sed 's/^/   • /'

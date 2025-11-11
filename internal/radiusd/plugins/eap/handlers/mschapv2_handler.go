@@ -21,32 +21,32 @@ const (
 	MSCHAPv2Success   = 3
 	MSCHAPv2Failure   = 4
 
-	// MSCHAPv2 常量
+// MSCHAPv2 constants
 	MSCHAPChallengeSize = 16
 	MSCHAPResponseSize  = 49 // PeerChallenge(16) + Reserved(8) + NTResponse(24) + Flags(1)
 	EAPMethodMSCHAPv2   = "eap-mschapv2"
 	ServerName          = "toughradius"
 )
 
-// MSCHAPv2Handler EAP-MSCHAPv2 认证处理器
+// MSCHAPv2Handler EAP-MSCHAPv2 authenticationhandler
 type MSCHAPv2Handler struct{}
 
-// NewMSCHAPv2Handler 创建 EAP-MSCHAPv2 处理器
+// NewMSCHAPv2Handler Create EAP-MSCHAPv2 handler
 func NewMSCHAPv2Handler() *MSCHAPv2Handler {
 	return &MSCHAPv2Handler{}
 }
 
-// Name 返回处理器名称
+// Name Returnshandlernames
 func (h *MSCHAPv2Handler) Name() string {
 	return EAPMethodMSCHAPv2
 }
 
-// EAPType 返回 EAP 类型码
+// EAPType returns the EAP type code
 func (h *MSCHAPv2Handler) EAPType() uint8 {
 	return eap.TypeMSCHAPv2
 }
 
-// CanHandle 判断是否可以处理该 EAP 消息
+// CanHandle checks whether this handler can process the EAP message
 func (h *MSCHAPv2Handler) CanHandle(ctx *eap.EAPContext) bool {
 	if ctx.EAPMessage == nil {
 		return false
@@ -54,21 +54,21 @@ func (h *MSCHAPv2Handler) CanHandle(ctx *eap.EAPContext) bool {
 	return ctx.EAPMessage.Type == eap.TypeMSCHAPv2
 }
 
-// HandleIdentity 处理 EAP-Response/Identity，发送 MSCHAPv2 Challenge
+// HandleIdentity Handle EAP-Response/Identity，Send MSCHAPv2 Challenge
 func (h *MSCHAPv2Handler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
-	// 生成随机 Authenticator Challenge (16 字节)
+	// Generate a random Authenticator Challenge (16 bytes)
 	challenge, err := eap.GenerateRandomBytes(MSCHAPChallengeSize)
 	if err != nil {
 		return false, fmt.Errorf("failed to generate challenge: %w", err)
 	}
 
-	// 构建 EAP-MSCHAPv2 Challenge Request
+	// Build the EAP-MSCHAPv2 Challenge Request
 	eapData := h.buildChallengeRequest(ctx.EAPMessage.Identifier, challenge)
 
-	// 创建 RADIUS Access-Challenge 响应
+	// Create RADIUS Access-Challenge response
 	response := ctx.Request.Response(radius.CodeAccessChallenge)
 
-	// 生成并保存状态
+	// Generate and save the state
 	stateID := common.UUID()
 	username := rfc2865.UserName_GetString(ctx.Request.Packet)
 
@@ -81,26 +81,26 @@ func (h *MSCHAPv2Handler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 		Data:      make(map[string]interface{}),
 	}
 
-	// 保存 MSIdentifier 供后续使用
+	// Save the MSIdentifier for later use
 	state.Data["ms_identifier"] = ctx.EAPMessage.Identifier
 
 	if err := ctx.StateManager.SetState(stateID, state); err != nil {
 		return false, fmt.Errorf("failed to save state: %w", err)
 	}
 
-	// 设置 State 属性
+	// Set the State attribute
 	rfc2865.State_SetString(response, stateID)
 
-	// 设置 EAP-Message 和 Message-Authenticator
+	// Set the EAP-Message and Message-Authenticator
 	eap.SetEAPMessageAndAuth(response, eapData, ctx.Secret)
 
-	// 发送响应
+	// Sendresponse
 	return true, ctx.ResponseWriter.Write(response)
 }
 
-// HandleResponse 处理 EAP-Response (MSCHAPv2 Response)
+// HandleResponse Handle EAP-Response (MSCHAPv2 Response)
 func (h *MSCHAPv2Handler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
-	// 获取状态
+	// getStatus
 	stateID := rfc2865.State_GetString(ctx.Request.Packet)
 	if stateID == "" {
 		return false, eap.ErrStateNotFound
@@ -111,19 +111,19 @@ func (h *MSCHAPv2Handler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 		return false, err
 	}
 
-	// 解析 MSCHAPv2 Response
+	// Parse MSCHAPv2 Response
 	msResp, err := h.parseResponse(ctx.EAPMessage.Data)
 	if err != nil {
 		return false, fmt.Errorf("failed to parse MSCHAPv2 response: %w", err)
 	}
 
-	// 获取密码
+	// getPassword
 	password, err := ctx.PwdProvider.GetPassword(ctx.User, ctx.IsMacAuth)
 	if err != nil {
 		return false, err
 	}
 
-	// 验证 MSCHAPv2 Response
+	// Validate MSCHAPv2 Response
 	success, err := h.verifyResponse(
 		ctx.User.Username,
 		password,
@@ -142,25 +142,25 @@ func (h *MSCHAPv2Handler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 		return false, eap.ErrPasswordMismatch
 	}
 
-	// 标记认证成功
+	// Mark authentication as successful
 	state.Success = true
 	ctx.StateManager.SetState(stateID, state)
 
 	return true, nil
 }
 
-// buildChallengeRequest 构建 MSCHAPv2 Challenge Request
-// EAP-MSCHAPv2 Challenge 格式:
+// buildChallengeRequest constructs the MSCHAPv2 Challenge Request
+// EAP-MSCHAPv2 Challenge format:
 // Code(1) | Identifier(1) | Length(2) | Type(1) | OpCode(1) | MS-CHAPv2-ID(1) |
 // MS-Length(2) | Value-Size(1) | Challenge(16) | Name(variable)
 func (h *MSCHAPv2Handler) buildChallengeRequest(identifier uint8, challenge []byte) []byte {
 	serverName := []byte(ServerName)
 
-	// 计算 MS-CHAPv2 数据长度
+	// Compute the MS-CHAPv2 data length
 	// OpCode(1) + MS-CHAPv2-ID(1) + MS-Length(2) + Value-Size(1) + Challenge(16) + Name(len)
 	msDataLen := 1 + 1 + 2 + 1 + MSCHAPChallengeSize + len(serverName)
 
-	// 计算 EAP 总长度
+	// Compute the total EAP length
 	// EAP Header(4) + Type(1) + MS-CHAPv2 Data
 	totalLen := 4 + 1 + msDataLen
 
@@ -177,7 +177,7 @@ func (h *MSCHAPv2Handler) buildChallengeRequest(identifier uint8, challenge []by
 	// MS-CHAPv2 Data
 	offset := 5
 	buffer[offset] = MSCHAPv2Challenge                                       // OpCode
-	buffer[offset+1] = identifier                                            // MS-CHAPv2-ID (同 EAP Identifier)
+	buffer[offset+1] = identifier // MS-CHAPv2-ID (matches the EAP identifier)
 	binary.BigEndian.PutUint16(buffer[offset+2:offset+4], uint16(msDataLen)) // MS-Length
 	buffer[offset+4] = MSCHAPChallengeSize                                   // Value-Size
 	copy(buffer[offset+5:offset+5+MSCHAPChallengeSize], challenge)           // Challenge
@@ -186,7 +186,7 @@ func (h *MSCHAPv2Handler) buildChallengeRequest(identifier uint8, challenge []by
 	return buffer
 }
 
-// MSCHAPv2ResponseData MSCHAPv2 响应数据结构
+// MSCHAPv2ResponseData defines the MSCHAPv2 response structure
 type MSCHAPv2ResponseData struct {
 	OpCode        uint8
 	MsIdentifier  uint8
@@ -199,8 +199,8 @@ type MSCHAPv2ResponseData struct {
 	Name          []byte
 }
 
-// parseResponse 解析 MSCHAPv2 Response
-// EAP-MSCHAPv2 Response 格式:
+// parseResponse Parse MSCHAPv2 Response
+// EAP-MSCHAPv2 Response format:
 // OpCode(1) | MS-CHAPv2-ID(1) | MS-Length(2) | Value-Size(1) |
 // Peer-Challenge(16) | Reserved(8) | NT-Response(24) | Flags(1) | Name(variable)
 func (h *MSCHAPv2Handler) parseResponse(data []byte) (*MSCHAPv2ResponseData, error) {
@@ -217,7 +217,7 @@ func (h *MSCHAPv2Handler) parseResponse(data []byte) (*MSCHAPv2ResponseData, err
 	resp.ValueSize = data[offset+4]
 	offset += 5
 
-	// 检查 OpCode 和 ValueSize
+	// Check the opcode and value size
 	if resp.OpCode != MSCHAPv2Response {
 		return nil, fmt.Errorf("invalid OpCode: expected %d, got %d", MSCHAPv2Response, resp.OpCode)
 	}
@@ -226,20 +226,20 @@ func (h *MSCHAPv2Handler) parseResponse(data []byte) (*MSCHAPv2ResponseData, err
 		return nil, fmt.Errorf("invalid ValueSize: expected %d, got %d", MSCHAPResponseSize, resp.ValueSize)
 	}
 
-	// 检查剩余数据长度
+	// Check the remaining data length
 	if len(data) < offset+int(resp.ValueSize) {
 		return nil, fmt.Errorf("insufficient data for response value: need %d, have %d",
 			offset+int(resp.ValueSize), len(data))
 	}
 
-	// 解析 Peer-Challenge, Reserved, NT-Response, Flags
+	// Parse Peer-Challenge, Reserved, NT-Response, Flags
 	resp.PeerChallenge = data[offset : offset+16]
 	resp.Reserved = data[offset+16 : offset+24]
 	resp.NTResponse = data[offset+24 : offset+48]
 	resp.Flags = data[offset+48]
 	offset += int(resp.ValueSize)
 
-	// Name (剩余部分)
+	// Name (remaining portion)
 	if len(data) > offset {
 		resp.Name = data[offset:]
 	}
@@ -247,7 +247,7 @@ func (h *MSCHAPv2Handler) parseResponse(data []byte) (*MSCHAPv2ResponseData, err
 	return resp, nil
 }
 
-// verifyResponse 验证 MSCHAPv2 Response 并生成加密密钥
+// verifyResponse validates the MSCHAPv2 response and generates encryption keys
 func (h *MSCHAPv2Handler) verifyResponse(
 	username string,
 	password string,
@@ -260,7 +260,7 @@ func (h *MSCHAPv2Handler) verifyResponse(
 	byteUser := []byte(username)
 	bytePwd := []byte(password)
 
-	// 使用 RFC 2759 生成 NT-Response
+	// Using RFC 2759 Generate NT-Response
 	expectedNTResponse, err := rfc2759.GenerateNTResponse(
 		authChallenge,
 		peerChallenge,
@@ -271,12 +271,12 @@ func (h *MSCHAPv2Handler) verifyResponse(
 		return false, fmt.Errorf("failed to generate NT-Response: %w", err)
 	}
 
-	// 验证 NT-Response
+	// Validate NT-Response
 	if !bytes.Equal(expectedNTResponse, ntResponse) {
 		return false, nil
 	}
 
-	// 生成 MPPE 密钥
+	// Generate MPPE keys
 	recvKey, err := rfc3079.MakeKey(expectedNTResponse, bytePwd, false)
 	if err != nil {
 		return false, fmt.Errorf("failed to generate recv key: %w", err)
@@ -287,7 +287,7 @@ func (h *MSCHAPv2Handler) verifyResponse(
 		return false, fmt.Errorf("failed to generate send key: %w", err)
 	}
 
-	// 生成 Authenticator Response (RFC 2759)
+	// Generate Authenticator Response (RFC 2759)
 	authenticatorResponse, err := rfc2759.GenerateAuthenticatorResponse(
 		authChallenge,
 		peerChallenge,
@@ -299,13 +299,13 @@ func (h *MSCHAPv2Handler) verifyResponse(
 		return false, fmt.Errorf("failed to generate authenticator response: %w", err)
 	}
 
-	// 构建 MSCHAP2-Success 属性值
-	// 格式: Ident(1) + Authenticator-Response(42)
+	// Construct the MSCHAPv2-Success attribute value
+	// format: Ident(1) + Authenticator-Response(42)
 	success := make([]byte, 43)
 	success[0] = msIdentifier
 	copy(success[1:], authenticatorResponse)
 
-	// 添加 Microsoft 特定属性到响应
+	// Add Microsoft-specific attributes to the response
 	microsoft.MSCHAP2Success_Add(response, success)
 	microsoft.MSMPPERecvKey_Add(response, recvKey)
 	microsoft.MSMPPESendKey_Add(response, sendKey)

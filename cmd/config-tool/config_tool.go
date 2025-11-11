@@ -8,7 +8,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app"
 )
 
-// validateConfigSchemas 验证配置 JSON 文件的格式和内容
+// validateConfigSchemas validates the formatting and content of the configuration JSON file
 func validateConfigSchemas(filePath string) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -20,10 +20,10 @@ func validateConfigSchemas(filePath string) error {
 		return fmt.Errorf("JSON 格式错误: %w", err)
 	}
 
-	// 验证配置项
+		// Validate each configuration entry
 	keyMap := make(map[string]bool)
 	for i, schema := range schemasData.Schemas {
-		// 检查必要字段
+		// Check required fields
 		if schema.Key == "" {
 			return fmt.Errorf("配置项 %d: key 不能为空", i)
 		}
@@ -34,13 +34,13 @@ func validateConfigSchemas(filePath string) error {
 			return fmt.Errorf("配置项 %d (%s): default 不能为空", i, schema.Key)
 		}
 
-		// 检查重复的key
+		// Check for duplicate keys
 		if keyMap[schema.Key] {
 			return fmt.Errorf("配置项 %d (%s): key 重复", i, schema.Key)
 		}
 		keyMap[schema.Key] = true
 
-		// 验证类型
+		// Validate the type
 		validTypes := []string{"string", "int", "bool", "duration", "json"}
 		typeValid := false
 		for _, validType := range validTypes {
@@ -53,14 +53,14 @@ func validateConfigSchemas(filePath string) error {
 			return fmt.Errorf("配置项 %d (%s): 无效的类型 %s，支持的类型: %v", i, schema.Key, schema.Type, validTypes)
 		}
 
-		// 验证整数范围
+		// Validate integer ranges
 		if schema.Type == "int" {
 			if schema.Min != nil && schema.Max != nil && *schema.Min > *schema.Max {
 				return fmt.Errorf("配置项 %d (%s): min 值不能大于 max 值", i, schema.Key)
 			}
 		}
 
-		// 验证枚举值
+		// Validate enumeration values
 		if len(schema.Enum) > 0 {
 			defaultInEnum := false
 			for _, enumVal := range schema.Enum {
@@ -79,7 +79,7 @@ func validateConfigSchemas(filePath string) error {
 	return nil
 }
 
-// printConfigSummary 打印配置摘要
+// printConfigSummary prints the configuration summary
 func printConfigSummary(filePath string) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -96,7 +96,7 @@ func printConfigSummary(filePath string) error {
 
 	categoryMap := make(map[string][]app.ConfigSchemaJSON)
 	for _, schema := range schemasData.Schemas {
-		// 按分类分组
+		// Group entries by category
 		var category string
 		if idx := findDotIndex(schema.Key); idx != -1 {
 			category = schema.Key[:idx]

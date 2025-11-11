@@ -20,19 +20,19 @@ import (
 	"gorm.io/gorm"
 )
 
-// setupAuthTestDB 创建测试数据库
+// setupAuthTestDB creates the test data database
 func setupAuthTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 
-	// 自动迁移操作员表
+	// Automatically migrate the operator table
 	err = db.AutoMigrate(&domain.SysOpr{})
 	require.NoError(t, err)
 
 	return db
 }
 
-// setupAuthTestApp 初始化测试应用
+// setupAuthTestApp initializes the test application
 func setupAuthTestApp(t *testing.T, db *gorm.DB) {
 	cfg := &config.AppConfig{
 		System: config.SysConfig{
@@ -50,12 +50,12 @@ func setupAuthTestApp(t *testing.T, db *gorm.DB) {
 	app.SetGDB(db)
 }
 
-// setupAuthTest 初始化测试环境并创建测试用户
+// setupAuthTest sets up the test environment and creates a test user
 func setupAuthTest(t *testing.T) (*domain.SysOpr, func()) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
 
-	// 创建测试用户
+	// Create the test user
 	testOpr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
 		Username:  "testuser",
@@ -77,7 +77,7 @@ func setupAuthTest(t *testing.T) (*domain.SysOpr, func()) {
 	return testOpr, cleanup
 }
 
-// TestLoginHandler 测试登录处理函数
+// TestLoginHandler tests the login handler
 func TestLoginHandler(t *testing.T) {
 	_, cleanup := setupAuthTest(t)
 	defer cleanup()
@@ -90,49 +90,49 @@ func TestLoginHandler(t *testing.T) {
 		checkToken     bool
 	}{
 		{
-			name:           "成功登录",
+			name:           "Successful login",
 			requestBody:    `{"username":"testuser","password":"password123"}`,
 			expectedStatus: http.StatusOK,
 			expectedCode:   "",
 			checkToken:     true,
 		},
 		{
-			name:           "无效的JSON",
+			name:           "Invalid JSON",
 			requestBody:    `{invalid json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedCode:   "INVALID_REQUEST",
 			checkToken:     false,
 		},
 		{
-			name:           "空用户名",
+			name:           "Empty username",
 			requestBody:    `{"username":"","password":"password123"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedCode:   "INVALID_CREDENTIALS",
 			checkToken:     false,
 		},
 		{
-			name:           "空密码",
+			name:           "Empty password",
 			requestBody:    `{"username":"testuser","password":""}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedCode:   "INVALID_CREDENTIALS",
 			checkToken:     false,
 		},
 		{
-			name:           "用户不存在",
+			name:           "User not found",
 			requestBody:    `{"username":"nonexistent","password":"password123"}`,
 			expectedStatus: http.StatusUnauthorized,
 			expectedCode:   "INVALID_CREDENTIALS",
 			checkToken:     false,
 		},
 		{
-			name:           "密码错误",
+			name:           "Wrong password",
 			requestBody:    `{"username":"testuser","password":"wrongpassword"}`,
 			expectedStatus: http.StatusUnauthorized,
 			expectedCode:   "INVALID_CREDENTIALS",
 			checkToken:     false,
 		},
 		{
-			name:           "用户名前后有空格（应被trim）",
+			name:           "Username with surrounding spaces (should be trimmed)",
 			requestBody:    `{"username":"  testuser  ","password":"password123"}`,
 			expectedStatus: http.StatusOK,
 			expectedCode:   "",
@@ -150,9 +150,9 @@ func TestLoginHandler(t *testing.T) {
 
 			err := loginHandler(c)
 
-			// fail() 函数调用 c.JSON() 并返回nil，所以我们检查响应码而不是错误
+			// fail() calls c.JSON() and returns nil, so we check the response code instead of the error
 			if tt.expectedStatus >= 400 {
-				// 错误情况：检查响应状态码和错误信息
+				// Error cases: verify response status and error message
 				require.NoError(t, err, "handler should not return error, but write error response")
 				assert.Equal(t, tt.expectedStatus, rec.Code)
 
@@ -172,18 +172,18 @@ func TestLoginHandler(t *testing.T) {
 					data, ok := response["data"].(map[string]interface{})
 					assert.True(t, ok, "response should have data field")
 
-					// 检查 token
+					// Check token
 					token, ok := data["token"].(string)
 					assert.True(t, ok, "data should have token field")
 					assert.NotEmpty(t, token, "token should not be empty")
 
-					// 检查 user
+					// Check user
 					user, ok := data["user"].(map[string]interface{})
 					assert.True(t, ok, "data should have user field")
 					assert.Equal(t, "testuser", user["username"])
 					assert.Empty(t, user["password"], "password should be empty in response")
 
-					// 检查 tokenExpires
+					// Check tokenExpires
 					tokenExpires, ok := data["tokenExpires"].(float64)
 					assert.True(t, ok, "data should have tokenExpires field")
 					assert.Greater(t, tokenExpires, float64(time.Now().Unix()))
@@ -193,12 +193,12 @@ func TestLoginHandler(t *testing.T) {
 	}
 }
 
-// TestLoginHandler_DisabledAccount 测试禁用账号登录
+// TestLoginHandler_DisabledAccount tests login for a disabled account
 func TestLoginHandler_DisabledAccount(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
 
-	// 创建禁用的测试用户
+	// Create a disabled test user
 	disabledOpr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
 		Username:  "disableduser",
@@ -231,7 +231,7 @@ func TestLoginHandler_DisabledAccount(t *testing.T) {
 	assert.Equal(t, "ACCOUNT_DISABLED", errorResp.Error)
 }
 
-// TestIssueToken 测试 JWT token 生成
+// TestIssueToken tests JWT token generation
 func TestIssueToken(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
@@ -246,7 +246,7 @@ func TestIssueToken(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, token)
 
-	// 解析 token 验证内容
+	// Parse the token and validate its contents
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(app.GConfig().Web.Secret), nil
 	})
@@ -256,13 +256,13 @@ func TestIssueToken(t *testing.T) {
 	claims, ok := parsedToken.Claims.(jwt.MapClaims)
 	assert.True(t, ok)
 
-	// 验证 claims
+	// Validate claims
 	assert.Equal(t, "12345", claims["sub"])
 	assert.Equal(t, "testuser", claims["username"])
 	assert.Equal(t, "super", claims["role"])
 	assert.Equal(t, "toughradius", claims["iss"])
 
-	// 验证时间字段
+	// Validate the time-related fields
 	exp, ok := claims["exp"].(float64)
 	assert.True(t, ok)
 	assert.Greater(t, exp, float64(time.Now().Unix()))
@@ -272,16 +272,16 @@ func TestIssueToken(t *testing.T) {
 	assert.LessOrEqual(t, iat, float64(time.Now().Unix()))
 }
 
-// TestCurrentUserHandler 测试获取当前用户信息
+// TestCurrentUserHandler tests fetching current user info
 func TestCurrentUserHandler(t *testing.T) {
 	testOpr, cleanup := setupAuthTest(t)
 	defer cleanup()
 
-	// 生成有效 token
+	// Generate a valid token
 	token, err := issueToken(*testOpr)
 	assert.NoError(t, err)
 
-	// 解析 token
+	// Parse token
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(app.GConfig().Web.Secret), nil
 	})
@@ -292,7 +292,7 @@ func TestCurrentUserHandler(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	// 模拟 JWT 中间件设置的 context
+	// Simulate the context that the JWT middleware sets
 	c.Set("user", parsedToken)
 
 	err = currentUserHandler(c)
@@ -312,7 +312,7 @@ func TestCurrentUserHandler(t *testing.T) {
 	assert.Empty(t, user["password"], "password should be empty")
 }
 
-// TestCurrentUserHandler_NoToken 测试无 token 情况
+// TestCurrentUserHandler_NoToken tests the no-token scenario
 func TestCurrentUserHandler_NoToken(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
@@ -322,7 +322,7 @@ func TestCurrentUserHandler_NoToken(t *testing.T) {
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
 
-	// 不设置 user context
+	// Leave the user context unset
 
 	err := currentUserHandler(c)
 	require.NoError(t, err)
@@ -334,16 +334,16 @@ func TestCurrentUserHandler_NoToken(t *testing.T) {
 	assert.Equal(t, "UNAUTHORIZED", errorResp.Error)
 }
 
-// TestResolveOperatorFromContext 测试从 context 解析操作员
+// TestResolveOperatorFromContext tests parsing the operator from context
 func TestResolveOperatorFromContext(t *testing.T) {
 	testOpr, cleanup := setupAuthTest(t)
 	defer cleanup()
 
-	// 生成有效 token
+	// Generate a valid token
 	token, err := issueToken(*testOpr)
 	assert.NoError(t, err)
 
-	// 解析 token
+	// Parse token
 	parsedToken, err := jwt.Parse(token, func(t *jwt.Token) (interface{}, error) {
 		return []byte(app.GConfig().Web.Secret), nil
 	})
@@ -363,7 +363,7 @@ func TestResolveOperatorFromContext(t *testing.T) {
 	assert.Empty(t, operator.Password, "password should be empty")
 }
 
-// TestResolveOperatorFromContext_NoUser 测试无用户上下文
+// TestResolveOperatorFromContext_NoUser tests when no user context exists
 func TestResolveOperatorFromContext_NoUser(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
@@ -379,7 +379,7 @@ func TestResolveOperatorFromContext_NoUser(t *testing.T) {
 	assert.Contains(t, err.Error(), "no user in context")
 }
 
-// TestResolveOperatorFromContext_InvalidTokenType 测试无效的 token 类型
+// TestResolveOperatorFromContext_InvalidTokenType tests invalid token types
 func TestResolveOperatorFromContext_InvalidTokenType(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
@@ -388,7 +388,7 @@ func TestResolveOperatorFromContext_InvalidTokenType(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rec := httptest.NewRecorder()
 	c := e.NewContext(req, rec)
-	c.Set("user", "not a token") // 设置错误类型
+	c.Set("user", "not a token") // Set an incorrect type
 
 	operator, err := resolveOperatorFromContext(c)
 	assert.Error(t, err)
@@ -396,12 +396,12 @@ func TestResolveOperatorFromContext_InvalidTokenType(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid token type")
 }
 
-// TestResolveOperatorFromContext_InvalidClaims 测试无效的 claims
+// TestResolveOperatorFromContext_InvalidClaims tests invalid claims
 func TestResolveOperatorFromContext_InvalidClaims(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
 
-	// 创建一个没有 sub claim 的 token
+	// Create a token without a sub claim
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"username": "testuser",
@@ -422,15 +422,15 @@ func TestResolveOperatorFromContext_InvalidClaims(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid token subject")
 }
 
-// TestResolveOperatorFromContext_UserNotFound 测试用户不存在
+// TestResolveOperatorFromContext_UserNotFound tests when the user does not exist
 func TestResolveOperatorFromContext_UserNotFound(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
 
-	// 创建一个指向不存在用户的 token
+	// Create a token referencing a non-existent user
 	now := time.Now()
 	claims := jwt.MapClaims{
-		"sub":      "999999999", // 不存在的用户 ID
+		"sub":      "999999999", // ID of a non-existent user
 		"username": "nonexistent",
 		"role":     "operator",
 		"exp":      now.Add(tokenTTL).Unix(),
@@ -450,12 +450,12 @@ func TestResolveOperatorFromContext_UserNotFound(t *testing.T) {
 	assert.Nil(t, operator)
 }
 
-// TestResolveOperatorFromContext_InvalidSubFormat 测试无效的 sub 格式
+// TestResolveOperatorFromContext_InvalidSubFormat tests invalid sub format
 func TestResolveOperatorFromContext_InvalidSubFormat(t *testing.T) {
 	db := setupAuthTestDB(t)
 	setupAuthTestApp(t, db)
 
-	// 创建一个 sub 不是数字的 token
+	// Create a token whose sub value is not digits
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"sub":      "not-a-number",
@@ -477,12 +477,12 @@ func TestResolveOperatorFromContext_InvalidSubFormat(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid token id")
 }
 
-// TestLoginHandler_LastLoginUpdate 测试登录成功后更新最后登录时间
+// TestLoginHandler_LastLoginUpdate tests updating last login time after successful login
 func TestLoginHandler_LastLoginUpdate(t *testing.T) {
 	testOpr, cleanup := setupAuthTest(t)
 	defer cleanup()
 
-	// 记录登录前的时间
+	// Record the time before login
 	beforeLogin := time.Now()
 
 	e := echo.New()
@@ -495,23 +495,23 @@ func TestLoginHandler_LastLoginUpdate(t *testing.T) {
 	err := loginHandler(c)
 	assert.NoError(t, err)
 
-	// 等待 goroutine 完成更新
+	// Wait for the goroutine to finish updating
 	time.Sleep(100 * time.Millisecond)
 
-	// 重新查询用户，检查 last_login
+	// Query the user again to check last_login
 	var updatedOpr domain.SysOpr
 	app.GDB().Where("id = ?", testOpr.ID).First(&updatedOpr)
 
-	// last_login 应该在登录之后
+	// last_login should be after the login
 	assert.True(t, updatedOpr.LastLogin.After(beforeLogin) || updatedOpr.LastLogin.Equal(beforeLogin))
 }
 
-// TestTokenTTL 测试 token 过期时间
+// TestTokenTTL Test token Expiration time
 func TestTokenTTL(t *testing.T) {
 	assert.Equal(t, 12*time.Hour, tokenTTL, "token TTL should be 12 hours")
 }
 
-// BenchmarkLoginHandler 登录处理性能基准测试
+// BenchmarkLoginHandler benchmarks the login handler
 func BenchmarkLoginHandler(b *testing.B) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	if err != nil {
@@ -564,7 +564,7 @@ func BenchmarkLoginHandler(b *testing.B) {
 	}
 }
 
-// BenchmarkIssueToken token 生成性能基准测试
+// BenchmarkIssueToken benchmarks token generation
 func BenchmarkIssueToken(b *testing.B) {
 	cfg := &config.AppConfig{
 		System: config.SysConfig{

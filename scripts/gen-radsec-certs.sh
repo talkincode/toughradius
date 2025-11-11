@@ -1,37 +1,37 @@
 #!/bin/bash
 
 #########################################################
-# ToughRADIUS RadSec 服务器证书生成脚本
+# ToughRADIUS RadSec server certificate generation script
 #
-# 此脚本用于生成 RadSec (RADIUS over TLS) 服务器所需的证书
-# 包括：CA 证书、服务器证书和密钥
+# This script generates certificates required for the RadSec (RADIUS over TLS) server
+# Includes the CA certificate, server certificate, and key
 #
-# 使用方法:
-#   ./scripts/gen-radsec-certs.sh [选项]
+# Usage:
+#   ./scripts/gen-radsec-certs.sh [options]
 #
-# 选项:
-#   -d DIR     输出目录 (默认: ./rundata/private)
-#   -h HOST    服务器主机名 (默认: radius.example.com)
-#   -i IPS     服务器 IP 地址，逗号分隔 (默认: 127.0.0.1)
-#   -y DAYS    证书有效期天数 (默认: 3650)
-#   -o ORG     组织名称 (默认: ToughRADIUS)
-#   -h         显示帮助信息
+# Options:
+#   -d DIR     Output directory (default: ./rundata/private)
+#   -h HOST    Server hostname (default: radius.example.com)
+#   -i IPS     Server IP addresses, comma-separated (default: 127.0.0.1)
+#   -y DAYS    Certificate validity in days (default: 3650)
+#   -o ORG     Organization name (default: ToughRADIUS)
+#   -h         Display help information
 #
-# 示例:
-#   # 使用默认配置生成证书
+# Examples:
+#   # Generate certificates using the default configuration
 #   ./scripts/gen-radsec-certs.sh
 #
-#   # 指定主机名和 IP
+#   # Specify hostname and IP
 #   ./scripts/gen-radsec-certs.sh -h radius.mycompany.com -i "192.168.1.100,10.0.0.1"
 #
-#   # 自定义所有参数
+#   # Customize all parameters
 #   ./scripts/gen-radsec-certs.sh -d ./certs -h radius.local -i 127.0.0.1 -y 1825 -o "My Company"
 #
 #########################################################
 
 set -e
 
-# 默认配置
+# Default configuration
 OUTPUT_DIR="./rundata/private"
 SERVER_HOST="radius.example.com"
 SERVER_IPS="127.0.0.1"
@@ -42,14 +42,14 @@ PROVINCE="Shanghai"
 LOCALITY="Shanghai"
 ORG_UNIT="IT"
 
-# 颜色输出
+# Colorized output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# 显示帮助信息
+# Display help information
 show_help() {
     cat << EOF
 ToughRADIUS RadSec 服务器证书生成脚本
@@ -70,13 +70,13 @@ ToughRADIUS RadSec 服务器证书生成脚本
     -h          显示此帮助信息
 
 示例:
-    # 使用默认配置
+    # Use the default configuration
     $0
 
-    # 指定主机名和 IP
+    # Specify hostname and IP
     $0 -n radius.mycompany.com -i "192.168.1.100,10.0.0.1"
 
-    # 完整配置
+    # Full configuration
     $0 -d ./certs -n radius.local -i 127.0.0.1 -y 1825 -o "My Company"
 
 生成的文件:
@@ -88,7 +88,7 @@ ToughRADIUS RadSec 服务器证书生成脚本
 EOF
 }
 
-# 解析命令行参数
+# Parse command-line arguments
 while getopts "d:n:i:y:o:c:p:l:u:h" opt; do
     case $opt in
         d) OUTPUT_DIR="$OPTARG" ;;
@@ -112,7 +112,7 @@ while getopts "d:n:i:y:o:c:p:l:u:h" opt; do
     esac
 done
 
-# 打印配置信息
+# Print configuration information
 echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}  ToughRADIUS RadSec 证书生成${NC}"
 echo -e "${BLUE}========================================${NC}"
@@ -129,17 +129,17 @@ echo -e "  城市:         ${YELLOW}$LOCALITY${NC}"
 echo -e "  组织单元:     ${YELLOW}$ORG_UNIT${NC}"
 echo ""
 
-# 创建输出目录
+# Create the output directory
 mkdir -p "$OUTPUT_DIR"
 
-# 检查 certgen 工具是否存在
+# Check whether the certgen tool exists
 if ! command -v go &> /dev/null; then
     echo -e "${RED}错误: 未找到 Go 工具链${NC}"
     echo "请先安装 Go: https://golang.org/dl/"
     exit 1
 fi
 
-# 构建 certgen 工具（如果需要）
+# Build the certgen tool if needed
 CERTGEN_BIN="./certgen"
 if [ ! -f "$CERTGEN_BIN" ]; then
     echo -e "${YELLOW}正在构建 certgen 工具...${NC}"
@@ -148,10 +148,10 @@ if [ ! -f "$CERTGEN_BIN" ]; then
     echo ""
 fi
 
-# 准备 DNS 名称列表（包含主机名及其通配符）
+# Prepare the DNS name list (including hostnames and wildcards)
 DNS_NAMES="${SERVER_HOST},*.${SERVER_HOST},localhost"
 
-# 生成证书
+# Generate certificates
 echo -e "${YELLOW}正在生成证书...${NC}"
 echo ""
 
@@ -170,7 +170,7 @@ echo ""
 -server-ips "$SERVER_IPS" \
 -client-cn "radius-client"
 
-# 重命名服务器证书文件为 RadSec 标准命名
+# Rename the server certificate files to RadSec-standard names
 if [ -f "$OUTPUT_DIR/server.crt" ]; then
     mv "$OUTPUT_DIR/server.crt" "$OUTPUT_DIR/radsec.tls.crt"
     echo -e "${GREEN}✓ 服务器证书已重命名为 radsec.tls.crt${NC}"

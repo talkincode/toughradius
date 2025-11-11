@@ -127,7 +127,7 @@ func TestRsaEncryptDecrypt(t *testing.T) {
 		},
 		{
 			name:      "Special characters",
-			plaintext: "测试中文字符!@#$%^&*()",
+			plaintext: "Test Chinese characters!@#$%^&*()",
 		},
 		{
 			name:      "Long text",

@@ -43,7 +43,7 @@ func TestH3CParser_Parse(t *testing.T) {
 			name:           "H3C-IP-Host-Addr too short, fallback to CallingStationID",
 			ipHostAddr:     "192.168.1.100",
 			callingStation: "aa:bb:cc:dd:ee:ff",
-			expectedMac:    "192.168.1.100", // 长度不足17，直接使用 ipha
+			expectedMac:    "192.168.1.100", // Length shorter than 17, use IP as MAC
 			expectedVlan1:  0,
 			expectedVlan2:  0,
 		},

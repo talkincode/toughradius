@@ -32,7 +32,7 @@ func TestEAPAuthHelperGetCoordinator(t *testing.T) {
 		t.Fatal("GetCoordinator returned nil")
 	}
 
-	// 验证是同一个实例
+	// Validate it returns the same instance
 	if coordinator != helper.coordinator {
 		t.Error("GetCoordinator returned different instance")
 	}
@@ -41,7 +41,7 @@ func TestEAPAuthHelperGetCoordinator(t *testing.T) {
 func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 	helper := NewEAPAuthHelper()
 
-	// 创建测试数据
+	// Create test data
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, "testuser")
 
@@ -68,10 +68,10 @@ func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 	vendorReq := &vendorparsers.VendorRequest{}
 	response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-	// 测试 HandleEAPAuthentication
-	// 注意：由于没有实际的 EAP 消息，这个调用应该返回 handled=false
+	// Test HandleEAPAuthentication
+	// Note: without a real EAP message, this call should return handled=false
 	handled, success, err := helper.HandleEAPAuthentication(
-		nil, // ResponseWriter - 可以为 nil 因为不会被使用
+		nil, // ResponseWriter - nil because it won't be used
 		req,
 		user,
 		nas,
@@ -80,8 +80,8 @@ func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 		"eap-md5",
 	)
 
-	// 验证结果
-	// 由于没有 EAP 消息，协调器应该返回未处理
+	// Validate the result
+	// Without an EAP message, the coordinator should report unhandled
 	if handled {
 		t.Log("Note: handled=true may indicate EAP message was found")
 	}
@@ -90,7 +90,7 @@ func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 		t.Logf("Error occurred (expected for missing EAP message): %v", err)
 	}
 
-	_ = success // success 的值取决于是否有 EAP 消息
+	_ = success // success depends on whether an EAP message was present
 }
 
 func TestEAPAuthHelperSendEAPSuccess(t *testing.T) {
@@ -105,19 +105,19 @@ func TestEAPAuthHelperSendEAPSuccess(t *testing.T) {
 
 	response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-	// 测试 SendEAPSuccess
-	// 注意：由于 ResponseWriter 为 nil，会返回错误或 panic
-	// 我们只测试方法是否存在且不会导致意外错误
+	// Test SendEAPSuccess
+	// Note: with a nil ResponseWriter, this may return an error or panic
+	// We just ensure the method exists and won't panic unexpectedly
 	defer func() {
 		if r := recover(); r != nil {
-			// ResponseWriter 为 nil 导致 panic 是预期的
+			// A panic is expected when ResponseWriter is nil
 			t.Logf("SendEAPSuccess panicked (expected with nil writer): %v", r)
 		}
 	}()
 
 	err := helper.SendEAPSuccess(nil, req, response, "secret")
 
-	// 由于 ResponseWriter 为 nil，可能会返回错误或 panic
+	// With a nil ResponseWriter, an error or panic may occur
 	if err != nil {
 		t.Logf("SendEAPSuccess error (expected with nil writer): %v", err)
 	}
@@ -133,17 +133,17 @@ func TestEAPAuthHelperSendEAPFailure(t *testing.T) {
 		LocalAddr:  &net.UDPAddr{IP: net.ParseIP("192.168.1.1"), Port: 1812},
 	}
 
-	// 测试 SendEAPFailure
+	// Test SendEAPFailure
 	defer func() {
 		if r := recover(); r != nil {
-			// ResponseWriter 为 nil 导致 panic 是预期的
+		// A panic is expected when the ResponseWriter is nil
 			t.Logf("SendEAPFailure panicked (expected with nil writer): %v", r)
 		}
 	}()
 
 	err := helper.SendEAPFailure(nil, req, "secret", nil)
 
-	// 由于 ResponseWriter 为 nil，可能会返回错误或 panic
+	// With a nil ResponseWriter, an error or panic may occur
 	if err != nil {
 		t.Logf("SendEAPFailure error (expected with nil writer): %v", err)
 	}
@@ -159,14 +159,14 @@ func TestEAPAuthHelperCleanupState(t *testing.T) {
 		LocalAddr:  &net.UDPAddr{IP: net.ParseIP("192.168.1.1"), Port: 1812},
 	}
 
-	// 测试 CleanupState - 应该不会 panic
+	// Test CleanupState - should not panic
 	helper.CleanupState(req)
 }
 
 func TestEAPAuthHelperMacAuth(t *testing.T) {
 	helper := NewEAPAuthHelper()
 
-	// 创建 MAC 认证场景
+	// Create a MAC authentication scenario
 	macAddr := "aa:bb:cc:dd:ee:ff"
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, macAddr)
@@ -191,14 +191,14 @@ func TestEAPAuthHelperMacAuth(t *testing.T) {
 		Secret:     "secret",
 	}
 
-	// MAC 认证场景
+	// MAC authentication scenario
 	vendorReq := &vendorparsers.VendorRequest{
 		MacAddr: macAddr,
 	}
 
 	response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-	// 测试 MAC 认证
+	// Test MAC authentication
 	handled, success, err := helper.HandleEAPAuthentication(
 		nil,
 		req,
@@ -213,8 +213,8 @@ func TestEAPAuthHelperMacAuth(t *testing.T) {
 	_ = success
 	_ = err
 
-	// MAC 认证时 isMacAuth 应该为 true
-	// 由于实际逻辑在 coordinator 中，这里只是验证方法调用不会 panic
+	// isMacAuth should be true during MAC authentication
+	// The coordinator logic handles this, so we only check that the call doesn't panic
 }
 
 func TestEAPAuthHelperDifferentMethods(t *testing.T) {
@@ -245,7 +245,7 @@ func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 	vendorReq := &vendorparsers.VendorRequest{}
 	response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-	// 测试不同的 EAP 方法
+	// Test different EAP methods
 	methods := []string{"eap-md5", "eap-mschapv2", "eap-tls"}
 
 	for _, method := range methods {
@@ -260,7 +260,7 @@ func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 				method,
 			)
 
-			// 验证方法调用不会 panic
+			// Ensure the method call does not panic
 			_ = handled
 			_ = success
 			_ = err
@@ -271,7 +271,7 @@ func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 func TestEAPAuthHelperConcurrentAccess(t *testing.T) {
 	helper := NewEAPAuthHelper()
 
-	// 测试并发访问 GetCoordinator 是否安全
+	// Test concurrent access to GetCoordinator for safety
 	done := make(chan bool, 10)
 
 	for i := 0; i < 10; i++ {
@@ -284,7 +284,7 @@ func TestEAPAuthHelperConcurrentAccess(t *testing.T) {
 		}()
 	}
 
-	// 等待所有 goroutine 完成
+	// Wait for all goroutines to finish
 	for i := 0; i < 10; i++ {
 		<-done
 	}

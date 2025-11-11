@@ -13,7 +13,7 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// DefaultAcceptEnhancer 下发标准 RADIUS 属性
+// DefaultAcceptEnhancer sets standard RADIUS attributes
 type DefaultAcceptEnhancer struct{}
 
 func NewDefaultAcceptEnhancer() *DefaultAcceptEnhancer {

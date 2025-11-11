@@ -9,7 +9,7 @@ import (
 	"layeh.com/radius/rfc2865"
 )
 
-// PAPValidator PAP密码验证器
+// PAPValidator handles PAP password validation
 type PAPValidator struct{}
 
 func (v *PAPValidator) Name() string {

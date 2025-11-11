@@ -9,7 +9,7 @@ import (
 func TestDefaultAppConfig(t *testing.T) {
 	cfg := DefaultAppConfig
 
-	// 测试系统配置
+	// TestSystem configuration
 	if cfg.System.Appid != "ToughRADIUS" {
 		t.Errorf("Expected Appid 'ToughRADIUS', got '%s'", cfg.System.Appid)
 	}
@@ -26,7 +26,7 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Error("Expected Debug to be true")
 	}
 
-	// 测试 Web 配置
+	// Test Web configuration
 	if cfg.Web.Host != "0.0.0.0" {
 		t.Errorf("Expected Web.Host '0.0.0.0', got '%s'", cfg.Web.Host)
 	}
@@ -39,7 +39,7 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Errorf("Expected Web.TlsPort 1817, got %d", cfg.Web.TlsPort)
 	}
 
-	// 测试数据库配置
+	// TestDatabase configuration
 	if cfg.Database.Type != "sqlite" {
 		t.Errorf("Expected Database.Type 'sqlite', got '%s'", cfg.Database.Type)
 	}
@@ -52,7 +52,7 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Errorf("Expected Database.MaxConn 100, got %d", cfg.Database.MaxConn)
 	}
 
-	// 测试 RADIUS 配置
+	// Test RADIUS configuration
 	if !cfg.Radiusd.Enabled {
 		t.Error("Expected Radiusd.Enabled to be true")
 	}
@@ -69,7 +69,7 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Errorf("Expected Radiusd.RadsecPort 2083, got %d", cfg.Radiusd.RadsecPort)
 	}
 
-	// 测试日志配置
+	// Test logger configuration
 	if cfg.Logger.Mode != "development" {
 		t.Errorf("Expected Logger.Mode 'development', got '%s'", cfg.Logger.Mode)
 	}
@@ -133,7 +133,7 @@ func TestAppConfigGetters(t *testing.T) {
 		},
 	}
 
-	// 设置 RadSec 证书路径（相对路径）
+	// Set the RadSec certificate paths (relative path)
 	cfg.Radiusd.RadsecCaCert = "private/ca.crt"
 	cfg.Radiusd.RadsecCert = "private/radsec.tls.crt"
 	cfg.Radiusd.RadsecKey = "private/radsec.tls.key"
@@ -152,7 +152,7 @@ func TestLoadConfigFromFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "test-config.yml")
 
-	// 创建测试配置文件
+	// CreateTestconfig file
 	configContent := `
 system:
   appid: TestApp
@@ -197,10 +197,10 @@ logger:
 		t.Fatalf("Failed to write config file: %v", err)
 	}
 
-	// 加载配置
+	// Loadconfiguration
 	cfg := LoadConfig(configFile)
 
-	// 验证系统配置
+	// ValidateSystem configuration
 	if cfg.System.Appid != "TestApp" {
 		t.Errorf("Expected Appid 'TestApp', got '%s'", cfg.System.Appid)
 	}
@@ -213,7 +213,7 @@ logger:
 		t.Error("Expected Debug to be false")
 	}
 
-	// 验证 Web 配置
+	// Validate Web configuration
 	if cfg.Web.Host != "127.0.0.1" {
 		t.Errorf("Expected Web.Host '127.0.0.1', got '%s'", cfg.Web.Host)
 	}
@@ -226,7 +226,7 @@ logger:
 		t.Errorf("Expected Web.Secret 'test-secret', got '%s'", cfg.Web.Secret)
 	}
 
-	// 验证数据库配置
+	// ValidateDatabase configuration
 	if cfg.Database.Type != "postgres" {
 		t.Errorf("Expected Database.Type 'postgres', got '%s'", cfg.Database.Type)
 	}
@@ -247,7 +247,7 @@ logger:
 		t.Errorf("Expected Database.MaxConn 50, got %d", cfg.Database.MaxConn)
 	}
 
-	// 验证 RADIUS 配置
+	// Validate RADIUS configuration
 	if cfg.Radiusd.Enabled {
 		t.Error("Expected Radiusd.Enabled to be false")
 	}
@@ -260,7 +260,7 @@ logger:
 		t.Errorf("Expected Radiusd.RadsecWorker 50, got %d", cfg.Radiusd.RadsecWorker)
 	}
 
-	// 验证日志配置
+	// Validate logger configuration
 	if cfg.Logger.Mode != "production" {
 		t.Errorf("Expected Logger.Mode 'production', got '%s'", cfg.Logger.Mode)
 	}
@@ -271,10 +271,10 @@ logger:
 }
 
 func TestLoadConfigNonExistent(t *testing.T) {
-	// 加载不存在的配置文件，应该返回默认配置
+// Loading a nonexistent config file should return the default configuration
 	cfg := LoadConfig("/nonexistent/path/config.yml")
 
-	// 验证返回的是默认配置
+	// Validate that the defaults are returned
 	if cfg.System.Appid != DefaultAppConfig.System.Appid {
 		t.Errorf("Expected default Appid '%s', got '%s'", DefaultAppConfig.System.Appid, cfg.System.Appid)
 	}
@@ -288,7 +288,7 @@ func TestEnvVariableOverrides(t *testing.T) {
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "env-test-config.yml")
 
-	// 创建基础配置文件
+	// Create a base config file
 	configContent := `
 system:
   appid: TestApp
@@ -326,7 +326,7 @@ logger:
 		t.Fatalf("Failed to write config file: %v", err)
 	}
 
-	// 设置环境变量
+	// Set environment variables
 	testEnvVars := map[string]string{
 		"TOUGHRADIUS_SYSTEM_DEBUG":         "true",
 		"TOUGHRADIUS_WEB_HOST":             "192.168.1.1",
@@ -346,18 +346,18 @@ logger:
 		"TOUGHRADIUS_RADIUS_RADSEC_WORKER": "200",
 	}
 
-	// 保存原始环境变量
+	// Preserve the original environment variables
 	originalEnvVars := make(map[string]string)
 	for key := range testEnvVars {
 		originalEnvVars[key] = os.Getenv(key)
 	}
 
-	// 设置测试环境变量
+	// Set test-specific environment variables
 	for key, value := range testEnvVars {
 		os.Setenv(key, value)
 	}
 
-	// 确保测试结束后恢复环境变量
+	// Restore environment variables after the test
 	defer func() {
 		for key, value := range originalEnvVars {
 			if value == "" {
@@ -368,10 +368,10 @@ logger:
 		}
 	}()
 
-	// 加载配置（环境变量应该覆盖文件配置）
+	// Load the configuration (environment variables should override file settings)
 	cfg := LoadConfig(configFile)
 
-	// 验证环境变量覆盖
+	// Validate that environment variables override file values
 	if !cfg.System.Debug {
 		t.Error("Expected System.Debug to be true (from env)")
 	}
@@ -448,7 +448,7 @@ func TestInitDirs(t *testing.T) {
 
 	cfg.initDirs()
 
-	// 验证目录是否创建
+	// Validate that the directories were created
 	expectedDirs := []string{
 		"logs",
 		"public",
@@ -663,7 +663,7 @@ func TestSetEnvInt64Value(t *testing.T) {
 }
 
 func TestDatabaseConfig(t *testing.T) {
-	// 测试 SQLite 配置
+	// Test SQLite configuration
 	sqliteCfg := DBConfig{
 		Type:     "sqlite",
 		Name:     "test.db",
@@ -676,7 +676,7 @@ func TestDatabaseConfig(t *testing.T) {
 		t.Errorf("Expected Type 'sqlite', got '%s'", sqliteCfg.Type)
 	}
 
-	// 测试 PostgreSQL 配置
+	// Test PostgreSQL configuration
 	postgresCfg := DBConfig{
 		Type:     "postgres",
 		Host:     "localhost",
@@ -706,7 +706,7 @@ func TestCompleteConfigurationCycle(t *testing.T) {
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "complete-test.yml")
 
-	// 创建完整配置
+	// Create a complete configuration
 	configContent := `
 system:
   appid: CompleteTest
@@ -747,10 +747,10 @@ logger:
 		t.Fatalf("Failed to write config file: %v", err)
 	}
 
-	// 加载并验证配置
+	// Load and validate the configuration
 	cfg := LoadConfig(configFile)
 
-	// 验证所有 getter 方法
+	// Validate all getter methods
 	if cfg.GetLogDir() != filepath.Join(tmpDir, "logs") {
 		t.Errorf("GetLogDir mismatch")
 	}
@@ -771,7 +771,7 @@ logger:
 		t.Errorf("GetBackupDir mismatch")
 	}
 
-	// 验证目录已创建
+	// Validate that the directories were created
 	dirs := []string{
 		cfg.GetLogDir(),
 		cfg.GetPublicDir(),
@@ -798,7 +798,7 @@ func TestRadsecCertPathsAbsolute(t *testing.T) {
 		},
 	}
 
-	// 测试绝对路径不会被拼接
+	// Test that absolute paths are not modified
 	if cfg.GetRadsecCaCertPath() != "/etc/ssl/certs/ca.crt" {
 		t.Errorf("Expected absolute path '/etc/ssl/certs/ca.crt', got '%s'", cfg.GetRadsecCaCertPath())
 	}
@@ -824,7 +824,7 @@ func TestRadsecCertPathsRelative(t *testing.T) {
 		},
 	}
 
-	// 测试相对路径会被拼接到 workdir
+	// Test that relative paths are joined to the workdir
 	if cfg.GetRadsecCaCertPath() != "/var/toughradius/certs/ca.crt" {
 		t.Errorf("Expected path '/var/toughradius/certs/ca.crt', got '%s'", cfg.GetRadsecCaCertPath())
 	}
@@ -841,7 +841,7 @@ func TestRadsecCertPathsRelative(t *testing.T) {
 func TestDefaultRadsecCertPaths(t *testing.T) {
 	cfg := DefaultAppConfig
 
-	// 验证默认配置中的 RadSec 证书路径
+	// Validate the default RadSec certificate paths in the configuration
 	if cfg.Radiusd.RadsecCaCert != "private/ca.crt" {
 		t.Errorf("Expected default RadsecCaCert 'private/ca.crt', got '%s'", cfg.Radiusd.RadsecCaCert)
 	}

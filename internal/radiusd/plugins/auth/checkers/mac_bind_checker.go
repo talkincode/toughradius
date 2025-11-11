@@ -9,7 +9,7 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// MacBindChecker MAC 绑定检查器
+// MacBindChecker enforces MAC binding
 type MacBindChecker struct{}
 
 func (c *MacBindChecker) Name() string {
@@ -17,24 +17,24 @@ func (c *MacBindChecker) Name() string {
 }
 
 func (c *MacBindChecker) Order() int {
-	return 20 // 在状态和过期之后
+	return 20 // Execute after status and expiration checks
 }
 
 func (c *MacBindChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {
 	user := authCtx.User
 
-	// 不检查 MAC 绑定
+		// Skip MAC bind check
 	if user.BindMac == 0 {
 		return nil
 	}
 
-	// 获取厂商请求中的 MAC 地址
+	// Get MAC addresses from the vendor request
 	vendorReq, ok := authCtx.VendorRequest.(*vendorparsers.VendorRequest)
 	if !ok || vendorReq == nil {
 		return nil
 	}
 
-	// 如果用户 MAC 和请求 MAC 都有效，则检查是否匹配
+	// e.g., if both the user MAC and request MAC are present, ensure they match
 	if common.IsNotEmptyAndNA(user.MacAddr) && vendorReq.MacAddr != "" && user.MacAddr != vendorReq.MacAddr {
 		return errors.NewMacBindError()
 	}

@@ -17,7 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// createTestOperator 创建测试操作员数据
+// createTestOperator creates test operator data
 func createTestOperator(db *gorm.DB, username string, level string) *domain.SysOpr {
 	opr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
@@ -41,10 +41,10 @@ func TestListOperators(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 自动迁移操作员表
+	// Automatically migrate the operator table
 	db.AutoMigrate(&domain.SysOpr{})
 
-	// 创建测试数据
+	// Create test data
 	createTestOperator(db, "admin1", "admin")
 	createTestOperator(db, "operator1", "operator")
 	createTestOperator(db, "superadmin", "super")
@@ -57,7 +57,7 @@ func TestListOperators(t *testing.T) {
 		checkResponse  func(*testing.T, *Response)
 	}{
 		{
-			name:           "获取所有操作员 - 默认分页",
+			name:           "List all operators - default pagination",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -68,7 +68,7 @@ func TestListOperators(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第1页",
+			name:           "Paginated query - page 1",
 			queryParams:    "?page=1&pageSize=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  2,
@@ -79,24 +79,24 @@ func TestListOperators(t *testing.T) {
 			},
 		},
 		{
-			name:           "按用户名搜索",
+			name:           "Search by username",
 			queryParams:    "?username=admin1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
 				operators := resp.Data.([]domain.SysOpr)
 				assert.Equal(t, "admin1", operators[0].Username)
-				assert.Empty(t, operators[0].Password) // 密码应被清空
+				assert.Empty(t, operators[0].Password) // Password should be cleared
 			},
 		},
 		{
-			name:           "按真实姓名搜索",
+			name:           "Search by real name",
 			queryParams:    "?realname=Test",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
 		},
 		{
-			name:           "按权限级别过滤",
+			name:           "Filter by permission level",
 			queryParams:    "?level=super",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -106,7 +106,7 @@ func TestListOperators(t *testing.T) {
 			},
 		},
 		{
-			name:           "按状态过滤",
+			name:           "Filter by status",
 			queryParams:    "?status=enabled",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -128,7 +128,7 @@ func TestListOperators(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			// 将 data 转换为 operator 数组
+			// Convert the response data to a slice of operators
 			dataBytes, _ := json.Marshal(response.Data)
 			var operators []domain.SysOpr
 			json.Unmarshal(dataBytes, &operators)
@@ -148,7 +148,7 @@ func TestGetOperator(t *testing.T) {
 	setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
-	// 创建测试数据
+	// Create test data
 	opr := createTestOperator(db, "testadmin", "admin")
 
 	tests := []struct {
@@ -158,12 +158,12 @@ func TestGetOperator(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "获取存在的操作员",
+			name:           "Get existing operator",
 			operatorID:     opr.ID,
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "获取不存在的操作员",
+			name:           "Get missing operator",
 			operatorID:     999999,
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "OPERATOR_NOT_FOUND",
@@ -193,7 +193,7 @@ func TestGetOperator(t *testing.T) {
 				json.Unmarshal(dataBytes, &resultOpr)
 
 				assert.Equal(t, opr.Username, resultOpr.Username)
-				assert.Empty(t, resultOpr.Password) // 密码应被清空
+				assert.Empty(t, resultOpr.Password) // Password should be cleared
 			} else {
 				var errResponse ErrorResponse
 				json.Unmarshal(rec.Body.Bytes(), &errResponse)
@@ -216,7 +216,7 @@ func TestCreateOperator(t *testing.T) {
 		checkResult    func(*testing.T, *domain.SysOpr)
 	}{
 		{
-			name: "成功创建操作员",
+			name: "Successfully create operator",
 			requestBody: `{
 				"username": "newadmin",
 				"password": "Password123",
@@ -232,11 +232,11 @@ func TestCreateOperator(t *testing.T) {
 				assert.Equal(t, "New Admin", opr.Realname)
 				assert.Equal(t, "admin", opr.Level)
 				assert.Equal(t, "enabled", opr.Status)
-				assert.Empty(t, opr.Password) // 返回时密码应被清空
+				assert.Empty(t, opr.Password) // Password should be cleared in the response
 			},
 		},
 		{
-			name: "创建时使用默认权限级别",
+			name: "Use default permission level on create",
 			requestBody: `{
 				"username": "defaultoper",
 				"password": "Password123",
@@ -245,12 +245,12 @@ func TestCreateOperator(t *testing.T) {
 			}`,
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, opr *domain.SysOpr) {
-				assert.Equal(t, "operator", opr.Level) // 默认为 operator
-				assert.Equal(t, "enabled", opr.Status) // 默认为 enabled
+				assert.Equal(t, "operator", opr.Level) // Defaults to operator
+				assert.Equal(t, "enabled", opr.Status) // Defaults to enabled
 			},
 		},
 		{
-			name: "用户名太短",
+			name: "Username too short",
 			requestBody: `{
 				"username": "ab",
 				"password": "Password123",
@@ -260,7 +260,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_USERNAME",
 		},
 		{
-			name: "用户名太长",
+			name: "Username too long",
 			requestBody: `{
 				"username": "abcdefghijklmnopqrstuvwxyz12345",
 				"password": "Password123",
@@ -270,25 +270,25 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_USERNAME",
 		},
 		{
-			name:           "缺少用户名",
+			name:           "Missing username",
 			requestBody:    `{"password": "Password123", "realname": "Test"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "MISSING_USERNAME",
 		},
 		{
-			name:           "缺少密码",
+			name:           "Missing password",
 			requestBody:    `{"username": "testuser", "realname": "Test"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "MISSING_PASSWORD",
 		},
 		{
-			name:           "缺少真实姓名",
+			name:           "Missing real name",
 			requestBody:    `{"username": "testuser", "password": "Password123"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "MISSING_REALNAME",
 		},
 		{
-			name: "密码太短",
+			name: "Password too short",
 			requestBody: `{
 				"username": "testuser",
 				"password": "12345",
@@ -298,7 +298,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_PASSWORD",
 		},
 		{
-			name: "密码太长",
+			name: "Password too long",
 			requestBody: `{
 				"username": "testuser",
 				"password": "` + strings.Repeat("a", 51) + `",
@@ -308,7 +308,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_PASSWORD",
 		},
 		{
-			name: "密码强度不足 - 只有数字",
+			name: "Password strength insufficient - numbers only",
 			requestBody: `{
 				"username": "testuser",
 				"password": "123456789",
@@ -318,7 +318,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "WEAK_PASSWORD",
 		},
 		{
-			name: "密码强度不足 - 只有字母",
+			name: "Password strength insufficient - letters only",
 			requestBody: `{
 				"username": "testuser",
 				"password": "abcdefgh",
@@ -328,7 +328,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "WEAK_PASSWORD",
 		},
 		{
-			name: "无效的邮箱格式",
+			name: "Invalid email format",
 			requestBody: `{
 				"username": "testuser",
 				"password": "Password123",
@@ -339,7 +339,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_EMAIL",
 		},
 		{
-			name: "无效的手机号格式",
+			name: "Invalid mobile format",
 			requestBody: `{
 				"username": "testuser",
 				"password": "Password123",
@@ -350,7 +350,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_MOBILE",
 		},
 		{
-			name: "无效的权限级别",
+			name: "Invalid permission level",
 			requestBody: `{
 				"username": "testuser",
 				"password": "Password123",
@@ -361,7 +361,7 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "INVALID_LEVEL",
 		},
 		{
-			name: "用户名已存在",
+			name: "Username already exists",
 			requestBody: `{
 				"username": "duplicateuser",
 				"password": "Password123",
@@ -371,13 +371,13 @@ func TestCreateOperator(t *testing.T) {
 			expectedError:  "USERNAME_EXISTS",
 		},
 		{
-			name:           "无效的 JSON",
+			name:           "Invalid JSON",
 			requestBody:    `{invalid json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_REQUEST",
 		},
 		{
-			name: "用户名自动去除空格",
+			name: "Username trims spaces automatically",
 			requestBody: `{
 				"username": "  spaceuser  ",
 				"password": "Password123",
@@ -392,8 +392,8 @@ func TestCreateOperator(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 为用户名已存在测试创建已存在的操作员
-			if tt.name == "用户名已存在" {
+			// Create an operator with an existing username to test duplicate handling
+			if tt.name == "Username already exists" {
 				createTestOperator(db, "duplicateuser", "operator")
 			}
 
@@ -434,7 +434,7 @@ func TestUpdateOperator(t *testing.T) {
 	setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
-	// 创建测试数据
+	// Create test data
 	opr := createTestOperator(db, "originaluser", "operator")
 	createTestOperator(db, "anotheruser", "admin")
 
@@ -447,7 +447,7 @@ func TestUpdateOperator(t *testing.T) {
 		checkResult    func(*testing.T, *domain.SysOpr)
 	}{
 		{
-			name:       "成功更新操作员",
+			name:       "Successfully update operator",
 			operatorID: opr.ID,
 			requestBody: `{
 				"realname": "Updated Name",
@@ -460,7 +460,7 @@ func TestUpdateOperator(t *testing.T) {
 			},
 		},
 		{
-			name:       "更新权限级别",
+			name:       "Update permission level",
 			operatorID: opr.ID,
 			requestBody: `{
 				"level": "admin"
@@ -471,15 +471,15 @@ func TestUpdateOperator(t *testing.T) {
 			},
 		},
 		{
-			name:       "更新密码",
+			name:       "Update password",
 			operatorID: opr.ID,
 			requestBody: `{
 				"password": "NewPass456"
 			}`,
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, o *domain.SysOpr) {
-				assert.Empty(t, o.Password) // 返回时应被清空
-				// 验证密码已更新（需要从数据库重新查询）
+				assert.Empty(t, o.Password) // Password should be cleared in the response
+				// Validate the password was updated (need to re-query the database)
 				var updatedOpr domain.SysOpr
 				db.Where("id = ?", opr.ID).First(&updatedOpr)
 				expectedHash := common.Sha256HashWithSalt("NewPass456", common.SecretSalt)
@@ -487,7 +487,7 @@ func TestUpdateOperator(t *testing.T) {
 			},
 		},
 		{
-			name:       "部分更新 - 只更新状态",
+			name:       "Partial update - status only",
 			operatorID: opr.ID,
 			requestBody: `{
 				"status": "disabled"
@@ -498,7 +498,7 @@ func TestUpdateOperator(t *testing.T) {
 			},
 		},
 		{
-			name:       "用户名冲突",
+			name:       "Username conflict",
 			operatorID: opr.ID,
 			requestBody: `{
 				"username": "anotheruser"
@@ -507,14 +507,14 @@ func TestUpdateOperator(t *testing.T) {
 			expectedError:  "USERNAME_EXISTS",
 		},
 		{
-			name:           "操作员不存在",
+			name:           "Operator not found",
 			operatorID:     999999,
 			requestBody:    `{"realname": "test"}`,
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "OPERATOR_NOT_FOUND",
 		},
 		{
-			name:       "无效的用户名 - 太短",
+			name:       "Invalid username - too short",
 			operatorID: opr.ID,
 			requestBody: `{
 				"username": "ab"
@@ -523,7 +523,7 @@ func TestUpdateOperator(t *testing.T) {
 			expectedError:  "INVALID_USERNAME",
 		},
 		{
-			name:       "无效的密码 - 太短",
+			name:       "Invalid password - too short",
 			operatorID: opr.ID,
 			requestBody: `{
 				"password": "12345"
@@ -532,7 +532,7 @@ func TestUpdateOperator(t *testing.T) {
 			expectedError:  "INVALID_PASSWORD",
 		},
 		{
-			name:       "密码强度不足",
+			name:       "Password strength insufficient",
 			operatorID: opr.ID,
 			requestBody: `{
 				"password": "123456789"
@@ -541,7 +541,7 @@ func TestUpdateOperator(t *testing.T) {
 			expectedError:  "WEAK_PASSWORD",
 		},
 		{
-			name:       "无效的邮箱格式",
+			name:       "Invalid email format",
 			operatorID: opr.ID,
 			requestBody: `{
 				"email": "invalid-email"
@@ -550,7 +550,7 @@ func TestUpdateOperator(t *testing.T) {
 			expectedError:  "INVALID_EMAIL",
 		},
 		{
-			name:       "无效的手机号格式",
+			name:       "Invalid mobile format",
 			operatorID: opr.ID,
 			requestBody: `{
 				"mobile": "12345"
@@ -559,7 +559,7 @@ func TestUpdateOperator(t *testing.T) {
 			expectedError:  "INVALID_MOBILE",
 		},
 		{
-			name:       "更新邮箱和手机号",
+			name:       "Update email and mobile",
 			operatorID: opr.ID,
 			requestBody: `{
 				"email": "newemail@example.com",
@@ -596,7 +596,7 @@ func TestUpdateOperator(t *testing.T) {
 				var updatedOpr domain.SysOpr
 				json.Unmarshal(dataBytes, &updatedOpr)
 
-				assert.Empty(t, updatedOpr.Password) // 密码应被清空
+				assert.Empty(t, updatedOpr.Password) // Password should be cleared
 				if tt.checkResult != nil {
 					tt.checkResult(t, &updatedOpr)
 				}
@@ -609,13 +609,13 @@ func TestUpdateOperator(t *testing.T) {
 	}
 }
 
-// TestOperatorEdgeCases 测试边缘情况
+// TestOperatorEdgeCases Test edge cases
 func TestOperatorEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
-	t.Run("用户名自动去除空格", func(t *testing.T) {
+	t.Run("Username trims spaces automatically", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "  spaceadmin  ",
@@ -639,7 +639,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		assert.Equal(t, "spaceadmin", opr.Username)
 	})
 
-	t.Run("密码去除空格", func(t *testing.T) {
+	t.Run("Password trims spaces", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "testadmin2",
@@ -661,14 +661,14 @@ func TestOperatorEdgeCases(t *testing.T) {
 		var opr domain.SysOpr
 		json.Unmarshal(dataBytes, &opr)
 
-		// 验证密码已正确存储（去除空格后加密）
+		// Validate the password is stored correctly (trimmed then hashed)
 		var savedOpr domain.SysOpr
 		db.Where("id = ?", opr.ID).First(&savedOpr)
 		expectedHash := common.Sha256HashWithSalt("Password123", common.SecretSalt)
 		assert.Equal(t, expectedHash, savedOpr.Password)
 	})
 
-	t.Run("更新不存在的字段不应影响其他字段", func(t *testing.T) {
+	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		opr := createTestOperator(db, "testadmin3", "admin")
 		originalUsername := opr.Username
 		originalLevel := opr.Level
@@ -690,14 +690,14 @@ func TestOperatorEdgeCases(t *testing.T) {
 		var updatedOpr domain.SysOpr
 		json.Unmarshal(dataBytes, &updatedOpr)
 
-		// 用户名和权限级别不应该改变
+		// Username and permission level should not change
 		assert.Equal(t, originalUsername, updatedOpr.Username)
 		assert.Equal(t, originalLevel, updatedOpr.Level)
-		// realname 应该更新
+		// Realname should be updated
 		assert.Equal(t, "New Name", updatedOpr.Realname)
 	})
 
-	t.Run("权限级别大小写不敏感", func(t *testing.T) {
+	t.Run("Permission level is case-insensitive", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "casetest",
@@ -719,10 +719,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		var opr domain.SysOpr
 		json.Unmarshal(dataBytes, &opr)
 
-		assert.Equal(t, "admin", opr.Level) // 应该转换为小写
+		assert.Equal(t, "admin", opr.Level) // Should be converted to lowercase
 	})
 
-	t.Run("状态大小写不敏感", func(t *testing.T) {
+	t.Run("Status is case-insensitive", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "statustest",
@@ -744,10 +744,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		var opr domain.SysOpr
 		json.Unmarshal(dataBytes, &opr)
 
-		assert.Equal(t, "disabled", opr.Status) // 应该转换为小写
+		assert.Equal(t, "disabled", opr.Status) // Should be converted to lowercase
 	})
 
-	t.Run("验证有效的中国手机号", func(t *testing.T) {
+	t.Run("Validate valid mobile numbers", func(t *testing.T) {
 		validMobiles := []string{
 			"13800138000",
 			"15912345678",
@@ -771,11 +771,11 @@ func TestOperatorEdgeCases(t *testing.T) {
 
 			err := createOperator(c)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, rec.Code, "手机号 %s 应该是有效的", mobile)
+			assert.Equal(t, http.StatusOK, rec.Code, "Mobile number %s should be valid", mobile)
 		}
 	})
 
-	t.Run("验证有效的邮箱", func(t *testing.T) {
+	t.Run("Validate valid emails", func(t *testing.T) {
 		validEmails := []string{
 			"test@example.com",
 			"admin@test.com",
@@ -797,7 +797,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 
 			err := createOperator(c)
 			require.NoError(t, err)
-			assert.Equal(t, http.StatusOK, rec.Code, "邮箱 %s 应该是有效的", email)
+			assert.Equal(t, http.StatusOK, rec.Code, "Email %s should be valid", email)
 		}
 	})
 }

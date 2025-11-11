@@ -15,14 +15,14 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// 网络节点请求结构
+// nodePayload defines the network node request structure
 type nodePayload struct {
 	Name   string `json:"name" validate:"required,min=1,max=100"`
 	Tags   string `json:"tags" validate:"omitempty,max=200"`
 	Remark string `json:"remark" validate:"omitempty,max=500"`
 }
 
-// 注册网络节点路由
+// registerNodesRoutes registers network node routes
 func registerNodesRoutes() {
 	webserver.ApiGET("/network/nodes", listNodes)
 	webserver.ApiGET("/network/nodes/:id", getNode)
@@ -31,7 +31,7 @@ func registerNodesRoutes() {
 	webserver.ApiDELETE("/network/nodes/:id", deleteNode)
 }
 
-// 获取网络节点列表
+// listNodes retrieves the network node list
 func listNodes(c echo.Context) error {
 	page, pageSize := parsePagination(c)
 
@@ -55,7 +55,7 @@ func listNodes(c echo.Context) error {
 	return paged(c, nodes, total, page, pageSize)
 }
 
-// 获取单个网络节点
+// getNode retrieves a single network node
 func getNode(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
@@ -72,21 +72,21 @@ func getNode(c echo.Context) error {
 	return ok(c, node)
 }
 
-// 创建网络节点
+// createNode creates a network node
 func createNode(c echo.Context) error {
 	var payload nodePayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析节点参数", nil)
 	}
 
-	// 使用验证器验证请求参数
+	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
 		return err
 	}
 
 	payload.Name = strings.TrimSpace(payload.Name)
 
-	// 检查节点名称是否已存在
+	// Check whether another node already uses the same name
 	var exists int64
 	app.GDB().Model(&domain.NetNode{}).Where("name = ?", payload.Name).Count(&exists)
 	if exists > 0 {
@@ -109,7 +109,7 @@ func createNode(c echo.Context) error {
 	return ok(c, node)
 }
 
-// 更新网络节点
+// updateNode updates a network node
 func updateNode(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
@@ -121,7 +121,7 @@ func updateNode(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析节点参数", nil)
 	}
 
-	// 使用验证器验证请求参数
+	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func updateNode(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询网络节点失败", err.Error())
 	}
 
-	// 如果更新名称，检查名称是否已被其他节点使用
+	// If the name is changed, check whether another node already uses it
 	if payload.Name != "" && payload.Name != node.Name {
 		payload.Name = strings.TrimSpace(payload.Name)
 		var exists int64
@@ -144,7 +144,7 @@ func updateNode(c echo.Context) error {
 		node.Name = payload.Name
 	}
 
-	// 更新其他字段
+	// Update other fields
 	if payload.Tags != "" {
 		node.Tags = payload.Tags
 	}
@@ -160,14 +160,14 @@ func updateNode(c echo.Context) error {
 	return ok(c, node)
 }
 
-// 删除网络节点
+// deleteNode deletes a network node
 func deleteNode(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的节点 ID", nil)
 	}
 
-	// 检查是否有 NAS 设备关联此节点
+	// Check whether NAS devices are associated with this node
 	var nasCount int64
 	app.GDB().Model(&domain.NetNas{}).Where("node_id = ?", id).Count(&nasCount)
 	if nasCount > 0 {
@@ -183,7 +183,7 @@ func deleteNode(c echo.Context) error {
 	})
 }
 
-// 筛选条件
+// Filter conditions
 func applyNodeFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
 		db = db.Where("name ILIKE ?", "%"+name+"%")

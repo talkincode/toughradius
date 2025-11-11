@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// createTestUser 创建测试 User 数据
+// createTestUser creates test user data
 func createTestUser(db *gorm.DB, username string, profileID int64) *domain.RadiusUser {
 	user := &domain.RadiusUser{
 		Username:   username,
@@ -48,10 +48,10 @@ func TestListUsers(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试 Profile
+	// CreateTest Profile
 	profile := createTestProfile(db, "test-profile")
 
-	// 创建测试数据
+	// Create test data
 	createTestUser(db, "user1", profile.ID)
 	createTestUser(db, "user2", profile.ID)
 	createTestUser(db, "user3", profile.ID)
@@ -64,7 +64,7 @@ func TestListUsers(t *testing.T) {
 		checkResponse  func(*testing.T, *Response)
 	}{
 		{
-			name:           "获取所有 users - 默认分页",
+			name:           "List all users - default pagination",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -75,7 +75,7 @@ func TestListUsers(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第1页",
+			name:           "Paginated query - page 1",
 			queryParams:    "?page=1&perPage=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  2,
@@ -86,24 +86,24 @@ func TestListUsers(t *testing.T) {
 			},
 		},
 		{
-			name:           "按用户名搜索",
+			name:           "Search by username",
 			queryParams:    "?q=user1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
 				users := resp.Data.([]domain.RadiusUser)
 				assert.Equal(t, "user1", users[0].Username)
-				assert.Empty(t, users[0].Password) // 密码应被清空
+				assert.Empty(t, users[0].Password) // Password should be cleared
 			},
 		},
 		{
-			name:           "按状态过滤",
+			name:           "Filter by status",
 			queryParams:    "?status=enabled",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
 		},
 		{
-			name:           "按 profile_id 过滤",
+			name:           "Filter by profile_id",
 			queryParams:    "?profile_id=" + string(rune(profile.ID)),
 			expectedStatus: http.StatusOK,
 		},
@@ -124,7 +124,7 @@ func TestListUsers(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			// 将 data 转换为 user 数组
+			// Convert the response data to a slice of users
 			dataBytes, _ := json.Marshal(response.Data)
 			var users []domain.RadiusUser
 			json.Unmarshal(dataBytes, &users)
@@ -143,7 +143,7 @@ func TestGetUser(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	profile := createTestProfile(db, "test-profile")
 	user := createTestUser(db, "testuser", profile.ID)
 
@@ -154,18 +154,18 @@ func TestGetUser(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "获取存在的 user",
+			name:           "Get existing user",
 			userID:         "1",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "获取不存在的 user",
+			name:           "Get missing user",
 			userID:         "999",
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "USER_NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			userID:         "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -195,7 +195,7 @@ func TestGetUser(t *testing.T) {
 				json.Unmarshal(dataBytes, &resultUser)
 
 				assert.Equal(t, user.Username, resultUser.Username)
-				assert.Empty(t, resultUser.Password) // 密码应被清空
+				assert.Empty(t, resultUser.Password) // Password should be cleared
 			} else {
 				var errResponse ErrorResponse
 				json.Unmarshal(rec.Body.Bytes(), &errResponse)
@@ -209,7 +209,7 @@ func TestCreateUser(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试 Profile
+	// CreateTest Profile
 	profile := createTestProfile(db, "test-profile")
 
 	tests := []struct {
@@ -220,7 +220,7 @@ func TestCreateUser(t *testing.T) {
 		checkResult    func(*testing.T, *domain.RadiusUser)
 	}{
 		{
-			name: "成功创建 user",
+			name: "Successfully create user",
 			requestBody: `{
 				"username": "newuser",
 				"password": "password123",
@@ -234,11 +234,11 @@ func TestCreateUser(t *testing.T) {
 				assert.Equal(t, "newuser", user.Username)
 				assert.Equal(t, "New User", user.Realname)
 				assert.Equal(t, "enabled", user.Status)
-				assert.Empty(t, user.Password) // 返回时密码应被清空
+				assert.Empty(t, user.Password) // Password should be cleared in the response
 			},
 		},
 		{
-			name: "创建时状态为空 - 使用默认值",
+			name: "Missing status on create - use default",
 			requestBody: `{
 				"username": "defaultuser",
 				"password": "password123",
@@ -250,23 +250,23 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
-			name:           "缺少必填字段 - 用户名",
+			name:           "Missing required field - username",
 			requestBody:    `{"password": "test", "profile_id": "1"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "缺少必填字段 - 密码",
+			name:           "Missing required field - password",
 			requestBody:    `{"username": "test", "profile_id": "1"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "MISSING_PASSWORD",
 		},
 		{
-			name:           "缺少必填字段 - profile_id",
+			name:           "Missing required field - profile_id",
 			requestBody:    `{"username": "test", "password": "test123"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "用户名已存在",
+			name: "Username already exists",
 			requestBody: `{
 				"username": "duplicateuser",
 				"password": "password123",
@@ -276,7 +276,7 @@ func TestCreateUser(t *testing.T) {
 			expectedError:  "USERNAME_EXISTS",
 		},
 		{
-			name: "关联的 profile 不存在",
+			name: "Associated profile not found",
 			requestBody: `{
 				"username": "testuser",
 				"password": "password123",
@@ -286,13 +286,13 @@ func TestCreateUser(t *testing.T) {
 			expectedError:  "PROFILE_NOT_FOUND",
 		},
 		{
-			name:           "无效的 JSON",
+			name:           "Invalid JSON",
 			requestBody:    `{invalid json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_REQUEST",
 		},
 		{
-			name: "前端格式 - boolean 类型的 status",
+			name: "Frontend format - boolean status",
 			requestBody: `{
 				"username": "booluser",
 				"password": "password123",
@@ -308,8 +308,8 @@ func TestCreateUser(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 为重复用户名测试创建已存在的 user
-			if tt.name == "用户名已存在" {
+			// Create an existing user to test duplicate usernames
+			if tt.name == "Username already exists" {
 				createTestUser(db, "duplicateuser", profile.ID)
 			}
 
@@ -349,7 +349,7 @@ func TestUpdateUser(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	profile := createTestProfile(db, "test-profile")
 	profile2 := createTestProfile(db, "another-profile")
 	_ = createTestUser(db, "originaluser", profile.ID)
@@ -364,7 +364,7 @@ func TestUpdateUser(t *testing.T) {
 		checkResult    func(*testing.T, *domain.RadiusUser)
 	}{
 		{
-			name:   "成功更新 user",
+			name:   "Successfully update user",
 			userID: "1",
 			requestBody: `{
 				"realname": "Updated Name",
@@ -377,7 +377,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 		},
 		{
-			name:   "更新 profile - 应同步 profile 配置",
+			name:   "Update profile - should sync profile config",
 			userID: "1",
 			requestBody: `{
 				"profile_id": "` + string(rune(profile2.ID)) + `"
@@ -390,7 +390,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 		},
 		{
-			name:   "部分更新 - 只更新状态",
+			name:   "Partial update - status only",
 			userID: "1",
 			requestBody: `{
 				"status": "disabled"
@@ -401,7 +401,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 		},
 		{
-			name:   "用户名冲突",
+			name:   "Username conflict",
 			userID: "1",
 			requestBody: `{
 				"username": "anotheruser"
@@ -410,21 +410,21 @@ func TestUpdateUser(t *testing.T) {
 			expectedError:  "USERNAME_EXISTS",
 		},
 		{
-			name:           "user 不存在",
+			name:           "User not found",
 			userID:         "999",
 			requestBody:    `{"realname": "test"}`,
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "USER_NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			userID:         "invalid",
 			requestBody:    `{"realname": "test"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
 		},
 		{
-			name:   "更新关联的 profile 不存在",
+			name:   "Update with missing associated profile",
 			userID: "1",
 			requestBody: `{
 				"profile_id": "999"
@@ -433,7 +433,7 @@ func TestUpdateUser(t *testing.T) {
 			expectedError:  "PROFILE_NOT_FOUND",
 		},
 		{
-			name:   "前端格式 - boolean 类型更新",
+			name:   "Frontend format - boolean update",
 			userID: "1",
 			requestBody: `{
 				"status": false,
@@ -472,7 +472,7 @@ func TestUpdateUser(t *testing.T) {
 				var updatedUser domain.RadiusUser
 				json.Unmarshal(dataBytes, &updatedUser)
 
-				assert.Empty(t, updatedUser.Password) // 密码应被清空
+				assert.Empty(t, updatedUser.Password) // Password should be cleared
 				if tt.checkResult != nil {
 					tt.checkResult(t, &updatedUser)
 				}
@@ -489,7 +489,7 @@ func TestDeleteUser(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	profile := createTestProfile(db, "test-profile")
 	_ = createTestUser(db, "user-to-delete", profile.ID)
 
@@ -501,19 +501,19 @@ func TestDeleteUser(t *testing.T) {
 		checkDeleted   bool
 	}{
 		{
-			name:           "成功删除 user",
+			name:           "Successfully delete user",
 			userID:         "1",
 			expectedStatus: http.StatusOK,
 			checkDeleted:   true,
 		},
 		{
-			name:           "user 不存在",
+			name:           "User not found",
 			userID:         "999",
-			expectedStatus: http.StatusOK, // GORM Delete 不会返回错误
+			expectedStatus: http.StatusOK, // GORM Delete does not return error
 			checkDeleted:   false,
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			userID:         "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -539,7 +539,7 @@ func TestDeleteUser(t *testing.T) {
 				require.NoError(t, err)
 
 				if tt.checkDeleted {
-					// 验证 user 已被删除
+					// Validate the user has been deleted
 					var count int64
 					db.Model(&domain.RadiusUser{}).Where("id = ?", tt.userID).Count(&count)
 					assert.Equal(t, int64(0), count)
@@ -553,14 +553,14 @@ func TestDeleteUser(t *testing.T) {
 	}
 }
 
-// TestUserEdgeCases 测试边缘情况
+// TestUserEdgeCases Test edge cases
 func TestUserEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
 	profile := createTestProfile(db, "test-profile")
 
-	t.Run("用户名自动去除空格", func(t *testing.T) {
+	t.Run("Username trims spaces automatically", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "  spaceuser  ",
@@ -584,7 +584,7 @@ func TestUserEdgeCases(t *testing.T) {
 		assert.Equal(t, "spaceuser", user.Username)
 	})
 
-	t.Run("从 profile 继承配置", func(t *testing.T) {
+	t.Run("Inherit configuration from profile", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "inherituser",
@@ -605,14 +605,14 @@ func TestUserEdgeCases(t *testing.T) {
 		var user domain.RadiusUser
 		json.Unmarshal(dataBytes, &user)
 
-		// 应该继承 profile 的配置
+		// Should inherit profile configuration
 		assert.Equal(t, profile.ActiveNum, user.ActiveNum)
 		assert.Equal(t, profile.UpRate, user.UpRate)
 		assert.Equal(t, profile.DownRate, user.DownRate)
 		assert.Equal(t, profile.AddrPool, user.AddrPool)
 	})
 
-	t.Run("更新不存在的字段不应影响其他字段", func(t *testing.T) {
+	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		user := createTestUser(db, "testuser", profile.ID)
 		originalUsername := user.Username
 
@@ -633,13 +633,13 @@ func TestUserEdgeCases(t *testing.T) {
 		var updatedUser domain.RadiusUser
 		json.Unmarshal(dataBytes, &updatedUser)
 
-		// 用户名不应该改变
+		// Username should remain unchanged
 		assert.Equal(t, originalUsername, updatedUser.Username)
-		// realname 应该更新
+		// Realname should be updated
 		assert.Equal(t, "New Name", updatedUser.Realname)
 	})
 
-	t.Run("过期时间默认值", func(t *testing.T) {
+	t.Run("Default expire time", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"username": "expireuser",
@@ -660,7 +660,7 @@ func TestUserEdgeCases(t *testing.T) {
 		var user domain.RadiusUser
 		json.Unmarshal(dataBytes, &user)
 
-		// 默认过期时间应该是一年后
+		// Default expiration time should be one year later
 		expectedExpire := time.Now().AddDate(1, 0, 0)
 		assert.WithinDuration(t, expectedExpire, user.ExpireTime, time.Hour*24)
 	})

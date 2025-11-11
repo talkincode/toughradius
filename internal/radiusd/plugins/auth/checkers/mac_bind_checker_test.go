@@ -118,7 +118,7 @@ func TestMacBindChecker_Check_NoVendorRequest(t *testing.T) {
 		MacAddr:  "00:11:22:33:44:55",
 	}
 
-	// 没有 VendorRequest
+	// No VendorRequest
 	authCtx := &auth.AuthContext{
 		User:          user,
 		VendorRequest: nil,
@@ -138,7 +138,7 @@ func TestMacBindChecker_Check_InvalidVendorRequest(t *testing.T) {
 		MacAddr:  "00:11:22:33:44:55",
 	}
 
-	// 错误类型的 VendorRequest
+	// VendorRequest of an unexpected type
 	authCtx := &auth.AuthContext{
 		User:          user,
 		VendorRequest: "invalid",

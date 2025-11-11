@@ -10,7 +10,7 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// ZTEParser 中兴厂商属性解析器
+// ZTEParser parses ZTE vendor attributes
 type ZTEParser struct{}
 
 func (p *ZTEParser) VendorCode() string {
@@ -24,11 +24,11 @@ func (p *ZTEParser) VendorName() string {
 func (p *ZTEParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, error) {
 	vr := &vendorparsers.VendorRequest{}
 
-	// 解析 MAC 地址 - ZTE 设备的 MAC 地址格式为 12 位连续字符
+		// Parse MAC addresses; ZTE devices provide 12-digit strings
 	macval := rfc2865.CallingStationID_GetString(r.Packet)
 	if macval != "" {
 		if len(macval) >= 12 {
-			// 将 12 位连续字符转换为标准格式
+			// Convert the 12-digit string to the standard format
 			vr.MacAddr = fmt.Sprintf("%s:%s:%s:%s:%s:%s",
 				macval[0:2], macval[2:4], macval[4:6],
 				macval[6:8], macval[8:10], macval[10:12])
@@ -41,7 +41,7 @@ func (p *ZTEParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, erro
 		zap.L().Warn("ZTE CallingStationID is empty", zap.String("namespace", "radius"))
 	}
 
-	// VLAN 解析
+	// VLAN Parse
 	nasportid := rfc2869.NASPortID_GetString(r.Packet)
 	if nasportid == "" {
 		vr.Vlanid1 = 0

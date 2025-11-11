@@ -8,18 +8,18 @@ import (
 
 type dataItem = btree.Item
 
-// 索引时
+// With index
 // 0: ip start
 // 1: ip end
 // 2: country position
 // 3: region position
-// 无索引时
+// Without index
 // 2: ip end position
 // 3: n/a
 type indexItem [4]uint32
 
 func (i indexItem) Less(than btree.Item) bool {
-	// 默认降序 1:End < 0:Start
+	// Default descending 1:End < 0:Start
 	if v, ok := than.(indexItem); ok {
 		return i[1] < v[0]
 
@@ -27,11 +27,11 @@ func (i indexItem) Less(than btree.Item) bool {
 	return i[1] < than.(indexItemAscend)[0]
 }
 
-// indexItem 升序
+// indexItem Ascending
 type indexItemAscend [4]uint32
 
 func (i indexItemAscend) Less(than btree.Item) bool {
-	// 升序 0:End < 0:Start
+	// Ascending 0:End < 0:Start
 	if v, ok := than.(indexItem); ok {
 		return i[0] < v[0]
 
@@ -46,7 +46,7 @@ type indexes struct {
 }
 
 func (idx *indexes) indexOf(u uint32) (hit indexItem) {
-	// 对比中间值决定高低顺序，提升查询速度
+	// Compare middle value to determine order，Improve query speed
 	if u > idx.indexMid[1] {
 		idx.index.DescendLessOrEqual(indexItem{0, u}, func(i btree.Item) bool {
 			hit = i.(indexItem)

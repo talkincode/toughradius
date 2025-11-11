@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// createTestNas 创建测试 NAS 数据
+// createTestNas creates test NAS data
 func createTestNas(db *gorm.DB, name, ipaddr string) *domain.NetNas {
 	nas := &domain.NetNas{
 		NodeId:     1,
@@ -42,7 +42,7 @@ func TestListNAS(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	createTestNas(db, "nas1", "192.168.1.1")
 	createTestNas(db, "nas2", "192.168.1.2")
 	createTestNas(db, "nas3", "192.168.1.3")
@@ -55,7 +55,7 @@ func TestListNAS(t *testing.T) {
 		checkResponse  func(*testing.T, map[string]interface{})
 	}{
 		{
-			name:           "获取所有 NAS - 默认分页",
+			name:           "List all NAS - default pagination",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -64,7 +64,7 @@ func TestListNAS(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第1页",
+			name:           "Paginated query - page 1",
 			queryParams:    "?page=1&perPage=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  2,
@@ -73,7 +73,7 @@ func TestListNAS(t *testing.T) {
 			},
 		},
 		{
-			name:           "按名称搜索",
+			name:           "Search by name",
 			queryParams:    "?name=nas1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -84,13 +84,13 @@ func TestListNAS(t *testing.T) {
 			},
 		},
 		{
-			name:           "按 IP 地址搜索",
+			name:           "Search by IP address",
 			queryParams:    "?ipaddr=192.168.1.1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 		},
 		{
-			name:           "按状态过滤",
+			name:           "Filter by status",
 			queryParams:    "?status=enabled",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -126,7 +126,7 @@ func TestGetNAS(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	nas := createTestNas(db, "test-nas", "192.168.1.100")
 
 	tests := []struct {
@@ -136,18 +136,18 @@ func TestGetNAS(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "获取存在的 NAS",
+			name:           "Get existing NAS",
 			nasID:          "1",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "获取不存在的 NAS",
+			name:           "Get missing NAS",
 			nasID:          "999",
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			nasID:          "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -199,7 +199,7 @@ func TestCreateNAS(t *testing.T) {
 		checkResult    func(*testing.T, *domain.NetNas)
 	}{
 		{
-			name: "成功创建 NAS",
+			name: "Successfully create NAS",
 			requestBody: `{
 				"name": "new-nas",
 				"ipaddr": "10.0.0.1",
@@ -219,7 +219,7 @@ func TestCreateNAS(t *testing.T) {
 			},
 		},
 		{
-			name: "创建 NAS - 最小参数",
+			name: "Create NAS with minimal parameters",
 			requestBody: `{
 				"name": "minimal-nas",
 				"ipaddr": "10.0.0.2",
@@ -228,27 +228,27 @@ func TestCreateNAS(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, nas *domain.NetNas) {
 				assert.Equal(t, "minimal-nas", nas.Name)
-				assert.Equal(t, "enabled", nas.Status) // 默认值
-				assert.Equal(t, 3799, nas.CoaPort)     // 默认值
+				assert.Equal(t, "enabled", nas.Status) // Default status
+				assert.Equal(t, 3799, nas.CoaPort)     // Default CoA port
 			},
 		},
 		{
-			name:           "缺少必填字段 - 名称",
+			name:           "Missing required field - name",
 			requestBody:    `{"ipaddr": "10.0.0.3", "secret": "test"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "缺少必填字段 - IP 地址",
+			name:           "Missing required field - IP address",
 			requestBody:    `{"name": "test", "secret": "test123"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "缺少必填字段 - Secret",
+			name:           "Missing required field - secret",
 			requestBody:    `{"name": "test", "ipaddr": "10.0.0.4"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "Secret 太短 (<6字符)",
+			name: "Secret too short (<6 characters)",
 			requestBody: `{
 				"name": "test",
 				"ipaddr": "10.0.0.5",
@@ -257,7 +257,7 @@ func TestCreateNAS(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "IP 地址已存在",
+			name: "IP address already exists",
 			requestBody: `{
 				"name": "duplicate-nas",
 				"ipaddr": "192.168.100.100",
@@ -267,7 +267,7 @@ func TestCreateNAS(t *testing.T) {
 			expectedError:  "IPADDR_EXISTS",
 		},
 		{
-			name: "无效的 IP 地址格式",
+			name: "Invalid IP address format",
 			requestBody: `{
 				"name": "test",
 				"ipaddr": "invalid-ip",
@@ -276,7 +276,7 @@ func TestCreateNAS(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "无效的 CoA 端口 (>65535)",
+			name: "Invalid CoA port (>65535)",
 			requestBody: `{
 				"name": "test",
 				"ipaddr": "10.0.0.6",
@@ -286,7 +286,7 @@ func TestCreateNAS(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "无效的状态值",
+			name: "Invalid status value",
 			requestBody: `{
 				"name": "test",
 				"ipaddr": "10.0.0.7",
@@ -296,13 +296,13 @@ func TestCreateNAS(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "无效的 JSON",
+			name:           "Invalid JSON",
 			requestBody:    `{invalid json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_REQUEST",
 		},
 		{
-			name: "名称超长 (>100字符)",
+			name: "Name too long (>100 characters)",
 			requestBody: `{
 				"name": "` + strings.Repeat("a", 101) + `",
 				"ipaddr": "10.0.0.8",
@@ -314,8 +314,8 @@ func TestCreateNAS(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 为重复 IP 测试创建已存在的 NAS
-			if tt.name == "IP 地址已存在" {
+			// Create an existing NAS to test duplicate IP handling
+			if tt.name == "IP address already exists" {
 				createTestNas(db, "existing-nas", "192.168.100.100")
 			}
 
@@ -355,7 +355,7 @@ func TestUpdateNAS(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	_ = createTestNas(db, "original-nas", "192.168.2.1")
 	createTestNas(db, "another-nas", "192.168.2.2")
 
@@ -368,7 +368,7 @@ func TestUpdateNAS(t *testing.T) {
 		checkResult    func(*testing.T, *domain.NetNas)
 	}{
 		{
-			name:  "成功更新 NAS",
+			name:  "Successfully update NAS",
 			nasID: "1",
 			requestBody: `{
 				"name": "updated-nas",
@@ -383,7 +383,7 @@ func TestUpdateNAS(t *testing.T) {
 			},
 		},
 		{
-			name:  "部分更新 - 只更新状态",
+			name:  "Partial update - status only",
 			nasID: "1",
 			requestBody: `{
 				"status": "disabled"
@@ -394,7 +394,7 @@ func TestUpdateNAS(t *testing.T) {
 			},
 		},
 		{
-			name:  "更新 IP 地址",
+			name:  "Update IP address",
 			nasID: "1",
 			requestBody: `{
 				"ipaddr": "192.168.3.1"
@@ -405,7 +405,7 @@ func TestUpdateNAS(t *testing.T) {
 			},
 		},
 		{
-			name:  "IP 地址冲突",
+			name:  "IP address conflict",
 			nasID: "1",
 			requestBody: `{
 				"ipaddr": "192.168.2.2"
@@ -414,21 +414,21 @@ func TestUpdateNAS(t *testing.T) {
 			expectedError:  "IPADDR_EXISTS",
 		},
 		{
-			name:           "NAS 不存在",
+			name:           "NAS not found",
 			nasID:          "999",
 			requestBody:    `{"name": "test"}`,
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			nasID:          "invalid",
 			requestBody:    `{"name": "test"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
 		},
 		{
-			name:  "无效的 IP 格式",
+			name:  "Invalid IP format",
 			nasID: "1",
 			requestBody: `{
 				"ipaddr": "not-an-ip"
@@ -436,7 +436,7 @@ func TestUpdateNAS(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:  "无效的端口",
+			name:  "Invalid port",
 			nasID: "1",
 			requestBody: `{
 				"coa_port": 0
@@ -444,7 +444,7 @@ func TestUpdateNAS(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:  "Secret 太短",
+			name:  "Secret too short",
 			nasID: "1",
 			requestBody: `{
 				"secret": "short"
@@ -492,7 +492,7 @@ func TestDeleteNAS(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	_ = createTestNas(db, "nas-to-delete", "192.168.4.1")
 
 	tests := []struct {
@@ -503,19 +503,19 @@ func TestDeleteNAS(t *testing.T) {
 		checkDeleted   bool
 	}{
 		{
-			name:           "成功删除 NAS",
+			name:           "Successfully delete NAS",
 			nasID:          "1",
 			expectedStatus: http.StatusOK,
 			checkDeleted:   true,
 		},
 		{
-			name:           "NAS 不存在",
+			name:           "NAS not found",
 			nasID:          "999",
-			expectedStatus: http.StatusOK, // GORM Delete 不会返回错误
+			expectedStatus: http.StatusOK, // GORM Delete does not return error
 			checkDeleted:   false,
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			nasID:          "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -541,7 +541,7 @@ func TestDeleteNAS(t *testing.T) {
 				require.NoError(t, err)
 
 				if tt.checkDeleted {
-					// 验证 NAS 已被删除
+					// Validate the NAS has been deleted
 					var count int64
 					db.Model(&domain.NetNas{}).Where("id = ?", tt.nasID).Count(&count)
 					assert.Equal(t, int64(0), count)
@@ -555,12 +555,12 @@ func TestDeleteNAS(t *testing.T) {
 	}
 }
 
-// TestNASEdgeCases 测试边缘情况
+// TestNASEdgeCases Test edge cases
 func TestNASEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	t.Run("更新不存在的字段不应影响其他字段", func(t *testing.T) {
+	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		nas := createTestNas(db, "test-nas", "192.168.5.1")
 		originalName := nas.Name
 		originalIpaddr := nas.Ipaddr
@@ -582,14 +582,14 @@ func TestNASEdgeCases(t *testing.T) {
 		var updatedNas domain.NetNas
 		json.Unmarshal(dataBytes, &updatedNas)
 
-		// 名称和 IP 不应该改变
+		// Name and IP should remain unchanged
 		assert.Equal(t, originalName, updatedNas.Name)
 		assert.Equal(t, originalIpaddr, updatedNas.Ipaddr)
-		// 备注应该更新
+		// Remark should be updated
 		assert.Equal(t, "New remark", updatedNas.Remark)
 	})
 
-	t.Run("默认值正确设置", func(t *testing.T) {
+	t.Run("Defaults should be set correctly", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{
 			"name": "default-test",
@@ -610,13 +610,13 @@ func TestNASEdgeCases(t *testing.T) {
 		var nas domain.NetNas
 		json.Unmarshal(dataBytes, &nas)
 
-		// 默认状态应该是 enabled
+		// Default status should be enabled
 		assert.Equal(t, "enabled", nas.Status)
-		// 默认 CoA 端口应该是 3799
+		// Default CoA port should be 3799
 		assert.Equal(t, 3799, nas.CoaPort)
 	})
 
-	t.Run("IPv4 地址验证", func(t *testing.T) {
+	t.Run("IPv4 address validation", func(t *testing.T) {
 		tests := []struct {
 			ip      string
 			isValid bool
@@ -654,7 +654,7 @@ func TestNASEdgeCases(t *testing.T) {
 		}
 	})
 
-	t.Run("端口范围验证", func(t *testing.T) {
+	t.Run("Port range validation", func(t *testing.T) {
 		tests := []struct {
 			port    int
 			isValid bool

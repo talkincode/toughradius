@@ -36,7 +36,7 @@ func initAuth(user string) (secret, code string) {
 
 func TestGoogleAuth_VerifyCode(t *testing.T) {
 
-	// fmt.Println("-----------------开启二次认证----------------------")
+	// fmt.Println("-----------------Enable two-factor authentication----------------------")
 	user := "testxxx@google.com"
 	secret, code := initAuth(user)
 	t.Log(secret, code)

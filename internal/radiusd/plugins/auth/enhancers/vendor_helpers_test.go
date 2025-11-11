@@ -170,7 +170,7 @@ func TestClampInt64(t *testing.T) {
 }
 
 func TestVendorConstants(t *testing.T) {
-	// 验证厂商代码常量的正确性
+	// Validate the correctness of vendor code constants
 	assert.Equal(t, "2011", vendorHuawei)
 	assert.Equal(t, "25506", vendorH3C)
 	assert.Equal(t, "3902", vendorZTE)

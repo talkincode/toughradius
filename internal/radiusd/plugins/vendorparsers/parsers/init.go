@@ -4,7 +4,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 )
 
-// init 自动注册所有厂商解析器
+// init automatically registers all vendor parsers
 func init() {
 	registry.RegisterVendorParser(&DefaultParser{})
 	registry.RegisterVendorParser(&HuaweiParser{})

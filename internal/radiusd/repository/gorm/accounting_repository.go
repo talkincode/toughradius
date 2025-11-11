@@ -11,12 +11,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// GormAccountingRepository GORM实现的计费仓储
+// GormAccountingRepository is the GORM implementation of the accounting repository
 type GormAccountingRepository struct {
 	db *gorm.DB
 }
 
-// NewGormAccountingRepository 创建计费仓储实例
+// NewGormAccountingRepository creates an accounting repository instance
 func NewGormAccountingRepository(db *gorm.DB) repository.AccountingRepository {
 	return &GormAccountingRepository{db: db}
 }

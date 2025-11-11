@@ -51,7 +51,7 @@ func parseTimeInput(value string, fallback time.Time) (time.Time, error) {
 	}
 	for _, layout := range layouts {
 		if ts, err := time.ParseInLocation(layout, value, time.Local); err == nil {
-			// 如果只有日期，设置为当天的最后一秒
+			// If only a date is provided, set it to the last second of that day
 			if layout == "2006-01-02" {
 				return ts.Add(23*time.Hour + 59*time.Minute + 59*time.Second), nil
 			}

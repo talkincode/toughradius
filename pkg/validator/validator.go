@@ -8,22 +8,22 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// CustomValidator Echo 自定义验证器
+// CustomValidator is a custom Echo validator
 type CustomValidator struct {
 	validator *validator.Validate
 }
 
-// NewValidator 创建验证器实例
+// NewValidator creates a validator instance
 func NewValidator() *CustomValidator {
 	v := validator.New()
 
-	// 注册自定义验证规则
+	// Register custom validation rules
 	registerCustomValidations(v)
 
 	return &CustomValidator{validator: v}
 }
 
-// Validate 实现 echo.Validator 接口
+// Validate implements the echo.Validator interface
 func (cv *CustomValidator) Validate(i interface{}) error {
 	if err := cv.validator.Struct(i); err != nil {
 		return echo.NewHTTPError(400, formatValidationError(err))
@@ -31,7 +31,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 	return nil
 }
 
-// formatValidationError 格式化验证错误为友好消息
+// formatValidationError formats validation errors into user-friendly messages
 func formatValidationError(err error) map[string]interface{} {
 	errors := make(map[string]string)
 
@@ -98,36 +98,36 @@ func formatValidationError(err error) map[string]interface{} {
 	}
 }
 
-// registerCustomValidations 注册自定义验证规则
+// registerCustomValidations registers custom validation rules
 func registerCustomValidations(v *validator.Validate) {
-	// 验证地址池格式 (简单的 CIDR 检查)
+	// ValidateAddress pool format (simple CIDR check)
 	v.RegisterValidation("addrpool", func(fl validator.FieldLevel) bool {
 		value := fl.Field().String()
 		if value == "" {
-			return true // 允许空值，使用 required 标签控制必填
+			return true // Allow empty values; use the required tag for mandatory fields
 		}
-		// 简单验证是否包含 CIDR 标记
+		// Ensure the value contains a CIDR separator
 		parts := strings.Split(value, "/")
 		if len(parts) != 2 {
 			return false
 		}
-		// 可以添加更严格的 IP 和掩码验证
+		// Could add stricter IP and mask validation here
 		return true
 	})
 
-	// 验证 RADIUS 状态值
+	// Validate RADIUS status value
 	v.RegisterValidation("radiusstatus", func(fl validator.FieldLevel) bool {
 		value := fl.Field().String()
 		return value == "enabled" || value == "disabled" || value == ""
 	})
 
-	// 验证用户名格式（字母数字、下划线、中划线）
+	// Validate username format (letters, digits, underscore, hyphen)
 	v.RegisterValidation("username", func(fl validator.FieldLevel) bool {
 		value := fl.Field().String()
 		if value == "" {
 			return true
 		}
-		// 允许字母、数字、下划线、中划线、@符号
+		// Allow letters, digits, underscore, hyphen, @, and dot
 		for _, c := range value {
 			if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
 				(c >= '0' && c <= '9') || c == '_' || c == '-' || c == '@' || c == '.') {
@@ -137,7 +137,7 @@ func registerCustomValidations(v *validator.Validate) {
 		return true
 	})
 
-	// 验证端口号
+	// Validate port numbers
 	v.RegisterValidation("port", func(fl validator.FieldLevel) bool {
 		port := fl.Field().Int()
 		return port >= 1 && port <= 65535

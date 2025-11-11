@@ -11,22 +11,22 @@ import (
 	"layeh.com/radius"
 )
 
-// authPluginOptions 定义插件认证可选项
+// authPluginOptions defines optional settings for authentication plugins
 type authPluginOptions struct {
 	skipPasswordValidation bool
 }
 
-// AuthPluginOption 认证选项函数
+// AuthPluginOption defines an option function for authentication plugins
 type AuthPluginOption func(*authPluginOptions)
 
-// SkipPasswordValidation 跳过密码验证（用于已通过其他方式认证的场景，例如 EAP）
+// SkipPasswordValidation skips password validation (used when authentication is handled elsewhere, e.g., EAP)
 func SkipPasswordValidation() AuthPluginOption {
 	return func(opts *authPluginOptions) {
 		opts.skipPasswordValidation = true
 	}
 }
 
-// AuthenticateUserWithPlugins 使用插件系统进行用户认证
+// AuthenticateUserWithPlugins uses the plugin system to authenticate a user
 func (s *AuthService) AuthenticateUserWithPlugins(
 	ctx context.Context,
 	r *radius.Request,
@@ -37,7 +37,7 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 	isMacAuth bool,
 	opts ...AuthPluginOption,
 ) error {
-	// 解析可选参数
+	// Parse optional parameters
 	options := &authPluginOptions{}
 	for _, opt := range opts {
 		if opt != nil {
@@ -45,7 +45,7 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 		}
 	}
 
-	// 创建认证上下文
+	// Create the authentication context
 	authCtx := &auth.AuthContext{
 		Request:       r,
 		Response:      response,
@@ -59,7 +59,7 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 	var password string
 	var err error
 
-	// 1. 执行密码验证（使用插件）
+	// 1. Perform password validation via plugins
 	if !isMacAuth && !options.skipPasswordValidation {
 		password, err = s.GetLocalPassword(user, isMacAuth)
 		if err != nil {
@@ -71,7 +71,7 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 		}
 	}
 
-	// 2. 执行策略检查（使用插件）
+	// 2. Perform profile checks via plugins
 	if !isMacAuth {
 		if err := s.checkPoliciesWithPlugins(ctx, authCtx); err != nil {
 			return err
@@ -81,35 +81,35 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 	return nil
 }
 
-// validatePasswordWithPlugins 使用密码验证器插件进行密码验证
+// validatePasswordWithPlugins uses password validator plugins
 func (s *AuthService) validatePasswordWithPlugins(
 	ctx context.Context,
 	authCtx *auth.AuthContext,
 	password string,
 ) error {
-	// 获取所有已注册的密码验证器
+	// Get all registered password validators
 	validators := registry.GetPasswordValidators()
 
-	// 遍历验证器，找到能处理当前请求的验证器
+	// Iterate over validators to find one that can handle the current request
 	for _, validator := range validators {
 		if validator.CanHandle(authCtx) {
 			return validator.Validate(ctx, authCtx, password)
 		}
 	}
 
-	// 没有找到合适的验证器，返回错误
+	// Return an error if no suitable validator is found
 	return errors.NewAuthError("radus_reject_other", "no suitable password validator found")
 }
 
-// checkPoliciesWithPlugins 使用策略检查器插件进行策略验证
+// checkPoliciesWithPlugins uses profile checker plugins
 func (s *AuthService) checkPoliciesWithPlugins(
 	ctx context.Context,
 	authCtx *auth.AuthContext,
 ) error {
-	// 获取所有已注册的策略检查器（已按Order排序）
+	// Get all registered profile checkers (already sorted by order)
 	checkers := registry.GetPolicyCheckers()
 
-	// 按顺序执行所有策略检查器
+	// Execute all profile checkers in order
 	for _, checker := range checkers {
 		if err := checker.Check(ctx, authCtx); err != nil {
 			return err

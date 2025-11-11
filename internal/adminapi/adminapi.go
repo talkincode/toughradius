@@ -1,6 +1,6 @@
 package adminapi
 
-// Init 注册所有管理端 API 路由
+// Init registers all admin API routes
 func Init() {
 	registerAuthRoutes()
 	registerUserRoutes()

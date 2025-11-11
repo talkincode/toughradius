@@ -110,7 +110,7 @@ func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
 
 	token, ok := userVal.(*jwt.Token)
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("invalid token type, got: %T", userVal))
+		return nil, fmt.Errorf("invalid token type, got: %T", userVal)
 	}
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok {

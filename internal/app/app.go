@@ -138,7 +138,7 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		a.checkDefaultPNode()
 	}()
 
-	// 初始化配置管理器
+	// Initialize the configuration manager
 	a.configManager = NewConfigManager(a)
 
 	a.initJob()
@@ -181,7 +181,7 @@ func (a *Application) InitDb() {
 	}
 }
 
-// ConfigMgr 获取配置管理器
+// ConfigMgr returns the configuration manager
 func (a *Application) ConfigMgr() *ConfigManager {
 	return a.configManager
 }

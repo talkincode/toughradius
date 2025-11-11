@@ -8,12 +8,12 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
 )
 
-// OnlineCountChecker 在线数检查器
+// OnlineCountChecker enforces online count limits
 type OnlineCountChecker struct {
 	sessionRepo repository.SessionRepository
 }
 
-// NewOnlineCountChecker 创建在线数检查器
+// NewOnlineCountChecker creates an online count checker
 func NewOnlineCountChecker(sessionRepo repository.SessionRepository) *OnlineCountChecker {
 	return &OnlineCountChecker{sessionRepo: sessionRepo}
 }
@@ -23,13 +23,13 @@ func (c *OnlineCountChecker) Name() string {
 }
 
 func (c *OnlineCountChecker) Order() int {
-	return 30 // 在绑定检查之后
+	return 30 // Execute after the bind check
 }
 
 func (c *OnlineCountChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {
 	user := authCtx.User
 
-	// activeNum为0表示不限制
+		// An activeNum of 0 indicates no limit
 	if user.ActiveNum == 0 {
 		return nil
 	}

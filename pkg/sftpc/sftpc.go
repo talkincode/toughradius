@@ -17,12 +17,12 @@ type Client struct {
 	Port     int
 }
 
-// SftpSession sftp会话
+// SftpSession represents an SFTP session
 type SftpSession struct {
 	Client *sftp.Client
 }
 
-// NewSession 创建一个新的sftp会话
+// NewSession creates a new SFTP session
 func (s *Client) NewSession() (*SftpSession, error) {
 	var (
 		auth         []ssh.AuthMethod
@@ -60,7 +60,7 @@ func (s *Client) NewSession() (*SftpSession, error) {
 	}, nil
 }
 
-// Upload 上传本地文件到远程
+// Upload transfers a local file to the remote host
 func (s *Client) Upload(session *SftpSession, localFilePath, remotePath string) error {
 	var err error
 	var _session *SftpSession
@@ -102,7 +102,7 @@ func (s *Client) Upload(session *SftpSession, localFilePath, remotePath string) 
 	return nil
 }
 
-// Download 下载远程文件到本地
+// Download retrieves a remote file to the local host
 func (s *Client) Download(session *SftpSession, remotePath, localFilePath string) error {
 	var err error
 	var _session *SftpSession

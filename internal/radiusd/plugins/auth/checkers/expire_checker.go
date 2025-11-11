@@ -8,7 +8,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 )
 
-// ExpireChecker 过期检查器
+// ExpireChecker checks whether the account is expired
 type ExpireChecker struct{}
 
 func (c *ExpireChecker) Name() string {
@@ -16,7 +16,7 @@ func (c *ExpireChecker) Name() string {
 }
 
 func (c *ExpireChecker) Order() int {
-	return 10 // 最先执行
+	return 10 // Execute first
 }
 
 func (c *ExpireChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {

@@ -10,12 +10,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// GormSessionRepository GORM实现的会话仓储
+// GormSessionRepository is the GORM implementation of the session repository
 type GormSessionRepository struct {
 	db *gorm.DB
 }
 
-// NewGormSessionRepository 创建会话仓储实例
+// NewGormSessionRepository creates a session repository instance
 func NewGormSessionRepository(db *gorm.DB) repository.SessionRepository {
 	return &GormSessionRepository{db: db}
 }

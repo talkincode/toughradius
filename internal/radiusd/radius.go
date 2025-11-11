@@ -115,7 +115,7 @@ func (s *RadiusService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) (
 	return []byte("mysecret"), nil
 }
 
-// GetNas 查询 NAS 设备, 优先查询IP, 然后ID
+// GetNas looks up a NAS device, preferring IP before ID
 // Deprecated: Use NasRepo.GetByIPOrIdentifier instead
 func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err error) {
 	// Adapter: delegate to repository layer
@@ -131,7 +131,7 @@ func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err e
 	return nas, nil
 }
 
-// GetValidUser 获取有效用户, 初步判断用户有效性
+// GetValidUser retrieves a valid user and performs initial checks
 // Deprecated: Use UserRepo methods with plugin-based validation instead
 func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *domain.RadiusUser, err error) {
 	// Adapter: delegate to repository layer
@@ -160,7 +160,7 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	return user, nil
 }
 
-// GetUserForAcct 获取用户, 不判断用户过期等状态
+// GetUserForAcct fetches the user without validating expiration or status
 // Deprecated: Use UserRepo.GetByUsername instead
 func (s *RadiusService) GetUserForAcct(username string) (user *domain.RadiusUser, err error) {
 	// Adapter: delegate to repository layer
@@ -203,7 +203,7 @@ func (s *RadiusService) UpdateUserLastOnline(username string) {
 }
 
 func (s *RadiusService) GetEapMethod() string {
-	// 直接从 ConfigManager 读取(已在内存)
+	// Read directly from the ConfigManager (already in memory)
 	return app.GApp().ConfigMgr().GetString("radius", "EapMethod")
 }
 
@@ -450,7 +450,7 @@ func (s *AuthService) UpdateBind(user *domain.RadiusUser, vendorReq *VendorReque
 	}
 }
 
-// ApplyAcceptEnhancers 用户属性策略下发配置（插件化）
+// ApplyAcceptEnhancers delivers user profile configuration via plugins
 func (s *AuthService) ApplyAcceptEnhancers(
 	user *domain.RadiusUser,
 	nas *domain.NetNas,

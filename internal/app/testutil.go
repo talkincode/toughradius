@@ -4,12 +4,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// SetGApp 设置全局应用实例（仅用于测试）
+// SetGApp sets the global application instance (for testing only)
 func SetGApp(a *Application) {
 	app = a
 }
 
-// SetGDB 设置全局数据库实例（仅用于测试）
+// SetGDB sets the global database instance (for testing only)
 func SetGDB(db *gorm.DB) {
 	if app != nil {
 		app.gormDB = db

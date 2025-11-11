@@ -14,24 +14,24 @@ import (
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
-	customValidator "github.com/talkincode/toughradius/v9/internal/pkg/validator"
+	customValidator "github.com/talkincode/toughradius/v9/pkg/validator"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
-// setupTestEcho 创建带验证器的 Echo 实例
+// setupTestEcho creates an Echo instance with a validator
 func setupTestEcho() *echo.Echo {
 	e := echo.New()
 	e.Validator = customValidator.NewValidator()
 	return e
 }
 
-// setupTestDB 创建测试数据库
+// setupTestDB creates the test database
 func setupTestDB(t *testing.T) *gorm.DB {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
 
-	// 自动迁移表结构
+	// Automatically migrate the table structure
 	err = db.AutoMigrate(
 		&domain.RadiusProfile{},
 		&domain.RadiusUser{},
@@ -43,7 +43,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 	return db
 }
 
-// setupTestApp 初始化测试应用
+// setupTestApp initializes the test application
 func setupTestApp(t *testing.T, db *gorm.DB) {
 	cfg := &config.AppConfig{
 		System: config.SysConfig{
@@ -55,14 +55,14 @@ func setupTestApp(t *testing.T, db *gorm.DB) {
 	}
 	testApp := app.NewApplication(cfg)
 
-	// 使用反射设置私有字段 db
-	// 注意: 这里需要访问 app 包的内部结构
-	// 在实际测试中，可能需要在 app 包中提供 SetDB 方法
+	// Use reflection to set the private db field
+	// Note: this accesses internal structures of the app package
+	// In real tests, the app package might expose a SetDB helper
 	app.SetGApp(testApp)
 	app.SetGDB(db)
 }
 
-// createTestProfile 创建测试 Profile 数据
+// createTestProfile creates test profile data
 func createTestProfile(db *gorm.DB, name string) *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
 		Name:       name,
@@ -88,7 +88,7 @@ func TestListProfiles(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	createTestProfile(db, "profile1")
 	createTestProfile(db, "profile2")
 	createTestProfile(db, "profile3")
@@ -101,7 +101,7 @@ func TestListProfiles(t *testing.T) {
 		checkResponse  func(*testing.T, *Response)
 	}{
 		{
-			name:           "获取所有 profiles - 默认分页",
+			name:           "List all profiles - default pagination",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -112,7 +112,7 @@ func TestListProfiles(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第1页",
+			name:           "Paginated query - page 1",
 			queryParams:    "?page=1&perPage=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  2,
@@ -123,7 +123,7 @@ func TestListProfiles(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第2页",
+			name:           "Paginated query - page 2",
 			queryParams:    "?page=2&perPage=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -133,7 +133,7 @@ func TestListProfiles(t *testing.T) {
 			},
 		},
 		{
-			name:           "按名称搜索",
+			name:           "Search by name",
 			queryParams:    "?name=profile1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -143,13 +143,13 @@ func TestListProfiles(t *testing.T) {
 			},
 		},
 		{
-			name:           "按状态过滤",
+			name:           "Filter by status",
 			queryParams:    "?status=enabled",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
 		},
 		{
-			name:           "排序测试 - ASC",
+			name:           "Sorting test - ASC",
 			queryParams:    "?sort=name&order=ASC",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -175,7 +175,7 @@ func TestListProfiles(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			// 将 data 转换为 profile 数组
+			// Convert the response data to a slice of profiles
 			dataBytes, _ := json.Marshal(response.Data)
 			var profiles []domain.RadiusProfile
 			json.Unmarshal(dataBytes, &profiles)
@@ -194,7 +194,7 @@ func TestGetProfile(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	profile := createTestProfile(db, "test-profile")
 
 	tests := []struct {
@@ -204,18 +204,18 @@ func TestGetProfile(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "获取存在的 profile",
+			name:           "Get existing profile",
 			profileID:      "1",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "获取不存在的 profile",
+			name:           "Get missing profile",
 			profileID:      "999",
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			profileID:      "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -267,7 +267,7 @@ func TestCreateProfile(t *testing.T) {
 		checkResult    func(*testing.T, *domain.RadiusProfile)
 	}{
 		{
-			name: "成功创建 profile",
+			name: "Successfully create profile",
 			requestBody: `{
 				"name": "new-profile",
 				"status": "enabled",
@@ -287,7 +287,7 @@ func TestCreateProfile(t *testing.T) {
 			},
 		},
 		{
-			name: "创建时状态为空 - 使用默认值",
+			name: "Missing status on create - use default",
 			requestBody: `{
 				"name": "default-status-profile",
 				"addr_pool": "10.0.0.0/24"
@@ -298,13 +298,13 @@ func TestCreateProfile(t *testing.T) {
 			},
 		},
 		{
-			name:           "缺少必填字段 - 名称",
+			name:           "Missing required field - name",
 			requestBody:    `{"status": "enabled"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "MISSING_NAME",
 		},
 		{
-			name: "名称已存在",
+			name: "Name already exists",
 			requestBody: `{
 				"name": "duplicate-profile",
 				"status": "enabled"
@@ -313,13 +313,13 @@ func TestCreateProfile(t *testing.T) {
 			expectedError:  "NAME_EXISTS",
 		},
 		{
-			name:           "无效的 JSON",
+			name:           "Invalid JSON",
 			requestBody:    `{invalid json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_REQUEST",
 		},
 		{
-			name: "前端格式 - boolean 类型的 status 和 bind 字段",
+			name: "Frontend format - boolean status and bind fields",
 			requestBody: `{
 				"status": true,
 				"active_num": 1,
@@ -343,8 +343,8 @@ func TestCreateProfile(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 为重复名称测试创建已存在的 profile
-			if tt.name == "名称已存在" {
+			// Create an existing profile to test duplicate names
+		if tt.name == "Name already exists" {
 				createTestProfile(db, "duplicate-profile")
 			}
 
@@ -384,7 +384,7 @@ func TestUpdateProfile(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	_ = createTestProfile(db, "original-profile")
 	createTestProfile(db, "another-profile")
 
@@ -397,7 +397,7 @@ func TestUpdateProfile(t *testing.T) {
 		checkResult    func(*testing.T, *domain.RadiusProfile)
 	}{
 		{
-			name:      "成功更新 profile",
+			name:      "Successfully update profile",
 			profileID: "1",
 			requestBody: `{
 				"name": "updated-profile",
@@ -412,7 +412,7 @@ func TestUpdateProfile(t *testing.T) {
 			},
 		},
 		{
-			name:      "部分更新 - 只更新状态",
+			name:      "Partial update - status only",
 			profileID: "1",
 			requestBody: `{
 				"status": "disabled"
@@ -423,7 +423,7 @@ func TestUpdateProfile(t *testing.T) {
 			},
 		},
 		{
-			name:      "名称冲突",
+			name:      "Name conflict",
 			profileID: "1",
 			requestBody: `{
 				"name": "another-profile"
@@ -432,21 +432,21 @@ func TestUpdateProfile(t *testing.T) {
 			expectedError:  "NAME_EXISTS",
 		},
 		{
-			name:           "profile 不存在",
+			name:           "Profile not found",
 			profileID:      "999",
 			requestBody:    `{"name": "test"}`,
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			profileID:      "invalid",
 			requestBody:    `{"name": "test"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
 		},
 		{
-			name:      "前端格式 - boolean 类型更新",
+			name:      "Frontend format - boolean update",
 			profileID: "1",
 			requestBody: `{
 				"status": false,
@@ -501,11 +501,11 @@ func TestDeleteProfile(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	_ = createTestProfile(db, "profile-to-delete")
 	profile2 := createTestProfile(db, "profile-in-use")
 
-	// 创建一个使用 profile2 的用户
+	// Create a user that is using profile2
 	user := &domain.RadiusUser{
 		Username:  "testuser",
 		Password:  "testpass",
@@ -525,25 +525,25 @@ func TestDeleteProfile(t *testing.T) {
 		checkDeleted   bool
 	}{
 		{
-			name:           "成功删除未使用的 profile",
+			name:           "Successfully delete unused profile",
 			profileID:      "1",
 			expectedStatus: http.StatusOK,
 			checkDeleted:   true,
 		},
 		{
-			name:           "无法删除正在使用的 profile",
+			name:           "Cannot delete profile in use",
 			profileID:      "2",
 			expectedStatus: http.StatusConflict,
 			expectedError:  "IN_USE",
 		},
 		{
-			name:           "profile 不存在",
+			name:           "Profile not found",
 			profileID:      "999",
-			expectedStatus: http.StatusOK, // GORM Delete 不会返回错误
+			expectedStatus: http.StatusOK, // GORM Delete does not return error
 			checkDeleted:   false,
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			profileID:      "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -569,7 +569,7 @@ func TestDeleteProfile(t *testing.T) {
 				require.NoError(t, err)
 
 				if tt.checkDeleted {
-					// 验证 profile 已被删除
+					// Validate the profile has been deleted
 					var count int64
 					db.Model(&domain.RadiusProfile{}).Where("id = ?", tt.profileID).Count(&count)
 					assert.Equal(t, int64(0), count)
@@ -583,12 +583,12 @@ func TestDeleteProfile(t *testing.T) {
 	}
 }
 
-// TestProfileEdgeCases 测试边缘情况
+// TestProfileEdgeCases Test edge cases
 func TestProfileEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	t.Run("超大分页参数", func(t *testing.T) {
+	t.Run("Large pagination parameters", func(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles?perPage=1000", nil)
 		rec := httptest.NewRecorder()
@@ -599,11 +599,11 @@ func TestProfileEdgeCases(t *testing.T) {
 
 		var response Response
 		json.Unmarshal(rec.Body.Bytes(), &response)
-		// perPage 应该被限制为 100
+		// perPage should be limited to 100
 		assert.LessOrEqual(t, response.Meta.PageSize, 100)
 	})
 
-	t.Run("负数分页参数", func(t *testing.T) {
+	t.Run("Negative pagination parameters", func(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles?page=-1&perPage=-10", nil)
 		rec := httptest.NewRecorder()
@@ -614,12 +614,12 @@ func TestProfileEdgeCases(t *testing.T) {
 
 		var response Response
 		json.Unmarshal(rec.Body.Bytes(), &response)
-		// 应该使用默认值
+		// Should fall back to default values
 		assert.Equal(t, 1, response.Meta.Page)
 		assert.Equal(t, 10, response.Meta.PageSize)
 	})
 
-	t.Run("无效的排序方向", func(t *testing.T) {
+	t.Run("Invalid sort direction", func(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles?order=INVALID", nil)
 		rec := httptest.NewRecorder()
@@ -630,7 +630,7 @@ func TestProfileEdgeCases(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 	})
 
-	t.Run("更新不存在的字段不应影响其他字段", func(t *testing.T) {
+	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		profile := createTestProfile(db, "test-profile")
 		originalName := profile.Name
 
@@ -651,9 +651,9 @@ func TestProfileEdgeCases(t *testing.T) {
 		var updatedProfile domain.RadiusProfile
 		json.Unmarshal(dataBytes, &updatedProfile)
 
-		// 名称不应该改变
+		// Name should remain unchanged
 		assert.Equal(t, originalName, updatedProfile.Name)
-		// up_rate 应该更新
+		// up_rate should be updated
 		assert.Equal(t, 30720, updatedProfile.UpRate)
 	})
 }

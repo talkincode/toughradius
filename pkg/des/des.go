@@ -7,14 +7,14 @@ import (
 	"errors"
 )
 
-// 明文补码算法
+// Plaintext complement algorithm
 func PKCS5Padding(ciphertext []byte, blockSize int) []byte {
 	padding := blockSize - len(ciphertext)%blockSize
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(ciphertext, padtext...)
 }
 
-// 明文减码算法
+// Plaintext subtract algorithm
 func PKCS5UnPadding(origData []byte) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
@@ -39,15 +39,15 @@ func DesEncrypt(src, key []byte) ([]byte, error) {
 		return nil, err
 	}
 	bs := block.BlockSize()
-	//对明文数据进行补码
+	// Complement the plaintext data
 	src = PKCS5Padding(src, bs)
 	if len(src)%bs != 0 {
 		return nil, errors.New("Need a multiple of the blocksize")
 	}
 	out := make([]byte, len(src))
 	dst := out
-	//对明文按照blocksize进行分块加密
-	//必要时可以使用go关键字进行并行加密
+	// Encrypt the plaintext in block-sized chunks
+	// Use goroutines for parallel encryption if needed
 	for len(src) > 0 {
 		block.Encrypt(dst, src[:bs])
 		src = src[bs:]

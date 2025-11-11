@@ -9,7 +9,7 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-// NasStateHandler 处理 Accounting-On/Off 事件
+// NasStateHandler Handle Accounting-On/Off event
 type NasStateHandler struct {
 	sessionRepo repository.SessionRepository
 }

@@ -10,17 +10,17 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
-// ListAccounting 获取 Accounting 日志列表
-// @Summary 获取 Accounting 日志列表
+// ListAccounting retrieves the accounting logs table
+// @Summary get accounting logs table
 // @Tags Accounting
-// @Param page query int false "页码"
-// @Param perPage query int false "每页数量"
-// @Param sort query string false "排序字段"
-// @Param order query string false "排序方向"
-// @Param username query string false "用户名"
-// @Param nas_addr query string false "NAS 地址"
-// @Param start_time query string false "开始时间"
-// @Param end_time query string false "结束时间"
+// @Param page query int false "Page number"
+// @Param perPage query int false "Items per page"
+// @Param sort query string false "Sort field"
+// @Param order query string false "Sort direction"
+// @Param username query string false "Username"
+// @Param nas_addr query string false "NAS addresses"
+// @Param start_time query string false "Start time"
+// @Param end_time query string false "End time"
 // @Success 200 {object} ListResponse
 // @Router /api/v1/accounting [get]
 func ListAccounting(c echo.Context) error {
@@ -49,22 +49,22 @@ func ListAccounting(c echo.Context) error {
 
 	query := db.Model(&domain.RadiusAccounting{})
 
-	// 按用户名过滤
+	// Filter by username
 	if username := c.QueryParam("username"); username != "" {
 		query = query.Where("username LIKE ?", "%"+username+"%")
 	}
 
-	// 按 NAS 地址过滤
+	// Filter by NAS address
 	if nasAddr := c.QueryParam("nas_addr"); nasAddr != "" {
 		query = query.Where("nas_addr = ?", nasAddr)
 	}
 
-	// 按会话ID过滤
+	// Filter by session ID
 	if sessionId := c.QueryParam("acct_session_id"); sessionId != "" {
 		query = query.Where("acct_session_id = ?", sessionId)
 	}
 
-	// 按时间范围过滤
+	// Filter by time range
 	if startTime := c.QueryParam("start_time"); startTime != "" {
 		query = query.Where("acct_start_time >= ?", startTime)
 	}
@@ -80,8 +80,8 @@ func ListAccounting(c echo.Context) error {
 	return paged(c, records, total, page, perPage)
 }
 
-// GetAccounting 获取单条 Accounting 记录
-// @Summary 获取 Accounting 记录详情
+// GetAccounting fetches a single accounting record
+// @Summary get accounting record detail
 // @Tags Accounting
 // @Param id path int true "Accounting ID"
 // @Success 200 {object} domain.RadiusAccounting
@@ -100,7 +100,7 @@ func GetAccounting(c echo.Context) error {
 	return ok(c, record)
 }
 
-// registerAccountingRoutes 注册 Accounting 路由
+// registerAccountingRoutes registers accounting routes
 func registerAccountingRoutes() {
 	webserver.ApiGET("/accounting", ListAccounting)
 	webserver.ApiGET("/accounting/:id", GetAccounting)

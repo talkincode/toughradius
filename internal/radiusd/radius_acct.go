@@ -14,7 +14,7 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-// 记账服务
+// Accounting service
 type AcctService struct {
 	*RadiusService
 }
@@ -45,20 +45,20 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		zap.S().Debug(FmtRequest(r))
 	}
 
-	// NAS 接入检查
+	// NAS Access check
 	raddrstr := r.RemoteAddr.String()
 	nasrip := raddrstr[:strings.Index(raddrstr, ":")]
 	var identifier = rfc2865.NASIdentifier_GetString(r.Packet)
 	nas, err := s.GetNas(nasrip, identifier)
 	common.Must(err)
 
-	// 重新设置数据报文秘钥
+	// Reset packet secret
 	r.Secret = []byte(nas.Secret)
 	r.Packet.Secret = []byte(nas.Secret)
 
 	statusType := rfc2866.AcctStatusType_Get(r.Packet)
 
-	// 用户名检查
+	// UsernameCheck
 	var username string
 	if statusType != rfc2866.AcctStatusType_Value_AccountingOn &&
 		statusType != rfc2866.AcctStatusType_Value_AccountingOff {
@@ -83,14 +83,14 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	// async process accounting
 	common.Must(s.TaskPool.Submit(func() {
-		// 将vendorReq转换为vendorparsers.VendorRequest用于插件
+		// ConvertvendorReqConvert tovendorparsers.VendorRequestfor plugin
 		vendorReqForPlugin := &vendorparserspkg.VendorRequest{
 			MacAddr: vendorReq.MacAddr,
 			Vlanid1: vendorReq.Vlanid1,
 			Vlanid2: vendorReq.Vlanid2,
 		}
 
-		// 使用插件系统处理计费请求
+		// Use plugin system to handle accounting request
 		ctx := context.Background()
 		err := s.HandleAccountingWithPlugins(ctx, r, vendorReqForPlugin, username, nas, nasrip)
 		if err != nil {

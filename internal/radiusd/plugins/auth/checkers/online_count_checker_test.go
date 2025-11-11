@@ -12,7 +12,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 )
 
-// mockSessionRepository 模拟 SessionRepository
+// mockSessionRepository simulates a SessionRepository
 type mockSessionRepository struct {
 	countByUsername func(ctx context.Context, username string) (int, error)
 }
@@ -24,7 +24,7 @@ func (m *mockSessionRepository) CountByUsername(ctx context.Context, username st
 	return 0, nil
 }
 
-// 实现其他接口方法（虽然在测试中不会用到）
+// Implement other interface methods (unused in tests)
 func (m *mockSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) error {
 	return nil
 }
@@ -137,7 +137,7 @@ func TestOnlineCountChecker_Check(t *testing.T) {
 				if tt.errorContains != "" {
 					assert.Contains(t, err.Error(), tt.errorContains)
 				}
-				// 检查是否是认证错误（除了repository错误）
+				// Check whether it's an authentication error (excluding repository errors)
 				if tt.countError == nil {
 					authErr, ok := radiusErrors.GetAuthError(err)
 					assert.True(t, ok)

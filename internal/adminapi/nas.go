@@ -10,7 +10,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
-// NAS 设备请求结构
+// nasPayload represents the NAS device request structure
 type nasPayload struct {
 	NodeId     int64  `json:"node_id,string" validate:"gte=0"`
 	Name       string `json:"name" validate:"required,min=1,max=100"`
@@ -26,15 +26,15 @@ type nasPayload struct {
 	Remark     string `json:"remark" validate:"omitempty,max=500"`
 }
 
-// ListNAS 获取 NAS 设备列表
-// @Summary 获取 NAS 设备列表
+// ListNAS retrieves the NAS device list
+// @Summary get the NAS device list
 // @Tags NAS
-// @Param page query int false "页码"
-// @Param perPage query int false "每页数量"
-// @Param sort query string false "排序字段"
-// @Param order query string false "排序方向"
-// @Param name query string false "设备名称"
-// @Param status query string false "设备状态"
+// @Param page query int false "Page number"
+// @Param perPage query int false "Items per page"
+// @Param sort query string false "Sort field"
+// @Param order query string false "Sort direction"
+// @Param name query string false "Device name"
+// @Param status query string false "Device status"
 // @Success 200 {object} ListResponse
 // @Router /api/v1/network/nas [get]
 func ListNAS(c echo.Context) error {
@@ -63,17 +63,17 @@ func ListNAS(c echo.Context) error {
 
 	query := db.Model(&domain.NetNas{})
 
-	// 按名称过滤
+	// Filter by name
 	if name := c.QueryParam("name"); name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
 
-	// 按状态过滤
+	// Filter by status
 	if status := c.QueryParam("status"); status != "" {
 		query = query.Where("status = ?", status)
 	}
 
-	// 按 IP 地址过滤
+	// Filter by IP address
 	if ipaddr := c.QueryParam("ipaddr"); ipaddr != "" {
 		query = query.Where("ipaddr = ?", ipaddr)
 	}
@@ -89,8 +89,8 @@ func ListNAS(c echo.Context) error {
 	})
 }
 
-// GetNAS 获取单个 NAS 设备
-// @Summary 获取 NAS 设备详情
+// GetNAS fetches a single NAS device
+// @Summary get NAS device detail
 // @Tags NAS
 // @Param id path int true "NAS ID"
 // @Success 200 {object} domain.NetNas
@@ -109,10 +109,10 @@ func GetNAS(c echo.Context) error {
 	return ok(c, device)
 }
 
-// CreateNAS 创建 NAS 设备
-// @Summary 创建 NAS 设备
+// CreateNAS creates a NAS device
+// @Summary create a NAS device
 // @Tags NAS
-// @Param nas body nasPayload true "NAS 设备信息"
+// @Param nas body nasPayload true "NAS device information"
 // @Success 201 {object} domain.NetNas
 // @Router /api/v1/network/nas [post]
 func CreateNAS(c echo.Context) error {
@@ -121,19 +121,19 @@ func CreateNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 使用验证器验证请求参数
+	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
 		return err
 	}
 
-	// 检查 IP 地址是否已存在
+	// Check whether the IP address already exists
 	var count int64
 	app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ?", payload.Ipaddr).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
 	}
 
-	// 设置默认值
+	// Set default values
 	if payload.Status == "" {
 		payload.Status = "enabled"
 	}
@@ -163,11 +163,11 @@ func CreateNAS(c echo.Context) error {
 	return ok(c, device)
 }
 
-// UpdateNAS 更新 NAS 设备
-// @Summary 更新 NAS 设备
+// UpdateNAS updates a NAS device
+// @Summary update a NAS device
 // @Tags NAS
 // @Param id path int true "NAS ID"
-// @Param nas body nasPayload true "NAS 设备信息"
+// @Param nas body nasPayload true "NAS device information"
 // @Success 200 {object} domain.NetNas
 // @Router /api/v1/network/nas/{id} [put]
 func UpdateNAS(c echo.Context) error {
@@ -186,12 +186,12 @@ func UpdateNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 使用验证器验证请求参数
+	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
 		return err
 	}
 
-	// 验证 IP 唯一性（如果 IP 被修改）
+	// Validate IP uniqueness (e.g., if the IP was modified)
 	if payload.Ipaddr != "" && payload.Ipaddr != device.Ipaddr {
 		var count int64
 		app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", payload.Ipaddr, id).Count(&count)
@@ -201,7 +201,7 @@ func UpdateNAS(c echo.Context) error {
 		device.Ipaddr = payload.Ipaddr
 	}
 
-	// 更新字段
+	// Update fields
 	if payload.Name != "" {
 		device.Name = payload.Name
 	}
@@ -243,8 +243,8 @@ func UpdateNAS(c echo.Context) error {
 	return ok(c, device)
 }
 
-// DeleteNAS 删除 NAS 设备
-// @Summary 删除 NAS 设备
+// DeleteNAS deletes a NAS device
+// @Summary delete a NAS device
 // @Tags NAS
 // @Param id path int true "NAS ID"
 // @Success 200 {object} SuccessResponse
@@ -255,7 +255,7 @@ func DeleteNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 NAS ID", nil)
 	}
 
-	// 检查是否有在线会话
+	// Check whether there are active online sessions
 	var onlineCount int64
 	app.GDB().Model(&domain.RadiusOnline{}).Joins("JOIN net_vpe ON radius_online.nas_addr = net_vpe.ipaddr").Where("net_vpe.id = ?", id).Count(&onlineCount)
 	if onlineCount > 0 {
@@ -273,7 +273,7 @@ func DeleteNAS(c echo.Context) error {
 	})
 }
 
-// registerNASRoutes 注册 NAS 路由
+// registerNASRoutes registers NAS routes
 func registerNASRoutes() {
 	webserver.ApiGET("/network/nas", ListNAS)
 	webserver.ApiGET("/network/nas/:id", GetNAS)

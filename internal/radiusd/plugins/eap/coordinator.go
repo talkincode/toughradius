@@ -10,19 +10,19 @@ import (
 	"layeh.com/radius/rfc2865"
 )
 
-// HandlerRegistry EAP 处理器注册表接口
+// HandlerRegistry defines the EAP handler registry interface
 type HandlerRegistry interface {
 	GetHandler(eapType uint8) (EAPHandler, bool)
 }
 
-// Coordinator EAP 协调器，负责 EAP 消息的分发和处理
+// Coordinator orchestrates EAP message dispatching and handling
 type Coordinator struct {
 	stateManager    EAPStateManager
 	pwdProvider     PasswordProvider
 	handlerRegistry HandlerRegistry
 }
 
-// NewCoordinator 创建新的 EAP 协调器
+// NewCoordinator creates a new EAP coordinator
 func NewCoordinator(stateManager EAPStateManager, pwdProvider PasswordProvider, handlerRegistry HandlerRegistry) *Coordinator {
 	return &Coordinator{
 		stateManager:    stateManager,
@@ -31,11 +31,11 @@ func NewCoordinator(stateManager EAPStateManager, pwdProvider PasswordProvider, 
 	}
 }
 
-// HandleEAPRequest 处理 EAP 请求
-// 返回值: (handled bool, success bool, err error)
-// handled: 是否已处理该请求
-// success: 认证是否成功 (只在 handled=true 时有效)
-// err: 处理过程中的错误
+// HandleEAPRequest Handle EAP request
+// Returns: handled bool, success bool, err error
+// handled: whether the request was handled
+// success: whether authentication succeeded (only meaningful when handled=true)
+// err: error occurred during handling
 func (c *Coordinator) HandleEAPRequest(
 	w radius.ResponseWriter,
 	r *radius.Request,
@@ -44,17 +44,17 @@ func (c *Coordinator) HandleEAPRequest(
 	response *radius.Packet,
 	secret string,
 	isMacAuth bool,
-	configuredMethod string, // 配置的 EAP 方法 (eap-md5, eap-mschapv2, etc.)
+	configuredMethod string, // Configured EAP method (eap-md5, eap-mschapv2, etc.)
 ) (handled bool, success bool, err error) {
 
-	// 解析 EAP 消息
+	// Parse the EAP message
 	eapMsg, err := ParseEAPMessage(r.Packet)
 	if err != nil {
-		// 不是 EAP 请求
+		// Not an EAP request
 		return false, false, nil
 	}
 
-	// 创建 EAP 上下文
+	// Create the EAP context
 	ctx := &EAPContext{
 		Request:        r,
 		ResponseWriter: w,
@@ -68,17 +68,17 @@ func (c *Coordinator) HandleEAPRequest(
 		PwdProvider:    c.pwdProvider,
 	}
 
-	// 处理 EAP-Response/Identity
+	// Handle EAP-Response/Identity
 	if eapMsg.Code == CodeResponse && eapMsg.Type == TypeIdentity {
 		return c.handleIdentityResponse(ctx, configuredMethod)
 	}
 
-	// 处理 EAP-Response/Nak
+	// Handle EAP-Response/Nak
 	if eapMsg.Code == CodeResponse && eapMsg.Type == TypeNak {
 		return c.handleNak(ctx)
 	}
 
-	// 处理 EAP-Response (Challenge Response)
+	// Handle EAP-Response (Challenge Response)
 	if eapMsg.Code == CodeResponse {
 		return c.handleChallengeResponse(ctx)
 	}
@@ -86,10 +86,9 @@ func (c *Coordinator) HandleEAPRequest(
 	return false, false, fmt.Errorf("unsupported EAP code: %d", eapMsg.Code)
 }
 
-// handleIdentityResponse 处理 EAP-Response/Identity
-// 根据配置的方法发送相应的 Challenge
+// handleIdentityResponse processes EAP-Response/Identity and sends the configured challenge
 func (c *Coordinator) handleIdentityResponse(ctx *EAPContext, configuredMethod string) (bool, bool, error) {
-	// 根据配置的方法选择处理器
+	// Select the handler for the configured method
 	var handler EAPHandler
 
 	switch configuredMethod {
@@ -100,7 +99,7 @@ func (c *Coordinator) handleIdentityResponse(ctx *EAPContext, configuredMethod s
 	case "eap-otp":
 		handler, _ = c.handlerRegistry.GetHandler(TypeOTP)
 	default:
-		// 默认使用 MD5
+		// Default to MD5
 		handler, _ = c.handlerRegistry.GetHandler(TypeMD5Challenge)
 	}
 
@@ -108,7 +107,7 @@ func (c *Coordinator) handleIdentityResponse(ctx *EAPContext, configuredMethod s
 		return false, false, fmt.Errorf("EAP handler not found for method: %s", configuredMethod)
 	}
 
-	// 调用处理器发送 Challenge
+	// Invoke the handler to send the challenge
 	handled, err := handler.HandleIdentity(ctx)
 	if err != nil {
 		zap.L().Error("EAP HandleIdentity failed",
@@ -116,18 +115,17 @@ func (c *Coordinator) handleIdentityResponse(ctx *EAPContext, configuredMethod s
 			zap.Error(err))
 	}
 
-	// Identity 阶段不返回成功，需要等待 Challenge Response
+	// Identity phase does not return success; wait for the challenge response
 	return handled, false, err
 }
 
-// handleNak 处理 EAP-Response/Nak
-// 客户端拒绝当前方法，建议其他方法
+// handleNak handles EAP-Response/Nak when the client rejects the current method
 func (c *Coordinator) handleNak(ctx *EAPContext) (bool, bool, error) {
 	if len(ctx.EAPMessage.Data) == 0 {
 		return false, false, fmt.Errorf("Nak message has no alternative methods")
 	}
 
-	// 获取客户端建议的第一个方法
+	// Take the first method suggested by the client
 	suggestedType := ctx.EAPMessage.Data[0]
 
 	handler, ok := c.handlerRegistry.GetHandler(suggestedType)
@@ -135,25 +133,25 @@ func (c *Coordinator) handleNak(ctx *EAPContext) (bool, bool, error) {
 		return false, false, fmt.Errorf("unsupported EAP type: %d", suggestedType)
 	}
 
-	// 使用建议的方法发送 Challenge
+	// Send the challenge using the suggested method
 	handled, err := handler.HandleIdentity(ctx)
 	return handled, false, err
 }
 
-// handleChallengeResponse 处理 EAP-Response (Challenge Response)
+// handleChallengeResponse processes EAP-Response (Challenge Response)
 func (c *Coordinator) handleChallengeResponse(ctx *EAPContext) (bool, bool, error) {
-	// 根据 EAP Type 获取处理器
+	// Get the handler based on the EAP type
 	handler, ok := c.handlerRegistry.GetHandler(ctx.EAPMessage.Type)
 	if !ok {
 		return false, false, fmt.Errorf("unsupported EAP type: %d", ctx.EAPMessage.Type)
 	}
 
-	// 检查处理器是否可以处理该消息
+	// Check whether the handler can process this message
 	if !handler.CanHandle(ctx) {
 		return false, false, fmt.Errorf("handler cannot handle this EAP message")
 	}
 
-	// 调用处理器验证响应
+	// Invoke the handler to validate the response
 	success, err := handler.HandleResponse(ctx)
 	if err != nil {
 		zap.L().Error("EAP HandleResponse failed",
@@ -165,18 +163,18 @@ func (c *Coordinator) handleChallengeResponse(ctx *EAPContext) (bool, bool, erro
 	return true, success, nil
 }
 
-// SendEAPSuccess 发送 EAP-Success 响应
+// SendEAPSuccess Send EAP-Success response
 func (c *Coordinator) SendEAPSuccess(w radius.ResponseWriter, r *radius.Request, response *radius.Packet, secret string) error {
 	eapMsg, _ := ParseEAPMessage(r.Packet)
 	identifier := eapMsg.Identifier
 
-	// 创建 EAP-Success 消息
+	// Create the EAP-Success message
 	eapSuccess := EncodeEAPHeader(CodeSuccess, identifier)
 
-	// 设置 EAP-Message 和 Message-Authenticator
+	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapSuccess, secret)
 
-	// 发送响应
+	// Sendresponse
 	if app.GConfig().Radiusd.Debug {
 		zap.L().Info("Sending EAP-Success",
 			zap.Uint8("identifier", identifier))
@@ -185,21 +183,21 @@ func (c *Coordinator) SendEAPSuccess(w radius.ResponseWriter, r *radius.Request,
 	return w.Write(response)
 }
 
-// SendEAPFailure 发送 EAP-Failure 响应
+// SendEAPFailure Send EAP-Failure response
 func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request, secret string, reason error) error {
 	eapMsg, _ := ParseEAPMessage(r.Packet)
 	identifier := eapMsg.Identifier
 
-	// 创建 EAP-Failure 消息
+	// Create the EAP-Failure message
 	eapFailure := EncodeEAPHeader(CodeFailure, identifier)
 
-	// 创建 RADIUS Reject 响应
+	// Create RADIUS Reject response
 	response := r.Response(radius.CodeAccessReject)
 
-	// 设置 EAP-Message 和 Message-Authenticator
+	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapFailure, secret)
 
-	// 记录日志
+	// Log the failure event
 	zap.L().Warn("Sending EAP-Failure",
 		zap.Uint8("identifier", identifier),
 		zap.Error(reason))
@@ -207,7 +205,7 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 	return w.Write(response)
 }
 
-// CleanupState 清理 EAP 状态
+// CleanupState Cleanup EAP Status
 func (c *Coordinator) CleanupState(r *radius.Request) {
 	stateID := rfc2865.State_GetString(r.Packet)
 	if stateID != "" {

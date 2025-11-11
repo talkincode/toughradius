@@ -96,7 +96,7 @@ func TestMikrotikAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 			if tt.shouldEnhance {
 				rateLimit := mikrotik.MikrotikRateLimit_GetString(response)
 				assert.NotEmpty(t, rateLimit)
-				// 格式应该是 "UpRatek/DownRatek"
+				// Format should be "UpRatek/DownRatek"
 				assert.Equal(t, "1024k/2048k", rateLimit)
 			}
 		})

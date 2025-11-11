@@ -50,7 +50,7 @@ func TestMSCHAPValidator_CanHandle(t *testing.T) {
 		{
 			name: "without attributes",
 			setupPacket: func(packet *radius.Packet) {
-				// 不添加任何属性
+				// Do not add any attributes
 			},
 			expected: false,
 		},
@@ -135,21 +135,21 @@ func TestMSCHAPValidator_Validate_InvalidLength(t *testing.T) {
 }
 
 func TestMSCHAPValidator_Validate_PasswordMismatch(t *testing.T) {
-	// 这个测试使用简单的数据验证密码不匹配的情况
-	// 完整的 MSCHAPv2 验证需要使用 RFC 2759 测试向量
+	// This test uses simple data for a mismatched password validation
+	// Full MSCHAPv2 validation should use RFC 2759 test vectors
 	validator := &MSCHAPValidator{}
 	ctx := context.Background()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-	// 创建有效长度但内容随机的 challenge 和 response
+	// Create a valid-length but random challenge and response
 	challenge := make([]byte, 16)
 	mschapResponse := make([]byte, 50)
 	
-	// 设置基本结构
+	// Set up the basic structure
 	mschapResponse[0] = 1  // ident
-	// 其他字节保持为 0
+	// Keep the remaining bytes zero
 
 	microsoft.MSCHAPChallenge_Add(packet, challenge)
 	microsoft.MSCHAP2Response_Add(packet, mschapResponse)
@@ -162,7 +162,7 @@ func TestMSCHAPValidator_Validate_PasswordMismatch(t *testing.T) {
 		User:     user,
 	}
 
-	// 由于 challenge 和 response 是随机的，应该验证失败
+	// With random challenge and response, validation should fail
 	err := validator.Validate(ctx, authCtx, "testpass")
 	require.Error(t, err)
 }

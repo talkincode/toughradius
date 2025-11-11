@@ -16,7 +16,7 @@ import (
 	"gorm.io/gorm/schema"
 )
 
-// getDatabase 根据配置类型获取数据库连接
+// getDatabase returns a database connection based on the configuration type
 func getDatabase(config config.DBConfig) *gorm.DB {
 	dbType := strings.ToLower(config.Type)
 	switch dbType {
@@ -30,9 +30,9 @@ func getDatabase(config config.DBConfig) *gorm.DB {
 	}
 }
 
-// getSqliteDatabase 获取 SQLite 数据库连接
+// getSqliteDatabase returns a SQLite database connection
 func getSqliteDatabase(config config.DBConfig) *gorm.DB {
-	// 如果 Name 不是绝对路径且不是内存数据库,则放在 workdir/data 目录下
+	// e.g., if the name is not an absolute path and not an in-memory DB, store it under workdir/data
 	dbPath := config.Name
 	if dbPath != ":memory:" && !path.IsAbs(dbPath) {
 		dbPath = path.Join(GConfig().System.Workdir, "data", dbPath)
@@ -62,14 +62,14 @@ func getSqliteDatabase(config config.DBConfig) *gorm.DB {
 	sqlDB, err := pool.DB()
 	common.Must(err)
 
-	// SQLite 连接池设置
+	// SQLite connection pool settings
 	sqlDB.SetMaxIdleConns(1)
 	sqlDB.SetMaxOpenConns(1)
 
 	return pool
 }
 
-// getPgDatabase 获取 PostgreSQL 数据库连接
+// getPgDatabase returns a PostgreSQL database connection
 func getPgDatabase(config config.DBConfig) *gorm.DB {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
 		config.Host,
@@ -97,11 +97,11 @@ func getPgDatabase(config config.DBConfig) *gorm.DB {
 	common.Must(err)
 	sqlDB, err := pool.DB()
 	common.Must(err)
-	// SetMaxIdleConns 设置空闲连接池中连接的最大数量
+	// SetMaxIdleConns sets the maximum number of idle connections in the pool
 	sqlDB.SetMaxIdleConns(config.IdleConn)
-	// SetMaxOpenConns 设置打开数据库连接的最大数量。
+	// SetMaxOpenConns sets the maximum number of open database connections
 	sqlDB.SetMaxOpenConns(config.MaxConn)
-	// SetConnMaxLifetime 设置了连接可复用的最大时间。
+	// SetConnMaxLifetime sets the maximum lifetime a connection can be reused
 	// sqlDB.SetConnMaxLifetime(time.Hour * 8)
 	return pool
 }

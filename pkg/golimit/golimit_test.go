@@ -34,7 +34,7 @@ func TestNewGoLimit(t *testing.T) {
 	}
 }
 
-// TestGoLimit_Add tests adding to the限制器
+// TestGoLimit_Add tests adding to the limiter
 func TestGoLimit_Add(t *testing.T) {
 	gl := NewGoLimit(3)
 

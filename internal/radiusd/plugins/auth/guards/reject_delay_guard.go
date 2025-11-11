@@ -17,7 +17,7 @@ const (
 	maxCachedRejectItems = 65535
 )
 
-// rejectItem 记录单个用户名的拒绝信息
+// rejectItem stores rejection info for a single username
 type rejectItem struct {
 	mu         sync.Mutex
 	rejects    int64
@@ -41,7 +41,7 @@ func (ri *rejectItem) exceeded(limit int64, window time.Duration) bool {
 	return false
 }
 
-// RejectDelayGuard 在连续拒绝次数超出阈值时阻断请求
+// RejectDelayGuard blocks requests when consecutive rejection counts exceed the threshold
 type RejectDelayGuard struct {
 	maxRejects int64
 	resetAfter time.Duration
@@ -50,7 +50,7 @@ type RejectDelayGuard struct {
 	items map[string]*rejectItem
 }
 
-// NewRejectDelayGuard 创建 RejectDelayGuard
+// NewRejectDelayGuard Create RejectDelayGuard
 func NewRejectDelayGuard() *RejectDelayGuard {
 	return &RejectDelayGuard{
 		maxRejects: defaultRejectLimit,
@@ -63,7 +63,7 @@ func (g *RejectDelayGuard) Name() string {
 	return "reject-delay"
 }
 
-// OnError 统计拒绝次数，超过阈值返回限速错误
+// OnError tracks rejection counts and returns a rate-limit error when the threshold is exceeded
 func (g *RejectDelayGuard) OnError(ctx context.Context, authCtx *auth.AuthContext, stage string, err error) error {
 	if err == nil {
 		return nil

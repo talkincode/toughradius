@@ -13,7 +13,7 @@ import (
 	"layeh.com/radius"
 )
 
-// HandleAccountingWithPlugins 使用插件系统处理计费请求
+// HandleAccountingWithPlugins Use plugin system to handle accounting request
 func (s *AcctService) HandleAccountingWithPlugins(
 	ctx context.Context,
 	r *radius.Request,
@@ -22,17 +22,17 @@ func (s *AcctService) HandleAccountingWithPlugins(
 	nas *domain.NetNas,
 	nasIP string,
 ) error {
-	// 获取Accounting-Status-Type
+	// getAccounting-Status-Type
 	statusTypeAttr := r.Packet.Get(40) // Acct-Status-Type
 	if statusTypeAttr == nil {
 		return fmt.Errorf("missing Acct-Status-Type attribute")
 	}
 
-	// statusType已经在ServeRADIUS中获取，这里简化为直接从statusTypeAttr提取
-	// rfc2866的Value常量: Start=1, Stop=2, InterimUpdate=3, AccountingOn=7, AccountingOff=8
+	// The status type is already available from the RADIUS packet; extract it directly
+	// RFC 2866 value constants: Start=1, Stop=2, InterimUpdate=3, AccountingOn=7, AccountingOff=8
 	statusType := statusTypeAttr[0]
 
-	// 构建AccountingContext
+	// Build the AccountingContext
 	acctCtx := &accounting.AccountingContext{
 		Context:    ctx,
 		Request:    r,
@@ -43,13 +43,13 @@ func (s *AcctService) HandleAccountingWithPlugins(
 		StatusType: int(statusType),
 	}
 
-	// 获取注册的Accounting Handler
+	// Get registered accounting handlers
 	handlers := registry.GetAccountingHandlers()
 	if len(handlers) == 0 {
 		return fmt.Errorf("no accounting handlers registered")
 	}
 
-	// 遍历handlers，找到能处理该StatusType的handler
+	// Iterate over handlers to find one that can handle this status type
 	for _, handler := range handlers {
 		if handler.CanHandle(acctCtx) {
 			err := handler.Handle(acctCtx)
@@ -64,7 +64,7 @@ func (s *AcctService) HandleAccountingWithPlugins(
 				return err
 			}
 
-			// 记录成功处理的metrics
+			// Record metrics for successful handling
 			switch statusType {
 			case 1: // Start
 				zap.L().Info("radius accounting start",

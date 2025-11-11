@@ -51,7 +51,7 @@ func WriteRow(t interface{}, i int, xlsx *excelize.File, sheet string) {
 	d := reflect.TypeOf(t).Elem()
 	count := 0
 	for j := 0; j < d.NumField(); j++ {
-		// 设置表头
+		// Set the table header
 		column := COLNAMES[count]
 		count++
 		if i == 0 {
@@ -67,7 +67,7 @@ func WriteRow(t interface{}, i int, xlsx *excelize.File, sheet string) {
 			}
 			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+1), xtag)
 		}
-		// 设置内容
+		// Set the content
 		// column := strings.Split(d.Field(j).Tag.Get("xlsx"), "-")[0]
 		ctype := d.Field(j).Type.String()
 		switch ctype {

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-// CertConfig 证书配置
+// CertConfig Certificate configuration
 type CertConfig struct {
 	CommonName         string
 	Organization       []string
@@ -22,35 +22,35 @@ type CertConfig struct {
 	Country            []string
 	Province           []string
 	Locality           []string
-	DNSNames           []string // SAN DNS 名称
-	IPAddresses        []net.IP // SAN IP 地址
-	ValidDays          int      // 有效天数
-	KeySize            int      // RSA 密钥大小
+	DNSNames           []string // SAN DNS names
+	IPAddresses        []net.IP // SAN IP addresses
+	ValidDays          int      // Valid days
+	KeySize            int      // RSA Key size
 }
 
-// CAConfig CA 证书配置
+// CAConfig CA Certificate configuration
 type CAConfig struct {
 	CertConfig
-	OutputDir string // 输出目录
+	OutputDir string // Output directory
 }
 
-// ServerConfig 服务器证书配置
+// ServerConfig holds server certificate configuration
 type ServerConfig struct {
 	CertConfig
-	CAKeyPath  string // CA 私钥路径
-	CACertPath string // CA 证书路径
-	OutputDir  string // 输出目录
+	CAKeyPath  string // CA private key path
+	CACertPath string // CA certificate path
+	OutputDir  string // Output directory
 }
 
-// ClientConfig 客户端证书配置
+// ClientConfig holds client certificate configuration
 type ClientConfig struct {
 	CertConfig
-	CAKeyPath  string // CA 私钥路径
-	CACertPath string // CA 证书路径
-	OutputDir  string // 输出目录
+	CAKeyPath  string // CA private key path
+	CACertPath string // CA certificate path
+	OutputDir  string // Output directory
 }
 
-// DefaultCertConfig 返回默认证书配置
+// DefaultCertConfig Returns default certificate configuration
 func DefaultCertConfig() CertConfig {
 	return CertConfig{
 		Organization:       []string{"ToughRADIUS"},
@@ -63,19 +63,19 @@ func DefaultCertConfig() CertConfig {
 	}
 }
 
-// GenerateCA 生成 CA 证书
+// GenerateCA Generate CA certificate
 func GenerateCA(config CAConfig) error {
 	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
-	// 生成私钥
+	// Generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, config.KeySize)
 	if err != nil {
 		return fmt.Errorf("generate private key failed: %w", err)
 	}
 
-	// 创建证书模板
+	// Create certificate template
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
 		return fmt.Errorf("generate serial number failed: %w", err)
@@ -99,13 +99,13 @@ func GenerateCA(config CAConfig) error {
 		IsCA:                  true,
 	}
 
-	// 自签名证书
+	// Self-signed certificate
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
 	if err != nil {
 		return fmt.Errorf("create certificate failed: %w", err)
 	}
 
-	// 保存证书
+	// Save certificate
 	certPath := filepath.Join(config.OutputDir, "ca.crt")
 	certOut, err := os.Create(certPath)
 	if err != nil {
@@ -117,7 +117,7 @@ func GenerateCA(config CAConfig) error {
 		return fmt.Errorf("encode certificate failed: %w", err)
 	}
 
-	// 保存私钥
+	// Save private key
 	keyPath := filepath.Join(config.OutputDir, "ca.key")
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -141,25 +141,25 @@ func GenerateCA(config CAConfig) error {
 	return nil
 }
 
-// GenerateServerCert 生成服务器证书（支持 SAN）
+// GenerateServerCert generates the server certificate (supports SAN)
 func GenerateServerCert(config ServerConfig) error {
 	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
-	// 加载 CA 证书和私钥
+	// Load CA certificateand private key
 	caCert, caKey, err := loadCAFiles(config.CACertPath, config.CAKeyPath)
 	if err != nil {
 		return err
 	}
 
-	// 生成私钥
+	// Generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, config.KeySize)
 	if err != nil {
 		return fmt.Errorf("generate private key failed: %w", err)
 	}
 
-	// 创建证书模板
+	// Create certificate template
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
 		return fmt.Errorf("generate serial number failed: %w", err)
@@ -184,13 +184,13 @@ func GenerateServerCert(config ServerConfig) error {
 		IPAddresses:           config.IPAddresses,
 	}
 
-	// 使用 CA 签名
+	// Sign using the CA
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, caCert, &privateKey.PublicKey, caKey)
 	if err != nil {
 		return fmt.Errorf("create certificate failed: %w", err)
 	}
 
-	// 保存证书
+	// Save certificate
 	certPath := filepath.Join(config.OutputDir, "server.crt")
 	certOut, err := os.Create(certPath)
 	if err != nil {
@@ -202,7 +202,7 @@ func GenerateServerCert(config ServerConfig) error {
 		return fmt.Errorf("encode certificate failed: %w", err)
 	}
 
-	// 保存私钥
+	// Save private key
 	keyPath := filepath.Join(config.OutputDir, "server.key")
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -232,25 +232,25 @@ func GenerateServerCert(config ServerConfig) error {
 	return nil
 }
 
-// GenerateClientCert 生成客户端证书（支持 SAN）
+// GenerateClientCert generates the client certificate (supports SAN)
 func GenerateClientCert(config ClientConfig) error {
 	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
-	// 加载 CA 证书和私钥
+	// Load CA certificateand private key
 	caCert, caKey, err := loadCAFiles(config.CACertPath, config.CAKeyPath)
 	if err != nil {
 		return err
 	}
 
-	// 生成私钥
+	// Generate private key
 	privateKey, err := rsa.GenerateKey(rand.Reader, config.KeySize)
 	if err != nil {
 		return fmt.Errorf("generate private key failed: %w", err)
 	}
 
-	// 创建证书模板
+	// Create certificate template
 	serialNumber, err := rand.Int(rand.Reader, new(big.Int).Lsh(big.NewInt(1), 128))
 	if err != nil {
 		return fmt.Errorf("generate serial number failed: %w", err)
@@ -275,13 +275,13 @@ func GenerateClientCert(config ClientConfig) error {
 		IPAddresses:           config.IPAddresses,
 	}
 
-	// 使用 CA 签名
+	// Sign using the CA
 	derBytes, err := x509.CreateCertificate(rand.Reader, &template, caCert, &privateKey.PublicKey, caKey)
 	if err != nil {
 		return fmt.Errorf("create certificate failed: %w", err)
 	}
 
-	// 保存证书
+	// Save certificate
 	certPath := filepath.Join(config.OutputDir, "client.crt")
 	certOut, err := os.Create(certPath)
 	if err != nil {
@@ -293,7 +293,7 @@ func GenerateClientCert(config ClientConfig) error {
 		return fmt.Errorf("encode certificate failed: %w", err)
 	}
 
-	// 保存私钥
+	// Save private key
 	keyPath := filepath.Join(config.OutputDir, "client.key")
 	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -323,9 +323,9 @@ func GenerateClientCert(config ClientConfig) error {
 	return nil
 }
 
-// loadCAFiles 加载 CA 证书和私钥文件
+// loadCAFiles loads the CA certificate and private key files
 func loadCAFiles(certPath, keyPath string) (*x509.Certificate, *rsa.PrivateKey, error) {
-	// 读取 CA 证书
+	// Read CA certificate
 	certPEM, err := os.ReadFile(certPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read CA cert failed: %w", err)
@@ -341,7 +341,7 @@ func loadCAFiles(certPath, keyPath string) (*x509.Certificate, *rsa.PrivateKey, 
 		return nil, nil, fmt.Errorf("parse CA cert failed: %w", err)
 	}
 
-	// 读取 CA 私钥
+	// Read CA private key
 	keyPEM, err := os.ReadFile(keyPath)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read CA key failed: %w", err)

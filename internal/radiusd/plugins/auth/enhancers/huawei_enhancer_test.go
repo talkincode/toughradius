@@ -99,9 +99,9 @@ func TestHuaweiAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 			err := enhancer.Enhance(ctx, authCtx)
 			require.NoError(t, err)
 
-			// 检查是否添加了 Huawei 属性
+			// Check whether Huawei attributes were added
 			if tt.shouldEnhance {
-				// 验证速率属性已设置
+				// Validate that rate attributes were set
 				upAvg := huawei.HuaweiInputAverageRate_Get(response)
 				assert.Greater(t, uint32(upAvg), uint32(0))
 
@@ -179,7 +179,7 @@ func TestHuaweiAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 			downAvg := huawei.HuaweiOutputAverageRate_Get(response)
 			assert.Equal(t, tt.expectedDownAvg, uint32(downAvg))
 
-			// Peak 速率应该是平均速率的 4 倍（有上限）
+			// Peak rate should be four times the average rate (with a cap)
 			upPeak := huawei.HuaweiInputPeakRate_Get(response)
 			expectedUpPeak := clampInt64(int64(tt.expectedUpAvg)*4, math.MaxInt32)
 			assert.Equal(t, uint32(expectedUpPeak), uint32(upPeak))
@@ -211,7 +211,7 @@ func TestHuaweiAcceptEnhancer_Enhance_NoNas(t *testing.T) {
 	err := enhancer.Enhance(ctx, authCtx)
 	require.NoError(t, err)
 
-	// 没有 NAS 时不应该添加属性
+	// Should not add attributes when no NAS is present
 	upAvg := huawei.HuaweiInputAverageRate_Get(response)
 	assert.Equal(t, huawei.HuaweiInputAverageRate(0), upAvg)
 }

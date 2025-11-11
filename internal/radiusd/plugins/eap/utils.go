@@ -12,7 +12,7 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// ParseEAPMessage 从 RADIUS 包中解析 EAP 消息
+// ParseEAPMessage extracts the EAP message from a RADIUS packet
 func ParseEAPMessage(packet *radius.Packet) (*EAPMessage, error) {
 	attr, err := rfc2869.EAPMessage_Lookup(packet)
 	if err != nil {
@@ -33,9 +33,9 @@ func ParseEAPMessage(packet *radius.Packet) (*EAPMessage, error) {
 	return eap, nil
 }
 
-// EncodeEAPMessage 编码 EAP 消息为字节切片
+// EncodeEAPMessage encodes an EAP message into bytes
 func (msg *EAPMessage) Encode() []byte {
-	length := 5 // Code, Identifier, Length, Type 字段总共占用 5 字节
+	length := 5 // Code, Identifier, Length, and Type fields occupy 5 bytes
 	var data []byte
 	if msg.Data != nil {
 		data = msg.Data
@@ -54,7 +54,7 @@ func (msg *EAPMessage) Encode() []byte {
 	return buffer
 }
 
-// EncodeEAPHeader 编码 EAP Header (Success/Failure)
+// EncodeEAPHeader encodes an EAP header (Success/Failure)
 func EncodeEAPHeader(code, identifier uint8) []byte {
 	buffer := make([]byte, 4)
 	buffer[0] = code
@@ -63,7 +63,7 @@ func EncodeEAPHeader(code, identifier uint8) []byte {
 	return buffer
 }
 
-// GenerateRandomBytes 生成指定长度的随机字节数组
+// GenerateRandomBytes generates a random byte array of the specified length
 func GenerateRandomBytes(n int) ([]byte, error) {
 	b := make([]byte, n)
 	_, err := rand.Read(b)
@@ -74,7 +74,7 @@ func GenerateRandomBytes(n int) ([]byte, error) {
 	return b, nil
 }
 
-// GenerateMessageAuthenticator 生成 Message-Authenticator 属性
+// GenerateMessageAuthenticator generates the Message-Authenticator attribute
 func GenerateMessageAuthenticator(packet *radius.Packet, secret string) []byte {
 	b, _ := packet.MarshalBinary()
 	mac := hmac.New(md5.New, []byte(secret))
@@ -82,7 +82,7 @@ func GenerateMessageAuthenticator(packet *radius.Packet, secret string) []byte {
 	return mac.Sum(nil)
 }
 
-// SetEAPMessageAndAuth 设置 EAP-Message 和 Message-Authenticator 属性
+// SetEAPMessageAndAuth sets the EAP-Message and Message-Authenticator attributes
 func SetEAPMessageAndAuth(response *radius.Packet, eapData []byte, secret string) {
 	rfc2869.EAPMessage_Set(response, eapData)
 	rfc2869.MessageAuthenticator_Set(response, make([]byte, 16))
@@ -90,14 +90,14 @@ func SetEAPMessageAndAuth(response *radius.Packet, eapData []byte, secret string
 	rfc2869.MessageAuthenticator_Set(response, authenticator)
 }
 
-// ComputeMD5Hash 计算 MD5 哈希
+// ComputeMD5Hash computes the MD5 hash
 func ComputeMD5Hash(data []byte) []byte {
 	hash := md5.New()
 	hash.Write(data)
 	return hash.Sum(nil)
 }
 
-// VerifyMD5Hash 验证 MD5 哈希
+// VerifyMD5Hash validates the MD5 hash
 func VerifyMD5Hash(expected, actual []byte) bool {
 	return bytes.Equal(expected, actual)
 }

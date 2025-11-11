@@ -1,29 +1,29 @@
 #!/bin/bash
 
 ###############################################################################
-# ToughRADIUS 数据库初始化脚本
+# ToughRADIUS database initialization script
 #
-# 用途：快速初始化 ToughRADIUS 数据库（支持 PostgreSQL 和 SQLite）
+# Purpose: quickly initialize the ToughRADIUS database (PostgreSQL or SQLite supported)
 #
-# 使用方法：
+# Usage:
 #   1. PostgreSQL: ./scripts/init-db.sh postgres
 #   2. SQLite:     ./scripts/init-db.sh sqlite
-#   3. 使用配置文件: ./scripts/init-db.sh
+#   3. Use a config file: ./scripts/init-db.sh
 #
-# 示例：
+# Examples:
 #   ./scripts/init-db.sh sqlite
 #   ./scripts/init-db.sh postgres
 ###############################################################################
 
 set -e
 
-# 颜色输出
+# Color output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# 获取脚本所在目录
+# Determine the script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
@@ -32,7 +32,7 @@ echo -e "${GREEN}ToughRADIUS 数据库初始化脚本${NC}"
 echo -e "${GREEN}================================${NC}"
 echo ""
 
-# 检查参数
+# Check arguments
 DB_TYPE="${1:-}"
 
 if [ -z "$DB_TYPE" ]; then
@@ -40,7 +40,7 @@ if [ -z "$DB_TYPE" ]; then
     echo ""
     cd "$PROJECT_ROOT"
     
-    # 检查是否已编译
+    # Check if the tool has been compiled
     if [ ! -f "./toughradius" ]; then
         echo -e "${YELLOW}未找到编译文件，开始编译...${NC}"
         go build -o toughradius
@@ -67,13 +67,13 @@ if [ -z "$DB_TYPE" ]; then
     exit 0
 fi
 
-# 参数化初始化
+# Parameterized initialization
 case "$DB_TYPE" in
     sqlite)
         echo -e "${GREEN}使用 SQLite 数据库${NC}"
         echo ""
         
-        # 创建临时配置文件
+        # Create a temporary configuration file
         TEMP_CONFIG="/tmp/toughradius-sqlite.yml"
         cat > "$TEMP_CONFIG" <<EOF
 system:
@@ -122,21 +122,21 @@ EOF
         
         cd "$PROJECT_ROOT"
         
-        # 检查是否已编译
+        # Check if the tool has been compiled
         if [ ! -f "./toughradius" ]; then
             echo -e "${YELLOW}未找到编译文件，开始编译...${NC}"
             go build -o toughradius
             echo -e "${GREEN}✓ 编译完成${NC}"
         fi
         
-        # 创建数据目录
+        # Create the data directory
         sudo mkdir -p /var/toughradius/data
         sudo chown -R $(whoami) /var/toughradius
         
         echo -e "${YELLOW}开始初始化 SQLite 数据库...${NC}"
         ./toughradius -c "$TEMP_CONFIG" -initdb
         
-        # 清理临时配置
+        # Clean up temporary configuration
         rm -f "$TEMP_CONFIG"
         
         echo ""
@@ -163,7 +163,7 @@ EOF
         echo -e "${GREEN}使用 PostgreSQL 数据库${NC}"
         echo ""
         
-        # 读取配置
+        # Load the configuration
         read -p "PostgreSQL 主机 [127.0.0.1]: " PG_HOST
         PG_HOST=${PG_HOST:-127.0.0.1}
         
@@ -179,7 +179,7 @@ EOF
         read -sp "数据库密码: " PG_PASS
         echo ""
         
-        # 创建临时配置文件
+        # Create a temporary configuration file
         TEMP_CONFIG="/tmp/toughradius-postgres.yml"
         cat > "$TEMP_CONFIG" <<EOF
 system:
@@ -235,7 +235,7 @@ EOF
         
         cd "$PROJECT_ROOT"
         
-        # 检查是否已编译
+        # Check if the tool has been compiled
         if [ ! -f "./toughradius" ]; then
             echo -e "${YELLOW}未找到编译文件，开始编译...${NC}"
             go build -o toughradius
@@ -245,7 +245,7 @@ EOF
         echo -e "${YELLOW}开始初始化 PostgreSQL 数据库...${NC}"
         ./toughradius -c "$TEMP_CONFIG" -initdb
         
-        # 清理临时配置
+        # Clean up temporary configuration
         rm -f "$TEMP_CONFIG"
         
         echo ""

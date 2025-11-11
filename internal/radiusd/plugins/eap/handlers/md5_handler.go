@@ -14,25 +14,25 @@ const (
 	EAPMethodMD5       = "eap-md5"
 )
 
-// MD5Handler EAP-MD5 认证处理器
+// MD5Handler EAP-MD5 authenticationhandler
 type MD5Handler struct{}
 
-// NewMD5Handler 创建 EAP-MD5 处理器
+// NewMD5Handler Create EAP-MD5 handler
 func NewMD5Handler() *MD5Handler {
 	return &MD5Handler{}
 }
 
-// Name 返回处理器名称
+// Name Returnshandlernames
 func (h *MD5Handler) Name() string {
 	return EAPMethodMD5
 }
 
-// EAPType 返回 EAP 类型码
+// EAPType returns the EAP type code
 func (h *MD5Handler) EAPType() uint8 {
 	return eap.TypeMD5Challenge
 }
 
-// CanHandle 判断是否可以处理该 EAP 消息
+// CanHandle checks whether this handler can process the EAP message
 func (h *MD5Handler) CanHandle(ctx *eap.EAPContext) bool {
 	if ctx.EAPMessage == nil {
 		return false
@@ -40,21 +40,21 @@ func (h *MD5Handler) CanHandle(ctx *eap.EAPContext) bool {
 	return ctx.EAPMessage.Type == eap.TypeMD5Challenge
 }
 
-// HandleIdentity 处理 EAP-Response/Identity，发送 MD5 Challenge
+// HandleIdentity Handle EAP-Response/Identity，Send MD5 Challenge
 func (h *MD5Handler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
-	// 生成随机 challenge
+	// Generate a random challenge
 	challenge, err := eap.GenerateRandomBytes(MD5ChallengeLength)
 	if err != nil {
 		return false, err
 	}
 
-	// 创建 Challenge Request
+	// Create Challenge Request
 	eapData := h.buildChallengeRequest(ctx.EAPMessage.Identifier, challenge)
 
-	// 创建 RADIUS Access-Challenge 响应
+	// Create RADIUS Access-Challenge response
 	response := ctx.Request.Response(radius.CodeAccessChallenge)
 
-	// 生成并保存状态
+	// Generate and save the state
 	stateID := common.UUID()
 	username := rfc2865.UserName_GetString(ctx.Request.Packet)
 
@@ -70,19 +70,19 @@ func (h *MD5Handler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 		return false, err
 	}
 
-	// 设置 State 属性
+	// Set the State attribute
 	rfc2865.State_SetString(response, stateID)
 
-	// 设置 EAP-Message 和 Message-Authenticator
+	// Set the EAP-Message and Message-Authenticator
 	eap.SetEAPMessageAndAuth(response, eapData, ctx.Secret)
 
-	// 发送响应
+	// Sendresponse
 	return true, ctx.ResponseWriter.Write(response)
 }
 
-// HandleResponse 处理 EAP-Response (Challenge Response)
+// HandleResponse Handle EAP-Response (Challenge Response)
 func (h *MD5Handler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
-	// 获取状态
+	// getStatus
 	stateID := rfc2865.State_GetString(ctx.Request.Packet)
 	if stateID == "" {
 		return false, eap.ErrStateNotFound
@@ -93,28 +93,28 @@ func (h *MD5Handler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 		return false, err
 	}
 
-	// 获取密码
+	// getPassword
 	password, err := ctx.PwdProvider.GetPassword(ctx.User, ctx.IsMacAuth)
 	if err != nil {
 		return false, err
 	}
 
-	// 验证 MD5 响应
+	// Validate MD5 response
 	if !h.verifyMD5Response(ctx.EAPMessage.Identifier, password, state.Challenge, ctx.EAPMessage.Data) {
 		return false, eap.ErrPasswordMismatch
 	}
 
-	// 标记认证成功
+	// Mark authentication as successful
 	state.Success = true
 	ctx.StateManager.SetState(stateID, state)
 
 	return true, nil
 }
 
-// buildChallengeRequest 构建 MD5 Challenge Request
+// buildChallengeRequest constructs the MD5 Challenge Request
 func (h *MD5Handler) buildChallengeRequest(identifier uint8, challenge []byte) []byte {
-	// EAP-MD5 格式:
-	// Code (1) | Identifier (1) | Length (2) | Type (1) | Value-Size (1) | Value (16) | Name (可选)
+	// EAP-MD5 format:
+	// Code (1) | Identifier (1) | Length (2) | Type (1) | Value-Size (1) | Value (16) | Name (optional)
 
 	valueSize := byte(len(challenge))
 	dataLen := 1 + len(challenge) // Value-Size + Value
@@ -132,18 +132,18 @@ func (h *MD5Handler) buildChallengeRequest(identifier uint8, challenge []byte) [
 	return buffer
 }
 
-// verifyMD5Response 验证 MD5 响应
+// verifyMD5Response Validate MD5 response
 // MD5(identifier + password + challenge) == response
 func (h *MD5Handler) verifyMD5Response(identifier uint8, password string, challenge, response []byte) bool {
 	if len(response) < 1 {
 		return false
 	}
 
-	// 响应格式: Value-Size (1) + Value (16)
-	// 跳过 Value-Size
+	// responseformat: Value-Size (1) + Value (16)
+		// Skip the Value-Size
 	actualResponse := response[1:]
 
-	// 计算期望的 MD5
+		// Compute the expected MD5
 	hash := md5.New()
 	hash.Write([]byte{identifier})
 	hash.Write([]byte(password))

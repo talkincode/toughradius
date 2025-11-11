@@ -11,7 +11,7 @@ import (
 	"layeh.com/radius/rfc3079"
 )
 
-// MSCHAPValidator MSCHAP 密码验证器（非EAP模式）
+// MSCHAPValidator handles MSCHAP password validation (non-EAP)
 type MSCHAPValidator struct{}
 
 func (v *MSCHAPValidator) Name() string {
@@ -62,7 +62,7 @@ func (v *MSCHAPValidator) validateMSCHAPv2(
 		return errors.NewPasswordMismatchError()
 	}
 
-	// 生成加密密钥
+		// Generate the encryption key
 	recvKey, err := rfc3079.MakeKey(ntResponse, bytePwd, false)
 	if err != nil {
 		return errors.NewAuthError("radus_reject_passwd_error",
@@ -85,7 +85,7 @@ func (v *MSCHAPValidator) validateMSCHAPv2(
 	success[0] = ident
 	copy(success[1:], authenticatorResponse)
 
-	// 添加响应属性
+		// Add the response attribute
 	microsoft.MSCHAP2Success_Add(authCtx.Response, []byte(success))
 	microsoft.MSMPPERecvKey_Add(authCtx.Response, recvKey)
 	microsoft.MSMPPESendKey_Add(authCtx.Response, sendKey)

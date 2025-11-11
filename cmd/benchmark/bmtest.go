@@ -26,9 +26,9 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// 命令行定义
+// Command-line definitions
 var (
-	// DEBUG 可打印详细日志，包括SQL
+	// DEBUG toggles verbose logging output, including SQL
 	h            = flag.Bool("h", false, "help usage")
 	datafile     = flag.String("d", "bmdata.json", "test data file")
 	user         = flag.String("u", "test01", "test username")

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-// 测试不依赖数据库的纯逻辑功能
+// Testpure logic functions without database dependency
 
 func TestCheckAuthRateLimitBasic(t *testing.T) {
 	service := &RadiusService{
@@ -15,19 +15,19 @@ func TestCheckAuthRateLimitBasic(t *testing.T) {
 		arclock:       sync.Mutex{},
 	}
 
-	// 测试首次认证
+	// TestFirst authentication
 	err := service.CheckAuthRateLimit("user1")
 	if err != nil {
 		t.Errorf("first auth should succeed, got error: %v", err)
 	}
 
-	// 测试频繁认证（应该被限制）
+	// TestFrequent authentication（should be limited）
 	err = service.CheckAuthRateLimit("user1")
 	if err == nil {
 		t.Error("expected rate limit error for rapid authentication")
 	}
 
-	// 验证错误类型
+	// Validate error types
 	authErr, ok := err.(*AuthError)
 	if !ok {
 		t.Errorf("expected AuthError, got %T", err)
@@ -42,13 +42,13 @@ func TestCheckAuthRateLimitAfterWait(t *testing.T) {
 		arclock:       sync.Mutex{},
 	}
 
-	// 首次认证
+	// First authentication
 	_ = service.CheckAuthRateLimit("user1")
 
-	// 等待超过限制时间
+	// Wait beyond rate limit time
 	time.Sleep(time.Duration(RadiusAuthRateInterval+1) * time.Second)
 
-	// 再次认证应该成功
+	// Second authentication should succeed
 	err := service.CheckAuthRateLimit("user1")
 	if err != nil {
 		t.Errorf("auth after wait should succeed, got error: %v", err)
@@ -61,7 +61,7 @@ func TestCheckAuthRateLimitDifferentUsers(t *testing.T) {
 		arclock:       sync.Mutex{},
 	}
 
-	// 不同用户的认证不应该互相影响
+	// Authentication of different users should not affect each other
 	err1 := service.CheckAuthRateLimit("user1")
 	if err1 != nil {
 		t.Errorf("user1 first auth should succeed: %v", err1)
@@ -72,7 +72,7 @@ func TestCheckAuthRateLimitDifferentUsers(t *testing.T) {
 		t.Errorf("user2 first auth should succeed: %v", err2)
 	}
 
-	// 验证缓存中有两个用户
+	// Validate two users currently in the cache
 	service.arclock.Lock()
 	count := len(service.AuthRateCache)
 	service.arclock.Unlock()
@@ -88,13 +88,13 @@ func TestReleaseAuthRateLimit(t *testing.T) {
 		arclock:       sync.Mutex{},
 	}
 
-	// 添加用户到限制缓存
+	// Add user to rate limit cache
 	_ = service.CheckAuthRateLimit("user1")
 
-	// 释放限制
+	// Release rate limit
 	service.ReleaseAuthRateLimit("user1")
 
-	// 验证用户已从缓存中移除
+	// Validate the user is removed from the cache
 	service.arclock.Lock()
 	_, exists := service.AuthRateCache["user1"]
 	service.arclock.Unlock()
@@ -103,7 +103,7 @@ func TestReleaseAuthRateLimit(t *testing.T) {
 		t.Error("user should be removed from cache after release")
 	}
 
-	// 立即再次认证应该成功
+	// Immediate re-authentication should succeed
 	err := service.CheckAuthRateLimit("user1")
 	if err != nil {
 		t.Errorf("auth should succeed after release: %v", err)
@@ -121,7 +121,7 @@ func TestCheckAuthRateLimitConcurrent(t *testing.T) {
 	failCount := 0
 	var mu sync.Mutex
 
-	// 并发测试相同用户
+	// Concurrent test for same user
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
@@ -139,7 +139,7 @@ func TestCheckAuthRateLimitConcurrent(t *testing.T) {
 
 	wg.Wait()
 
-	// 只有第一个应该成功，其余应该失败
+	// Only first should succeed, rest should fail
 	if successCount < 1 {
 		t.Error("at least one concurrent request should succeed")
 	}
@@ -156,7 +156,7 @@ func TestEAPStateManagement(t *testing.T) {
 		eaplock:       sync.Mutex{},
 	}
 
-	// 添加 EAP 状态
+	// Add EAP Status
 	stateID := "test-state-id"
 	username := "testuser"
 	challenge := []byte("challenge-data")
@@ -164,7 +164,7 @@ func TestEAPStateManagement(t *testing.T) {
 
 	service.AddEapState(stateID, username, challenge, eapMethod)
 
-	// 获取 EAP 状态
+	// get EAP Status
 	state, err := service.GetEapState(stateID)
 	if err != nil {
 		t.Fatalf("failed to get EAP state: %v", err)
@@ -186,10 +186,10 @@ func TestEAPStateManagement(t *testing.T) {
 		t.Error("initial state should have Success=false")
 	}
 
-	// 删除 EAP 状态
+	// Delete EAP Status
 	service.DeleteEapState(stateID)
 
-	// 验证已删除
+	// Validatedeleted
 	_, err = service.GetEapState(stateID)
 	if err == nil {
 		t.Error("expected error when getting deleted state")
@@ -221,7 +221,7 @@ func TestEAPStateConcurrentAccess(t *testing.T) {
 	var wg sync.WaitGroup
 	stateCount := 100
 
-	// 并发添加状态
+	// Concurrent add states
 	for i := 0; i < stateCount; i++ {
 		wg.Add(1)
 		go func(id int) {
@@ -233,7 +233,7 @@ func TestEAPStateConcurrentAccess(t *testing.T) {
 
 	wg.Wait()
 
-	// 验证所有状态都被添加
+	// ValidateAll states added
 	service.eaplock.Lock()
 	count := len(service.EapStateCache)
 	service.eaplock.Unlock()
@@ -252,7 +252,7 @@ func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 	var wg sync.WaitGroup
 	userCount := 50
 
-	// 并发添加不同用户
+	// Concurrent add different users
 	for i := 0; i < userCount; i++ {
 		wg.Add(1)
 		go func(id int) {
@@ -264,7 +264,7 @@ func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 
 	wg.Wait()
 
-	// 验证缓存中的用户数
+	// Validate the number of users in the cache
 	service.arclock.Lock()
 	count := len(service.AuthRateCache)
 	service.arclock.Unlock()
@@ -282,13 +282,13 @@ func TestEAPStateUpdate(t *testing.T) {
 
 	stateID := "test-state"
 
-	// 添加初始状态
+	// Add the initial status
 	service.AddEapState(stateID, "user1", []byte("challenge1"), "eap-md5")
 
-	// 更新状态（通过覆盖）
+	// Update state（by overwriting）
 	service.AddEapState(stateID, "user2", []byte("challenge2"), "eap-mschapv2")
 
-	// 验证状态被更新
+	// ValidateStatusupdated
 	state, err := service.GetEapState(stateID)
 	if err != nil {
 		t.Fatalf("failed to get state: %v", err)
@@ -309,10 +309,10 @@ func TestReleaseAuthRateLimitNonexistent(t *testing.T) {
 		arclock:       sync.Mutex{},
 	}
 
-	// 释放不存在的用户不应该 panic
+	// Releasing a non-existent user should not panic
 	service.ReleaseAuthRateLimit("nonexistent-user")
 
-	// 验证缓存为空
+	// Validate the cache is empty
 	service.arclock.Lock()
 	count := len(service.AuthRateCache)
 	service.arclock.Unlock()
@@ -328,10 +328,10 @@ func TestDeleteEapStateNonexistent(t *testing.T) {
 		eaplock:       sync.Mutex{},
 	}
 
-	// 删除不存在的状态不应该 panic
+	// DeleteNon-existent state should not panic
 	service.DeleteEapState("nonexistent-state")
 
-	// 验证缓存为空
+	// Validate the cache is empty
 	service.eaplock.Lock()
 	count := len(service.EapStateCache)
 	service.eaplock.Unlock()
@@ -347,7 +347,7 @@ func TestMultipleEAPStates(t *testing.T) {
 		eaplock:       sync.Mutex{},
 	}
 
-	// 添加多个不同的 EAP 状态
+	// Add multiple different EAP Status
 	states := map[string]string{
 		"state1": "user1",
 		"state2": "user2",
@@ -358,7 +358,7 @@ func TestMultipleEAPStates(t *testing.T) {
 		service.AddEapState(stateID, username, []byte("challenge"), "eap-md5")
 	}
 
-	// 验证所有状态都存在
+	// ValidateAll states exist
 	for stateID, expectedUser := range states {
 		state, err := service.GetEapState(stateID)
 		if err != nil {
@@ -377,23 +377,23 @@ func TestAuthRateLimitExpiry(t *testing.T) {
 		arclock:       sync.Mutex{},
 	}
 
-	// 添加用户
+	// Add user
 	_ = service.CheckAuthRateLimit("user1")
 
-	// 获取添加时间
+	// Get add time
 	service.arclock.Lock()
 	startTime := service.AuthRateCache["user1"].Starttime
 	service.arclock.Unlock()
 
-	// 验证时间戳
+	// Validatetimestamp
 	if time.Since(startTime) > time.Second {
 		t.Error("start time should be recent")
 	}
 
-	// 等待到期
+	// Wait for expiration
 	time.Sleep(time.Duration(RadiusAuthRateInterval+1) * time.Second)
 
-	// 应该能再次认证
+	// Should be able to authenticate again
 	err := service.CheckAuthRateLimit("user1")
 	if err != nil {
 		t.Errorf("should be able to auth after expiry: %v", err)

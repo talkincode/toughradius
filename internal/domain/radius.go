@@ -4,62 +4,62 @@ import (
 	"time"
 )
 
-// RADIUS 相关模型
+// RADIUS related models
 
-// RadiusProfile RADIUS 策略
+// RadiusProfile RADIUS billing profile
 type RadiusProfile struct {
-	ID         int64     `json:"id,string" form:"id"`               // 主键 ID
-	NodeId     int64     `json:"node_id,string" form:"node_id"`     // 节点ID
-	Name       string    `json:"name" form:"name"`                  // 策略名称
-	Status     string    `gorm:"index" json:"status" form:"status"` // 策略状态 0：禁用 1：正常
-	AddrPool   string    `json:"addr_pool" form:"addr_pool"`        // 策略地址池
-	ActiveNum  int       `json:"active_num" form:"active_num"`      // 并发数
-	UpRate     int       `json:"up_rate" form:"up_rate"`            // 上行速率 Kb
-	DownRate   int       `json:"down_rate" form:"down_rate"`        // 下行速率 Kb
-	Domain     string    `json:"domain" form:"domain"`              // 域， 对应 NAS 设备域属性， 比如华为 domain_code
-	IPv6Prefix string    `json:"ipv6_prefix" form:"ipv6_prefix"`    // IPv6前缀，如 2001:db8::/64
-	BindMac    int       `json:"bind_mac" form:"bind_mac"`          // 绑定MAC
-	BindVlan   int       `json:"bind_vlan" form:"bind_vlan"`        // 绑定VLAN
-	Remark     string    `json:"remark" form:"remark"`              // 备注
+	ID         int64     `json:"id,string" form:"id"`               // Primary key ID
+	NodeId     int64     `json:"node_id,string" form:"node_id"`     // Node ID
+	Name       string    `json:"name" form:"name"`                  // Profile name
+	Status     string    `gorm:"index" json:"status" form:"status"` // Profile status: 0=disabled 1=enabled
+	AddrPool   string    `json:"addr_pool" form:"addr_pool"`        // Address pool
+	ActiveNum  int       `json:"active_num" form:"active_num"`      // Concurrent sessions
+	UpRate     int       `json:"up_rate" form:"up_rate"`            // Upload rate in Kb
+	DownRate   int       `json:"down_rate" form:"down_rate"`        // Download rate in Kb
+	Domain     string    `json:"domain" form:"domain"`              // Domain, corresponds to NAS device domain attribute, e.g., Huawei domain_code
+	IPv6Prefix string    `json:"ipv6_prefix" form:"ipv6_prefix"`    // IPv6 prefix, e.g., 2001:db8::/64
+	BindMac    int       `json:"bind_mac" form:"bind_mac"`          // Bind MAC
+	BindVlan   int       `json:"bind_vlan" form:"bind_vlan"`        // Bind VLAN
+	Remark     string    `json:"remark" form:"remark"`              // Remark
 	CreatedAt  time.Time `json:"created_at" form:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at" form:"updated_at"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (RadiusProfile) TableName() string {
 	return "radius_profile"
 }
 
 // RadiusUser RADIUS Authentication account
 type RadiusUser struct {
-	ID          int64     `json:"id,string" form:"id"`                              // 主键 ID
-	NodeId      int64     `json:"node_id,string" form:"node_id"`                    // 节点ID
-	ProfileId   int64     `gorm:"index" json:"profile_id,string" form:"profile_id"` // RADIUS 策略ID
-	Realname    string    `json:"realname" form:"realname"`                         // 联系人姓名
-	Mobile      string    `json:"mobile" form:"mobile"`                             // 联系人电话
-	Username    string    `json:"username" gorm:"uniqueIndex" form:"username"`      // 账号名
-	Password    string    `json:"password" form:"password"`                         // 密码
-	AddrPool    string    `json:"addr_pool" form:"addr_pool"`                       // 策略地址池
-	ActiveNum   int       `gorm:"index" json:"active_num" form:"active_num"`        // 并发数
-	UpRate      int       `json:"up_rate" form:"up_rate"`                           // 上行速率
-	DownRate    int       `json:"down_rate" form:"down_rate"`                       // 下行速率
+	ID          int64     `json:"id,string" form:"id"`                              // Primary key ID
+	NodeId      int64     `json:"node_id,string" form:"node_id"`                    // Node ID
+	ProfileId   int64     `gorm:"index" json:"profile_id,string" form:"profile_id"` // RADIUS profile ID
+	Realname    string    `json:"realname" form:"realname"`                         // Contact name
+	Mobile      string    `json:"mobile" form:"mobile"`                             // Contact phone
+	Username    string    `json:"username" gorm:"uniqueIndex" form:"username"`      // Account name
+	Password    string    `json:"password" form:"password"`                         // Password
+	AddrPool    string    `json:"addr_pool" form:"addr_pool"`                       // Address pool
+	ActiveNum   int       `gorm:"index" json:"active_num" form:"active_num"`        // Concurrent sessions
+	UpRate      int       `json:"up_rate" form:"up_rate"`                           // Upload rate
+	DownRate    int       `json:"down_rate" form:"down_rate"`                       // Download rate
 	Vlanid1     int       `json:"vlanid1" form:"vlanid1"`                           // VLAN ID 1
 	Vlanid2     int       `json:"vlanid2" form:"vlanid2"`                           // VLAN ID 2
-	IpAddr      string    `json:"ip_addr" form:"ip_addr"`                           // 静态IP
-	IpV6Addr    string    `json:"ipv6_addr" form:"ipv6_addr"`                       // 静态 IPv6地址
-	MacAddr     string    `json:"mac_addr" form:"mac_addr"`                         // MAC
-	BindVlan    int       `json:"bind_vlan" form:"bind_vlan"`                       // 绑定VLAN
-	BindMac     int       `json:"bind_mac" form:"bind_mac"`                         // 绑定MAC
-	ExpireTime  time.Time `gorm:"index" json:"expire_time"`                         // 过期时间
-	Status      string    `gorm:"index" json:"status" form:"status"`                // 状态 enabled | disabled
-	Remark      string    `json:"remark" form:"remark"`                             // 备注
+	IpAddr      string    `json:"ip_addr" form:"ip_addr"`                           // Static IP
+	IpV6Addr    string    `json:"ipv6_addr" form:"ipv6_addr"`                       // Static IPv6 address
+	MacAddr     string    `json:"mac_addr" form:"mac_addr"`                         // MAC address
+	BindVlan    int       `json:"bind_vlan" form:"bind_vlan"`                       // Bind VLAN
+	BindMac     int       `json:"bind_mac" form:"bind_mac"`                         // Bind MAC
+	ExpireTime  time.Time `gorm:"index" json:"expire_time"`                         // Expiration time
+	Status      string    `gorm:"index" json:"status" form:"status"`                // Status: enabled | disabled
+	Remark      string    `json:"remark" form:"remark"`                             // Remark
 	OnlineCount int       `json:"online_count" gorm:"-:migration;<-:false"`
 	LastOnline  time.Time `json:"last_online"`
 	CreatedAt   time.Time `gorm:"index" json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (RadiusUser) TableName() string {
 	return "radius_user"
 }
@@ -67,7 +67,7 @@ func (RadiusUser) TableName() string {
 // RadiusOnline
 // Radius RadiusOnline Recode
 type RadiusOnline struct {
-	ID                  int64     `json:"id,string"` // 主键 ID
+	ID                  int64     `json:"id,string"` // Primary key ID
 	Username            string    `gorm:"index" json:"username"`
 	NasId               string    `json:"nas_id"`
 	NasAddr             string    `json:"nas_addr"`
@@ -94,7 +94,7 @@ type RadiusOnline struct {
 	LastUpdate          time.Time `json:"last_update"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (RadiusOnline) TableName() string {
 	return "radius_online"
 }
@@ -102,7 +102,7 @@ func (RadiusOnline) TableName() string {
 // RadiusAccounting
 // Radius Accounting Recode
 type RadiusAccounting struct {
-	ID                  int64     `json:"id,string"` // 主键 ID
+	ID                  int64     `json:"id,string"` // Primary key ID
 	Username            string    `gorm:"index" json:"username"`
 	AcctSessionId       string    `gorm:"index" json:"acct_session_id"`
 	NasId               string    `json:"nas_id"`
@@ -130,7 +130,7 @@ type RadiusAccounting struct {
 	AcctStopTime        time.Time `gorm:"index" json:"acct_stop_time"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (RadiusAccounting) TableName() string {
 	return "radius_accounting"
 }

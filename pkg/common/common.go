@@ -73,7 +73,7 @@ func Usage(str string) {
 	flag.PrintDefaults()
 }
 
-// MakeDir 创建目录
+// MakeDir Create directory
 func MakeDir(path string) {
 	f, err := os.Stat(path)
 	if err != nil || f.IsDir() == false {
@@ -95,7 +95,7 @@ func Copy(from, to string) error {
 		return e
 	}
 	if f.IsDir() {
-		// from是文件夹，那么定义to也是文件夹
+		// fromis directory，then definetois also directory
 		if list, e := ioutil.ReadDir(from); e == nil {
 			for _, item := range list {
 				if e = Copy(filepath.Join(from, item.Name()), filepath.Join(to, item.Name())); e != nil {
@@ -104,47 +104,47 @@ func Copy(from, to string) error {
 			}
 		}
 	} else {
-		// from是文件，那么创建to的文件夹
+		// fromis file，then createtodirectory
 		p := filepath.Dir(to)
 		if _, e = os.Stat(p); e != nil {
 			if e = os.MkdirAll(p, 0777); e != nil {
 				return e
 			}
 		}
-		// 读取源文件
+		// Read source file
 		file, e := os.Open(from)
 		if e != nil {
 			return e
 		}
 		defer file.Close()
 		bufReader := bufio.NewReader(file)
-		// 创建一个文件用于保存
+		// Create a file to save
 		out, e := os.Create(to)
 		if e != nil {
 			return e
 		}
 		defer out.Close()
-		// 然后将文件流和文件流对接起来
+		// Then connect file streams
 		_, e = io.Copy(out, bufReader)
 	}
 	return e
 }
 
 func CopyFile(from io.Reader, to string, mode os.FileMode) error {
-	// from是文件，那么创建to的文件夹
+	// fromis file，then createtodirectory
 	p := filepath.Dir(to)
 	if _, e := os.Stat(p); e != nil {
 		if e = os.MkdirAll(p, mode); e != nil {
 			return e
 		}
 	}
-	// 创建一个文件用于保存
+	// Create a file to save
 	out, e := os.Create(to)
 	if e != nil {
 		return e
 	}
 	defer out.Close()
-	// 然后将文件流和文件流对接起来
+	// Then connect file streams
 	_, e = io.Copy(out, from)
 	return e
 }
@@ -415,7 +415,7 @@ func MobileAgent(userAgent string) string {
 	return mobileRe.FindString(userAgent)
 }
 
-// 校验码生成
+// Generate checksum
 func GenValidateCode(width int) string {
 	numeric := [10]byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 	r := len(numeric)
@@ -691,7 +691,7 @@ func GetFieldType(mod interface{}, name string) string {
 	return ""
 }
 
-// GbkToUtf8 GBK 转 UTF-8
+// GbkToUtf8 GBK to UTF-8
 func GbkToUtf8(s []byte) ([]byte, error) {
 	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewDecoder())
 	d, e := ioutil.ReadAll(reader)
@@ -701,7 +701,7 @@ func GbkToUtf8(s []byte) ([]byte, error) {
 	return d, nil
 }
 
-// Utf8ToGbk UTF-8 转 GBK
+// Utf8ToGbk UTF-8 to GBK
 func Utf8ToGbk(s []byte) ([]byte, error) {
 	reader := transform.NewReader(bytes.NewReader(s), simplifiedchinese.GBK.NewEncoder())
 	d, e := ioutil.ReadAll(reader)

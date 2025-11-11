@@ -17,13 +17,13 @@ func TestSysOprLog_MarshalJSON(t *testing.T) {
 		check   func(t *testing.T, data []byte)
 	}{
 		{
-			name: "正常序列化操作日志",
+			name: "Serializing operation log",
 			log: SysOprLog{
 				ID:        1,
 				OprName:   "admin",
 				OprIp:     "192.168.1.100",
 				OptAction: "login",
-				OptDesc:   "用户登录系统",
+				OptDesc:   "User login",
 				OptTime:   time.Date(2025, 11, 8, 14, 30, 0, 0, time.UTC),
 			},
 			wantErr: false,
@@ -32,19 +32,19 @@ func TestSysOprLog_MarshalJSON(t *testing.T) {
 				err := json.Unmarshal(data, &result)
 				require.NoError(t, err)
 
-				// ID 字段的 json tag 包含 string，所以序列化为字符串
+				// The ID field's json tag includes string, so it should serialize as a string
 				assert.Equal(t, "1", result["id"])
 				assert.Equal(t, "admin", result["opr_name"])
 				assert.Equal(t, "192.168.1.100", result["opr_ip"])
 				assert.Equal(t, "login", result["opt_action"])
-				assert.Equal(t, "用户登录系统", result["opt_desc"])
+				assert.Equal(t, "User login", result["opt_desc"])
 
-				// 验证时间格式为 RFC3339
+				// Validate that the time format is RFC3339
 				assert.Equal(t, "2025-11-08T14:30:00Z", result["opt_time"])
 			},
 		},
 		{
-			name: "零值时间序列化",
+			name: "Zero value time serialization",
 			log: SysOprLog{
 				ID:      2,
 				OprName: "system",
@@ -56,7 +56,7 @@ func TestSysOprLog_MarshalJSON(t *testing.T) {
 				err := json.Unmarshal(data, &result)
 				require.NoError(t, err)
 
-				// 零值时间应该序列化为 "0001-01-01T00:00:00Z"
+				// Zero time should serialize as "0001-01-01T00:00:00Z"
 				assert.Contains(t, result["opt_time"], "0001-01-01")
 			},
 		},
@@ -88,12 +88,12 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 		check   func(t *testing.T, data []byte)
 	}{
 		{
-			name: "正常序列化用户信息",
+			name: "Serializing user info",
 			user: RadiusUser{
 				ID:         1,
 				NodeId:     100,
 				ProfileId:  5,
-				Realname:   "张三",
+				Realname:   "John Smith",
 				Mobile:     "13800138000",
 				Username:   "test001",
 				Password:   "password123",
@@ -114,21 +114,21 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 				assert.Equal(t, "1", result["id"])
 				assert.Equal(t, "100", result["node_id"])
 				assert.Equal(t, "5", result["profile_id"])
-				assert.Equal(t, "张三", result["realname"])
+				assert.Equal(t, "John Smith", result["realname"])
 				assert.Equal(t, "13800138000", result["mobile"])
 				assert.Equal(t, "test001", result["username"])
 				assert.Equal(t, "password123", result["password"])
 				assert.Equal(t, "enabled", result["status"])
 
-				// 验证过期时间格式 YYYYMMDDHHMMSS (2006-01-02 15:04:05)
+				// Validate the expire_time format is YYYY-MM-DD HH:MM:SS (2006-01-02 15:04:05)
 				assert.Equal(t, "2025-12-31 23:59:59", result["expire_time"])
 
-				// 验证最后在线时间格式 YYYYMMDDHHMM (2006-01-02 15:04)
+				// Validate the last_online format is YYYY-MM-DD HH:MM (2006-01-02 15:04)
 				assert.Equal(t, "2025-11-08 14:30", result["last_online"])
 			},
 		},
 		{
-			name: "零值时间序列化",
+			name: "Zero value time serialization",
 			user: RadiusUser{
 				ID:         2,
 				Username:   "test002",
@@ -141,18 +141,18 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 				err := json.Unmarshal(data, &result)
 				require.NoError(t, err)
 
-				// 零值时间格式化后的结果
+				// Check that zero times still produce formatted output
 				assert.NotEmpty(t, result["expire_time"])
 				assert.NotEmpty(t, result["last_online"])
 			},
 		},
 		{
-			name: "包含完整字段的用户",
+			name: "User with all fields",
 			user: RadiusUser{
 				ID:         3,
 				NodeId:     200,
 				ProfileId:  10,
-				Realname:   "李四",
+				Realname:   "Jane Doe",
 				Mobile:     "13900139000",
 				Username:   "test003",
 				Password:   "pass456",
@@ -168,7 +168,7 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 				BindMac:    1,
 				ExpireTime: time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC),
 				Status:     "disabled",
-				Remark:     "测试账号",
+				Remark:     "Test account",
 				LastOnline: time.Date(2025, 11, 7, 10, 15, 0, 0, time.UTC),
 			},
 			wantErr: false,
@@ -182,7 +182,7 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 				assert.Equal(t, "10.0.0.100", result["ip_addr"])
 				assert.Equal(t, "00:11:22:33:44:55", result["mac_addr"])
 				assert.Equal(t, "disabled", result["status"])
-				assert.Equal(t, "测试账号", result["remark"])
+				assert.Equal(t, "Test account", result["remark"])
 				assert.Equal(t, "2026-06-30 23:59:59", result["expire_time"])
 				assert.Equal(t, "2025-11-07 10:15", result["last_online"])
 			},
@@ -215,7 +215,7 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 		check   func(t *testing.T, user *RadiusUser)
 	}{
 		{
-			name: "正常反序列化用户信息",
+			name: "Deserializing user info",
 			json: `{
 				"id": "1",
 				"node_id": "100",
@@ -235,19 +235,19 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 				assert.Equal(t, "password123", user.Password)
 				assert.Equal(t, "enabled", user.Status)
 
-				// 验证过期时间解析（应该被设置为 23:59:59）
+				// Validate expire_time parsing (should be set to 23:59:59)
 				expectedExpire := time.Date(2025, 12, 31, 23, 59, 59, 0, time.UTC)
 				assert.True(t, user.ExpireTime.Equal(expectedExpire),
-					"ExpireTime 应该是 %v，但得到 %v", expectedExpire, user.ExpireTime)
+					"ExpireTime should be %v but got %v", expectedExpire, user.ExpireTime)
 
-				// 验证最后在线时间解析
+				// Validate last_online parsing
 				assert.Equal(t, 2025, user.LastOnline.Year())
 				assert.Equal(t, time.November, user.LastOnline.Month())
 				assert.Equal(t, 8, user.LastOnline.Day())
 			},
 		},
 		{
-			name: "仅日期的过期时间",
+			name: "Expire time with date only",
 			json: `{
 				"id": "2",
 				"username": "test002",
@@ -258,14 +258,14 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 			check: func(t *testing.T, user *RadiusUser) {
 				assert.Equal(t, "test002", user.Username)
 
-				// 过期时间应该被设置为当天的 23:59:59
+				// Expiration time should be set to 23:59:59 on that day
 				expectedExpire := time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC)
 				assert.True(t, user.ExpireTime.Equal(expectedExpire),
-					"ExpireTime 应该是 %v，但得到 %v", expectedExpire, user.ExpireTime)
+					"ExpireTime should be %v but got %v", expectedExpire, user.ExpireTime)
 			},
 		},
 		{
-			name: "格式化的时间字符串",
+			name: "Formatted time string",
 			json: `{
 				"id": "3",
 				"username": "test003",
@@ -276,7 +276,7 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 			check: func(t *testing.T, user *RadiusUser) {
 				assert.Equal(t, "test003", user.Username)
 
-				// 验证时间正确解析
+				// Validate that the time values parsed correctly
 				assert.Equal(t, 2025, user.ExpireTime.Year())
 				assert.Equal(t, time.December, user.ExpireTime.Month())
 				assert.Equal(t, 2025, user.LastOnline.Year())
@@ -284,12 +284,12 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 			},
 		},
 		{
-			name: "包含完整字段的 JSON",
+			name: "Full JSON payload",
 			json: `{
 				"id": "4",
 				"node_id": "200",
 				"profile_id": "10",
-				"realname": "李四",
+			"realname": "Jane Doe",
 				"mobile": "13900139000",
 				"username": "test004",
 				"password": "pass789",
@@ -304,14 +304,14 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 				"bind_vlan": 1,
 				"bind_mac": 0,
 				"status": "disabled",
-				"remark": "完整测试",
+				"remark": "Complete test",
 				"expire_time": "2027-12-31 23:59:59",
 				"last_online": "2025-11-08 16:00:00"
 			}`,
 			wantErr: false,
 			check: func(t *testing.T, user *RadiusUser) {
 				assert.Equal(t, int64(4), user.ID)
-				assert.Equal(t, "李四", user.Realname)
+			assert.Equal(t, "Jane Doe", user.Realname)
 				assert.Equal(t, "13900139000", user.Mobile)
 				assert.Equal(t, "test004", user.Username)
 				assert.Equal(t, "pool2", user.AddrPool)
@@ -321,11 +321,11 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 				assert.Equal(t, "10.0.0.200", user.IpAddr)
 				assert.Equal(t, "AA:BB:CC:DD:EE:FF", user.MacAddr)
 				assert.Equal(t, "disabled", user.Status)
-				assert.Equal(t, "完整测试", user.Remark)
+				assert.Equal(t, "Complete test", user.Remark)
 			},
 		},
 		{
-			name:    "无效的 JSON",
+			name:    "Invalid JSON",
 			json:    `{invalid json}`,
 			wantErr: true,
 			check:   nil,
@@ -352,12 +352,12 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 }
 
 func TestRadiusUser_MarshalUnmarshal_RoundTrip(t *testing.T) {
-	// 测试序列化和反序列化的往返转换
+	// Test round-trip serialization and deserialization
 	original := RadiusUser{
 		ID:         100,
 		NodeId:     50,
 		ProfileId:  10,
-		Realname:   "往返测试",
+		Realname:   "Roundtrip Test",
 		Mobile:     "13812345678",
 		Username:   "roundtrip",
 		Password:   "test123",
@@ -373,21 +373,21 @@ func TestRadiusUser_MarshalUnmarshal_RoundTrip(t *testing.T) {
 		BindMac:    1,
 		ExpireTime: time.Date(2025, 12, 31, 23, 59, 59, 0, time.UTC),
 		Status:     "enabled",
-		Remark:     "测试备注",
+		Remark:     "Test remark",
 		LastOnline: time.Date(2025, 11, 8, 10, 0, 0, 0, time.UTC),
 	}
 
-	// 序列化
+	// Serialize
 	data, err := json.Marshal(&original)
 	require.NoError(t, err)
-	t.Logf("序列化后的 JSON: %s", string(data))
+	t.Logf("Serialized JSON: %s", string(data))
 
-	// 反序列化
+	// Deserialize
 	var decoded RadiusUser
 	err = json.Unmarshal(data, &decoded)
 	require.NoError(t, err)
 
-	// 验证关键字段
+	// Validate key fields
 	assert.Equal(t, original.ID, decoded.ID)
 	assert.Equal(t, original.NodeId, decoded.NodeId)
 	assert.Equal(t, original.ProfileId, decoded.ProfileId)
@@ -401,11 +401,11 @@ func TestRadiusUser_MarshalUnmarshal_RoundTrip(t *testing.T) {
 	assert.Equal(t, original.MacAddr, decoded.MacAddr)
 	assert.Equal(t, original.Remark, decoded.Remark)
 
-	// 验证时间字段（由于格式化和解析，可能有微小差异）
+	// Validate time fields (small discrepancies may appear due to formatting and parsing)
 	assert.True(t, original.ExpireTime.Equal(decoded.ExpireTime),
-		"ExpireTime 不匹配: 原始=%v, 解码=%v", original.ExpireTime, decoded.ExpireTime)
+		"ExpireTime mismatch: original=%v, decoded=%v", original.ExpireTime, decoded.ExpireTime)
 
-	// LastOnline 由于格式化为分钟精度，秒数会丢失
+	// LastOnline loses seconds because it is formatted with minute precision
 	assert.Equal(t, original.LastOnline.Year(), decoded.LastOnline.Year())
 	assert.Equal(t, original.LastOnline.Month(), decoded.LastOnline.Month())
 	assert.Equal(t, original.LastOnline.Day(), decoded.LastOnline.Day())
@@ -414,36 +414,36 @@ func TestRadiusUser_MarshalUnmarshal_RoundTrip(t *testing.T) {
 }
 
 func TestSysOprLog_MarshalUnmarshal_RoundTrip(t *testing.T) {
-	// 测试操作日志的序列化和反序列化往返
+	// Test round-trip serialization and deserialization for operation logs
 	original := SysOprLog{
 		ID:        123,
 		OprName:   "admin",
 		OprIp:     "192.168.1.1",
 		OptAction: "create_user",
-		OptDesc:   "创建新用户 test001",
+		OptDesc:   "Created new user test001",
 		OptTime:   time.Date(2025, 11, 8, 15, 30, 45, 0, time.UTC),
 	}
 
-	// 序列化
+	// Serialize
 	data, err := json.Marshal(&original)
 	require.NoError(t, err)
-	t.Logf("序列化后的 JSON: %s", string(data))
+	t.Logf("Serialized JSON: %s", string(data))
 
-	// 反序列化
+	// Deserialize
 	var decoded SysOprLog
 	err = json.Unmarshal(data, &decoded)
 	require.NoError(t, err)
 
-	// 验证字段
+	// Validate fields
 	assert.Equal(t, original.ID, decoded.ID)
 	assert.Equal(t, original.OprName, decoded.OprName)
 	assert.Equal(t, original.OprIp, decoded.OprIp)
 	assert.Equal(t, original.OptAction, decoded.OptAction)
 	assert.Equal(t, original.OptDesc, decoded.OptDesc)
 
-	// 验证时间（RFC3339 格式应该精确保留）
+	// Validate time (RFC3339 format should be preserved)
 	assert.True(t, original.OptTime.Equal(decoded.OptTime),
-		"OptTime 不匹配: 原始=%v, 解码=%v", original.OptTime, decoded.OptTime)
+		"OptTime mismatch: original=%v, decoded=%v", original.OptTime, decoded.OptTime)
 }
 
 func BenchmarkRadiusUser_MarshalJSON(b *testing.B) {
@@ -451,7 +451,7 @@ func BenchmarkRadiusUser_MarshalJSON(b *testing.B) {
 		ID:         1,
 		NodeId:     100,
 		ProfileId:  5,
-		Realname:   "性能测试",
+		Realname:   "Performance Test",
 		Mobile:     "13800138000",
 		Username:   "benchmark",
 		Password:   "password123",
@@ -494,7 +494,7 @@ func BenchmarkSysOprLog_MarshalJSON(b *testing.B) {
 		OprName:   "admin",
 		OprIp:     "192.168.1.100",
 		OptAction: "login",
-		OptDesc:   "用户登录系统",
+		OptDesc:   "User login",
 		OptTime:   time.Now(),
 	}
 

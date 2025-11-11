@@ -23,7 +23,7 @@ func Find(qqwrySrc, rawIP string) (*Detail, error) {
 	return loc.Find(rawIP), nil
 }
 
-// Open 生成索引，查询速度快
+// Open Generate index，Fast query
 func Open(qqwrySrc string) (loc *Locator, err error) {
 	loc = &Locator{}
 	var parser *Parser
@@ -35,7 +35,7 @@ func Open(qqwrySrc string) (loc *Locator, err error) {
 	return
 }
 
-// OpenWithoutIndexes 无索引，不预载文件，打开速度快，但查询速度慢
+// OpenWithoutIndexes Without index，Don't preload file，Fast open，but slow query
 func OpenWithoutIndexes(qqwrySrc string) (loc *Locator, err error) {
 	loc = &Locator{}
 	if loc.parser, err = NewParser(qqwrySrc, false); err != nil {

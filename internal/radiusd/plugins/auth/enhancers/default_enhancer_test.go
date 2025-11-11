@@ -17,31 +17,31 @@ func TestDefaultAcceptEnhancer_Name(t *testing.T) {
 }
 
 func TestDefaultAcceptEnhancer_Enhance(t *testing.T) {
-	// Note: 这个测试不能完全测试 Enhance 方法，因为它依赖全局 app 实例
-	// 我们只测试基本的 nil 安全性
+	// Note: this test cannot fully exercise Enhance because it depends on the global app instance
+	// We only verify basic nil-safety
 	enhancer := NewDefaultAcceptEnhancer()
 	ctx := context.Background()
 
 	t.Run("nil safety", func(t *testing.T) {
-		// 测试 nil context
+		// Test nil context
 		err := enhancer.Enhance(ctx, nil)
 		require.NoError(t, err)
 
-		// 测试 nil response
+		// Test nil response
 		err = enhancer.Enhance(ctx, &auth.AuthContext{
 			User: &domain.RadiusUser{},
 		})
 		require.NoError(t, err)
 
-		// 测试 nil user
+		// Test nil user
 		err = enhancer.Enhance(ctx, &auth.AuthContext{
 			Response: radius.New(radius.CodeAccessAccept, []byte("secret")),
 		})
 		require.NoError(t, err)
 	})
 
-	// TODO: 完整的功能测试需要初始化全局 app 实例
-	// 或者重构代码以支持依赖注入
+	// TODO: Full functionality tests need the global app instance initialized
+	// or refactor the code to support dependency injection
 }
 
 func TestDefaultAcceptEnhancer_Enhance_NilSafety(t *testing.T) {

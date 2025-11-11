@@ -11,7 +11,7 @@ import (
 	"layeh.com/radius/rfc2865"
 )
 
-// CHAPValidator CHAP密码验证器
+// CHAPValidator implements CHAP password validation
 type CHAPValidator struct{}
 
 func (v *CHAPValidator) Name() string {

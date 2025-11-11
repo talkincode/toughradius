@@ -63,14 +63,14 @@ func (ga *GoogleAuth) oneTimePassword(key []byte, data []byte) uint32 {
 	return number % 1000000
 }
 
-// 获取秘钥
+// Get secret
 func (ga *GoogleAuth) GetSecret() string {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.BigEndian, ga.un())
 	return strings.ToUpper(ga.base32encode(ga.hmacSha1(buf.Bytes(), nil)))
 }
 
-// 获取动态码
+// Get dynamic code
 func (ga *GoogleAuth) GetCode(secret string) (string, error) {
 	secretUpper := strings.ToUpper(secret)
 	secretKey, err := ga.base32decode(secretUpper)
@@ -81,12 +81,12 @@ func (ga *GoogleAuth) GetCode(secret string) (string, error) {
 	return fmt.Sprintf("%06d", number), nil
 }
 
-// 获取动态码二维码内容
+// Get dynamic code QR content
 func (ga *GoogleAuth) GetQrcode(user, secret, stype string) string {
 	return fmt.Sprintf("otpauth://totp/%s:%s?issuer=%s&secret=%s", stype, user, stype, secret)
 }
 
-// 获取动态码二维码图片地址,这里是第三方二维码api
+// Get dynamic code QR image URL,This is third-party QRapi
 func (ga *GoogleAuth) GetQrcodeUrl(user, secret, stype string) string {
 	qrcode := ga.GetQrcode(user, secret, stype)
 	width := "200"
@@ -96,7 +96,7 @@ func (ga *GoogleAuth) GetQrcodeUrl(user, secret, stype string) string {
 	return "https://api.qrserver.com/v1/create-qr-code/?" + data.Encode() + "&size=" + width + "x" + height + "&ecc=M"
 }
 
-// 验证动态码
+// Validate dynamic code
 func (ga *GoogleAuth) VerifyCode(secret, code string) (bool, error) {
 	_code, err := ga.GetCode(secret)
 	fmt.Println(_code, code, err)

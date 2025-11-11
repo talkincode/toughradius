@@ -12,25 +12,25 @@ const (
 	EAPMethodOTP        = "eap-otp"
 )
 
-// OTPHandler EAP-OTP 认证处理器
+// OTPHandler EAP-OTP authenticationhandler
 type OTPHandler struct{}
 
-// NewOTPHandler 创建 EAP-OTP 处理器
+// NewOTPHandler Create EAP-OTP handler
 func NewOTPHandler() *OTPHandler {
 	return &OTPHandler{}
 }
 
-// Name 返回处理器名称
+// Name Returnshandlernames
 func (h *OTPHandler) Name() string {
 	return EAPMethodOTP
 }
 
-// EAPType 返回 EAP 类型码
+// EAPType returns the EAP type code
 func (h *OTPHandler) EAPType() uint8 {
 	return eap.TypeOTP
 }
 
-// CanHandle 判断是否可以处理该 EAP 消息
+// CanHandle checks whether this handler can process the EAP message
 func (h *OTPHandler) CanHandle(ctx *eap.EAPContext) bool {
 	if ctx.EAPMessage == nil {
 		return false
@@ -38,18 +38,18 @@ func (h *OTPHandler) CanHandle(ctx *eap.EAPContext) bool {
 	return ctx.EAPMessage.Type == eap.TypeOTP
 }
 
-// HandleIdentity 处理 EAP-Response/Identity，发送 OTP Challenge
+// HandleIdentity Handle EAP-Response/Identity，Send OTP Challenge
 func (h *OTPHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
-	// OTP Challenge 是一个文本消息
+	// The OTP challenge is a textual message
 	challenge := []byte(OTPChallengeMessage)
 
-	// 创建 Challenge Request
+	// Create Challenge Request
 	eapData := h.buildChallengeRequest(ctx.EAPMessage.Identifier, challenge)
 
-	// 创建 RADIUS Access-Challenge 响应
+	// Create RADIUS Access-Challenge response
 	response := ctx.Request.Response(radius.CodeAccessChallenge)
 
-	// 生成并保存状态
+	// Generate and save the state
 	stateID := common.UUID()
 	username := rfc2865.UserName_GetString(ctx.Request.Packet)
 
@@ -65,19 +65,19 @@ func (h *OTPHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 		return false, err
 	}
 
-	// 设置 State 属性
+	// Set the State attribute
 	rfc2865.State_SetString(response, stateID)
 
-	// 设置 EAP-Message 和 Message-Authenticator
+	// Set the EAP-Message and Message-Authenticator
 	eap.SetEAPMessageAndAuth(response, eapData, ctx.Secret)
 
-	// 发送响应
+	// Sendresponse
 	return true, ctx.ResponseWriter.Write(response)
 }
 
-// HandleResponse 处理 EAP-Response (OTP Response)
+// HandleResponse Handle EAP-Response (OTP Response)
 func (h *OTPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
-	// 获取状态
+	// getStatus
 	stateID := rfc2865.State_GetString(ctx.Request.Packet)
 	if stateID == "" {
 		return false, eap.ErrStateNotFound
@@ -88,28 +88,28 @@ func (h *OTPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 		return false, err
 	}
 
-	// 获取 OTP 密码 (这里简化处理，实际应该调用 OTP 验证服务)
-	// TODO: 集成真实的 OTP 验证逻辑
-	expectedOTP := "123456" // 示例固定值，实际应该从验证服务获取
+	// Get the OTP password (simplified here; a real implementation should call an OTP validation service)
+	// TODO: Integrate with a real OTP validation logic
+	expectedOTP := "123456" // Sample fixed value; in reality retrieve from the validation service
 
-	// 从 EAP Data 中获取用户输入的 OTP
+	// Extract the user's entered OTP from the EAP data
 	userOTP := string(ctx.EAPMessage.Data)
 
-	// 验证 OTP
+	// Validate OTP
 	if userOTP != expectedOTP {
 		return false, eap.ErrPasswordMismatch
 	}
 
-	// 标记认证成功
+	// Mark authentication as successful
 	state.Success = true
 	ctx.StateManager.SetState(stateID, state)
 
 	return true, nil
 }
 
-// buildChallengeRequest 构建 OTP Challenge Request
+// buildChallengeRequest constructs the OTP Challenge Request
 func (h *OTPHandler) buildChallengeRequest(identifier uint8, challenge []byte) []byte {
-	// EAP-OTP 格式:
+	// EAP-OTP format:
 	// Code (1) | Identifier (1) | Length (2) | Type (1) | Challenge (variable)
 
 	dataLen := len(challenge)

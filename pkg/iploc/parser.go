@@ -129,7 +129,7 @@ func (p *Parser) Reader() io.Reader {
 	return p.res
 }
 
-// (*Parser) ReadByte 读取1字节，用来识别重定向模式
+// (*Parser) ReadByte Read1byte(s)，to identify redirect mode
 func (p *Parser) ReadByte(pos int64) byte {
 	b := make([]byte, 1)
 	n, err := p.res.ReadAt(b, pos)
@@ -139,7 +139,7 @@ func (p *Parser) ReadByte(pos int64) byte {
 	return b[0]
 }
 
-// (*Parser) ReadBytes 读取n字节并翻转
+// (*Parser) ReadBytes Readnbyte(s)and reverse
 func (p *Parser) ReadBytes(pos, n int64) (b []byte) {
 	b = make([]byte, n)
 	i, err := p.res.ReadAt(b, pos)
@@ -153,7 +153,7 @@ func (p *Parser) ReadBytes(pos, n int64) (b []byte) {
 	return
 }
 
-// (*Parser) ReadPosition 读取3字节的偏移位置
+// (*Parser) ReadPosition Read3byte(s)offset position
 func (p *Parser) ReadPosition(offset int64) int64 {
 	b := p.ReadBytes(offset, positionByteSize)
 	// left padding to the 32 bits
@@ -164,7 +164,7 @@ func (p *Parser) ReadPosition(offset int64) int64 {
 	return int64(binary.BigEndian.Uint32(b))
 }
 
-// (*Parser) ReadText 读取国家地区数据，以0x00结尾
+// (*Parser) ReadText Read country/region data，ending with0x00terminator
 func (p *Parser) ReadText(offset int64) ([]byte, int) {
 	if uint32(offset) >= p.min {
 		return nil, 0
@@ -188,7 +188,7 @@ func (p *Parser) ReadString(offset int64) (string, int) {
 	return string(s), n
 }
 
-// (*Parser) ReadRegion 读取地区数据，处理可能的重定向
+// (*Parser) ReadRegion Read region data，handle possible redirect
 func (p *Parser) ReadRegion(offset int64) (s []byte) {
 	switch p.ReadByte(offset) {
 	case redirectPart:
@@ -243,7 +243,7 @@ func (p *Parser) readRegionRaw(offset int64) (s []byte, pos uint32, mode byte) {
 	return
 }
 
-// ReadLocationRaw 用于导出或索引
+// ReadLocationRaw Used for export or indexing
 func (p *Parser) ReadLocationRaw(offset int64) (raw LocationRaw) {
 	var n int
 	raw.Mode[0] = p.ReadByte(offset + ipByteSize)

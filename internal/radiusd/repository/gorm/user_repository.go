@@ -9,12 +9,12 @@ import (
 	"gorm.io/gorm"
 )
 
-// GormUserRepository GORM实现的用户仓储
+// GormUserRepository is the GORM implementation of the user repository
 type GormUserRepository struct {
 	db *gorm.DB
 }
 
-// NewGormUserRepository 创建用户仓储实例
+// NewGormUserRepository creates a user repository instance
 func NewGormUserRepository(db *gorm.DB) repository.UserRepository {
 	return &GormUserRepository{db: db}
 }

@@ -10,13 +10,13 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
-// ListProfiles 获取 RADIUS Profile 列表
-// @Summary 获取 RADIUS Profile 列表
+// ListProfiles retrieves the RADIUS profile list
+// @Summary get the RADIUS profile list
 // @Tags RadiusProfile
-// @Param page query int false "页码"
-// @Param perPage query int false "每页数量"
-// @Param sort query string false "排序字段"
-// @Param order query string false "排序方向"
+// @Param page query int false "Page number"
+// @Param perPage query int false "Items per page"
+// @Param sort query string false "Sort field"
+// @Param order query string false "Sort direction"
 // @Success 200 {object} ListResponse
 // @Router /api/v1/radius-profiles [get]
 func ListProfiles(c echo.Context) error {
@@ -45,12 +45,12 @@ func ListProfiles(c echo.Context) error {
 
 	query := db.Model(&domain.RadiusProfile{})
 
-	// 支持按名称搜索
+	// Support filtering by name
 	if name := c.QueryParam("name"); name != "" {
 		query = query.Where("name LIKE ?", "%"+name+"%")
 	}
 
-	// 支持按状态过滤
+	// Support filtering by status
 	if status := c.QueryParam("status"); status != "" {
 		query = query.Where("status = ?", status)
 	}
@@ -63,8 +63,8 @@ func ListProfiles(c echo.Context) error {
 	return paged(c, profiles, total, page, perPage)
 }
 
-// GetProfile 获取单个 RADIUS Profile
-// @Summary 获取 RADIUS Profile 详情
+// GetProfile retrieves a single RADIUS profile
+// @Summary get RADIUS profile detail
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
 // @Success 200 {object} domain.RadiusProfile
@@ -83,23 +83,23 @@ func GetProfile(c echo.Context) error {
 	return ok(c, profile)
 }
 
-// ProfileRequest 用于处理前端发送的混合类型 JSON
+// ProfileRequest represents the mixed-type JSON sent from the frontend
 type ProfileRequest struct {
 	Name       string      `json:"name" validate:"required,min=1,max=100"`
-	Status     interface{} `json:"status"` // 可以是 string 或 boolean
+	Status     interface{} `json:"status"` // Can be string or boolean
 	AddrPool   string      `json:"addr_pool" validate:"omitempty,addrpool"`
 	ActiveNum  int         `json:"active_num" validate:"gte=0,lte=100"`
 	UpRate     int         `json:"up_rate" validate:"gte=0,lte=10000000"`
 	DownRate   int         `json:"down_rate" validate:"gte=0,lte=10000000"`
 	Domain     string      `json:"domain" validate:"omitempty,max=50"`
 	IPv6Prefix string      `json:"ipv6_prefix" validate:"omitempty"`
-	BindMac    interface{} `json:"bind_mac"`  // 可以是 int 或 boolean
-	BindVlan   interface{} `json:"bind_vlan"` // 可以是 int 或 boolean
+	BindMac    interface{} `json:"bind_mac"`  // Can be int or boolean
+	BindVlan   interface{} `json:"bind_vlan"` // Can be int or boolean
 	Remark     string      `json:"remark" validate:"omitempty,max=500"`
-	NodeId     interface{} `json:"node_id"` // 可以是 int64 或 string
+	NodeId     interface{} `json:"node_id"` // Can be int64 or string
 }
 
-// toRadiusProfile 将 ProfileRequest 转换为 RadiusProfile
+// toRadiusProfile Convert ProfileRequest Convert to RadiusProfile
 func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
 		Name:       pr.Name,
@@ -112,7 +112,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 		Remark:     pr.Remark,
 	}
 
-	// 处理 status 字段：boolean true -> "enabled", false -> "disabled", string 保持不变
+	// Handle status field: boolean true -> "enabled", false -> "disabled", string remains unchanged
 	switch v := pr.Status.(type) {
 	case bool:
 		if v {
@@ -124,7 +124,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 		profile.Status = v
 	}
 
-	// 处理 bind_mac 字段：boolean -> int (true=1, false=0)
+	// Handle bind_mac field：boolean -> int (true=1, false=0)
 	switch v := pr.BindMac.(type) {
 	case bool:
 		if v {
@@ -136,7 +136,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 		profile.BindMac = int(v)
 	}
 
-	// 处理 bind_vlan 字段：boolean -> int (true=1, false=0)
+	// Handle bind_vlan field：boolean -> int (true=1, false=0)
 	switch v := pr.BindVlan.(type) {
 	case bool:
 		if v {
@@ -148,7 +148,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 		profile.BindVlan = int(v)
 	}
 
-	// 处理 node_id 字段
+	// Handle node_id field
 	switch v := pr.NodeId.(type) {
 	case float64:
 		profile.NodeId = int64(v)
@@ -162,10 +162,10 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	return profile
 }
 
-// CreateProfile 创建 RADIUS Profile
-// @Summary 创建 RADIUS Profile
+// CreateProfile creates a RADIUS profile
+// @Summary create a RADIUS profile
 // @Tags RadiusProfile
-// @Param profile body ProfileRequest true "Profile 信息"
+// @Param profile body ProfileRequest true "Profile information"
 // @Success 201 {object} domain.RadiusProfile
 // @Router /api/v1/radius-profiles [post]
 func CreateProfile(c echo.Context) error {
@@ -174,22 +174,22 @@ func CreateProfile(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 自动验证请求参数
+	// Auto-validate request parameters
 	if err := c.Validate(&req); err != nil {
-		return err // 验证错误已经格式化
+		return err // Validation errors already formatted
 	}
 
-	// 转换为 RadiusProfile
+	// Convert to RadiusProfile
 	profile := req.toRadiusProfile()
 
-	// 检查名称是否已存在（业务逻辑验证）
+	// Check whether a profile with the same name already exists (business logic validation)
 	var count int64
 	app.GDB().Model(&domain.RadiusProfile{}).Where("name = ?", profile.Name).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile 名称已存在", nil)
 	}
 
-	// 设置默认值
+	// Set default values
 	if profile.Status == "" {
 		profile.Status = "enabled"
 	}
@@ -201,11 +201,11 @@ func CreateProfile(c echo.Context) error {
 	return ok(c, profile)
 }
 
-// UpdateProfile 更新 RADIUS Profile
-// @Summary 更新 RADIUS Profile
+// UpdateProfile updates a RADIUS profile
+// @Summary update a RADIUS profile
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
-// @Param profile body ProfileRequest true "Profile 信息"
+// @Param profile body ProfileRequest true "Profile information"
 // @Success 200 {object} domain.RadiusProfile
 // @Router /api/v1/radius-profiles/{id} [put]
 func UpdateProfile(c echo.Context) error {
@@ -224,14 +224,14 @@ func UpdateProfile(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
 	}
 
-	// 自动验证请求参数
+	// Auto-validate request parameters
 	if err := c.Validate(&req); err != nil {
-		return err // 验证错误已经格式化
+		return err // Validation errors already formatted
 	}
 
 	updateData := req.toRadiusProfile()
 
-	// 验证名称唯一性（业务逻辑验证）
+	// Validate name uniqueness (business logic validation)
 	if updateData.Name != "" && updateData.Name != profile.Name {
 		var count int64
 		app.GDB().Model(&domain.RadiusProfile{}).Where("name = ? AND id != ?", updateData.Name, id).Count(&count)
@@ -240,7 +240,7 @@ func UpdateProfile(c echo.Context) error {
 		}
 	}
 
-	// 更新字段
+	// Update fields
 	updates := map[string]interface{}{}
 	if updateData.Name != "" {
 		updates["name"] = updateData.Name
@@ -283,14 +283,14 @@ func UpdateProfile(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "更新 Profile 失败", err.Error())
 	}
 
-	// 重新查询最新数据
+	// Re-query latest data
 	app.GDB().First(&profile, id)
 
 	return ok(c, profile)
 }
 
-// DeleteProfile 删除 RADIUS Profile
-// @Summary 删除 RADIUS Profile
+// DeleteProfile Delete RADIUS Profile
+// @Summary Delete RADIUS Profile
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
 // @Success 200 {object} SuccessResponse
@@ -301,7 +301,7 @@ func DeleteProfile(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Profile ID", nil)
 	}
 
-	// 检查是否有用户在使用此 Profile
+	// Check whether any users are currently using this profile
 	var userCount int64
 	app.GDB().Model(&domain.RadiusUser{}).Where("profile_id = ?", id).Count(&userCount)
 	if userCount > 0 {
@@ -319,7 +319,7 @@ func DeleteProfile(c echo.Context) error {
 	})
 }
 
-// registerProfileRoutes 注册 Profile 路由
+// registerProfileRoutes registers profile routes
 func registerProfileRoutes() {
 	webserver.ApiGET("/radius-profiles", ListProfiles)
 	webserver.ApiGET("/radius-profiles/:id", GetProfile)

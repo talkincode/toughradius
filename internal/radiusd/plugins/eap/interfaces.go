@@ -7,7 +7,7 @@ import (
 	"layeh.com/radius"
 )
 
-// EAP Code 常量
+// EAP code constants
 const (
 	CodeRequest  = 1 // EAP Request message
 	CodeResponse = 2 // EAP Response message
@@ -15,7 +15,7 @@ const (
 	CodeFailure  = 4 // Indicates failed authentication
 )
 
-// EAP Type 常量
+// EAP type constants
 const (
 	TypeIdentity     = 1  // Identity
 	TypeNotification = 2  // Notification
@@ -27,21 +27,21 @@ const (
 	TypeMSCHAPv2     = 26 // EAP-MSCHAPv2
 )
 
-// EAPState EAP 状态数据
+// EAPState holds EAP status data
 type EAPState struct {
-	Username  string                 // 用户名
-	Challenge []byte                 // Challenge 数据
-	StateID   string                 // 状态ID (RADIUS State 属性值)
-	Method    string                 // EAP 方法名称 (eap-md5, eap-mschapv2, etc.)
-	Success   bool                   // 是否认证成功
-	Data      map[string]interface{} // 额外数据存储
+	Username  string                 // Username
+	Challenge []byte                 // Challenge data
+	StateID   string                 // StateID (RADIUS State attribute value)
+	Method    string                 // EAP method name (eap-md5, eap-mschapv2, etc.)
+	Success   bool                   // whether authentication succeeded
+	Data      map[string]interface{} // Additional data storage
 }
 
-// EAPContext EAP 认证上下文
+// EAPContext holds EAP authentication context
 type EAPContext struct {
 	Context        context.Context
 	Request        *radius.Request
-	ResponseWriter radius.ResponseWriter // RADIUS 响应写入器
+	ResponseWriter radius.ResponseWriter // RADIUS response writer
 	Response       *radius.Packet
 	User           *domain.RadiusUser
 	NAS            *domain.NetNas
@@ -53,7 +53,7 @@ type EAPContext struct {
 	PwdProvider    PasswordProvider
 }
 
-// EAPMessage EAP 消息结构
+// EAPMessage represents the EAP message structure
 type EAPMessage struct {
 	Code       uint8  // EAP Code
 	Identifier uint8  // EAP Identifier
@@ -62,40 +62,40 @@ type EAPMessage struct {
 	Data       []byte // EAP Data
 }
 
-// EAPHandler EAP 认证处理器接口
+// EAPHandler defines the EAP authentication handler interface
 type EAPHandler interface {
-	// Name 返回处理器名称 (如 "eap-md5", "eap-mschapv2")
+	// Name Returnshandlernames (e.g., "eap-md5", "eap-mschapv2")
 	Name() string
 
-	// EAPType 返回处理的 EAP 类型码
+	// EAPType returns the EAP type code this handler handles
 	EAPType() uint8
 
-	// CanHandle 判断是否可以处理该 EAP 消息
+	// CanHandle determines whether this handler can process the EAP message
 	CanHandle(ctx *EAPContext) bool
 
-	// HandleIdentity 处理 EAP-Response/Identity，发送 Challenge
-	// 返回 true 表示已处理并发送响应，false 表示不处理
+	// HandleIdentity Handle EAP-Response/Identity，Send Challenge
+	// Returns true if handled and a response was sent; otherwise false
 	HandleIdentity(ctx *EAPContext) (bool, error)
 
-	// HandleResponse 处理 EAP-Response (Challenge Response)
-	// 返回 true 表示认证成功，false 表示认证失败
+	// HandleResponse Handle EAP-Response (Challenge Response)
+	// Returns true if authentication succeeded, false otherwise
 	HandleResponse(ctx *EAPContext) (bool, error)
 }
 
-// EAPStateManager EAP 状态管理器接口
+// EAPStateManager defines the EAP state manager interface
 type EAPStateManager interface {
-	// GetState 获取 EAP 状态
+	// GetState get EAP Status
 	GetState(stateID string) (*EAPState, error)
 
-	// SetState 设置 EAP 状态
+	// SetState stores the EAP status
 	SetState(stateID string, state *EAPState) error
 
-	// DeleteState 删除 EAP 状态
+	// DeleteState Delete EAP Status
 	DeleteState(stateID string) error
 }
 
-// PasswordProvider 密码提供者接口
+// PasswordProvider defines how to retrieve passwords
 type PasswordProvider interface {
-	// GetPassword 获取用户密码（明文或加密）
+	// GetPassword retrieves the user's password (plain or encrypted)
 	GetPassword(user *domain.RadiusUser, isMacAuth bool) (string, error)
 }

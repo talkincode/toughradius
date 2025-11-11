@@ -16,13 +16,13 @@ import (
 	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3162"
 	"layeh.com/radius/rfc4818"
-) // StartHandler 计费开始处理器
+) // StartHandler Accounting Start handler
 type StartHandler struct {
 	sessionRepo    repository.SessionRepository
 	accountingRepo repository.AccountingRepository
 }
 
-// NewStartHandler 创建计费开始处理器
+// NewStartHandler CreateAccounting Start handler
 func NewStartHandler(
 	sessionRepo repository.SessionRepository,
 	accountingRepo repository.AccountingRepository,
@@ -47,10 +47,10 @@ func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 		vendorReq = &vendorparserspkg.VendorRequest{}
 	}
 
-	// 构建在线会话记录
+	// Construct the online session record
 	online := h.buildRadiusOnline(acctCtx.Request, vendorReq, acctCtx.NAS, acctCtx.NASIP)
 
-	// 创建在线会话
+	// Create online session
 	err := h.sessionRepo.Create(acctCtx.Context, &online)
 	if err != nil {
 		zap.L().Error("add radius online error",
@@ -61,7 +61,7 @@ func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 		return err
 	}
 
-	// 创建计费记录
+	// Create accounting record
 	accounting := h.buildRadiusAccounting(&online, true)
 	if err := h.accountingRepo.Create(acctCtx.Context, &accounting); err != nil {
 		zap.L().Error("add radius accounting error",
@@ -95,7 +95,7 @@ func (h *StartHandler) buildRadiusOnline(r *radius.Request, vr *vendorparserspkg
 		SessionTimeout:      int(rfc2865.SessionTimeout_Get(r.Packet)),
 		FramedIpaddr:        common.IfEmptyStr(rfc2865.FramedIPAddress_Get(r.Packet).String(), common.NA),
 		FramedNetmask:       common.IfEmptyStr(rfc2865.FramedIPNetmask_Get(r.Packet).String(), common.NA),
-		FramedIpv6Address:   common.NA, // 根据厂商特定逻辑设置
+		FramedIpv6Address:   common.NA, // Set based on vendor-specific logic
 		FramedIpv6Prefix:    common.IfEmptyStr(rfc3162.FramedIPv6Prefix_Get(r.Packet).String(), common.NA),
 		DelegatedIpv6Prefix: common.IfEmptyStr(rfc4818.DelegatedIPv6Prefix_Get(r.Packet).String(), common.NA),
 		MacAddr:             common.IfEmptyStr(vr.MacAddr, common.NA),

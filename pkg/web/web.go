@@ -49,7 +49,7 @@ func (d DateRange) ParseEnd() (time.Time, error) {
 	return time.Parse("2006-01-02 15:04:05", d.End)
 }
 
-// WEB 参数
+// WEB parameters
 type WebForm struct {
 	FormItem interface{}
 	Posts    url.Values        `json:"-" form:"-" query:"-"`
@@ -158,10 +158,10 @@ func (f *WebForm) GetInt64Val(name string, defval int64) int64 {
 	return v
 }
 
-// ParseTimeDesc 解析时间描述
-// now-1hour 最近1小时
-// now-1min 最近1分钟
-// now-1day 最近1天
+// ParseTimeDesc parses a time description
+// now-1hour indicates the past hour
+// now-1min indicates the past minute
+// now-1day indicates the past day
 func (f *WebForm) ParseTimeDesc(timestr string, defval string) string {
 	val := f.GetVal(timestr)
 	if val == "" {
@@ -198,7 +198,7 @@ type JsonOptions struct {
 	Value string `json:"value"`
 }
 
-// 参数快速读取,避免多次错误处理
+// Quickly read parameters to avoid repeated error handling
 type ParamReader struct {
 	form      *WebForm
 	LastError error
@@ -286,7 +286,7 @@ func ReadImportExcelData(src io.Reader, sheet string) ([]map[string]interface{},
 	if err != nil {
 		return nil, err
 	}
-	// 获取 Sheet1 上所有单元格
+		// Retrieve all cells from Sheet1
 	rows := f.GetRows(sheet)
 	head := make(map[int]string)
 	var data []map[string]interface{}
@@ -362,7 +362,7 @@ func ParseSortMap(c echo.Context) map[string]string {
 		switch {
 		case strings.HasPrefix(k, "sort[") && vs[0] != "":
 			if common.InSlice(vs[0], []string{"asc", "desc"}) {
-				// 排序参数
+				// Sorting parameters
 				sortmap[k[5:len(k)-1]] = vs[0]
 			}
 		}
@@ -375,7 +375,7 @@ func ParseFilterMap(c echo.Context) map[string]string {
 	for k, vs := range c.QueryParams() {
 		switch {
 		case strings.HasPrefix(k, "filter[") && vs[0] != "":
-			// 查询参数
+			// Query parameters
 			filtermap[k[7:len(k)-1]] = vs[0]
 		}
 	}
@@ -387,7 +387,7 @@ func ParseEqualMap(c echo.Context) map[string]string {
 	for k, vs := range c.QueryParams() {
 		switch {
 		case strings.HasPrefix(k, "equal[") && vs[0] != "":
-			// 查询参数
+			// Query parameters
 			filtermap[k[6:len(k)-1]] = vs[0]
 		}
 	}

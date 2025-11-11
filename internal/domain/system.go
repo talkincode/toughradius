@@ -15,7 +15,7 @@ type SysConfig struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (SysConfig) TableName() string {
 	return "sys_config"
 }
@@ -35,7 +35,7 @@ type SysOpr struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (SysOpr) TableName() string {
 	return "sys_opr"
 }
@@ -49,7 +49,7 @@ type SysOprLog struct {
 	OptTime   time.Time `json:"opt_time"`
 }
 
-// TableName 指定表名
+// TableName Specify table name
 func (SysOprLog) TableName() string {
 	return "sys_opr_log"
 }

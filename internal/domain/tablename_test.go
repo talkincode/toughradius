@@ -51,7 +51,7 @@ func TestRadiusAccounting_TableName(t *testing.T) {
 	assert.Equal(t, "radius_accounting", model.TableName())
 }
 
-// TestAllModelsHaveTableName 验证所有在 Tables 列表中的模型都实现了 TableName 方法
+// TestAllModelsHaveTableName ensures every model listed in Tables implements TableName
 func TestAllModelsHaveTableName(t *testing.T) {
 	type tableNamer interface {
 		TableName() string
@@ -60,12 +60,12 @@ func TestAllModelsHaveTableName(t *testing.T) {
 	for _, table := range Tables {
 		t.Run("", func(t *testing.T) {
 			_, ok := table.(tableNamer)
-			assert.True(t, ok, "模型 %T 应该实现 TableName() 方法", table)
+			assert.True(t, ok, "Model %T should implement TableName()", table)
 		})
 	}
 }
 
-// TestTableNameUniqueness 验证所有表名都是唯一的
+// TestTableNameUniqueness ensures all table names are unique
 func TestTableNameUniqueness(t *testing.T) {
 	type tableNamer interface {
 		TableName() string
@@ -76,12 +76,12 @@ func TestTableNameUniqueness(t *testing.T) {
 	for _, table := range Tables {
 		if tn, ok := table.(tableNamer); ok {
 			name := tn.TableName()
-			assert.False(t, tableNames[name], "表名 %s 重复", name)
+			assert.False(t, tableNames[name], "Table name %s is duplicated", name)
 			tableNames[name] = true
 		}
 	}
 
-	// 验证所有表名都是蛇形命名（snake_case）
+	// Ensure all table names follow snake_case
 	expectedNames := map[string]bool{
 		"sys_config":         true,
 		"sys_opr":            true,
@@ -94,9 +94,9 @@ func TestTableNameUniqueness(t *testing.T) {
 		"radius_accounting":  true,
 	}
 
-	assert.Equal(t, len(expectedNames), len(tableNames), "表名数量应该匹配")
+	assert.Equal(t, len(expectedNames), len(tableNames), "Table name count should match")
 	
 	for name := range tableNames {
-		assert.True(t, expectedNames[name], "未预期的表名: %s", name)
+		assert.True(t, expectedNames[name], "Unexpected table name: %s", name)
 	}
 }

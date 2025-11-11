@@ -1,6 +1,6 @@
 package web
 
-// Webix 表格列定义
+// Webix table column definitions
 type WebixTableColumn struct {
 	Id         string      `json:"id,omitempty"`
 	Header     interface{} `json:"header,omitempty"`

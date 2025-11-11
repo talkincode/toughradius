@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-# 数据库文件路径
+# Database file path
 db_path = "rundata/data/toughradius.db"
 
 
@@ -17,11 +17,11 @@ def main():
         print("提示: 请先运行 ToughRADIUS 以创建数据库")
         sys.exit(1)
 
-    # 连接数据库
+# Connect to the database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # 检查表是否存在
+# Check if the tables exist
     cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='radius_accounting'"
     )
@@ -29,14 +29,14 @@ def main():
         print("❌ radius_accounting 表不存在")
         sys.exit(1)
 
-    # 清空现有测试数据
+# Clear existing test data
     cursor.execute("DELETE FROM radius_accounting")
     print("✓ 已清空现有计费记录数据")
 
-    # 测试数据
+# Test data
     now = datetime.now()
     test_records = [
-        # 已完成的会话
+        # Completed session
         (
             "alice@test.com",
             "sess-alice-complete-001",
@@ -57,8 +57,8 @@ def main():
             2048000000,
             50000,
             100000,
-            -120,  # 2小时前开始
-            -60,  # 1小时前结束
+            -120,  # Start 2 hours ago
+            -60,  # End 1 hour ago
         ),
         (
             "bob@test.com",
@@ -80,8 +80,8 @@ def main():
             4096000000,
             100000,
             200000,
-            -180,  # 3小时前开始
-            -60,  # 1小时前结束
+            -180,  # Start 3 hours ago
+            -60,  # End 1 hour ago
         ),
         (
             "charlie@test.com",
@@ -103,8 +103,8 @@ def main():
             1024000000,
             25000,
             50000,
-            -90,  # 90分钟前开始
-            -30,  # 30分钟前结束
+            -90,  # Start 90 minutes ago
+            -30,  # End 30 minutes ago
         ),
         (
             "david@test.com",
@@ -126,8 +126,8 @@ def main():
             512000000,
             12500,
             25000,
-            -45,  # 45分钟前开始
-            -35,  # 35分钟前结束
+            -45,  # Start 45 minutes ago
+            -35,  # End 35 minutes ago
         ),
         (
             "eve@test.com",
@@ -149,8 +149,8 @@ def main():
             6144000000,
             150000,
             300000,
-            -240,  # 4小时前开始
-            -150,  # 2.5小时前结束
+            -240,  # Start 4 hours ago
+            -150,  # End 2.5 hours ago
         ),
         (
             "frank@test.com",
@@ -172,8 +172,8 @@ def main():
             768000000,
             18750,
             37500,
-            -60,  # 1小时前开始
-            -45,  # 45分钟前结束
+            -60,  # Start 1 hour ago
+            -45,  # End 45 minutes ago
         ),
         (
             "grace@test.com",
@@ -195,8 +195,8 @@ def main():
             10240000000,
             250000,
             500000,
-            -360,  # 6小时前开始
-            -180,  # 3小时前结束
+            -360,  # Start 6 hours ago
+            -180,  # End 3 hours ago
         ),
         (
             "henry@test.com",
@@ -218,8 +218,8 @@ def main():
             3072000000,
             75000,
             150000,
-            -150,  # 2.5小时前开始
-            -105,  # 1小时45分钟前结束
+            -150,  # Start 2.5 hours ago
+            -105,  # End 1 hour 45 minutes ago
         ),
         (
             "iris@test.com",
@@ -241,8 +241,8 @@ def main():
             1280000000,
             31250,
             62500,
-            -100,  # 100分钟前开始
-            -80,  # 80分钟前结束
+            -100,  # Start 100 minutes ago
+            -80,  # End 80 minutes ago
         ),
         (
             "jack@test.com",
@@ -264,10 +264,10 @@ def main():
             5120000000,
             125000,
             250000,
-            -300,  # 5小时前开始
-            -225,  # 3小时45分钟前结束
+            -300,  # Start 5 hours ago
+            -225,  # End 3 hours 45 minutes ago
         ),
-        # 最近的几条记录
+        # Most recent records
         (
             "alice@test.com",
             "sess-alice-recent-001",
@@ -288,8 +288,8 @@ def main():
             1792000000,
             43750,
             87500,
-            -30,  # 30分钟前开始
-            -0,  # 刚结束
+            -30,  # Start 30 minutes ago
+            -0,  # Just ended
         ),
         (
             "bob@test.com",
@@ -311,8 +311,8 @@ def main():
             3584000000,
             87500,
             175000,
-            -50,  # 50分钟前开始
-            -0,  # 刚结束
+            -50,  # Start 50 minutes ago
+            -0,  # Just ended
         ),
     ]
 
@@ -392,7 +392,7 @@ def main():
     conn.commit()
     print(f"✓ 成功插入 {inserted_count} 条计费记录")
 
-    # 显示插入的数据统计
+    # Display statistics of the inserted records
     print("\n📊 计费记录统计:")
     cursor.execute(
         """
@@ -410,7 +410,7 @@ def main():
     print(f"总上传流量: {row[2]:.2f} GB")
     print(f"总下载流量: {row[3]:.2f} GB")
 
-    # 显示最近的记录
+    # Display recent records
     print("\n📋 最近的5条计费记录:")
     cursor.execute(
         """
@@ -435,7 +435,7 @@ def main():
             f"{row[0]:<4} {row[1]:<20} {row[2]:<15} {row[3]:<15} {row[4]:<10} {row[5]:<10.2f} {row[6]:<10.2f}"
         )
 
-    # 按用户统计
+    # Show statistics per user
     print("\n👥 用户流量统计 (TOP 5):")
     cursor.execute(
         """

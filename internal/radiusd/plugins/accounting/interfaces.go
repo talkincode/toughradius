@@ -8,7 +8,7 @@ import (
 	"layeh.com/radius"
 )
 
-// AccountingContext 计费上下文（统一命名）
+// AccountingContext is the shared accounting context
 type AccountingContext struct {
 	Context    context.Context
 	Request    *radius.Request
@@ -19,14 +19,14 @@ type AccountingContext struct {
 	StatusType int // rfc2866: Start=1, Stop=2, InterimUpdate=3, AccountingOn=7, AccountingOff=8
 }
 
-// AccountingHandler 计费处理器接口
+// AccountingHandler defines the accounting handler interface
 type AccountingHandler interface {
-	// Name 返回处理器名称
+	// Name Returnshandlernames
 	Name() string
 
-	// CanHandle 判断是否能处理该计费请求
+	// CanHandle determines whether the handler can process this accounting request
 	CanHandle(ctx *AccountingContext) bool
 
-	// Handle 处理计费请求
+	// Handle HandleAccountingrequest
 	Handle(ctx *AccountingContext) error
 }

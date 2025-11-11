@@ -16,30 +16,30 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// UserRequest 用于处理前端发送的用户数据
+// UserRequest Used to handle user data sent from frontend
 type UserRequest struct {
-	NodeID     interface{} `json:"node_id"`                                     // 可以是 int64 或 string
-	ProfileID  interface{} `json:"profile_id" validate:"required"`              // 可以是 int64 或 string
-	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // 真实姓名
-	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // 邮箱
-	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // 手机号（可选，最多20字符）
-	Address    string      `json:"address" validate:"omitempty,max=255"`        // 地址
-	Username   string      `json:"username" validate:"required,min=3,max=50"`   // 用户名
-	Password   string      `json:"password" validate:"omitempty,min=6,max=128"` // 密码
-	AddrPool   string      `json:"addr_pool" validate:"omitempty,max=50"`       // 地址池
+	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
+	ProfileID  interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
+	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // Real name
+	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // Email
+	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
+	Address    string      `json:"address" validate:"omitempty,max=255"`        // addresses
+	Username   string      `json:"username" validate:"required,min=3,max=50"`   // Username
+	Password   string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
+	AddrPool   string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
 	Vlanid1    int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
 	Vlanid2    int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
-	IpAddr     string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4地址
-	Ipv6Addr   string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6地址
-	MacAddr    string      `json:"mac_addr" validate:"omitempty,mac"`           // MAC地址
-	BindVlan   interface{} `json:"bind_vlan"`                                   // 可以是 int 或 boolean
-	BindMac    interface{} `json:"bind_mac"`                                    // 可以是 int 或 boolean
-	ExpireTime string      `json:"expire_time" validate:"omitempty"`            // 过期时间
-	Status     interface{} `json:"status"`                                      // 可以是 string 或 boolean
-	Remark     string      `json:"remark" validate:"omitempty,max=500"`         // 备注
+	IpAddr     string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
+	Ipv6Addr   string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6addresses
+	MacAddr    string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
+	BindVlan   interface{} `json:"bind_vlan"`                                   // Can be int or boolean
+	BindMac    interface{} `json:"bind_mac"`                                    // Can be int or boolean
+	ExpireTime string      `json:"expire_time" validate:"omitempty"`            // Expiration time
+	Status     interface{} `json:"status"`                                      // Can be string or boolean
+	Remark     string      `json:"remark" validate:"omitempty,max=500"`         // Remark
 }
 
-// toRadiusUser 将 UserRequest 转换为 RadiusUser
+// toRadiusUser Convert UserRequest Convert to RadiusUser
 func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 	user := &domain.RadiusUser{
 		Realname: ur.Realname,
@@ -54,7 +54,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 		Remark:   ur.Remark,
 	}
 
-	// 处理 profile_id
+	// Handle profile_id
 	switch v := ur.ProfileID.(type) {
 	case float64:
 		user.ProfileId = int64(v)
@@ -65,7 +65,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 		}
 	}
 
-	// 处理 node_id
+	// Handle node_id
 	switch v := ur.NodeID.(type) {
 	case float64:
 		user.NodeId = int64(v)
@@ -76,7 +76,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 		}
 	}
 
-	// 处理 status 字段：boolean true -> "enabled", false -> "disabled"
+	// Handle status field：boolean true -> "enabled", false -> "disabled"
 	switch v := ur.Status.(type) {
 	case bool:
 		if v {
@@ -88,7 +88,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 		user.Status = strings.ToLower(v)
 	}
 
-	// 处理 bind_mac 字段
+	// Handle bind_mac field
 	switch v := ur.BindMac.(type) {
 	case bool:
 		if v {
@@ -100,7 +100,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 		user.BindMac = int(v)
 	}
 
-	// 处理 bind_vlan 字段
+	// Handle bind_vlan field
 	switch v := ur.BindVlan.(type) {
 	case bool:
 		if v {
@@ -175,15 +175,15 @@ func createRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析用户参数", err.Error())
 	}
 
-	// 自动验证请求参数
+	// Auto-validate request parameters
 	if err := c.Validate(&req); err != nil {
-		return err // 验证错误已经格式化
+		return err // Validation errors already formatted
 	}
 
-	// 转换为 RadiusUser
+	// Convert to RadiusUser
 	user := req.toRadiusUser()
 
-	// 额外的业务逻辑验证
+	// Additional business logic validation
 	if user.Username == "" {
 		return fail(c, http.StatusBadRequest, "MISSING_USERNAME", "用户名不能为空", nil)
 	}
@@ -194,14 +194,14 @@ func createRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "MISSING_PROFILE_ID", "计费策略不能为空", nil)
 	}
 
-	// 检查用户名是否已存在
+	// CheckUsernamealready exists
 	var exists int64
 	app.GDB().Model(&domain.RadiusUser{}).Where("username = ?", user.Username).Count(&exists)
 	if exists > 0 {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "用户名已存在", nil)
 	}
 
-	// 验证计费策略是否存在
+	// Validate if accounting profile exists
 	var profile domain.RadiusProfile
 	if err := app.GDB().Where("id = ?", user.ProfileId).First(&profile).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -210,13 +210,13 @@ func createRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询计费策略失败", err.Error())
 	}
 
-	// 解析过期时间
+	// ParseExpiration time
 	expire, err := parseTimeInput(req.ExpireTime, time.Now().AddDate(1, 0, 0))
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "过期时间格式不正确", nil)
 	}
 
-	// 设置默认值和从 profile 继承的值
+	// Set default values and inherit from profile inherited values
 	user.ID = common.UUIDint64()
 	user.AddrPool = common.If(user.AddrPool != "", user.AddrPool, profile.AddrPool).(string)
 	user.ActiveNum = profile.ActiveNum
@@ -248,9 +248,9 @@ func updateRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析用户参数", err.Error())
 	}
 
-	// 自动验证请求参数
+	// Auto-validate request parameters
 	if err := c.Validate(&req); err != nil {
-		return err // 验证错误已经格式化
+		return err // Validation errors already formatted
 	}
 
 	var user domain.RadiusUser
@@ -262,7 +262,7 @@ func updateRadiusUser(c echo.Context) error {
 
 	updateData := req.toRadiusUser()
 
-	// 验证用户名唯一性（如果修改了用户名）
+	// Validate username uniqueness (if username modified)
 	if updateData.Username != "" && updateData.Username != user.Username {
 		var count int64
 		app.GDB().Model(&domain.RadiusUser{}).Where("username = ? AND id != ?", updateData.Username, id).Count(&count)
@@ -271,7 +271,7 @@ func updateRadiusUser(c echo.Context) error {
 		}
 	}
 
-	// 如果更新了 ProfileID，需要验证并同步 Profile 的配置
+	// If updated ProfileID，need toValidateand sync Profile configuration
 	if updateData.ProfileId != 0 && updateData.ProfileId != user.ProfileId {
 		var profile domain.RadiusProfile
 		if err := app.GDB().Where("id = ?", updateData.ProfileId).First(&profile).Error; err != nil {
@@ -287,7 +287,7 @@ func updateRadiusUser(c echo.Context) error {
 		user.AddrPool = profile.AddrPool
 	}
 
-	// 更新其他字段
+	// Update other fields
 	updates := map[string]interface{}{}
 	if updateData.NodeId > 0 {
 		updates["node_id"] = updateData.NodeId
@@ -345,7 +345,7 @@ func updateRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新用户失败", err.Error())
 	}
 
-	// 重新查询最新数据
+	// Re-query latest data
 	app.GDB().Where("id = ?", id).First(&user)
 	user.Password = ""
 	return ok(c, user)

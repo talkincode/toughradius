@@ -120,7 +120,7 @@ func TestIkuaiAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 			name:         "normal rates",
 			upRate:       100,
 			downRate:     200,
-			expectedUp:   100 * 1024 * 8, // Ikuai 使用 bits/s，所以要 * 8
+			expectedUp:   100 * 1024 * 8, // Ikuai uses bits/s, so multiply by 8
 			expectedDown: 200 * 1024 * 8,
 		},
 		{

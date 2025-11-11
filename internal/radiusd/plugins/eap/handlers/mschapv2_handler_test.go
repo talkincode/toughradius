@@ -14,7 +14,7 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// mockResponseWriter 模拟 RADIUS 响应写入器
+// mockResponseWriter simulates a RADIUS response writer
 type mockResponseWriter struct {
 	response *radius.Packet
 }
@@ -24,7 +24,7 @@ func (m *mockResponseWriter) Write(p *radius.Packet) error {
 	return nil
 }
 
-// mockPasswordProvider 模拟密码提供者
+// mockPasswordProvider simulates a password provider
 type mockPasswordProvider struct {
 	password string
 }
@@ -91,11 +91,11 @@ func TestMSCHAPv2Handler_HandleIdentity(t *testing.T) {
 	stateManager := statemanager.NewMemoryStateManager()
 	writer := &mockResponseWriter{}
 
-	// 创建 RADIUS 请求
+	// Create RADIUS request
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, "testuser")
 
-	// 创建 EAP Identity Response
+	// Create EAP Identity Response
 	identityMsg := &eap.EAPMessage{
 		Code:       eap.CodeResponse,
 		Identifier: 1,
@@ -116,16 +116,16 @@ func TestMSCHAPv2Handler_HandleIdentity(t *testing.T) {
 		Secret:         "secret",
 	}
 
-	// 调用 HandleIdentity
+		// Call HandleIdentity
 	handled, err := handler.HandleIdentity(ctx)
 
-	// 验证结果
+		// Validate the result
 	require.NoError(t, err)
 	assert.True(t, handled)
 	assert.NotNil(t, writer.response)
 	assert.Equal(t, radius.CodeAccessChallenge, writer.response.Code)
 
-	// 验证 EAP-Message 属性
+		// Validate the EAP-Message attributes
 	eapMsg, err := rfc2869.EAPMessage_Lookup(writer.response)
 	require.NoError(t, err)
 	assert.NotNil(t, eapMsg)
@@ -133,7 +133,7 @@ func TestMSCHAPv2Handler_HandleIdentity(t *testing.T) {
 	assert.Equal(t, uint8(eap.TypeMSCHAPv2), eapMsg[4])  // EAP Type
 	assert.Equal(t, uint8(MSCHAPv2Challenge), eapMsg[5]) // MS-CHAPv2 OpCode
 
-	// 验证状态已保存
+		// Validate that status is stored
 	stateID := rfc2865.State_GetString(writer.response)
 	assert.NotEmpty(t, stateID)
 
@@ -154,24 +154,24 @@ func TestMSCHAPv2Handler_buildChallengeRequest(t *testing.T) {
 
 	data := handler.buildChallengeRequest(identifier, challenge)
 
-	// 验证 EAP Header
+	// Validate EAP Header
 	assert.Equal(t, uint8(eap.CodeRequest), data[0])
 	assert.Equal(t, identifier, data[1])
 
-	// 验证 EAP Type
+	// Validate EAP Type
 	assert.Equal(t, uint8(eap.TypeMSCHAPv2), data[4])
 
-	// 验证 MS-CHAPv2 OpCode
-	assert.Equal(t, uint8(MSCHAPv2Challenge), data[5]) // 验证 MS-CHAPv2-ID
+	// Validate MS-CHAPv2 OpCode
+	assert.Equal(t, uint8(MSCHAPv2Challenge), data[5]) // Validate MS-CHAPv2-ID
 	assert.Equal(t, identifier, data[6])
 
-	// 验证 Value-Size
+	// Validate Value-Size
 	assert.Equal(t, MSCHAPChallengeSize, int(data[9]))
 
-	// 验证 Challenge
+	// Validate Challenge
 	assert.Equal(t, challenge, data[10:10+MSCHAPChallengeSize])
 
-	// 验证 Server Name
+	// Validate Server Name
 	assert.Equal(t, []byte(ServerName), data[10+MSCHAPChallengeSize:])
 }
 
@@ -267,13 +267,13 @@ func TestMSCHAPv2Handler_parseResponse(t *testing.T) {
 func TestMSCHAPv2Handler_verifyResponse(t *testing.T) {
 	handler := NewMSCHAPv2Handler()
 
-	// 这个测试需要真实的 MSCHAPv2 计算
-	// 使用已知的测试向量
+	// This test needs a real MSCHAPv2 calculation
+	// Use known test vectors
 	username := "testuser"
 	password := "password123"
 
-	// 为了简化测试,这里只测试函数能否正常执行
-	// 真实的密码验证需要使用 RFC 2759 的测试向量
+	// To simplify the test, only verify that the function executes
+	// Real password validation requires RFC 2759 test vectors
 
 	authChallenge := make([]byte, 16)
 	peerChallenge := make([]byte, 16)
@@ -281,7 +281,7 @@ func TestMSCHAPv2Handler_verifyResponse(t *testing.T) {
 
 	packet := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-	// 这应该失败,因为 ntResponse 是空的
+	// This should fail because ntResponse is empty
 	success, err := handler.verifyResponse(
 		username,
 		password,
@@ -293,16 +293,16 @@ func TestMSCHAPv2Handler_verifyResponse(t *testing.T) {
 	)
 
 	require.NoError(t, err)
-	assert.False(t, success) // 应该验证失败
+	assert.False(t, success) // Should fail validation
 }
 
 func TestMSCHAPv2Handler_Integration(t *testing.T) {
-	// 集成测试:模拟完整的 EAP-MSCHAPv2 认证流程
+	// Integration test: simulate the full EAP-MSCHAPv2 authentication flow
 	handler := NewMSCHAPv2Handler()
 	stateManager := statemanager.NewMemoryStateManager()
 	pwdProvider := &mockPasswordProvider{password: "testpass"}
 
-	// 1. Identity 阶段
+	// 1. Identity phase
 	writer1 := &mockResponseWriter{}
 	packet1 := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet1, "testuser")
@@ -330,12 +330,12 @@ func TestMSCHAPv2Handler_Integration(t *testing.T) {
 	require.NoError(t, err)
 	assert.True(t, handled)
 
-	// 验证收到 Challenge
+	// Validate that a challenge was received
 	assert.Equal(t, radius.CodeAccessChallenge, writer1.response.Code)
 	stateID := rfc2865.State_GetString(writer1.response)
 	assert.NotEmpty(t, stateID)
 
-	// 注意:这里无法完成完整的 Response 阶段测试,
-	// 因为需要客户端根据 Challenge 计算正确的 NT-Response
-	// 这需要使用 RFC 2759 的测试向量或真实的客户端模拟
+	// Note: it is not possible to complete the full Response phase test,
+	// because the client must compute the correct NT-Response based on the challenge
+	// This requires RFC 2759 test vectors or a real client simulation
 }

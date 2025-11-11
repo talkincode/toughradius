@@ -19,7 +19,7 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v9/internal/app"
-	customValidator "github.com/talkincode/toughradius/v9/internal/pkg/validator"
+	customValidator "github.com/talkincode/toughradius/v9/pkg/validator"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"github.com/talkincode/toughradius/v9/pkg/excel"
 	"github.com/talkincode/toughradius/v9/pkg/web"
@@ -57,7 +57,7 @@ func Listen() error {
 	return server.Start()
 }
 
-// NewAdminServer 创建管理系统服务器
+// NewAdminServer creates the admin system server
 func NewAdminServer() *AdminServer {
 	appconfig := app.GConfig()
 	s := &AdminServer{}
@@ -70,12 +70,12 @@ func NewAdminServer() *AdminServer {
 		Level: 1,
 	}))
 
-	// 注册自定义验证器
+	// Register the custom validator
 	s.root.Validator = customValidator.NewValidator()
 
-	// 失败恢复处理中间件
+	// Failure recovery middleware
 	s.root.Use(ServerRecover(appconfig.System.Debug))
-	// 日志处理中间件
+	// Logging middleware
 	s.root.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
 		Format: appconfig.System.Appid + " ${time_rfc3339} ${remote_ip} ${method} ${uri} ${protocol} ${status} ${id} ${user_agent} ${latency} ${bytes_in} ${bytes_out} ${error}\n",
 		Output: os.Stdout,
@@ -83,15 +83,15 @@ func NewAdminServer() *AdminServer {
 	// p := prometheus.NewPrometheus("toughradius", nil)
 	// p.Use(s.root)
 
-	// React Admin Web UI 静态文件服务
+	// Serve React Admin web UI static files
 	s.setupReactAdminStatic()
 
 	s.root.HideBanner = true
-	// 设置日志级别
+	// Set the log level
 	s.root.Logger.SetLevel(common.If(appconfig.System.Debug, elog.DEBUG, elog.INFO).(elog.Lvl))
 	s.root.Debug = appconfig.System.Debug
 
-	// 根路径重定向到 /admin
+	// Redirect the root path to /admin
 	s.root.GET("/", func(c echo.Context) error {
 		return c.Redirect(http.StatusMovedPermanently, "/admin")
 	})
@@ -106,7 +106,7 @@ func NewAdminServer() *AdminServer {
 
 	s.root.GET("/.well-known/appspecific/com.chrome.devtools.json", chromeDevtoolsManifest)
 
-	// Chrome DevTools 配置文件请求处理
+	// Chrome DevTools config filerequestHandle
 	s.root.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c echo.Context) error {
 		return c.JSON(200, map[string]interface{}{
 			"applications": []map[string]interface{}{
@@ -119,7 +119,7 @@ func NewAdminServer() *AdminServer {
 		})
 	})
 
-	// JWT 中间件
+	// JWT middleware
 	s.jwtConfig = echojwt.Config{
 		SigningKey:    []byte(appconfig.Web.Secret),
 		SigningMethod: echojwt.AlgorithmHS256,
@@ -138,19 +138,19 @@ func NewAdminServer() *AdminServer {
 	return s
 }
 
-// setupReactAdminStatic 设置 React Admin 静态文件服务
+// setupReactAdminStatic sets up React Admin static file serving
 func (s *AdminServer) setupReactAdminStatic() {
-	// 尝试从嵌入的文件系统加载
+	// Try loading from the embedded filesystem
 	webStaticFS, err := getWebStaticFS()
 	if err != nil {
 		zap.S().Warnf("Failed to load embedded web static files: %v, using development mode", err)
-		// 开发模式：从本地文件系统读取
+		// Development mode: read from the local filesystem
 		s.root.Static("/admin", "web/dist/admin")
 		return
 	}
 
-	// 生产模式：从嵌入的文件系统读取
-	// 处理 /admin 路径下的静态资源
+	// Production mode: read from the embedded filesystem
+	// Serve static assets under the /admin path
 	staticHandler := http.FileServer(webStaticFS)
 
 	renderIndex := func(c echo.Context) error {
@@ -164,15 +164,15 @@ func (s *AdminServer) setupReactAdminStatic() {
 		return c.Stream(http.StatusOK, "text/html", indexFile)
 	}
 
-	// 注册 /admin/assets/* 路由用于静态资源
+	// Register /admin/assets/* for static assets
 	s.root.GET("/admin/assets/*", echo.WrapHandler(http.StripPrefix("/admin", staticHandler)))
 
-	// 处理精确的 /admin 路径（不带尾随斜杠）
+	// Handle the exact /admin path (without trailing slash)
 	s.root.GET("/admin", renderIndex)
 
-	// 注册 /admin/* 路由用于 SPA，所有路由返回 index.html
+	// Register /admin/* for the SPA; all routes return index.html
 	s.root.GET("/admin/*", func(c echo.Context) error {
-		// 尝试获取请求的文件
+		// Try to fetch the requested file
 		path := strings.TrimPrefix(c.Request().URL.Path, "/admin")
 		if path == "" || path == "/" {
 			path = "/index.html"
@@ -184,7 +184,7 @@ func (s *AdminServer) setupReactAdminStatic() {
 			return echo.WrapHandler(http.StripPrefix("/admin", staticHandler))(c)
 		}
 
-		// 如果文件不存在，返回 index.html（用于 SPA 路由）
+		// e.g., if the file is missing, return index.html (for SPA routing)
 		indexFile, err := webStaticFS.Open("/index.html")
 		if err != nil {
 			return c.String(http.StatusNotFound, "Web UI not found")
@@ -198,7 +198,7 @@ func (s *AdminServer) setupReactAdminStatic() {
 	zap.S().Info("React Admin static files loaded successfully")
 }
 
-// getWebStaticFS 获取嵌入的 Web 静态文件系统
+// getWebStaticFS returns the embedded web static filesystem
 func getWebStaticFS() (http.FileSystem, error) {
 	return webui.GetAdminFileSystem()
 }
@@ -244,7 +244,7 @@ func (s *AdminServer) Start() error {
 	return err
 }
 
-// ParseJwtToken 解析 Jwt Token
+// ParseJwtToken Parse Jwt Token
 func (s *AdminServer) ParseJwtToken(tokenstr string) (jwt.MapClaims, error) {
 	config := s.jwtConfig
 	token, err := jwt.Parse(tokenstr, func(t *jwt.Token) (interface{}, error) {
@@ -269,7 +269,7 @@ func (s *AdminServer) ParseJwtToken(tokenstr string) (jwt.MapClaims, error) {
 	return claims, err
 }
 
-// ServerRecover Web 服务恢复处理中间件
+// ServerRecover is the web recovery middleware
 func ServerRecover(debug bool) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
@@ -290,7 +290,7 @@ func ServerRecover(debug bool) echo.MiddlewareFunc {
 	}
 }
 
-// skipFUnc Web 请求过滤中间件
+// skipFunc filters web requests in middleware
 func jwtSkipFunc() func(c echo.Context) bool {
 	return func(c echo.Context) bool {
 		if os.Getenv("TOUGHRADIUS_DEVMODE") == "true" {

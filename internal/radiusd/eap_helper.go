@@ -9,23 +9,23 @@ import (
 	"layeh.com/radius"
 )
 
-// EAPAuthHelper EAP 认证辅助工具
+// EAPAuthHelper EAP authentication helper
 type EAPAuthHelper struct {
 	coordinator *eap.Coordinator
 }
 
-// NewEAPAuthHelper 创建 EAP 认证辅助工具
+// NewEAPAuthHelper Create EAP authentication helper
 func NewEAPAuthHelper() *EAPAuthHelper {
-	// 创建状态管理器
+	// Createstate manager
 	stateManager := statemanager.NewMemoryStateManager()
 
-	// 创建密码提供者
+	// Createpassword provider
 	pwdProvider := eap.NewDefaultPasswordProvider()
 
-	// 获取处理器注册表
+	// gethandler registry
 	var handlerRegistry eap.HandlerRegistry = registry.GetGlobalRegistry()
 
-	// 创建协调器
+	// Createcoordinator
 	coordinator := eap.NewCoordinator(stateManager, pwdProvider, handlerRegistry)
 
 	return &EAPAuthHelper{
@@ -33,8 +33,8 @@ func NewEAPAuthHelper() *EAPAuthHelper {
 	}
 }
 
-// HandleEAPAuthentication 处理 EAP 认证
-// 返回 (handled bool, success bool, err error)
+// HandleEAPAuthentication Handle EAP authentication
+// Returns (handled bool, success bool, err error)
 func (h *EAPAuthHelper) HandleEAPAuthentication(
 	w radius.ResponseWriter,
 	r *radius.Request,
@@ -45,10 +45,10 @@ func (h *EAPAuthHelper) HandleEAPAuthentication(
 	eapMethod string,
 ) (handled bool, success bool, err error) {
 
-	// 判断是否为 MAC 认证
+	// Check if is MAC authentication
 	isMacAuth := vendorReq.MacAddr != "" && vendorReq.MacAddr == user.Username
 
-	// 调用协调器处理 EAP 请求
+	// Call coordinator to handle EAP request
 	handled, success, err = h.coordinator.HandleEAPRequest(
 		w, r, user, nas, response, nas.Secret, isMacAuth, eapMethod,
 	)
@@ -56,7 +56,7 @@ func (h *EAPAuthHelper) HandleEAPAuthentication(
 	return handled, success, err
 }
 
-// SendEAPSuccess 发送 EAP Success 响应
+// SendEAPSuccess Send EAP Success response
 func (h *EAPAuthHelper) SendEAPSuccess(
 	w radius.ResponseWriter,
 	r *radius.Request,
@@ -66,7 +66,7 @@ func (h *EAPAuthHelper) SendEAPSuccess(
 	return h.coordinator.SendEAPSuccess(w, r, response, secret)
 }
 
-// SendEAPFailure 发送 EAP Failure 响应
+// SendEAPFailure Send EAP Failure response
 func (h *EAPAuthHelper) SendEAPFailure(
 	w radius.ResponseWriter,
 	r *radius.Request,
@@ -76,12 +76,12 @@ func (h *EAPAuthHelper) SendEAPFailure(
 	return h.coordinator.SendEAPFailure(w, r, secret, reason)
 }
 
-// CleanupState 清理 EAP 状态
+// CleanupState Cleanup EAP Status
 func (h *EAPAuthHelper) CleanupState(r *radius.Request) {
 	h.coordinator.CleanupState(r)
 }
 
-// GetCoordinator 获取底层的协调器(用于高级用法)
+// GetCoordinator Get underlying coordinator(for advanced usage)
 func (h *EAPAuthHelper) GetCoordinator() *eap.Coordinator {
 	return h.coordinator
 }

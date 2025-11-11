@@ -10,7 +10,7 @@ import (
 	vendorparserspkg "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 )
 
-// Registry 插件注册中心
+// Registry holds plugin registrations
 type Registry struct {
 	passwordValidators map[string]auth.PasswordValidator
 	policyCheckers     []auth.PolicyChecker
@@ -19,7 +19,7 @@ type Registry struct {
 	vendorParsers      map[string]vendorparserspkg.VendorParser
 	vendorBuilders     map[string]vendorparserspkg.VendorResponseBuilder
 	acctHandlers       []accounting.AccountingHandler
-	eapHandlers        map[uint8]eap.EAPHandler // EAP处理器，按EAPType索引
+	eapHandlers        map[uint8]eap.EAPHandler // EAP handlers indexed by EAP type
 	mu                 sync.RWMutex
 }
 
@@ -38,14 +38,14 @@ func newRegistry() *Registry {
 	}
 }
 
-// RegisterPasswordValidator 注册密码验证器
+// RegisterPasswordValidator registers a password validator
 func RegisterPasswordValidator(validator auth.PasswordValidator) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.passwordValidators[validator.Name()] = validator
 }
 
-// GetPasswordValidators 获取所有密码验证器
+// GetPasswordValidators returns all password validators
 func GetPasswordValidators() []auth.PasswordValidator {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -57,7 +57,7 @@ func GetPasswordValidators() []auth.PasswordValidator {
 	return validators
 }
 
-// GetPasswordValidator 根据名称获取密码验证器
+// GetPasswordValidator returns a password validator by name
 func GetPasswordValidator(name string) (auth.PasswordValidator, bool) {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -65,35 +65,35 @@ func GetPasswordValidator(name string) (auth.PasswordValidator, bool) {
 	return v, ok
 }
 
-// RegisterPolicyChecker 注册策略检查器
+// RegisterPolicyChecker registers a profile checker
 func RegisterPolicyChecker(checker auth.PolicyChecker) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.policyCheckers = append(globalRegistry.policyCheckers, checker)
-	// 按Order排序
+	// Sort by order
 	sort.Slice(globalRegistry.policyCheckers, func(i, j int) bool {
 		return globalRegistry.policyCheckers[i].Order() < globalRegistry.policyCheckers[j].Order()
 	})
 }
 
-// GetPolicyCheckers 获取所有策略检查器（已按Order排序）
+// GetPolicyCheckers returns all profile checkers (sorted by order)
 func GetPolicyCheckers() []auth.PolicyChecker {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
-	// 返回副本
+	// Returns a copy
 	checkers := make([]auth.PolicyChecker, len(globalRegistry.policyCheckers))
 	copy(checkers, globalRegistry.policyCheckers)
 	return checkers
 }
 
-// RegisterResponseEnhancer 注册响应增强器
+// RegisterResponseEnhancer registers a response enhancer
 func RegisterResponseEnhancer(enhancer auth.ResponseEnhancer) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.responseEnhancers = append(globalRegistry.responseEnhancers, enhancer)
 }
 
-// GetResponseEnhancers 获取所有响应增强器
+// GetResponseEnhancers returns all response enhancers
 func GetResponseEnhancers() []auth.ResponseEnhancer {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -102,14 +102,14 @@ func GetResponseEnhancers() []auth.ResponseEnhancer {
 	return enhancers
 }
 
-// RegisterAuthGuard 注册认证守卫
+// RegisterAuthGuard registers an authentication guard
 func RegisterAuthGuard(guard auth.Guard) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.authGuards = append(globalRegistry.authGuards, guard)
 }
 
-// GetAuthGuards 获取所有认证守卫
+// GetAuthGuards returns all authentication guards
 func GetAuthGuards() []auth.Guard {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -118,34 +118,34 @@ func GetAuthGuards() []auth.Guard {
 	return guards
 }
 
-// RegisterVendorParser 注册厂商解析器
+// RegisterVendorParser registers a vendor parser
 func RegisterVendorParser(parser vendorparserspkg.VendorParser) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.vendorParsers[parser.VendorCode()] = parser
 }
 
-// GetVendorParser 获取厂商解析器
+// GetVendorParser returns a vendor parser
 func GetVendorParser(vendorCode string) (vendorparserspkg.VendorParser, bool) {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
 
 	parser, ok := globalRegistry.vendorParsers[vendorCode]
 	if !ok {
-		// 返回默认解析器
+		// Return the default parser
 		parser, ok = globalRegistry.vendorParsers["default"]
 	}
 	return parser, ok
 }
 
-// RegisterVendorResponseBuilder 注册厂商响应构建器
+// RegisterVendorResponseBuilder registers a vendor response builder
 func RegisterVendorResponseBuilder(builder vendorparserspkg.VendorResponseBuilder) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.vendorBuilders[builder.VendorCode()] = builder
 }
 
-// GetVendorResponseBuilder 获取厂商响应构建器
+// GetVendorResponseBuilder returns a vendor response builder
 func GetVendorResponseBuilder(vendorCode string) (vendorparserspkg.VendorResponseBuilder, bool) {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -153,14 +153,14 @@ func GetVendorResponseBuilder(vendorCode string) (vendorparserspkg.VendorRespons
 	return builder, ok
 }
 
-// RegisterAccountingHandler 注册计费处理器
+// RegisterAccountingHandler registers an accounting handler
 func RegisterAccountingHandler(handler accounting.AccountingHandler) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.acctHandlers = append(globalRegistry.acctHandlers, handler)
 }
 
-// GetAccountingHandlers 获取所有计费处理器
+// GetAccountingHandlers returns all accounting handlers
 func GetAccountingHandlers() []accounting.AccountingHandler {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -169,14 +169,14 @@ func GetAccountingHandlers() []accounting.AccountingHandler {
 	return handlers
 }
 
-// RegisterEAPHandler 注册 EAP 处理器
+// RegisterEAPHandler registers an EAP handler
 func RegisterEAPHandler(handler eap.EAPHandler) {
 	globalRegistry.mu.Lock()
 	defer globalRegistry.mu.Unlock()
 	globalRegistry.eapHandlers[handler.EAPType()] = handler
 }
 
-// GetEAPHandler 根据 EAP 类型获取处理器
+// GetEAPHandler returns the handler for a given EAP type
 func GetEAPHandler(eapType uint8) (eap.EAPHandler, bool) {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -184,7 +184,7 @@ func GetEAPHandler(eapType uint8) (eap.EAPHandler, bool) {
 	return handler, ok
 }
 
-// GetAllEAPHandlers 获取所有 EAP 处理器
+// GetAllEAPHandlers returns all EAP handlers
 func GetAllEAPHandlers() map[uint8]eap.EAPHandler {
 	globalRegistry.mu.RLock()
 	defer globalRegistry.mu.RUnlock()
@@ -195,7 +195,7 @@ func GetAllEAPHandlers() map[uint8]eap.EAPHandler {
 	return handlers
 }
 
-// GetHandler 实现 eap.HandlerRegistry 接口
+// GetHandler implements the eap.HandlerRegistry interface
 func (r *Registry) GetHandler(eapType uint8) (eap.EAPHandler, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -203,8 +203,8 @@ func (r *Registry) GetHandler(eapType uint8) (eap.EAPHandler, bool) {
 	return handler, ok
 }
 
-// GetGlobalRegistry 获取全局注册表实例
-// 用于实现 eap.HandlerRegistry 接口
+// GetGlobalRegistry returns the global registry instance
+// Used to implement the eap.HandlerRegistry interface
 func GetGlobalRegistry() *Registry {
 	return globalRegistry
 }

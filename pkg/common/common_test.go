@@ -76,7 +76,7 @@ func TestToSnakeCase1(t *testing.T) {
 }
 
 func TestUnicode(t *testing.T) {
-	s, _ := ToGbkHexString("好")
+	s, _ := ToGbkHexString("ok")
 	fmt.Println(url.QueryEscape(s))
 }
 

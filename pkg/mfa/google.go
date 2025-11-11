@@ -78,7 +78,7 @@ func (ga *GoogleAuth) oneTimePassword(key []byte, data []byte) uint32 {
 	return number % 1000000
 }
 
-// 获取秘钥
+// Get secret
 func (ga *GoogleAuth) GetSecret() string {
 	var buf bytes.Buffer
 	binary.Write(&buf, binary.BigEndian, ga.un())

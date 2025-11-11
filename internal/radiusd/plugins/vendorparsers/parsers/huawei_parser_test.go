@@ -96,7 +96,7 @@ func TestHuaweiParser_Parse_NoAttributes(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, vr)
 
-	// 没有任何属性时，应该返回空的 VendorRequest
+	// When no attributes are present, should return an empty VendorRequest
 	assert.Equal(t, "", vr.MacAddr)
 	assert.Equal(t, int64(0), vr.Vlanid1)
 	assert.Equal(t, int64(0), vr.Vlanid2)

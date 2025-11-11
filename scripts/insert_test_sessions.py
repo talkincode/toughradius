@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import os
 import sys
 
-# 数据库文件路径
+# Database file path
 db_path = "rundata/data/toughradius.db"
 
 
@@ -17,11 +17,11 @@ def main():
         print("提示: 请先运行 ToughRADIUS 以创建数据库")
         sys.exit(1)
 
-    # 连接数据库
+# Connect to the database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-    # 检查表是否存在
+# Check if the tables exist
     cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='radius_online'"
     )
@@ -29,11 +29,11 @@ def main():
         print("❌ radius_online 表不存在")
         sys.exit(1)
 
-    # 清空现有测试数据
+# Clear existing test data
     cursor.execute("DELETE FROM radius_online")
     print("✓ 已清空现有在线会话数据")
 
-    # 测试数据: (username, nas_id, nas_addr, nas_paddr, session_timeout, framed_ipaddr,
+# Test data: (username, nas_id, nas_addr, nas_paddr, session_timeout, framed_ipaddr,
     #            framed_netmask, mac_addr, nas_port, nas_class, nas_port_id, nas_port_type,
     #            service_type, acct_session_id, acct_session_time, acct_input_total,
     #            acct_output_total, acct_input_packets, acct_output_packets,
@@ -345,7 +345,7 @@ def main():
     conn.commit()
     print(f"✓ 成功插入 {inserted_count} 条在线会话记录")
 
-    # 显示插入的数据
+# Display inserted records
     print("\n📊 当前在线会话:")
     cursor.execute(
         """

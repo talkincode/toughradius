@@ -7,55 +7,55 @@ import (
 	"layeh.com/radius"
 )
 
-// AuthContext 认证上下文
+// AuthContext represents the authentication context
 type AuthContext struct {
 	Request       *radius.Request
 	Response      *radius.Packet
 	User          *domain.RadiusUser
 	Nas           *domain.NetNas
 	VendorRequest interface{}
-	IsMacAuth     bool                   // 是否为MAC认证
-	Metadata      map[string]interface{} // 额外的元数据
+	IsMacAuth     bool                   // whether this is MAC authentication
+	Metadata      map[string]interface{} // Additional metadata
 }
 
-// PasswordValidator 密码验证器接口
+// PasswordValidator defines the password validation interface
 type PasswordValidator interface {
-	// Name 返回验证器名称 (pap, chap, mschap, eap-md5, etc.)
+	// Name returns the validator name (pap, chap, mschap, eap-md5, etc.)
 	Name() string
 
-	// CanHandle 判断是否可以处理该请求
+	// CanHandle determines whether this validator can handle the request
 	CanHandle(ctx *AuthContext) bool
 
-	// Validate 执行密码验证
+	// Validate performs password validation
 	Validate(ctx context.Context, authCtx *AuthContext, password string) error
 }
 
-// PolicyChecker 策略检查器接口
+// PolicyChecker defines the profile check interface
 type PolicyChecker interface {
-	// Name 返回检查器名称
+	// Name returns the checker's name
 	Name() string
 
-	// Check 执行策略检查
+	// Check executes the profile check
 	Check(ctx context.Context, authCtx *AuthContext) error
 
-	// Order 返回执行顺序（数字越小越先执行）
+	// Order returns the execution order (lower digits run first)
 	Order() int
 }
 
-// ResponseEnhancer 响应增强器接口
+// ResponseEnhancer defines the response enhancement interface
 type ResponseEnhancer interface {
-	// Name 返回增强器名称
+	// Name returns the enhancer name
 	Name() string
 
-	// Enhance 增强响应内容（添加厂商属性等）
+	// Enhance augments the response (e.g., add vendor attributes)
 	Enhance(ctx context.Context, authCtx *AuthContext) error
 }
 
-// Guard 认证守卫，用于统一处理认证过程中的错误（如拒绝延迟、黑名单等）
+// Guard handles authentication errors uniformly (e.g., reject delay, blacklist)
 type Guard interface {
-	// Name 返回守卫名称
+	// Name returns the guard name
 	Name() string
 
-	// OnError 在认证流程发生错误时被调用，可以返回新的错误中断流程
+	// OnError is called when an error occurs during authentication; it can return a new error to abort the flow
 	OnError(ctx context.Context, authCtx *AuthContext, stage string, err error) error
 }

@@ -46,21 +46,21 @@ func TestZTEParser_Parse(t *testing.T) {
 		{
 			name:           "mixed case MAC - preserves case",
 			callingStation: "AaBbCcDdEeFf",
-			expectedMac:    "Aa:Bb:Cc:Dd:Ee:Ff", // 保持原始大小写
+			expectedMac:    "Aa:Bb:Cc:Dd:Ee:Ff", // Preserve the original casing
 			expectedVlan1:  0,
 			expectedVlan2:  0,
 		},
 		{
 			name:           "MAC already with colons - parses first 12 chars",
 			callingStation: "00:11:22:33:44:55",
-			expectedMac:    "00::1:1::22::3:3:", // 按12位解析（包含冒号）
+			expectedMac:    "00::1:1::22::3:3:", // Parse as a 12-digit string (includes colons)
 			expectedVlan1:  0,
 			expectedVlan2:  0,
 		},
 		{
 			name:           "MAC with dashes - parses first 12 chars",
 			callingStation: "00-11-22-33-44-55",
-			expectedMac:    "00:-1:1-:22:-3:3-", // 按12位解析（包含破折号）
+			expectedMac:    "00:-1:1-:22:-3:3-", // Parse as a 12-digit string (includes hyphens)
 			expectedVlan1:  0,
 			expectedVlan2:  0,
 		},
@@ -74,14 +74,14 @@ func TestZTEParser_Parse(t *testing.T) {
 		{
 			name:           "short MAC (less than 12 chars) - warning logged",
 			callingStation: "aabbccdd",
-			expectedMac:    "", // 长度不足，不处理
+			expectedMac:    "", // Length insufficient; do not handle
 			expectedVlan1:  0,
 			expectedVlan2:  0,
 		},
 		{
 			name:           "13-char MAC - uses first 12 chars",
 			callingStation: "aabbccddeeff1",
-			expectedMac:    "aa:bb:cc:dd:ee:ff", // 只取前12位
+			expectedMac:    "aa:bb:cc:dd:ee:ff", // Only use the first 12 digits
 			expectedVlan1:  0,
 			expectedVlan2:  0,
 		},

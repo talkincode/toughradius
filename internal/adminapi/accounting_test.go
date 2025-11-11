@@ -18,11 +18,11 @@ func TestListAccounting(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 迁移表结构
+	// Migratetable structure
 	err := db.AutoMigrate(&domain.RadiusAccounting{})
 	require.NoError(t, err)
 
-	// 插入测试数据
+	// Insert test data
 	now := time.Now()
 	testRecords := []domain.RadiusAccounting{
 		{
@@ -62,7 +62,7 @@ func TestListAccounting(t *testing.T) {
 		checkFunc      func(*testing.T, *Response)
 	}{
 		{
-			name: "获取所有记录",
+			name: "List all records",
 			queryParams: map[string]string{
 				"page":    "1",
 				"perPage": "10",
@@ -77,7 +77,7 @@ func TestListAccounting(t *testing.T) {
 			},
 		},
 		{
-			name: "分页测试",
+			name: "Pagination test",
 			queryParams: map[string]string{
 				"page":    "1",
 				"perPage": "1",
@@ -90,7 +90,7 @@ func TestListAccounting(t *testing.T) {
 			},
 		},
 		{
-			name: "按用户名过滤",
+			name: "Filter by username",
 			queryParams: map[string]string{
 				"page":     "1",
 				"perPage":  "10",
@@ -103,7 +103,7 @@ func TestListAccounting(t *testing.T) {
 			},
 		},
 		{
-			name: "按NAS地址过滤",
+			name: "Filter by NAS address",
 			queryParams: map[string]string{
 				"page":     "1",
 				"perPage":  "10",
@@ -113,7 +113,7 @@ func TestListAccounting(t *testing.T) {
 			expectedCount:  1,
 		},
 		{
-			name: "排序测试",
+			name: "Sorting test",
 			queryParams: map[string]string{
 				"page":    "1",
 				"perPage": "10",
@@ -145,7 +145,7 @@ func TestListAccounting(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &resp)
 			assert.NoError(t, err)
 
-			// 检查数据数组
+			// Check data array
 			dataArray, ok := resp.Data.([]interface{})
 			assert.True(t, ok, "Data should be an array")
 			assert.Equal(t, tt.expectedCount, len(dataArray))
@@ -161,11 +161,11 @@ func TestGetAccounting(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 迁移表结构
+	// Migratetable structure
 	err := db.AutoMigrate(&domain.RadiusAccounting{})
 	require.NoError(t, err)
 
-	// 插入测试数据
+	// Insert test data
 	now := time.Now()
 	testRecord := domain.RadiusAccounting{
 		Username:          "user1@test.com",
@@ -191,7 +191,7 @@ func TestGetAccounting(t *testing.T) {
 		checkFunc      func(*testing.T, *Response)
 	}{
 		{
-			name:           "成功获取记录",
+			name:           "Successfully retrieve record",
 			id:             "1",
 			expectedStatus: http.StatusOK,
 			checkFunc: func(t *testing.T, resp *Response) {
@@ -202,12 +202,12 @@ func TestGetAccounting(t *testing.T) {
 			},
 		},
 		{
-			name:           "无效的ID",
+			name:           "Invalid ID",
 			id:             "invalid",
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "记录不存在",
+			name:           "Record not found",
 			id:             "999",
 			expectedStatus: http.StatusNotFound,
 		},
@@ -242,11 +242,11 @@ func TestAccountingFilters(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 迁移表结构
+	// Migratetable structure
 	err := db.AutoMigrate(&domain.RadiusAccounting{})
 	require.NoError(t, err)
 
-	// 插入不同时间的测试数据
+	// Insert test data with different times
 	now := time.Now()
 	testRecords := []domain.RadiusAccounting{
 		{
@@ -280,7 +280,7 @@ func TestAccountingFilters(t *testing.T) {
 		expectedCount int
 	}{
 		{
-			name: "按会话ID过滤",
+			name: "Filter by session ID",
 			queryParams: map[string]string{
 				"page":            "1",
 				"perPage":         "10",
@@ -289,13 +289,13 @@ func TestAccountingFilters(t *testing.T) {
 			expectedCount: 1,
 		},
 		{
-			name: "时间范围过滤 - 开始时间",
+			name: "Time range filter - start time",
 			queryParams: map[string]string{
 				"page":       "1",
 				"perPage":    "10",
 				"start_time": now.Add(-90 * time.Minute).Format(time.RFC3339),
 			},
-			expectedCount: 1, // 只有 user2 (1小时前) 满足条件
+			expectedCount: 1, // Only user2 (1hour(s) ago) meets condition
 		},
 	}
 

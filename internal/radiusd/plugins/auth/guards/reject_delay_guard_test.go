@@ -41,13 +41,13 @@ func TestRejectDelayGuard_OnError_RejectLimit(t *testing.T) {
 
 	testErr := errors.New("auth failed")
 
-	// 测试拒绝次数累计
+	// Test rejection count accumulation
 	for i := int64(0); i <= guard.maxRejects; i++ {
 		err := guard.OnError(ctx, authCtx, "test", testErr)
 		require.NoError(t, err)
 	}
 
-	// 超过限制后应该返回限流错误
+	// After exceeding the limit, should return a rate-limit error
 	err := guard.OnError(ctx, authCtx, "test", testErr)
 	require.Error(t, err)
 	authErr, ok := radiusErrors.GetAuthError(err)
@@ -57,7 +57,7 @@ func TestRejectDelayGuard_OnError_RejectLimit(t *testing.T) {
 
 func TestRejectDelayGuard_OnError_ResetWindow(t *testing.T) {
 	guard := NewRejectDelayGuard()
-	guard.resetAfter = 100 * time.Millisecond // 缩短重置时间以加快测试
+	guard.resetAfter = 100 * time.Millisecond // Shorten the reset window to speed up the test
 	ctx := context.Background()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
@@ -69,19 +69,19 @@ func TestRejectDelayGuard_OnError_ResetWindow(t *testing.T) {
 
 	testErr := errors.New("auth failed")
 
-	// 累计拒绝次数到限制
+		// Accumulate rejection counts up to the limit
 	for i := int64(0); i <= guard.maxRejects; i++ {
 		_ = guard.OnError(ctx, authCtx, "test", testErr)
 	}
 
-	// 超过限制
+		// Exceed the limit
 	err := guard.OnError(ctx, authCtx, "test", testErr)
 	require.Error(t, err)
 
-	// 等待重置窗口过期
+		// Wait for the reset window to expire
 	time.Sleep(guard.resetAfter + 50*time.Millisecond)
 
-	// 应该可以再次认证（计数器被重置）
+		// Should be able to authenticate again (counter reset)
 	err = guard.OnError(ctx, authCtx, "test", testErr)
 	require.NoError(t, err)
 }
@@ -92,7 +92,7 @@ func TestRejectDelayGuard_OnError_DifferentUsers(t *testing.T) {
 
 	testErr := errors.New("auth failed")
 
-	// 用户1累计到限制
+	// User1 reaches the limit
 	packet1 := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet1, "user1")
 	authCtx1 := &auth.AuthContext{
@@ -103,11 +103,11 @@ func TestRejectDelayGuard_OnError_DifferentUsers(t *testing.T) {
 		_ = guard.OnError(ctx, authCtx1, "test", testErr)
 	}
 
-	// 用户1超过限制
+	// User1 exceeds the limit
 	err := guard.OnError(ctx, authCtx1, "test", testErr)
 	require.Error(t, err)
 
-	// 用户2应该不受影响
+	// User2 should remain unaffected
 	packet2 := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet2, "user2")
 	authCtx2 := &auth.AuthContext{
@@ -195,11 +195,11 @@ func TestRejectDelayGuard_OnError_AnonymousUser(t *testing.T) {
 	guard := NewRejectDelayGuard()
 	ctx := context.Background()
 
-	// 无用户名的请求
+	// Request without a username
 	authCtx := &auth.AuthContext{}
 	testErr := errors.New("auth failed")
 
-	// 应该使用 "anonymous" 作为用户名
+	// Should use "anonymous" as the username
 	for i := int64(0); i <= guard.maxRejects; i++ {
 		_ = guard.OnError(ctx, authCtx, "test", testErr)
 	}
@@ -214,7 +214,7 @@ func TestRejectDelayGuard_CacheLimit(t *testing.T) {
 
 	testErr := errors.New("auth failed")
 
-	// 添加大量不同的用户，测试缓存清理
+	// Add a large number of distinct users to test cache cleanup
 	for i := 0; i < maxCachedRejectItems+100; i++ {
 		packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 		username := "user_" + string(rune(i))
@@ -227,7 +227,7 @@ func TestRejectDelayGuard_CacheLimit(t *testing.T) {
 		guard.OnError(ctx, authCtx, "test", testErr)
 	}
 
-	// 验证缓存大小不超过限制
+	// Validate that cache size stays within the limit
 	guard.mu.RLock()
 	cacheSize := len(guard.items)
 	guard.mu.RUnlock()

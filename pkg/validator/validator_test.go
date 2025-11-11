@@ -6,13 +6,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// 注意：这些测试需要先安装 validator 包
+// Note: these tests require the validator package to be installed
 // go get github.com/go-playground/validator/v10
 
-// TestProfileValidation 示例：Profile 验证测试
+// TestProfileValidation example: profile validation
 func TestProfileValidation(t *testing.T) {
-	// 如果没有安装 validator，跳过测试
-	t.Skip("需要先安装 go-playground/validator: go get github.com/go-playground/validator/v10")
+	// e.g., if the validator package is not installed, skip the test
+	t.Skip("Please install go-playground/validator: go get github.com/go-playground/validator/v10")
 
 	validator := NewValidator()
 
@@ -31,7 +31,7 @@ func TestProfileValidation(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "有效的请求",
+			name: "Valid request",
 			request: ProfileRequest{
 				Name:      "test-profile",
 				Status:    "enabled",
@@ -43,14 +43,14 @@ func TestProfileValidation(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "名称为空 - 应该失败",
+			name: "Empty name - should fail",
 			request: ProfileRequest{
 				Name: "",
 			},
 			wantErr: true,
 		},
 		{
-			name: "状态值无效 - 应该失败",
+			name: "Invalid status value - should fail",
 			request: ProfileRequest{
 				Name:   "test",
 				Status: "invalid",
@@ -58,7 +58,7 @@ func TestProfileValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "速率超出范围 - 应该失败",
+			name: "Rate out of range - should fail",
 			request: ProfileRequest{
 				Name:   "test",
 				UpRate: 99999999,
@@ -66,7 +66,7 @@ func TestProfileValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "并发数超出范围 - 应该失败",
+			name: "Concurrent sessions out of range - should fail",
 			request: ProfileRequest{
 				Name:      "test",
 				ActiveNum: 200,
@@ -74,10 +74,10 @@ func TestProfileValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "地址池格式错误 - 应该失败",
+			name: "Invalid address pool format - should fail",
 			request: ProfileRequest{
 				Name:     "test",
-				AddrPool: "192.168.1.0", // 缺少掩码
+				AddrPool: "192.168.1.0", // Missing subnet mask
 			},
 			wantErr: true,
 		},
@@ -95,9 +95,9 @@ func TestProfileValidation(t *testing.T) {
 	}
 }
 
-// TestUserValidation 示例：User 验证测试
+// TestUserValidation example: user validation
 func TestUserValidation(t *testing.T) {
-	t.Skip("需要先安装 go-playground/validator")
+	t.Skip("Please install go-playground/validator")
 
 	validator := NewValidator()
 
@@ -115,7 +115,7 @@ func TestUserValidation(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "有效的用户",
+			name: "Valid user",
 			request: UserRequest{
 				Username: "testuser",
 				Password: "password123",
@@ -126,7 +126,7 @@ func TestUserValidation(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "用户名太短",
+			name: "Username too short",
 			request: UserRequest{
 				Username: "ab",
 				Password: "password123",
@@ -135,7 +135,7 @@ func TestUserValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "密码太短",
+			name: "Password too short",
 			request: UserRequest{
 				Username: "testuser",
 				Password: "12345",
@@ -144,7 +144,7 @@ func TestUserValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "邮箱格式错误",
+			name: "Invalid email format",
 			request: UserRequest{
 				Username: "testuser",
 				Password: "password123",
@@ -154,7 +154,7 @@ func TestUserValidation(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "手机号长度错误",
+			name: "Invalid mobile length",
 			request: UserRequest{
 				Username: "testuser",
 				Password: "password123",
@@ -177,13 +177,13 @@ func TestUserValidation(t *testing.T) {
 	}
 }
 
-// TestCustomValidations 测试自定义验证规则
+// TestCustomValidations tests custom validation rules
 func TestCustomValidations(t *testing.T) {
-	t.Skip("需要先安装 go-playground/validator")
+	t.Skip("Please install go-playground/validator")
 
 	validator := NewValidator()
 
-	t.Run("地址池验证", func(t *testing.T) {
+	t.Run("Address pool validation", func(t *testing.T) {
 		type Request struct {
 			AddrPool string `validate:"addrpool"`
 		}
@@ -197,7 +197,7 @@ func TestCustomValidations(t *testing.T) {
 		for _, pool := range validCases {
 			req := Request{AddrPool: pool}
 			err := validator.Validate(&req)
-			assert.NoError(t, err, "地址池 %s 应该是有效的", pool)
+			assert.NoError(t, err, "Address pool %s should be valid", pool)
 		}
 
 		invalidCases := []string{
@@ -209,11 +209,11 @@ func TestCustomValidations(t *testing.T) {
 		for _, pool := range invalidCases {
 			req := Request{AddrPool: pool}
 			err := validator.Validate(&req)
-			assert.Error(t, err, "地址池 %s 应该是无效的", pool)
+			assert.Error(t, err, "Address pool %s should be invalid", pool)
 		}
 	})
 
-	t.Run("RADIUS 状态验证", func(t *testing.T) {
+	t.Run("RADIUS status validation", func(t *testing.T) {
 		type Request struct {
 			Status string `validate:"radiusstatus"`
 		}
@@ -222,18 +222,18 @@ func TestCustomValidations(t *testing.T) {
 		for _, status := range validStatuses {
 			req := Request{Status: status}
 			err := validator.Validate(&req)
-			assert.NoError(t, err, "状态 %s 应该是有效的", status)
+			assert.NoError(t, err, "Status %s should be valid", status)
 		}
 
 		invalidStatuses := []string{"active", "inactive", "pending"}
 		for _, status := range invalidStatuses {
 			req := Request{Status: status}
 			err := validator.Validate(&req)
-			assert.Error(t, err, "状态 %s 应该是无效的", status)
+			assert.Error(t, err, "Status %s should be invalid", status)
 		}
 	})
 
-	t.Run("用户名验证", func(t *testing.T) {
+	t.Run("Username validation", func(t *testing.T) {
 		type Request struct {
 			Username string `validate:"username"`
 		}
@@ -249,19 +249,19 @@ func TestCustomValidations(t *testing.T) {
 		for _, username := range validUsernames {
 			req := Request{Username: username}
 			err := validator.Validate(&req)
-			assert.NoError(t, err, "用户名 %s 应该是有效的", username)
+			assert.NoError(t, err, "Username %s should be valid", username)
 		}
 
 		invalidUsernames := []string{
-			"test user",  // 包含空格
-			"test#user",  // 包含特殊字符
-			"测试用户",     // 包含中文
+			"test user",  // Contains a space
+			"test#user",  // Contains special characters
+			"userΩ",      // Contains a non-Latin character
 		}
 
 		for _, username := range invalidUsernames {
 			req := Request{Username: username}
 			err := validator.Validate(&req)
-			assert.Error(t, err, "用户名 %s 应该是无效的", username)
+			assert.Error(t, err, "Username %s should be invalid", username)
 		}
 	})
 }

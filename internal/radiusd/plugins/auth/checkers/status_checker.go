@@ -8,7 +8,7 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// StatusChecker 用户状态检查器
+// StatusChecker verifies user status
 type StatusChecker struct{}
 
 func (c *StatusChecker) Name() string {
@@ -16,7 +16,7 @@ func (c *StatusChecker) Name() string {
 }
 
 func (c *StatusChecker) Order() int {
-	return 5 // 很早执行
+	return 5 // Execute early
 }
 
 func (c *StatusChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {

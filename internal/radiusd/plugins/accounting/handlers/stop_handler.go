@@ -9,13 +9,13 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-// StopHandler 计费停止处理器
+// StopHandler Accounting Stop handler
 type StopHandler struct {
 	sessionRepo    repository.SessionRepository
 	accountingRepo repository.AccountingRepository
 }
 
-// NewStopHandler 创建计费停止处理器
+// NewStopHandler CreateAccounting Stop handler
 func NewStopHandler(
 	sessionRepo repository.SessionRepository,
 	accountingRepo repository.AccountingRepository,
@@ -40,11 +40,11 @@ func (h *StopHandler) Handle(acctCtx *accounting.AccountingContext) error {
 		vendorReq = &vendorparserspkg.VendorRequest{}
 	}
 
-	// 构建在线会话数据
+	// Build online session data
 	online := buildOnlineFromRequest(acctCtx, vendorReq)
 	sessionId := rfc2866.AcctSessionID_GetString(acctCtx.Request.Packet)
 
-	// 更新计费记录的停止时间
+	// Update accounting record stop time
 	acctRecord := domain.RadiusAccounting{
 		AcctInputTotal:    online.AcctInputTotal,
 		AcctOutputTotal:   online.AcctOutputTotal,
@@ -63,7 +63,7 @@ func (h *StopHandler) Handle(acctCtx *accounting.AccountingContext) error {
 		)
 	}
 
-	// 删除在线会话
+	// Delete the online session
 	err = h.sessionRepo.Delete(acctCtx.Context, sessionId)
 	if err != nil {
 		zap.L().Error("delete radius online error",

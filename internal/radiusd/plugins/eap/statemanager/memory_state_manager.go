@@ -7,20 +7,20 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 )
 
-// MemoryStateManager 基于内存的 EAP 状态管理器
+// MemoryStateManager is an in-memory EAP state manager
 type MemoryStateManager struct {
 	states map[string]*eap.EAPState
 	mu     sync.RWMutex
 }
 
-// NewMemoryStateManager 创建新的内存状态管理器
+// NewMemoryStateManager creates a new in-memory state manager
 func NewMemoryStateManager() *MemoryStateManager {
 	return &MemoryStateManager{
 		states: make(map[string]*eap.EAPState),
 	}
 }
 
-// GetState 获取 EAP 状态
+// GetState get EAP Status
 func (m *MemoryStateManager) GetState(stateID string) (*eap.EAPState, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
@@ -30,7 +30,7 @@ func (m *MemoryStateManager) GetState(stateID string) (*eap.EAPState, error) {
 		return nil, errors.New("state not found")
 	}
 
-	// 返回副本以避免并发修改
+	// Returns a copy to avoid concurrent modification
 	stateCopy := *state
 	if state.Data != nil {
 		stateCopy.Data = make(map[string]interface{})
@@ -42,12 +42,12 @@ func (m *MemoryStateManager) GetState(stateID string) (*eap.EAPState, error) {
 	return &stateCopy, nil
 }
 
-// SetState 设置 EAP 状态
+// SetState stores the EAP status
 func (m *MemoryStateManager) SetState(stateID string, state *eap.EAPState) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	// 存储副本以避免外部修改
+	// Store a copy to avoid external modification
 	stateCopy := *state
 	if state.Data != nil {
 		stateCopy.Data = make(map[string]interface{})
@@ -60,7 +60,7 @@ func (m *MemoryStateManager) SetState(stateID string, state *eap.EAPState) error
 	return nil
 }
 
-// DeleteState 删除 EAP 状态
+// DeleteState Delete EAP Status
 func (m *MemoryStateManager) DeleteState(stateID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

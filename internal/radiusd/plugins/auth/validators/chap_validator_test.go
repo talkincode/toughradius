@@ -69,21 +69,21 @@ func TestCHAPValidator_Validate(t *testing.T) {
 			name:     "valid chap authentication",
 			password: "testpass123",
 			setupPacket: func(packet *radius.Packet, password string) {
-				// 构造有效的 CHAP 密码
+				// Construct a valid CHAP password
 				chapID := byte(1)
 				challenge := make([]byte, 16)
 				for i := range challenge {
 					challenge[i] = byte(i)
 				}
 
-				// 计算 CHAP 响应
+				// Compute the CHAP response
 				w := md5.New()
 				w.Write([]byte{chapID})
 				w.Write([]byte(password))
 				w.Write(challenge)
 				response := w.Sum(nil)
 
-				// 构造 CHAP Password (ID + Response)
+				// Construct the CHAP password (ID + response)
 				chapPassword := make([]byte, 17)
 				chapPassword[0] = chapID
 				copy(chapPassword[1:], response)
@@ -103,7 +103,7 @@ func TestCHAPValidator_Validate(t *testing.T) {
 					challenge[i] = byte(i)
 				}
 
-				// 使用错误的密码计算
+				// Use an incorrect password for computation
 				w := md5.New()
 				w.Write([]byte{chapID})
 				w.Write([]byte("wrongpassword"))
@@ -123,7 +123,7 @@ func TestCHAPValidator_Validate(t *testing.T) {
 			name:     "invalid chap password length",
 			password: "testpass123",
 			setupPacket: func(packet *radius.Packet, password string) {
-				// 长度不正确的 CHAP Password
+				// CHAP password with an incorrect length
 				chapPassword := make([]byte, 10)
 				challenge := make([]byte, 16)
 
@@ -138,7 +138,7 @@ func TestCHAPValidator_Validate(t *testing.T) {
 			password: "testpass123",
 			setupPacket: func(packet *radius.Packet, password string) {
 				chapPassword := make([]byte, 17)
-				// 长度不正确的 Challenge
+				// Challenge with incorrect length
 				challenge := make([]byte, 8)
 
 				rfc2865.CHAPPassword_Add(packet, chapPassword)

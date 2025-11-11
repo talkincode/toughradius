@@ -15,31 +15,31 @@ func TestNewAuthError(t *testing.T) {
 		expected string
 	}{
 		{
-			name:     "用户不存在错误",
+			name:     "User not found error",
 			errType:  app.MetricsRadiusRejectNotExists,
 			errMsg:   "user not exists",
 			expected: "user not exists",
 		},
 		{
-			name:     "用户已禁用错误",
+			name:     "User disabled error",
 			errType:  app.MetricsRadiusRejectDisable,
 			errMsg:   "user status is disabled",
 			expected: "user status is disabled",
 		},
 		{
-			name:     "用户过期错误",
+			name:     "User expired error",
 			errType:  app.MetricsRadiusRejectExpire,
 			errMsg:   "user expire",
 			expected: "user expire",
 		},
 		{
-			name:     "未授权访问错误",
+			name:     "Unauthorized access error",
 			errType:  app.MetricsRadiusRejectUnauthorized,
 			errMsg:   "unauthorized access",
 			expected: "unauthorized access",
 		},
 		{
-			name:     "速率限制错误",
+			name:     "Rate limit error",
 			errType:  app.MetricsRadiusRejectLimit,
 			errMsg:   "there is a authentication still in process",
 			expected: "there is a authentication still in process",
@@ -50,22 +50,22 @@ func TestNewAuthError(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			authErr := NewAuthError(tt.errType, tt.errMsg)
 
-			// 测试 AuthError 的创建
+			// Test creating an AuthError
 			if authErr == nil {
 				t.Fatal("NewAuthError returned nil")
 			}
 
-			// 测试 Type 字段
+			// Test Type field
 			if authErr.Type != tt.errType {
 				t.Errorf("expected Type = %s, got %s", tt.errType, authErr.Type)
 			}
 
-			// 测试 Error() 方法
+			// Test the Error() method
 			if authErr.Error() != tt.expected {
 				t.Errorf("expected Error() = %s, got %s", tt.expected, authErr.Error())
 			}
 
-			// 测试内部 Err 字段
+			// Test the internal Err field
 			if authErr.Err == nil {
 				t.Error("Err field should not be nil")
 			}
@@ -80,10 +80,10 @@ func TestNewAuthError(t *testing.T) {
 func TestAuthErrorImplementsError(t *testing.T) {
 	authErr := NewAuthError(app.MetricsRadiusRejectNotExists, "test error")
 
-	// 验证 AuthError 实现了 error 接口
+	// Validate that AuthError implements the error interface
 	var _ error = authErr
 
-	// 测试是否可以作为普通 error 使用
+	// Test whether it can be used as a standard error
 	err := error(authErr)
 	if err.Error() != "test error" {
 		t.Errorf("expected error message = 'test error', got %s", err.Error())
@@ -95,7 +95,7 @@ func TestAuthErrorComparison(t *testing.T) {
 	err2 := NewAuthError(app.MetricsRadiusRejectNotExists, "user not found")
 	err3 := NewAuthError(app.MetricsRadiusRejectDisable, "user disabled")
 
-	// 测试相同类型和消息的错误
+	// Test errors with the same type and message
 	if err1.Type != err2.Type {
 		t.Error("errors with same type should have same Type field")
 	}
@@ -104,7 +104,7 @@ func TestAuthErrorComparison(t *testing.T) {
 		t.Error("errors with same message should return same Error()")
 	}
 
-	// 测试不同类型的错误
+	// Test errors with different types
 	if err1.Type == err3.Type {
 		t.Error("errors with different types should have different Type field")
 	}
@@ -113,12 +113,12 @@ func TestAuthErrorComparison(t *testing.T) {
 func TestAuthErrorIsError(t *testing.T) {
 	authErr := NewAuthError(app.MetricsRadiusRejectNotExists, "test error")
 
-	// 测试使用 errors.Is 比较
+	// Test comparisons using errors.Is
 	if !errors.Is(authErr, authErr) {
 		t.Error("AuthError should be equal to itself using errors.Is")
 	}
 
-	// 测试与其他错误比较
+	// Test comparisons with other errors
 	otherErr := errors.New("test error")
 	if errors.Is(authErr, otherErr) {
 		t.Error("AuthError should not be equal to a different error")
@@ -134,7 +134,7 @@ func TestAuthErrorEmptyMessage(t *testing.T) {
 }
 
 func TestAuthErrorType(t *testing.T) {
-	// 测试所有已知的错误类型常量
+	// Test all known error type constants
 	errorTypes := []string{
 		app.MetricsRadiusRejectNotExists,
 		app.MetricsRadiusRejectDisable,
@@ -158,7 +158,7 @@ func TestAuthErrorType(t *testing.T) {
 func TestAuthErrorWrapping(t *testing.T) {
 	authErr := NewAuthError(app.MetricsRadiusRejectNotExists, "user not exists")
 
-	// 测试错误包装
+	// Test error wrapping
 	wrappedErr := errors.New("wrapped: " + authErr.Error())
 	if wrappedErr.Error() != "wrapped: user not exists" {
 		t.Errorf("error wrapping failed, got: %s", wrappedErr.Error())

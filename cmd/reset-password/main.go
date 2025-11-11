@@ -28,24 +28,24 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 加载配置
+	// Loadconfiguration
 	_config := config.LoadConfig(*conffile)
 
-	// 初始化应用
+	// Initialize the application
 	app.InitGlobalApplication(_config)
 	defer app.Release()
 
-	// 计算新密码的哈希值
+	// Compute the hash for the new password
 	hashedPassword := common.Sha256HashWithSalt(*password, common.SecretSalt)
 
-	// 查找用户
+	// Find the user
 	var operator domain.SysOpr
 	result := app.GDB().Where("username = ?", *username).First(&operator)
 	if result.Error != nil {
 		log.Fatalf("Failed to find user '%s': %v", *username, result.Error)
 	}
 
-	// 更新密码
+	// Update the password
 	result = app.GDB().Model(&operator).Update("password", hashedPassword)
 	if result.Error != nil {
 		log.Fatalf("Failed to update password: %v", result.Error)

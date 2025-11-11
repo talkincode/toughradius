@@ -15,7 +15,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// handleTestError 处理测试中的 Echo HTTP 错误
+// handleTestError handles Echo HTTP errors during tests
 func handleTestError(rec *httptest.ResponseRecorder, err error) {
 	if err != nil {
 		if he, ok := err.(*echo.HTTPError); ok {
@@ -28,7 +28,7 @@ func handleTestError(rec *httptest.ResponseRecorder, err error) {
 	}
 }
 
-// createTestNode 创建测试 Node 数据
+// createTestNode creates test node data
 func createTestNode(db *gorm.DB, name string) *domain.NetNode {
 	node := &domain.NetNode{
 		Name:      name,
@@ -45,7 +45,7 @@ func TestListNodes(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	createTestNode(db, "node1")
 	createTestNode(db, "node2")
 	createTestNode(db, "node3")
@@ -58,7 +58,7 @@ func TestListNodes(t *testing.T) {
 		checkResponse  func(*testing.T, *Response)
 	}{
 		{
-			name:           "获取所有 nodes - 默认分页",
+			name:           "List all nodes - default pagination",
 			queryParams:    "",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -69,7 +69,7 @@ func TestListNodes(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第1页",
+			name:           "Paginated query - page 1",
 			queryParams:    "?page=1&pageSize=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  2,
@@ -80,7 +80,7 @@ func TestListNodes(t *testing.T) {
 			},
 		},
 		{
-			name:           "分页查询 - 第2页",
+			name:           "Paginated query - page 2",
 			queryParams:    "?page=2&pageSize=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -90,7 +90,7 @@ func TestListNodes(t *testing.T) {
 			},
 		},
 		{
-			name:           "按名称搜索",
+			name:           "Search by name",
 			queryParams:    "?name=node1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -100,7 +100,7 @@ func TestListNodes(t *testing.T) {
 			},
 		},
 		{
-			name:           "按名称模糊搜索",
+			name:           "Search by name (partial)",
 			queryParams:    "?name=node",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
@@ -122,7 +122,7 @@ func TestListNodes(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			// 将 data 转换为 node 数组
+			// Convert the response data to a slice of nodes
 			dataBytes, _ := json.Marshal(response.Data)
 			var nodes []domain.NetNode
 			json.Unmarshal(dataBytes, &nodes)
@@ -141,7 +141,7 @@ func TestGetNode(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	node := createTestNode(db, "testnode")
 
 	tests := []struct {
@@ -151,18 +151,18 @@ func TestGetNode(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:           "获取存在的 node",
+			name:           "Get existing node",
 			nodeID:         "1",
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:           "获取不存在的 node",
+			name:           "Get missing node",
 			nodeID:         "999",
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "NODE_NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			nodeID:         "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -213,7 +213,7 @@ func TestCreateNode(t *testing.T) {
 		checkResult    func(*testing.T, *domain.NetNode)
 	}{
 		{
-			name: "成功创建 node",
+			name: "Successfully create node",
 			requestBody: `{
 				"name": "new-node",
 				"tags": "production,main",
@@ -228,7 +228,7 @@ func TestCreateNode(t *testing.T) {
 			},
 		},
 		{
-			name: "创建 node - 最小参数",
+			name: "Create node with minimal parameters",
 			requestBody: `{
 				"name": "minimal-node"
 			}`,
@@ -240,17 +240,17 @@ func TestCreateNode(t *testing.T) {
 			},
 		},
 		{
-			name:           "缺少必填字段 - 名称",
+			name:           "Missing required field - name",
 			requestBody:    `{"tags": "test"}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:           "名称为空字符串",
+			name:           "Name is empty string",
 			requestBody:    `{"name": ""}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "名称已存在",
+			name: "Name already exists",
 			requestBody: `{
 				"name": "duplicate-node"
 			}`,
@@ -258,20 +258,20 @@ func TestCreateNode(t *testing.T) {
 			expectedError:  "NODE_EXISTS",
 		},
 		{
-			name:           "无效的 JSON",
+			name:           "Invalid JSON",
 			requestBody:    `{invalid json}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_REQUEST",
 		},
 		{
-			name: "名称超长 (>100字符)",
+			name: "Name too long (>100 characters)",
 			requestBody: `{
 				"name": "` + strings.Repeat("a", 101) + `"
 			}`,
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "备注超长 (>500字符)",
+			name: "Remark too long (>500 characters)",
 			requestBody: `{
 				"name": "test-node",
 				"remark": "` + strings.Repeat("x", 501) + `"
@@ -279,7 +279,7 @@ func TestCreateNode(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name: "名称自动去除空格",
+			name: "Name trims spaces automatically",
 			requestBody: `{
 				"name": "  spaced-node  "
 			}`,
@@ -292,8 +292,8 @@ func TestCreateNode(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// 为重复名称测试创建已存在的 node
-			if tt.name == "名称已存在" {
+			// Create an existing node to test duplicate names
+			if tt.name == "Name already exists" {
 				createTestNode(db, "duplicate-node")
 			}
 
@@ -303,7 +303,7 @@ func TestCreateNode(t *testing.T) {
 			rec := httptest.NewRecorder()
 			c := e.NewContext(req, rec)
 
-			// 调用处理函数并处理可能的错误
+			// Call the handler and handle any potential errors
 			handleTestError(rec, createNode(c))
 
 			assert.Equal(t, tt.expectedStatus, rec.Code)
@@ -322,7 +322,7 @@ func TestCreateNode(t *testing.T) {
 					tt.checkResult(t, &node)
 				}
 			} else if tt.expectedError != "" {
-				// 对于非验证错误，检查我们的自定义错误响应
+				// For non-validation errors, check our custom error response
 				var errResponse ErrorResponse
 				if json.Unmarshal(rec.Body.Bytes(), &errResponse) == nil {
 					if errResponse.Error != "" {
@@ -338,7 +338,7 @@ func TestUpdateNode(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	_ = createTestNode(db, "original-node")
 	createTestNode(db, "another-node")
 
@@ -351,7 +351,7 @@ func TestUpdateNode(t *testing.T) {
 		checkResult    func(*testing.T, *domain.NetNode)
 	}{
 		{
-			name:   "成功更新 node",
+			name:   "Successfully update node",
 			nodeID: "1",
 			requestBody: `{
 				"name": "updated-node",
@@ -366,7 +366,7 @@ func TestUpdateNode(t *testing.T) {
 			},
 		},
 		{
-			name:   "部分更新 - 只更新备注",
+			name:   "Partial update - remark only",
 			nodeID: "1",
 			requestBody: `{
 				"remark": "Only remark updated"
@@ -377,7 +377,7 @@ func TestUpdateNode(t *testing.T) {
 			},
 		},
 		{
-			name:   "名称冲突",
+			name:   "Name conflict",
 			nodeID: "1",
 			requestBody: `{
 				"name": "another-node"
@@ -386,21 +386,21 @@ func TestUpdateNode(t *testing.T) {
 			expectedError:  "NODE_EXISTS",
 		},
 		{
-			name:           "node 不存在",
+			name:           "Node not found",
 			nodeID:         "999",
 			requestBody:    `{"name": "test"}`,
 			expectedStatus: http.StatusNotFound,
 			expectedError:  "NODE_NOT_FOUND",
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			nodeID:         "invalid",
 			requestBody:    `{"name": "test"}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
 		},
 		{
-			name:   "名称超长",
+			name:   "Name too long",
 			nodeID: "1",
 			requestBody: `{
 				"name": "` + strings.Repeat("a", 101) + `"
@@ -408,7 +408,7 @@ func TestUpdateNode(t *testing.T) {
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
-			name:   "更新为空名称应该失败",
+			name:   "Updating to empty name should fail",
 			nodeID: "1",
 			requestBody: `{
 				"name": ""
@@ -456,11 +456,11 @@ func TestDeleteNode(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	// 创建测试数据
+	// Create test data
 	_ = createTestNode(db, "node-to-delete")
 	node2 := createTestNode(db, "node-in-use")
 
-	// 创建一个关联 node2 的 NAS 设备
+	// Create a NAS device associated with node2
 	nas := &domain.NetNas{
 		NodeId:    node2.ID,
 		Name:      "test-nas",
@@ -481,25 +481,25 @@ func TestDeleteNode(t *testing.T) {
 		checkDeleted   bool
 	}{
 		{
-			name:           "成功删除未使用的 node",
+			name:           "Successfully delete unused node",
 			nodeID:         "1",
 			expectedStatus: http.StatusOK,
 			checkDeleted:   true,
 		},
 		{
-			name:           "无法删除正在使用的 node",
+			name:           "Cannot delete node in use",
 			nodeID:         "2",
 			expectedStatus: http.StatusConflict,
 			expectedError:  "NODE_IN_USE",
 		},
 		{
-			name:           "node 不存在",
+			name:           "Node not found",
 			nodeID:         "999",
-			expectedStatus: http.StatusOK, // GORM Delete 不会返回错误
+			expectedStatus: http.StatusOK, // GORM Delete does not return error
 			checkDeleted:   false,
 		},
 		{
-			name:           "无效的 ID",
+			name:           "Invalid ID",
 			nodeID:         "invalid",
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "INVALID_ID",
@@ -525,7 +525,7 @@ func TestDeleteNode(t *testing.T) {
 				require.NoError(t, err)
 
 				if tt.checkDeleted {
-					// 验证 node 已被删除
+					// Validate the node has been deleted
 					var count int64
 					db.Model(&domain.NetNode{}).Where("id = ?", tt.nodeID).Count(&count)
 					assert.Equal(t, int64(0), count)
@@ -539,12 +539,12 @@ func TestDeleteNode(t *testing.T) {
 	}
 }
 
-// TestNodeEdgeCases 测试边缘情况
+// TestNodeEdgeCases Test edge cases
 func TestNodeEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
 	setupTestApp(t, db)
 
-	t.Run("更新不存在的字段不应影响其他字段", func(t *testing.T) {
+	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		node := createTestNode(db, "test-node")
 		originalName := node.Name
 		originalTags := node.Tags
@@ -566,14 +566,14 @@ func TestNodeEdgeCases(t *testing.T) {
 		var updatedNode domain.NetNode
 		json.Unmarshal(dataBytes, &updatedNode)
 
-		// 名称和标签不应该改变
+		// Name and tags should remain unchanged
 		assert.Equal(t, originalName, updatedNode.Name)
 		assert.Equal(t, originalTags, updatedNode.Tags)
-		// 备注应该更新
+		// Remark should be updated
 		assert.Equal(t, "New remark", updatedNode.Remark)
 	})
 
-	t.Run("创建时间和更新时间自动设置", func(t *testing.T) {
+	t.Run("Created and updated timestamps set automatically", func(t *testing.T) {
 		e := setupTestEcho()
 		requestBody := `{"name": "time-test-node"}`
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/network/nodes", strings.NewReader(requestBody))
@@ -595,11 +595,11 @@ func TestNodeEdgeCases(t *testing.T) {
 		assert.WithinDuration(t, time.Now(), node.CreatedAt, time.Second*2)
 	})
 
-	t.Run("更新时更新时间应该变化", func(t *testing.T) {
+	t.Run("Updated timestamp should change on update", func(t *testing.T) {
 		node := createTestNode(db, "update-time-test")
 		originalUpdateTime := node.UpdatedAt
 
-		// 等待一小段时间确保时间不同
+		// Wait briefly to ensure the timestamps differ
 		time.Sleep(time.Millisecond * 100)
 
 		e := setupTestEcho()

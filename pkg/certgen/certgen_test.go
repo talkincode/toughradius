@@ -23,7 +23,7 @@ func TestGenerateCA(t *testing.T) {
 		t.Fatalf("GenerateCA failed: %v", err)
 	}
 
-	// 验证文件是否存在
+	// Validate that the file exists
 	certPath := filepath.Join(tmpDir, "ca.crt")
 	keyPath := filepath.Join(tmpDir, "ca.key")
 
@@ -35,7 +35,7 @@ func TestGenerateCA(t *testing.T) {
 		t.Errorf("CA key file not created")
 	}
 
-	// 验证证书内容
+	// Validate the certificate contents
 	certPEM, err := os.ReadFile(certPath)
 	if err != nil {
 		t.Fatalf("Failed to read CA cert: %v", err)
@@ -63,7 +63,7 @@ func TestGenerateCA(t *testing.T) {
 func TestGenerateServerCert(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// 先生成 CA
+	// Generate the CA first
 	caConfig := CAConfig{
 		CertConfig: DefaultCertConfig(),
 		OutputDir:  tmpDir,
@@ -75,7 +75,7 @@ func TestGenerateServerCert(t *testing.T) {
 		t.Fatalf("GenerateCA failed: %v", err)
 	}
 
-	// 生成服务器证书
+	// Generate the server certificate
 	serverConfig := ServerConfig{
 		CertConfig: DefaultCertConfig(),
 		CAKeyPath:  filepath.Join(tmpDir, "ca.key"),
@@ -91,7 +91,7 @@ func TestGenerateServerCert(t *testing.T) {
 		t.Fatalf("GenerateServerCert failed: %v", err)
 	}
 
-	// 验证文件是否存在
+	// Validate that the file exists
 	certPath := filepath.Join(tmpDir, "server.crt")
 	keyPath := filepath.Join(tmpDir, "server.key")
 
@@ -103,7 +103,7 @@ func TestGenerateServerCert(t *testing.T) {
 		t.Errorf("Server key file not created")
 	}
 
-	// 验证证书内容和 SAN
+	// Validate the certificate contents and SAN
 	certPEM, err := os.ReadFile(certPath)
 	if err != nil {
 		t.Fatalf("Failed to read server cert: %v", err)
@@ -123,7 +123,7 @@ func TestGenerateServerCert(t *testing.T) {
 		t.Errorf("Expected CommonName 'radius.example.com', got '%s'", cert.Subject.CommonName)
 	}
 
-	// 验证 SAN
+	// Validate SAN
 	if len(cert.DNSNames) != 3 {
 		t.Errorf("Expected 3 DNS names, got %d", len(cert.DNSNames))
 	}
@@ -132,7 +132,7 @@ func TestGenerateServerCert(t *testing.T) {
 		t.Errorf("Expected 2 IP addresses, got %d", len(cert.IPAddresses))
 	}
 
-	// 验证 ExtKeyUsage
+	// Validate ExtKeyUsage
 	hasServerAuth := false
 	for _, usage := range cert.ExtKeyUsage {
 		if usage == x509.ExtKeyUsageServerAuth {
@@ -148,7 +148,7 @@ func TestGenerateServerCert(t *testing.T) {
 func TestGenerateClientCert(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// 先生成 CA
+	// Generate the CA first
 	caConfig := CAConfig{
 		CertConfig: DefaultCertConfig(),
 		OutputDir:  tmpDir,
@@ -160,7 +160,7 @@ func TestGenerateClientCert(t *testing.T) {
 		t.Fatalf("GenerateCA failed: %v", err)
 	}
 
-	// 生成客户端证书
+	// Generate the client certificate
 	clientConfig := ClientConfig{
 		CertConfig: DefaultCertConfig(),
 		CAKeyPath:  filepath.Join(tmpDir, "ca.key"),
@@ -175,7 +175,7 @@ func TestGenerateClientCert(t *testing.T) {
 		t.Fatalf("GenerateClientCert failed: %v", err)
 	}
 
-	// 验证文件是否存在
+	// Validate that the file exists
 	certPath := filepath.Join(tmpDir, "client.crt")
 	keyPath := filepath.Join(tmpDir, "client.key")
 
@@ -187,7 +187,7 @@ func TestGenerateClientCert(t *testing.T) {
 		t.Errorf("Client key file not created")
 	}
 
-	// 验证证书内容
+	// Validate the certificate contents
 	certPEM, err := os.ReadFile(certPath)
 	if err != nil {
 		t.Fatalf("Failed to read client cert: %v", err)
@@ -207,7 +207,7 @@ func TestGenerateClientCert(t *testing.T) {
 		t.Errorf("Expected CommonName 'client.example.com', got '%s'", cert.Subject.CommonName)
 	}
 
-	// 验证 ExtKeyUsage
+	// Validate ExtKeyUsage
 	hasClientAuth := false
 	for _, usage := range cert.ExtKeyUsage {
 		if usage == x509.ExtKeyUsageClientAuth {

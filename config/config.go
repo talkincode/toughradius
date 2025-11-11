@@ -9,21 +9,21 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// DBConfig 数据库配置
-// 支持的数据库类型: postgres, sqlite
+// DBConfig Database configuration
+// Supported database types: postgres, sqlite
 type DBConfig struct {
-	Type     string `yaml:"type"`      // 数据库类型: postgres 或 sqlite
-	Host     string `yaml:"host"`      // PostgreSQL 主机地址
-	Port     int    `yaml:"port"`      // PostgreSQL 端口
-	Name     string `yaml:"name"`      // 数据库名称或 SQLite 文件路径
-	User     string `yaml:"user"`      // PostgreSQL 用户名
-	Passwd   string `yaml:"passwd"`    // PostgreSQL 密码
-	MaxConn  int    `yaml:"max_conn"`  // 最大连接数
-	IdleConn int    `yaml:"idle_conn"` // 空闲连接数
-	Debug    bool   `yaml:"debug"`     // 调试模式
+	Type     string `yaml:"type"`      // Database type: postgres or sqlite
+	Host     string `yaml:"host"`      // PostgreSQL host address
+	Port     int    `yaml:"port"`      // PostgreSQL port
+	Name     string `yaml:"name"`      // Database name or SQLite file path
+	User     string `yaml:"user"`      // PostgreSQL username
+	Passwd   string `yaml:"passwd"`    // PostgreSQL password
+	MaxConn  int    `yaml:"max_conn"`  // Maximum connections
+	IdleConn int    `yaml:"idle_conn"` // Idle connections
+	Debug    bool   `yaml:"debug"`     // Debug mode
 }
 
-// SysConfig 系统配置
+// SysConfig System configuration
 type SysConfig struct {
 	Appid    string `yaml:"appid"`
 	Location string `yaml:"location"`
@@ -31,7 +31,7 @@ type SysConfig struct {
 	Debug    bool   `yaml:"debug"`
 }
 
-// WebConfig WEB 配置
+// WebConfig Web server configuration
 type WebConfig struct {
 	Host    string `yaml:"host"`
 	Port    int    `yaml:"port"`
@@ -46,9 +46,9 @@ type RadiusdConfig struct {
 	AcctPort     int    `yaml:"acct_port" json:"acct_port"`
 	RadsecPort   int    `yaml:"radsec_port" json:"radsec_port"`
 	RadsecWorker int    `yaml:"radsec_worker" json:"radsec_worker"`
-	RadsecCaCert string `yaml:"radsec_ca_cert" json:"radsec_ca_cert"` // RadSec CA 证书路径
-	RadsecCert   string `yaml:"radsec_cert" json:"radsec_cert"`       // RadSec 服务器证书路径
-	RadsecKey    string `yaml:"radsec_key" json:"radsec_key"`         // RadSec 服务器私钥路径
+	RadsecCaCert string `yaml:"radsec_ca_cert" json:"radsec_ca_cert"` // RadSec CA certificate path
+	RadsecCert   string `yaml:"radsec_cert" json:"radsec_cert"`       // RadSec server certificate path
+	RadsecKey    string `yaml:"radsec_key" json:"radsec_key"`         // RadSec server private key path
 	Debug        bool   `yaml:"debug" json:"debug"`
 }
 
@@ -85,7 +85,7 @@ func (c *AppConfig) GetBackupDir() string {
 	return path.Join(c.System.Workdir, "backup")
 }
 
-// GetRadsecCaCertPath 获取 RadSec CA 证书的完整路径
+// GetRadsecCaCertPath Returns the full path to the RadSec CA certificate
 func (c *AppConfig) GetRadsecCaCertPath() string {
 	if path.IsAbs(c.Radiusd.RadsecCaCert) {
 		return c.Radiusd.RadsecCaCert
@@ -93,7 +93,7 @@ func (c *AppConfig) GetRadsecCaCertPath() string {
 	return path.Join(c.System.Workdir, c.Radiusd.RadsecCaCert)
 }
 
-// GetRadsecCertPath 获取 RadSec 服务器证书的完整路径
+// GetRadsecCertPath Returns the full path to the RadSec server certificate
 func (c *AppConfig) GetRadsecCertPath() string {
 	if path.IsAbs(c.Radiusd.RadsecCert) {
 		return c.Radiusd.RadsecCert
@@ -101,7 +101,7 @@ func (c *AppConfig) GetRadsecCertPath() string {
 	return path.Join(c.System.Workdir, c.Radiusd.RadsecCert)
 }
 
-// GetRadsecKeyPath 获取 RadSec 服务器私钥的完整路径
+// GetRadsecKeyPath Returns the full path to the RadSec server private key
 func (c *AppConfig) GetRadsecKeyPath() string {
 	if path.IsAbs(c.Radiusd.RadsecKey) {
 		return c.Radiusd.RadsecKey
@@ -169,10 +169,10 @@ var DefaultAppConfig = &AppConfig{
 		Secret:  "9b6de5cc-0731-1203-xxtt-0f568ac9da37",
 	},
 	Database: DBConfig{
-		Type:     "sqlite",    // 默认使用 SQLite，适合开发和测试
-		Host:     "127.0.0.1", // PostgreSQL 配置（当 type 为 postgres 时使用）
+		Type:     "sqlite",    // Default to SQLite for development and testing
+		Host:     "127.0.0.1", // PostgreSQL configuration (used when type is postgres)
 		Port:     5432,
-		Name:     "toughradius.db", // SQLite: 数据库文件名；PostgreSQL: 数据库名
+		Name:     "toughradius.db", // SQLite: database filename; PostgreSQL: database name
 		User:     "postgres",
 		Passwd:   "myroot",
 		MaxConn:  100,
@@ -199,7 +199,7 @@ var DefaultAppConfig = &AppConfig{
 }
 
 func LoadConfig(cfile string) *AppConfig {
-	// 开发环境首先查找当前目录是否存在自定义配置文件
+	// In development environment, first check if custom config file exists in current directory
 	if cfile == "" {
 		cfile = "toughradius.yml"
 	}

@@ -30,16 +30,16 @@ func (a *Application) checkSuper() {
 }
 
 func (a *Application) checkSettings() {
-	// 从嵌入的 JSON 文件加载配置定义
+	// Load configuration definitions from the embedded JSON file
 	var schemasData ConfigSchemasJSON
 	if err := json.Unmarshal(configSchemasData, &schemasData); err != nil {
 		zap.L().Error("failed to load config schemas from JSON", zap.Error(err))
 		return
 	}
 
-	// 遍历所有配置定义，检查并初始化缺失的配置
+	// Iterate over all configuration definitions, checking and initializing missing entries
 	for sortid, schema := range schemasData.Schemas {
-		// 解析 key: "category.name" -> category, name
+		// Parse key: "category.name" -> category, name
 		parts := strings.SplitN(schema.Key, ".", 2)
 		if len(parts) != 2 {
 			zap.L().Warn("invalid config key format", zap.String("key", schema.Key))
@@ -49,13 +49,13 @@ func (a *Application) checkSettings() {
 		category := parts[0]
 		name := parts[1]
 
-		// 检查配置是否存在
+		// Check whether the configuration already exists
 		var count int64
 		a.gormDB.Model(&domain.SysConfig{}).
 			Where("type = ? and name = ?", category, name).
 			Count(&count)
 
-		// 如果配置不存在，创建默认配置
+		// e.g., if the configuration does not exist, create the default configuration
 		if count == 0 {
 			a.gormDB.Create(&domain.SysConfig{
 				ID:     0,

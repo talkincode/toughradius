@@ -165,7 +165,7 @@ func TestH3CAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 			downAvg := h3c.H3COutputAverageRate_Get(response)
 			assert.Equal(t, tt.expectedDownAvg, uint32(downAvg))
 
-			// Peak 速率应该是平均速率的 4 倍
+			// Peak rate should be four times the average rate
 			upPeak := h3c.H3CInputPeakRate_Get(response)
 			expectedUpPeak := clampInt64(int64(tt.expectedUpAvg)*4, math.MaxInt32)
 			assert.Equal(t, uint32(expectedUpPeak), uint32(upPeak))
