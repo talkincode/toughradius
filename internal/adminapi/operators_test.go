@@ -39,7 +39,7 @@ func createTestOperator(db *gorm.DB, username string, level string) *domain.SysO
 
 func TestListOperators(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Automatically migrate the operator table
 	db.AutoMigrate(&domain.SysOpr{})
@@ -118,7 +118,7 @@ func TestListOperators(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/system/operators"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := listOperators(c)
 			require.NoError(t, err)
@@ -145,7 +145,7 @@ func TestListOperators(t *testing.T) {
 
 func TestGetOperator(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
 	// Create test data
@@ -175,7 +175,7 @@ func TestGetOperator(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/system/operators/"+strconv.FormatInt(tt.operatorID, 10), nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(strconv.FormatInt(tt.operatorID, 10))
 
@@ -205,7 +205,7 @@ func TestGetOperator(t *testing.T) {
 
 func TestCreateOperator(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
 	tests := []struct {
@@ -401,7 +401,7 @@ func TestCreateOperator(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := createOperator(c)
 			require.NoError(t, err)
@@ -431,7 +431,7 @@ func TestCreateOperator(t *testing.T) {
 
 func TestUpdateOperator(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
 	// Create test data
@@ -579,7 +579,7 @@ func TestUpdateOperator(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/system/operators/"+strconv.FormatInt(tt.operatorID, 10), strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(strconv.FormatInt(tt.operatorID, 10))
 
@@ -612,7 +612,7 @@ func TestUpdateOperator(t *testing.T) {
 // TestOperatorEdgeCases Test edge cases
 func TestOperatorEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 	db.AutoMigrate(&domain.SysOpr{})
 
 	t.Run("Username trims spaces automatically", func(t *testing.T) {
@@ -625,7 +625,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createOperator(c)
 		require.NoError(t, err)
@@ -649,7 +649,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createOperator(c)
 		require.NoError(t, err)
@@ -677,7 +677,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/api/v1/system/operators/"+strconv.FormatInt(opr.ID, 10), strings.NewReader(`{"realname": "New Name"}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues(strconv.FormatInt(opr.ID, 10))
 
@@ -708,7 +708,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createOperator(c)
 		require.NoError(t, err)
@@ -733,7 +733,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createOperator(c)
 		require.NoError(t, err)
@@ -767,7 +767,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := createOperator(c)
 			require.NoError(t, err)
@@ -793,7 +793,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/system/operators", strings.NewReader(requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := createOperator(c)
 			require.NoError(t, err)

@@ -3,6 +3,7 @@ package adminapi
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -65,10 +66,16 @@ func ListAccounting(c echo.Context) error {
 
 	// Filter by time range
 	if startTime := c.QueryParam("start_time"); startTime != "" {
-		query = query.Where("acct_start_time >= ?", startTime)
+		parsedTime, err := time.Parse(time.RFC3339, startTime)
+		if err == nil {
+			query = query.Where("acct_start_time >= ?", parsedTime)
+		}
 	}
 	if endTime := c.QueryParam("end_time"); endTime != "" {
-		query = query.Where("acct_stop_time <= ?", endTime)
+		parsedTime, err := time.Parse(time.RFC3339, endTime)
+		if err == nil {
+			query = query.Where("acct_stop_time <= ?", parsedTime)
+		}
 	}
 
 	query.Count(&total)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-插入测试在线会话数据到 ToughRADIUS 数据库
+Insert test online session data into ToughRADIUS database
 """
 import sqlite3
 from datetime import datetime, timedelta
@@ -13,27 +13,27 @@ db_path = "rundata/data/toughradius.db"
 
 def main():
     if not os.path.exists(db_path):
-        print(f"❌ 数据库文件不存在: {db_path}")
-        print("提示: 请先运行 ToughRADIUS 以创建数据库")
+        print(f"❌ Database file does not exist: {db_path}")
+        print("Hint: Please run ToughRADIUS first to create the database")
         sys.exit(1)
 
-# Connect to the database
+    # Connect to the database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-# Check if the tables exist
+    # Check if the tables exist
     cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='radius_online'"
     )
     if not cursor.fetchone():
-        print("❌ radius_online 表不存在")
+        print("❌ radius_online table does not exist")
         sys.exit(1)
 
-# Clear existing test data
+    # Clear existing test data
     cursor.execute("DELETE FROM radius_online")
-    print("✓ 已清空现有在线会话数据")
-
-# Test data: (username, nas_id, nas_addr, nas_paddr, session_timeout, framed_ipaddr,
+    print(
+        "✓ Cleared existing online session data"
+    )  # Test data: (username, nas_id, nas_addr, nas_paddr, session_timeout, framed_ipaddr,
     #            framed_netmask, mac_addr, nas_port, nas_class, nas_port_id, nas_port_type,
     #            service_type, acct_session_id, acct_session_time, acct_input_total,
     #            acct_output_total, acct_input_packets, acct_output_packets,
@@ -343,10 +343,10 @@ def main():
         inserted_count += 1
 
     conn.commit()
-    print(f"✓ 成功插入 {inserted_count} 条在线会话记录")
+    print(f"✓ Successfully inserted {inserted_count} online session records")
 
-# Display inserted records
-    print("\n📊 当前在线会话:")
+    # Display inserted records
+    print("\n📊 Current online sessions:")
     cursor.execute(
         """
         SELECT id, username, nas_addr, framed_ipaddr, acct_session_time, 
@@ -358,7 +358,7 @@ def main():
     )
 
     print(
-        f"{'ID':<4} {'用户名':<20} {'NAS地址':<15} {'分配IP':<15} {'在线时长(s)':<12} {'上传(MB)':<10} {'下载(MB)':<10}"
+        f"{'ID':<4} {'Username':<20} {'NAS Addr':<15} {'Framed IP':<15} {'Duration(s)':<12} {'Upload(MB)':<10} {'Download(MB)':<10}"
     )
     print("-" * 100)
     for row in cursor.fetchall():
@@ -367,17 +367,17 @@ def main():
         )
 
     conn.close()
-    print(f"\n✓ 测试数据已准备完成!")
-    print(f"\n💡 测试 API 命令:")
-    print(f"   1. 获取所有在线会话: curl http://localhost:1816/api/v1/sessions")
+    print(f"\n✓ Test data prepared successfully!")
+    print(f"\n💡 Test API commands:")
+    print(f"   1. Get all online sessions: curl http://localhost:1816/api/v1/sessions")
     print(
-        f"   2. 分页查询: curl 'http://localhost:1816/api/v1/sessions?page=1&perPage=5'"
+        f"   2. Paginated query: curl 'http://localhost:1816/api/v1/sessions?page=1&perPage=5'"
     )
     print(
-        f"   3. 按用户搜索: curl 'http://localhost:1816/api/v1/sessions?username=alice'"
+        f"   3. Search by user: curl 'http://localhost:1816/api/v1/sessions?username=alice'"
     )
     print(
-        f"   4. 按NAS过滤: curl 'http://localhost:1816/api/v1/sessions?nas_addr=192.168.1.1'"
+        f"   4. Filter by NAS: curl 'http://localhost:1816/api/v1/sessions?nas_addr=192.168.1.1'"
     )
 
 

@@ -42,7 +42,7 @@ func createTestProfile(db *gorm.DB, name string) *domain.RadiusProfile {
 
 func TestListProfiles(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	createTestProfile(db, "profile1")
@@ -121,7 +121,7 @@ func TestListProfiles(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := ListProfiles(c)
 			require.NoError(t, err)
@@ -148,7 +148,7 @@ func TestListProfiles(t *testing.T) {
 
 func TestGetProfile(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	profile := createTestProfile(db, "test-profile")
@@ -183,7 +183,7 @@ func TestGetProfile(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles/"+tt.profileID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.profileID)
 
@@ -213,7 +213,7 @@ func TestGetProfile(t *testing.T) {
 
 func TestCreateProfile(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	tests := []struct {
 		name           string
@@ -308,7 +308,7 @@ func TestCreateProfile(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/radius-profiles", strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := CreateProfile(c)
 			require.NoError(t, err)
@@ -338,7 +338,7 @@ func TestCreateProfile(t *testing.T) {
 
 func TestUpdateProfile(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	_ = createTestProfile(db, "original-profile")
@@ -424,7 +424,7 @@ func TestUpdateProfile(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/radius-profiles/"+tt.profileID, strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.profileID)
 
@@ -455,7 +455,7 @@ func TestUpdateProfile(t *testing.T) {
 
 func TestDeleteProfile(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	_ = createTestProfile(db, "profile-to-delete")
@@ -511,7 +511,7 @@ func TestDeleteProfile(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodDelete, "/api/v1/radius-profiles/"+tt.profileID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.profileID)
 
@@ -542,13 +542,13 @@ func TestDeleteProfile(t *testing.T) {
 // TestProfileEdgeCases Test edge cases
 func TestProfileEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	t.Run("Large pagination parameters", func(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles?perPage=1000", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListProfiles(c)
 		require.NoError(t, err)
@@ -563,7 +563,7 @@ func TestProfileEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles?page=-1&perPage=-10", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListProfiles(c)
 		require.NoError(t, err)
@@ -579,7 +579,7 @@ func TestProfileEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/radius-profiles?order=INVALID", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListProfiles(c)
 		require.NoError(t, err)
@@ -594,7 +594,7 @@ func TestProfileEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/api/v1/radius-profiles/1", strings.NewReader(`{"up_rate": 30720}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 

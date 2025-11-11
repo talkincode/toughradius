@@ -95,9 +95,9 @@ func GenerateCrt(config Config, cacrtfile, cakeyfile, crtfile, keyfile string) e
 	if err != nil {
 		return err
 	}
-	cakbytes := cadata.PrivateKey.(*ecdsa.PrivateKey).D.Bytes()
-	capkey, err := x509.ParseECPrivateKey(cakbytes)
-	if err != nil {
+	// Get the private key directly from the certificate data
+	capkey, ok := cadata.PrivateKey.(*ecdsa.PrivateKey)
+	if !ok {
 		return err
 	}
 

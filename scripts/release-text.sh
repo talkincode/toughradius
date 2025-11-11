@@ -5,7 +5,7 @@
 
 # Check if running inside a git repository
 if ! git rev-parse --git-dir > /dev/null 2>&1; then
-    echo "❌ 错误: 当前目录不是git仓库"
+    echo "❌ Error: Current directory is not a git repository"
     exit 1
 fi
 
@@ -15,9 +15,9 @@ current_commit=$(git rev-parse HEAD)
 
 # Set the commit range
 if [ -z "$latest_tag" ]; then
-    echo "⚠️  未找到任何标签，显示所有提交记录"
+    echo "⚠️  No tags found, showing all commits"
     commit_range="HEAD"
-    version_info="初始提交 → HEAD"
+    version_info="Initial commit → HEAD"
 else
     # Check if HEAD is already at the latest tag
     latest_tag_commit=$(git rev-parse "$latest_tag" 2>/dev/null || echo "")
@@ -32,7 +32,7 @@ else
         else
             echo "📋 —— $latest_tag"
             commit_range="$latest_tag"
-            version_info="初始提交 → $latest_tag"
+            version_info="Initial commit → $latest_tag"
         fi
     else
         echo "📋 $latest_tag —— "
@@ -49,14 +49,14 @@ total_commits=$(git rev-list --count $commit_range 2>/dev/null || echo "0")
 files_changed=$(git diff --name-only $commit_range 2>/dev/null | wc -l | tr -d ' ')
 authors=$(git log $commit_range --format='%an' 2>/dev/null | sort -u | wc -l | tr -d ' ')
 
-echo "📊 统计信息:"
-echo "   • 提交数量: $total_commits"
-echo "   • 文件变更: $files_changed"
-echo "   • 参与作者: $authors"
+echo "📊 Statistics:"
+echo "   • Commits: $total_commits"
+echo "   • Files changed: $files_changed"
+echo "   • Authors: $authors"
 echo ""
 
 # Display the changelog
-echo "📝 变更清单:"
+echo "📝 Changelog:"
 echo ""
 
 # Categorize commits
@@ -97,35 +97,35 @@ git log $commit_range --format='%h|%s|%an|%ad' --date=short 2>/dev/null | {
     
     # Display categorized results
     if [ $feat_count -gt 0 ]; then
-        echo "🚀 新功能 ($feat_count):"
+        echo "🚀 New Features ($feat_count):"
         echo -e "$feat_commits"
     fi
     
     if [ $fix_count -gt 0 ]; then
-        echo "🐛 Bug修复 ($fix_count):"
+        echo "🐛 Bug Fixes ($fix_count):"
         echo -e "$fix_commits"
     fi
     
     if [ $refactor_count -gt 0 ]; then
-        echo "♻️  重构/优化 ($refactor_count):"
+        echo "♻️  Refactoring/Optimization ($refactor_count):"
         echo -e "$refactor_commits"
     fi
     
     if [ $other_count -gt 0 ]; then
-        echo "📦 其他变更 ($other_count):"
+        echo "📦 Other Changes ($other_count):"
         echo -e "$other_commits"
     fi
 }
 
 # Display file change stats (top 10 lines)
 if [ "$files_changed" -gt 0 ]; then
-    echo "📄 主要文件变更:"
+    echo "📄 Main File Changes:"
     git diff --stat $commit_range 2>/dev/null | head -10 | sed 's/^/   /'
     echo ""
 fi
 
 # Display contributors
 if [ "$authors" -gt 0 ]; then
-    echo "👥 贡献者:"
+    echo "👥 Contributors:"
     git log $commit_range --format='%an <%ae>' 2>/dev/null | sort -u | sed 's/^/   • /'
 fi

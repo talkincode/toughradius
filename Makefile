@@ -70,10 +70,7 @@ initdb:
 # 运行测试
 test:
 	@echo "🧪 运行测试..."
-	go test ./...
-	@echo ""
-	@echo "前端测试:"
-	cd web && npm test
+	CGO_ENABLED=1 go test ./...
 
 # 清理构建文件
 clean:

@@ -2,6 +2,7 @@ package adminapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -34,13 +35,15 @@ func createTestNas(db *gorm.DB, name, ipaddr string) *domain.NetNas {
 		CreatedAt:  time.Now(),
 		UpdatedAt:  time.Now(),
 	}
-	db.Create(nas)
+	result := db.Create(nas)
+	if result.Error != nil {
+		panic(fmt.Sprintf("Failed to create test NAS: %v", result.Error))
+	}
 	return nas
 }
 
 func TestListNAS(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Create test data
 	createTestNas(db, "nas1", "192.168.1.1")
@@ -99,21 +102,29 @@ func TestListNAS(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/nas"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := ListNAS(c)
 			require.NoError(t, err)
+
+			// Debug: print response body if status is not 200
+			if rec.Code != http.StatusOK {
+				t.Logf("Response body: %s", rec.Body.String())
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			var response map[string]interface{}
 			err = json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			data := response["data"].([]interface{})
-			assert.Len(t, data, tt.expectedCount)
+			if data, ok := response["data"].([]interface{}); ok {
+				assert.Len(t, data, tt.expectedCount)
+			} else {
+				t.Logf("Response: %+v", response)
+				t.Fatal("response data is not a slice")
+			}
 
 			if tt.checkResponse != nil {
 				tt.checkResponse(t, response)
@@ -123,8 +134,7 @@ func TestListNAS(t *testing.T) {
 }
 
 func TestGetNAS(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Create test data
 	nas := createTestNas(db, "test-nas", "192.168.1.100")
@@ -156,10 +166,9 @@ func TestGetNAS(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/nas/"+tt.nasID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.nasID)
 
@@ -188,8 +197,7 @@ func TestGetNAS(t *testing.T) {
 }
 
 func TestCreateNAS(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	tests := []struct {
 		name           string
@@ -319,11 +327,10 @@ func TestCreateNAS(t *testing.T) {
 				createTestNas(db, "existing-nas", "192.168.100.100")
 			}
 
-			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/nas", strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := CreateNAS(c)
 			require.NoError(t, err)
@@ -352,8 +359,7 @@ func TestCreateNAS(t *testing.T) {
 }
 
 func TestUpdateNAS(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Create test data
 	_ = createTestNas(db, "original-nas", "192.168.2.1")
@@ -455,11 +461,10 @@ func TestUpdateNAS(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/nas/"+tt.nasID, strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.nasID)
 
@@ -489,8 +494,7 @@ func TestUpdateNAS(t *testing.T) {
 }
 
 func TestDeleteNAS(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Create test data
 	_ = createTestNas(db, "nas-to-delete", "192.168.4.1")
@@ -524,10 +528,9 @@ func TestDeleteNAS(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodDelete, "/api/v1/nas/"+tt.nasID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.nasID)
 
@@ -557,19 +560,17 @@ func TestDeleteNAS(t *testing.T) {
 
 // TestNASEdgeCases Test edge cases
 func TestNASEdgeCases(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		nas := createTestNas(db, "test-nas", "192.168.5.1")
 		originalName := nas.Name
 		originalIpaddr := nas.Ipaddr
 
-		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodPut, "/api/v1/nas/1", strings.NewReader(`{"remark": "New remark"}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
@@ -590,7 +591,6 @@ func TestNASEdgeCases(t *testing.T) {
 	})
 
 	t.Run("Defaults should be set correctly", func(t *testing.T) {
-		e := setupTestEcho()
 		requestBody := `{
 			"name": "default-test",
 			"ipaddr": "10.0.1.1",
@@ -599,7 +599,7 @@ func TestNASEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/nas", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := CreateNAS(c)
 		require.NoError(t, err)
@@ -632,7 +632,6 @@ func TestNASEdgeCases(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			e := setupTestEcho()
 			requestBody := `{
 				"name": "ip-test",
 				"ipaddr": "` + tt.ip + `",
@@ -641,7 +640,7 @@ func TestNASEdgeCases(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/nas", strings.NewReader(requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := CreateNAS(c)
 			require.NoError(t, err)
@@ -668,7 +667,6 @@ func TestNASEdgeCases(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			e := setupTestEcho()
 			requestBody := `{
 				"name": "port-test",
 				"ipaddr": "10.0.2.1",
@@ -678,7 +676,7 @@ func TestNASEdgeCases(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/nas", strings.NewReader(requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := CreateNAS(c)
 			require.NoError(t, err)

@@ -56,8 +56,8 @@ var (
 
 func printHelp() {
 	if *h {
-		ustr := fmt.Sprintf("toughradius benchmark tools, version: 1.0, Usage:tradtest -h\nOptions:")
-		fmt.Fprintf(os.Stderr, ustr)
+		ustr := "toughradius benchmark tools, version: 1.0, Usage:tradtest -h\nOptions:"
+		fmt.Fprintf(os.Stderr, "%s", ustr)
 		flag.PrintDefaults()
 		os.Exit(0)
 	}

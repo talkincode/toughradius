@@ -7,12 +7,31 @@ import (
 	"testing"
 	"time"
 
+	"github.com/robfig/cron/v3"
+	"github.com/talkincode/toughradius/v9/config"
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
+	"gorm.io/gorm"
 	"layeh.com/radius"
 )
+
+// mockAppContext implements app.AppContext for testing
+type mockAppContext struct{}
+
+func (m *mockAppContext) DB() *gorm.DB                                       { return nil }
+func (m *mockAppContext) Config() *config.AppConfig                          { return nil }
+func (m *mockAppContext) GetSettingsStringValue(category, key string) string { return "" }
+func (m *mockAppContext) GetSettingsInt64Value(category, key string) int64   { return 0 }
+func (m *mockAppContext) GetSettingsBoolValue(category, key string) bool     { return false }
+func (m *mockAppContext) SaveSettings(settings map[string]interface{}) error { return nil }
+func (m *mockAppContext) Scheduler() *cron.Cron                              { return nil }
+func (m *mockAppContext) ConfigMgr() *app.ConfigManager                      { return nil }
+func (m *mockAppContext) MigrateDB(track bool) error                         { return nil }
+func (m *mockAppContext) InitDb()                                            {}
+func (m *mockAppContext) DropAll()                                           {}
 
 type testEnhancer struct {
 	name  string
@@ -85,7 +104,9 @@ func TestHandleAuthErrorInvokesGuards(t *testing.T) {
 		result: guardErr,
 	})
 
-	authSvc := &AuthService{RadiusService: &RadiusService{}}
+	// Create a mock RadiusService with AppContext
+	mockAppCtx := &mockAppContext{}
+	authSvc := &AuthService{RadiusService: &RadiusService{appCtx: mockAppCtx}}
 
 	defer func() {
 		r := recover()

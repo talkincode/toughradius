@@ -28,7 +28,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 echo -e "${GREEN}================================${NC}"
-echo -e "${GREEN}ToughRADIUS 数据库初始化脚本${NC}"
+echo -e "${GREEN}ToughRADIUS Database Initialization${NC}"
 echo -e "${GREEN}================================${NC}"
 echo ""
 
@@ -36,32 +36,32 @@ echo ""
 DB_TYPE="${1:-}"
 
 if [ -z "$DB_TYPE" ]; then
-    echo -e "${YELLOW}未指定数据库类型，将使用配置文件中的设置${NC}"
+    echo -e "${YELLOW}No database type specified, using configuration file settings${NC}"
     echo ""
     cd "$PROJECT_ROOT"
     
     # Check if the tool has been compiled
     if [ ! -f "./toughradius" ]; then
-        echo -e "${YELLOW}未找到编译文件，开始编译...${NC}"
+        echo -e "${YELLOW}Binary not found, starting compilation...${NC}"
         go build -o toughradius
-        echo -e "${GREEN}✓ 编译完成${NC}"
+        echo -e "${GREEN}✓ Compilation completed${NC}"
     fi
     
-    echo -e "${YELLOW}开始初始化数据库...${NC}"
+    echo -e "${YELLOW}Initializing database...${NC}"
     ./toughradius -initdb
     
     echo ""
     echo -e "${GREEN}================================${NC}"
-    echo -e "${GREEN}数据库初始化完成！${NC}"
+    echo -e "${GREEN}Database initialization completed!${NC}"
     echo -e "${GREEN}================================${NC}"
     echo ""
-    echo -e "${GREEN}默认管理员账号：${NC}"
-    echo -e "  用户名: ${YELLOW}admin${NC}"
-    echo -e "  密码:   ${YELLOW}toughradius${NC}"
+    echo -e "${GREEN}Default admin account:${NC}"
+    echo -e "  Username: ${YELLOW}admin${NC}"
+    echo -e "  Password: ${YELLOW}toughradius${NC}"
     echo ""
-    echo -e "${GREEN}API 用户账号：${NC}"
-    echo -e "  用户名: ${YELLOW}apiuser${NC}"
-    echo -e "  密码:   ${YELLOW}Api_189${NC}"
+    echo -e "${GREEN}API user account:${NC}"
+    echo -e "  Username: ${YELLOW}apiuser${NC}"
+    echo -e "  Password: ${YELLOW}Api_189${NC}"
     echo ""
     
     exit 0
@@ -70,7 +70,7 @@ fi
 # Parameterized initialization
 case "$DB_TYPE" in
     sqlite)
-        echo -e "${GREEN}使用 SQLite 数据库${NC}"
+        echo -e "${GREEN}Using SQLite database${NC}"
         echo ""
         
         # Create a temporary configuration file
@@ -116,24 +116,24 @@ logger:
   filename: /var/toughradius/toughradius.log
 EOF
         
-        echo -e "${YELLOW}SQLite 数据库配置：${NC}"
-        echo -e "  数据库文件: ${YELLOW}/var/toughradius/data/toughradius.db${NC}"
+        echo -e "${YELLOW}SQLite database configuration:${NC}"
+        echo -e "  Database file: ${YELLOW}/var/toughradius/data/toughradius.db${NC}"
         echo ""
         
         cd "$PROJECT_ROOT"
         
         # Check if the tool has been compiled
         if [ ! -f "./toughradius" ]; then
-            echo -e "${YELLOW}未找到编译文件，开始编译...${NC}"
+            echo -e "${YELLOW}Binary not found, starting compilation...${NC}"
             go build -o toughradius
-            echo -e "${GREEN}✓ 编译完成${NC}"
+            echo -e "${GREEN}✓ Compilation completed${NC}"
         fi
         
         # Create the data directory
         sudo mkdir -p /var/toughradius/data
         sudo chown -R $(whoami) /var/toughradius
         
-        echo -e "${YELLOW}开始初始化 SQLite 数据库...${NC}"
+        echo -e "${YELLOW}Initializing SQLite database...${NC}"
         ./toughradius -c "$TEMP_CONFIG" -initdb
         
         # Clean up temporary configuration
@@ -141,16 +141,16 @@ EOF
         
         echo ""
         echo -e "${GREEN}================================${NC}"
-        echo -e "${GREEN}SQLite 数据库初始化完成！${NC}"
+        echo -e "${GREEN}SQLite database initialization completed!${NC}"
         echo -e "${GREEN}================================${NC}"
         echo ""
-        echo -e "${GREEN}数据库位置：${NC}"
+        echo -e "${GREEN}Database location:${NC}"
         echo -e "  ${YELLOW}/var/toughradius/data/toughradius.db${NC}"
         echo ""
-        echo -e "${GREEN}启动命令（使用 SQLite）：${NC}"
+        echo -e "${GREEN}Start command (using SQLite):${NC}"
         echo -e "  ${YELLOW}./toughradius -c $TEMP_CONFIG${NC}"
         echo ""
-        echo -e "${GREEN}或者修改 toughradius.yml 配置文件：${NC}"
+        echo -e "${GREEN}Or modify toughradius.yml configuration file:${NC}"
         cat <<EOF
   ${YELLOW}database:
     type: sqlite
@@ -160,23 +160,23 @@ EOF
     ;;
     
     postgres|postgresql)
-        echo -e "${GREEN}使用 PostgreSQL 数据库${NC}"
+        echo -e "${GREEN}Using PostgreSQL database${NC}"
         echo ""
         
         # Load the configuration
-        read -p "PostgreSQL 主机 [127.0.0.1]: " PG_HOST
+        read -p "PostgreSQL host [127.0.0.1]: " PG_HOST
         PG_HOST=${PG_HOST:-127.0.0.1}
         
-        read -p "PostgreSQL 端口 [5432]: " PG_PORT
+        read -p "PostgreSQL port [5432]: " PG_PORT
         PG_PORT=${PG_PORT:-5432}
         
-        read -p "数据库名称 [toughradius]: " PG_DB
+        read -p "Database name [toughradius]: " PG_DB
         PG_DB=${PG_DB:-toughradius}
         
-        read -p "数据库用户 [postgres]: " PG_USER
+        read -p "Database user [postgres]: " PG_USER
         PG_USER=${PG_USER:-postgres}
         
-        read -sp "数据库密码: " PG_PASS
+        read -sp "Database password: " PG_PASS
         echo ""
         
         # Create a temporary configuration file
@@ -227,22 +227,22 @@ logger:
 EOF
         
         echo ""
-        echo -e "${YELLOW}PostgreSQL 数据库配置：${NC}"
-        echo -e "  主机: ${YELLOW}$PG_HOST:$PG_PORT${NC}"
-        echo -e "  数据库: ${YELLOW}$PG_DB${NC}"
-        echo -e "  用户: ${YELLOW}$PG_USER${NC}"
+        echo -e "${YELLOW}PostgreSQL database configuration:${NC}"
+        echo -e "  Host: ${YELLOW}$PG_HOST:$PG_PORT${NC}"
+        echo -e "  Database: ${YELLOW}$PG_DB${NC}"
+        echo -e "  User: ${YELLOW}$PG_USER${NC}"
         echo ""
         
         cd "$PROJECT_ROOT"
         
         # Check if the tool has been compiled
         if [ ! -f "./toughradius" ]; then
-            echo -e "${YELLOW}未找到编译文件，开始编译...${NC}"
+            echo -e "${YELLOW}Binary not found, starting compilation...${NC}"
             go build -o toughradius
-            echo -e "${GREEN}✓ 编译完成${NC}"
+            echo -e "${GREEN}✓ Compilation completed${NC}"
         fi
         
-        echo -e "${YELLOW}开始初始化 PostgreSQL 数据库...${NC}"
+        echo -e "${YELLOW}Initializing PostgreSQL database...${NC}"
         ./toughradius -c "$TEMP_CONFIG" -initdb
         
         # Clean up temporary configuration
@@ -250,19 +250,19 @@ EOF
         
         echo ""
         echo -e "${GREEN}================================${NC}"
-        echo -e "${GREEN}PostgreSQL 数据库初始化完成！${NC}"
+        echo -e "${GREEN}PostgreSQL database initialization completed!${NC}"
         echo -e "${GREEN}================================${NC}"
         echo ""
     ;;
     
     *)
-        echo -e "${RED}错误：不支持的数据库类型 '$DB_TYPE'${NC}"
+        echo -e "${RED}Error: Unsupported database type '$DB_TYPE'${NC}"
         echo ""
-        echo -e "${YELLOW}支持的数据库类型：${NC}"
+        echo -e "${YELLOW}Supported database types:${NC}"
         echo "  - sqlite"
-        echo "  - postgres (或 postgresql)"
+        echo "  - postgres (or postgresql)"
         echo ""
-        echo -e "${YELLOW}使用示例：${NC}"
+        echo -e "${YELLOW}Usage examples:${NC}"
         echo "  ./scripts/init-db.sh sqlite"
         echo "  ./scripts/init-db.sh postgres"
         echo ""
@@ -270,14 +270,14 @@ EOF
     ;;
 esac
 
-echo -e "${GREEN}默认管理员账号：${NC}"
-echo -e "  用户名: ${YELLOW}admin${NC}"
-echo -e "  密码:   ${YELLOW}toughradius${NC}"
+echo -e "${GREEN}Default admin account:${NC}"
+echo -e "  Username: ${YELLOW}admin${NC}"
+echo -e "  Password: ${YELLOW}toughradius${NC}"
 echo ""
-echo -e "${GREEN}API 用户账号：${NC}"
-echo -e "  用户名: ${YELLOW}apiuser${NC}"
-echo -e "  密码:   ${YELLOW}Api_189${NC}"
+echo -e "${GREEN}API user account:${NC}"
+echo -e "  Username: ${YELLOW}apiuser${NC}"
+echo -e "  Password: ${YELLOW}Api_189${NC}"
 echo ""
-echo -e "${GREEN}Web 管理界面：${NC}"
+echo -e "${GREEN}Web admin interface:${NC}"
 echo -e "  ${YELLOW}http://localhost:1816/admin${NC}"
 echo ""

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-插入测试计费记录数据到 ToughRADIUS 数据库
+Insert test accounting records into ToughRADIUS database
 """
 import sqlite3
 from datetime import datetime, timedelta
@@ -13,27 +13,27 @@ db_path = "rundata/data/toughradius.db"
 
 def main():
     if not os.path.exists(db_path):
-        print(f"❌ 数据库文件不存在: {db_path}")
-        print("提示: 请先运行 ToughRADIUS 以创建数据库")
+        print(f"❌ Database file does not exist: {db_path}")
+        print("Hint: Please run ToughRADIUS first to create the database")
         sys.exit(1)
 
-# Connect to the database
+    # Connect to the database
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
-# Check if the tables exist
+    # Check if the tables exist
     cursor.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name='radius_accounting'"
     )
     if not cursor.fetchone():
-        print("❌ radius_accounting 表不存在")
+        print("❌ radius_accounting table does not exist")
         sys.exit(1)
 
-# Clear existing test data
+    # Clear existing test data
     cursor.execute("DELETE FROM radius_accounting")
-    print("✓ 已清空现有计费记录数据")
+    print("✓ Cleared existing accounting records")
 
-# Test data
+    # Test data
     now = datetime.now()
     test_records = [
         # Completed session
@@ -390,10 +390,10 @@ def main():
         inserted_count += 1
 
     conn.commit()
-    print(f"✓ 成功插入 {inserted_count} 条计费记录")
+    print(f"✓ Successfully inserted {inserted_count} accounting records")
 
     # Display statistics of the inserted records
-    print("\n📊 计费记录统计:")
+    print("\n📊 Accounting Statistics:")
     cursor.execute(
         """
         SELECT 
@@ -405,13 +405,13 @@ def main():
     """
     )
     row = cursor.fetchone()
-    print(f"总记录数: {row[0]}")
-    print(f"总会话时长: {row[1]} 秒 ({row[1]//3600} 小时)")
-    print(f"总上传流量: {row[2]:.2f} GB")
-    print(f"总下载流量: {row[3]:.2f} GB")
+    print(f"Total records: {row[0]}")
+    print(f"Total session time: {row[1]} seconds ({row[1]//3600} hours)")
+    print(f"Total upload: {row[2]:.2f} GB")
+    print(f"Total download: {row[3]:.2f} GB")
 
     # Display recent records
-    print("\n📋 最近的5条计费记录:")
+    print("\n📋 Latest 5 accounting records:")
     cursor.execute(
         """
         SELECT 
@@ -427,7 +427,7 @@ def main():
     )
 
     print(
-        f"{'ID':<4} {'用户名':<20} {'NAS':<15} {'IP':<15} {'时长(s)':<10} {'上传MB':<10} {'下载MB':<10}"
+        f"{'ID':<4} {'Username':<20} {'NAS':<15} {'IP':<15} {'Duration(s)':<10} {'Upload MB':<10} {'Download MB':<10}"
     )
     print("-" * 100)
     for row in cursor.fetchall():
@@ -436,7 +436,7 @@ def main():
         )
 
     # Show statistics per user
-    print("\n👥 用户流量统计 (TOP 5):")
+    print("\n👥 User Traffic Statistics (TOP 5):")
     cursor.execute(
         """
         SELECT 
@@ -453,7 +453,7 @@ def main():
     )
 
     print(
-        f"{'用户名':<20} {'会话数':<10} {'总时长(h)':<12} {'上传GB':<12} {'下载GB':<12}"
+        f"{'Username':<20} {'Sessions':<10} {'Total(h)':<12} {'Upload GB':<12} {'Download GB':<12}"
     )
     print("-" * 70)
     for row in cursor.fetchall():
@@ -462,20 +462,22 @@ def main():
         )
 
     conn.close()
-    print(f"\n✓ 测试数据已准备完成!")
-    print(f"\n💡 测试 API 命令:")
-    print(f"   1. 获取所有计费记录: curl http://localhost:1816/api/v1/accounting")
+    print(f"\n✓ Test data prepared successfully!")
+    print(f"\n💡 Test API commands:")
     print(
-        f"   2. 分页查询: curl 'http://localhost:1816/api/v1/accounting?page=1&perPage=5'"
+        f"   1. Get all accounting records: curl http://localhost:1816/api/v1/accounting"
     )
     print(
-        f"   3. 按用户搜索: curl 'http://localhost:1816/api/v1/accounting?username=alice'"
+        f"   2. Paginated query: curl 'http://localhost:1816/api/v1/accounting?page=1&perPage=5'"
     )
     print(
-        f"   4. 按会话ID: curl 'http://localhost:1816/api/v1/accounting?acct_session_id=sess-alice-complete-001'"
+        f"   3. Search by user: curl 'http://localhost:1816/api/v1/accounting?username=alice'"
     )
     print(
-        f"   5. 时间范围: curl 'http://localhost:1816/api/v1/accounting?start_time=2025-01-01T00:00:00Z'"
+        f"   4. By session ID: curl 'http://localhost:1816/api/v1/accounting?acct_session_id=sess-alice-complete-001'"
+    )
+    print(
+        f"   5. Time range: curl 'http://localhost:1816/api/v1/accounting?start_time=2025-01-01T00:00:00Z'"
     )
 
 

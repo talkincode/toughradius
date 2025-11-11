@@ -69,7 +69,7 @@ func init() {
 
 // Usage print usage
 func Usage(str string) {
-	fmt.Fprintf(os.Stderr, str)
+	fmt.Fprintf(os.Stderr, "%s", str)
 	flag.PrintDefaults()
 }
 
@@ -243,9 +243,38 @@ func UUIDBase32() (string, error) {
 
 // Convert to Big Hump format
 func ToCamelCase(str string) string {
+	// Common abbreviations that should be all caps
+	commonAbbreviations := map[string]string{
+		"id":    "ID",
+		"ip":    "IP",
+		"url":   "URL",
+		"uri":   "URI",
+		"api":   "API",
+		"http":  "HTTP",
+		"https": "HTTPS",
+		"sql":   "SQL",
+		"db":    "DB",
+		"cpu":   "CPU",
+		"ram":   "RAM",
+		"dns":   "DNS",
+		"ssh":   "SSH",
+		"ftp":   "FTP",
+		"smtp":  "SMTP",
+		"xml":   "XML",
+		"json":  "JSON",
+		"html":  "HTML",
+		"css":   "CSS",
+		"js":    "JS",
+	}
+
 	temp := strings.Split(str, "_")
 	for i, r := range temp {
-		temp[i] = strings.Title(r)
+		// Check if it's a common abbreviation
+		if abbrev, ok := commonAbbreviations[strings.ToLower(r)]; ok {
+			temp[i] = abbrev
+		} else {
+			temp[i] = strings.Title(r)
+		}
 	}
 	return strings.Join(temp, "")
 }

@@ -7,15 +7,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 )
 
 func TestListAccounting(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Migratetable structure
 	err := db.AutoMigrate(&domain.RadiusAccounting{})
@@ -126,7 +124,6 @@ func TestListAccounting(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := echo.New()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/accounting", nil)
 			q := req.URL.Query()
 			for k, v := range tt.queryParams {
@@ -134,7 +131,7 @@ func TestListAccounting(t *testing.T) {
 			}
 			req.URL.RawQuery = q.Encode()
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := ListAccounting(c)
 			assert.NoError(t, err)
@@ -157,8 +154,7 @@ func TestListAccounting(t *testing.T) {
 }
 
 func TestGetAccounting(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Migratetable structure
 	err := db.AutoMigrate(&domain.RadiusAccounting{})
@@ -214,10 +210,9 @@ func TestGetAccounting(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := echo.New()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/accounting/"+tt.id, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.id)
 
@@ -238,8 +233,7 @@ func TestGetAccounting(t *testing.T) {
 }
 
 func TestAccountingFilters(t *testing.T) {
-	db := setupTestDB(t)
-	setupTestApp(t, db)
+	db, e, appCtx := CreateTestAppContext(t)
 
 	// Migratetable structure
 	err := db.AutoMigrate(&domain.RadiusAccounting{})
@@ -300,7 +294,6 @@ func TestAccountingFilters(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := echo.New()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/accounting", nil)
 			q := req.URL.Query()
 			for k, v := range tt.queryParams {
@@ -308,7 +301,7 @@ func TestAccountingFilters(t *testing.T) {
 			}
 			req.URL.RawQuery = q.Encode()
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := ListAccounting(c)
 			assert.NoError(t, err)

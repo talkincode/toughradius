@@ -45,7 +45,7 @@ func createTestOnlineSession(db *gorm.DB, username, nasAddr, framedIp string) *d
 
 func TestListOnlineSessions(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Migrate online session table
 	err := db.AutoMigrate(&domain.RadiusOnline{})
@@ -209,7 +209,7 @@ func TestListOnlineSessions(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := ListOnlineSessions(c)
 			require.NoError(t, err)
@@ -231,7 +231,7 @@ func TestListOnlineSessions(t *testing.T) {
 
 func TestGetOnlineSession(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Migrate online session table
 	err := db.AutoMigrate(&domain.RadiusOnline{})
@@ -289,7 +289,7 @@ func TestGetOnlineSession(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions/"+tt.sessionID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.sessionID)
 
@@ -321,7 +321,7 @@ func TestGetOnlineSession(t *testing.T) {
 
 func TestDeleteOnlineSession(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Migrate online session table
 	err := db.AutoMigrate(&domain.RadiusOnline{})
@@ -396,7 +396,7 @@ func TestDeleteOnlineSession(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodDelete, "/api/v1/sessions/"+tt.sessionID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.sessionID)
 
@@ -435,7 +435,7 @@ func TestDeleteOnlineSession(t *testing.T) {
 // TestSessionsEdgeCases Test edge cases
 func TestSessionsEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Migrate online session table
 	err := db.AutoMigrate(&domain.RadiusOnline{})
@@ -445,7 +445,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListOnlineSessions(c)
 		require.NoError(t, err)
@@ -469,7 +469,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions?page=3&perPage=10", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListOnlineSessions(c)
 		require.NoError(t, err)
@@ -490,7 +490,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions?username=@", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListOnlineSessions(c)
 		require.NoError(t, err)
@@ -511,7 +511,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions?nas_addr=0.0.0.0", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListOnlineSessions(c)
 		require.NoError(t, err)
@@ -529,7 +529,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions/"+fmt.Sprint(session.ID), nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues(fmt.Sprint(session.ID))
 
@@ -563,7 +563,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodDelete, "/api/v1/sessions/1", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
@@ -594,7 +594,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions?username=multilogin", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListOnlineSessions(c)
 		require.NoError(t, err)
@@ -620,7 +620,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e := setupTestEcho()
 		req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions?sort=acct_start_time&order=DESC", nil)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := ListOnlineSessions(c)
 		require.NoError(t, err)
@@ -637,7 +637,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 // TestSessionsFilterCombinations Test various filter combinations
 func TestSessionsFilterCombinations(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Migrate online session table
 	err := db.AutoMigrate(&domain.RadiusOnline{})
@@ -693,7 +693,7 @@ func TestSessionsFilterCombinations(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/sessions"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := ListOnlineSessions(c)
 			require.NoError(t, err)

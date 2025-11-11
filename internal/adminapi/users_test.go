@@ -46,7 +46,7 @@ func createTestUser(db *gorm.DB, username string, profileID int64) *domain.Radiu
 
 func TestListUsers(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// CreateTest Profile
 	profile := createTestProfile(db, "test-profile")
@@ -114,7 +114,7 @@ func TestListUsers(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/users"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := listRadiusUsers(c)
 			require.NoError(t, err)
@@ -141,7 +141,7 @@ func TestListUsers(t *testing.T) {
 
 func TestGetUser(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	profile := createTestProfile(db, "test-profile")
@@ -177,7 +177,7 @@ func TestGetUser(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/users/"+tt.userID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.userID)
 
@@ -207,7 +207,7 @@ func TestGetUser(t *testing.T) {
 
 func TestCreateUser(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// CreateTest Profile
 	profile := createTestProfile(db, "test-profile")
@@ -317,7 +317,7 @@ func TestCreateUser(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := createRadiusUser(c)
 			require.NoError(t, err)
@@ -347,7 +347,7 @@ func TestCreateUser(t *testing.T) {
 
 func TestUpdateUser(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	profile := createTestProfile(db, "test-profile")
@@ -455,7 +455,7 @@ func TestUpdateUser(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/users/"+tt.userID, strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.userID)
 
@@ -487,7 +487,7 @@ func TestUpdateUser(t *testing.T) {
 
 func TestDeleteUser(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	profile := createTestProfile(db, "test-profile")
@@ -525,7 +525,7 @@ func TestDeleteUser(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/"+tt.userID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.userID)
 
@@ -556,7 +556,7 @@ func TestDeleteUser(t *testing.T) {
 // TestUserEdgeCases Test edge cases
 func TestUserEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	profile := createTestProfile(db, "test-profile")
 
@@ -570,7 +570,7 @@ func TestUserEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createRadiusUser(c)
 		require.NoError(t, err)
@@ -594,7 +594,7 @@ func TestUserEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createRadiusUser(c)
 		require.NoError(t, err)
@@ -620,7 +620,7 @@ func TestUserEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/api/v1/users/1", strings.NewReader(`{"realname": "New Name"}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
@@ -649,7 +649,7 @@ func TestUserEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createRadiusUser(c)
 		require.NoError(t, err)

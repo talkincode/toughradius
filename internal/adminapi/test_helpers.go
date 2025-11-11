@@ -44,8 +44,8 @@ func setupTestDB(t *testing.T) *gorm.DB {
 }
 
 // setupTestApp creates a test application context and sets it globally
-// This is a compatibility function for existing tests
-func setupTestApp(t *testing.T, db *gorm.DB) {
+// Returns: app context for injecting into echo context
+func setupTestApp(t *testing.T, db *gorm.DB) app.AppContext {
 	cfg := &config.AppConfig{
 		System: config.SysConfig{
 			Appid:    "TestApp",
@@ -64,11 +64,9 @@ func setupTestApp(t *testing.T, db *gorm.DB) {
 
 	// Create application but don't call Init() which would create a new DB
 	testApp := app.NewApplication(cfg)
-
-	// We need to inject the test DB into the application
-	// Since we removed the global setters, we'll need to work with the app directly
-	// For now, let's just initialize normally and the tests will use GetDB(c)
 	testApp.Init(cfg)
+
+	return testApp
 }
 
 // CreateTestAppContext creates a test application context with an in-memory SQLite database
@@ -91,9 +89,23 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 	testApp := app.NewApplication(cfg)
 	testApp.Init(cfg)
 
+	// Migrate test tables
+	db := testApp.DB()
+	err := db.AutoMigrate(
+		&domain.RadiusProfile{},
+		&domain.RadiusUser{},
+		&domain.NetNode{},
+		&domain.NetNas{},
+		&domain.RadiusAccounting{},
+		&domain.RadiusOnline{},
+		&domain.SysOpr{},
+		&domain.SysConfig{},
+	)
+	require.NoError(t, err)
+
 	e := setupTestEcho()
 
-	return testApp.DB(), e, testApp
+	return db, e, testApp
 }
 
 // CreateTestContext creates an echo context with appCtx injected
@@ -102,4 +114,14 @@ func CreateTestContext(e *echo.Echo, db *gorm.DB, req *http.Request, rec *httpte
 	c.Set("appCtx", appCtx)
 	c.Set("db", db)
 	return c
+}
+
+// CreateTestContextWithApp is a helper that combines setupTestEcho, setupTestDB, and setupTestApp
+// for backward compatibility with existing tests
+func CreateTestContextWithApp(t *testing.T, req *http.Request, rec *httptest.ResponseRecorder) (echo.Context, *gorm.DB, app.AppContext) {
+	e := setupTestEcho()
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	c := CreateTestContext(e, db, req, rec, appCtx)
+	return c, db, appCtx
 }

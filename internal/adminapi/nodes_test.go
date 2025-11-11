@@ -43,7 +43,7 @@ func createTestNode(db *gorm.DB, name string) *domain.NetNode {
 
 func TestListNodes(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	createTestNode(db, "node1")
@@ -112,7 +112,7 @@ func TestListNodes(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/network/nodes"+tt.queryParams, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := listNodes(c)
 			require.NoError(t, err)
@@ -139,7 +139,7 @@ func TestListNodes(t *testing.T) {
 
 func TestGetNode(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	node := createTestNode(db, "testnode")
@@ -174,7 +174,7 @@ func TestGetNode(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodGet, "/api/v1/network/nodes/"+tt.nodeID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.nodeID)
 
@@ -203,7 +203,7 @@ func TestGetNode(t *testing.T) {
 
 func TestCreateNode(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	tests := []struct {
 		name           string
@@ -301,7 +301,7 @@ func TestCreateNode(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/api/v1/network/nodes", strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			// Call the handler and handle any potential errors
 			handleTestError(rec, createNode(c))
@@ -336,7 +336,7 @@ func TestCreateNode(t *testing.T) {
 
 func TestUpdateNode(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	_ = createTestNode(db, "original-node")
@@ -423,7 +423,7 @@ func TestUpdateNode(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPut, "/api/v1/network/nodes/"+tt.nodeID, strings.NewReader(tt.requestBody))
 			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.nodeID)
 
@@ -454,7 +454,7 @@ func TestUpdateNode(t *testing.T) {
 
 func TestDeleteNode(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	// Create test data
 	_ = createTestNode(db, "node-to-delete")
@@ -511,7 +511,7 @@ func TestDeleteNode(t *testing.T) {
 			e := setupTestEcho()
 			req := httptest.NewRequest(http.MethodDelete, "/api/v1/network/nodes/"+tt.nodeID, nil)
 			rec := httptest.NewRecorder()
-			c := e.NewContext(req, rec)
+			c := CreateTestContext(e, db, req, rec, appCtx)
 			c.SetParamNames("id")
 			c.SetParamValues(tt.nodeID)
 
@@ -542,7 +542,7 @@ func TestDeleteNode(t *testing.T) {
 // TestNodeEdgeCases Test edge cases
 func TestNodeEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
-	setupTestApp(t, db)
+	appCtx := setupTestApp(t, db)
 
 	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {
 		node := createTestNode(db, "test-node")
@@ -553,7 +553,7 @@ func TestNodeEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/api/v1/network/nodes/1", strings.NewReader(`{"remark": "New remark"}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
@@ -579,7 +579,7 @@ func TestNodeEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/network/nodes", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 
 		err := createNode(c)
 		require.NoError(t, err)
@@ -606,7 +606,7 @@ func TestNodeEdgeCases(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPut, "/api/v1/network/nodes/1", strings.NewReader(`{"remark": "Updated"}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
