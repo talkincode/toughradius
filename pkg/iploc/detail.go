@@ -63,7 +63,7 @@ func (detail *Detail) fill() *Detail {
 		return detail
 	}
 
-	detail.Country = "中国"
+	detail.Country = "China"
 	detail.Province = string(rs[:i])
 
 	if i >= len(rs) {

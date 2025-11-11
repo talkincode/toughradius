@@ -47,53 +47,53 @@ func formatValidationError(err error) map[string]interface{} {
 		field := strings.ToLower(err.Field())
 		switch err.Tag() {
 		case "required":
-			errors[field] = fmt.Sprintf("%s 不能为空", err.Field())
+			errors[field] = fmt.Sprintf("%s cannot be empty", err.Field())
 		case "email":
-			errors[field] = "请输入有效的邮箱地址"
+			errors[field] = "Please provide a valid email address"
 		case "min":
-			errors[field] = fmt.Sprintf("%s 最小长度为 %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s minimum length is %s", err.Field(), err.Param())
 		case "max":
-			errors[field] = fmt.Sprintf("%s 最大长度为 %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s maximum length is %s", err.Field(), err.Param())
 		case "gte":
-			errors[field] = fmt.Sprintf("%s 必须大于等于 %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s must be greater than or equal to %s", err.Field(), err.Param())
 		case "lte":
-			errors[field] = fmt.Sprintf("%s 必须小于等于 %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s must be less than or equal to %s", err.Field(), err.Param())
 		case "gt":
-			errors[field] = fmt.Sprintf("%s 必须大于 %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s must be greater than %s", err.Field(), err.Param())
 		case "lt":
-			errors[field] = fmt.Sprintf("%s 必须小于 %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s must be less than %s", err.Field(), err.Param())
 		case "oneof":
-			errors[field] = fmt.Sprintf("%s 必须是以下值之一: %s", err.Field(), err.Param())
+			errors[field] = fmt.Sprintf("%s must be one of: %s", err.Field(), err.Param())
 		case "ip":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 IP 地址", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid IP address", err.Field())
 		case "ipv4":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 IPv4 地址", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid IPv4 address", err.Field())
 		case "ipv6":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 IPv6 地址", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid IPv6 address", err.Field())
 		case "cidr":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 CIDR 格式", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid CIDR", err.Field())
 		case "cidrv4":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 IPv4 CIDR 格式", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid IPv4 CIDR", err.Field())
 		case "cidrv6":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 IPv6 CIDR 格式", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid IPv6 CIDR", err.Field())
 		case "mac":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 MAC 地址", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid MAC address", err.Field())
 		case "url":
-			errors[field] = fmt.Sprintf("%s 必须是有效的 URL", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid URL", err.Field())
 		case "alphanum":
-			errors[field] = fmt.Sprintf("%s 只能包含字母和数字", err.Field())
+			errors[field] = fmt.Sprintf("%s may only contain letters and digits", err.Field())
 		case "addrpool":
-			errors[field] = fmt.Sprintf("%s 必须是有效的地址池格式（CIDR）", err.Field())
+			errors[field] = fmt.Sprintf("%s must be a valid address pool format (CIDR)", err.Field())
 		case "radiusstatus":
-			errors[field] = fmt.Sprintf("%s 必须是 enabled 或 disabled", err.Field())
+			errors[field] = fmt.Sprintf("%s must be enabled or disabled", err.Field())
 		default:
-			errors[field] = fmt.Sprintf("%s 验证失败: %s", err.Field(), err.Tag())
+			errors[field] = fmt.Sprintf("%s validation failed: %s", err.Field(), err.Tag())
 		}
 	}
 
 	return map[string]interface{}{
 		"error":   "VALIDATION_ERROR",
-		"message": "请求参数验证失败",
+		"message": "Request parameter validation failed",
 		"details": errors,
 	}
 }

@@ -79,12 +79,12 @@ func ListOnlineSessions(c echo.Context) error {
 func GetOnlineSession(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Session ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid Session ID", nil)
 	}
 
 	var session domain.RadiusOnline
 	if err := app.GDB().First(&session, id).Error; err != nil {
-		return fail(c, http.StatusNotFound, "NOT_FOUND", "在线会话不存在", nil)
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
 	}
 
 	return ok(c, session)
@@ -99,12 +99,12 @@ func GetOnlineSession(c echo.Context) error {
 func DeleteOnlineSession(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Session ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid Session ID", nil)
 	}
 
 	// Delete online session record
 	if err := app.GDB().Delete(&domain.RadiusOnline{}, id).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "强制下线失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to terminate session", err.Error())
 	}
 
 	// TODO: Send CoA/DM to NAS device to actually force offline

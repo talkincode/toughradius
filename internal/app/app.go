@@ -128,7 +128,7 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		cfg.Database.Type = "postgres"
 	}
 	a.gormDB = getDatabase(cfg.Database)
-	zap.S().Infof("数据库连接成功，类型: %s", cfg.Database.Type)
+	zap.S().Infof("Database connection successful, type: %s", cfg.Database.Type)
 
 	// wait for database initialization to complete
 	go func() {

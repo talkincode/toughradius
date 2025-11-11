@@ -20,24 +20,24 @@ const (
 
 /*
 	<qqwry.dat>
-	原始下载地址 http://www.cz88.net/fox/ipdat.shtml
-	原版qqwry.dat, 字节序: LittleEndian 编码字符集: GBK
-	使用转换工具 iploc-conv 转换为UTF-8
-	文件内容结构, 所有偏移位置都是3字节的绝对偏移
-	<文件头 8字节|数据区|索引区 7字节的倍数>
-	[文件头]	索引区开始位置(4字节)|索引区结束位置(4字节)
-	[数据区] 结束IP(4字节)|国家地区数据
-			*国家地区数据
-				通常是 国家数据(0x00结尾)|地区数据(0x00结尾)
-				当国家地区数据的首字节是 0x01 或 0x02时为重定向模式，后3字节为偏移位置
+	Original download URL: http://www.cz88.net/fox/ipdat.shtml
+	Original qqwry.dat, byte order: LittleEndian, encoding: GBK
+	Use the iploc-conv tool to convert to UTF-8
+	File layout, all offsets are absolute 3-byte values
+	<Header 8 bytes|Data section|Index section multiple of 7 bytes>
+	[Header]	Index start position (4 bytes)|Index end position (4 bytes)
+	[Data section]	End IP (4 bytes)|Country and region data
+			*Country and region data
+				Typically country data (ends with 0x00)|Region data (ends with 0x00)
+				When the first byte of country/region data is 0x01 or 0x02 it indicates redirect mode, followed by a 3-byte offset
 
-				0x01	国家和地区都重定向, 偏移位置(3字节)
-				0x02	国家重定向, 偏移位置(3字节)|地区数据
-				无重定向	国家数据(0x00结尾)|地区数据
+				0x01	Both country and region redirected, offset (3 bytes)
+				0x02	Country redirected, offset (3 bytes)|Region data
+				No redirect	Country data (ends with 0x00)|Region data
 
-				地区数据可能还有一次重定向(0x02开头)
+				Region data might contain another redirect (starts with 0x02)
 
-	[索引区] 起始IP(4字节)|偏移位置(3字节) = 每条索引 7字节
+	[Index section] Start IP (4 bytes)|Offset (3 bytes) = Each index entry is 7 bytes
 */
 
 type Parser struct {

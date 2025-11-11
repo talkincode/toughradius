@@ -125,7 +125,7 @@ func (f *WebForm) GetMustVal(name string) (string, error) {
 	if val != "" {
 		return val, nil
 	}
-	return "", errors.New(name + " 不能为空")
+	return "", errors.New(name + " cannot be empty")
 }
 
 func (f *WebForm) GetVal2(name string, defval string) string {

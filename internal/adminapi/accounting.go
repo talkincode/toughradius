@@ -89,12 +89,12 @@ func ListAccounting(c echo.Context) error {
 func GetAccounting(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Accounting ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid Accounting ID", nil)
 	}
 
 	var record domain.RadiusAccounting
 	if err := app.GDB().First(&record, id).Error; err != nil {
-		return fail(c, http.StatusNotFound, "NOT_FOUND", "Accounting 记录不存在", nil)
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "Accounting record not found", nil)
 	}
 
 	return ok(c, record)

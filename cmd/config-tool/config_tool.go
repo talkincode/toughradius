@@ -12,12 +12,12 @@ import (
 func validateConfigSchemas(filePath string) error {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
-		return fmt.Errorf("读取文件失败: %w", err)
+		return fmt.Errorf("failed to read file: %w", err)
 	}
 
 	var schemasData app.ConfigSchemasJSON
 	if err := json.Unmarshal(data, &schemasData); err != nil {
-		return fmt.Errorf("JSON 格式错误: %w", err)
+		return fmt.Errorf("invalid JSON format: %w", err)
 	}
 
 		// Validate each configuration entry
@@ -25,18 +25,18 @@ func validateConfigSchemas(filePath string) error {
 	for i, schema := range schemasData.Schemas {
 		// Check required fields
 		if schema.Key == "" {
-			return fmt.Errorf("配置项 %d: key 不能为空", i)
+			return fmt.Errorf("config item %d: key cannot be empty", i)
 		}
 		if schema.Type == "" {
-			return fmt.Errorf("配置项 %d (%s): type 不能为空", i, schema.Key)
+			return fmt.Errorf("config item %d (%s): type cannot be empty", i, schema.Key)
 		}
 		if schema.Default == "" {
-			return fmt.Errorf("配置项 %d (%s): default 不能为空", i, schema.Key)
+			return fmt.Errorf("config item %d (%s): default cannot be empty", i, schema.Key)
 		}
 
 		// Check for duplicate keys
 		if keyMap[schema.Key] {
-			return fmt.Errorf("配置项 %d (%s): key 重复", i, schema.Key)
+			return fmt.Errorf("config item %d (%s): duplicate key", i, schema.Key)
 		}
 		keyMap[schema.Key] = true
 
@@ -50,13 +50,13 @@ func validateConfigSchemas(filePath string) error {
 			}
 		}
 		if !typeValid {
-			return fmt.Errorf("配置项 %d (%s): 无效的类型 %s，支持的类型: %v", i, schema.Key, schema.Type, validTypes)
+			return fmt.Errorf("config item %d (%s): invalid type %s, supported: %v", i, schema.Key, schema.Type, validTypes)
 		}
 
 		// Validate integer ranges
 		if schema.Type == "int" {
 			if schema.Min != nil && schema.Max != nil && *schema.Min > *schema.Max {
-				return fmt.Errorf("配置项 %d (%s): min 值不能大于 max 值", i, schema.Key)
+				return fmt.Errorf("config item %d (%s): min value cannot be greater than max", i, schema.Key)
 			}
 		}
 
@@ -70,12 +70,12 @@ func validateConfigSchemas(filePath string) error {
 				}
 			}
 			if !defaultInEnum {
-				return fmt.Errorf("配置项 %d (%s): 默认值 %s 不在枚举列表中 %v", i, schema.Key, schema.Default, schema.Enum)
+				return fmt.Errorf("config item %d (%s): default %s is not in enum %v", i, schema.Key, schema.Default, schema.Enum)
 			}
 		}
 	}
 
-	fmt.Printf("✓ 配置文件验证成功！共有 %d 个配置项\n", len(schemasData.Schemas))
+	fmt.Printf("✓ Configuration validation succeeded! %d entries found\n", len(schemasData.Schemas))
 	return nil
 }
 
@@ -91,7 +91,7 @@ func printConfigSummary(filePath string) error {
 		return err
 	}
 
-	fmt.Printf("\n配置摘要 (共 %d 项):\n", len(schemasData.Schemas))
+	fmt.Printf("\nConfiguration summary (%d entries):\n", len(schemasData.Schemas))
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 	categoryMap := make(map[string][]app.ConfigSchemaJSON)
@@ -101,20 +101,20 @@ func printConfigSummary(filePath string) error {
 		if idx := findDotIndex(schema.Key); idx != -1 {
 			category = schema.Key[:idx]
 		} else {
-			category = "其他"
+			category = "Other"
 		}
 		categoryMap[category] = append(categoryMap[category], schema)
 	}
 
 	for category, schemas := range categoryMap {
-		fmt.Printf("\n🔧 %s (%d 项):\n", category, len(schemas))
+		fmt.Printf("\n🔧 %s (%d entries):\n", category, len(schemas))
 		for _, schema := range schemas {
 			fmt.Printf("  • %-30s [%s] %s\n", schema.Key, schema.Type, schema.Description)
 			if len(schema.Enum) > 0 {
-				fmt.Printf("    └─ 枚举: %v\n", schema.Enum)
+				fmt.Printf("    └─ Enum: %v\n", schema.Enum)
 			}
 			if schema.Min != nil || schema.Max != nil {
-				rangeInfo := "    └─ 范围: "
+				rangeInfo := "    └─ Range: "
 				if schema.Min != nil {
 					rangeInfo += fmt.Sprintf("min=%d ", *schema.Min)
 				}
@@ -140,15 +140,15 @@ func findDotIndex(s string) int {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println("使用方法:")
-		fmt.Println("  go run config_tool.go validate <config_schemas.json>  # 验证配置文件")
-		fmt.Println("  go run config_tool.go summary <config_schemas.json>  # 显示配置摘要")
+		fmt.Println("Usage:")
+		fmt.Println("  go run config_tool.go validate <config_schemas.json>  # validate the configuration file")
+		fmt.Println("  go run config_tool.go summary <config_schemas.json>  # display the configuration summary")
 		os.Exit(1)
 	}
 
 	command := os.Args[1]
 	if len(os.Args) < 3 {
-		fmt.Println("错误: 请提供配置文件路径")
+		fmt.Println("Error: Provide the configuration file path")
 		os.Exit(1)
 	}
 
@@ -157,21 +157,21 @@ func main() {
 	switch command {
 	case "validate":
 		if err := validateConfigSchemas(filePath); err != nil {
-			fmt.Printf("❌ 验证失败: %v\n", err)
+			fmt.Printf("❌ Validation failed: %v\n", err)
 			os.Exit(1)
 		}
 	case "summary":
 		if err := validateConfigSchemas(filePath); err != nil {
-			fmt.Printf("❌ 验证失败: %v\n", err)
+			fmt.Printf("❌ Validation failed: %v\n", err)
 			os.Exit(1)
 		}
 		if err := printConfigSummary(filePath); err != nil {
-			fmt.Printf("❌ 显示摘要失败: %v\n", err)
+			fmt.Printf("❌ Failed to display summary: %v\n", err)
 			os.Exit(1)
 		}
 	default:
-		fmt.Printf("未知命令: %s\n", command)
-		fmt.Println("支持的命令: validate, summary")
+		fmt.Printf("Unknown command: %s\n", command)
+		fmt.Println("Supported commands: validate, summary")
 		os.Exit(1)
 	}
 }

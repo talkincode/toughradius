@@ -40,16 +40,16 @@ func listNodes(c echo.Context) error {
 
 	var total int64
 	if err := base.Count(&total).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询网络节点失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query network nodes", err.Error())
 	}
 
 	var nodes []domain.NetNode
-	if err := base.
-		Order("id DESC").
-		Offset((page - 1) * pageSize).
-		Limit(pageSize).
-		Find(&nodes).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询网络节点失败", err.Error())
+		if err := base.
+			Order("id DESC").
+			Offset((page - 1) * pageSize).
+			Limit(pageSize).
+			Find(&nodes).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query network nodes", err.Error())
 	}
 
 	return paged(c, nodes, total, page, pageSize)
@@ -59,14 +59,14 @@ func listNodes(c echo.Context) error {
 func getNode(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的节点 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid node ID", nil)
 	}
 
 	var node domain.NetNode
 	if err := app.GDB().Where("id = ?", id).First(&node).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusNotFound, "NODE_NOT_FOUND", "节点不存在", nil)
+		return fail(c, http.StatusNotFound, "NODE_NOT_FOUND", "Node not found", nil)
 	} else if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询网络节点失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query network nodes", err.Error())
 	}
 
 	return ok(c, node)
@@ -76,7 +76,7 @@ func getNode(c echo.Context) error {
 func createNode(c echo.Context) error {
 	var payload nodePayload
 	if err := c.Bind(&payload); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析节点参数", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse node parameters", nil)
 	}
 
 	// Validate the request payload
@@ -90,7 +90,7 @@ func createNode(c echo.Context) error {
 	var exists int64
 	app.GDB().Model(&domain.NetNode{}).Where("name = ?", payload.Name).Count(&exists)
 	if exists > 0 {
-		return fail(c, http.StatusConflict, "NODE_EXISTS", "节点名称已存在", nil)
+		return fail(c, http.StatusConflict, "NODE_EXISTS", "Node name already exists", nil)
 	}
 
 	node := domain.NetNode{
@@ -103,7 +103,7 @@ func createNode(c echo.Context) error {
 	}
 
 	if err := app.GDB().Create(&node).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "创建网络节点失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create network node", err.Error())
 	}
 
 	return ok(c, node)
@@ -113,12 +113,12 @@ func createNode(c echo.Context) error {
 func updateNode(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的节点 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid node ID", nil)
 	}
 
 	var payload nodePayload
 	if err := c.Bind(&payload); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析节点参数", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse node parameters", nil)
 	}
 
 	// Validate the request payload
@@ -128,9 +128,9 @@ func updateNode(c echo.Context) error {
 
 	var node domain.NetNode
 	if err := app.GDB().Where("id = ?", id).First(&node).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusNotFound, "NODE_NOT_FOUND", "节点不存在", nil)
+		return fail(c, http.StatusNotFound, "NODE_NOT_FOUND", "Node not found", nil)
 	} else if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询网络节点失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query network nodes", err.Error())
 	}
 
 	// If the name is changed, check whether another node already uses it
@@ -139,7 +139,7 @@ func updateNode(c echo.Context) error {
 		var exists int64
 		app.GDB().Model(&domain.NetNode{}).Where("name = ? AND id != ?", payload.Name, id).Count(&exists)
 		if exists > 0 {
-			return fail(c, http.StatusConflict, "NODE_EXISTS", "节点名称已存在", nil)
+			return fail(c, http.StatusConflict, "NODE_EXISTS", "Node name already exists", nil)
 		}
 		node.Name = payload.Name
 	}
@@ -154,7 +154,7 @@ func updateNode(c echo.Context) error {
 	node.UpdatedAt = time.Now()
 
 	if err := app.GDB().Save(&node).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新网络节点失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update network node", err.Error())
 	}
 
 	return ok(c, node)
@@ -164,18 +164,18 @@ func updateNode(c echo.Context) error {
 func deleteNode(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的节点 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid node ID", nil)
 	}
 
 	// Check whether NAS devices are associated with this node
 	var nasCount int64
 	app.GDB().Model(&domain.NetNas{}).Where("node_id = ?", id).Count(&nasCount)
 	if nasCount > 0 {
-		return fail(c, http.StatusConflict, "NODE_IN_USE", "该节点下还有 NAS 设备，无法删除", nil)
+		return fail(c, http.StatusConflict, "NODE_IN_USE", "This node still has NAS devices and cannot be deleted", nil)
 	}
 
 	if err := app.GDB().Where("id = ?", id).Delete(&domain.NetNode{}).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "删除网络节点失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete network node", err.Error())
 	}
 
 	return ok(c, map[string]interface{}{

@@ -25,7 +25,7 @@ func getDatabase(config config.DBConfig) *gorm.DB {
 	case "postgres", "postgresql":
 		return getPgDatabase(config)
 	default:
-		zap.S().Fatalf("不支持的数据库类型: %s，支持的类型: postgres, sqlite", config.Type)
+		zap.S().Fatalf("Unsupported database type: %s, supported types: postgres, sqlite", config.Type)
 		return nil
 	}
 }
@@ -38,7 +38,7 @@ func getSqliteDatabase(config config.DBConfig) *gorm.DB {
 		dbPath = path.Join(GConfig().System.Workdir, "data", dbPath)
 	}
 
-	zap.S().Infof("SQLite 数据库路径: %s", dbPath)
+zap.S().Infof("SQLite database path: %s", dbPath)
 
 	pool, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,

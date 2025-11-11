@@ -135,7 +135,7 @@ func listRadiusUsers(c echo.Context) error {
 	var total int64
 	countQuery := base.Session(&gorm.Session{NewDB: true})
 	if err := countQuery.Model(&domain.RadiusUser{}).Count(&total).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
 	}
 
 	var users []domain.RadiusUser
@@ -144,7 +144,7 @@ func listRadiusUsers(c echo.Context) error {
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&users).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
 	}
 
 	for i := range users {
@@ -157,13 +157,13 @@ func listRadiusUsers(c echo.Context) error {
 func getRadiusUser(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的用户 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
 	var user domain.RadiusUser
 	if err := app.GDB().Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "用户不存在", nil)
+		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "User not found", nil)
 	} else if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
 	}
 	user.Password = ""
 	return ok(c, user)
@@ -172,7 +172,7 @@ func getRadiusUser(c echo.Context) error {
 func createRadiusUser(c echo.Context) error {
 	var req UserRequest
 	if err := c.Bind(&req); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析用户参数", err.Error())
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
 	}
 
 	// Auto-validate request parameters
@@ -185,35 +185,35 @@ func createRadiusUser(c echo.Context) error {
 
 	// Additional business logic validation
 	if user.Username == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_USERNAME", "用户名不能为空", nil)
+		return fail(c, http.StatusBadRequest, "MISSING_USERNAME", "Username is required", nil)
 	}
 	if req.Password == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_PASSWORD", "密码不能为空", nil)
+		return fail(c, http.StatusBadRequest, "MISSING_PASSWORD", "Password is required", nil)
 	}
 	if user.ProfileId == 0 {
-		return fail(c, http.StatusBadRequest, "MISSING_PROFILE_ID", "计费策略不能为空", nil)
+		return fail(c, http.StatusBadRequest, "MISSING_PROFILE_ID", "Billing profile is required", nil)
 	}
 
 	// CheckUsernamealready exists
 	var exists int64
 	app.GDB().Model(&domain.RadiusUser{}).Where("username = ?", user.Username).Count(&exists)
 	if exists > 0 {
-		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "用户名已存在", nil)
+		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
 
 	// Validate if accounting profile exists
 	var profile domain.RadiusProfile
 	if err := app.GDB().Where("id = ?", user.ProfileId).First(&profile).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "关联的计费策略不存在", nil)
+			return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "Associated billing profile not found", nil)
 		}
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询计费策略失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query billing profile", err.Error())
 	}
 
 	// ParseExpiration time
 	expire, err := parseTimeInput(req.ExpireTime, time.Now().AddDate(1, 0, 0))
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "过期时间格式不正确", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "Invalid expire time format", nil)
 	}
 
 	// Set default values and inherit from profile inherited values
@@ -230,7 +230,7 @@ func createRadiusUser(c echo.Context) error {
 	user.UpdatedAt = time.Now()
 
 	if err := app.GDB().Create(&user).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "创建用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create user", err.Error())
 	}
 
 	user.Password = ""
@@ -240,12 +240,12 @@ func createRadiusUser(c echo.Context) error {
 func updateRadiusUser(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的用户 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
 
 	var req UserRequest
 	if err := c.Bind(&req); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析用户参数", err.Error())
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
 	}
 
 	// Auto-validate request parameters
@@ -255,9 +255,9 @@ func updateRadiusUser(c echo.Context) error {
 
 	var user domain.RadiusUser
 	if err := app.GDB().Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "用户不存在", nil)
+		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "User not found", nil)
 	} else if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
 	}
 
 	updateData := req.toRadiusUser()
@@ -267,7 +267,7 @@ func updateRadiusUser(c echo.Context) error {
 		var count int64
 		app.GDB().Model(&domain.RadiusUser{}).Where("username = ? AND id != ?", updateData.Username, id).Count(&count)
 		if count > 0 {
-			return fail(c, http.StatusConflict, "USERNAME_EXISTS", "用户名已存在", nil)
+			return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 		}
 	}
 
@@ -276,9 +276,9 @@ func updateRadiusUser(c echo.Context) error {
 		var profile domain.RadiusProfile
 		if err := app.GDB().Where("id = ?", updateData.ProfileId).First(&profile).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "关联的计费策略不存在", nil)
+				return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "Associated billing profile not found", nil)
 			}
-			return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询计费策略失败", err.Error())
+			return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query billing profile", err.Error())
 		}
 		user.ProfileId = updateData.ProfileId
 		user.ActiveNum = profile.ActiveNum
@@ -334,7 +334,7 @@ func updateRadiusUser(c echo.Context) error {
 	if req.ExpireTime != "" {
 		expire, err := parseTimeInput(req.ExpireTime, user.ExpireTime)
 		if err != nil {
-			return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "过期时间格式不正确", nil)
+			return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "Invalid expire time format", nil)
 		}
 		updates["expire_time"] = expire
 	}
@@ -342,7 +342,7 @@ func updateRadiusUser(c echo.Context) error {
 	updates["updated_at"] = time.Now()
 
 	if err := app.GDB().Model(&user).Updates(updates).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update user", err.Error())
 	}
 
 	// Re-query latest data
@@ -354,10 +354,10 @@ func updateRadiusUser(c echo.Context) error {
 func deleteRadiusUser(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的用户 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
 	if err := app.GDB().Where("id = ?", id).Delete(&domain.RadiusUser{}).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "删除用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete user", err.Error())
 	}
 	return ok(c, map[string]interface{}{
 		"id": id,

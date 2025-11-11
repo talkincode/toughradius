@@ -72,12 +72,12 @@ func ListProfiles(c echo.Context) error {
 func GetProfile(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Profile ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid profile ID", nil)
 	}
 
 	var profile domain.RadiusProfile
 	if err := app.GDB().First(&profile, id).Error; err != nil {
-		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile 不存在", nil)
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile not found", nil)
 	}
 
 	return ok(c, profile)
@@ -171,7 +171,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 func CreateProfile(c echo.Context) error {
 	var req ProfileRequest
 	if err := c.Bind(&req); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
 	}
 
 	// Auto-validate request parameters
@@ -186,7 +186,7 @@ func CreateProfile(c echo.Context) error {
 	var count int64
 	app.GDB().Model(&domain.RadiusProfile{}).Where("name = ?", profile.Name).Count(&count)
 	if count > 0 {
-		return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile 名称已存在", nil)
+		return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile name already exists", nil)
 	}
 
 	// Set default values
@@ -195,7 +195,7 @@ func CreateProfile(c echo.Context) error {
 	}
 
 	if err := app.GDB().Create(profile).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "创建 Profile 失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "Failed to create profile", err.Error())
 	}
 
 	return ok(c, profile)
@@ -211,17 +211,17 @@ func CreateProfile(c echo.Context) error {
 func UpdateProfile(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Profile ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid profile ID", nil)
 	}
 
 	var profile domain.RadiusProfile
 	if err := app.GDB().First(&profile, id).Error; err != nil {
-		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile 不存在", nil)
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile not found", nil)
 	}
 
 	var req ProfileRequest
 	if err := c.Bind(&req); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
 	}
 
 	// Auto-validate request parameters
@@ -236,7 +236,7 @@ func UpdateProfile(c echo.Context) error {
 		var count int64
 		app.GDB().Model(&domain.RadiusProfile{}).Where("name = ? AND id != ?", updateData.Name, id).Count(&count)
 		if count > 0 {
-			return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile 名称已存在", nil)
+			return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile name already exists", nil)
 		}
 	}
 
@@ -280,7 +280,7 @@ func UpdateProfile(c echo.Context) error {
 	}
 
 	if err := app.GDB().Model(&profile).Updates(updates).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "更新 Profile 失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update profile", err.Error())
 	}
 
 	// Re-query latest data
@@ -298,24 +298,24 @@ func UpdateProfile(c echo.Context) error {
 func DeleteProfile(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 Profile ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid profile ID", nil)
 	}
 
 	// Check whether any users are currently using this profile
 	var userCount int64
 	app.GDB().Model(&domain.RadiusUser{}).Where("profile_id = ?", id).Count(&userCount)
 	if userCount > 0 {
-		return fail(c, http.StatusConflict, "IN_USE", "该 Profile 正在被使用，无法删除", map[string]interface{}{
+		return fail(c, http.StatusConflict, "IN_USE", "Profile is in use and cannot be deleted", map[string]interface{}{
 			"user_count": userCount,
 		})
 	}
 
 	if err := app.GDB().Delete(&domain.RadiusProfile{}, id).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "删除 Profile 失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to delete profile", err.Error())
 	}
 
 	return ok(c, map[string]interface{}{
-		"message": "删除成功",
+		"message": "Deletion successful",
 	})
 }
 

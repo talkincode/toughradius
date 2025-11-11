@@ -33,34 +33,34 @@ func registerAuthRoutes() {
 func loginHandler(c echo.Context) error {
 	var req loginRequest
 	if err := c.Bind(&req); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析登录参数", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse login parameters", nil)
 	}
 	req.Username = strings.TrimSpace(req.Username)
 	req.Password = strings.TrimSpace(req.Password)
 	if req.Username == "" || req.Password == "" {
-		return fail(c, http.StatusBadRequest, "INVALID_CREDENTIALS", "用户名与密码不能为空", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_CREDENTIALS", "Username and password cannot be empty", nil)
 	}
 
 	var operator domain.SysOpr
 	err := app.GDB().Where("username = ?", req.Username).First(&operator).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "用户名或密码错误", nil)
+		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Incorrect username or password", nil)
 	}
 	if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询用户失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query user", err.Error())
 	}
 
 	hashed := common.Sha256HashWithSalt(req.Password, common.SecretSalt)
 	if hashed != operator.Password {
-		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "用户名或密码错误", nil)
+		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Incorrect username or password", nil)
 	}
 	if strings.EqualFold(operator.Status, common.DISABLED) {
-		return fail(c, http.StatusForbidden, "ACCOUNT_DISABLED", "账号已被禁用", nil)
+		return fail(c, http.StatusForbidden, "ACCOUNT_DISABLED", "Account has been disabled", nil)
 	}
 
 	token, err := issueToken(operator)
 	if err != nil {
-		return fail(c, http.StatusInternalServerError, "TOKEN_ERROR", "生成登录令牌失败", nil)
+		return fail(c, http.StatusInternalServerError, "TOKEN_ERROR", "Failed to generate login token", nil)
 	}
 
 	go func(id int64) {

@@ -44,7 +44,7 @@ func listSettings(c echo.Context) error {
 
 	var total int64
 	if err := base.Count(&total).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
 	}
 
 	var settings []domain.SysConfig
@@ -53,7 +53,7 @@ func listSettings(c echo.Context) error {
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&settings).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
 	}
 
 	return paged(c, settings, total, page, pageSize)
@@ -63,14 +63,14 @@ func listSettings(c echo.Context) error {
 func getSettings(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的设置 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid setting ID", nil)
 	}
 
 	var setting domain.SysConfig
 	if err := app.GDB().Where("id = ?", id).First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusNotFound, "SETTING_NOT_FOUND", "设置不存在", nil)
+		return fail(c, http.StatusNotFound, "SETTING_NOT_FOUND", "Setting not found", nil)
 	} else if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
 	}
 
 	return ok(c, setting)
@@ -79,7 +79,7 @@ func getSettings(c echo.Context) error {
 // getconfigurationschemas
 func getConfigSchemas(c echo.Context) error {
 	if app.GApp().ConfigMgr() == nil {
-		return fail(c, http.StatusInternalServerError, "CONFIG_MANAGER_NOT_FOUND", "配置管理器未初始化", nil)
+		return fail(c, http.StatusInternalServerError, "CONFIG_MANAGER_NOT_FOUND", "Configuration manager is not initialized", nil)
 	}
 
 	schemas := app.GApp().ConfigMgr().GetAllSchemas()
@@ -132,14 +132,14 @@ func getConfigTypeName(configType app.ConfigType) string {
 func createSettings(c echo.Context) error {
 	var payload settingsPayload
 	if err := c.Bind(&payload); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析设置参数", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse setting parameters", nil)
 	}
 
 	payload.Type = strings.TrimSpace(payload.Type)
 	payload.Name = strings.TrimSpace(payload.Name)
 
 	if payload.Type == "" || payload.Name == "" || payload.Value == "" {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "type、name、value 不能为空", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "type, name, and value cannot be empty", nil)
 	}
 
 	// Check whether a setting with the same type and name already exists (unique constraint)
@@ -148,7 +148,7 @@ func createSettings(c echo.Context) error {
 		Where("type = ? AND name = ?", payload.Type, payload.Name).
 		Count(&exists)
 	if exists > 0 {
-		return fail(c, http.StatusConflict, "SETTING_EXISTS", "该类型下已存在同名配置", nil)
+		return fail(c, http.StatusConflict, "SETTING_EXISTS", "A setting with the same name already exists under this type", nil)
 	}
 
 	setting := domain.SysConfig{
@@ -163,7 +163,7 @@ func createSettings(c echo.Context) error {
 	}
 
 	if err := app.GDB().Create(&setting).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "创建系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create system setting", err.Error())
 	}
 
 	// Sync to the ConfigManager cache
@@ -178,19 +178,19 @@ func createSettings(c echo.Context) error {
 func updateSettings(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的设置 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid setting ID", nil)
 	}
 
 	var payload settingsPayload
 	if err := c.Bind(&payload); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析设置参数", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse setting parameters", nil)
 	}
 
 	var setting domain.SysConfig
 	if err := app.GDB().Where("id = ?", id).First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return fail(c, http.StatusNotFound, "SETTING_NOT_FOUND", "设置不存在", nil)
+		return fail(c, http.StatusNotFound, "SETTING_NOT_FOUND", "Setting not found", nil)
 	} else if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "查询系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
 	}
 
 	// Update fields
@@ -212,7 +212,7 @@ func updateSettings(c echo.Context) error {
 	setting.UpdatedAt = time.Now()
 
 	if err := app.GDB().Save(&setting).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "更新系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update system setting", err.Error())
 	}
 
 	// Sync to the ConfigManager cache
@@ -227,11 +227,11 @@ func updateSettings(c echo.Context) error {
 func deleteSettings(c echo.Context) error {
 	id, err := parseIDParam(c, "id")
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的设置 ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid setting ID", nil)
 	}
 
 	if err := app.GDB().Where("id = ?", id).Delete(&domain.SysConfig{}).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "删除系统设置失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete system setting", err.Error())
 	}
 
 	// Sync to the ConfigManager cache
@@ -263,7 +263,7 @@ func reloadConfig(c echo.Context) error {
 	app.GApp().ConfigMgr().ReloadAll()
 
 	return ok(c, map[string]interface{}{
-		"message": "配置已重新加载",
+		"message": "Configuration reloaded",
 		"time":    time.Now(),
 	})
 }

@@ -98,12 +98,12 @@ func ListNAS(c echo.Context) error {
 func GetNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 NAS ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid NAS ID", nil)
 	}
 
 	var device domain.NetNas
 	if err := app.GDB().First(&device, id).Error; err != nil {
-		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS 设备不存在", nil)
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
 	return ok(c, device)
@@ -118,7 +118,7 @@ func GetNAS(c echo.Context) error {
 func CreateNAS(c echo.Context) error {
 	var payload nasPayload
 	if err := c.Bind(&payload); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
 	}
 
 	// Validate the request payload
@@ -130,7 +130,7 @@ func CreateNAS(c echo.Context) error {
 	var count int64
 	app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ?", payload.Ipaddr).Count(&count)
 	if count > 0 {
-		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
+		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP address already exists", nil)
 	}
 
 	// Set default values
@@ -157,7 +157,7 @@ func CreateNAS(c echo.Context) error {
 	}
 
 	if err := app.GDB().Create(&device).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "创建 NAS 设备失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "Failed to create NAS device", err.Error())
 	}
 
 	return ok(c, device)
@@ -173,17 +173,17 @@ func CreateNAS(c echo.Context) error {
 func UpdateNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 NAS ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid NAS ID", nil)
 	}
 
 	var device domain.NetNas
 	if err := app.GDB().First(&device, id).Error; err != nil {
-		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS 设备不存在", nil)
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
 	var payload nasPayload
 	if err := c.Bind(&payload); err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "无法解析请求参数", err.Error())
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
 	}
 
 	// Validate the request payload
@@ -196,7 +196,7 @@ func UpdateNAS(c echo.Context) error {
 		var count int64
 		app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", payload.Ipaddr, id).Count(&count)
 		if count > 0 {
-			return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP 地址已存在", nil)
+			return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP address already exists", nil)
 		}
 		device.Ipaddr = payload.Ipaddr
 	}
@@ -237,7 +237,7 @@ func UpdateNAS(c echo.Context) error {
 	}
 
 	if err := app.GDB().Save(&device).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "更新 NAS 设备失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update NAS device", err.Error())
 	}
 
 	return ok(c, device)
@@ -252,24 +252,24 @@ func UpdateNAS(c echo.Context) error {
 func DeleteNAS(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
-		return fail(c, http.StatusBadRequest, "INVALID_ID", "无效的 NAS ID", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid NAS ID", nil)
 	}
 
 	// Check whether there are active online sessions
 	var onlineCount int64
 	app.GDB().Model(&domain.RadiusOnline{}).Joins("JOIN net_vpe ON radius_online.nas_addr = net_vpe.ipaddr").Where("net_vpe.id = ?", id).Count(&onlineCount)
 	if onlineCount > 0 {
-		return fail(c, http.StatusConflict, "HAS_ONLINE_SESSIONS", "该设备有在线会话，无法删除", map[string]interface{}{
+		return fail(c, http.StatusConflict, "HAS_ONLINE_SESSIONS", "Device has active sessions and cannot be deleted", map[string]interface{}{
 			"online_count": onlineCount,
 		})
 	}
 
 	if err := app.GDB().Delete(&domain.NetNas{}, id).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "删除 NAS 设备失败", err.Error())
+		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to delete NAS device", err.Error())
 	}
 
 	return ok(c, map[string]interface{}{
-		"message": "删除成功",
+		"message": "Deletion successful",
 	})
 }
 
