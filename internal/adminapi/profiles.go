@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
@@ -20,7 +19,7 @@ import (
 // @Success 200 {object} ListResponse
 // @Router /api/v1/radius-profiles [get]
 func ListProfiles(c echo.Context) error {
-	db := app.GDB()
+	db := GetDB(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	perPage, _ := strconv.Atoi(c.QueryParam("perPage"))
@@ -76,7 +75,7 @@ func GetProfile(c echo.Context) error {
 	}
 
 	var profile domain.RadiusProfile
-	if err := app.GDB().First(&profile, id).Error; err != nil {
+	if err := GetDB(c).First(&profile, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile not found", nil)
 	}
 
@@ -184,7 +183,7 @@ func CreateProfile(c echo.Context) error {
 
 	// Check whether a profile with the same name already exists (business logic validation)
 	var count int64
-	app.GDB().Model(&domain.RadiusProfile{}).Where("name = ?", profile.Name).Count(&count)
+	GetDB(c).Model(&domain.RadiusProfile{}).Where("name = ?", profile.Name).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile name already exists", nil)
 	}
@@ -194,7 +193,7 @@ func CreateProfile(c echo.Context) error {
 		profile.Status = "enabled"
 	}
 
-	if err := app.GDB().Create(profile).Error; err != nil {
+	if err := GetDB(c).Create(profile).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "Failed to create profile", err.Error())
 	}
 
@@ -215,7 +214,7 @@ func UpdateProfile(c echo.Context) error {
 	}
 
 	var profile domain.RadiusProfile
-	if err := app.GDB().First(&profile, id).Error; err != nil {
+	if err := GetDB(c).First(&profile, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile not found", nil)
 	}
 
@@ -234,7 +233,7 @@ func UpdateProfile(c echo.Context) error {
 	// Validate name uniqueness (business logic validation)
 	if updateData.Name != "" && updateData.Name != profile.Name {
 		var count int64
-		app.GDB().Model(&domain.RadiusProfile{}).Where("name = ? AND id != ?", updateData.Name, id).Count(&count)
+		GetDB(c).Model(&domain.RadiusProfile{}).Where("name = ? AND id != ?", updateData.Name, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile name already exists", nil)
 		}
@@ -279,12 +278,12 @@ func UpdateProfile(c echo.Context) error {
 		updates["node_id"] = updateData.NodeId
 	}
 
-	if err := app.GDB().Model(&profile).Updates(updates).Error; err != nil {
+	if err := GetDB(c).Model(&profile).Updates(updates).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update profile", err.Error())
 	}
 
 	// Re-query latest data
-	app.GDB().First(&profile, id)
+	GetDB(c).First(&profile, id)
 
 	return ok(c, profile)
 }
@@ -303,14 +302,14 @@ func DeleteProfile(c echo.Context) error {
 
 	// Check whether any users are currently using this profile
 	var userCount int64
-	app.GDB().Model(&domain.RadiusUser{}).Where("profile_id = ?", id).Count(&userCount)
+	GetDB(c).Model(&domain.RadiusUser{}).Where("profile_id = ?", id).Count(&userCount)
 	if userCount > 0 {
 		return fail(c, http.StatusConflict, "IN_USE", "Profile is in use and cannot be deleted", map[string]interface{}{
 			"user_count": userCount,
 		})
 	}
 
-	if err := app.GDB().Delete(&domain.RadiusProfile{}, id).Error; err != nil {
+	if err := GetDB(c).Delete(&domain.RadiusProfile{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to delete profile", err.Error())
 	}
 

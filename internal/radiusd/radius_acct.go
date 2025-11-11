@@ -41,7 +41,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		return
 	}
 
-	if app.GConfig().Radiusd.Debug {
+	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtRequest(r))
 	}
 
@@ -116,7 +116,7 @@ func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
 		return
 	}
 
-	if app.GConfig().Radiusd.Debug {
+	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtResponse(resp, r.RemoteAddr))
 	}
 

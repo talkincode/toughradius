@@ -20,8 +20,6 @@ const (
 	AutoRegisterPopNodeId int64 = 999999999
 )
 
-var app *Application
-
 type Application struct {
 	appConfig     *config.AppConfig
 	gormDB        *gorm.DB
@@ -29,26 +27,15 @@ type Application struct {
 	configManager *ConfigManager
 }
 
-func GApp() *Application {
-	return app
-}
-
-func GDB() *gorm.DB {
-	return app.gormDB
-}
-
-func GConfig() *config.AppConfig {
-	return app.appConfig
-}
-
-// func GTsdb() tstorage.Storage {
-// 	return app.tsdb
-// }
-
-func InitGlobalApplication(cfg *config.AppConfig) {
-	app = NewApplication(cfg)
-	app.Init(cfg)
-}
+// Ensure Application implements all interfaces
+var (
+	_ DBProvider            = (*Application)(nil)
+	_ ConfigProvider        = (*Application)(nil)
+	_ SettingsProvider      = (*Application)(nil)
+	_ SchedulerProvider     = (*Application)(nil)
+	_ ConfigManagerProvider = (*Application)(nil)
+	_ AppContext            = (*Application)(nil)
+)
 
 func NewApplication(appConfig *config.AppConfig) *Application {
 	return &Application{appConfig: appConfig}
@@ -127,7 +114,7 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	if cfg.Database.Type == "" {
 		cfg.Database.Type = "postgres"
 	}
-	a.gormDB = getDatabase(cfg.Database)
+	a.gormDB = getDatabase(cfg.Database, cfg.System.Workdir)
 	zap.S().Infof("Database connection successful, type: %s", cfg.Database.Type)
 
 	// wait for database initialization to complete
@@ -186,6 +173,33 @@ func (a *Application) ConfigMgr() *ConfigManager {
 	return a.configManager
 }
 
+// Scheduler returns the cron scheduler
+func (a *Application) Scheduler() *cron.Cron {
+	return a.sched
+}
+
+// GetSettingsStringValue retrieves a string configuration value
+func (a *Application) GetSettingsStringValue(category, key string) string {
+	return a.configManager.GetString(category, key)
+}
+
+// GetSettingsInt64Value retrieves an int64 configuration value
+func (a *Application) GetSettingsInt64Value(category, key string) int64 {
+	return a.configManager.GetInt64(category, key)
+}
+
+// GetSettingsBoolValue retrieves a boolean configuration value
+func (a *Application) GetSettingsBoolValue(category, key string) bool {
+	return a.configManager.GetBool(category, key)
+}
+
+// SaveSettings saves configuration settings
+func (a *Application) SaveSettings(settings map[string]interface{}) error {
+	// TODO: Implement proper settings save logic
+	// This is a placeholder to satisfy the interface
+	return nil
+}
+
 // checkDefaultPNode check default node
 func (a *Application) checkDefaultPNode() {
 	var pnode domain.NetNode
@@ -200,9 +214,10 @@ func (a *Application) checkDefaultPNode() {
 	}
 }
 
-func Release() {
-	if app.sched != nil {
-		app.sched.Stop()
+// Release releases application resources
+func (a *Application) Release() {
+	if a.sched != nil {
+		a.sched.Stop()
 	}
 
 	_ = metrics.Close()

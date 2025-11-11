@@ -19,9 +19,9 @@ import (
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v9/internal/app"
-	customValidator "github.com/talkincode/toughradius/v9/pkg/validator"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"github.com/talkincode/toughradius/v9/pkg/excel"
+	customValidator "github.com/talkincode/toughradius/v9/pkg/validator"
 	"github.com/talkincode/toughradius/v9/pkg/web"
 	webui "github.com/talkincode/toughradius/v9/web"
 	"go.uber.org/zap"
@@ -47,20 +47,21 @@ type AdminServer struct {
 	root      *echo.Echo
 	api       *echo.Group
 	jwtConfig echojwt.Config
+	appCtx    app.AppContext // Application context
 }
 
-func Init() {
-	server = NewAdminServer()
+func Init(appCtx app.AppContext) {
+	server = NewAdminServer(appCtx)
 }
 
-func Listen() error {
+func Listen(appCtx app.AppContext) error {
 	return server.Start()
 }
 
 // NewAdminServer creates the admin system server
-func NewAdminServer() *AdminServer {
-	appconfig := app.GConfig()
-	s := &AdminServer{}
+func NewAdminServer(appCtx app.AppContext) *AdminServer {
+	appconfig := appCtx.Config()
+	s := &AdminServer{appCtx: appCtx}
 	s.root = echo.New()
 	s.root.Pre(middleware.RemoveTrailingSlash())
 	s.root.Use(middleware.GzipWithConfig(middleware.GzipConfig{
@@ -134,6 +135,14 @@ func NewAdminServer() *AdminServer {
 	// init api -------------------------------
 	s.api = s.root.Group(apiBasePath)
 	s.api.Use(echojwt.WithConfig(s.jwtConfig))
+
+	// Add middleware to inject appCtx into each request context
+	s.root.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("appCtx", s.appCtx)
+			return next(c)
+		}
+	})
 
 	return s
 }
@@ -227,7 +236,7 @@ func chromeDevtoolsManifest(c echo.Context) error {
 
 // Start Admin Server
 func (s *AdminServer) Start() error {
-	appconfig := app.GConfig()
+	appconfig := s.appCtx.Config()
 	go func() {
 		zap.S().Infof("Prepare to start the TLS management port %s:%d", appconfig.Web.Host, appconfig.Web.TlsPort)
 		err := s.root.StartTLS(fmt.Sprintf("%s:%d", appconfig.Web.Host, appconfig.Web.TlsPort),
@@ -352,8 +361,9 @@ func ImportData(c echo.Context, sheet string) ([]map[string]interface{}, error) 
 }
 
 func ExportData(c echo.Context, data []map[string]interface{}, sheet string) error {
+	appCtx := c.Get("appCtx").(app.AppContext)
 	filename := fmt.Sprintf("%s-%d.xlsx", sheet, common.UUIDint64())
-	filepath := path.Join(app.GConfig().GetDataDir(), filename)
+	filepath := path.Join(appCtx.Config().GetDataDir(), filename)
 	xlsx := excelize.NewFile()
 	index := xlsx.NewSheet(sheet)
 	names := make([]string, 0)
@@ -384,8 +394,9 @@ func ExportData(c echo.Context, data []map[string]interface{}, sheet string) err
 }
 
 func ExportCsv(c echo.Context, v interface{}, name string) error {
+	appCtx := c.Get("appCtx").(app.AppContext)
 	filename := fmt.Sprintf("%s-%d.csv", name, common.UUIDint64())
-	filepath := path.Join(app.GConfig().GetDataDir(), filename)
+	filepath := path.Join(appCtx.Config().GetDataDir(), filename)
 	nfs, err := os.Create(filepath)
 	defer nfs.Close()
 	if err != nil {

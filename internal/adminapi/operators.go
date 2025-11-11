@@ -9,7 +9,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -70,7 +69,7 @@ func updateCurrentOperator(c echo.Context) error {
 		// Checkusername already used by other account
 		if username != currentOpr.Username {
 			var exists int64
-			app.GDB().Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, currentOpr.ID).Count(&exists)
+			GetDB(c).Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, currentOpr.ID).Count(&exists)
 			if exists > 0 {
 				return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 			}
@@ -107,7 +106,7 @@ func updateCurrentOperator(c echo.Context) error {
 	}
 	currentOpr.UpdatedAt = time.Now()
 
-	if err := app.GDB().Save(&currentOpr).Error; err != nil {
+	if err := GetDB(c).Save(&currentOpr).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update operator", err.Error())
 	}
 
@@ -129,7 +128,7 @@ func listOperators(c echo.Context) error {
 
 	page, pageSize := parsePagination(c)
 
-	base := app.GDB().Model(&domain.SysOpr{})
+	base := GetDB(c).Model(&domain.SysOpr{})
 	base = applyOperatorFilters(base, c)
 
 	var total int64
@@ -172,7 +171,7 @@ func getOperator(c echo.Context) error {
 	}
 
 	var operator domain.SysOpr
-	if err := app.GDB().Where("id = ?", id).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", err.Error())
@@ -250,7 +249,7 @@ func createOperator(c echo.Context) error {
 
 	// CheckUsernamealready exists
 	var exists int64
-	app.GDB().Model(&domain.SysOpr{}).Where("username = ?", payload.Username).Count(&exists)
+	GetDB(c).Model(&domain.SysOpr{}).Where("username = ?", payload.Username).Count(&exists)
 	if exists > 0 {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
@@ -279,7 +278,7 @@ func createOperator(c echo.Context) error {
 		UpdatedAt: time.Now(),
 	}
 
-	if err := app.GDB().Create(&operator).Error; err != nil {
+	if err := GetDB(c).Create(&operator).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create operator", err.Error())
 	}
 
@@ -320,7 +319,7 @@ func updateOperator(c echo.Context) error {
 	}
 
 	var operator domain.SysOpr
-	if err := app.GDB().Where("id = ?", id).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", err.Error())
@@ -336,7 +335,7 @@ func updateOperator(c echo.Context) error {
 		// Checkusername already used by other account
 		if username != operator.Username {
 			var exists int64
-			app.GDB().Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, id).Count(&exists)
+			GetDB(c).Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, id).Count(&exists)
 			if exists > 0 {
 				return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 			}
@@ -390,7 +389,7 @@ func updateOperator(c echo.Context) error {
 	}
 	operator.UpdatedAt = time.Now()
 
-	if err := app.GDB().Save(&operator).Error; err != nil {
+	if err := GetDB(c).Save(&operator).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update operator", err.Error())
 	}
 
@@ -424,7 +423,7 @@ func deleteOperator(c echo.Context) error {
 
 	// Only super admins can delete other admins
 	var targetOpr domain.SysOpr
-	if err := app.GDB().Where("id = ?", id).First(&targetOpr).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&targetOpr).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", err.Error())
@@ -434,7 +433,7 @@ func deleteOperator(c echo.Context) error {
 		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "Only super admins can delete another super admin account", nil)
 	}
 
-	if err := app.GDB().Where("id = ?", id).Delete(&domain.SysOpr{}).Error; err != nil {
+	if err := GetDB(c).Where("id = ?", id).Delete(&domain.SysOpr{}).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete operator", err.Error())
 	}
 

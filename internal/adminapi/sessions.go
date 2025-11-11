@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
@@ -22,7 +21,7 @@ import (
 // @Success 200 {object} ListResponse
 // @Router /api/v1/sessions [get]
 func ListOnlineSessions(c echo.Context) error {
-	db := app.GDB()
+	db := GetDB(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	perPage, _ := strconv.Atoi(c.QueryParam("perPage"))
@@ -83,7 +82,7 @@ func GetOnlineSession(c echo.Context) error {
 	}
 
 	var session domain.RadiusOnline
-	if err := app.GDB().First(&session, id).Error; err != nil {
+	if err := GetDB(c).First(&session, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
 	}
 
@@ -103,7 +102,7 @@ func DeleteOnlineSession(c echo.Context) error {
 	}
 
 	// Delete online session record
-	if err := app.GDB().Delete(&domain.RadiusOnline{}, id).Error; err != nil {
+	if err := GetDB(c).Delete(&domain.RadiusOnline{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to terminate session", err.Error())
 	}
 

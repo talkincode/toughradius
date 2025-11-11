@@ -40,7 +40,7 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 		timeout = 0
 	}
 
-	interim := getIntConfig(app.ConfigRadiusAcctInterimInterval, 120)
+	interim := getIntConfig(authCtx, app.ConfigRadiusAcctInterimInterval, 120)
 
 	rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))
 	rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim))
@@ -55,10 +55,16 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 	return nil
 }
 
-func getIntConfig(name string, def int64) int64 {
-	val := app.GApp().ConfigMgr().GetInt64("radius", name)
-	if val == 0 {
-		return def
+func getIntConfig(authCtx *auth.AuthContext, name string, def int64) int64 {
+	// Get config manager from metadata
+	if authCtx.Metadata != nil {
+		if cfgMgr, ok := authCtx.Metadata["config_mgr"].(*app.ConfigManager); ok {
+			val := cfgMgr.GetInt64("radius", name)
+			if val == 0 {
+				return def
+			}
+			return val
+		}
 	}
-	return val
+	return def
 }

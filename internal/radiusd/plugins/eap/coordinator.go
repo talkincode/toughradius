@@ -3,7 +3,6 @@ package eap
 import (
 	"fmt"
 
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"go.uber.org/zap"
 	"layeh.com/radius"
@@ -20,14 +19,16 @@ type Coordinator struct {
 	stateManager    EAPStateManager
 	pwdProvider     PasswordProvider
 	handlerRegistry HandlerRegistry
+	debug           bool // Debug mode flag
 }
 
 // NewCoordinator creates a new EAP coordinator
-func NewCoordinator(stateManager EAPStateManager, pwdProvider PasswordProvider, handlerRegistry HandlerRegistry) *Coordinator {
+func NewCoordinator(stateManager EAPStateManager, pwdProvider PasswordProvider, handlerRegistry HandlerRegistry, debug bool) *Coordinator {
 	return &Coordinator{
 		stateManager:    stateManager,
 		pwdProvider:     pwdProvider,
 		handlerRegistry: handlerRegistry,
+		debug:           debug,
 	}
 }
 
@@ -174,8 +175,8 @@ func (c *Coordinator) SendEAPSuccess(w radius.ResponseWriter, r *radius.Request,
 	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapSuccess, secret)
 
-	// Sendresponse
-	if app.GConfig().Radiusd.Debug {
+	// Send response
+	if c.debug {
 		zap.L().Info("Sending EAP-Success",
 			zap.Uint8("identifier", identifier))
 	}

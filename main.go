@@ -61,42 +61,49 @@ func main() {
 		return
 	}
 
+	// Create and initialize application context
+	application := app.NewApplication(_config)
+	application.Init(_config)
+
 	if *initdb {
-		app.InitGlobalApplication(_config)
-		app.GApp().InitDb()
+		application.InitDb()
 		return
 	}
 
-	app.InitGlobalApplication(_config)
-	app.GApp().MigrateDB(false)
-	defer app.Release()
+	application.MigrateDB(false)
+	defer application.Release()
 
+	// Initialize web server and admin API with dependency injection
 	g.Go(func() error {
-		webserver.Init()
-		adminapi.Init()
-		return webserver.Listen()
+		webserver.Init(application)
+		adminapi.Init(application)
+		return webserver.Listen(application)
 	})
 
-	radiusService := radiusd.NewRadiusService()
+	// Initialize RADIUS service with dependency injection
+	radiusService := radiusd.NewRadiusService(application)
 	defer radiusService.Release()
 
 	// Initialize plugin system after RadiusService is created
 	plugins.InitPlugins(radiusService.SessionRepo, radiusService.AccountingRepo)
 
+	// Start RADIUS Auth server
 	g.Go(func() error {
-		return radiusd.ListenRadiusAuthServer(radiusd.NewAuthService(radiusService))
+		return radiusd.ListenRadiusAuthServer(application, radiusd.NewAuthService(radiusService))
 	})
 
+	// Start RADIUS Acct server
 	g.Go(func() error {
-		return radiusd.ListenRadiusAcctServer(radiusd.NewAcctService(radiusService))
+		return radiusd.ListenRadiusAcctServer(application, radiusd.NewAcctService(radiusService))
 	})
 
+	// Start RadSec server
 	g.Go(func() error {
 		radsec := radiusd.NewRadsecService(
 			radiusd.NewAuthService(radiusService),
 			radiusd.NewAcctService(radiusService),
 		)
-		return radiusd.ListenRadsecServer(radsec)
+		return radiusd.ListenRadsecServer(application, radsec)
 	})
 
 	if err := g.Wait(); err != nil {

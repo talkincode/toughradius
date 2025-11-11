@@ -11,56 +11,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/talkincode/toughradius/v9/config"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
-	customValidator "github.com/talkincode/toughradius/v9/pkg/validator"
-	"gorm.io/driver/sqlite"
+
 	"gorm.io/gorm"
 )
 
-// setupTestEcho creates an Echo instance with a validator
-func setupTestEcho() *echo.Echo {
-	e := echo.New()
-	e.Validator = customValidator.NewValidator()
-	return e
-}
 
-// setupTestDB creates the test database
-func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	require.NoError(t, err)
-
-	// Automatically migrate the table structure
-	err = db.AutoMigrate(
-		&domain.RadiusProfile{},
-		&domain.RadiusUser{},
-		&domain.NetNode{},
-		&domain.NetNas{},
-	)
-	require.NoError(t, err)
-
-	return db
-}
-
-// setupTestApp initializes the test application
-func setupTestApp(t *testing.T, db *gorm.DB) {
-	cfg := &config.AppConfig{
-		System: config.SysConfig{
-			Appid:    "TestApp",
-			Location: "Asia/Shanghai",
-			Workdir:  "/tmp/test",
-			Debug:    true,
-		},
-	}
-	testApp := app.NewApplication(cfg)
-
-	// Use reflection to set the private db field
-	// Note: this accesses internal structures of the app package
-	// In real tests, the app package might expose a SetDB helper
-	app.SetGApp(testApp)
-	app.SetGDB(db)
-}
 
 // createTestProfile creates test profile data
 func createTestProfile(db *gorm.DB, name string) *domain.RadiusProfile {

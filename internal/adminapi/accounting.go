@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
@@ -24,7 +23,7 @@ import (
 // @Success 200 {object} ListResponse
 // @Router /api/v1/accounting [get]
 func ListAccounting(c echo.Context) error {
-	db := app.GDB()
+	db := GetDB(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	perPage, _ := strconv.Atoi(c.QueryParam("perPage"))
@@ -93,7 +92,7 @@ func GetAccounting(c echo.Context) error {
 	}
 
 	var record domain.RadiusAccounting
-	if err := app.GDB().First(&record, id).Error; err != nil {
+	if err := GetDB(c).First(&record, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Accounting record not found", nil)
 	}
 

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
@@ -30,7 +29,7 @@ type DashboardStats struct {
 // @Success 200 {object} DashboardStats
 // @Router /api/v1/dashboard/stats [get]
 func GetDashboardStats(c echo.Context) error {
-	db := app.GDB()
+	db := GetDB(c)
 
 	stats := &DashboardStats{}
 

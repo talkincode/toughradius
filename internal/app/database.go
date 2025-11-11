@@ -17,28 +17,28 @@ import (
 )
 
 // getDatabase returns a database connection based on the configuration type
-func getDatabase(config config.DBConfig) *gorm.DB {
-	dbType := strings.ToLower(config.Type)
+func getDatabase(dbConfig config.DBConfig, workdir string) *gorm.DB {
+	dbType := strings.ToLower(dbConfig.Type)
 	switch dbType {
 	case "sqlite":
-		return getSqliteDatabase(config)
+		return getSqliteDatabase(dbConfig, workdir)
 	case "postgres", "postgresql":
-		return getPgDatabase(config)
+		return getPgDatabase(dbConfig)
 	default:
-		zap.S().Fatalf("Unsupported database type: %s, supported types: postgres, sqlite", config.Type)
+		zap.S().Fatalf("Unsupported database type: %s, supported types: postgres, sqlite", dbConfig.Type)
 		return nil
 	}
 }
 
 // getSqliteDatabase returns a SQLite database connection
-func getSqliteDatabase(config config.DBConfig) *gorm.DB {
+func getSqliteDatabase(config config.DBConfig, workdir string) *gorm.DB {
 	// e.g., if the name is not an absolute path and not an in-memory DB, store it under workdir/data
 	dbPath := config.Name
 	if dbPath != ":memory:" && !path.IsAbs(dbPath) {
-		dbPath = path.Join(GConfig().System.Workdir, "data", dbPath)
+		dbPath = path.Join(workdir, "data", dbPath)
 	}
 
-zap.S().Infof("SQLite database path: %s", dbPath)
+	zap.S().Infof("SQLite database path: %s", dbPath)
 
 	pool, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		DisableForeignKeyConstraintWhenMigrating: true,

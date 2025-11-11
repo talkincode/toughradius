@@ -10,7 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -126,7 +125,7 @@ func registerUserRoutes() {
 func listRadiusUsers(c echo.Context) error {
 	page, pageSize := parsePagination(c)
 
-	base := app.GDB().Model(&domain.RadiusUser{}).
+	base := GetDB(c).Model(&domain.RadiusUser{}).
 		Select("radius_user.*, COALESCE(ro.count, 0) AS online_count").
 		Joins("LEFT JOIN (SELECT username, COUNT(1) AS count FROM radius_online GROUP BY username) ro ON radius_user.username = ro.username")
 
@@ -160,7 +159,7 @@ func getRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
 	var user domain.RadiusUser
-	if err := app.GDB().Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "User not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
@@ -196,14 +195,14 @@ func createRadiusUser(c echo.Context) error {
 
 	// CheckUsernamealready exists
 	var exists int64
-	app.GDB().Model(&domain.RadiusUser{}).Where("username = ?", user.Username).Count(&exists)
+	GetDB(c).Model(&domain.RadiusUser{}).Where("username = ?", user.Username).Count(&exists)
 	if exists > 0 {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
 
 	// Validate if accounting profile exists
 	var profile domain.RadiusProfile
-	if err := app.GDB().Where("id = ?", user.ProfileId).First(&profile).Error; err != nil {
+	if err := GetDB(c).Where("id = ?", user.ProfileId).First(&profile).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "Associated billing profile not found", nil)
 		}
@@ -229,7 +228,7 @@ func createRadiusUser(c echo.Context) error {
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 
-	if err := app.GDB().Create(&user).Error; err != nil {
+	if err := GetDB(c).Create(&user).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create user", err.Error())
 	}
 
@@ -254,7 +253,7 @@ func updateRadiusUser(c echo.Context) error {
 	}
 
 	var user domain.RadiusUser
-	if err := app.GDB().Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "User not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
@@ -265,7 +264,7 @@ func updateRadiusUser(c echo.Context) error {
 	// Validate username uniqueness (if username modified)
 	if updateData.Username != "" && updateData.Username != user.Username {
 		var count int64
-		app.GDB().Model(&domain.RadiusUser{}).Where("username = ? AND id != ?", updateData.Username, id).Count(&count)
+		GetDB(c).Model(&domain.RadiusUser{}).Where("username = ? AND id != ?", updateData.Username, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 		}
@@ -274,7 +273,7 @@ func updateRadiusUser(c echo.Context) error {
 	// If updated ProfileID，need toValidateand sync Profile configuration
 	if updateData.ProfileId != 0 && updateData.ProfileId != user.ProfileId {
 		var profile domain.RadiusProfile
-		if err := app.GDB().Where("id = ?", updateData.ProfileId).First(&profile).Error; err != nil {
+		if err := GetDB(c).Where("id = ?", updateData.ProfileId).First(&profile).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "Associated billing profile not found", nil)
 			}
@@ -341,12 +340,12 @@ func updateRadiusUser(c echo.Context) error {
 
 	updates["updated_at"] = time.Now()
 
-	if err := app.GDB().Model(&user).Updates(updates).Error; err != nil {
+	if err := GetDB(c).Model(&user).Updates(updates).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update user", err.Error())
 	}
 
 	// Re-query latest data
-	app.GDB().Where("id = ?", id).First(&user)
+	GetDB(c).Where("id = ?", id).First(&user)
 	user.Password = ""
 	return ok(c, user)
 }
@@ -356,7 +355,7 @@ func deleteRadiusUser(c echo.Context) error {
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
-	if err := app.GDB().Where("id = ?", id).Delete(&domain.RadiusUser{}).Error; err != nil {
+	if err := GetDB(c).Where("id = ?", id).Delete(&domain.RadiusUser{}).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete user", err.Error())
 	}
 	return ok(c, map[string]interface{}{

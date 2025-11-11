@@ -28,25 +28,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Loadconfiguration
+	// Load configuration
 	_config := config.LoadConfig(*conffile)
 
 	// Initialize the application
-	app.InitGlobalApplication(_config)
-	defer app.Release()
+	application := app.NewApplication(_config)
+	application.Init(_config)
+	defer application.Release()
 
 	// Compute the hash for the new password
 	hashedPassword := common.Sha256HashWithSalt(*password, common.SecretSalt)
 
 	// Find the user
 	var operator domain.SysOpr
-	result := app.GDB().Where("username = ?", *username).First(&operator)
+	result := application.DB().Where("username = ?", *username).First(&operator)
 	if result.Error != nil {
 		log.Fatalf("Failed to find user '%s': %v", *username, result.Error)
 	}
 
 	// Update the password
-	result = app.GDB().Model(&operator).Update("password", hashedPassword)
+	result = application.DB().Model(&operator).Update("password", hashedPassword)
 	if result.Error != nil {
 		log.Fatalf("Failed to update password: %v", result.Error)
 	}

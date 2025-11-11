@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	"github.com/labstack/echo/v4"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
@@ -38,7 +37,7 @@ type nasPayload struct {
 // @Success 200 {object} ListResponse
 // @Router /api/v1/network/nas [get]
 func ListNAS(c echo.Context) error {
-	db := app.GDB()
+	db := GetDB(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	perPage, _ := strconv.Atoi(c.QueryParam("perPage"))
@@ -102,7 +101,7 @@ func GetNAS(c echo.Context) error {
 	}
 
 	var device domain.NetNas
-	if err := app.GDB().First(&device, id).Error; err != nil {
+	if err := GetDB(c).First(&device, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
@@ -128,7 +127,7 @@ func CreateNAS(c echo.Context) error {
 
 	// Check whether the IP address already exists
 	var count int64
-	app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ?", payload.Ipaddr).Count(&count)
+	GetDB(c).Model(&domain.NetNas{}).Where("ipaddr = ?", payload.Ipaddr).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP address already exists", nil)
 	}
@@ -156,7 +155,7 @@ func CreateNAS(c echo.Context) error {
 		Remark:     payload.Remark,
 	}
 
-	if err := app.GDB().Create(&device).Error; err != nil {
+	if err := GetDB(c).Create(&device).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "CREATE_FAILED", "Failed to create NAS device", err.Error())
 	}
 
@@ -177,7 +176,7 @@ func UpdateNAS(c echo.Context) error {
 	}
 
 	var device domain.NetNas
-	if err := app.GDB().First(&device, id).Error; err != nil {
+	if err := GetDB(c).First(&device, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
@@ -194,7 +193,7 @@ func UpdateNAS(c echo.Context) error {
 	// Validate IP uniqueness (e.g., if the IP was modified)
 	if payload.Ipaddr != "" && payload.Ipaddr != device.Ipaddr {
 		var count int64
-		app.GDB().Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", payload.Ipaddr, id).Count(&count)
+		GetDB(c).Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", payload.Ipaddr, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP address already exists", nil)
 		}
@@ -236,7 +235,7 @@ func UpdateNAS(c echo.Context) error {
 		device.NodeId = payload.NodeId
 	}
 
-	if err := app.GDB().Save(&device).Error; err != nil {
+	if err := GetDB(c).Save(&device).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update NAS device", err.Error())
 	}
 
@@ -257,14 +256,14 @@ func DeleteNAS(c echo.Context) error {
 
 	// Check whether there are active online sessions
 	var onlineCount int64
-	app.GDB().Model(&domain.RadiusOnline{}).Joins("JOIN net_vpe ON radius_online.nas_addr = net_vpe.ipaddr").Where("net_vpe.id = ?", id).Count(&onlineCount)
+	GetDB(c).Model(&domain.RadiusOnline{}).Joins("JOIN net_vpe ON radius_online.nas_addr = net_vpe.ipaddr").Where("net_vpe.id = ?", id).Count(&onlineCount)
 	if onlineCount > 0 {
 		return fail(c, http.StatusConflict, "HAS_ONLINE_SESSIONS", "Device has active sessions and cannot be deleted", map[string]interface{}{
 			"online_count": onlineCount,
 		})
 	}
 
-	if err := app.GDB().Delete(&domain.NetNas{}, id).Error; err != nil {
+	if err := GetDB(c).Delete(&domain.NetNas{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to delete NAS device", err.Error())
 	}
 

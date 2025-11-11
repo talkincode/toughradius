@@ -24,7 +24,7 @@ type AuthService struct {
 func NewAuthService(radiusService *RadiusService) *AuthService {
 	return &AuthService{
 		RadiusService: radiusService,
-		eapHelper:     NewEAPAuthHelper(),
+		eapHelper:     NewEAPAuthHelper(radiusService),
 	}
 }
 
@@ -56,7 +56,7 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		return
 	}
 
-	if app.GConfig().Radiusd.Debug {
+	if s.Config().Radiusd.Debug {
 		zap.S().Info(FmtRequest(r))
 	}
 
@@ -194,7 +194,7 @@ func (s *AuthService) SendAccept(w radius.ResponseWriter, r *radius.Request, res
 		s.eapHelper.CleanupState(r)
 	}
 
-	if app.GConfig().Radiusd.Debug {
+	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtResponse(resp, r.RemoteAddr))
 	}
 
@@ -231,7 +231,7 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 	}
 
 	// debug message
-	if app.GConfig().Radiusd.Debug {
+	if s.Config().Radiusd.Debug {
 		zap.S().Info(FmtResponse(resp, r.RemoteAddr))
 	}
 }
@@ -257,7 +257,8 @@ func (s *AuthService) handleAuthError(
 	}
 
 	metadata := map[string]interface{}{
-		"stage": stage,
+		"stage":      stage,
+		"config_mgr": s.AppContext().ConfigMgr(), // Add config manager for enhancers
 	}
 	if username != "" {
 		metadata["username"] = username

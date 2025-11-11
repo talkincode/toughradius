@@ -10,7 +10,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 )
 
@@ -50,7 +49,7 @@ func TestListAccounting(t *testing.T) {
 	}
 
 	for i := range testRecords {
-		err = app.GDB().Create(&testRecords[i]).Error
+		err = db.Create(&testRecords[i]).Error
 		assert.NoError(t, err)
 	}
 
@@ -181,7 +180,7 @@ func TestGetAccounting(t *testing.T) {
 		AcctStartTime:     now.Add(-1 * time.Hour),
 		AcctStopTime:      now,
 	}
-	err = app.GDB().Create(&testRecord).Error
+	err = db.Create(&testRecord).Error
 	assert.NoError(t, err)
 
 	tests := []struct {
@@ -270,7 +269,7 @@ func TestAccountingFilters(t *testing.T) {
 	}
 
 	for i := range testRecords {
-		err = app.GDB().Create(&testRecords[i]).Error
+		err = db.Create(&testRecords[i]).Error
 		assert.NoError(t, err)
 	}
 

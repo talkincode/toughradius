@@ -39,7 +39,7 @@ func registerSettingsRoutes() {
 func listSettings(c echo.Context) error {
 	page, pageSize := parsePagination(c)
 
-	base := app.GDB().Model(&domain.SysConfig{})
+	base := GetDB(c).Model(&domain.SysConfig{})
 	base = applySettingsFilters(base, c)
 
 	var total int64
@@ -67,7 +67,7 @@ func getSettings(c echo.Context) error {
 	}
 
 	var setting domain.SysConfig
-	if err := app.GDB().Where("id = ?", id).First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "SETTING_NOT_FOUND", "Setting not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
@@ -78,11 +78,11 @@ func getSettings(c echo.Context) error {
 
 // getconfigurationschemas
 func getConfigSchemas(c echo.Context) error {
-	if app.GApp().ConfigMgr() == nil {
+	if GetAppContext(c).ConfigMgr() == nil {
 		return fail(c, http.StatusInternalServerError, "CONFIG_MANAGER_NOT_FOUND", "Configuration manager is not initialized", nil)
 	}
 
-	schemas := app.GApp().ConfigMgr().GetAllSchemas()
+	schemas := GetAppContext(c).ConfigMgr().GetAllSchemas()
 
 	// Convert to a frontend-friendly format
 	var result []map[string]interface{}
@@ -144,7 +144,7 @@ func createSettings(c echo.Context) error {
 
 	// Check whether a setting with the same type and name already exists (unique constraint)
 	var exists int64
-	app.GDB().Model(&domain.SysConfig{}).
+	GetDB(c).Model(&domain.SysConfig{}).
 		Where("type = ? AND name = ?", payload.Type, payload.Name).
 		Count(&exists)
 	if exists > 0 {
@@ -162,13 +162,13 @@ func createSettings(c echo.Context) error {
 		UpdatedAt: time.Now(),
 	}
 
-	if err := app.GDB().Create(&setting).Error; err != nil {
+	if err := GetDB(c).Create(&setting).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create system setting", err.Error())
 	}
 
 	// Sync to the ConfigManager cache
-	if app.GApp().ConfigMgr() != nil {
-		app.GApp().ConfigMgr().ReloadAll()
+	if GetAppContext(c).ConfigMgr() != nil {
+		GetAppContext(c).ConfigMgr().ReloadAll()
 	}
 
 	return ok(c, setting)
@@ -187,7 +187,7 @@ func updateSettings(c echo.Context) error {
 	}
 
 	var setting domain.SysConfig
-	if err := app.GDB().Where("id = ?", id).First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("id = ?", id).First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "SETTING_NOT_FOUND", "Setting not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
@@ -211,13 +211,13 @@ func updateSettings(c echo.Context) error {
 	}
 	setting.UpdatedAt = time.Now()
 
-	if err := app.GDB().Save(&setting).Error; err != nil {
+	if err := GetDB(c).Save(&setting).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update system setting", err.Error())
 	}
 
 	// Sync to the ConfigManager cache
-	if app.GApp().ConfigMgr() != nil {
-		app.GApp().ConfigMgr().ReloadAll()
+	if GetAppContext(c).ConfigMgr() != nil {
+		GetAppContext(c).ConfigMgr().ReloadAll()
 	}
 
 	return ok(c, setting)
@@ -230,13 +230,13 @@ func deleteSettings(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid setting ID", nil)
 	}
 
-	if err := app.GDB().Where("id = ?", id).Delete(&domain.SysConfig{}).Error; err != nil {
+	if err := GetDB(c).Where("id = ?", id).Delete(&domain.SysConfig{}).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete system setting", err.Error())
 	}
 
 	// Sync to the ConfigManager cache
-	if app.GApp().ConfigMgr() != nil {
-		app.GApp().ConfigMgr().ReloadAll()
+	if GetAppContext(c).ConfigMgr() != nil {
+		GetAppContext(c).ConfigMgr().ReloadAll()
 	}
 
 	return ok(c, map[string]interface{}{
@@ -260,7 +260,7 @@ func applySettingsFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 // reloadConfig reloads the configuration
 func reloadConfig(c echo.Context) error {
 	// Reload all configuration
-	app.GApp().ConfigMgr().ReloadAll()
+	GetAppContext(c).ConfigMgr().ReloadAll()
 
 	return ok(c, map[string]interface{}{
 		"message": "Configuration reloaded",

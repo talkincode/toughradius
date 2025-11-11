@@ -12,7 +12,6 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -42,7 +41,7 @@ func loginHandler(c echo.Context) error {
 	}
 
 	var operator domain.SysOpr
-	err := app.GDB().Where("username = ?", req.Username).First(&operator).Error
+	err := GetDB(c).Where("username = ?", req.Username).First(&operator).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Incorrect username or password", nil)
 	}
@@ -58,13 +57,13 @@ func loginHandler(c echo.Context) error {
 		return fail(c, http.StatusForbidden, "ACCOUNT_DISABLED", "Account has been disabled", nil)
 	}
 
-	token, err := issueToken(operator)
+	token, err := issueToken(c, operator)
 	if err != nil {
 		return fail(c, http.StatusInternalServerError, "TOKEN_ERROR", "Failed to generate login token", nil)
 	}
 
 	go func(id int64) {
-		app.GDB().Model(&domain.SysOpr{}).Where("id = ?", id).Update("last_login", time.Now())
+		GetDB(c).Model(&domain.SysOpr{}).Where("id = ?", id).Update("last_login", time.Now())
 	}(operator.ID)
 
 	operator.Password = ""
@@ -76,6 +75,21 @@ func loginHandler(c echo.Context) error {
 	})
 }
 
+func issueToken(c echo.Context, op domain.SysOpr) (string, error) {
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"sub":      fmt.Sprintf("%d", op.ID),
+		"username": op.Username,
+		"role":     op.Level,
+		"exp":      now.Add(tokenTTL).Unix(),
+		"iat":      now.Unix(),
+		"nbf":      now.Add(-1 * time.Minute).Unix(),
+		"iss":      "toughradius",
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(GetAppContext(c).Config().Web.Secret))
+}
+
 func currentUserHandler(c echo.Context) error {
 	operator, err := resolveOperatorFromContext(c)
 	if err != nil {
@@ -85,21 +99,6 @@ func currentUserHandler(c echo.Context) error {
 		"user":        operator,
 		"permissions": []string{},
 	})
-}
-
-func issueToken(op domain.SysOpr) (string, error) {
-	now := time.Now()
-	claims := jwt.MapClaims{
-		"sub":      strconv.FormatInt(op.ID, 10),
-		"username": op.Username,
-		"role":     op.Level,
-		"exp":      now.Add(tokenTTL).Unix(),
-		"iat":      now.Unix(),
-		"nbf":      now.Add(-1 * time.Minute).Unix(),
-		"iss":      "toughradius",
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(app.GConfig().Web.Secret))
 }
 
 func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
@@ -125,7 +124,7 @@ func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
 		return nil, errors.New("invalid token id")
 	}
 	var operator domain.SysOpr
-	err = app.GDB().Where("id = ?", id).First(&operator).Error
+	err = GetDB(c).Where("id = ?", id).First(&operator).Error
 	if err != nil {
 		return nil, err
 	}

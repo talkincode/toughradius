@@ -15,18 +15,21 @@ type EAPAuthHelper struct {
 }
 
 // NewEAPAuthHelper Create EAP authentication helper
-func NewEAPAuthHelper() *EAPAuthHelper {
-	// Createstate manager
+func NewEAPAuthHelper(radiusService *RadiusService) *EAPAuthHelper {
+	// Create state manager
 	stateManager := statemanager.NewMemoryStateManager()
 
-	// Createpassword provider
+	// Create password provider
 	pwdProvider := eap.NewDefaultPasswordProvider()
 
-	// gethandler registry
+	// get handler registry
 	var handlerRegistry eap.HandlerRegistry = registry.GetGlobalRegistry()
 
-	// Createcoordinator
-	coordinator := eap.NewCoordinator(stateManager, pwdProvider, handlerRegistry)
+	// Get debug flag from config
+	debug := radiusService.Config().Radiusd.Debug
+
+	// Create coordinator with debug flag
+	coordinator := eap.NewCoordinator(stateManager, pwdProvider, handlerRegistry, debug)
 
 	return &EAPAuthHelper{
 		coordinator: coordinator,

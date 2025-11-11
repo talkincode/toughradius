@@ -8,7 +8,6 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"os"
@@ -17,7 +16,6 @@ import (
 	"time"
 	"unsafe"
 
-	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
@@ -282,9 +280,9 @@ func (s *RadsecPacketServer) ListenAndServe(capath, crtfile, keyfile string) err
 		return errors.New("radius: nil SecretSource")
 	}
 
-	addrStr := fmt.Sprintf(":%d", app.GConfig().Radiusd.RadsecPort)
-	if s.Addr != "" {
-		addrStr = s.Addr
+	addrStr := s.Addr
+	if addrStr == "" {
+		addrStr = ":2083" // Default RadSec port
 	}
 
 	network := "tcp"

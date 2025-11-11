@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/panjf2000/ants/v2"
+	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
@@ -69,7 +70,7 @@ type EapState struct {
 }
 
 type RadiusService struct {
-	App           *app.Application
+	appCtx        app.AppContext // Use interface instead of concrete type
 	AuthRateCache map[string]AuthRateUser
 	EapStateCache map[string]EapState
 	TaskPool      *ants.Pool
@@ -83,7 +84,7 @@ type RadiusService struct {
 	NasRepo        repository.NasRepository
 }
 
-func NewRadiusService() *RadiusService {
+func NewRadiusService(appCtx app.AppContext) *RadiusService {
 	poolsize, err := strconv.Atoi(os.Getenv("TOUGHRADIUS_RADIUS_POOL"))
 	if err != nil {
 		poolsize = 1024
@@ -91,9 +92,10 @@ func NewRadiusService() *RadiusService {
 	pool, err := ants.NewPool(poolsize)
 	common.Must(err)
 
-	// Initialize all repositories
-	db := app.GDB()
+	// Initialize all repositories using injected context
+	db := appCtx.DB()
 	s := &RadiusService{
+		appCtx:        appCtx,
 		AuthRateCache: make(map[string]AuthRateUser),
 		EapStateCache: make(map[string]EapState),
 		arclock:       sync.Mutex{},
@@ -204,7 +206,17 @@ func (s *RadiusService) UpdateUserLastOnline(username string) {
 
 func (s *RadiusService) GetEapMethod() string {
 	// Read directly from the ConfigManager (already in memory)
-	return app.GApp().ConfigMgr().GetString("radius", "EapMethod")
+	return s.appCtx.ConfigMgr().GetString("radius", "EapMethod")
+}
+
+// Config returns the application configuration
+func (s *RadiusService) Config() *config.AppConfig {
+	return s.appCtx.Config()
+}
+
+// AppContext returns the application context
+func (s *RadiusService) AppContext() app.AppContext {
+	return s.appCtx
 }
 
 func GetFramedIpv6Address(r *radius.Request, nas *domain.NetNas) string {

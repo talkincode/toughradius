@@ -8,12 +8,13 @@ import (
 	"layeh.com/radius"
 )
 
-func ListenRadiusAuthServer(service *AuthService) error {
-	if !app.GConfig().Radiusd.Enabled {
+func ListenRadiusAuthServer(appCtx app.AppContext, service *AuthService) error {
+	cfg := appCtx.Config()
+	if !cfg.Radiusd.Enabled {
 		return nil
 	}
 	server := radius.PacketServer{
-		Addr:               fmt.Sprintf("%s:%d", app.GConfig().Radiusd.Host, app.GConfig().Radiusd.AuthPort),
+		Addr:               fmt.Sprintf("%s:%d", cfg.Radiusd.Host, cfg.Radiusd.AuthPort),
 		Handler:            service,
 		SecretSource:       service,
 		InsecureSkipVerify: true,
@@ -23,12 +24,13 @@ func ListenRadiusAuthServer(service *AuthService) error {
 	return server.ListenAndServe()
 }
 
-func ListenRadiusAcctServer(service *AcctService) error {
-	if !app.GConfig().Radiusd.Enabled {
+func ListenRadiusAcctServer(appCtx app.AppContext, service *AcctService) error {
+	cfg := appCtx.Config()
+	if !cfg.Radiusd.Enabled {
 		return nil
 	}
 	server := radius.PacketServer{
-		Addr:               fmt.Sprintf("%s:%d", app.GConfig().Radiusd.Host, app.GConfig().Radiusd.AcctPort),
+		Addr:               fmt.Sprintf("%s:%d", cfg.Radiusd.Host, cfg.Radiusd.AcctPort),
 		Handler:            service,
 		SecretSource:       service,
 		InsecureSkipVerify: true,
@@ -38,20 +40,21 @@ func ListenRadiusAcctServer(service *AcctService) error {
 	return server.ListenAndServe()
 }
 
-func ListenRadsecServer(service *RadsecService) error {
-	if !app.GConfig().Radiusd.Enabled {
+func ListenRadsecServer(appCtx app.AppContext, service *RadsecService) error {
+	cfg := appCtx.Config()
+	if !cfg.Radiusd.Enabled {
 		return nil
 	}
-	caCert := app.GConfig().GetRadsecCaCertPath()
-	serverCert := app.GConfig().GetRadsecCertPath()
-	serverKey := app.GConfig().GetRadsecKeyPath()
+	caCert := cfg.GetRadsecCaCertPath()
+	serverCert := cfg.GetRadsecCertPath()
+	serverKey := cfg.GetRadsecKeyPath()
 
 	server := RadsecPacketServer{
-		Addr:               fmt.Sprintf("%s:%d", app.GConfig().Radiusd.Host, app.GConfig().Radiusd.RadsecPort),
+		Addr:               fmt.Sprintf("%s:%d", cfg.Radiusd.Host, cfg.Radiusd.RadsecPort),
 		Handler:            service,
 		SecretSource:       service,
 		InsecureSkipVerify: true,
-		RadsecWorker:       app.GConfig().Radiusd.RadsecWorker,
+		RadsecWorker:       cfg.Radiusd.RadsecWorker,
 	}
 
 	zap.S().Infof("Starting Radius Resec server on %s", server.Addr)

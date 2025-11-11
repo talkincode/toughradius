@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/talkincode/toughradius/v9/config"
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -12,8 +14,30 @@ import (
 	"layeh.com/radius/rfc2865"
 )
 
+// createTestRadiusService creates a minimal RadiusService for testing
+func createTestRadiusService() *RadiusService {
+	// Create a minimal config
+	cfg := &config.AppConfig{
+		Radiusd: config.RadiusdConfig{
+			Debug: false,
+		},
+	}
+
+	// Create a mock AppContext
+	testApp := app.NewApplication(cfg)
+
+	// Create RadiusService with the test context
+	// Note: This won't have database connections, but that's okay for EAP helper tests
+	rs := &RadiusService{
+		appCtx: testApp,
+	}
+
+	return rs
+}
+
 func TestNewEAPAuthHelper(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	if helper == nil {
 		t.Fatal("NewEAPAuthHelper returned nil")
@@ -25,7 +49,8 @@ func TestNewEAPAuthHelper(t *testing.T) {
 }
 
 func TestEAPAuthHelperGetCoordinator(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 	coordinator := helper.GetCoordinator()
 
 	if coordinator == nil {
@@ -39,7 +64,8 @@ func TestEAPAuthHelperGetCoordinator(t *testing.T) {
 }
 
 func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	// Create test data
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
@@ -94,7 +120,8 @@ func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 }
 
 func TestEAPAuthHelperSendEAPSuccess(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	packet := radius.New(radius.CodeAccessAccept, []byte("secret"))
 	req := &radius.Request{
@@ -124,7 +151,8 @@ func TestEAPAuthHelperSendEAPSuccess(t *testing.T) {
 }
 
 func TestEAPAuthHelperSendEAPFailure(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	packet := radius.New(radius.CodeAccessReject, []byte("secret"))
 	req := &radius.Request{
@@ -136,7 +164,7 @@ func TestEAPAuthHelperSendEAPFailure(t *testing.T) {
 	// Test SendEAPFailure
 	defer func() {
 		if r := recover(); r != nil {
-		// A panic is expected when the ResponseWriter is nil
+			// A panic is expected when the ResponseWriter is nil
 			t.Logf("SendEAPFailure panicked (expected with nil writer): %v", r)
 		}
 	}()
@@ -150,7 +178,8 @@ func TestEAPAuthHelperSendEAPFailure(t *testing.T) {
 }
 
 func TestEAPAuthHelperCleanupState(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	req := &radius.Request{
@@ -164,7 +193,8 @@ func TestEAPAuthHelperCleanupState(t *testing.T) {
 }
 
 func TestEAPAuthHelperMacAuth(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	// Create a MAC authentication scenario
 	macAddr := "aa:bb:cc:dd:ee:ff"
@@ -218,7 +248,8 @@ func TestEAPAuthHelperMacAuth(t *testing.T) {
 }
 
 func TestEAPAuthHelperDifferentMethods(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, "testuser")
@@ -269,7 +300,8 @@ func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 }
 
 func TestEAPAuthHelperConcurrentAccess(t *testing.T) {
-	helper := NewEAPAuthHelper()
+	rs := createTestRadiusService()
+	helper := NewEAPAuthHelper(rs)
 
 	// Test concurrent access to GetCoordinator for safety
 	done := make(chan bool, 10)
