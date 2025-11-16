@@ -261,7 +261,7 @@ func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, nas *do
 		AcctInputTotal:      int64(acctInputOctets) + int64(acctInputGigawords)*4*1024*1024*1024,
 		AcctOutputTotal:     int64(acctOutputOctets) + int64(acctOutputGigawords)*4*1024*1024*1024,
 		AcctInputPackets:    int(rfc2866.AcctInputPackets_Get(r.Packet)),
-		AcctOutputPackets:   int(rfc2866.AcctInputPackets_Get(r.Packet)),
+		AcctOutputPackets:   int(rfc2866.AcctOutputPackets_Get(r.Packet)),
 		AcctStartTime:       getAcctStartTime(int(rfc2866.AcctSessionTime_Get(r.Packet))),
 		LastUpdate:          time.Now(),
 	}

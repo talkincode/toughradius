@@ -367,18 +367,23 @@ func ExportData(c echo.Context, data []map[string]interface{}, sheet string) err
 	xlsx := excelize.NewFile()
 	index := xlsx.NewSheet(sheet)
 	names := make([]string, 0)
-	for i, item := range data {
-		if i == 0 {
-			for k, _ := range item {
-				names = append(names, k)
-			}
-			sort.Slice(names, func(i, j int) bool {
-				return names[i] == "id"
-			})
-			for j, name := range names {
-				xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", excel.COLNAMES[j], 1), name)
+	if len(data) > 0 {
+		for k := range data[0] {
+			names = append(names, k)
+		}
+		sort.Strings(names)
+		for idx, name := range names {
+			if strings.EqualFold(name, "id") {
+				copy(names[1:idx+1], names[:idx])
+				names[0] = name
+				break
 			}
 		}
+		for j, name := range names {
+			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", excel.COLNAMES[j], 1), name)
+		}
+	}
+	for i, item := range data {
 		for j, name := range names {
 			_value := cast.ToString(item[name])
 			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", excel.COLNAMES[j], i+2), _value)
@@ -398,10 +403,10 @@ func ExportCsv(c echo.Context, v interface{}, name string) error {
 	filename := fmt.Sprintf("%s-%d.csv", name, common.UUIDint64())
 	filepath := path.Join(appCtx.Config().GetDataDir(), filename)
 	nfs, err := os.Create(filepath)
-	defer nfs.Close()
 	if err != nil {
 		return err
 	}
+	defer nfs.Close()
 	err = gocsv.Marshal(v, nfs)
 	if err != nil {
 		return err

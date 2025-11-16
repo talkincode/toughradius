@@ -1,118 +1,412 @@
-# ToughRADIUS AI Agent 开发指南
+# ToughRADIUS AI Agent Development Guide
 
-## 🤖 AI Agent 工作准则
+## 🤖 AI Agent Working Guidelines
 
-### ⚠️ 重要规则：不要自动生成总结文档
+### 🔍 Mandatory Requirement: Use @oraios/serena for Code Retrieval
 
-**AI Agent 在完成工作后，除非用户明确要求，否则不要创建总结文档或工作报告。**
+**Before making any code modifications or feature development, you MUST use `@oraios/serena` to retrieve relevant code context.**
 
-- ❌ **禁止**：每次任务完成后自动创建 `SUMMARY.md`、`WORK_REPORT.md` 等文档
-- ❌ **禁止**：在聊天回复中添加冗长的"工作总结"、"完成情况报告"
-- ✅ **允许**：简洁地确认任务完成状态（1-2 句话）
-- ✅ **允许**：用户明确要求时创建文档（如："请生成一份总结文档"）
+#### Why Use @oraios/serena?
 
-**正确的工作完成回复示例：**
+- ✅ **Precise Targeting** - Quickly find relevant code implementations in the project
+- ✅ **Understand Architecture** - Learn the organization structure and design patterns of existing code
+- ✅ **Avoid Duplication** - Discover existing similar features to avoid reinventing the wheel
+- ✅ **Maintain Consistency** - Reference existing code style and conventions to keep code consistent
+
+#### Usage Scenarios
+
+**1. Must Search Before Feature Development**
+
+```bash
+# Before adding new RADIUS vendor support
+@oraios/serena Find existing vendor implementation code
+@oraios/serena RADIUS vendor attribute parsing related code
+
+# Before adding new API endpoints
+@oraios/serena Find similar API route registration code
+@oraios/serena Echo framework middleware usage examples
+```
+
+**2. Must Search Before Bug Fixes**
+
+```bash
+# Before fixing authentication issues
+@oraios/serena Authentication flow related code
+@oraios/serena AuthError error handling pattern
+
+# Before fixing database query issues
+@oraios/serena GORM query optimization examples
+@oraios/serena app.GDB() usage pattern
+```
+
+**3. Must Search Before Refactoring**
+
+```bash
+# Understand global impact before refactoring
+@oraios/serena Find all references to this function
+@oraios/serena Dependencies of this module
+```
+
+**4. Learning Project Conventions**
+
+```bash
+# Learn error handling patterns
+@oraios/serena Error handling and logging examples
+
+# Learn test writing approach
+@oraios/serena Table-driven test examples
+@oraios/serena Unit testing best practices
+```
+
+#### Search Best Practices
+
+**1. Use Specific Query Terms**
+
+```bash
+# ✅ Correct: Specific and clear
+@oraios/serena Huawei vendor attribute parsing implementation
+@oraios/serena Password validation in RADIUS authentication flow
+
+# ❌ Wrong: Too broad
+@oraios/serena authentication
+@oraios/serena code
+```
+
+**2. Combine Keywords with Context**
+
+```bash
+# Find specific patterns
+@oraios/serena Code that uses errgroup to start services concurrently
+@oraios/serena Examples of reading config via app.GApp()
+
+# Find interface implementations
+@oraios/serena Core code implementing RADIUS protocol
+@oraios/serena Echo middleware registration approach
+```
+
+**3. Iterative Search**
+
+```bash
+# Round 1: Macro understanding
+@oraios/serena RADIUS authentication service architecture
+
+# Round 2: Deep dive into details
+@oraios/serena Authentication password validation function implementation
+
+# Round 3: Understand testing
+@oraios/serena Unit tests for authentication password validation
+```
+
+#### Standard Workflow
+
+**Step 0: Code Retrieval (New)**
+
+Before starting any development work:
+
+```bash
+# 1️⃣ Retrieve existing implementations of related features
+@oraios/serena [keywords for the feature you want to implement]
+
+# 2️⃣ Review search results, understand existing code
+# - Code organization structure
+# - Naming conventions
+# - Design patterns
+# - Testing approach
+
+# 3️⃣ Retrieve related test cases
+@oraios/serena [feature keywords] tests
+
+# 4️⃣ Plan implementation based on search results
+```
+
+**Example: Adding Cisco Vendor Support**
+
+```bash
+# Step 1: Retrieve existing vendor implementations
+@oraios/serena Huawei vendor attribute parsing
+@oraios/serena Mikrotik vendor support code
+
+# Step 2: Retrieve vendor attribute processing flow
+@oraios/serena VendorCode processing logic
+@oraios/serena auth_accept_config vendor switch case
+
+# Step 3: Retrieve related tests
+@oraios/serena vendor_parse_test test cases
+
+# Step 4: Start TDD development based on search results
+# Now you understand:
+# - How to define vendor constants
+# - How to add new vendor in switch case
+# - How to write test cases
+# - Where code files should be placed
+```
+
+### 📝 Code is the Best Documentation Principle
+
+**Core Philosophy: Self-Documenting Code > Separate Documentation**
+
+#### Code Comment Requirements
+
+**1. Mandatory Comments for All Exported APIs**
+
+All exported functions, types, constants, and variables **MUST** have clear, comprehensive comments:
+
+```go
+// ✅ Correct: Clear, comprehensive API documentation
+// AuthenticateUser validates user credentials against the RADIUS database.
+// It checks username/password, account expiration, and session limits.
+//
+// Parameters:
+//   - username: User's login name (case-sensitive)
+//   - password: Plain text password (will be hashed internally)
+//   - nasIP: Network Access Server IP address for session tracking
+//
+// Returns:
+//   - *domain.RadiusUser: User object if authentication succeeds
+//   - error: AuthError with metrics tag if validation fails
+//
+// Common errors:
+//   - MetricsRadiusRejectUserNotFound: Username doesn't exist
+//   - MetricsRadiusRejectPasswordError: Password mismatch
+//   - MetricsRadiusRejectExpire: Account expired
+//   - MetricsRadiusRejectMaxSession: Maximum concurrent sessions exceeded
+//
+// Example:
+//   user, err := AuthenticateUser("john", "secret123", "192.168.1.1")
+//   if err != nil {
+//       log.Error("auth failed", zap.Error(err))
+//       return err
+//   }
+func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
+    // Implementation
+}
+
+// ❌ Wrong: Insufficient documentation
+// Auth user
+func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
+    // Implementation
+}
+```
+
+**2. Complex Logic Requires Inline Comments**
+
+```go
+// ✅ Correct: Explain the "why" not the "what"
+func calculateBandwidth(plan string) int64 {
+    // Huawei devices expect bandwidth in Kbps, but our plan stores it in Mbps
+    // Convert Mbps to Kbps by multiplying by 1024 (binary), not 1000 (decimal)
+    baseBandwidth := getPlanBandwidth(plan)
+    return baseBandwidth * 1024
+}
+
+// ❌ Wrong: Obvious comments add no value
+func calculateBandwidth(plan string) int64 {
+    // Get bandwidth
+    baseBandwidth := getPlanBandwidth(plan)
+    // Multiply by 1024
+    return baseBandwidth * 1024
+}
+```
+
+**3. Vendor-Specific Code Must Document Protocol Details**
+
+```go
+// ParseHuaweiInputAverageRate extracts bandwidth limit from Huawei VSA attribute.
+//
+// Huawei-Input-Average-Rate format (RFC 2865):
+//   Type=11, Length=variable, Value=bandwidth_in_kbps
+//   Example: "10240" means 10 Mbps downstream limit
+//
+// See: internal/radiusd/vendors/huawei/README.md for full VSA specification
+func ParseHuaweiInputAverageRate(attr *radius.Attribute) int64 {
+    // Implementation
+}
+```
+
+#### Documentation Strategy
+
+**When to Write Code Comments (Always Required):**
+
+- ✅ All exported functions, methods, types, constants
+- ✅ Complex algorithms or business logic
+- ✅ Non-obvious design decisions
+- ✅ Protocol implementations (RADIUS RFCs, vendor specs)
+- ✅ Performance-critical code with optimization notes
+- ✅ Error handling with expected error scenarios
+
+**When to Create Separate Documentation (Minimal):**
+
+- ✅ **API Integration Guide** - Only for external API consumers (e.g., `docs/api-integration.md`)
+- ✅ **Architecture Overview** - High-level system design (e.g., `docs/v9-architecture.md`)
+- ✅ **Protocol RFCs** - Already in `docs/rfcs/` (no duplication needed)
+- ❌ **NOT for** - Individual features, bug fixes, or code changes
+- ❌ **NOT for** - Work summaries, completion reports, or change logs (use Git history)
+
+**When to Update Existing Docs (Only When Necessary):**
+
+- ✅ Public API behavior changes → Update API docs
+- ✅ New configuration options → Update config guide
+- ✅ Breaking changes → Update `CHANGELOG.md` and migration guide
+- ❌ Internal refactoring → No doc update needed (Git commit is enough)
+
+#### Auto-Generated Documentation Rule
+
+**After completing work, unless explicitly requested by the user, AI Agent should NOT create summary documents or work reports.**
+
+- ❌ **Prohibited**: Auto-creating `SUMMARY.md`, `WORK_REPORT.md` after each task
+- ❌ **Prohibited**: Adding lengthy "work summaries" or "completion reports" in chat responses
+- ❌ **Prohibited**: Creating separate doc files for simple feature additions
+- ✅ **Allowed**: Briefly confirming task completion status (1-2 sentences)
+- ✅ **Allowed**: Creating documents when explicitly requested by user
+- ✅ **Required**: Comprehensive code comments in the implementation itself
+
+**Correct Completion Response:**
 
 ```
-✅ 已完成 config 包的测试，覆盖率 98.5%，所有测试通过。
+✅ Completed config package testing with 98.5% coverage, all tests passing.
 ```
 
-**错误的工作完成回复示例：**
+**Incorrect Completion Response:**
 
 ```
-## 工作总结报告 ❌
+## Work Summary Report ❌
 
-### 完成内容
+### Completed Items
 1. xxxxx
 2. xxxxx
-...（大段总结）
+...(lengthy summary - this belongs in Git commit messages, not separate docs)
 ```
 
-**简洁原则：**
+#### Documentation Quality Standards
 
-- 代码和测试结果本身就是最好的文档
-- Git commit 历史记录了所有变更
-- 只在必要时（用户要求或项目规范要求）才创建文档
+**API-Level Documentation Must Be:**
 
-## 核心开发原则
+1. **Clear** - Use simple, plain language; avoid jargon
+2. **Complete** - Document all parameters, returns, errors
+3. **Practical** - Include real-world usage examples
+4. **Accurate** - Keep code and comments in sync
+5. **Concise** - No redundant or obvious information
 
-本项目**严格遵循**以下三大开发原则，所有代码贡献必须符合这些标准：
+**Example: High-Quality API Comment**
 
-### 🧪 测试驱动开发（TDD）
+```go
+// GetUserOnlineSessions retrieves all active RADIUS sessions for a user.
+//
+// This function queries the accounting table for sessions with null stop time,
+// indicating they are still active. It's used to enforce MaxSessions limits.
+//
+// Parameters:
+//   - username: User's login name (exact match, case-sensitive)
+//
+// Returns:
+//   - []*domain.RadiusAccounting: Slice of active session records (empty if none)
+//   - error: Database error if query fails (nil on success)
+//
+// Performance: Uses index on (username, acct_stop_time) for fast lookup.
+// For users with >1000 sessions, consider pagination.
+//
+// Example:
+//   sessions, err := GetUserOnlineSessions("john@example.com")
+//   if err != nil {
+//       return fmt.Errorf("failed to check sessions: %w", err)
+//   }
+//   if len(sessions) >= maxSessions {
+//       return ErrMaxSessionsExceeded
+//   }
+func GetUserOnlineSessions(username string) ([]*domain.RadiusAccounting, error) {
+    var sessions []*domain.RadiusAccounting
+    err := app.GDB().Where("username = ? AND acct_stop_time IS NULL", username).
+        Find(&sessions).Error
+    return sessions, err
+}
+```
 
-**强制要求：先写测试，后写代码**
+**Remember:**
 
-#### TDD 工作流程
+- 📝 **Code comments are mandatory** - Think of them as inline documentation
+- 🎯 **Optimize for readers** - Your future self and team members
+- 🚫 **Minimize separate docs** - Only create when code comments aren't enough
+- ✅ **Git is your changelog** - Commit messages record what/why/when
 
-1. **红灯阶段** - 编写失败的测试
+## Core Development Principles
+
+This project **strictly follows** these three core development principles. All code contributions must comply with these standards:
+
+### 🧪 Test-Driven Development (TDD)
+
+**Mandatory Requirement: Write Tests First, Then Code**
+
+#### TDD Workflow
+
+1. **Red Phase** - Write failing tests
 
    ```bash
-   # 创建测试文件
+   # Create test file
    touch internal/radiusd/new_feature_test.go
 
-   # 运行测试（应该失败）
+   # Run tests (should fail)
    go test ./internal/radiusd/new_feature_test.go -v
    ```
 
-2. **绿灯阶段** - 编写最小实现使测试通过
+2. **Green Phase** - Write minimal implementation to pass tests
 
    ```bash
-   # 实现功能代码
+   # Implement feature code
    vim internal/radiusd/new_feature.go
 
-   # 再次运行测试（应该通过）
+   # Run tests again (should pass)
    go test ./internal/radiusd/new_feature_test.go -v
    ```
 
-3. **重构阶段** - 优化代码同时保持测试通过
+3. **Refactor Phase** - Optimize code while keeping tests passing
    ```bash
-   # 持续运行测试确保重构安全
+   # Continuously run tests to ensure safe refactoring
    go test ./... -v
    ```
 
-#### 测试覆盖率要求
+#### Test Coverage Requirements
 
-- **新增功能代码覆盖率必须 ≥ 80%**
-- **核心 RADIUS 协议模块覆盖率必须 ≥ 90%**
-- **关键业务逻辑必须有集成测试**
+- **New feature code coverage must be ≥ 80%**
+- **Core RADIUS protocol module coverage must be ≥ 90%**
+- **Critical business logic must have integration tests**
 
 ```bash
-# 检查测试覆盖率
+# Check test coverage
 go test ./... -coverprofile=coverage.out
 go tool cover -html=coverage.out
 
-# 查看覆盖率统计
+# View coverage statistics
 go test ./internal/radiusd -coverprofile=coverage.out
 go tool cover -func=coverage.out
 ```
 
-#### 测试文件组织
+#### Test File Organization
 
 ```
 internal/radiusd/
-├── auth_passwd_check.go          # 实现文件
-├── auth_passwd_check_test.go     # 单元测试（同包）
+├── auth_passwd_check.go          # Implementation file
+├── auth_passwd_check_test.go     # Unit tests (same package)
 ├── radius_auth.go
-├── radius_test.go                # 集成测试
-└── vendor_parse_test.go          # 特性测试
+├── radius_test.go                # Integration tests
+└── vendor_parse_test.go          # Feature tests
 ```
 
-#### 测试用例命名规范
+#### Test Case Naming Convention
 
 ```go
-// ✅ 正确：清晰描述测试意图
+// ✅ Correct: Clearly describe test intent
 func TestAuthPasswordCheck_ValidUser_ShouldReturnSuccess(t *testing.T) {}
 func TestAuthPasswordCheck_ExpiredUser_ShouldReturnError(t *testing.T) {}
 func TestGetNas_UnauthorizedIP_ShouldReturnAuthError(t *testing.T) {}
 
-// ❌ 错误：模糊不清
+// ❌ Wrong: Ambiguous
 func TestAuth(t *testing.T) {}
 func TestFunc1(t *testing.T) {}
 ```
 
-#### 表驱动测试（Table-Driven Tests）
+#### Table-Driven Tests
 
-对于多场景测试，使用表驱动方式：
+For multi-scenario testing, use table-driven approach:
 
 ```go
 func TestVendorParse(t *testing.T) {
@@ -129,71 +423,71 @@ func TestVendorParse(t *testing.T) {
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            // 测试逻辑
+            // Test logic
         })
     }
 }
 ```
 
-### 🔄 GitHub 工作流
+### 🔄 GitHub Workflow
 
-**强制要求：遵循 Git Flow 分支模型和标准 PR 流程**
+**Mandatory Requirement: Follow Git Flow branching model and standard PR process**
 
-#### 分支策略
+#### Branching Strategy
 
 ```
-main (生产分支)
-  ├── v9dev (开发分支)
-  │    ├── feature/user-management     # 功能分支
-  │    ├── feature/radius-vendor-cisco # 功能分支
-  │    ├── bugfix/session-timeout      # 缺陷修复
-  │    └── hotfix/security-patch       # 紧急修复
-  └── release/v9.1.0                   # 发布分支
+main (production branch)
+  ├── v9dev (development branch)
+  │    ├── feature/user-management     # Feature branch
+  │    ├── feature/radius-vendor-cisco # Feature branch
+  │    ├── bugfix/session-timeout      # Bug fix
+  │    └── hotfix/security-patch       # Hotfix
+  └── release/v9.1.0                   # Release branch
 ```
 
-#### 标准开发流程
+#### Standard Development Process
 
-**1. 创建功能分支**
+**1. Create Feature Branch**
 
 ```bash
-# 从 v9dev 创建功能分支
+# Create feature branch from v9dev
 git checkout v9dev
 git pull origin v9dev
 git checkout -b feature/add-cisco-vendor
 
-# 分支命名规范
-# feature/  - 新功能
-# bugfix/   - 缺陷修复
-# hotfix/   - 紧急修复
-# refactor/ - 代码重构
-# docs/     - 文档更新
+# Branch naming convention
+# feature/  - New features
+# bugfix/   - Bug fixes
+# hotfix/   - Hotfixes
+# refactor/ - Code refactoring
+# docs/     - Documentation updates
 ```
 
-**2. TDD 循环开发**
+**2. TDD Loop Development**
 
 ```bash
-# 1️⃣ 先写测试
+# 1️⃣ Write tests first
 vim internal/radiusd/vendors/cisco/cisco_test.go
 
-# 2️⃣ 运行测试（红灯）
+# 2️⃣ Run tests (red)
 go test ./internal/radiusd/vendors/cisco -v
 
-# 3️⃣ 实现功能
+# 3️⃣ Implement feature
 vim internal/radiusd/vendors/cisco/cisco.go
 
-# 4️⃣ 运行测试（绿灯）
+# 4️⃣ Run tests (green)
 go test ./internal/radiusd/vendors/cisco -v
 
-# 5️⃣ 提交原子化的变更
+# 5️⃣ Commit atomic changes
 git add internal/radiusd/vendors/cisco/
 git commit -m "test: add Cisco vendor attribute parsing tests"
 git commit -m "feat: implement Cisco vendor attribute parsing"
 ```
 
-**3. 提交规范（Conventional Commits）**
+**3. Commit Convention (Conventional Commits)**
 
 ```bash
-# 格式：<type>(<scope>): <subject>
+# Format: <type>(<scope>): <subject>
 git commit -m "feat(radius): add Cisco vendor support"
 git commit -m "test(radius): add unit tests for Cisco attributes"
 git commit -m "fix(auth): correct password validation logic"
@@ -201,206 +495,209 @@ git commit -m "docs(api): update RADIUS authentication API docs"
 git commit -m "refactor(database): optimize user query performance"
 git commit -m "perf(radius): reduce authentication latency by 20%"
 
-# Type 类型
-# feat:     新功能
-# fix:      缺陷修复
-# test:     测试相关
-# docs:     文档更新
-# refactor: 代码重构
-# perf:     性能优化
-# style:    代码格式
-# chore:    构建/工具变更
+# Type definitions
+# feat:     New features
+# fix:      Bug fixes
+# test:     Testing related
+# docs:     Documentation updates
+# refactor: Code refactoring
+# perf:     Performance optimization
+# style:    Code formatting
+# chore:    Build/tool changes
 ```
 
-**4. 创建 Pull Request**
+**4. Create Pull Request**
 
-PR 必须包含：
+PR must include:
 
-- ✅ **所有测试通过**（`go test ./...`）
-- ✅ **代码覆盖率达标**
-- ✅ **清晰的描述和变更说明**
-- ✅ **关联的 Issue 编号**
-- ✅ **至少一个代码审查者批准**
+- ✅ **All tests passing** (`go test ./...`)
+- ✅ **Code coverage meets requirements**
+- ✅ **Clear description and change summary**
+- ✅ **Associated Issue number**
+- ✅ **At least one code reviewer approval**
 
-PR 模板：
+PR Template:
 
 ```markdown
-## 变更描述
+## Change Description
 
-简要说明本次 PR 的目的和主要变更
+Brief description of the purpose and main changes of this PR
 
-## 变更类型
+## Change Type
 
-- [ ] 新功能
-- [ ] 缺陷修复
-- [ ] 性能优化
-- [ ] 代码重构
-- [ ] 文档更新
+- [ ] New feature
+- [ ] Bug fix
+- [ ] Performance optimization
+- [ ] Code refactoring
+- [ ] Documentation update
 
-## 测试覆盖
+## Test Coverage
 
-- [ ] 添加了单元测试
-- [ ] 添加了集成测试
-- [ ] 测试覆盖率 ≥ 80%
-- [ ] 所有测试通过
+- [ ] Added unit tests
+- [ ] Added integration tests
+- [ ] Test coverage ≥ 80%
+- [ ] All tests passing
 
-## 检查清单
+## Checklist
 
-- [ ] 代码遵循项目规范
-- [ ] 提交信息符合 Conventional Commits
-- [ ] 更新了相关文档
-- [ ] 无破坏性变更（或已在 CHANGELOG 中说明）
+- [ ] Code follows project conventions
+- [ ] Commit messages follow Conventional Commits
+- [ ] Updated relevant documentation
+- [ ] No breaking changes (or documented in CHANGELOG)
 
-## 关联 Issue
+## Related Issue
 
 Closes #123
 ```
 
-**5. 持续集成检查**
+**5. Continuous Integration Checks**
 
-每个 PR 自动触发：
+Each PR automatically triggers:
 
-- ✅ `go test ./...` - 运行所有测试
-- ✅ `go build` - 确保代码可编译
-- ✅ Docker 镜像构建
-- ✅ 代码风格检查
+- ✅ `go test ./...` - Run all tests
+- ✅ `go build` - Ensure code compiles
+- ✅ Docker image build
+- ✅ Code style checks
 
-#### 发布流程
+#### Release Process
 
 ```bash
-# 1. 创建发布分支
+# 1. Create release branch
 git checkout -b release/v9.1.0 v9dev
 
-# 2. 更新版本号和 CHANGELOG
+# 2. Update version and CHANGELOG
 vim VERSION
 vim CHANGELOG.md
 
-# 3. 合并到 main 并打标签
+# 3. Merge to main and tag
 git checkout main
 git merge --no-ff release/v9.1.0
 git tag -a v9.1.0 -m "Release version 9.1.0"
 git push origin main --tags
 
-# 4. 触发 GitHub Actions 自动发布
-# - 构建 AMD64/ARM64 二进制
-# - 发布 Docker 镜像到 DockerHub 和 GHCR
-# - 创建 GitHub Release
+# 4. Trigger GitHub Actions auto-release
+# - Build AMD64/ARM64 binaries
+# - Publish Docker images to DockerHub and GHCR
+# - Create GitHub Release
 ```
 
-### 📦 最小可用产品（MVP）原则
+### 📦 Minimum Viable Product (MVP) Principle
 
-**强制要求：每个功能必须以最小可用单元交付**
+**Mandatory Requirement: Each feature must be delivered in minimum viable units**
 
-#### MVP 设计方法
+#### MVP Design Method
 
-1. **确定核心价值**
+1. **Identify Core Value**
 
-   - ❓ 这个功能解决什么问题？
-   - ❓ 最简化的实现是什么？
-   - ❓ 哪些是必需的，哪些是锦上添花？
+   - ❓ What problem does this feature solve?
+   - ❓ What is the simplest implementation?
+   - ❓ What is essential vs. nice-to-have?
 
-2. **功能拆分示例**
+2. **Feature Breakdown Example**
 
    ```
-   ❌ 错误做法：一次性实现完整功能
-   Issue #123: 添加 Cisco 厂商支持
-   └── 包含认证、计费、VSA 属性、配置管理、Web 界面...
+   ❌ Wrong approach: Implement complete feature at once
+   Issue #123: Add Cisco vendor support
+   └── Includes auth, accounting, VSA attributes, config management, Web UI...
 
-   ✅ 正确做法：MVP 拆分
-   Issue #123: 添加 Cisco 厂商基础认证支持 (MVP-1)
-   ├── PR #124: Cisco VSA 属性解析
-   ├── PR #125: Cisco 认证流程集成
-   └── PR #126: 基础测试用例
+   ✅ Correct approach: MVP breakdown
+   Issue #123: Add Cisco vendor basic auth support (MVP-1)
+   ├── PR #124: Cisco VSA attribute parsing
+   ├── PR #125: Cisco auth flow integration
+   └── PR #126: Basic test cases
 
-   Issue #130: 扩展 Cisco 计费功能 (MVP-2)
-   └── 基于 MVP-1 构建
+   Issue #130: Extend Cisco accounting features (MVP-2)
+   └── Built on MVP-1
 
-   Issue #135: 添加 Cisco Web 管理界面 (MVP-3)
-   └── 基于 MVP-1 + MVP-2 构建
+   Issue #135: Add Cisco Web management UI (MVP-3)
+   └── Built on MVP-1 + MVP-2
    ```
 
-3. **MVP 交付标准**
+3. **MVP Delivery Standards**
 
-   每个 MVP 必须：
+   Each MVP must be:
 
-   - ✅ **独立可用** - 不依赖未完成的功能
-   - ✅ **完整测试** - 覆盖率达标
-   - ✅ **文档完善** - API 文档 + 使用说明
-   - ✅ **可演示** - 能够运行并展示价值
-   - ✅ **可回滚** - 不破坏现有功能
+   - ✅ **Independently Usable** - Does not depend on incomplete features
+   - ✅ **Fully Tested** - Coverage meets requirements
+   - ✅ **Well Documented** - API docs + usage guide
+   - ✅ **Demonstrable** - Can run and show value
+   - ✅ **Rollback-Safe** - Does not break existing functionality
 
-#### MVP 实践案例
+#### MVP Practice Examples
 
-**案例 1：新增 RADIUS 厂商支持**
-
-```
-MVP-1（第1周）：基础属性解析 ✅
-├── vendor_cisco.go          # 厂商常量定义
-├── vendor_cisco_test.go     # 解析测试
-└── 支持读取基础 VSA 属性
-
-MVP-2（第2周）：认证集成 ✅
-├── auth_accept_config.go    # 添加 Cisco case
-├── auth_cisco_test.go       # 认证集成测试
-└── 支持 Cisco 设备认证流程
-
-MVP-3（第3周）：计费支持 ✅
-└── 扩展计费记录 Cisco 特定字段
-
-MVP-4（第4周）：Web 管理 ✅
-└── Admin API 添加 Cisco 配置界面
-```
-
-**案例 2：性能优化**
+**Example 1: Adding RADIUS Vendor Support**
 
 ```
-MVP-1：识别瓶颈 ✅
-├── 添加性能测试基准
-├── 识别热点函数
-└── 建立性能基线
+MVP-1 (Week 1): Basic attribute parsing ✅
+├── vendor_cisco.go          # Vendor constant definitions
+├── vendor_cisco_test.go     # Parsing tests
+└── Support reading basic VSA attributes
 
-MVP-2：优化数据库查询 ✅
-├── 添加索引
-├── 优化 N+1 查询
-└── 验证性能提升 20%
+MVP-2 (Week 2): Authentication integration ✅
+├── auth_accept_config.go    # Add Cisco case
+├── auth_cisco_test.go       # Auth integration tests
+└── Support Cisco device auth flow
 
-MVP-3：缓存层 ✅ (可选)
-└── 如果性能仍不达标则继续
+MVP-3 (Week 3): Accounting support ✅
+└── Extend accounting records with Cisco-specific fields
+
+MVP-4 (Week 4): Web management ✅
+└── Admin API adds Cisco configuration UI
 ```
 
-## 开发工作流完整示例
+**Example 2: Performance Optimization**
 
-### 场景：添加新的 RADIUS 厂商支持（Cisco）
+```
+MVP-1: Identify bottlenecks ✅
+├── Add performance test benchmarks
+├── Identify hotspot functions
+└── Establish performance baseline
 
-**第 1 步：创建 Issue（需求分析）**
+MVP-2: Optimize database queries ✅
+├── Add indexes
+├── Optimize N+1 queries
+└── Verify 20% performance improvement
+
+MVP-3: Caching layer ✅ (optional)
+└── Continue if performance still not meeting targets
+```
+
+## Complete Development Workflow Example
+
+### Scenario: Adding New RADIUS Vendor Support (Cisco)
+
+**Step 1: Create Issue (Requirements Analysis)**
 
 ```markdown
-Title: [Feature] 添加 Cisco RADIUS 厂商支持
+Title: [Feature] Add Cisco RADIUS Vendor Support
 
-## MVP-1 范围
+## MVP-1 Scope
 
-- [ ] 解析 Cisco VSA 属性
-- [ ] 单元测试覆盖率 ≥ 90%
-- [ ] 文档更新
+- [ ] Parse Cisco VSA attributes
+- [ ] Unit test coverage ≥ 90%
+- [ ] Documentation update
 
-## MVP-2 范围（后续）
+## MVP-2 Scope (Future)
 
-- [ ] 认证流程集成
-- [ ] 计费功能支持
+- [ ] Authentication flow integration
+- [ ] Accounting feature support
 
-## 不包含
+## Not Included
 
-- Web 管理界面（MVP-3）
-- 高级配置管理（MVP-4）
+- Web management UI (MVP-3)
+- Advanced configuration management (MVP-4)
 ```
 
-**第 2 步：TDD 开发**
+**Step 2: TDD Development**
+
+````bash
+**Step 2: TDD Development**
 
 ```bash
-# 1️⃣ 创建分支
+# 1️⃣ Create branch
 git checkout -b feature/cisco-vendor-mvp1 v9dev
 
-# 2️⃣ 先写测试（红灯）
+# 2️⃣ Write tests first (red)
 cat > internal/radiusd/vendors/cisco/cisco_test.go << 'EOF'
 package cisco
 
@@ -418,40 +715,40 @@ func TestParseCiscoAVPair(t *testing.T) {
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             got := ParseAVPair(tt.input)
-            // 断言逻辑
+            // Assertion logic
         })
     }
 }
 EOF
 
-# 3️⃣ 运行测试（应该失败）
+# 3️⃣ Run tests (should fail)
 go test ./internal/radiusd/vendors/cisco -v
 
-# 4️⃣ 实现最小可用代码（绿灯）
+# 4️⃣ Implement minimal code (green)
 cat > internal/radiusd/vendors/cisco/cisco.go << 'EOF'
 package cisco
 
 func ParseAVPair(input string) map[string]string {
-    // 最简实现
+    // Minimal implementation
     return map[string]string{}
 }
 EOF
 
-# 5️⃣ 运行测试（应该通过）
+# 5️⃣ Run tests (should pass)
 go test ./internal/radiusd/vendors/cisco -v
 
-# 6️⃣ 重构优化
-# 改进实现，持续确保测试通过
+# 6️⃣ Refactor and optimize
+# Improve implementation while keeping tests passing
 
-# 7️⃣ 检查覆盖率
+# 7️⃣ Check coverage
 go test ./internal/radiusd/vendors/cisco -coverprofile=coverage.out
 go tool cover -func=coverage.out | grep total
-```
+````
 
-**第 3 步：提交代码**
+**Step 3: Commit Code**
 
 ```bash
-# 原子化提交
+# Atomic commits
 git add internal/radiusd/vendors/cisco/cisco_test.go
 git commit -m "test(radius): add Cisco AVPair parsing tests"
 
@@ -462,145 +759,197 @@ git add docs/radius/cisco-vendor.md
 git commit -m "docs(radius): add Cisco vendor documentation"
 ```
 
-**第 4 步：创建 Pull Request**
+**Step 4: Create Pull Request**
 
 ```bash
 git push origin feature/cisco-vendor-mvp1
-# 在 GitHub 上创建 PR，填写 PR 模板
+# Create PR on GitHub, fill in PR template
 ```
 
-**第 5 步：代码审查和合并**
+**Step 5: Code Review and Merge**
 
-- 等待 CI 通过
-- 代码审查反馈
-- 修复问题，推送更新
-- 获得批准后合并到 v9dev
+- Wait for CI to pass
+- Code review feedback
+- Fix issues, push updates
+- Merge to v9dev after approval
 
-**第 6 步：计划 MVP-2**
+**Step 6: Plan MVP-2**
 
-- 创建新的 Issue 用于下一个 MVP
-- 重复上述流程
+- Create new Issue for next MVP
+- Repeat the above process
 
-## 质量门禁（Quality Gates）
+## Quality Gates
 
-所有代码合并前必须通过：
+All code must pass before merging:
 
-### ✅ 自动化检查
+### ✅ Automated Checks
 
-- [ ] 所有单元测试通过（`go test ./...`）
-- [ ] 代码覆盖率 ≥ 80%
-- [ ] 编译无错误（`go build`）
-- [ ] Docker 镜像构建成功
-- [ ] 前端测试通过（`npm run test`）
+- [ ] All unit tests pass (`go test ./...`)
+- [ ] Code coverage ≥ 80%
+- [ ] No compilation errors (`go build`)
+- [ ] Docker image builds successfully
+- [ ] Frontend tests pass (`npm run test`)
 
-### ✅ 代码审查
+### ✅ Code Review
 
-- [ ] 至少一个维护者批准
-- [ ] 无未解决的审查意见
-- [ ] 符合代码规范
+- [ ] At least one maintainer approval
+- [ ] No unresolved review comments
+- [ ] Follows code conventions
 
-### ✅ 文档要求
+### ✅ Documentation Requirements (Code-First Approach)
 
-- [ ] 代码注释充分（特别是导出函数）
-- [ ] API 变更更新了文档
-- [ ] CHANGELOG.md 已更新（如果面向用户）
+- [ ] **All exported APIs have comprehensive comments** (mandatory)
+  - Function/method purpose clearly explained
+  - All parameters documented with types and constraints
+  - Return values and error conditions described
+  - Real-world usage examples included (for complex APIs)
+- [ ] **Complex logic has inline comments** explaining the "why"
+- [ ] **Vendor-specific code references protocol specs** (RFC numbers, VSA docs)
+- [ ] **API behavior changes** → Update existing API documentation only if external-facing
+- [ ] **Breaking changes** → CHANGELOG.md updated with migration guide
+- [ ] **No redundant separate documentation** unless explicitly required
 
-### ✅ MVP 验收
+### ✅ MVP Acceptance
 
-- [ ] 功能独立可用
-- [ ] 满足最小需求
-- [ ] 不引入技术债务
+- [ ] Feature independently usable
+- [ ] Meets minimum requirements
+- [ ] Does not introduce technical debt
 
-## 常见反模式（禁止）
+## Common Anti-Patterns (Prohibited)
 
-### ❌ 反模式 1：无测试提交
+### ❌ Anti-Pattern 1: Exporting APIs Without Documentation
+
+```go
+// ❌ Wrong: Exported function with no comment
+func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
+    // Implementation
+}
+
+// ✅ Correct: Comprehensive API documentation
+// AuthenticateUser validates user credentials against the RADIUS database.
+// It checks username/password, account expiration, and session limits.
+//
+// Parameters:
+//   - username: User's login name (case-sensitive)
+//   - password: Plain text password (will be hashed internally)
+//   - nasIP: Network Access Server IP address for session tracking
+//
+// Returns:
+//   - *domain.RadiusUser: User object if authentication succeeds
+//   - error: AuthError with metrics tag if validation fails
+func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
+    // Implementation
+}
+```
+
+### ❌ Anti-Pattern 2: Committing Without Tests
 
 ```bash
-# 错误示例
-git commit -m "feat: add new feature"  # 无对应测试文件
+# Wrong example
+git commit -m "feat: add new feature"  # No corresponding test file
 
-# 正确做法
+# Correct approach
 git commit -m "test: add tests for new feature"
 git commit -m "feat: add new feature"
 ```
 
-### ❌ 反模式 2：巨型 PR
+### ❌ Anti-Pattern 3: Giant PRs
 
 ```
-❌ PR #100: 完整实现用户管理系统
+❌ PR #100: Complete user management system implementation
    +2000 -500 lines across 50 files
 
-✅ 拆分为：
+✅ Split into:
    PR #101: User model and database migration (MVP-1)
    PR #102: User CRUD API endpoints (MVP-2)
    PR #103: User management UI (MVP-3)
 ```
 
-### ❌ 反模式 3：先实现后测试
+### ❌ Anti-Pattern 4: Implementation Before Tests
 
 ```go
-// ❌ 错误流程
-1. 实现完整功能
-2. 功能已经很复杂
-3. 补充测试困难
-4. 测试覆盖率不足
+// ❌ Wrong flow
+1. Implement complete feature
+2. Feature becomes complex
+3. Difficult to add tests
+4. Insufficient test coverage
 
-// ✅ TDD 流程
-1. 写测试（定义行为）
-2. 最小实现
-3. 重构优化
-4. 测试覆盖率自然达标
+// ✅ TDD flow
+1. Write tests (define behavior)
+2. Minimal implementation
+3. Refactor and optimize
+4. Test coverage naturally achieved
 ```
 
-### ❌ 反模式 4：跳过 Code Review
+### ❌ Anti-Pattern 5: Skipping Code Review
 
 ```bash
-# ❌ 直接推送到主分支
-git push origin main  # 被保护分支拒绝
+# ❌ Direct push to main branch
+git push origin main  # Rejected by protected branch
 
-# ✅ 通过 PR 流程
+# ✅ Through PR process
 git push origin feature/my-feature
-# 创建 PR → CI 检查 → 代码审查 → 合并
+# Create PR → CI checks → Code review → Merge
 ```
 
-## 工具配置
-
-### 本地开发环境设置
+### ❌ Anti-Pattern 6: Creating Redundant Documentation
 
 ```bash
-# 安装 Git hooks（自动化测试）
+# ❌ Wrong: Auto-generating summary docs after each task
+feature-implementation.go  # Implementation
+feature-implementation-summary.md  # Redundant - info should be in code comments
+WORK_REPORT.md  # Redundant - info should be in Git commits
+
+# ✅ Correct: Code + Comments + Git History
+feature-implementation.go  # Implementation with comprehensive comments
+# Git commit messages record the what/why/when
+# No separate summary document needed
+```
+
+## Tool Configuration
+
+### Local Development Environment Setup
+
+```bash
+# Install Git hooks (automated testing)
 cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/bash
-echo "运行测试..."
+echo "Running tests..."
 go test ./...
 if [ $? -ne 0 ]; then
-    echo "❌ 测试失败，提交已阻止"
+    echo "❌ Tests failed, commit blocked"
     exit 1
 fi
-echo "✅ 测试通过"
+echo "✅ Tests passed"
 EOF
 chmod +x .git/hooks/pre-commit
 
-# 配置 commit 模板
+# Configure commit template
 git config commit.template .gitmessage.txt
 ```
 
-### 推荐 VS Code 扩展
+### Recommended VS Code Extensions
 
-- **Go** - Go 语言支持
-- **Go Test Explorer** - 测试可视化
-- **Coverage Gutters** - 覆盖率展示
-- **Conventional Commits** - 提交规范辅助
-- **GitLens** - Git 增强
+- **Go** - Go language support
+- **Go Test Explorer** - Test visualization
+- **Coverage Gutters** - Coverage display
+- **Conventional Commits** - Commit convention helper
+- **GitLens** - Git enhancement
 
-## 参考资料
+## References
 
-- [TDD 实践指南](https://martinfowler.com/bliki/TestDrivenDevelopment.html)
-- [Git Flow 工作流](https://nvie.com/posts/a-successful-git-branching-model/)
+- [TDD Practice Guide](https://martinfowler.com/bliki/TestDrivenDevelopment.html)
+- [Git Flow Workflow](https://nvie.com/posts/a-successful-git-branching-model/)
 - [Conventional Commits](https://www.conventionalcommits.org/)
-- [MVP 方法论](https://www.agilealliance.org/glossary/mvp/)
-- [Go 测试最佳实践](https://go.dev/doc/tutorial/add-a-test)
+- [MVP Methodology](https://www.agilealliance.org/glossary/mvp/)
+- [Go Testing Best Practices](https://go.dev/doc/tutorial/add-a-test)
 
 ---
 
-**记住：质量优于速度，可用优于完美，测试先于代码！**
+**Remember: Quality over speed, Usable over perfect, Tests before code, Code is the documentation!**
+
+**Documentation Hierarchy:**
+
+1. 🥇 **Code + Comprehensive Comments** - First-class documentation
+2. 🥈 **Git Commit History** - Records what/why/when
+3. 🥉 **Minimal Separate Docs** - Only for architecture & external APIs

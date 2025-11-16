@@ -1,140 +1,212 @@
 # ToughRADIUS AI Coding Agent Instructions
 
-## 项目概述
+## 🔍 Mandatory Requirements Before Development
 
-ToughRADIUS 是一个用 Go 语言开发的企业级 RADIUS 服务器，支持标准 RADIUS 协议（RFC 2865/2866）、RadSec（RADIUS over TLS）。前端使用 React Admin 框架构建管理界面。
+**Before making any code modifications or feature development, you MUST use `@oraios/serena` to retrieve relevant code context.**
 
-## 架构要点
+### When to Use @oraios/serena
 
-### 核心服务并发模型
+1. **Before Feature Development** - Retrieve existing implementations of similar features
+2. **Before Bug Fixes** - Find code paths related to the problem
+3. **Before Refactoring** - Understand the global impact scope of the code
+4. **Learning Conventions** - Understand the project's code patterns and best practices
 
-`main.go` 使用 `errgroup` 并发启动多个独立服务，任一服务崩溃会导致整个应用退出：
+### Search Examples
 
-- **Web/Admin API** - Echo 框架，端口 1816（`internal/webserver` + `internal/adminapi`）
-- **RADIUS Auth** - 认证服务，UDP 1812（`internal/radiusd`）
-- **RADIUS Acct** - 计费服务，UDP 1813（`internal/radiusd`）
-- **RadSec** - TLS 加密的 RADIUS over TCP，端口 2083（`internal/radiusd`）
+```bash
+# Before adding new features
+@oraios/serena Huawei vendor attribute parsing implementation
+@oraios/serena Password validation in RADIUS authentication flow
 
-### 项目结构模式
+# Before fixing issues
+@oraios/serena AuthError error handling pattern
+@oraios/serena GORM query optimization examples
 
-遵循 golang-standards/project-layout：
+# Before refactoring
+@oraios/serena Find all references to this function
+@oraios/serena app.GDB() usage pattern
+```
 
-- `internal/` - 私有代码，外部不可导入
-  - `domain/` - **统一数据模型**（所有 GORM 模型定义在 `domain/tables.go` 列出）
-  - `adminapi/` - 新版管理 API 路由（v9 重构）
-  - `radiusd/` - RADIUS 协议核心实现
-  - `app/` - 全局应用实例（数据库、配置、定时任务）
-- `pkg/` - 可复用公共库（工具函数、加密、Excel 等）
-- `web/` - React Admin 前端（TypeScript + Vite）
+**Core Principle: Understand existing code → Follow project conventions → Maintain consistency**
 
-### 数据库访问模式
+---
 
-**始终**通过 `app.GDB()` 获取 GORM 实例，不要直接注入 DB 连接：
+## Project Overview
+
+ToughRADIUS is an enterprise-grade RADIUS server developed in Go, supporting standard RADIUS protocols (RFC 2865/2866) and RadSec (RADIUS over TLS). The frontend uses React Admin framework for the management interface.
+
+## Architecture Highlights
+
+### Core Service Concurrency Model
+
+`main.go` uses `errgroup` to start multiple independent services concurrently. If any service crashes, the entire application exits:
+
+- **Web/Admin API** - Echo framework, port 1816 (`internal/webserver` + `internal/adminapi`)
+- **RADIUS Auth** - Authentication service, UDP 1812 (`internal/radiusd`)
+- **RADIUS Acct** - Accounting service, UDP 1813 (`internal/radiusd`)
+- **RadSec** - TLS-encrypted RADIUS over TCP, port 2083 (`internal/radiusd`)
+
+### Project Structure Pattern
+
+Follows golang-standards/project-layout:
+
+- `internal/` - Private code, cannot be imported externally
+  - `domain/` - **Unified data models** (all GORM models listed in `domain/tables.go`)
+  - `adminapi/` - New management API routes (v9 refactor)
+  - `radiusd/` - RADIUS protocol core implementation
+  - `app/` - Global application instance (database, config, scheduled tasks)
+- `pkg/` - Reusable public libraries (utilities, encryption, Excel, etc.)
+- `web/` - React Admin frontend (TypeScript + Vite)
+
+### Database Access Pattern
+
+**Always** obtain GORM instance through `app.GDB()`, do not inject DB connection directly:
 
 ```go
-// 正确
+// Correct
 user := &domain.RadiusUser{}
 app.GDB().Where("username = ?", name).First(user)
 
-// 错误 - 不要这样做
+// Wrong - Don't do this
 type Service struct { DB *gorm.DB }
 ```
 
-支持 PostgreSQL（默认）和 SQLite（需要 `CGO_ENABLED=1` 编译）。数据库迁移通过 `app.MigrateDB()` 自动完成。
+Supports PostgreSQL (default) and SQLite (requires `CGO_ENABLED=1` compilation). Database migration is automatically handled by `app.MigrateDB()`.
 
-### 厂商扩展处理
+### Vendor Extension Handling
 
-RADIUS 协议支持多厂商特性，通过 `VendorCode` 字段区分：
+RADIUS protocol supports multi-vendor features, distinguished by `VendorCode` field:
 
 - Huawei (2011) - `internal/radiusd/vendors/huawei/`
-- Mikrotik (14988) - 见 `auth_accept_config.go`
+- Mikrotik (14988) - See `auth_accept_config.go`
 - Cisco (9) / Ikuai (10055) / ZTE (3902) / H3C (25506)
 
-添加新厂商支持时，在 `radius.go` 中定义常量，然后在 `auth_accept_config.go` 和相关处理函数中添加 switch case。
+When adding new vendor support, define constants in `radius.go`, then add switch cases in `auth_accept_config.go` and related processing functions.
 
-## 关键开发流程
+## Key Development Workflows
 
-### 构建与运行
+### Build and Run
 
-**本地开发**（支持 SQLite）：
+**Local Development** (SQLite supported):
 
 ```bash
 CGO_ENABLED=1 go run main.go -c toughradius.yml
 ```
 
-**生产构建**（PostgreSQL only，静态编译）：
+**Production Build** (PostgreSQL only, static compilation):
 
 ```bash
-make build  # 输出到 ./release/toughradius
+make build  # Output to ./release/toughradius
 ```
 
-**前端开发**：
+**Frontend Development**:
 
 ```bash
 cd web
 npm install
-npm run dev      # 开发服务器，热重载
-npm run build    # 生产构建，输出到 dist/
+npm run dev      # Development server with hot reload
+npm run build    # Production build, output to dist/
 ```
 
-### 数据库初始化
+### Database Initialization
 
 ```bash
-./toughradius -initdb -c toughradius.yml  # 删除并重建所有表
+./toughradius -initdb -c toughradius.yml  # Drop and recreate all tables
 ```
 
-生产环境使用 `MigrateDB(false)` 自动迁移（main.go 中已配置）。
+Production environment uses `MigrateDB(false)` for automatic migration (configured in main.go).
 
-### 测试规范
+### Testing Standards
 
-- RADIUS 协议测试：`internal/radiusd/*_test.go`
-- 基准测试：`cmd/benchmark/bmtest.go`（独立工具）
-- 前端测试：`web/` 中使用 Playwright
+- RADIUS protocol tests: `internal/radiusd/*_test.go`
+- Benchmark tests: `cmd/benchmark/bmtest.go` (standalone tool)
+- Frontend tests: Playwright in `web/`
 
-运行测试：
+Run tests:
 
 ```bash
-go test ./...                    # 全部单元测试
-go test -bench=. ./internal/radiusd/  # 基准测试
+go test ./...                    # All unit tests
+go test -bench=. ./internal/radiusd/  # Benchmark tests
 ```
 
-## 常见模式与约定
+## Common Patterns and Conventions
 
-### 错误处理
+### Code Documentation Standards
 
-RADIUS 认证错误使用自定义类型 `AuthError`，携带 metrics 标签：
+**All exported APIs MUST have comprehensive comments:**
+
+```go
+// AuthenticateUser validates user credentials against the RADIUS database.
+// It checks username/password, account expiration, and session limits.
+//
+// Parameters:
+//   - username: User's login name (case-sensitive)
+//   - password: Plain text password (will be hashed internally)
+//   - nasIP: Network Access Server IP address for session tracking
+//
+// Returns:
+//   - *domain.RadiusUser: User object if authentication succeeds
+//   - error: AuthError with metrics tag if validation fails
+//
+// Common errors:
+//   - MetricsRadiusRejectUserNotFound: Username doesn't exist
+//   - MetricsRadiusRejectPasswordError: Password mismatch
+func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
+    // Implementation
+}
+```
+
+**Complex logic requires inline comments explaining the "why":**
+
+```go
+// Huawei devices expect bandwidth in Kbps, but our plan stores it in Mbps
+// Convert using 1024 (binary) not 1000 (decimal) for compatibility
+return baseBandwidth * 1024
+```
+
+**Vendor-specific code must reference protocol specifications:**
+
+```go
+// ParseHuaweiInputAverageRate extracts bandwidth limit from Huawei VSA attribute.
+// Format: Type=11, Length=variable, Value=bandwidth_in_kbps
+// See: internal/radiusd/vendors/huawei/README.md for full VSA specification
+```
+
+### Error Handling
+
+RADIUS authentication errors use custom `AuthError` type with metrics tags:
 
 ```go
 return NewAuthError(app.MetricsRadiusRejectExpire, "user expire")
 ```
 
-这些错误会自动记录到 Prometheus metrics（`internal/app/metrics.go`）。
+These errors are automatically recorded to Prometheus metrics (`internal/app/metrics.go`).
 
-### 配置读取
+### Configuration Reading
 
-通过 `app.GApp()` 访问全局配置和设置：
+Access global config and settings via `app.GApp()`:
 
 ```go
-// 读取 RADIUS 配置项
+// Read RADIUS config items
 eapMethod := app.GApp().GetSettingsStringValue("radius", "EapMethod")
 maxSessions := app.GApp().GetSettingsInt64Value("radius", "MaxSessions")
 ```
 
-系统配置存储在 `sys_config` 表中，通过 `checkSettings()` 初始化默认值。
+System configuration is stored in `sys_config` table, initialized with default values through `checkSettings()`.
 
-### 并发处理
+### Concurrency Handling
 
-RADIUS 请求处理使用 ants 协程池限制并发：
+RADIUS request processing uses ants goroutine pool to limit concurrency:
 
 ```go
-radiusService.TaskPool.Submit(func() { /* 处理请求 */ })
+radiusService.TaskPool.Submit(func() { /* Handle request */ })
 ```
 
-池大小通过环境变量 `TOUGHRADIUS_RADIUS_POOL` 配置（默认 1024）。
+Pool size is configured via environment variable `TOUGHRADIUS_RADIUS_POOL` (default 1024).
 
-### 日志规范
+### Logging Standards
 
-使用 zap 结构化日志，**始终**添加 namespace：
+Use zap structured logging, **always** add namespace:
 
 ```go
 zap.L().Error("update user failed",
@@ -142,25 +214,25 @@ zap.L().Error("update user failed",
     zap.String("namespace", "radius"))
 ```
 
-### Admin API 路由注册
+### Admin API Route Registration
 
-新增管理 API 时，在 `internal/adminapi/` 创建文件并在 `adminapi.go` 的 `Init()` 中注册：
+When adding new management APIs, create file in `internal/adminapi/` and register in `adminapi.go`'s `Init()`:
 
 ```go
 // users.go
 func registerUserRoutes() {
-    // 路由定义
+    // Route definitions
 }
 
 // adminapi.go
 func Init() {
-    registerUserRoutes()  // 添加这一行
+    registerUserRoutes()  // Add this line
 }
 ```
 
-## 关键依赖与集成
+## Key Dependencies and Integrations
 
-- **Echo v4** - Web 框架，中间件配置在 `internal/webserver/server.go`
-- **GORM** - ORM，自动迁移通过 `domain.Tables` 列表控制
-- **layeh.com/radius** - RADIUS 协议库，不要与其他 RADIUS 包混用
-- **React Admin 5.0** - 前端框架，REST 数据提供者在 `web/src/dataProvider.ts`
+- **Echo v4** - Web framework, middleware configured in `internal/webserver/server.go`
+- **GORM** - ORM, automatic migration controlled by `domain.Tables` list
+- **layeh.com/radius** - RADIUS protocol library, don't mix with other RADIUS packages
+- **React Admin 5.0** - Frontend framework, REST data provider in `web/src/dataProvider.ts`
