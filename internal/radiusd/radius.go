@@ -17,6 +17,7 @@ import (
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	cachepkg "github.com/talkincode/toughradius/v9/internal/radiusd/cache"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
 	repogorm "github.com/talkincode/toughradius/v9/internal/radiusd/repository/gorm"
@@ -76,6 +77,8 @@ type RadiusService struct {
 	TaskPool      *ants.Pool
 	arclock       sync.Mutex
 	eaplock       sync.Mutex
+	nasCache      *cachepkg.TTLCache[*domain.NetNas]
+	userCache     *cachepkg.TTLCache[*domain.RadiusUser]
 
 	// New Repository Layer (v9 refactoring)
 	UserRepo       repository.UserRepository
@@ -100,6 +103,8 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 		EapStateCache: make(map[string]EapState),
 		arclock:       sync.Mutex{},
 		TaskPool:      pool,
+		nasCache:      cachepkg.NewTTLCache[*domain.NetNas](time.Minute, 512),
+		userCache:     cachepkg.NewTTLCache[*domain.RadiusUser](10*time.Second, 2048),
 		// Initialize repository layer
 		UserRepo:       repogorm.NewGormUserRepository(db),
 		SessionRepo:    repogorm.NewGormSessionRepository(db),
@@ -120,6 +125,10 @@ func (s *RadiusService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) (
 // GetNas looks up a NAS device, preferring IP before ID
 // Deprecated: Use NasRepo.GetByIPOrIdentifier instead
 func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err error) {
+	cacheKey := fmt.Sprintf("%s|%s", ip, identifier)
+	if cached, ok := s.nasCache.Get(cacheKey); ok {
+		return cached, nil
+	}
 	// Adapter: delegate to repository layer
 	nas, err = s.NasRepo.GetByIPOrIdentifier(context.Background(), ip, identifier)
 	if err != nil {
@@ -130,12 +139,17 @@ func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err e
 		}
 		return nil, err
 	}
+	s.nasCache.Set(cacheKey, nas)
 	return nas, nil
 }
 
 // GetValidUser retrieves a valid user and performs initial checks
 // Deprecated: Use UserRepo methods with plugin-based validation instead
 func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *domain.RadiusUser, err error) {
+	cacheKey := fmt.Sprintf("%t|%s", macauth, usernameOrMac)
+	if cached, ok := s.userCache.Get(cacheKey); ok {
+		return cached, nil
+	}
 	// Adapter: delegate to repository layer
 	ctx := context.Background()
 	if macauth {
@@ -159,6 +173,7 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	if user.ExpireTime.Before(time.Now()) {
 		return nil, NewAuthError(app.MetricsRadiusRejectExpire, "user expire")
 	}
+	s.userCache.Set(cacheKey, user)
 	return user, nil
 }
 

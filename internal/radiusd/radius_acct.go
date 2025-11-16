@@ -81,16 +81,14 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		zap.String("metrics", app.MetricsRadiusAccounting),
 	)
 
-	// async process accounting
-	common.Must(s.TaskPool.Submit(func() {
-		// ConvertvendorReqConvert tovendorparsers.VendorRequestfor plugin
+	// async process accounting with back-pressure aware submit
+	task := func() {
 		vendorReqForPlugin := &vendorparserspkg.VendorRequest{
 			MacAddr: vendorReq.MacAddr,
 			Vlanid1: vendorReq.Vlanid1,
 			Vlanid2: vendorReq.Vlanid2,
 		}
 
-		// Use plugin system to handle accounting request
 		ctx := context.Background()
 		err := s.HandleAccountingWithPlugins(ctx, r, vendorReqForPlugin, username, nas, nasrip)
 		if err != nil {
@@ -101,7 +99,16 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 				zap.Error(err),
 			)
 		}
-	}))
+	}
+
+	if err := s.TaskPool.Submit(task); err != nil {
+		zap.L().Warn("accounting task pool saturated, running fallback goroutine",
+			zap.String("namespace", "radius"),
+			zap.String("metrics", app.MetricsRadiusAcctDrop),
+			zap.Error(err),
+		)
+		go task()
+	}
 }
 
 func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
