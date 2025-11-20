@@ -101,7 +101,7 @@ func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, err
 // ✅ Correct: Explain the "why" not the "what"
 func calculateBandwidth(plan string) int64 {
     // Huawei devices expect bandwidth in Kbps, but our plan stores it in Mbps
-    // Convert Mbps to Kbps by multiplying by 1024 (binary), not 1000 (decimal)
+    // Convert Mbps to Kbps by multiplying with 1024 (binary), not 1000 (decimal)
     baseBandwidth := getPlanBandwidth(plan)
     return baseBandwidth * 1024
 }
@@ -813,6 +813,16 @@ feature-implementation.go  # Implementation with comprehensive comments
 # No separate summary document needed
 ```
 
+### ❌ Anti-Pattern 7: Introducing CGO Dependencies
+
+```go
+// ❌ Wrong: Importing a library that requires CGO
+import "github.com/mattn/go-sqlite3"
+
+// ✅ Correct: Using a pure Go alternative
+import "github.com/glebarez/sqlite"
+```
+
 ## Tool Configuration
 
 ### Local Development Environment Setup
@@ -822,6 +832,7 @@ feature-implementation.go  # Implementation with comprehensive comments
 cat > .git/hooks/pre-commit << 'EOF'
 #!/bin/bash
 echo "Running tests..."
+export CGO_ENABLED=0
 go test ./...
 if [ $? -ne 0 ]; then
     echo "❌ Tests failed, commit blocked"
@@ -860,3 +871,13 @@ git config commit.template .gitmessage.txt
 1. 🥇 **Code + Comprehensive Comments** - First-class documentation
 2. 🥈 **Git Commit History** - Records what/why/when
 3. 🥉 **Minimal Separate Docs** - Only for architecture & external APIs
+
+### 🚫 Technical Constraints
+
+#### Mandatory Requirement: No CGO Dependencies
+
+This project is designed to be cross-platform and easily deployable.
+
+- **Strictly Forbidden**: Introducing any library that requires `CGO_ENABLED=1`.
+- **Database Drivers**: Use pure Go drivers only (e.g., `glebarez/sqlite` instead of `mattn/go-sqlite3`).
+- **Build Flags**: Always ensure `CGO_ENABLED=0` is set in build scripts and CI configurations.

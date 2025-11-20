@@ -87,13 +87,13 @@ When adding new vendor support, define constants in `radius.go`, then add switch
 
 ### Build and Run
 
-**Local Development** (SQLite supported):
+**Local Development** (SQLite supported, CGO disabled):
 
 ```bash
 CGO_ENABLED=0 go run main.go -c toughradius.yml
 ```
 
-**Production Build** (PostgreSQL only, static compilation):
+**Production Build** (Supports PostgreSQL & SQLite, static compilation):
 
 ```bash
 make build  # Output to ./release/toughradius
