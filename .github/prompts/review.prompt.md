@@ -10,12 +10,12 @@ tools:
     "githubRepo",
     "todos",
   ]
-description: "TeamsACS Project Code Quality Automated Detection and Analysis"
+description: "Project Code Quality Automated Detection and Analysis"
 ---
 
 # Code Quality Detection Prompt (review.prompt)
 
-This prompt guides the intelligent assistant to conduct a systematic and comprehensive code quality detection and analysis for the TeamsACS project, identifying potential issues, security risks, performance bottlenecks, and maintainability risks. Follows AGENTS.md and project best practices.
+This prompt guides the intelligent assistant to conduct a systematic and comprehensive code quality detection and analysis for the project, identifying potential issues, security risks, performance bottlenecks, and maintainability risks. Follows AGENTS.md and project best practices.
 
 ---
 
