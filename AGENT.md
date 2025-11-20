@@ -50,18 +50,32 @@ Always document the insights gained in your task notes or PR description so revi
 
 ### 📝 Code is the Best Documentation Principle
 
-**Core Philosophy: Self-Documenting Code > Separate Documentation**
+#### Core Philosophy: Treat Code as the Primary Source of Truth
 
-#### Code Comment Requirements
+We follow the **"Standard Library Style"** documentation approach. Just as the Go standard library is self-documenting, our codebase should be readable, understandable, and maintainable without relying on external documents.
 
-**1. Mandatory Comments for All Exported APIs**
+#### 1. Write Documentation Like the Standard Library
 
-All exported functions, types, constants, and variables **MUST** have clear, comprehensive comments:
+Every exported symbol (function, struct, interface, constant) must have a comment that explains **what** it does, **how** to use it, and **why** it behaves that way.
+
+**Standard Library Style Checklist:**
+
+- **Summary Sentence**: The first sentence should be a concise summary of the function's purpose.
+- **Detailed Description**: Explain the behavior, side effects, and algorithm if necessary.
+- **Parameter & Return Value Documentation**: Clearly define what inputs are expected and what outputs are returned.
+- **Error Handling**: Explicitly state what errors can be returned and under what conditions.
+- **Usage Examples**: Provide code snippets for complex APIs.
+
+#### 2. Documentation Examples
+
+##### Example 1: Function Documentation
 
 ```go
-// ✅ Correct: Clear, comprehensive API documentation
 // AuthenticateUser validates user credentials against the RADIUS database.
 // It checks username/password, account expiration, and session limits.
+//
+// If authentication succeeds, it returns the user object.
+// If authentication fails, it returns an error with a specific metrics tag.
 //
 // Parameters:
 //   - username: User's login name (case-sensitive)
@@ -76,7 +90,6 @@ All exported functions, types, constants, and variables **MUST** have clear, com
 //   - MetricsRadiusRejectUserNotFound: Username doesn't exist
 //   - MetricsRadiusRejectPasswordError: Password mismatch
 //   - MetricsRadiusRejectExpire: Account expired
-//   - MetricsRadiusRejectMaxSession: Maximum concurrent sessions exceeded
 //
 // Example:
 //   user, err := AuthenticateUser("john", "secret123", "192.168.1.1")
@@ -87,35 +100,67 @@ All exported functions, types, constants, and variables **MUST** have clear, com
 func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
     // Implementation
 }
-
-// ❌ Wrong: Insufficient documentation
-// Auth user
-func AuthenticateUser(username, password, nasIP string) (*domain.RadiusUser, error) {
-    // Implementation
-}
 ```
 
-**2. Complex Logic Requires Inline Comments**
+##### Example 2: Struct Documentation
 
 ```go
-// ✅ Correct: Explain the "why" not the "what"
-func calculateBandwidth(plan string) int64 {
-    // Huawei devices expect bandwidth in Kbps, but our plan stores it in Mbps
-    // Convert Mbps to Kbps by multiplying with 1024 (binary), not 1000 (decimal)
-    baseBandwidth := getPlanBandwidth(plan)
-    return baseBandwidth * 1024
-}
+// RadiusUser represents a user in the RADIUS system.
+// It maps to the "radius_user" table in the database.
+//
+// This struct holds all user-specific configuration, including
+// authentication credentials, billing information, and network policies.
+type RadiusUser struct {
+    // ID is the unique identifier for the user.
+    ID int64 `json:"id" gorm:"primaryKey"`
 
-// ❌ Wrong: Obvious comments add no value
-func calculateBandwidth(plan string) int64 {
-    // Get bandwidth
-    baseBandwidth := getPlanBandwidth(plan)
-    // Multiply by 1024
-    return baseBandwidth * 1024
+    // Username is the login name used for RADIUS authentication.
+    // It must be unique across the system.
+    Username string `json:"username" gorm:"uniqueIndex;not null"`
+
+    // Status indicates the user's account status.
+    // Possible values: "enabled", "disabled", "expire".
+    Status string `json:"status" gorm:"default:'enabled'"`
+
+    // ... other fields
 }
 ```
 
-**3. Vendor-Specific Code Must Document Protocol Details**
+##### Example 3: Interface Documentation
+
+```go
+// Authenticator defines the interface for user authentication strategies.
+// Different implementations can support PAP, CHAP, MS-CHAPv2, or EAP.
+type Authenticator interface {
+    // CheckPassword verifies the provided password against the stored credentials.
+    //
+    // Parameters:
+    //   - user: The user object retrieved from the database.
+    //   - password: The password provided in the RADIUS request.
+    //
+    // Returns:
+    //   - bool: True if the password matches, false otherwise.
+    //   - error: Any error that occurred during verification (e.g., hashing failure).
+    CheckPassword(user *domain.RadiusUser, password string) (bool, error)
+}
+```
+
+#### 3. Inline Comments for "Why"
+
+Use inline comments to explain **why** a specific implementation choice was made, especially for complex logic, workarounds, or optimizations. Do not explain **what** the code is doing if it's obvious.
+
+```go
+// ✅ Correct: Explain the "why"
+// Huawei devices expect bandwidth in Kbps, but our plan stores it in Mbps.
+// We multiply by 1024 (binary) instead of 1000 (decimal) to match vendor specs.
+return baseBandwidth * 1024
+
+// ❌ Wrong: Explain the "what"
+// Multiply by 1024
+return baseBandwidth * 1024
+```
+
+#### 4. Vendor-Specific Code Must Document Protocol Details
 
 ```go
 // ParseHuaweiInputAverageRate extracts bandwidth limit from Huawei VSA attribute.
@@ -169,13 +214,13 @@ func ParseHuaweiInputAverageRate(attr *radius.Attribute) int64 {
 
 **Correct Completion Response:**
 
-```
+```text
 ✅ Completed config package testing with 98.5% coverage, all tests passing.
 ```
 
 **Incorrect Completion Response:**
 
-```
+```text
 ## Work Summary Report ❌
 
 ### Completed Items
@@ -194,7 +239,7 @@ func ParseHuaweiInputAverageRate(attr *radius.Attribute) int64 {
 4. **Accurate** - Keep code and comments in sync
 5. **Concise** - No redundant or obvious information
 
-**Example: High-Quality API Comment**
+##### Example: High-Quality API Comment
 
 ```go
 // GetUserOnlineSessions retrieves all active RADIUS sessions for a user.
@@ -241,7 +286,16 @@ This project **strictly follows** these three core development principles. All c
 
 ### 🧪 Test-Driven Development (TDD)
 
-**Mandatory Requirement: Write Tests First, Then Code**
+#### Mandatory Requirement: Write Tests First, Then Code
+
+Before implementing any feature or fixing any bug, you **MUST** write a test case that reproduces the issue or defines the expected behavior.
+
+1. **Create Test File**: If `internal/radiusd/auth.go` is being modified, create/edit `internal/radiusd/auth_test.go`.
+2. **Define Test Case**: Write a test function `TestAuth_UserNotFound` that asserts the expected failure.
+3. **Run Test (Fail)**: Execute the test to confirm it fails (Red).
+4. **Implement Code**: Write the minimum code necessary to pass the test.
+5. **Run Test (Pass)**: Execute the test to confirm it passes (Green).
+6. **Refactor**: Clean up the code while keeping tests passing.
 
 #### TDD Workflow
 
@@ -266,6 +320,7 @@ This project **strictly follows** these three core development principles. All c
    ```
 
 3. **Refactor Phase** - Optimize code while keeping tests passing
+
    ```bash
    # Continuously run tests to ensure safe refactoring
    go test ./... -v
@@ -289,7 +344,7 @@ go tool cover -func=coverage.out
 
 #### Test File Organization
 
-```
+```text
 internal/radiusd/
 ├── auth_passwd_check.go          # Implementation file
 ├── auth_passwd_check_test.go     # Unit tests (same package)
@@ -338,11 +393,11 @@ func TestVendorParse(t *testing.T) {
 
 ### 🔄 GitHub Workflow
 
-**Mandatory Requirement: Follow Git Flow branching model and standard PR process**
+#### Mandatory Requirement: Follow Git Flow branching model and standard PR process
 
 #### Branching Strategy
 
-```
+```text
 main (production branch)
   ├── v9dev (development branch)
   │    ├── feature/user-management     # Feature branch
@@ -354,7 +409,7 @@ main (production branch)
 
 #### Standard Development Process
 
-**1. Create Feature Branch**
+##### 1. Create Feature Branch
 
 ```bash
 # Create feature branch from v9dev
@@ -370,7 +425,7 @@ git checkout -b feature/add-cisco-vendor
 # docs/     - Documentation updates
 ```
 
-**2. TDD Loop Development**
+##### 2. TDD Loop Development
 
 ```bash
 # 1️⃣ Write tests first
@@ -391,7 +446,7 @@ git commit -m "test: add Cisco vendor attribute parsing tests"
 git commit -m "feat: implement Cisco vendor attribute parsing"
 ```
 
-**3. Commit Convention (Conventional Commits)**
+##### 3. Commit Convention (Conventional Commits)
 
 ```bash
 # Format: <type>(<scope>): <subject>
@@ -413,7 +468,7 @@ git commit -m "perf(radius): reduce authentication latency by 20%"
 # chore:    Build/tool changes
 ```
 
-**4. Create Pull Request**
+##### 4. Create Pull Request
 
 PR must include:
 
@@ -457,7 +512,7 @@ Brief description of the purpose and main changes of this PR
 Closes #123
 ```
 
-**5. Continuous Integration Checks**
+##### 5. Continuous Integration Checks
 
 Each PR automatically triggers:
 
@@ -490,7 +545,7 @@ git push origin main --tags
 
 ### 📦 Minimum Viable Product (MVP) Principle
 
-**Mandatory Requirement: Each feature must be delivered in minimum viable units**
+#### Mandatory Requirement: Each feature must be delivered in minimum viable units
 
 #### MVP Design Method
 
@@ -502,7 +557,7 @@ git push origin main --tags
 
 2. **Feature Breakdown Example**
 
-   ```
+   ```text
    ❌ Wrong approach: Implement complete feature at once
    Issue #123: Add Cisco vendor support
    └── Includes auth, accounting, VSA attributes, config management, Web UI...
@@ -532,9 +587,9 @@ git push origin main --tags
 
 #### MVP Practice Examples
 
-**Example 1: Adding RADIUS Vendor Support**
+##### Example 1: Adding RADIUS Vendor Support
 
-```
+```text
 MVP-1 (Week 1): Basic attribute parsing ✅
 ├── vendor_cisco.go          # Vendor constant definitions
 ├── vendor_cisco_test.go     # Parsing tests
@@ -552,9 +607,9 @@ MVP-4 (Week 4): Web management ✅
 └── Admin API adds Cisco configuration UI
 ```
 
-**Example 2: Performance Optimization**
+##### Example 2: Performance Optimization
 
-```
+```text
 MVP-1: Identify bottlenecks ✅
 ├── Add performance test benchmarks
 ├── Identify hotspot functions
@@ -573,7 +628,7 @@ MVP-3: Caching layer ✅ (optional)
 
 ### Scenario: Adding New RADIUS Vendor Support (Cisco)
 
-**Step 1: Create Issue (Requirements Analysis)**
+#### Step 1: Create Issue (Requirements Analysis)
 
 ```markdown
 Title: [Feature] Add Cisco RADIUS Vendor Support
@@ -595,10 +650,7 @@ Title: [Feature] Add Cisco RADIUS Vendor Support
 - Advanced configuration management (MVP-4)
 ```
 
-**Step 2: TDD Development**
-
-````bash
-**Step 2: TDD Development**
+#### Step 2: TDD Development
 
 ```bash
 # 1️⃣ Create branch
@@ -650,9 +702,9 @@ go test ./internal/radiusd/vendors/cisco -v
 # 7️⃣ Check coverage
 go test ./internal/radiusd/vendors/cisco -coverprofile=coverage.out
 go tool cover -func=coverage.out | grep total
-````
+```
 
-**Step 3: Commit Code**
+#### Step 3: Commit Code
 
 ```bash
 # Atomic commits
@@ -666,21 +718,21 @@ git add docs/radius/cisco-vendor.md
 git commit -m "docs(radius): add Cisco vendor documentation"
 ```
 
-**Step 4: Create Pull Request**
+#### Step 4: Create Pull Request
 
 ```bash
 git push origin feature/cisco-vendor-mvp1
 # Create PR on GitHub, fill in PR template
 ```
 
-**Step 5: Code Review and Merge**
+#### Step 5: Code Review and Merge
 
 - Wait for CI to pass
 - Code review feedback
 - Fix issues, push updates
 - Merge to v9dev after approval
 
-**Step 6: Plan MVP-2**
+#### Step 6: Plan MVP-2
 
 - Create new Issue for next MVP
 - Repeat the above process
@@ -762,7 +814,7 @@ git commit -m "feat: add new feature"
 
 ### ❌ Anti-Pattern 3: Giant PRs
 
-```
+```text
 ❌ PR #100: Complete user management system implementation
    +2000 -500 lines across 50 files
 

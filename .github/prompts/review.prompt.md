@@ -1,462 +1,513 @@
 ---
 model: GPT-5
-tools: ['search', 'azure/search', 'usages', 'problems', 'changes', 'githubRepo', 'todos']
-description: 'TeamsACS 项目代码质量自动检测与分析'
+tools:
+  [
+    "search",
+    "azure/search",
+    "usages",
+    "problems",
+    "changes",
+    "githubRepo",
+    "todos",
+  ]
+description: "TeamsACS Project Code Quality Automated Detection and Analysis"
 ---
 
+# Code Quality Detection Prompt (review.prompt)
 
-# 代码质量检测提示 (review.prompt)
-
-本提示用于指导智能助手对 TeamsACS 项目进行系统化、全面的代码质量检测与分析,识别潜在问题、安全隐患、性能瓶颈与可维护性风险。遵循 AGENTS.md 与项目最佳实践。
-
----
-
-## 1. 检测目标
-
-- **代码健康度评估**: 复杂度、重复代码、函数长度、文件规模
-- **安全隐患识别**: 硬编码密钥、输入验证缺失、敏感信息泄露
-- **并发安全检查**: 数据竞争、锁竞争、goroutine 泄露风险
-- **性能问题发现**: 不必要分配、低效算法、频繁 I/O 操作
-- **测试覆盖分析**: 缺失测试、脆弱测试、依赖外部环境测试
-- **架构一致性**: 跨层调用、循环依赖、职责不清
-- **可维护性评估**: 注释缺失、命名混乱、魔法数字
+This prompt guides the intelligent assistant to conduct a systematic and comprehensive code quality detection and analysis for the TeamsACS project, identifying potential issues, security risks, performance bottlenecks, and maintainability risks. Follows AGENTS.md and project best practices.
 
 ---
 
-## 2. 检测维度与标准
+## 1. Detection Goals
 
-### 2.1 代码复杂度
-| 指标 | 阈值 | 说明 |
-|------|------|------|
-| 函数长度 | >100 行 | 需拆分为更小单元 |
-| 圈复杂度 | >15 | 逻辑分支过多,难以测试 |
-| 嵌套层级 | >4 层 | 可读性差,易出错 |
-| 文件长度 | >1000 行 | 可能职责过重 |
-| 参数个数 | >5 个 | 考虑用结构体封装 |
-
-### 2.2 代码质量
-- **重复代码**: 相似逻辑片段 >= 3 处
-- **未使用代码**: 导出但无引用的函数/类型
-- **错误处理**: 忽略错误、吞错、空 panic/recover
-- **命名规范**: 不明确缩写、单字母变量(非循环索引)
-- **注释完整性**: 导出符号缺失文档注释
-
-### 2.3 安全检测
-- 硬编码密钥/密码/Token(字符串中包含 "password", "secret", "token", "key" 等)
-- 敏感信息写入日志(密码、密钥、证书内容)
-- SQL 拼接(潜在注入风险)
-- 命令拼接(os/exec 使用未验证参数)
-- 输入验证缺失(HTTP handler 直接使用参数)
-- 不安全的随机数生成(math/rand 用于安全场景)
-- TLS 配置不当(InsecureSkipVerify = true)
-
-### 2.4 并发安全
-- 共享变量无锁保护(多 goroutine 写同一变量)
-- 锁范围过大/嵌套锁(死锁风险)
-- goroutine 泄露(无 context 取消机制)
-- channel 未关闭或重复关闭
-- sync 类型复制(Mutex、WaitGroup)
-- map 并发读写(未使用 sync.Map 或锁)
-
-### 2.5 性能问题
-- 循环中字符串拼接(未使用 strings.Builder/bytes.Buffer)
-- 不必要的类型转换或序列化
-- defer 在紧密循环中(可能影响性能)
-- 频繁小对象分配(可考虑 sync.Pool)
-- 重复 I/O 操作(数据库/文件/网络)
-
-### 2.6 测试质量
-- 关键模块无测试文件
-- 测试覆盖率 <50%(controllers、service/app、common 核心包)
-- 测试依赖外部资源(无 mock/隔离)
-- 测试无断言(只运行不验证)
-- 测试名称不清晰(Test1, Test2)
+- **Code Health Assessment**: Complexity, duplicate code, function length, file size
+- **Security Risk Identification**: Hardcoded keys, missing input validation, sensitive information leakage
+- **Concurrency Safety Check**: Data races, lock contention, goroutine leak risks
+- **Performance Issue Discovery**: Unnecessary allocations, inefficient algorithms, frequent I/O operations
+- **Test Coverage Analysis**: Missing tests, brittle tests, tests dependent on external environments
+- **Architecture Consistency**: Cross-layer calls, circular dependencies, unclear responsibilities
+- **Maintainability Assessment**: Missing comments, confusing naming, magic numbers
 
 ---
 
-## 3. 检测流程(标准循环)
+## 2. Detection Dimensions and Standards
 
-### 阶段 1: 范围确定
-1. **用户指定** 或 **全项目扫描**
-   - 若用户指定文件/目录,仅检测该范围
-   - 全项目时优先级: controllers > service > common > jobs/events
-2. **生成待办清单** (todos)
-   - 使用 todos 工具管理检测任务
-   - 拆分为: 复杂度 -> 安全 -> 并发 -> 性能 -> 测试 -> 架构
+### 2.1 Code Complexity
 
-### 阶段 2: 静态分析
-1. **搜索关键模式** (grep_search / semantic_search)
-   - 硬编码密钥: `password.*=|secret.*=|token.*=|apikey.*=`
-   - 忽略错误: `err\s*:?=.*\n\s*$` (未检查)
-   - SQL 拼接: `fmt.Sprintf.*SELECT|"SELECT.*\+`
-   - 共享变量: 识别包级变量 + goroutine 使用
-2. **列举问题函数** (list_code_usages)
-   - 找到高复杂度函数的调用方
-   - 识别跨包耦合链路
-3. **统计指标** (search + 正则)
-   - 函数行数分布
-   - 文件规模排序
-   - 导出符号引用计数
+| Metric                | Threshold   | Description                           |
+| --------------------- | ----------- | ------------------------------------- |
+| Function Length       | >100 lines  | Should be split into smaller units    |
+| Cyclomatic Complexity | >15         | Too many logic branches, hard to test |
+| Nesting Level         | >4 levels   | Poor readability, error-prone         |
+| File Length           | >1000 lines | Likely too many responsibilities      |
+| Parameter Count       | >5          | Consider encapsulating in a struct    |
 
-### 阶段 3: 深度检查
-1. **并发安全分析**
-   - 使用 `grep_search` 找 `var.*sync.Mutex|map\[.*\]`
-   - 检查 goroutine 启动点是否有 context 控制
-   - 寻找 `go func()` 无 defer recover 保护
-2. **错误处理审查**
-   - 搜索 `_ =` 或 `err != nil { }`(空处理)
-   - 检查 panic 使用是否合理(非初始化阶段禁止)
-3. **日志安全**
-   - 搜索 `log.*password|log.*secret|log.*token`
-   - 检查 fmt.Println 是否用于生产路径
+### 2.2 Code Quality
 
-### 阶段 4: 测试覆盖评估
-1. **使用 runTests mode=coverage**
-   - 分析覆盖率 <50% 的文件
-   - 识别完全无测试的关键模块
-2. **测试质量检查**
-   - 搜索 `t.Skip` 使用(是否合理)
-   - 检查测试是否依赖真实数据库/网络
+- **Duplicate Code**: Similar logic fragments >= 3 places
+- **Unused Code**: Exported but unreferenced functions/types
+- **Error Handling**: Ignoring errors, swallowing errors, empty panic/recover
+- **Naming Conventions**: Unclear abbreviations, single-letter variables (non-loop indices)
+- **Comment Completeness**: Missing documentation comments for exported symbols
 
-### 阶段 5: 报告生成
-1. **分类问题清单**
-   - 按严重性: 高(安全/并发) > 中(性能/复杂度) > 低(风格)
-2. **量化指标**
-   - 问题总数、分类占比
-   - 高风险文件 Top 10
-3. **修复建议**
-   - 每个问题附带具体修复方向
-   - 标注优先级与依赖关系
+### 2.3 Security Detection
+
+- Hardcoded keys/passwords/tokens (strings containing "password", "secret", "token", "key", etc.)
+- Sensitive information written to logs (passwords, keys, certificate content)
+- SQL concatenation (potential injection risk)
+- Command concatenation (os/exec using unvalidated parameters)
+- Missing input validation (HTTP handlers using parameters directly)
+- Insecure random number generation (math/rand used for security scenarios)
+- Improper TLS configuration (InsecureSkipVerify = true)
+
+### 2.4 Concurrency Safety
+
+- Shared variables without lock protection (multiple goroutines writing to the same variable)
+- Lock scope too large/nested locks (deadlock risk)
+- Goroutine leaks (no context cancellation mechanism)
+- Channel unclosed or double closed
+- sync type copying (Mutex, WaitGroup)
+- Map concurrent read/write (not using sync.Map or locks)
+
+### 2.5 Performance Issues
+
+- String concatenation in loops (not using strings.Builder/bytes.Buffer)
+- Unnecessary type conversion or serialization
+- defer in tight loops (may affect performance)
+- Frequent small object allocations (consider sync.Pool)
+- Repeated I/O operations (database/file/network)
+
+### 2.6 Test Quality
+
+- Critical modules without test files
+- Test coverage <50% (controllers, service/app, common core packages)
+- Tests dependent on external resources (no mock/isolation)
+- Tests without assertions (running only without verification)
+- Unclear test names (Test1, Test2)
 
 ---
 
-## 4. 检测规则库
+## 3. Detection Process (Standard Loop)
 
-### 规则 1: 硬编码密钥检测
+### Phase 1: Scope Determination
+
+1. **User Specified** or **Full Project Scan**
+   - If user specifies file/directory, detect only that scope
+   - For full project, priority: controllers > service > common > jobs/events
+2. **Generate Todo List** (todos)
+   - Use todos tool to manage detection tasks
+   - Split into: Complexity -> Security -> Concurrency -> Performance -> Testing -> Architecture
+
+### Phase 2: Static Analysis
+
+1. **Search Key Patterns** (grep_search / semantic_search)
+   - Hardcoded keys: `password.*=|secret.*=|token.*=|apikey.*=`
+   - Ignored errors: `err\s*:?=.*\n\s*$` (unchecked)
+   - SQL concatenation: `fmt.Sprintf.*SELECT|"SELECT.*\+`
+   - Shared variables: Identify package-level variables + goroutine usage
+2. **List Problematic Functions** (list_code_usages)
+   - Find callers of high-complexity functions
+   - Identify cross-package coupling links
+3. **Statistical Metrics** (search + regex)
+   - Function line count distribution
+   - File size sorting
+   - Exported symbol reference count
+
+### Phase 3: Deep Inspection
+
+1. **Concurrency Safety Analysis**
+   - Use `grep_search` to find `var.*sync.Mutex|map\[.*\]`
+   - Check if goroutine start points have context control
+   - Look for `go func()` without defer recover protection
+2. **Error Handling Review**
+   - Search `_ =` or `err != nil { }` (empty handling)
+   - Check if panic usage is reasonable (prohibited outside initialization phase)
+3. **Log Security**
+   - Search `log.*password|log.*secret|log.*token`
+   - Check if fmt.Println is used in production paths
+
+### Phase 4: Test Coverage Assessment
+
+1. **Use runTests mode=coverage**
+   - Analyze files with coverage <50%
+   - Identify critical modules with absolutely no tests
+2. **Test Quality Check**
+   - Search `t.Skip` usage (is it reasonable)
+   - Check if tests depend on real database/network
+
+### Phase 5: Report Generation
+
+1. **Categorize Issue List**
+   - By severity: High (Security/Concurrency) > Medium (Performance/Complexity) > Low (Style)
+2. **Quantify Metrics**
+   - Total issues, category distribution
+   - Top 10 high-risk files
+3. **Fix Suggestions**
+   - Specific fix direction for each issue
+   - Mark priority and dependencies
+
+---
+
+## 4. Detection Rule Library
+
+### Rule 1: Hardcoded Key Detection
+
 ```regex
-正则: (password|secret|token|apikey|private_key)\s*[:=]\s*["'](?!{{|$|xxx)[^"']{8,}
-位置: .go 文件(排除 *_test.go 中的测试常量)
-严重性: 高
+Regex: (password|secret|token|apikey|private_key)\s*[:=]\s*["'](?!{{|$|xxx)[^"']{8,}
+Location: .go files (exclude test constants in *_test.go)
+Severity: High
 ```
 
-### 规则 2: 错误忽略
+### Rule 2: Error Ignored
+
 ```regex
-正则: err\s*:?=.*\n(?!\s*(if|return|log|panic))
-排除: defer 语句、已知无错函数(Close 等)
-严重性: 中
+Regex: err\s*:?=.*\n(?!\s*(if|return|log|panic))
+Exclude: defer statements, known error-free functions (Close, etc.)
+Severity: Medium
 ```
 
-### 规则 3: SQL 注入风险
+### Rule 3: SQL Injection Risk
+
 ```regex
-正则: (fmt\.Sprintf|fmt\.Sprint|"\s*\+\s*).*(SELECT|INSERT|UPDATE|DELETE)
-位置: 非 ORM 包装的原始 SQL
-严重性: 高
+Regex: (fmt\.Sprintf|fmt\.Sprint|"\s*\+\s*).*(SELECT|INSERT|UPDATE|DELETE)
+Location: Raw SQL not wrapped by ORM
+Severity: High
 ```
 
-### 规则 4: 并发数据竞争
+### Rule 4: Concurrency Data Race
+
 ```go
-模式:
-- 包级变量 var + 非 const/sync 类型
-- 在 goroutine 内赋值
-- 无 Mutex 保护或非原子操作
-严重性: 高
+Pattern:
+- Package-level variable var + non-const/sync type
+- Assignment inside goroutine
+- No Mutex protection or non-atomic operation
+Severity: High
 ```
 
-### 规则 5: Goroutine 泄露
+### Rule 5: Goroutine Leak
+
 ```go
-模式:
-- go func() 无 context.Done() 监听
-- channel 未关闭且无超时
-- 无限循环无退出条件
-严重性: 中
+Pattern:
+- go func() without context.Done() listening
+- channel unclosed and no timeout
+- Infinite loop without exit condition
+Severity: Medium
 ```
 
-### 规则 6: 敏感日志
+### Rule 6: Sensitive Logs
+
 ```regex
-正则: (log\.|zap\.|fmt\.Print).*(password|secret|token|key|cert)
-排除: 已脱敏(*** 占位)
-严重性: 高
+Regex: (log\.|zap\.|fmt\.Print).*(password|secret|token|key|cert)
+Exclude: Masked (*** placeholder)
+Severity: High
 ```
 
-### 规则 7: 魔法数字
+### Rule 7: Magic Numbers
+
 ```go
-模式:
-- 硬编码数字(非 0, 1, -1)
-- 重复出现 >= 3 次
-- 未定义为常量
-严重性: 低
+Pattern:
+- Hardcoded numbers (non 0, 1, -1)
+- Appearing repeatedly >= 3 times
+- Not defined as constant
+Severity: Low
 ```
 
 ---
 
-## 5. 输出报告模板
+## 5. Output Report Template
 
-```markdown
-# TeamsACS 代码质量检测报告
+````markdown
+# TeamsACS Code Quality Detection Report
 
-**检测时间**: <timestamp>
-**检测范围**: <全项目 | 指定路径>
-**工具版本**: review.prompt v1.0
-
----
-
-## 📊 总体评分
-
-| 维度 | 评分 | 说明 |
-|------|------|------|
-| 代码复杂度 | <A-F> | 平均函数长度、圈复杂度 |
-| 安全性 | <A-F> | 硬编码、注入、日志泄露 |
-| 并发安全 | <A-F> | 数据竞争、锁使用 |
-| 测试覆盖 | <A-F> | 覆盖率与测试质量 |
-| 可维护性 | <A-F> | 命名、注释、结构 |
-| **综合得分** | **<A-F>** | 加权平均 |
+**Detection Time**: <timestamp>
+**Detection Scope**: <Full Project | Specified Path>
+**Tool Version**: review.prompt v1.0
 
 ---
 
-## 🚨 高优先级问题 (Top 10)
+## 📊 Overall Score
 
-### 1. [安全] 硬编码密钥 - controllers/api/auth.go:45
-**问题**:
+| Dimension               | Score     | Description                                    |
+| ----------------------- | --------- | ---------------------------------------------- |
+| Code Complexity         | <A-F>     | Average function length, cyclomatic complexity |
+| Security                | <A-F>     | Hardcoding, injection, log leakage             |
+| Concurrency Safety      | <A-F>     | Data races, lock usage                         |
+| Test Coverage           | <A-F>     | Coverage rate and test quality                 |
+| Maintainability         | <A-F>     | Naming, comments, structure                    |
+| **Comprehensive Score** | **<A-F>** | Weighted average                               |
+
+---
+
+## 🚨 High Priority Issues (Top 10)
+
+### 1. [Security] Hardcoded Key - controllers/api/auth.go:45
+
+**Issue**:
+
 ```go
-apiKey := "sk-1234567890abcdef"  // 硬编码
+apiKey := "sk-1234567890abcdef"  // Hardcoded
 ```
-**影响**: 密钥泄露风险
-**修复建议**:
-- 使用环境变量或配置文件
-- 示例: `os.Getenv("API_KEY")`
+````
 
-### 2. [并发] 数据竞争 - service/cache/cache.go:78
-**问题**:
+**Impact**: Key leakage risk
+**Fix Suggestion**:
+
+- Use environment variables or configuration files
+- Example: `os.Getenv("API_KEY")`
+
+### 2. [Concurrency] Data Race - service/cache/cache.go:78
+
+**Issue**:
+
 ```go
-var cacheMap = make(map[string]interface{})  // 无锁
-func Set(k string, v interface{}) { cacheMap[k] = v }  // 并发写
+var cacheMap = make(map[string]interface{})  // No lock
+func Set(k string, v interface{}) { cacheMap[k] = v }  // Concurrent write
 ```
-**影响**: 运行时 panic
-**修复建议**:
-- 使用 sync.Map 或加锁
-- 参考: `common/M1Cache` 实现
 
-...(其他问题)
+**Impact**: Runtime panic
+**Fix Suggestion**:
 
----
+- Use sync.Map or add locks
+- Reference: `common/M1Cache` implementation
 
-## 📈 指标详情
-
-### 代码复杂度分布
-| 文件 | 函数数 | 平均长度 | 最大圈复杂度 | 风险等级 |
-|------|--------|----------|--------------|----------|
-| controllers/cpe/handler.go | 25 | 85 行 | 18 | 高 |
-| service/app/app.go | 18 | 120 行 | 12 | 中 |
-| ... | ... | ... | ... | ... |
-
-### 安全问题统计
-- 硬编码密钥: <count> 处
-- SQL 注入风险: <count> 处
-- 敏感日志: <count> 处
-- 输入验证缺失: <count> 处
-
-### 并发问题统计
-- 潜在数据竞争: <count> 处
-- Goroutine 泄露风险: <count> 处
-- 不当锁使用: <count> 处
-
-### 测试覆盖
-| 包 | 覆盖率 | 缺失测试函数 |
-|----|--------|-------------|
-| controllers/api | 35% | HandleLogin, ValidateToken |
-| service/app | 60% | Init 错误分支 |
-| common/cziploc | 80% | - |
+...(Other issues)
 
 ---
 
-## 🛠️ 修复计划建议
+## 📈 Metric Details
 
-### 第一阶段 (高优先级 - 1周内)
-1. 修复所有硬编码密钥
-2. 补充输入验证(controllers/*)
-3. 修复已知数据竞争
+### Code Complexity Distribution
 
-### 第二阶段 (中优先级 - 2周内)
-1. 拆分大型函数(>100行)
-2. 提升测试覆盖至 60%
-3. 规范错误处理
+| File                       | Function Count | Avg Length | Max Cyclomatic Complexity | Risk Level |
+| -------------------------- | -------------- | ---------- | ------------------------- | ---------- |
+| controllers/cpe/handler.go | 25             | 85 lines   | 18                        | High       |
+| service/app/app.go         | 18             | 120 lines  | 12                        | Medium     |
+| ...                        | ...            | ...        | ...                       | ...        |
 
-### 第三阶段 (持续优化)
-1. 重构循环依赖
-2. 优化性能热点
-3. 补充文档注释
+### Security Issue Statistics
+
+- Hardcoded keys: <count> places
+- SQL injection risks: <count> places
+- Sensitive logs: <count> places
+- Missing input validation: <count> places
+
+### Concurrency Issue Statistics
+
+- Potential data races: <count> places
+- Goroutine leak risks: <count> places
+- Improper lock usage: <count> places
+
+### Test Coverage
+
+| Package         | Coverage | Missing Test Functions     |
+| --------------- | -------- | -------------------------- |
+| controllers/api | 35%      | HandleLogin, ValidateToken |
+| service/app     | 60%      | Init error branch          |
+| common/cziploc  | 80%      | -                          |
 
 ---
 
-## 📝 附录
+## 🛠️ Fix Plan Suggestions
 
-### A. 检测配置
-- 忽略路径: vendor/, assets/static/, bin/
-- 检测规则版本: v1.0
-- 覆盖率工具: go test -cover
+### Phase 1 (High Priority - Within 1 Week)
 
-### B. 参考资料
+1. Fix all hardcoded keys
+2. Supplement input validation (controllers/\*)
+3. Fix known data races
+
+### Phase 2 (Medium Priority - Within 2 Weeks)
+
+1. Split large functions (>100 lines)
+2. Improve test coverage to 60%
+3. Standardize error handling
+
+### Phase 3 (Continuous Optimization)
+
+1. Refactor circular dependencies
+2. Optimize performance hotspots
+3. Supplement documentation comments
+
+---
+
+## 📝 Appendix
+
+### A. Detection Configuration
+
+- Ignored paths: vendor/, assets/static/, bin/
+- Detection rule version: v1.0
+- Coverage tool: go test -cover
+
+### B. References
+
 - AGENTS.md
 - deprecated.md
 - Go Code Review Comments
 
 ---
 
-**说明**: 此报告由自动化工具生成,建议人工复审后执行修复。
+**Note**: This report is generated by an automated tool, manual review is recommended before executing fixes.
+
 ```
 
 ---
 
-## 6. 使用方式
+## 6. Usage
 
-### 全项目检测
-```
-使用 review.prompt 进行全面代码质量检测
+### Full Project Detection
 ```
 
-### 指定模块检测
-```
-检测 controllers/api 目录的代码质量
-```
+Use review.prompt for comprehensive code quality detection
 
-### 专项检测
-```
-检测项目中的安全隐患
-检测并发安全问题
-分析测试覆盖率
 ```
 
----
+### Specified Module Detection
+```
 
-## 7. 检测约束与最佳实践
+Detect code quality of controllers/api directory
 
-### 必须遵守
-1. **非破坏性**: 仅分析不修改(除非用户明确要求自动修复)
-2. **可验证性**: 每个问题必须提供具体位置与代码片段
-3. **优先级排序**: 高危问题(安全/并发)优先展示
-4. **误报控制**: 对不确定问题标注"待人工确认"
-5. **量化输出**: 提供可度量的指标与趋势
+```
 
-### 禁止行为
-- 不给出模糊或无法定位的问题描述
-- 不在未理解上下文的情况下判定"错误"
-- 不自动删除或重写代码(除非用户授权)
-- 不遗漏高优先级问题而纠结低优先级细节
+### Specialized Detection
+```
 
----
+Detect security risks in the project
+Detect concurrency safety issues
+Analyze test coverage
 
-## 8. 工具链集成
-
-### 使用 search 工具
-- 精确定位问题代码
-- 分析调用链与依赖
-
-### 使用 think 工具
-- 复杂问题分析前先输出推理过程
-- 识别潜在的架构问题
-
-### 使用 todos 工具
-- 管理检测任务进度
-- 跟踪修复状态
-
-### 使用 runTests 工具
-- 获取实时覆盖率数据
-- 验证问题是否可复现
-
-### 使用 problems 工具
-- 获取编译器级别的错误/警告
-- 辅助静态分析
+```
 
 ---
 
-## 9. 评分算法
+## 7. Detection Constraints and Best Practices
 
-### 维度权重
-- 安全性: 30%
-- 并发安全: 25%
-- 代码复杂度: 20%
-- 测试覆盖: 15%
-- 可维护性: 10%
+### Must Follow
+1. **Non-destructive**: Analyze only, do not modify (unless user explicitly requests auto-fix)
+2. **Verifiability**: Each issue must provide specific location and code snippet
+3. **Priority Sorting**: High-risk issues (Security/Concurrency) displayed first
+4. **False Positive Control**: Mark uncertain issues as "To be manually confirmed"
+5. **Quantified Output**: Provide measurable metrics and trends
 
-### 等级标准
-| 等级 | 分数 | 说明 |
-|------|------|------|
-| A | 90-100 | 优秀,符合最佳实践 |
-| B | 80-89 | 良好,少量改进点 |
-| C | 70-79 | 中等,需要重点改进 |
-| D | 60-69 | 较差,存在明显问题 |
-| F | <60 | 不合格,严重问题 |
-
-### 扣分规则
-- 每个高危问题: -5分
-- 每个中危问题: -2分
-- 每个低危问题: -0.5分
-- 测试覆盖 <50%: -10分
-- 存在硬编码密钥: -15分
+### Prohibited Behaviors
+- Do not give vague or unlocatable issue descriptions
+- Do not judge "errors" without understanding context
+- Do not automatically delete or rewrite code (unless authorized by user)
+- Do not miss high-priority issues while obsessing over low-priority details
 
 ---
 
-## 10. 示例检测对话
+## 8. Toolchain Integration
 
-**用户**: 检测 controllers/api 的代码质量
+### Use search Tool
+- Precisely locate problematic code
+- Analyze call chains and dependencies
 
-**助手**:
-1. 使用 search 扫描 controllers/api 目录结构
-2. 使用 grep_search 查找安全模式(密钥、SQL 拼接)
-3. 分析函数复杂度(统计行数、嵌套)
-4. 检查测试覆盖(runTests mode=coverage)
-5. 生成报告(问题清单 + 优先级 + 修复建议)
-6. 输出 todos 任务列表供后续跟进
+### Use think Tool
+- Output reasoning process before analyzing complex issues
+- Identify potential architectural issues
 
----
+### Use todos Tool
+- Manage detection task progress
+- Track fix status
 
-## 11. 扩展检测项
+### Use runTests Tool
+- Get real-time coverage data
+- Verify if issues are reproducible
 
-### 架构层面
-- 循环依赖检测(包级别)
-- 接口滥用(单一实现的接口)
-- 跨层调用(controller 直接访问 DB)
-
-### Go 专项
-- Context 使用不当(nil context、存储于结构体)
-- defer 误用(循环中、返回值影响)
-- slice/map 意外共享
-
-### 性能专项
-- 不必要的反射
-- 频繁的 JSON 编解码
-- 大对象复制传递
+### Use problems Tool
+- Get compiler-level errors/warnings
+- Assist static analysis
 
 ---
 
-## 12. 持续改进
+## 9. Scoring Algorithm
 
-### 基线建立
-- 首次检测结果作为基线
-- 定期(每周/每月)重新检测
-- 跟踪指标变化趋势
+### Dimension Weights
+- Security: 30%
+- Concurrency Safety: 25%
+- Code Complexity: 20%
+- Test Coverage: 15%
+- Maintainability: 10%
 
-### 规则优化
-- 根据误报情况调整规则
-- 新增项目特定的检测模式
-- 与 AGENTS.md 保持同步
+### Grade Standards
+| Grade | Score | Description |
+|---|---|---|
+| A | 90-100 | Excellent, follows best practices |
+| B | 80-89 | Good, minor improvements needed |
+| C | 70-79 | Medium, needs significant improvement |
+| D | 60-69 | Poor, obvious issues exist |
+| F | <60 | Fail, severe issues |
+
+### Deduction Rules
+- Each high-risk issue: -5 points
+- Each medium-risk issue: -2 points
+- Each low-risk issue: -0.5 points
+- Test coverage <50%: -10 points
+- Existence of hardcoded keys: -15 points
 
 ---
 
-## 13. 输出语言与格式
+## 10. Example Detection Conversation
 
-- 报告使用**中文**
-- 代码片段保持原始英文
-- 表格用 Markdown 格式
-- 关键问题加粗或高亮标记
-- 附带具体文件名与行号
+**User**: Detect code quality of controllers/api
+
+**Assistant**:
+1. Use search to scan controllers/api directory structure
+2. Use grep_search to find security patterns (keys, SQL concatenation)
+3. Analyze function complexity (count lines, nesting)
+4. Check test coverage (runTests mode=coverage)
+5. Generate report (Issue list + Priority + Fix suggestions)
+6. Output todos task list for follow-up
 
 ---
 
-## 14. 结束语
+## 11. Extended Detection Items
 
-代码质量检测是持续改进的起点,而非终点。遵循"发现问题 -> 分类优先级 -> 制定计划 -> 小步修复 -> 验证改进"的闭环,逐步提升 TeamsACS 项目的整体健康度。
+### Architecture Level
+- Circular dependency detection (package level)
+- Interface abuse (single implementation interface)
+- Cross-layer calls (controller directly accessing DB)
 
-**检测不是为了批评,而是为了更好地理解与改进。**
+### Go Specific
+- Improper Context usage (nil context, stored in struct)
+- defer misuse (in loop, return value impact)
+- slice/map accidental sharing
 
-````
+### Performance Specific
+- Unnecessary reflection
+- Frequent JSON encoding/decoding
+- Large object copying/passing
+
+---
+
+## 12. Continuous Improvement
+
+### Baseline Establishment
+- First detection result as baseline
+- Periodic (weekly/monthly) re-detection
+- Track metric trends
+
+### Rule Optimization
+- Adjust rules based on false positives
+- Add project-specific detection patterns
+- Keep in sync with AGENTS.md
+
+---
+
+## 13. Output Language and Format
+
+- Report in **English**
+- Keep code snippets in original English
+- Use Markdown format for tables
+- Bold or highlight key issues
+- Attach specific file names and line numbers
+
+---
+
+## 14. Conclusion
+
+Code quality detection is the starting point of continuous improvement, not the end. Follow the closed loop of "Discover Issues -> Prioritize -> Make Plan -> Small Step Fixes -> Verify Improvements" to gradually improve the overall health of the TeamsACS project.
+
+**Detection is not for criticism, but for better understanding and improvement.**
+
+```
