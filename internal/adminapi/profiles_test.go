@@ -2,6 +2,7 @@ package adminapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -15,8 +16,6 @@ import (
 
 	"gorm.io/gorm"
 )
-
-
 
 // createTestProfile creates test profile data
 func createTestProfile(db *gorm.DB, name string) *domain.RadiusProfile {
@@ -257,7 +256,7 @@ func TestCreateProfile(t *testing.T) {
 			name:           "Missing required field - name",
 			requestBody:    `{"status": "enabled"}`,
 			expectedStatus: http.StatusBadRequest,
-			expectedError:  "MISSING_NAME",
+			expectedError:  "VALIDATION_ERROR",
 		},
 		{
 			name: "Name already exists",
@@ -300,7 +299,7 @@ func TestCreateProfile(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create an existing profile to test duplicate names
-		if tt.name == "Name already exists" {
+			if tt.name == "Name already exists" {
 				createTestProfile(db, "duplicate-profile")
 			}
 
@@ -311,7 +310,13 @@ func TestCreateProfile(t *testing.T) {
 			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := CreateProfile(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -429,7 +434,13 @@ func TestUpdateProfile(t *testing.T) {
 			c.SetParamValues(tt.profileID)
 
 			err := UpdateProfile(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -516,7 +527,13 @@ func TestDeleteProfile(t *testing.T) {
 			c.SetParamValues(tt.profileID)
 
 			err := DeleteProfile(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -591,12 +608,12 @@ func TestProfileEdgeCases(t *testing.T) {
 		originalName := profile.Name
 
 		e := setupTestEcho()
-		req := httptest.NewRequest(http.MethodPut, "/api/v1/radius-profiles/1", strings.NewReader(`{"up_rate": 30720}`))
+		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/radius-profiles/%d", profile.ID), strings.NewReader(`{"up_rate": 30720}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
-		c.SetParamValues("1")
+		c.SetParamValues(fmt.Sprintf("%d", profile.ID))
 
 		err := UpdateProfile(c)
 		require.NoError(t, err)

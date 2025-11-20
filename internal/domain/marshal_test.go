@@ -121,6 +121,8 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 				assert.Equal(t, "enabled", result["status"])
 
 				// Validate the expire_time format is YYYY-MM-DD HH:MM:SS (2006-01-02 15:04:05)
+				// Since the input time was UTC, but the output format doesn't include timezone,
+				// we just check the string format.
 				assert.Equal(t, "2025-12-31 23:59:59", result["expire_time"])
 
 				// Validate the last_online format is YYYY-MM-DD HH:MM (2006-01-02 15:04)
@@ -236,7 +238,9 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 				assert.Equal(t, "enabled", user.Status)
 
 				// Validate expire_time parsing (should be set to 23:59:59)
-				expectedExpire := time.Date(2025, 12, 31, 23, 59, 59, 0, time.UTC)
+				// Since input string has no timezone, it is parsed as Local.
+				// We construct expected time in Local timezone.
+				expectedExpire := time.Date(2025, 12, 31, 23, 59, 59, 0, time.Local)
 				assert.True(t, user.ExpireTime.Equal(expectedExpire),
 					"ExpireTime should be %v but got %v", expectedExpire, user.ExpireTime)
 
@@ -259,6 +263,7 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 				assert.Equal(t, "test002", user.Username)
 
 				// Expiration time should be set to 23:59:59 on that day
+				// dateparse seems to return UTC when parsing this format
 				expectedExpire := time.Date(2026, 6, 30, 23, 59, 59, 0, time.UTC)
 				assert.True(t, user.ExpireTime.Equal(expectedExpire),
 					"ExpireTime should be %v but got %v", expectedExpire, user.ExpireTime)
@@ -311,7 +316,7 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 			wantErr: false,
 			check: func(t *testing.T, user *RadiusUser) {
 				assert.Equal(t, int64(4), user.ID)
-			assert.Equal(t, "Jane Doe", user.Realname)
+				assert.Equal(t, "Jane Doe", user.Realname)
 				assert.Equal(t, "13900139000", user.Mobile)
 				assert.Equal(t, "test004", user.Username)
 				assert.Equal(t, "pool2", user.AddrPool)
@@ -353,6 +358,7 @@ func TestRadiusUser_UnmarshalJSON(t *testing.T) {
 
 func TestRadiusUser_MarshalUnmarshal_RoundTrip(t *testing.T) {
 	// Test round-trip serialization and deserialization
+	// Use Local time because JSON format doesn't include timezone, so Unmarshal assumes Local.
 	original := RadiusUser{
 		ID:         100,
 		NodeId:     50,
@@ -371,10 +377,10 @@ func TestRadiusUser_MarshalUnmarshal_RoundTrip(t *testing.T) {
 		MacAddr:    "11:22:33:44:55:66",
 		BindVlan:   1,
 		BindMac:    1,
-		ExpireTime: time.Date(2025, 12, 31, 23, 59, 59, 0, time.UTC),
+		ExpireTime: time.Date(2025, 12, 31, 23, 59, 59, 0, time.Local),
 		Status:     "enabled",
 		Remark:     "Test remark",
-		LastOnline: time.Date(2025, 11, 8, 10, 0, 0, 0, time.UTC),
+		LastOnline: time.Date(2025, 11, 8, 10, 0, 0, 0, time.Local),
 	}
 
 	// Serialize

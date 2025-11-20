@@ -3,11 +3,15 @@ package app
 import (
 	_ "embed"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/talkincode/toughradius/v9/internal/domain"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // ConfigType represents the configuration value type
@@ -171,7 +175,7 @@ func (cm *ConfigManager) register(schema *ConfigSchema) {
 func (cm *ConfigManager) loadFromDatabase() {
 	// If the sys_config table hasn't been created yet (e.g., before migrations),
 	// we skip loading and rely on in-memory defaults instead of logging an error.
-	rows, err := cm.app.gormDB.Raw("SELECT CONCAT(type, '.', name) as key, value FROM sys_config").Rows()
+	rows, err := cm.app.gormDB.Model(&domain.SysConfig{}).Select("type", "name", "value").Rows()
 	if err != nil {
 		zap.L().Warn("failed to load config from database", zap.Error(err))
 		return
@@ -180,11 +184,12 @@ func (cm *ConfigManager) loadFromDatabase() {
 
 	loaded := 0
 	for rows.Next() {
-		var key, value string
-		if err := rows.Scan(&key, &value); err != nil {
+		var typeStr, nameStr, value string
+		if err := rows.Scan(&typeStr, &nameStr, &value); err != nil {
 			continue
 		}
 
+		key := typeStr + "." + nameStr
 		// Only load registered configurations
 		if _, exists := cm.schemas[key]; exists {
 			cm.configs[key] = value
@@ -237,12 +242,22 @@ func (cm *ConfigManager) Set(category, name, value string) error {
 	cm.mu.Unlock()
 
 	// Update the database
-	err := cm.app.gormDB.Exec(`
-		INSERT INTO sys_config (type, name, value, updated_at) 
-		VALUES (?, ?, ?, ?) 
-		ON CONFLICT (type, name) 
-		DO UPDATE SET value = EXCLUDED.value, updated_at = EXCLUDED.updated_at`,
-		category, name, value, time.Now()).Error
+	var config domain.SysConfig
+	err := cm.app.gormDB.Where("type = ? AND name = ?", category, name).First(&config).Error
+	switch {
+	case err == nil:
+		config.Value = value
+		config.UpdatedAt = time.Now()
+		err = cm.app.gormDB.Save(&config).Error
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		config = domain.SysConfig{
+			Type:      category,
+			Name:      name,
+			Value:     value,
+			UpdatedAt: time.Now(),
+		}
+		err = cm.app.gormDB.Create(&config).Error
+	}
 
 	if err != nil {
 		// Rollback the in-memory cache

@@ -2,6 +2,7 @@ package adminapi
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -76,7 +77,7 @@ func TestListUsers(t *testing.T) {
 		},
 		{
 			name:           "Paginated query - page 1",
-			queryParams:    "?page=1&perPage=2",
+			queryParams:    "?page=1&pageSize=2",
 			expectedStatus: http.StatusOK,
 			expectedCount:  2,
 			checkResponse: func(t *testing.T, resp *Response) {
@@ -104,8 +105,9 @@ func TestListUsers(t *testing.T) {
 		},
 		{
 			name:           "Filter by profile_id",
-			queryParams:    "?profile_id=" + string(rune(profile.ID)),
+			queryParams:    "?profile_id=" + fmt.Sprintf("%d", profile.ID),
 			expectedStatus: http.StatusOK,
+			expectedCount:  3,
 		},
 	}
 
@@ -182,7 +184,13 @@ func TestGetUser(t *testing.T) {
 			c.SetParamValues(tt.userID)
 
 			err := getRadiusUser(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -224,7 +232,7 @@ func TestCreateUser(t *testing.T) {
 			requestBody: `{
 				"username": "newuser",
 				"password": "password123",
-				"profile_id": "` + string(rune(profile.ID)) + `",
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `",
 				"realname": "New User",
 				"mobile": "13900139000",
 				"status": "enabled"
@@ -242,7 +250,7 @@ func TestCreateUser(t *testing.T) {
 			requestBody: `{
 				"username": "defaultuser",
 				"password": "password123",
-				"profile_id": "` + string(rune(profile.ID)) + `"
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `"
 			}`,
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, user *domain.RadiusUser) {
@@ -270,7 +278,7 @@ func TestCreateUser(t *testing.T) {
 			requestBody: `{
 				"username": "duplicateuser",
 				"password": "password123",
-				"profile_id": "` + string(rune(profile.ID)) + `"
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `"
 			}`,
 			expectedStatus: http.StatusConflict,
 			expectedError:  "USERNAME_EXISTS",
@@ -296,7 +304,7 @@ func TestCreateUser(t *testing.T) {
 			requestBody: `{
 				"username": "booluser",
 				"password": "password123",
-				"profile_id": "` + string(rune(profile.ID)) + `",
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `",
 				"status": true
 			}`,
 			expectedStatus: http.StatusOK,
@@ -320,7 +328,13 @@ func TestCreateUser(t *testing.T) {
 			c := CreateTestContext(e, db, req, rec, appCtx)
 
 			err := createRadiusUser(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -380,7 +394,7 @@ func TestUpdateUser(t *testing.T) {
 			name:   "Update profile - should sync profile config",
 			userID: "1",
 			requestBody: `{
-				"profile_id": "` + string(rune(profile2.ID)) + `"
+				"profile_id": "` + fmt.Sprintf("%d", profile2.ID) + `"
 			}`,
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, u *domain.RadiusUser) {
@@ -460,7 +474,13 @@ func TestUpdateUser(t *testing.T) {
 			c.SetParamValues(tt.userID)
 
 			err := updateRadiusUser(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -530,7 +550,13 @@ func TestDeleteUser(t *testing.T) {
 			c.SetParamValues(tt.userID)
 
 			err := deleteRadiusUser(c)
-			require.NoError(t, err)
+			if tt.expectedStatus >= 400 {
+				if err != nil {
+					e.HTTPErrorHandler(err, c)
+				}
+			} else {
+				require.NoError(t, err)
+			}
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
 			if tt.expectedStatus == http.StatusOK {
@@ -565,7 +591,7 @@ func TestUserEdgeCases(t *testing.T) {
 		requestBody := `{
 			"username": "  spaceuser  ",
 			"password": "password123",
-			"profile_id": "` + string(rune(profile.ID)) + `"
+			"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `"
 		}`
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -589,7 +615,7 @@ func TestUserEdgeCases(t *testing.T) {
 		requestBody := `{
 			"username": "inherituser",
 			"password": "password123",
-			"profile_id": "` + string(rune(profile.ID)) + `"
+			"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `"
 		}`
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
@@ -617,12 +643,12 @@ func TestUserEdgeCases(t *testing.T) {
 		originalUsername := user.Username
 
 		e := setupTestEcho()
-		req := httptest.NewRequest(http.MethodPut, "/api/v1/users/1", strings.NewReader(`{"realname": "New Name"}`))
+		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/users/%d", user.ID), strings.NewReader(`{"realname": "New Name"}`))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
-		c.SetParamValues("1")
+		c.SetParamValues(fmt.Sprintf("%d", user.ID))
 
 		err := updateRadiusUser(c)
 		require.NoError(t, err)
@@ -644,7 +670,7 @@ func TestUserEdgeCases(t *testing.T) {
 		requestBody := `{
 			"username": "expireuser",
 			"password": "password123",
-			"profile_id": "` + string(rune(profile.ID)) + `"
+			"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `"
 		}`
 		req := httptest.NewRequest(http.MethodPost, "/api/v1/users", strings.NewReader(requestBody))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)

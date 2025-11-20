@@ -44,7 +44,15 @@ func (d *RadiusUser) UnmarshalJSON(b []byte) error {
 	if err := json.Unmarshal(b, &tmp); err != nil {
 		return err
 	}
-	d.ExpireTime, _ = dateparse.ParseAny(tmp.ExpireTime[:10] + " 23:59:59")
+	if t, err := time.ParseInLocation(timeutil.YYYYMMDDHHMMSS_LAYOUT, tmp.ExpireTime, time.Local); err == nil {
+		d.ExpireTime = t
+	} else {
+		if len(tmp.ExpireTime) >= 10 {
+			d.ExpireTime, _ = dateparse.ParseAny(tmp.ExpireTime[:10] + " 23:59:59")
+		} else if tmp.ExpireTime != "" {
+			d.ExpireTime, _ = dateparse.ParseAny(tmp.ExpireTime)
+		}
+	}
 	d.LastOnline, _ = dateparse.ParseAny(tmp.LastOnline)
 	return nil
 }

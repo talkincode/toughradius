@@ -114,6 +114,105 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 	return user
 }
 
+// UserUpdateRequest Used to handle user update data
+type UserUpdateRequest struct {
+	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
+	ProfileID  interface{} `json:"profile_id"`                                  // Can be int64 or string
+	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // Real name
+	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // Email
+	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
+	Address    string      `json:"address" validate:"omitempty,max=255"`        // addresses
+	Username   string      `json:"username" validate:"omitempty,min=3,max=50"`  // Username
+	Password   string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
+	AddrPool   string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
+	Vlanid1    int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
+	Vlanid2    int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
+	IpAddr     string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
+	Ipv6Addr   string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6addresses
+	MacAddr    string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
+	BindVlan   interface{} `json:"bind_vlan"`                                   // Can be int or boolean
+	BindMac    interface{} `json:"bind_mac"`                                    // Can be int or boolean
+	ExpireTime string      `json:"expire_time" validate:"omitempty"`            // Expiration time
+	Status     interface{} `json:"status"`                                      // Can be string or boolean
+	Remark     string      `json:"remark" validate:"omitempty,max=500"`         // Remark
+}
+
+// toRadiusUser Convert UserUpdateRequest Convert to RadiusUser
+func (ur *UserUpdateRequest) toRadiusUser() *domain.RadiusUser {
+	user := &domain.RadiusUser{
+		Realname: ur.Realname,
+		Mobile:   ur.Mobile,
+		Username: strings.TrimSpace(ur.Username),
+		Password: ur.Password,
+		AddrPool: ur.AddrPool,
+		Vlanid1:  ur.Vlanid1,
+		Vlanid2:  ur.Vlanid2,
+		IpAddr:   ur.IpAddr,
+		MacAddr:  ur.MacAddr,
+		Remark:   ur.Remark,
+	}
+
+	// Handle profile_id
+	switch v := ur.ProfileID.(type) {
+	case float64:
+		user.ProfileId = int64(v)
+	case string:
+		if v != "" {
+			profileId, _ := strconv.ParseInt(v, 10, 64)
+			user.ProfileId = profileId
+		}
+	}
+
+	// Handle node_id
+	switch v := ur.NodeID.(type) {
+	case float64:
+		user.NodeId = int64(v)
+	case string:
+		if v != "" {
+			nodeId, _ := strconv.ParseInt(v, 10, 64)
+			user.NodeId = nodeId
+		}
+	}
+
+	// Handle status field：boolean true -> "enabled", false -> "disabled"
+	switch v := ur.Status.(type) {
+	case bool:
+		if v {
+			user.Status = common.ENABLED
+		} else {
+			user.Status = common.DISABLED
+		}
+	case string:
+		user.Status = strings.ToLower(v)
+	}
+
+	// Handle bind_mac field
+	switch v := ur.BindMac.(type) {
+	case bool:
+		if v {
+			user.BindMac = 1
+		} else {
+			user.BindMac = 0
+		}
+	case float64:
+		user.BindMac = int(v)
+	}
+
+	// Handle bind_vlan field
+	switch v := ur.BindVlan.(type) {
+	case bool:
+		if v {
+			user.BindVlan = 1
+		} else {
+			user.BindVlan = 0
+		}
+	case float64:
+		user.BindVlan = int(v)
+	}
+
+	return user
+}
+
 func registerUserRoutes() {
 	webserver.ApiGET("/users", listRadiusUsers)
 	webserver.ApiGET("/users/:id", getRadiusUser)
@@ -242,7 +341,7 @@ func updateRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
 
-	var req UserRequest
+	var req UserUpdateRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
 	}
@@ -270,6 +369,9 @@ func updateRadiusUser(c echo.Context) error {
 		}
 	}
 
+	// Update other fields
+	updates := map[string]interface{}{}
+
 	// If updated ProfileID，need toValidateand sync Profile configuration
 	if updateData.ProfileId != 0 && updateData.ProfileId != user.ProfileId {
 		var profile domain.RadiusProfile
@@ -279,15 +381,13 @@ func updateRadiusUser(c echo.Context) error {
 			}
 			return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query billing profile", err.Error())
 		}
-		user.ProfileId = updateData.ProfileId
-		user.ActiveNum = profile.ActiveNum
-		user.UpRate = profile.UpRate
-		user.DownRate = profile.DownRate
-		user.AddrPool = profile.AddrPool
+		updates["profile_id"] = updateData.ProfileId
+		updates["active_num"] = profile.ActiveNum
+		updates["up_rate"] = profile.UpRate
+		updates["down_rate"] = profile.DownRate
+		updates["addr_pool"] = profile.AddrPool
 	}
 
-	// Update other fields
-	updates := map[string]interface{}{}
 	if updateData.NodeId > 0 {
 		updates["node_id"] = updateData.NodeId
 	}
@@ -318,10 +418,10 @@ func updateRadiusUser(c echo.Context) error {
 	if updateData.MacAddr != "" {
 		updates["mac_addr"] = updateData.MacAddr
 	}
-	if updateData.BindVlan >= 0 {
+	if req.BindVlan != nil {
 		updates["bind_vlan"] = updateData.BindVlan
 	}
-	if updateData.BindMac >= 0 {
+	if req.BindMac != nil {
 		updates["bind_mac"] = updateData.BindMac
 	}
 	if updateData.Remark != "" {
@@ -369,8 +469,14 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	}
 
 	if q := strings.TrimSpace(c.QueryParam("q")); q != "" {
-		like := "%" + q + "%"
-		db = db.Where("(radius_user.username ILIKE ? OR radius_user.realname ILIKE ? OR radius_user.mobile ILIKE ?)", like, like, like)
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			like := "%" + q + "%"
+			db = db.Where("(radius_user.username ILIKE ? OR radius_user.realname ILIKE ? OR radius_user.mobile ILIKE ?)", like, like, like)
+		} else {
+			qLower := strings.ToLower(q)
+			like := "%" + qLower + "%"
+			db = db.Where("(LOWER(radius_user.username) LIKE ? OR LOWER(radius_user.realname) LIKE ? OR LOWER(radius_user.mobile) LIKE ?)", like, like, like)
+		}
 	}
 
 	if profileID := firstNotEmpty(c.QueryParam("profileId"), c.QueryParam("profile_id")); profileID != "" {

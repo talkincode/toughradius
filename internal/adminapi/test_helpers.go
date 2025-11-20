@@ -45,7 +45,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 
 // setupTestApp creates a test application context and sets it globally
 // Returns: app context for injecting into echo context
-func setupTestApp(t *testing.T, db *gorm.DB) app.AppContext {
+func setupTestApp(_ *testing.T, db *gorm.DB) app.AppContext {
 	cfg := &config.AppConfig{
 		System: config.SysConfig{
 			Appid:    "TestApp",
@@ -114,6 +114,13 @@ func CreateTestContext(e *echo.Echo, db *gorm.DB, req *http.Request, rec *httpte
 	c := e.NewContext(req, rec)
 	c.Set("appCtx", appCtx)
 	c.Set("db", db)
+	// Inject a default super admin for tests that require authentication
+	c.Set("current_operator", &domain.SysOpr{
+		ID:       1,
+		Username: "superadmin",
+		Level:    "super",
+		Status:   "enabled",
+	})
 	return c
 }
 

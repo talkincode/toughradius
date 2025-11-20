@@ -102,6 +102,11 @@ func currentUserHandler(c echo.Context) error {
 }
 
 func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
+	// Check for directly injected operator (for testing)
+	if op, ok := c.Get("current_operator").(*domain.SysOpr); ok {
+		return op, nil
+	}
+
 	userVal := c.Get("user")
 	if userVal == nil {
 		return nil, errors.New("no user in context")

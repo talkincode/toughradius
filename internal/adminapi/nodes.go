@@ -21,9 +21,9 @@ type nodePayload struct {
 }
 
 type nodeUpdatePayload struct {
-	Name   string `json:"name" validate:"omitempty,min=1,max=100"`
-	Tags   string `json:"tags" validate:"omitempty,max=200"`
-	Remark string `json:"remark" validate:"omitempty,max=500"`
+	Name   *string `json:"name" validate:"omitempty,min=1,max=100"`
+	Tags   *string `json:"tags" validate:"omitempty,max=200"`
+	Remark *string `json:"remark" validate:"omitempty,max=500"`
 }
 
 // registerNodesRoutes registers network node routes
@@ -137,22 +137,24 @@ func updateNode(c echo.Context) error {
 	}
 
 	// If the name is changed, check whether another node already uses it
-	if payload.Name != "" && payload.Name != node.Name {
-		payload.Name = strings.TrimSpace(payload.Name)
-		var exists int64
-		GetDB(c).Model(&domain.NetNode{}).Where("name = ? AND id != ?", payload.Name, id).Count(&exists)
-		if exists > 0 {
-			return fail(c, http.StatusConflict, "NODE_EXISTS", "Node name already exists", nil)
+	if payload.Name != nil {
+		name := strings.TrimSpace(*payload.Name)
+		if name != "" && name != node.Name {
+			var exists int64
+			GetDB(c).Model(&domain.NetNode{}).Where("name = ? AND id != ?", name, id).Count(&exists)
+			if exists > 0 {
+				return fail(c, http.StatusConflict, "NODE_EXISTS", "Node name already exists", nil)
+			}
+			node.Name = name
 		}
-		node.Name = payload.Name
 	}
 
 	// Update other fields
-	if payload.Tags != "" {
-		node.Tags = payload.Tags
+	if payload.Tags != nil {
+		node.Tags = *payload.Tags
 	}
-	if payload.Remark != "" {
-		node.Remark = strings.TrimSpace(payload.Remark)
+	if payload.Remark != nil {
+		node.Remark = strings.TrimSpace(*payload.Remark)
 	}
 	node.UpdatedAt = time.Now()
 

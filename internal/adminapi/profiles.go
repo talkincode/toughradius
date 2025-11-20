@@ -161,6 +161,85 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	return profile
 }
 
+// ProfileUpdateRequest represents the mixed-type JSON sent from the frontend for updates
+type ProfileUpdateRequest struct {
+	Name       string      `json:"name" validate:"omitempty,min=1,max=100"`
+	Status     interface{} `json:"status"` // Can be string or boolean
+	AddrPool   string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	ActiveNum  int         `json:"active_num" validate:"gte=0,lte=100"`
+	UpRate     int         `json:"up_rate" validate:"gte=0,lte=10000000"`
+	DownRate   int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	Domain     string      `json:"domain" validate:"omitempty,max=50"`
+	IPv6Prefix string      `json:"ipv6_prefix" validate:"omitempty"`
+	BindMac    interface{} `json:"bind_mac"`  // Can be int or boolean
+	BindVlan   interface{} `json:"bind_vlan"` // Can be int or boolean
+	Remark     string      `json:"remark" validate:"omitempty,max=500"`
+	NodeId     interface{} `json:"node_id"` // Can be int64 or string
+}
+
+// toRadiusProfile Convert ProfileUpdateRequest Convert to RadiusProfile
+func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
+	profile := &domain.RadiusProfile{
+		Name:       pr.Name,
+		AddrPool:   pr.AddrPool,
+		ActiveNum:  pr.ActiveNum,
+		UpRate:     pr.UpRate,
+		DownRate:   pr.DownRate,
+		Domain:     pr.Domain,
+		IPv6Prefix: pr.IPv6Prefix,
+		Remark:     pr.Remark,
+	}
+
+	// Handle status field: boolean true -> "enabled", false -> "disabled", string remains unchanged
+	switch v := pr.Status.(type) {
+	case bool:
+		if v {
+			profile.Status = "enabled"
+		} else {
+			profile.Status = "disabled"
+		}
+	case string:
+		profile.Status = v
+	}
+
+	// Handle bind_mac field：boolean -> int (true=1, false=0)
+	switch v := pr.BindMac.(type) {
+	case bool:
+		if v {
+			profile.BindMac = 1
+		} else {
+			profile.BindMac = 0
+		}
+	case float64:
+		profile.BindMac = int(v)
+	}
+
+	// Handle bind_vlan field：boolean -> int (true=1, false=0)
+	switch v := pr.BindVlan.(type) {
+	case bool:
+		if v {
+			profile.BindVlan = 1
+		} else {
+			profile.BindVlan = 0
+		}
+	case float64:
+		profile.BindVlan = int(v)
+	}
+
+	// Handle node_id field
+	switch v := pr.NodeId.(type) {
+	case float64:
+		profile.NodeId = int64(v)
+	case string:
+		if v != "" {
+			nodeId, _ := strconv.ParseInt(v, 10, 64)
+			profile.NodeId = nodeId
+		}
+	}
+
+	return profile
+}
+
 // CreateProfile creates a RADIUS profile
 // @Summary create a RADIUS profile
 // @Tags RadiusProfile
@@ -218,7 +297,7 @@ func UpdateProfile(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile not found", nil)
 	}
 
-	var req ProfileRequest
+	var req ProfileUpdateRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
 	}

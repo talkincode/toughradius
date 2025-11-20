@@ -288,6 +288,7 @@ func TestCurrentUserHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
 	rec := httptest.NewRecorder()
 	c := CreateTestContext(e, db, req, rec, appCtx)
+	c.Set("current_operator", nil) // Clear default operator to test token resolution
 	setJWTUser(t, c, testOpr)
 
 	err := currentUserHandler(c)

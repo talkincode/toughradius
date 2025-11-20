@@ -575,7 +575,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		e = setupTestEcho()
 		req = httptest.NewRequest(http.MethodGet, "/api/v1/sessions/1", nil)
 		rec = httptest.NewRecorder()
-		c = e.NewContext(req, rec)
+		c = CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
 		c.SetParamValues("1")
 
