@@ -41,7 +41,7 @@ import (
 
 const (
 	RadiusRejectDelayTimes = 7
-	RadiusAuthRateInterval = 1
+	RadiusAuthRateInterval = 1  // Original: 1 second rate limit
 )
 
 type VendorRequest struct {
