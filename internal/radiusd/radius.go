@@ -21,6 +21,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
 	repogorm "github.com/talkincode/toughradius/v9/internal/radiusd/repository/gorm"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
@@ -39,14 +40,6 @@ import (
 )
 
 const (
-	VendorMikrotik = "14988"
-	VendorIkuai    = "10055"
-	VendorHuawei   = "2011"
-	VendorZte      = "3902"
-	VendorH3c      = "25506"
-	VendorRadback  = "2352"
-	VendorCisco    = "9"
-
 	RadiusRejectDelayTimes = 7
 	RadiusAuthRateInterval = 1
 )
@@ -236,7 +229,7 @@ func (s *RadiusService) AppContext() app.AppContext {
 
 func GetFramedIpv6Address(r *radius.Request, nas *domain.NetNas) string {
 	switch nas.VendorCode {
-	case VendorHuawei:
+	case vendors.CodeHuawei:
 		return common.IfEmptyStr(huawei.HuaweiFramedIPv6Address_Get(r.Packet).String(), common.NA)
 	default:
 		return ""

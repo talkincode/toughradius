@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/mikrotik"
 )
 
@@ -22,7 +23,7 @@ func (e *MikrotikAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.Auth
 	if authCtx == nil || authCtx.Response == nil || authCtx.User == nil {
 		return nil
 	}
-	if !matchVendor(authCtx, vendorMikrotik) {
+	if !matchVendor(authCtx, vendors.CodeMikrotik) {
 		return nil
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/mikrotik"
 	"layeh.com/radius"
 )
@@ -56,18 +57,18 @@ func TestMikrotikAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		vendorCode  string
+		name          string
+		vendorCode    string
 		shouldEnhance bool
 	}{
 		{
-			name:        "mikrotik vendor",
-			vendorCode:  vendorMikrotik,
+			name:          "mikrotik vendor",
+			vendorCode:    vendors.CodeMikrotik,
 			shouldEnhance: true,
 		},
 		{
-			name:        "other vendor",
-			vendorCode:  vendorHuawei,
+			name:          "other vendor",
+			vendorCode:    vendors.CodeHuawei,
 			shouldEnhance: false,
 		},
 	}
@@ -142,7 +143,7 @@ func TestMikrotikAcceptEnhancer_Enhance_RateFormat(t *testing.T) {
 				DownRate: tt.downRate,
 			}
 			nas := &domain.NetNas{
-				VendorCode: vendorMikrotik,
+				VendorCode: vendors.CodeMikrotik,
 			}
 
 			authCtx := &auth.AuthContext{

@@ -27,31 +27,6 @@ func TestConstants(t *testing.T) {
 	}
 }
 
-func TestRadiusVendorConstants(t *testing.T) {
-	tests := []struct {
-		name     string
-		constant string
-		expected string
-	}{
-		{"Mikrotik", RadiusVendorMikrotik, "14988"},
-		{"Ikuai", RadiusVendorIkuai, "10055"},
-		{"Huawei", RadiusVendorHuawei, "2011"},
-		{"ZTE", RadiusVendorZte, "3902"},
-		{"H3C", RadiusVendorH3c, "25506"},
-		{"Radback", RadiusVendorRadback, "2352"},
-		{"Cisco", RadiusVendorCisco, "9"},
-		{"Standard", RadiusVendorStandard, "0"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.constant != tt.expected {
-				t.Errorf("Expected vendor code '%s', got '%s'", tt.expected, tt.constant)
-			}
-		})
-	}
-}
-
 func TestConfigConstantsArray(t *testing.T) {
 	expectedLength := 8
 	if len(ConfigConstants) != expectedLength {

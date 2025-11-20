@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/ikuai"
 	"layeh.com/radius"
 )
@@ -57,18 +58,18 @@ func TestIkuaiAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		vendorCode  string
+		name          string
+		vendorCode    string
 		shouldEnhance bool
 	}{
 		{
-			name:        "ikuai vendor",
-			vendorCode:  vendorIkuai,
+			name:          "ikuai vendor",
+			vendorCode:    vendors.CodeIkuai,
 			shouldEnhance: true,
 		},
 		{
-			name:        "other vendor",
-			vendorCode:  vendorHuawei,
+			name:          "other vendor",
+			vendorCode:    vendors.CodeHuawei,
 			shouldEnhance: false,
 		},
 	}
@@ -148,7 +149,7 @@ func TestIkuaiAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 				DownRate: tt.downRate,
 			}
 			nas := &domain.NetNas{
-				VendorCode: vendorIkuai,
+				VendorCode: vendors.CodeIkuai,
 			}
 
 			authCtx := &auth.AuthContext{

@@ -1,13 +1,7 @@
 package enhancers
 
-import "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
-
-const (
-	vendorHuawei   = "2011"
-	vendorH3C      = "25506"
-	vendorZTE      = "3902"
-	vendorMikrotik = "14988"
-	vendorIkuai    = "10055"
+import (
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 )
 
 func matchVendor(ctx *auth.AuthContext, vendorCode string) bool {

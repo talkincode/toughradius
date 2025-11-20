@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/zte"
 )
 
@@ -22,7 +23,7 @@ func (e *ZTEAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthConte
 	if authCtx == nil || authCtx.Response == nil || authCtx.User == nil {
 		return nil
 	}
-	if !matchVendor(authCtx, vendorZTE) {
+	if !matchVendor(authCtx, vendors.CodeZTE) {
 		return nil
 	}
 

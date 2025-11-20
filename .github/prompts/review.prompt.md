@@ -1,5 +1,5 @@
 ---
-model: GPT-5
+model: Claude Sonnet 4.5
 tools:
   [
     "search",

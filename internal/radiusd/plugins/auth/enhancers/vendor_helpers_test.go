@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 )
 
 func TestMatchVendor(t *testing.T) {
@@ -19,7 +20,7 @@ func TestMatchVendor(t *testing.T) {
 		{
 			name:       "nil context",
 			authCtx:    nil,
-			vendorCode: vendorHuawei,
+			vendorCode: vendors.CodeHuawei,
 			expected:   false,
 		},
 		{
@@ -27,27 +28,27 @@ func TestMatchVendor(t *testing.T) {
 			authCtx: &auth.AuthContext{
 				Nas: nil,
 			},
-			vendorCode: vendorHuawei,
+			vendorCode: vendors.CodeHuawei,
 			expected:   false,
 		},
 		{
 			name: "matching vendor",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: vendorHuawei,
+					VendorCode: vendors.CodeHuawei,
 				},
 			},
-			vendorCode: vendorHuawei,
+			vendorCode: vendors.CodeHuawei,
 			expected:   true,
 		},
 		{
 			name: "non-matching vendor",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: vendorHuawei,
+					VendorCode: vendors.CodeHuawei,
 				},
 			},
-			vendorCode: vendorH3C,
+			vendorCode: vendors.CodeH3C,
 			expected:   false,
 		},
 		{
@@ -57,7 +58,7 @@ func TestMatchVendor(t *testing.T) {
 					VendorCode: "2011",
 				},
 			},
-			vendorCode: vendorHuawei,
+			vendorCode: vendors.CodeHuawei,
 			expected:   true,
 		},
 		{
@@ -67,7 +68,7 @@ func TestMatchVendor(t *testing.T) {
 					VendorCode: "25506",
 				},
 			},
-			vendorCode: vendorH3C,
+			vendorCode: vendors.CodeH3C,
 			expected:   true,
 		},
 		{
@@ -77,7 +78,7 @@ func TestMatchVendor(t *testing.T) {
 					VendorCode: "3902",
 				},
 			},
-			vendorCode: vendorZTE,
+			vendorCode: vendors.CodeZTE,
 			expected:   true,
 		},
 		{
@@ -87,7 +88,7 @@ func TestMatchVendor(t *testing.T) {
 					VendorCode: "14988",
 				},
 			},
-			vendorCode: vendorMikrotik,
+			vendorCode: vendors.CodeMikrotik,
 			expected:   true,
 		},
 		{
@@ -97,7 +98,7 @@ func TestMatchVendor(t *testing.T) {
 					VendorCode: "10055",
 				},
 			},
-			vendorCode: vendorIkuai,
+			vendorCode: vendors.CodeIkuai,
 			expected:   true,
 		},
 	}
@@ -171,9 +172,9 @@ func TestClampInt64(t *testing.T) {
 
 func TestVendorConstants(t *testing.T) {
 	// Validate the correctness of vendor code constants
-	assert.Equal(t, "2011", vendorHuawei)
-	assert.Equal(t, "25506", vendorH3C)
-	assert.Equal(t, "3902", vendorZTE)
-	assert.Equal(t, "14988", vendorMikrotik)
-	assert.Equal(t, "10055", vendorIkuai)
+	assert.Equal(t, "2011", vendors.CodeHuawei)
+	assert.Equal(t, "25506", vendors.CodeH3C)
+	assert.Equal(t, "3902", vendors.CodeZTE)
+	assert.Equal(t, "14988", vendors.CodeMikrotik)
+	assert.Equal(t, "10055", vendors.CodeIkuai)
 }

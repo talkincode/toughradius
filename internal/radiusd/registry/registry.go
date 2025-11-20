@@ -8,6 +8,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	vendorparserspkg "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 )
 
 // Registry holds plugin registrations
@@ -16,8 +17,6 @@ type Registry struct {
 	policyCheckers     []auth.PolicyChecker
 	responseEnhancers  []auth.ResponseEnhancer
 	authGuards         []auth.Guard
-	vendorParsers      map[string]vendorparserspkg.VendorParser
-	vendorBuilders     map[string]vendorparserspkg.VendorResponseBuilder
 	acctHandlers       []accounting.AccountingHandler
 	eapHandlers        map[uint8]eap.EAPHandler // EAP handlers indexed by EAP type
 	mu                 sync.RWMutex
@@ -31,8 +30,6 @@ func newRegistry() *Registry {
 		policyCheckers:     make([]auth.PolicyChecker, 0),
 		responseEnhancers:  make([]auth.ResponseEnhancer, 0),
 		authGuards:         make([]auth.Guard, 0),
-		vendorParsers:      make(map[string]vendorparserspkg.VendorParser),
-		vendorBuilders:     make(map[string]vendorparserspkg.VendorResponseBuilder),
 		acctHandlers:       make([]accounting.AccountingHandler, 0),
 		eapHandlers:        make(map[uint8]eap.EAPHandler),
 	}
@@ -120,37 +117,42 @@ func GetAuthGuards() []auth.Guard {
 
 // RegisterVendorParser registers a vendor parser
 func RegisterVendorParser(parser vendorparserspkg.VendorParser) {
-	globalRegistry.mu.Lock()
-	defer globalRegistry.mu.Unlock()
-	globalRegistry.vendorParsers[parser.VendorCode()] = parser
+	vendors.Register(&vendors.VendorInfo{
+		Code:   parser.VendorCode(),
+		Name:   parser.VendorName(),
+		Parser: parser,
+	})
 }
 
 // GetVendorParser returns a vendor parser
 func GetVendorParser(vendorCode string) (vendorparserspkg.VendorParser, bool) {
-	globalRegistry.mu.RLock()
-	defer globalRegistry.mu.RUnlock()
-
-	parser, ok := globalRegistry.vendorParsers[vendorCode]
-	if !ok {
-		// Return the default parser
-		parser, ok = globalRegistry.vendorParsers["default"]
+	info, ok := vendors.Get(vendorCode)
+	if ok && info.Parser != nil {
+		return info.Parser, true
 	}
-	return parser, ok
+	// Fallback to default
+	info, ok = vendors.Get("default")
+	if ok && info.Parser != nil {
+		return info.Parser, true
+	}
+	return nil, false
 }
 
 // RegisterVendorResponseBuilder registers a vendor response builder
 func RegisterVendorResponseBuilder(builder vendorparserspkg.VendorResponseBuilder) {
-	globalRegistry.mu.Lock()
-	defer globalRegistry.mu.Unlock()
-	globalRegistry.vendorBuilders[builder.VendorCode()] = builder
+	vendors.Register(&vendors.VendorInfo{
+		Code:    builder.VendorCode(),
+		Builder: builder,
+	})
 }
 
 // GetVendorResponseBuilder returns a vendor response builder
 func GetVendorResponseBuilder(vendorCode string) (vendorparserspkg.VendorResponseBuilder, bool) {
-	globalRegistry.mu.RLock()
-	defer globalRegistry.mu.RUnlock()
-	builder, ok := globalRegistry.vendorBuilders[vendorCode]
-	return builder, ok
+	info, ok := vendors.Get(vendorCode)
+	if ok && info.Builder != nil {
+		return info.Builder, true
+	}
+	return nil, false
 }
 
 // RegisterAccountingHandler registers an accounting handler

@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/h3c"
 	"layeh.com/radius"
 )
@@ -63,12 +64,12 @@ func TestH3CAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 	}{
 		{
 			name:          "h3c vendor",
-			vendorCode:    vendorH3C,
+			vendorCode:    vendors.CodeH3C,
 			shouldEnhance: true,
 		},
 		{
 			name:          "other vendor",
-			vendorCode:    vendorHuawei,
+			vendorCode:    vendors.CodeHuawei,
 			shouldEnhance: false,
 		},
 	}
@@ -147,7 +148,7 @@ func TestH3CAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 				DownRate: tt.downRate,
 			}
 			nas := &domain.NetNas{
-				VendorCode: vendorH3C,
+				VendorCode: vendors.CodeH3C,
 			}
 
 			authCtx := &auth.AuthContext{

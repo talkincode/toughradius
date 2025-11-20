@@ -5,6 +5,7 @@ import (
 	"math"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
 )
 
@@ -22,7 +23,7 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 	if authCtx == nil || authCtx.Response == nil || authCtx.User == nil {
 		return nil
 	}
-	if !matchVendor(authCtx, vendorHuawei) {
+	if !matchVendor(authCtx, vendors.CodeHuawei) {
 		return nil
 	}
 

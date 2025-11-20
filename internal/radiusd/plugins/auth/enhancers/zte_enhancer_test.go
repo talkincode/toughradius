@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/zte"
 	"layeh.com/radius"
 )
@@ -63,12 +64,12 @@ func TestZTEAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 	}{
 		{
 			name:          "zte vendor",
-			vendorCode:    vendorZTE,
+			vendorCode:    vendors.CodeZTE,
 			shouldEnhance: true,
 		},
 		{
 			name:          "other vendor",
-			vendorCode:    vendorHuawei,
+			vendorCode:    vendors.CodeHuawei,
 			shouldEnhance: false,
 		},
 	}
@@ -148,7 +149,7 @@ func TestZTEAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 				DownRate: tt.downRate,
 			}
 			nas := &domain.NetNas{
-				VendorCode: vendorZTE,
+				VendorCode: vendors.CodeZTE,
 			}
 
 			authCtx := &auth.AuthContext{

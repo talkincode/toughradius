@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
 	"layeh.com/radius"
 )
@@ -57,23 +58,23 @@ func TestHuaweiAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name        string
-		vendorCode  string
+		name          string
+		vendorCode    string
 		shouldEnhance bool
 	}{
 		{
-			name:        "huawei vendor",
-			vendorCode:  vendorHuawei,
+			name:          "huawei vendor",
+			vendorCode:    vendors.CodeHuawei,
 			shouldEnhance: true,
 		},
 		{
-			name:        "other vendor",
-			vendorCode:  "9999",
+			name:          "other vendor",
+			vendorCode:    "9999",
 			shouldEnhance: false,
 		},
 		{
-			name:        "empty vendor",
-			vendorCode:  "",
+			name:          "empty vendor",
+			vendorCode:    "",
 			shouldEnhance: false,
 		},
 	}
@@ -83,8 +84,8 @@ func TestHuaweiAcceptEnhancer_Enhance_VendorMatch(t *testing.T) {
 			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 			user := &domain.RadiusUser{
 				Username: "testuser",
-				UpRate:   1024,  // 1024 KB/s
-				DownRate: 2048,  // 2048 KB/s
+				UpRate:   1024, // 1024 KB/s
+				DownRate: 2048, // 2048 KB/s
 			}
 			nas := &domain.NetNas{
 				VendorCode: tt.vendorCode,
@@ -123,31 +124,31 @@ func TestHuaweiAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name           string
-		upRate         int
-		downRate       int
-		expectedUpAvg  uint32
+		name            string
+		upRate          int
+		downRate        int
+		expectedUpAvg   uint32
 		expectedDownAvg uint32
 	}{
 		{
-			name:           "normal rates",
-			upRate:         100,
-			downRate:       200,
-			expectedUpAvg:  100 * 1024,
+			name:            "normal rates",
+			upRate:          100,
+			downRate:        200,
+			expectedUpAvg:   100 * 1024,
 			expectedDownAvg: 200 * 1024,
 		},
 		{
-			name:           "zero rates",
-			upRate:         0,
-			downRate:       0,
-			expectedUpAvg:  0,
+			name:            "zero rates",
+			upRate:          0,
+			downRate:        0,
+			expectedUpAvg:   0,
 			expectedDownAvg: 0,
 		},
 		{
-			name:           "max int32 boundary",
-			upRate:         2097152, // Will exceed MaxInt32 after * 1024
-			downRate:       2097152,
-			expectedUpAvg:  math.MaxInt32,
+			name:            "max int32 boundary",
+			upRate:          2097152, // Will exceed MaxInt32 after * 1024
+			downRate:        2097152,
+			expectedUpAvg:   math.MaxInt32,
 			expectedDownAvg: math.MaxInt32,
 		},
 	}
@@ -161,7 +162,7 @@ func TestHuaweiAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 				DownRate: tt.downRate,
 			}
 			nas := &domain.NetNas{
-				VendorCode: vendorHuawei,
+				VendorCode: vendors.CodeHuawei,
 			}
 
 			authCtx := &auth.AuthContext{
