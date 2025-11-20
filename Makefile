@@ -26,9 +26,9 @@ help:
 runs:
 	@echo "🚀 启动 ToughRADIUS 后端服务..."
 	@echo "📝 配置文件: toughradius.yml"
-	@echo "🔧 SQLite 支持: 已启用 (CGO_ENABLED=1)"
+	@echo "🔧 SQLite 支持: 已启用 (CGO_ENABLED=0)"
 	@echo ""
-	CGO_ENABLED=1 go run main.go -c toughradius.yml
+	CGO_ENABLED=0 go run main.go -c toughradius.yml
 
 # 启动前端开发服务
 runf:
@@ -48,10 +48,10 @@ dev:
 	@echo "   make runs > /tmp/toughradius-backend.log 2>&1 &"
 	@echo "   make runf > /tmp/toughradius-frontend.log 2>&1 &"
 
-# 构建生产版本（仅 PostgreSQL，静态编译）
+# 构建生产版本（静态编译，支持 PostgreSQL 和 SQLite）
 build:
 	@echo "🔨 构建生产版本..."
-	@echo "⚠️  PostgreSQL only (CGO_ENABLED=0)"
+	@echo "⚠️  Static build (CGO_ENABLED=0)"
 	@bash scripts/build-backend.sh
 
 # 构建前端生产版本
@@ -65,12 +65,12 @@ initdb:
 	@echo "⚠️  警告：此操作将删除并重建所有数据库表！"
 	@read -p "确认继续？(yes/no): " confirm && [ "$$confirm" = "yes" ] || (echo "已取消"; exit 1)
 	@echo "🗄️  初始化数据库..."
-	CGO_ENABLED=1 go run main.go -initdb -c toughradius.yml
+	CGO_ENABLED=0 go run main.go -initdb -c toughradius.yml
 
 # 运行测试
 test:
 	@echo "🧪 运行测试..."
-	CGO_ENABLED=1 go test ./...
+	CGO_ENABLED=0 go test ./...
 
 # 清理构建文件
 clean:

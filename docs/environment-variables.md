@@ -142,7 +142,7 @@ TOUGHRADIUS_LOGGER_MODE=production
 1. `.env` 文件不会被提交到 Git（已在 .gitignore 中）
 2. 修改环境变量后需要重启服务
 3. 布尔值使用 `true`/`false` 或 `1`/`0` 或 `on`/`off`
-4. 使用 SQLite 需要编译时启用 CGO: `CGO_ENABLED=1 go build`
+4. 使用 SQLite 无需 CGO: `CGO_ENABLED=0 go build`
 
 ## Docker 使用
 

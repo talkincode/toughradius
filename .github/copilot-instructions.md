@@ -71,7 +71,7 @@ app.GDB().Where("username = ?", name).First(user)
 type Service struct { DB *gorm.DB }
 ```
 
-Supports PostgreSQL (default) and SQLite (requires `CGO_ENABLED=1` compilation). Database migration is automatically handled by `app.MigrateDB()`.
+Supports PostgreSQL (default) and SQLite (pure Go, no CGO). Database migration is automatically handled by `app.MigrateDB()`.
 
 ### Vendor Extension Handling
 
@@ -90,7 +90,7 @@ When adding new vendor support, define constants in `radius.go`, then add switch
 **Local Development** (SQLite supported):
 
 ```bash
-CGO_ENABLED=1 go run main.go -c toughradius.yml
+CGO_ENABLED=0 go run main.go -c toughradius.yml
 ```
 
 **Production Build** (PostgreSQL only, static compilation):

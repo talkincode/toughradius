@@ -13,12 +13,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/pkg/common"
 	"gorm.io/gorm"
 )
 
 // createTestUser creates test user data
 func createTestUser(db *gorm.DB, username string, profileID int64) *domain.RadiusUser {
 	user := &domain.RadiusUser{
+		ID:         common.UUIDint64(),
 		Username:   username,
 		Password:   "testpass123",
 		ProfileId:  profileID,
@@ -157,7 +159,7 @@ func TestGetUser(t *testing.T) {
 	}{
 		{
 			name:           "Get existing user",
-			userID:         "1",
+			userID:         fmt.Sprintf("%d", user.ID),
 			expectedStatus: http.StatusOK,
 		},
 		{
@@ -366,7 +368,7 @@ func TestUpdateUser(t *testing.T) {
 	// Create test data
 	profile := createTestProfile(db, "test-profile")
 	profile2 := createTestProfile(db, "another-profile")
-	_ = createTestUser(db, "originaluser", profile.ID)
+	user := createTestUser(db, "originaluser", profile.ID)
 	createTestUser(db, "anotheruser", profile.ID)
 
 	tests := []struct {
@@ -379,7 +381,7 @@ func TestUpdateUser(t *testing.T) {
 	}{
 		{
 			name:   "Successfully update user",
-			userID: "1",
+			userID: fmt.Sprintf("%d", user.ID),
 			requestBody: `{
 				"realname": "Updated Name",
 				"mobile": "13911139111"
@@ -392,7 +394,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 		{
 			name:   "Update profile - should sync profile config",
-			userID: "1",
+			userID: fmt.Sprintf("%d", user.ID),
 			requestBody: `{
 				"profile_id": "` + fmt.Sprintf("%d", profile2.ID) + `"
 			}`,
@@ -405,7 +407,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 		{
 			name:   "Partial update - status only",
-			userID: "1",
+			userID: fmt.Sprintf("%d", user.ID),
 			requestBody: `{
 				"status": "disabled"
 			}`,
@@ -416,7 +418,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 		{
 			name:   "Username conflict",
-			userID: "1",
+			userID: fmt.Sprintf("%d", user.ID),
 			requestBody: `{
 				"username": "anotheruser"
 			}`,
@@ -439,7 +441,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 		{
 			name:   "Update with missing associated profile",
-			userID: "1",
+			userID: fmt.Sprintf("%d", user.ID),
 			requestBody: `{
 				"profile_id": "999"
 			}`,
@@ -448,7 +450,7 @@ func TestUpdateUser(t *testing.T) {
 		},
 		{
 			name:   "Frontend format - boolean update",
-			userID: "1",
+			userID: fmt.Sprintf("%d", user.ID),
 			requestBody: `{
 				"status": false,
 				"bind_mac": true,
@@ -511,7 +513,7 @@ func TestDeleteUser(t *testing.T) {
 
 	// Create test data
 	profile := createTestProfile(db, "test-profile")
-	_ = createTestUser(db, "user-to-delete", profile.ID)
+	user := createTestUser(db, "user-to-delete", profile.ID)
 
 	tests := []struct {
 		name           string
@@ -522,7 +524,7 @@ func TestDeleteUser(t *testing.T) {
 	}{
 		{
 			name:           "Successfully delete user",
-			userID:         "1",
+			userID:         fmt.Sprintf("%d", user.ID),
 			expectedStatus: http.StatusOK,
 			checkDeleted:   true,
 		},

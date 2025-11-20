@@ -43,8 +43,8 @@ database:
 2. **初始化数据库**:
 
 ```bash
-# 编译（需要 CGO）
-CGO_ENABLED=1 go build -o toughradius
+# 编译（无需 CGO）
+CGO_ENABLED=0 go build -o toughradius
 
 # 初始化
 ./toughradius -c toughradius-sqlite.yml -initdb
@@ -81,20 +81,17 @@ database:
 
 ```bash
 # 使用 Makefile
-make build-local
+make runs
 
 # 或直接使用 go
-CGO_ENABLED=1 go build -o toughradius
+CGO_ENABLED=0 go build -o toughradius
 ```
 
 ### 生产构建
 
 ```bash
-# PostgreSQL 版本（静态编译，无 CGO 依赖）
+# 静态编译，无 CGO 依赖（支持 PostgreSQL 和 SQLite）
 make build
-
-# SQLite 版本（需要 CGO）
-make build-sqlite
 ```
 
 ## 注意事项
@@ -106,18 +103,16 @@ make build-sqlite
 - 零配置，无需单独的数据库服务
 - 轻量级，适合开发和测试
 - 数据文件便于备份和迁移
+- **无需 CGO 编译**，跨平台部署更简单
 
 **限制**:
 
-- 需要 CGO 编译（编译时需要设置 `CGO_ENABLED=1`）
 - 不适合高并发场景
 - 连接数限制（建议设置为 1）
 
 **编译要求**:
 
-- macOS: 需要 Xcode Command Line Tools
-- Linux: 需要 gcc
-- Windows: 需要 MinGW-w64
+- 无特殊要求，支持纯 Go 编译
 
 ### PostgreSQL
 
@@ -142,7 +137,7 @@ make build-sqlite
 
 API 用户账号:
   用户名: apiuser
-  密码:   Api_189
+  密码:   apipass
 ```
 
 ## 数据库文件位置
@@ -167,20 +162,19 @@ database:
 
 ### Q: 编译时出现 "Binary was compiled with 'CGO_ENABLED=0'" 错误？
 
-**A**: 使用 SQLite 时必须启用 CGO：
+**A**: ToughRADIUS v9 使用纯 Go 实现的 SQLite 驱动，不再需要 CGO。请确保使用最新的代码，并设置 `CGO_ENABLED=0`。
 
 ```bash
-CGO_ENABLED=1 go build -o toughradius
+CGO_ENABLED=0 go build -o toughradius
 ```
 
 ### Q: 如何在 Docker 中使用 SQLite？
 
-**A**: 在 Dockerfile 中需要安装编译工具：
+**A**: Dockerfile 中不再需要安装 gcc 等编译工具：
 
 ```dockerfile
-FROM golang:1.21-alpine AS builder
-RUN apk add --no-cache gcc musl-dev
-ENV CGO_ENABLED=1
+FROM golang:1.24-alpine AS builder
+ENV CGO_ENABLED=0
 ...
 ```
 

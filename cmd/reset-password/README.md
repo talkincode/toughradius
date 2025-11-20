@@ -30,9 +30,9 @@ CGO_ENABLED=0 go build -o reset-password .
 **SQLite 数据库:**
 
 ```bash
-# 1. 编译重置密码工具 (需要 CGO)
+# 1. 编译重置密码工具 (无需 CGO)
 cd cmd/reset-password
-CGO_ENABLED=1 go build -o reset-password .
+CGO_ENABLED=0 go build -o reset-password .
 
 # 2. 运行工具
 ./reset-password -c ../../toughradius.yml -u admin -p toughradius
@@ -80,9 +80,9 @@ CGO_ENABLED=1 go build -o reset-password .
 
 **问题**: "go-sqlite3 requires cgo to work"
 
-- **原因**: SQLite 需要 CGO 支持
-- **解决**: 使用 `CGO_ENABLED=1` 编译，或使用脚本自动处理
-- **示例**: `CGO_ENABLED=1 go build -o reset-password .`
+- **原因**: 旧版本 SQLite 驱动需要 CGO 支持
+- **解决**: ToughRADIUS v9 使用纯 Go 驱动，请确保使用 `CGO_ENABLED=0` 编译
+- **示例**: `CGO_ENABLED=0 go build -o reset-password .`
 
 **问题**: "Failed to find user"
 

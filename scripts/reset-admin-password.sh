@@ -25,8 +25,8 @@ DB_TYPE=$(grep -A 5 "^database:" "$CONFIG_FILE" | grep "type:" | awk '{print $2}
 
 # Decide whether to enable CGO based on the database type
 if [ "$DB_TYPE" = "sqlite" ]; then
-    echo "Detected SQLite database, enabling CGO..."
-    export CGO_ENABLED=1
+    echo "Detected SQLite database..."
+    export CGO_ENABLED=0
 else
     echo "Detected $DB_TYPE database, using static compilation..."
     export CGO_ENABLED=0

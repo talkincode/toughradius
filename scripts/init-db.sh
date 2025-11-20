@@ -43,7 +43,7 @@ if [ -z "$DB_TYPE" ]; then
     # Check if the tool has been compiled
     if [ ! -f "./toughradius" ]; then
         echo -e "${YELLOW}Binary not found, starting compilation...${NC}"
-        go build -o toughradius
+        CGO_ENABLED=0 go build -o toughradius
         echo -e "${GREEN}✓ Compilation completed${NC}"
     fi
     
@@ -61,7 +61,7 @@ if [ -z "$DB_TYPE" ]; then
     echo ""
     echo -e "${GREEN}API user account:${NC}"
     echo -e "  Username: ${YELLOW}apiuser${NC}"
-    echo -e "  Password: ${YELLOW}Api_189${NC}"
+    echo -e "  Password: ${YELLOW}apipass${NC}"
     echo ""
     
     exit 0
@@ -125,7 +125,7 @@ EOF
         # Check if the tool has been compiled
         if [ ! -f "./toughradius" ]; then
             echo -e "${YELLOW}Binary not found, starting compilation...${NC}"
-            go build -o toughradius
+            CGO_ENABLED=0 go build -o toughradius
             echo -e "${GREEN}✓ Compilation completed${NC}"
         fi
         
@@ -238,7 +238,7 @@ EOF
         # Check if the tool has been compiled
         if [ ! -f "./toughradius" ]; then
             echo -e "${YELLOW}Binary not found, starting compilation...${NC}"
-            go build -o toughradius
+            CGO_ENABLED=0 go build -o toughradius
             echo -e "${GREEN}✓ Compilation completed${NC}"
         fi
         
@@ -276,7 +276,7 @@ echo -e "  Password: ${YELLOW}toughradius${NC}"
 echo ""
 echo -e "${GREEN}API user account:${NC}"
 echo -e "  Username: ${YELLOW}apiuser${NC}"
-echo -e "  Password: ${YELLOW}Api_189${NC}"
+echo -e "  Password: ${YELLOW}apipass${NC}"
 echo ""
 echo -e "${GREEN}Web admin interface:${NC}"
 echo -e "  ${YELLOW}http://localhost:1816/admin${NC}"

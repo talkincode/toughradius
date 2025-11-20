@@ -1,4 +1,4 @@
-FROM golang:1.20.0-buster AS builder
+FROM golang:1.24-bookworm AS builder
 
 COPY . /src
 WORKDIR /src
@@ -8,7 +8,7 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags \
 
 FROM alpine:3.19
 
-RUN apk add --no-cache curl postgresql14-client
+RUN apk add --no-cache curl
 
 COPY --from=builder /toughradius /usr/local/bin/toughradius
 
