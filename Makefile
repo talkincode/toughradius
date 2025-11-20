@@ -72,6 +72,11 @@ test:
 	@echo "🧪 运行测试..."
 	CGO_ENABLED=0 go test ./...
 
+# 运行集成测试
+test-integration:
+	@echo "🧪 运行集成测试..."
+	CGO_ENABLED=0 go test -v ./internal/radiusd/... -run TestRadiusIntegration
+
 # 清理构建文件
 clean:
 	@echo "🧹 清理构建文件..."

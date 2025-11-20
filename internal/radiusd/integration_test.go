@@ -1,6 +1,3 @@
-//go:build cgo
-// +build cgo
-
 package radiusd
 
 import (
@@ -18,6 +15,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins"
 	parsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers/parsers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/mikrotik"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -165,7 +163,7 @@ func TestRadiusIntegration(t *testing.T) {
 		Identifier: "nas-mikrotik",
 		Ipaddr:     "10.0.0.2",
 		Secret:     "secret",
-		VendorCode: VendorMikrotik,
+		VendorCode: vendors.CodeMikrotik,
 		Status:     common.ENABLED,
 		Remark:     "Mikrotik Test NAS",
 	}
@@ -178,7 +176,7 @@ func TestRadiusIntegration(t *testing.T) {
 		Identifier: "nas-huawei",
 		Ipaddr:     "10.0.0.3",
 		Secret:     "secret",
-		VendorCode: VendorHuawei,
+		VendorCode: vendors.CodeHuawei,
 		Status:     common.ENABLED,
 		Remark:     "Huawei Test NAS",
 	}
