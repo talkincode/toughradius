@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
 	"go.uber.org/zap"
 )
 
@@ -134,7 +133,7 @@ func (cm *ConfigManager) parseConfigType(typeStr string) ConfigType {
 func (cm *ConfigManager) registerHardcodedSchemas() {
 	zap.L().Warn("using hardcoded fallback schemas")
 
-		// Only register the most critical configuration entries as a fallback
+	// Only register the most critical configuration entries as a fallback
 	cm.register(&ConfigSchema{
 		Key:         "radius.EapMethod",
 		Type:        TypeString,
@@ -164,12 +163,14 @@ func (cm *ConfigManager) registerHardcodedSchemas() {
 // register is an internal registration helper
 func (cm *ConfigManager) register(schema *ConfigSchema) {
 	cm.schemas[schema.Key] = schema
-		// Set default values into memory
+	// Set default values into memory
 	cm.configs[schema.Key] = schema.Default
 }
 
 // loadFromDatabase loads configuration from the database
 func (cm *ConfigManager) loadFromDatabase() {
+	// If the sys_config table hasn't been created yet (e.g., before migrations),
+	// we skip loading and rely on in-memory defaults instead of logging an error.
 	rows, err := cm.app.gormDB.Raw("SELECT CONCAT(type, '.', name) as key, value FROM sys_config").Rows()
 	if err != nil {
 		zap.L().Warn("failed to load config from database", zap.Error(err))
@@ -227,15 +228,15 @@ func (cm *ConfigManager) Set(category, name, value string) error {
 		return fmt.Errorf("validation failed: %w", err)
 	}
 
-		// Get the previous value
+	// Get the previous value
 	oldValue := cm.Get(category, name)
 
-		// Update the in-memory cache
+	// Update the in-memory cache
 	cm.mu.Lock()
 	cm.configs[key] = value
 	cm.mu.Unlock()
 
-		// Update the database
+	// Update the database
 	err := cm.app.gormDB.Exec(`
 		INSERT INTO sys_config (type, name, value, updated_at) 
 		VALUES (?, ?, ?, ?) 

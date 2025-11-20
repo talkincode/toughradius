@@ -1,7 +1,6 @@
 ---
-mode: 'agent'
 model: Claude Sonnet 4.5
-tools: ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks', 'github/*', 'azure/search', 'executePrompt', 'usages', 'vscodeAPI', 'think', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runTests']
+tools: ['edit', 'runNotebooks', 'search', 'new', 'runCommands', 'runTasks',  'azure/search', 'usages', 'vscodeAPI',  'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'fetch', 'githubRepo', 'extensions', 'todos', 'runTests']
 description: '与用户讨论项目计划和任务分解， 制定工作计划和任务清单'
 ---
 

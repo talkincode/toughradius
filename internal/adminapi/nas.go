@@ -17,7 +17,23 @@ type nasPayload struct {
 	Hostname   string `json:"hostname" validate:"omitempty,max=100"`
 	Ipaddr     string `json:"ipaddr" validate:"required,ip"`
 	Secret     string `json:"secret" validate:"required,min=6,max=100"`
-	CoaPort    int    `json:"coa_port" validate:"omitempty,port"`
+	CoaPort    *int   `json:"coa_port" validate:"omitempty,port"`
+	Model      string `json:"model" validate:"omitempty,max=50"`
+	VendorCode string `json:"vendor_code" validate:"omitempty,max=20"`
+	Status     string `json:"status" validate:"omitempty,oneof=enabled disabled"`
+	Tags       string `json:"tags" validate:"omitempty,max=200"`
+	Remark     string `json:"remark" validate:"omitempty,max=500"`
+}
+
+// nasUpdatePayload relaxes validation rules for partial updates
+type nasUpdatePayload struct {
+	NodeId     int64  `json:"node_id,string" validate:"omitempty,gte=0"`
+	Name       string `json:"name" validate:"omitempty,min=1,max=100"`
+	Identifier string `json:"identifier" validate:"omitempty,max=100"`
+	Hostname   string `json:"hostname" validate:"omitempty,max=100"`
+	Ipaddr     string `json:"ipaddr" validate:"omitempty,ip"`
+	Secret     string `json:"secret" validate:"omitempty,min=6,max=100"`
+	CoaPort    *int   `json:"coa_port" validate:"omitempty,port"`
 	Model      string `json:"model" validate:"omitempty,max=50"`
 	VendorCode string `json:"vendor_code" validate:"omitempty,max=20"`
 	Status     string `json:"status" validate:"omitempty,oneof=enabled disabled"`
@@ -122,7 +138,7 @@ func CreateNAS(c echo.Context) error {
 
 	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
-		return err
+		return handleValidationError(c, err)
 	}
 
 	// Check whether the IP address already exists
@@ -136,8 +152,9 @@ func CreateNAS(c echo.Context) error {
 	if payload.Status == "" {
 		payload.Status = "enabled"
 	}
-	if payload.CoaPort == 0 {
-		payload.CoaPort = 3799
+	coaPort := 3799
+	if payload.CoaPort != nil {
+		coaPort = *payload.CoaPort
 	}
 
 	device := domain.NetNas{
@@ -147,7 +164,7 @@ func CreateNAS(c echo.Context) error {
 		Hostname:   payload.Hostname,
 		Ipaddr:     payload.Ipaddr,
 		Secret:     payload.Secret,
-		CoaPort:    payload.CoaPort,
+		CoaPort:    coaPort,
 		Model:      payload.Model,
 		VendorCode: payload.VendorCode,
 		Status:     payload.Status,
@@ -180,14 +197,14 @@ func UpdateNAS(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
-	var payload nasPayload
+	var payload nasUpdatePayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
 	}
 
 	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
-		return err
+		return handleValidationError(c, err)
 	}
 
 	// Validate IP uniqueness (e.g., if the IP was modified)
@@ -213,8 +230,8 @@ func UpdateNAS(c echo.Context) error {
 	if payload.Secret != "" {
 		device.Secret = payload.Secret
 	}
-	if payload.CoaPort > 0 {
-		device.CoaPort = payload.CoaPort
+	if payload.CoaPort != nil {
+		device.CoaPort = *payload.CoaPort
 	}
 	if payload.Model != "" {
 		device.Model = payload.Model

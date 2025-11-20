@@ -69,8 +69,6 @@ func main() {
 		application.InitDb()
 		return
 	}
-
-	application.MigrateDB(false)
 	defer application.Release()
 
 	// Initialize web server and admin API with dependency injection

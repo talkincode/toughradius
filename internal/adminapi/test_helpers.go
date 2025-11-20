@@ -5,13 +5,13 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/glebarez/sqlite"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	customValidator "github.com/talkincode/toughradius/v9/pkg/validator"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
 
@@ -65,6 +65,7 @@ func setupTestApp(t *testing.T, db *gorm.DB) app.AppContext {
 	// Create application but don't call Init() which would create a new DB
 	testApp := app.NewApplication(cfg)
 	testApp.Init(cfg)
+	testApp.OverrideDB(db)
 
 	return testApp
 }

@@ -187,7 +187,7 @@ func TestGetNAS(t *testing.T) {
 
 				assert.Equal(t, nas.Name, resultNas.Name)
 				assert.Equal(t, nas.Ipaddr, resultNas.Ipaddr)
-			} else {
+			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
 				json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
@@ -440,6 +440,7 @@ func TestUpdateNAS(t *testing.T) {
 				"ipaddr": "not-an-ip"
 			}`,
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "VALIDATION_ERROR",
 		},
 		{
 			name:  "Invalid port",
@@ -448,6 +449,7 @@ func TestUpdateNAS(t *testing.T) {
 				"coa_port": 0
 			}`,
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "VALIDATION_ERROR",
 		},
 		{
 			name:  "Secret too short",
@@ -456,6 +458,7 @@ func TestUpdateNAS(t *testing.T) {
 				"secret": "short"
 			}`,
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "VALIDATION_ERROR",
 		},
 	}
 
@@ -666,10 +669,11 @@ func TestNASEdgeCases(t *testing.T) {
 			{-1, false},
 		}
 
-		for _, tt := range tests {
+		for idx, tt := range tests {
+			ip := fmt.Sprintf("10.0.%d.%d", 2+(idx/200), 10+(idx%200))
 			requestBody := `{
 				"name": "port-test",
-				"ipaddr": "10.0.2.1",
+				"ipaddr": "` + ip + `",
 				"secret": "secret123",
 				"coa_port": ` + strconv.Itoa(tt.port) + `
 			}`

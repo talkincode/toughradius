@@ -9,15 +9,19 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
-	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
 // nodePayload defines the network node request structure
 type nodePayload struct {
 	Name   string `json:"name" validate:"required,min=1,max=100"`
+	Tags   string `json:"tags" validate:"omitempty,max=200"`
+	Remark string `json:"remark" validate:"omitempty,max=500"`
+}
+
+type nodeUpdatePayload struct {
+	Name   string `json:"name" validate:"omitempty,min=1,max=100"`
 	Tags   string `json:"tags" validate:"omitempty,max=200"`
 	Remark string `json:"remark" validate:"omitempty,max=500"`
 }
@@ -44,11 +48,11 @@ func listNodes(c echo.Context) error {
 	}
 
 	var nodes []domain.NetNode
-		if err := base.
-			Order("id DESC").
-			Offset((page - 1) * pageSize).
-			Limit(pageSize).
-			Find(&nodes).Error; err != nil {
+	if err := base.
+		Order("id DESC").
+		Offset((page - 1) * pageSize).
+		Limit(pageSize).
+		Find(&nodes).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query network nodes", err.Error())
 	}
 
@@ -81,7 +85,7 @@ func createNode(c echo.Context) error {
 
 	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
-		return err
+		return handleValidationError(c, err)
 	}
 
 	payload.Name = strings.TrimSpace(payload.Name)
@@ -94,7 +98,6 @@ func createNode(c echo.Context) error {
 	}
 
 	node := domain.NetNode{
-		ID:        common.UUIDint64(),
 		Name:      payload.Name,
 		Tags:      payload.Tags,
 		Remark:    payload.Remark,
@@ -116,14 +119,14 @@ func updateNode(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid node ID", nil)
 	}
 
-	var payload nodePayload
+	var payload nodeUpdatePayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse node parameters", nil)
 	}
 
 	// Validate the request payload
 	if err := c.Validate(&payload); err != nil {
-		return err
+		return handleValidationError(c, err)
 	}
 
 	var node domain.NetNode
@@ -149,7 +152,7 @@ func updateNode(c echo.Context) error {
 		node.Tags = payload.Tags
 	}
 	if payload.Remark != "" {
-		node.Remark = payload.Remark
+		node.Remark = strings.TrimSpace(payload.Remark)
 	}
 	node.UpdatedAt = time.Now()
 
@@ -186,7 +189,11 @@ func deleteNode(c echo.Context) error {
 // Filter conditions
 func applyNodeFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
-		db = db.Where("name ILIKE ?", "%"+name+"%")
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			db = db.Where("name ILIKE ?", "%"+name+"%")
+		} else {
+			db = db.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%")
+		}
 	}
 
 	return db

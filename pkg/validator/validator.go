@@ -2,6 +2,7 @@ package validator
 
 import (
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -139,7 +140,25 @@ func registerCustomValidations(v *validator.Validate) {
 
 	// Validate port numbers
 	v.RegisterValidation("port", func(fl validator.FieldLevel) bool {
-		port := fl.Field().Int()
-		return port >= 1 && port <= 65535
+		field := fl.Field()
+		if field.Kind() == reflect.Ptr {
+			if field.IsNil() {
+				return true
+			}
+			field = field.Elem()
+		}
+		if !field.IsValid() {
+			return false
+		}
+		switch field.Kind() {
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			port := field.Int()
+			return port >= 1 && port <= 65535
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			port := field.Uint()
+			return port >= 1 && port <= 65535
+		default:
+			return false
+		}
 	})
 }

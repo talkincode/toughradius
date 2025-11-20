@@ -2,29 +2,29 @@
 
 ## 🔍 Mandatory Requirements Before Development
 
-**Before making any code modifications or feature development, you MUST use `@oraios/serena` to retrieve relevant code context.**
+**Never modify code blindly. Always gather context from the existing implementation, related tests, and documentation first.**
 
-### When to Use @oraios/serena
+### When to Perform Context Retrieval
 
-1. **Before Feature Development** - Retrieve existing implementations of similar features
-2. **Before Bug Fixes** - Find code paths related to the problem
-3. **Before Refactoring** - Understand the global impact scope of the code
-4. **Learning Conventions** - Understand the project's code patterns and best practices
+1. **Before Feature Development** – Locate similar features to mirror naming, error handling, and data flow
+2. **Before Bug Fixes** – Trace the full execution path (handlers, services, models, DB access) before patching
+3. **Before Refactoring** – Map dependencies and side effects to avoid regressions
+4. **When Learning Conventions** – Study logging patterns, configuration helpers, and TDD expectations
 
-### Search Examples
+### Recommended Search Techniques
 
-```bash
-# Before adding new features
-@oraios/serena Huawei vendor attribute parsing implementation
-@oraios/serena Password validation in RADIUS authentication flow
+```text
+# Feature exploration
+semantic_search "vendor attribute parsing" in internal/radiusd/vendors
+file_search "*/internal/adminapi/*routes*.go"
 
-# Before fixing issues
-@oraios/serena AuthError error handling pattern
-@oraios/serena GORM query optimization examples
+# Bug fixing
+list_code_usages AuthenticateUser
+grep_search "AuthError" --include internal/radiusd/**
 
-# Before refactoring
-@oraios/serena Find all references to this function
-@oraios/serena app.GDB() usage pattern
+# Refactoring
+semantic_search "errgroup" in main.go
+grep_search "app.GDB" --include internal/app/**
 ```
 
 **Core Principle: Understand existing code → Follow project conventions → Maintain consistency**

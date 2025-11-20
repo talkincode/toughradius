@@ -49,6 +49,11 @@ func (a *Application) DB() *gorm.DB {
 	return a.gormDB
 }
 
+// OverrideDB replaces the application's database handle (used in tests).
+func (a *Application) OverrideDB(db *gorm.DB) {
+	a.gormDB = db
+}
+
 func (a *Application) Init(cfg *config.AppConfig) {
 	loc, err := time.LoadLocation(cfg.System.Location)
 	if err != nil {
@@ -116,6 +121,11 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	}
 	a.gormDB = getDatabase(cfg.Database, cfg.System.Workdir)
 	zap.S().Infof("Database connection successful, type: %s", cfg.Database.Type)
+
+	// Ensure database schema is migrated before loading configs
+	if err := a.MigrateDB(false); err != nil {
+		zap.S().Errorf("database migration failed: %v", err)
+	}
 
 	// wait for database initialization to complete
 	go func() {

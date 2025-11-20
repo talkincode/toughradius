@@ -1,5 +1,4 @@
 ---
-mode: 'agent'
 model: GPT-5
 tools: ['search', 'azure/search', 'usages', 'problems', 'changes', 'githubRepo', 'todos']
 description: 'TeamsACS 项目代码质量自动检测与分析'

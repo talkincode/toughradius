@@ -406,6 +406,7 @@ func TestUpdateNode(t *testing.T) {
 				"name": "` + strings.Repeat("a", 101) + `"
 			}`,
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "VALIDATION_ERROR",
 		},
 		{
 			name:   "Updating to empty name should fail",
@@ -414,6 +415,7 @@ func TestUpdateNode(t *testing.T) {
 				"name": ""
 			}`,
 			expectedStatus: http.StatusBadRequest,
+			expectedError:  "VALIDATION_ERROR",
 		},
 	}
 
@@ -443,7 +445,7 @@ func TestUpdateNode(t *testing.T) {
 				if tt.checkResult != nil {
 					tt.checkResult(t, &updatedNode)
 				}
-			} else {
+			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
 				json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)

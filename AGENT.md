@@ -2,144 +2,51 @@
 
 ## 🤖 AI Agent Working Guidelines
 
-### 🔍 Mandatory Requirement: Use @oraios/serena for Code Retrieval
+### 🔍 Mandatory Requirement: Understand Existing Code Before Editing
 
-**Before making any code modifications or feature development, you MUST use `@oraios/serena` to retrieve relevant code context.**
+**Before touching any code, thoroughly inspect the relevant implementation and surrounding tests.** Treat code search and context gathering as the very first step of every task.
 
-#### Why Use @oraios/serena?
+#### Why This Matters
 
-- ✅ **Precise Targeting** - Quickly find relevant code implementations in the project
-- ✅ **Understand Architecture** - Learn the organization structure and design patterns of existing code
-- ✅ **Avoid Duplication** - Discover existing similar features to avoid reinventing the wheel
-- ✅ **Maintain Consistency** - Reference existing code style and conventions to keep code consistent
+- ✅ **Precise Targeting** – Quickly locate existing implementations you can extend or reuse
+- ✅ **Architectural Awareness** – Learn how modules collaborate before making changes
+- ✅ **Consistency** – Mirror naming, data flow, and error-handling patterns already in place
+- ✅ **Risk Reduction** – Avoid regressions caused by overlooking hidden dependencies
 
-#### Usage Scenarios
+#### Recommended Search Workflow
 
-**1. Must Search Before Feature Development**
+1. **Pinpoint the module**: Identify packages, directories, or features involved (e.g., `internal/radiusd/vendors`).
+2. **Use repository search tools**: Combine `semantic_search`, `grep_search`, and `file_search` with precise keywords (function names, struct names, RFC identifiers, etc.).
+3. **Read surrounding tests**: Open the corresponding `*_test.go` / Playwright specs to understand expected behavior and edge cases.
+4. **Record findings**: Jot down key structs, helper functions, or patterns you must follow before implementing anything new.
 
-```bash
+#### Example Search Prompts
+
+```text
 # Before adding new RADIUS vendor support
-@oraios/serena Find existing vendor implementation code
-@oraios/serena RADIUS vendor attribute parsing related code
+semantic_search "vendor attribute parsing" in internal/radiusd/vendors
+grep_search "VendorCode" --include internal/radiusd/**
 
 # Before adding new API endpoints
-@oraios/serena Find similar API route registration code
-@oraios/serena Echo framework middleware usage examples
+file_search "*/internal/adminapi/*routes*.go"
+semantic_search "Echo middleware" in internal/webserver
+
+# Before fixing authentication bugs
+semantic_search "AuthError" in internal/radiusd
+grep_search "app.GDB" --include internal/app/**
+
+# Before large refactors
+file_search "*radius_auth*.go"
+list_code_usages AuthenticateUser
 ```
 
-**2. Must Search Before Bug Fixes**
+#### Iterative Exploration Pattern
 
-```bash
-# Before fixing authentication issues
-@oraios/serena Authentication flow related code
-@oraios/serena AuthError error handling pattern
+- **Round 1: Macro View** – Scan architecture docs (`docs/v9-architecture.md`), service entry points, and top-level packages.
+- **Round 2: Detail Dive** – Read concrete handler/service implementations plus related tests.
+- **Round 3: Edge Cases** – Inspect integration tests, benchmarks, or vendor-specific helpers to catch non-obvious behavior.
 
-# Before fixing database query issues
-@oraios/serena GORM query optimization examples
-@oraios/serena app.GDB() usage pattern
-```
-
-**3. Must Search Before Refactoring**
-
-```bash
-# Understand global impact before refactoring
-@oraios/serena Find all references to this function
-@oraios/serena Dependencies of this module
-```
-
-**4. Learning Project Conventions**
-
-```bash
-# Learn error handling patterns
-@oraios/serena Error handling and logging examples
-
-# Learn test writing approach
-@oraios/serena Table-driven test examples
-@oraios/serena Unit testing best practices
-```
-
-#### Search Best Practices
-
-**1. Use Specific Query Terms**
-
-```bash
-# ✅ Correct: Specific and clear
-@oraios/serena Huawei vendor attribute parsing implementation
-@oraios/serena Password validation in RADIUS authentication flow
-
-# ❌ Wrong: Too broad
-@oraios/serena authentication
-@oraios/serena code
-```
-
-**2. Combine Keywords with Context**
-
-```bash
-# Find specific patterns
-@oraios/serena Code that uses errgroup to start services concurrently
-@oraios/serena Examples of reading config via app.GApp()
-
-# Find interface implementations
-@oraios/serena Core code implementing RADIUS protocol
-@oraios/serena Echo middleware registration approach
-```
-
-**3. Iterative Search**
-
-```bash
-# Round 1: Macro understanding
-@oraios/serena RADIUS authentication service architecture
-
-# Round 2: Deep dive into details
-@oraios/serena Authentication password validation function implementation
-
-# Round 3: Understand testing
-@oraios/serena Unit tests for authentication password validation
-```
-
-#### Standard Workflow
-
-**Step 0: Code Retrieval (New)**
-
-Before starting any development work:
-
-```bash
-# 1️⃣ Retrieve existing implementations of related features
-@oraios/serena [keywords for the feature you want to implement]
-
-# 2️⃣ Review search results, understand existing code
-# - Code organization structure
-# - Naming conventions
-# - Design patterns
-# - Testing approach
-
-# 3️⃣ Retrieve related test cases
-@oraios/serena [feature keywords] tests
-
-# 4️⃣ Plan implementation based on search results
-```
-
-**Example: Adding Cisco Vendor Support**
-
-```bash
-# Step 1: Retrieve existing vendor implementations
-@oraios/serena Huawei vendor attribute parsing
-@oraios/serena Mikrotik vendor support code
-
-# Step 2: Retrieve vendor attribute processing flow
-@oraios/serena VendorCode processing logic
-@oraios/serena auth_accept_config vendor switch case
-
-# Step 3: Retrieve related tests
-@oraios/serena vendor_parse_test test cases
-
-# Step 4: Start TDD development based on search results
-# Now you understand:
-# - How to define vendor constants
-# - How to add new vendor in switch case
-# - How to write test cases
-# - Where code files should be placed
-```
+Always document the insights gained in your task notes or PR description so reviewers know which prior art influenced the change.
 
 ### 📝 Code is the Best Documentation Principle
 

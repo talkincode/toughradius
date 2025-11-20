@@ -180,12 +180,12 @@ func TestLoginHandler_DisabledAccount(t *testing.T) {
 	err := loginHandler(c)
 
 	require.NoError(t, err, "handler should not return error, but write error response")
-	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+	assert.Equal(t, http.StatusForbidden, rec.Code)
 
 	var errorResp ErrorResponse
 	err = json.Unmarshal(rec.Body.Bytes(), &errorResp)
 	require.NoError(t, err)
-	assert.Equal(t, "INVALID_CREDENTIALS", errorResp.Error)
+	assert.Equal(t, "ACCOUNT_DISABLED", errorResp.Error)
 }
 
 // TestIssueToken tests the token issuance function
@@ -288,7 +288,7 @@ func TestCurrentUserHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
 	rec := httptest.NewRecorder()
 	c := CreateTestContext(e, db, req, rec, appCtx)
-	c.Set("user", testOpr)
+	setJWTUser(t, c, testOpr)
 
 	err := currentUserHandler(c)
 	assert.NoError(t, err)
@@ -393,6 +393,17 @@ func TestTokenValidationMiddleware(t *testing.T) {
 			assert.NoError(t, err)
 		})
 	}
+}
+
+func setJWTUser(t *testing.T, c echo.Context, user *domain.SysOpr) {
+	tokenStr, err := issueToken(c, *user)
+	require.NoError(t, err)
+
+	parsedToken, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		return []byte(GetAppContext(c).Config().Web.Secret), nil
+	})
+	require.NoError(t, err)
+	c.Set("user", parsedToken)
 }
 
 // BenchmarkIssueToken benchmarks token issuance

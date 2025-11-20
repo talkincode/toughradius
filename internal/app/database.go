@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/glebarez/sqlite"
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
