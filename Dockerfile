@@ -14,6 +14,11 @@ COPY --from=builder /toughradius /usr/local/bin/toughradius
 
 RUN chmod +x /usr/local/bin/toughradius
 
-EXPOSE 1816 1817 1818 1819 1812/tcp 1812/udp 1813/udp
+# Expose required ports:
+# 1816 - Web/Admin API (HTTP)
+# 1812 - RADIUS Authentication (UDP)
+# 1813 - RADIUS Accounting (UDP)
+# 2083 - RadSec (RADIUS over TLS)
+EXPOSE 1816/tcp 1812/udp 1813/udp 2083/tcp
 
 ENTRYPOINT ["/usr/local/bin/toughradius"]
