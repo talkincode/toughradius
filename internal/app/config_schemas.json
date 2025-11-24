@@ -8,6 +8,12 @@
       "description": "EAP authentication method"
     },
     {
+      "key": "radius.EapEnabledHandlers",
+      "type": "string",
+      "default": "*",
+      "description": "Comma-separated list of enabled EAP handler names (e.g., eap-md5,eap-mschapv2). Use * to allow all registered handlers"
+    },
+    {
       "key": "radius.IgnorePassword",
       "type": "bool",
       "default": "false",

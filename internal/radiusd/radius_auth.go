@@ -2,12 +2,10 @@ package radiusd
 
 import (
 	"context"
-	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
-	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -18,14 +16,21 @@ import (
 
 type AuthService struct {
 	*RadiusService
-	eapHelper *EAPAuthHelper
+	eapHelper               *EAPAuthHelper
+	authPipeline            *AuthPipeline
+	allowedEAPHandlers      map[string]struct{}
+	allowedEAPHandlersOrder []string
 }
 
 func NewAuthService(radiusService *RadiusService) *AuthService {
-	return &AuthService{
+	authService := &AuthService{
 		RadiusService: radiusService,
-		eapHelper:     NewEAPAuthHelper(radiusService),
 	}
+	allowed := authService.initAllowedEAPHandlers()
+	authService.eapHelper = NewEAPAuthHelper(radiusService, allowed)
+	authService.authPipeline = NewAuthPipeline()
+	authService.registerDefaultStages()
+	return authService
 }
 
 func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
@@ -60,118 +65,22 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		zap.S().Info(FmtRequest(r))
 	}
 
-	var eapMethod = s.GetEapMethod()
-	var isEap bool
-	if _, err := eap.ParseEAPMessage(r.Packet); err == nil {
-		isEap = true
-	}
-
-	// nas access check
-	raddrstr := r.RemoteAddr.String()
-	ip := raddrstr[:strings.Index(raddrstr, ":")]
-	var identifier = rfc2865.NASIdentifier_GetString(r.Packet)
-	username := rfc2865.UserName_GetString(r.Packet)
-	callingStationID := rfc2865.CallingStationID_GetString(r.Packet)
-
-	// Username empty  check
-	if username == "" {
-		s.handleAuthError("validate_username", r, nil, nil, nil, false, callingStationID, ip,
-			NewAuthError(app.MetricsRadiusRejectNotExists, "username is empty of client mac"))
-	}
-
-	nas, err := s.GetNas(ip, identifier)
-	s.handleAuthError("load_nas", r, nil, nil, nil, false, username, ip, err)
-
-	//  setup new packet secret
-	r.Secret = []byte(nas.Secret)
-	r.Packet.Secret = []byte(nas.Secret)
-
-	if !isEap {
-		s.handleAuthError("auth_rate_limit", r, nil, nas, nil, false, username, ip, s.CheckAuthRateLimit(username))
-	}
-
-	response := r.Response(radius.CodeAccessAccept)
-	vendorReq := s.ParseVendor(r, nas.VendorCode)
-
-	// ----------------------------------------------------------------------------------------------------
-	// Fetch validate user
-	isMacAuth := vendorReq.MacAddr == username
-	user, err := s.GetValidUser(username, isMacAuth)
-	s.handleAuthError("load_user", r, nil, nas, nil, isMacAuth, username, ip, err)
-
-	// Note: Policy checks（online count、MACBind、VLANBind）now handled by plugin system
-	// in AuthenticateUserWithPlugins() executed
-
-	vendorReqForPlugin := &vendorparsers.VendorRequest{
-		MacAddr: vendorReq.MacAddr,
-		Vlanid1: vendorReq.Vlanid1,
-		Vlanid2: vendorReq.Vlanid2,
-	}
-
-	sendAccept := func(isEapFlow bool) {
-		s.ApplyAcceptEnhancers(user, nas, vendorReqForPlugin, response)
-
-		if isEapFlow && s.eapHelper != nil {
-			if err := s.eapHelper.SendEAPSuccess(w, r, response, nas.Secret); err != nil {
-				zap.L().Error("send eap success failed",
-					zap.String("namespace", "radius"),
-					zap.Error(err),
-				)
-			}
-			s.eapHelper.CleanupState(r)
-		} else {
-			s.SendAccept(w, r, response)
+	s.ensurePipeline()
+	pipelineCtx := NewAuthPipelineContext(s, w, r)
+	defer func() {
+		if pipelineCtx != nil && pipelineCtx.RateLimitChecked && pipelineCtx.Username != "" {
+			s.ReleaseAuthRateLimit(pipelineCtx.Username)
 		}
-
-		s.UpdateBind(user, vendorReq)
-		s.UpdateUserLastOnline(user.Username)
-		zap.L().Info("radius auth sucess",
-			zap.String("namespace", "radius"),
-			zap.String("username", username),
-			zap.String("nasip", ip),
-			zap.Bool("is_eap", isEapFlow),
-			zap.String("result", "success"),
-			zap.String("metrics", app.MetricsRadiusAccept),
-		)
+	}()
+	if err := s.authPipeline.Execute(pipelineCtx); err != nil {
+		s.handleAuthError("auth_pipeline", r, pipelineCtx.User, pipelineCtx.NAS, pipelineCtx.VendorRequestForPlugin, pipelineCtx.IsMacAuth, pipelineCtx.Username, pipelineCtx.RemoteIP, err)
 	}
+}
 
-	ctx := context.Background()
-
-	if isEap && s.eapHelper != nil {
-		handled, success, eapErr := s.eapHelper.HandleEAPAuthentication(
-			w, r, user, nas, vendorReqForPlugin, response, eapMethod,
-		)
-
-		if eapErr != nil {
-			zap.L().Warn("eap handling failed",
-				zap.String("namespace", "radius"),
-				zap.Error(eapErr),
-			)
-			_ = s.eapHelper.SendEAPFailure(w, r, nas.Secret, eapErr)
-			s.eapHelper.CleanupState(r)
-			return
-		}
-
-		if handled {
-			if success {
-				err = s.AuthenticateUserWithPlugins(ctx, r, response, user, nas, vendorReqForPlugin, isMacAuth, SkipPasswordValidation())
-				if err != nil {
-					_ = s.eapHelper.SendEAPFailure(w, r, nas.Secret, err)
-					s.eapHelper.CleanupState(r)
-					return
-				}
-				sendAccept(true)
-			}
-			return
-		}
-	}
-
-	err = s.AuthenticateUserWithPlugins(ctx, r, response, user, nas, vendorReqForPlugin, isMacAuth)
-	s.handleAuthError("plugin_auth", r, user, nas, vendorReqForPlugin, isMacAuth, username, ip, err)
-
-	sendAccept(false)
-
-	// s.CheckRequestSecret(r.Packet, []byte(nas.Secret))
+// Pipeline exposes the underlying auth pipeline for customization.
+func (s *AuthService) Pipeline() *AuthPipeline {
+	s.ensurePipeline()
+	return s.authPipeline
 }
 
 func (s *AuthService) SendAccept(w radius.ResponseWriter, r *radius.Request, resp *radius.Packet) {

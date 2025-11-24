@@ -105,6 +105,15 @@ web:
   port: 1816 # Web 管理界面端口
 ```
 
+### EAP 配置
+
+通过系统配置（`sys_config`）可以微调认证行为：
+
+- `radius.EapMethod`：首选的 EAP 方法（默认 `eap-md5`）。
+- `radius.EapEnabledHandlers`：允许加载的 EAP handler 列表，使用逗号分隔，例如 `eap-md5,eap-mschapv2`，填写 `*` 表示启用全部注册的 handler。
+
+这样可以在不中断服务的情况下，快速关闭未授权的 EAP 方式。
+
 ### 运行
 
 ```bash

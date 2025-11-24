@@ -10,6 +10,7 @@ const (
 	ConfigRadiusAccountingHistoryDays = "AccountingHistoryDays"
 	ConfigRadiusAcctInterimInterval   = "AcctInterimInterval"
 	ConfigRadiusEapMethod             = "RadiusEapMethod"
+	ConfigRadiusEapEnabledHandlers    = "RadiusEapEnabledHandlers"
 )
 
 var ConfigConstants = []string{
@@ -21,4 +22,5 @@ var ConfigConstants = []string{
 	ConfigRadiusAccountingHistoryDays,
 	ConfigRadiusAcctInterimInterval,
 	ConfigRadiusEapMethod,
+	ConfigRadiusEapEnabledHandlers,
 }

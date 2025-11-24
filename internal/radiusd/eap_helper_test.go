@@ -8,6 +8,7 @@ import (
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius"
@@ -37,7 +38,7 @@ func createTestRadiusService() *RadiusService {
 
 func TestNewEAPAuthHelper(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	if helper == nil {
 		t.Fatal("NewEAPAuthHelper returned nil")
@@ -50,7 +51,7 @@ func TestNewEAPAuthHelper(t *testing.T) {
 
 func TestEAPAuthHelperGetCoordinator(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 	coordinator := helper.GetCoordinator()
 
 	if coordinator == nil {
@@ -65,7 +66,7 @@ func TestEAPAuthHelperGetCoordinator(t *testing.T) {
 
 func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	// Create test data
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
@@ -121,7 +122,7 @@ func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 
 func TestEAPAuthHelperSendEAPSuccess(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	packet := radius.New(radius.CodeAccessAccept, []byte("secret"))
 	req := &radius.Request{
@@ -152,7 +153,7 @@ func TestEAPAuthHelperSendEAPSuccess(t *testing.T) {
 
 func TestEAPAuthHelperSendEAPFailure(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	packet := radius.New(radius.CodeAccessReject, []byte("secret"))
 	req := &radius.Request{
@@ -179,7 +180,7 @@ func TestEAPAuthHelperSendEAPFailure(t *testing.T) {
 
 func TestEAPAuthHelperCleanupState(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	req := &radius.Request{
@@ -194,7 +195,7 @@ func TestEAPAuthHelperCleanupState(t *testing.T) {
 
 func TestEAPAuthHelperMacAuth(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	// Create a MAC authentication scenario
 	macAddr := "aa:bb:cc:dd:ee:ff"
@@ -249,7 +250,7 @@ func TestEAPAuthHelperMacAuth(t *testing.T) {
 
 func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	rfc2865.UserName_SetString(packet, "testuser")
@@ -301,7 +302,7 @@ func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 
 func TestEAPAuthHelperConcurrentAccess(t *testing.T) {
 	rs := createTestRadiusService()
-	helper := NewEAPAuthHelper(rs)
+	helper := NewEAPAuthHelper(rs, nil)
 
 	// Test concurrent access to GetCoordinator for safety
 	done := make(chan bool, 10)
@@ -319,5 +320,54 @@ func TestEAPAuthHelperConcurrentAccess(t *testing.T) {
 	// Wait for all goroutines to finish
 	for i := 0; i < 10; i++ {
 		<-done
+	}
+}
+
+type mockEAPHandler struct {
+	name    string
+	eapType uint8
+}
+
+func (m *mockEAPHandler) Name() string                       { return m.name }
+func (m *mockEAPHandler) EAPType() uint8                     { return m.eapType }
+func (m *mockEAPHandler) CanHandle(ctx *eap.EAPContext) bool { return true }
+func (m *mockEAPHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
+	return true, nil
+}
+func (m *mockEAPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
+	return true, nil
+}
+
+type mockHandlerRegistry struct {
+	handler eap.EAPHandler
+}
+
+func (m *mockHandlerRegistry) GetHandler(eapType uint8) (eap.EAPHandler, bool) {
+	if m.handler == nil {
+		return nil, false
+	}
+	if m.handler.EAPType() != eapType {
+		return nil, false
+	}
+	return m.handler, true
+}
+
+func TestFilteredHandlerRegistry(t *testing.T) {
+	handler := &mockEAPHandler{name: "eap-md5", eapType: eap.TypeMD5Challenge}
+	base := &mockHandlerRegistry{handler: handler}
+
+	filtered := newFilteredHandlerRegistry(base, []string{"eap-md5"})
+	if _, ok := filtered.GetHandler(eap.TypeMD5Challenge); !ok {
+		t.Fatalf("expected handler to be returned when allowed")
+	}
+
+	filteredDenied := newFilteredHandlerRegistry(base, []string{"eap-mschapv2"})
+	if _, ok := filteredDenied.GetHandler(eap.TypeMD5Challenge); ok {
+		t.Fatalf("expected handler to be filtered out when not allowed")
+	}
+
+	filteredAll := newFilteredHandlerRegistry(base, nil)
+	if _, ok := filteredAll.GetHandler(eap.TypeMD5Challenge); !ok {
+		t.Fatalf("expected handler when allow list is empty")
 	}
 }

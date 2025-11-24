@@ -1,6 +1,8 @@
 package radiusd
 
 import (
+	"strings"
+
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager"
@@ -15,7 +17,7 @@ type EAPAuthHelper struct {
 }
 
 // NewEAPAuthHelper Create EAP authentication helper
-func NewEAPAuthHelper(radiusService *RadiusService) *EAPAuthHelper {
+func NewEAPAuthHelper(radiusService *RadiusService, allowedHandlers []string) *EAPAuthHelper {
 	// Create state manager
 	stateManager := statemanager.NewMemoryStateManager()
 
@@ -24,6 +26,9 @@ func NewEAPAuthHelper(radiusService *RadiusService) *EAPAuthHelper {
 
 	// get handler registry
 	var handlerRegistry eap.HandlerRegistry = registry.GetGlobalRegistry()
+	if len(allowedHandlers) > 0 {
+		handlerRegistry = newFilteredHandlerRegistry(handlerRegistry, allowedHandlers)
+	}
 
 	// Get debug flag from config
 	debug := radiusService.Config().Radiusd.Debug
@@ -87,4 +92,41 @@ func (h *EAPAuthHelper) CleanupState(r *radius.Request) {
 // GetCoordinator Get underlying coordinator(for advanced usage)
 func (h *EAPAuthHelper) GetCoordinator() *eap.Coordinator {
 	return h.coordinator
+}
+
+type filteredHandlerRegistry struct {
+	base    eap.HandlerRegistry
+	allowed map[string]struct{}
+}
+
+func newFilteredHandlerRegistry(base eap.HandlerRegistry, allowed []string) eap.HandlerRegistry {
+	allowedSet := make(map[string]struct{}, len(allowed))
+	for _, name := range allowed {
+		norm := strings.ToLower(strings.TrimSpace(name))
+		if norm == "" {
+			continue
+		}
+		allowedSet[norm] = struct{}{}
+	}
+	if len(allowedSet) == 0 {
+		return base
+	}
+	return &filteredHandlerRegistry{base: base, allowed: allowedSet}
+}
+
+func (f *filteredHandlerRegistry) GetHandler(eapType uint8) (eap.EAPHandler, bool) {
+	if f == nil || f.base == nil {
+		return nil, false
+	}
+	handler, ok := f.base.GetHandler(eapType)
+	if !ok {
+		return nil, false
+	}
+	if len(f.allowed) == 0 {
+		return handler, true
+	}
+	if _, allowed := f.allowed[strings.ToLower(handler.Name())]; allowed {
+		return handler, true
+	}
+	return nil, false
 }

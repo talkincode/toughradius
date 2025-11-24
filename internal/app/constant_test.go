@@ -16,6 +16,7 @@ func TestConstants(t *testing.T) {
 		{"AccountingHistoryDays", ConfigRadiusAccountingHistoryDays, "AccountingHistoryDays"},
 		{"AcctInterimInterval", ConfigRadiusAcctInterimInterval, "AcctInterimInterval"},
 		{"RadiusEapMethod", ConfigRadiusEapMethod, "RadiusEapMethod"},
+		{"RadiusEapEnabledHandlers", ConfigRadiusEapEnabledHandlers, "RadiusEapEnabledHandlers"},
 	}
 
 	for _, tt := range tests {
@@ -28,7 +29,7 @@ func TestConstants(t *testing.T) {
 }
 
 func TestConfigConstantsArray(t *testing.T) {
-	expectedLength := 8
+	expectedLength := 9
 	if len(ConfigConstants) != expectedLength {
 		t.Errorf("Expected ConfigConstants to have %d elements, got %d", expectedLength, len(ConfigConstants))
 	}
@@ -43,6 +44,7 @@ func TestConfigConstantsArray(t *testing.T) {
 		ConfigRadiusAccountingHistoryDays,
 		ConfigRadiusAcctInterimInterval,
 		ConfigRadiusEapMethod,
+		ConfigRadiusEapEnabledHandlers,
 	}
 
 	for i, expected := range expectedConstants {

@@ -128,7 +128,7 @@ func TestConfigManager_BoolValidation(t *testing.T) {
 	validBools := []string{"true", "false", "enabled", "disabled", "1", "0"}
 	for _, val := range validBools {
 		err := cm.validate(boolSchema, val)
-			assert.NoError(t, err, "Should accept boolean value: %s", val)
+		assert.NoError(t, err, "Should accept boolean value: %s", val)
 	}
 
 	// Test invalid boolean values
@@ -158,6 +158,12 @@ func TestConfigManagerJSON(t *testing.T) {
 	assert.Equal(t, "eap-md5", radiusEapSchema.Default, "radius.EapMethod default should be eap-md5")
 	assert.Contains(t, radiusEapSchema.Enum, "eap-md5", "Enum values should include eap-md5")
 	assert.Contains(t, radiusEapSchema.Enum, "eap-mschapv2", "Enum values should include eap-mschapv2")
+
+	// Ensure EAP handler enable list exists
+	enabledHandlerSchema, exists := cm.schemas["radius.EapEnabledHandlers"]
+	assert.True(t, exists, "radius.EapEnabledHandlers configuration should exist")
+	assert.Equal(t, TypeString, enabledHandlerSchema.Type, "radius.EapEnabledHandlers should be string type")
+	assert.Equal(t, "*", enabledHandlerSchema.Default, "radius.EapEnabledHandlers default should allow all handlers")
 
 	// Test integer configuration
 	interimSchema, exists := cm.schemas["radius.AcctInterimInterval"]
