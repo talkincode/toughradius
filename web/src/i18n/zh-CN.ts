@@ -89,6 +89,7 @@ const customChineseMessages: TranslationMessages = {
         expire_time: '过期时间',
         ip_addr: 'IPv4地址',
         ipv6_addr: 'IPv6地址',
+        domain: '域名',
         remark: '备注',
         balance: '余额',
         created_at: '创建时间',
@@ -127,6 +128,7 @@ const customChineseMessages: TranslationMessages = {
         expire_time: '用户服务到期时间，留空表示永不过期',
         ip_addr: '静态IPv4地址，如 192.168.1.100',
         ipv6_addr: '静态IPv6地址，如 2001:db8::1',
+        domain: '域名，用于厂商特定功能（如华为域），如 enterprise.example.com',
         remark: '可选的备注信息，最多1000个字符',
       },
       empty_text: {

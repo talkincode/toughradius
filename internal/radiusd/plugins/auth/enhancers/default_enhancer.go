@@ -4,6 +4,7 @@ import (
 	"context"
 	"math"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
@@ -11,6 +12,7 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
+	"layeh.com/radius/rfc3162"
 )
 
 // DefaultAcceptEnhancer sets standard RADIUS attributes
@@ -50,6 +52,19 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 	}
 	if common.IsNotEmptyAndNA(user.IpAddr) {
 		rfc2865.FramedIPAddress_Set(response, net.ParseIP(user.IpAddr))
+	}
+
+	// Set FramedIPv6Prefix if user has a fixed IPv6 address
+	if common.IsNotEmptyAndNA(user.IpV6Addr) {
+		// IPv6 prefix format: address/prefix-length (e.g., "2001:db8::1/64")
+		// If only address is provided, append /128 for single host
+		ipv6Prefix := user.IpV6Addr
+		if !strings.Contains(ipv6Prefix, "/") {
+			ipv6Prefix = ipv6Prefix + "/128"
+		}
+		if _, ipnet, err := net.ParseCIDR(ipv6Prefix); err == nil {
+			rfc3162.FramedIPv6Prefix_Set(response, ipnet)
+		}
 	}
 
 	return nil

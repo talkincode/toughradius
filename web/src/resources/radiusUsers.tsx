@@ -465,6 +465,15 @@ export const RadiusUserEdit = () => {
                 size="small"
               />
             </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="domain"
+                label={translate('resources.radius/users.fields.domain')}
+                helperText={translate('resources.radius/users.helpers.domain')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
           </FieldGrid>
         </FormSection>
 
@@ -642,6 +651,15 @@ export const RadiusUserCreate = () => {
                 source="ipv6_addr"
                 label={translate('resources.radius/users.fields.ipv6_addr')}
                 helperText={translate('resources.radius/users.helpers.ipv6_addr')}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="domain"
+                label={translate('resources.radius/users.fields.domain')}
+                helperText={translate('resources.radius/users.helpers.domain')}
                 fullWidth
                 size="small"
               />
@@ -833,6 +851,10 @@ export const RadiusUserShow = () => {
                     <DetailRow
                       label={translate('resources.radius/users.fields.ipv6_addr')}
                       value={<TextField source="ipv6_addr" emptyText="-" />}
+                    />
+                    <DetailRow
+                      label={translate('resources.radius/users.fields.domain')}
+                      value={<TextField source="domain" emptyText="-" />}
                     />
                   </TableBody>
                 </Table>

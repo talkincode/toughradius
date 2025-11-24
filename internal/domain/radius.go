@@ -48,6 +48,7 @@ type RadiusUser struct {
 	IpAddr      string    `json:"ip_addr" form:"ip_addr"`                           // Static IP
 	IpV6Addr    string    `json:"ipv6_addr" form:"ipv6_addr"`                       // Static IPv6 address
 	MacAddr     string    `json:"mac_addr" form:"mac_addr"`                         // MAC address
+	Domain      string    `json:"domain" form:"domain"`                             // Domain name for vendor-specific features (e.g., Huawei domain)
 	BindVlan    int       `json:"bind_vlan" form:"bind_vlan"`                       // Bind VLAN
 	BindMac     int       `json:"bind_mac" form:"bind_mac"`                         // Bind MAC
 	ExpireTime  time.Time `gorm:"index" json:"expire_time"`                         // Expiration time

@@ -3,10 +3,13 @@ package enhancers
 import (
 	"context"
 	"math"
+	"net"
+	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/huawei"
+	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
 type HuaweiAcceptEnhancer struct{}
@@ -39,5 +42,25 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 	huawei.HuaweiInputPeakRate_Set(resp, huawei.HuaweiInputPeakRate(upPeak))
 	huawei.HuaweiOutputAverageRate_Set(resp, huawei.HuaweiOutputAverageRate(down))
 	huawei.HuaweiOutputPeakRate_Set(resp, huawei.HuaweiOutputPeakRate(downPeak))
+
+	// Set Huawei FramedIPv6Address if user has a fixed IPv6 address
+	if common.IsNotEmptyAndNA(user.IpV6Addr) {
+		// Parse IPv6 address (without prefix length)
+		ipv6Str := user.IpV6Addr
+		if strings.Contains(ipv6Str, "/") {
+			// Remove prefix length if present
+			parts := strings.SplitN(ipv6Str, "/", 2)
+			ipv6Str = parts[0]
+		}
+		if ipv6Addr := net.ParseIP(ipv6Str); ipv6Addr != nil {
+			huawei.HuaweiFramedIPv6Address_Set(resp, ipv6Addr)
+		}
+	}
+
+	// Set Huawei Domain Name
+	if common.IsNotEmptyAndNA(user.Domain) {
+		huawei.HuaweiDomainName_SetString(resp, user.Domain)
+	}
+
 	return nil
 }

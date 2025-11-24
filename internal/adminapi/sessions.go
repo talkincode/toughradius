@@ -1,12 +1,19 @@
 package adminapi
 
 import (
+	"context"
+	"net"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
+	"go.uber.org/zap"
+	"layeh.com/radius"
+	"layeh.com/radius/rfc2865"
+	"layeh.com/radius/rfc2866"
 )
 
 // ListOnlineSessions List online sessions
@@ -101,13 +108,68 @@ func DeleteOnlineSession(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid Session ID", nil)
 	}
 
+	// Fetch session before deletion for CoA
+	var session domain.RadiusOnline
+	if err := GetDB(c).First(&session, id).Error; err != nil {
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
+	}
+
+	// Fetch NAS info for CoA
+	var nas domain.NetNas
+	nasErr := GetDB(c).Where("ip_addr = ?", session.NasAddr).First(&nas).Error
+
 	// Delete online session record
 	if err := GetDB(c).Delete(&domain.RadiusOnline{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to terminate session", err.Error())
 	}
 
-	// TODO: Send CoA/DM to NAS device to actually force offline
-	// This requires RADIUS CoA feature support
+	// Send CoA Disconnect-Request to NAS asynchronously (non-blocking)
+	if nasErr == nil {
+		go func() {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+
+			// Build CoA Disconnect-Request packet
+			pkt := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
+			rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId)
+			rfc2865.UserName_SetString(pkt, session.Username)
+
+			// Send to NAS CoA port (default 3799)
+			coaAddr := net.JoinHostPort(nas.Ipaddr, "3799")
+			client := &radius.Client{
+				Retry: time.Second * 2,
+			}
+
+			response, err := client.Exchange(ctx, pkt, coaAddr)
+			if err != nil {
+				zap.L().Error("Failed to send CoA Disconnect-Request",
+					zap.Error(err),
+					zap.String("nas_addr", coaAddr),
+					zap.String("username", session.Username),
+					zap.String("acct_session_id", session.AcctSessionId),
+					zap.String("namespace", "adminapi"))
+				return
+			}
+
+			if response.Code == radius.CodeDisconnectACK {
+				zap.L().Info("CoA Disconnect-Request ACK received",
+					zap.String("nas_addr", coaAddr),
+					zap.String("username", session.Username),
+					zap.String("namespace", "adminapi"))
+			} else {
+				zap.L().Warn("CoA Disconnect-Request NAK received",
+					zap.String("nas_addr", coaAddr),
+					zap.String("username", session.Username),
+					zap.Uint8("response_code", uint8(response.Code)),
+					zap.String("namespace", "adminapi"))
+			}
+		}()
+	} else {
+		zap.L().Warn("NAS not found for CoA, session deleted from database only",
+			zap.String("nas_addr", session.NasAddr),
+			zap.String("username", session.Username),
+			zap.String("namespace", "adminapi"))
+	}
 
 	return ok(c, map[string]interface{}{
 		"message": "User has been forced offline",

@@ -83,8 +83,14 @@
   - 文件：`rfc6930.txt`
 
 - **RFC 5969** - IPv6 Rapid Deployment on IPv4 Infrastructures (6rd) -- Protocol Specification
+
   - 6rd 协议规范
   - 文件：`rfc5969.txt`
+
+- **RFC 8772** - The China Mobile, Huawei, and ZTE Broadband Network Gateway (BNG) Simple Control and User Plane Separation Protocol (S-CUSP)
+
+  - Huawei/China Mobile/ZTE 制定的 BNG CUPS 协议，覆盖 IPv4/IPv6 访问流程
+  - 文件：`rfc8772-huawei-bng-s-cusp.txt`
 
 ## EAP 相关
 
