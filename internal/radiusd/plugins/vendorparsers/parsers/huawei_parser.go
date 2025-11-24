@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 )
@@ -12,7 +13,7 @@ import (
 type HuaweiParser struct{}
 
 func (p *HuaweiParser) VendorCode() string {
-	return "2011"
+	return vendors.CodeHuawei
 }
 
 func (p *HuaweiParser) VendorName() string {

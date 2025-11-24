@@ -71,12 +71,7 @@ const customChineseMessages: TranslationMessages = {
       saturday: '周六',
       sunday: '周日',
     },
-    connection_types: {
-      pppoe: 'PPPoE',
-      ipoe: 'IPoE',
-      wifi: 'WiFi',
-      other: '其他',
-    },
+    profile_unassigned: '未分配策略',
   },
   resources: {
     'radius/users': {

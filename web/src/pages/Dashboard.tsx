@@ -14,8 +14,9 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import ReactECharts from 'echarts-for-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslate } from 'react-admin';
+import { useApiQuery } from '../hooks/useApiQuery';
 
 interface DashboardStats {
   total_users: number;
@@ -27,98 +28,99 @@ interface DashboardStats {
   expired_users: number;
   today_input_gb: number;
   today_output_gb: number;
+  auth_trend: DashboardAuthTrendPoint[];
+  traffic_24h: DashboardTrafficPoint[];
+  profile_distribution: DashboardProfileSlice[];
 }
 
-// 模拟数据 - 移到组件外部避免 useMemo 警告
-const weeklyAuthData = [320, 432, 401, 534, 590, 530, 520];
-const trafficHours = Array.from({ length: 24 }, (_, hour) => `${hour}:00`);
-const trafficUpload = [18, 16, 20, 24, 26, 33, 37, 40, 42, 45, 48, 52, 54, 60, 64, 71, 74, 70, 60, 52, 45, 36, 28, 22];
-const trafficDownload = [42, 48, 50, 56, 64, 72, 80, 90, 102, 118, 128, 138, 146, 154, 162, 170, 168, 158, 140, 128, 118, 102, 80, 60];
+interface DashboardAuthTrendPoint {
+  date: string;
+  count: number;
+}
 
-const defaultStats: DashboardStats = {
-  total_users: 1250,
-  online_users: 423,
-  today_auth_count: 3784,
-  today_acct_count: 2156,
-  total_profiles: 8,
-  disabled_users: 45,
-  expired_users: 23,
-  today_input_gb: 156.78,
-  today_output_gb: 892.34,
+interface DashboardTrafficPoint {
+  hour: string;
+  upload_gb: number;
+  download_gb: number;
+}
+
+interface DashboardProfileSlice {
+  profile_id: number;
+  profile_name: string;
+  value: number;
+}
+
+const emptyStats: DashboardStats = {
+  total_users: 0,
+  online_users: 0,
+  today_auth_count: 0,
+  today_acct_count: 0,
+  total_profiles: 0,
+  disabled_users: 0,
+  expired_users: 0,
+  today_input_gb: 0,
+  today_output_gb: 0,
+  auth_trend: [],
+  traffic_24h: [],
+  profile_distribution: [],
 };
 
 const Dashboard = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const translate = useTranslate();
-  const [stats, setStats] = useState<DashboardStats>(defaultStats);
+  const { data: statsPayload, isFetching } = useApiQuery<DashboardStats>({
+    path: '/dashboard/stats',
+    queryKey: ['dashboard', 'stats'],
+    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000,
+    retry: 1,
+  });
 
-  // 使用 useMemo 包裹翻译数据避免每次渲染都重新创建
-  const weekDays = useMemo(() => [
-    translate('dashboard.week_days.monday'),
-    translate('dashboard.week_days.tuesday'),
-    translate('dashboard.week_days.wednesday'),
-    translate('dashboard.week_days.thursday'),
-    translate('dashboard.week_days.friday'),
-    translate('dashboard.week_days.saturday'),
-    translate('dashboard.week_days.sunday'),
-  ], [translate]);
-  
-  const connectionSources = useMemo(() => [
-    { value: 45, name: translate('dashboard.connection_types.pppoe') },
-    { value: 30, name: translate('dashboard.connection_types.ipoe') },
-    { value: 15, name: translate('dashboard.connection_types.wifi') },
-    { value: 10, name: translate('dashboard.connection_types.other') },
-  ], [translate]);
-  
+  const stats = statsPayload ?? emptyStats;
+
+  const dateFormatter = useMemo(() => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }), []);
+  const hourFormatter = useMemo(
+    () => new Intl.DateTimeFormat(undefined, { hour: '2-digit', minute: '2-digit', hour12: false }),
+    [],
+  );
+
   const numberFormatter = useMemo(() => new Intl.NumberFormat(), []);
-
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-
-        if (token) {
-          headers.Authorization = `Bearer ${token}`;
-        }
-
-        const response = await fetch('/api/v1/dashboard/stats', {
-          headers,
-        });
-
-        if (!response.ok) {
-          // Silently handle API errors, don't log to console
-          if (response.status === 401) {
-            // Handle unauthorized - maybe redirect to login
-            console.warn('Dashboard: Unauthorized access');
-          } else if (response.status === 404) {
-            console.warn('Dashboard: API endpoint not found');
-          } else {
-            console.warn(`Dashboard: API request failed with status ${response.status}`);
-          }
-          return;
-        }
-
-        const data = await response.json();
-        setStats((prev) => ({ ...prev, ...data }));
-      } catch (error) {
-        // Silent error handling - avoid console errors
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-          console.warn('Dashboard: Network error - using demo data');
-        } else {
-          console.warn('Dashboard: Failed to load stats - using demo data');
-        }
-      }
-    };
-
-    fetchStats();
-  }, []);
 
   const onlineRatio =
     stats.total_users > 0 ? Math.min((stats.online_users / stats.total_users) * 100, 100) : 0;
+
+  const authTrendLabels = useMemo(
+    () => (stats.auth_trend ?? []).map((point) => {
+      const normalized = `${point.date}T00:00:00`;
+      const parsed = new Date(normalized);
+      return Number.isNaN(parsed.getTime()) ? point.date : dateFormatter.format(parsed);
+    }),
+    [stats.auth_trend, dateFormatter],
+  );
+
+  const authTrendSeries = useMemo(() => (stats.auth_trend ?? []).map((point) => point.count), [stats.auth_trend]);
+
+  const profileSlices = useMemo(() => (
+    stats.profile_distribution ?? []
+  ).map((item) => ({
+    value: item.value,
+    name: item.profile_name?.trim() || translate('dashboard.profile_unassigned'),
+  })), [stats.profile_distribution, translate]);
+
+  const trafficData = useMemo(() => {
+    const formatHourLabel = (value: string) => {
+      const normalized = value.replace(' ', 'T');
+      const parsed = new Date(normalized);
+      return Number.isNaN(parsed.getTime()) ? value : hourFormatter.format(parsed);
+    };
+
+    return {
+      labels: (stats.traffic_24h ?? []).map((item) => formatHourLabel(item.hour)),
+      upload: (stats.traffic_24h ?? []).map((item) => item.upload_gb),
+      download: (stats.traffic_24h ?? []).map((item) => item.download_gb),
+    };
+  }, [stats.traffic_24h, hourFormatter]);
 
   const statCards = [
     {
@@ -163,7 +165,7 @@ const Dashboard = () => {
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: weekDays,
+        data: authTrendLabels,
         boundaryGap: false,
         axisLine: {
           lineStyle: { color: alpha(theme.palette.text.secondary, 0.25) },
@@ -188,7 +190,7 @@ const Dashboard = () => {
           smooth: true,
           symbol: 'circle',
           symbolSize: 10,
-          data: weeklyAuthData,
+          data: authTrendSeries,
           lineStyle: { width: 4 },
           itemStyle: { color: theme.palette.primary.main },
           areaStyle: {
@@ -197,7 +199,7 @@ const Dashboard = () => {
         },
       ],
     }),
-    [theme, weekDays, translate],
+    [theme, authTrendLabels, authTrendSeries, translate],
   );
 
   const onlineDistributionOption = useMemo(
@@ -230,7 +232,7 @@ const Dashboard = () => {
             smooth: true,
             length: 20,
           },
-          data: connectionSources,
+          data: profileSlices,
           color: [
             theme.palette.primary.main,
             theme.palette.secondary.main,
@@ -240,7 +242,7 @@ const Dashboard = () => {
         },
       ],
     }),
-    [theme, connectionSources, translate],
+    [theme, profileSlices, translate],
   );
 
   const trafficOption = useMemo(
@@ -255,7 +257,7 @@ const Dashboard = () => {
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
       xAxis: {
         type: 'category',
-        data: trafficHours,
+        data: trafficData.labels,
         axisLine: {
           lineStyle: { color: alpha(theme.palette.text.secondary, 0.2) },
         },
@@ -279,7 +281,7 @@ const Dashboard = () => {
           type: 'bar',
           stack: 'traffic',
           emphasis: { focus: 'series' },
-          data: trafficUpload,
+          data: trafficData.upload,
           color: alpha(theme.palette.secondary.main, 0.7),
         },
         {
@@ -287,16 +289,27 @@ const Dashboard = () => {
           type: 'bar',
           stack: 'traffic',
           emphasis: { focus: 'series' },
-          data: trafficDownload,
+          data: trafficData.download,
           color: theme.palette.primary.main,
         },
       ],
     }),
-    [theme, translate],
+    [theme, trafficData, translate],
   );
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+      {isFetching && (
+        <LinearProgress
+          sx={{
+            position: 'sticky',
+            top: 0,
+            left: 0,
+            right: 0,
+            borderRadius: 2,
+          }}
+        />
+      )}
       <Card
         sx={{
           borderRadius: 4,

@@ -5,13 +5,14 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 )
 
 func TestHuaweiParser_VendorCode(t *testing.T) {
 	parser := &HuaweiParser{}
-	assert.Equal(t, "2011", parser.VendorCode())
+	assert.Equal(t, vendors.CodeHuawei, parser.VendorCode())
 }
 
 func TestHuaweiParser_VendorName(t *testing.T) {

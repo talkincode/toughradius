@@ -2,31 +2,79 @@ package app
 
 import (
 	"encoding/json"
+	"errors"
 	"strings"
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 func (a *Application) checkSuper() {
-	var count int64
-	a.gormDB.Model(&domain.SysOpr{}).Where("username='admin' and level = ?", "super").Count(&count)
-	if count == 0 {
-		a.gormDB.Create(&domain.SysOpr{
+	const superUsername = "admin"
+	const defaultPassword = "toughradius"
+
+	hashedPassword := common.Sha256HashWithSalt(defaultPassword, common.SecretSalt)
+
+	var operator domain.SysOpr
+	err := a.gormDB.Where("username = ?", superUsername).First(&operator).Error
+	switch {
+	case errors.Is(err, gorm.ErrRecordNotFound):
+		if err := a.gormDB.Create(&domain.SysOpr{
 			ID:        common.UUIDint64(),
 			Realname:  "administrator",
 			Mobile:    "0000",
 			Email:     "N/A",
-			Username:  "admin",
-			Password:  common.Sha256HashWithSalt("toughradius", common.SecretSalt),
+			Username:  superUsername,
+			Password:  hashedPassword,
 			Level:     "super",
-			Status:    "enabled",
+			Status:    common.ENABLED,
 			Remark:    "super",
 			LastLogin: time.Now(),
-		})
+		}).Error; err != nil {
+			zap.L().Error("failed to create default super admin", zap.Error(err))
+		} else {
+			zap.L().Info("initialized default super admin account", zap.String("username", superUsername))
+		}
+		return
+	case err != nil:
+		zap.L().Error("failed to query super admin", zap.Error(err))
+		return
 	}
+
+	resetPassword := strings.TrimSpace(operator.Password) == ""
+	resetLevel := !strings.EqualFold(operator.Level, "super")
+	resetStatus := !strings.EqualFold(operator.Status, common.ENABLED)
+
+	if !(resetPassword || resetLevel || resetStatus) {
+		return
+	}
+
+	updates := map[string]interface{}{
+		"updated_at": time.Now(),
+	}
+	if resetPassword {
+		updates["password"] = hashedPassword
+	}
+	if resetLevel {
+		updates["level"] = "super"
+	}
+	if resetStatus {
+		updates["status"] = common.ENABLED
+	}
+
+	if err := a.gormDB.Model(&domain.SysOpr{}).Where("id = ?", operator.ID).Updates(updates).Error; err != nil {
+		zap.L().Error("failed to repair super admin account", zap.Error(err))
+		return
+	}
+
+	zap.L().Warn("repaired default super admin account",
+		zap.String("username", superUsername),
+		zap.Bool("passwordReset", resetPassword),
+		zap.Bool("levelReset", resetLevel),
+		zap.Bool("statusEnabled", resetStatus))
 }
 
 func (a *Application) checkSettings() {

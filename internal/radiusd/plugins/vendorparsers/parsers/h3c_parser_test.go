@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/h3c"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -12,7 +13,7 @@ import (
 
 func TestH3CParser_VendorCode(t *testing.T) {
 	parser := &H3CParser{}
-	assert.Equal(t, "25506", parser.VendorCode())
+	assert.Equal(t, vendors.CodeH3C, parser.VendorCode())
 }
 
 func TestH3CParser_VendorName(t *testing.T) {

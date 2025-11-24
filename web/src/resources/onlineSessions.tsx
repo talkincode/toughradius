@@ -5,15 +5,19 @@ import {
   DateField,
   FunctionField,
   Show,
-  Filter,
   TextInput,
   DateInput,
   useRecordContext,
   useTranslate,
-  FilterProps,
+  FilterButton,
+  ExportButton,
+  TopToolbar,
 } from 'react-admin';
 import { Box, Paper, Typography, Chip } from '@mui/material';
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
+import { ServerPagination } from '../components';
+
+const LARGE_LIST_PER_PAGE = 50;
 
 interface OnlineSession {
   acct_session_id?: string;
@@ -79,32 +83,38 @@ const formatTimestamp = (value?: string | number): string => {
   return date.toLocaleString();
 };
 
-const OnlineSessionFilter = (props: Omit<FilterProps, 'children'>) => {
+const useOnlineSessionFilters = () => {
   const translate = useTranslate();
-  return (
-    <Filter {...props}>
+  return useMemo(
+    () => [
       <TextInput
+        key="username"
         source="username"
         label={translate('resources.radius/online.fields.username')}
         alwaysOn
-      />
+      />,
       <TextInput
+        key="framed_ipaddr"
         source="framed_ipaddr"
         label={translate('resources.radius/online.fields.framed_ipaddr')}
-      />
+      />,
       <TextInput
+        key="nas_addr"
         source="nas_addr"
         label={translate('resources.radius/online.fields.nas_addr')}
-      />
+      />,
       <DateInput
+        key="start_time_gte"
         source="start_time_gte"
         label={translate('resources.radius/online.fields.start_time_gte')}
-      />
+      />,
       <DateInput
+        key="start_time_lte"
         source="start_time_lte"
         label={translate('resources.radius/online.fields.start_time_lte')}
-      />
-    </Filter>
+      />,
+    ],
+    [translate],
   );
 };
 
@@ -188,42 +198,51 @@ const DetailSection = ({ title, description, rows }: DetailSectionProps) => (
   <Paper
     elevation={0}
     sx={{
-      borderRadius: 1.5,
+      borderRadius: 1,
       border: theme => `1px solid ${theme.palette.divider}`,
       backgroundColor: theme => theme.palette.background.paper,
-      p: { xs: 1.5, md: 2 },
+      p: { xs: 1, md: 1.5 },
       width: '100%',
     }}
   >
-    <Box>
-      <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.9rem' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+      <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.85rem' }}>
         {title}
       </Typography>
       {description && (
-        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.25, fontSize: '0.8rem' }}>
+        <Typography variant="body2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
           {description}
         </Typography>
       )}
     </Box>
     <Box
       sx={{
-        mt: 1.5,
+        mt: 1,
         display: 'grid',
-        gap: 1.5,
+        gap: 1,
         gridTemplateColumns: {
           xs: 'repeat(1, minmax(0, 1fr))',
           sm: 'repeat(2, minmax(0, 1fr))',
-          md: 'repeat(3, minmax(0, 1fr))',
-          lg: 'repeat(4, minmax(0, 1fr))',
+          md: 'repeat(4, minmax(0, 1fr))',
+          lg: 'repeat(5, minmax(0, 1fr))',
         },
       }}
     >
       {rows.map(row => (
         <Box key={row.label}>
-          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.72rem' }}>
             {row.label}
           </Typography>
-          <Typography variant="body2" sx={{ mt: 0.25, fontWeight: 500, wordBreak: 'break-word', fontSize: '0.85rem' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              mt: 0.15,
+              fontWeight: 500,
+              wordBreak: 'break-word',
+              fontSize: '0.82rem',
+              lineHeight: 1.4,
+            }}
+          >
             {row.value ?? '-'}
           </Typography>
         </Box>
@@ -315,7 +334,7 @@ const OnlineSessionDetails = () => {
   ];
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, width: '100%', mt: 0.5 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mt: 0.25 }}>
       {sections.map(section => (
         <DetailSection
           key={section.title}
@@ -328,10 +347,24 @@ const OnlineSessionDetails = () => {
   );
 };
 
+const OnlineSessionActions = () => (
+  <TopToolbar>
+    <FilterButton />
+    <ExportButton />
+  </TopToolbar>
+);
+
 export const OnlineSessionList = () => {
   const translate = useTranslate();
+  const filters = useOnlineSessionFilters();
   return (
-    <List filters={<OnlineSessionFilter />} sort={{ field: 'acct_start_time', order: 'DESC' }}>
+    <List
+      actions={<OnlineSessionActions />}
+      filters={filters}
+      sort={{ field: 'acct_start_time', order: 'DESC' }}
+      perPage={LARGE_LIST_PER_PAGE}
+      pagination={<ServerPagination />}
+    >
       <Datagrid
         rowClick="show"
         bulkActionButtons={false}

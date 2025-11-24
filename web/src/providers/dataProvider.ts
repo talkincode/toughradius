@@ -1,21 +1,22 @@
 import simpleRestProvider from 'ra-data-simple-rest';
-import { fetchUtils, DataProvider } from 'react-admin';
+import {
+  fetchUtils,
+  DataProvider,
+  Identifier,
+  RaRecord,
+  CreateResult,
+  CreateParams,
+} from 'react-admin';
+import { API_BASE, extractData, extractTotal, httpClient } from '../utils/apiClient';
 
-const API_BASE = '/api/v1';
-
-const httpClient = (url: string, options: fetchUtils.Options = {}) => {
-  if (!options.headers) {
-    options.headers = new Headers({ Accept: 'application/json' });
+const getIdentifier = (payload: unknown): string | number | undefined => {
+  if (typeof payload === 'object' && payload !== null && 'id' in payload) {
+    const value = (payload as { id?: string | number }).id;
+    if (typeof value === 'string' || typeof value === 'number') {
+      return value;
+    }
   }
-  // 从 localStorage 获取 token
-  const token = localStorage.getItem('token');
-  if (token) {
-    (options.headers as Headers).set('Authorization', `Bearer ${token}`);
-    console.log('✓ Token 已添加到请求:', url);
-  } else {
-    console.warn('✗ 未找到 token，请求:', url);
-  }
-  return fetchUtils.fetchJson(url, options);
+  return undefined;
 };
 
 const resourcePathMap: Record<string, string> = {
@@ -31,13 +32,6 @@ const resolveResource = (resource: string) =>
 
 const buildApiUrl = (resource: string, suffix = '') =>
   `${API_BASE}/${resolveResource(resource)}${suffix}`;
-
-const extractData = <T = any>(json: any): T => json?.data ?? json;
-
-const extractTotal = (json: any): number =>
-  json?.meta?.total ??
-  json?.total ??
-  (Array.isArray(json?.data) ? json.data.length : Array.isArray(json) ? json.length : 0);
 
 const baseDataProvider = simpleRestProvider(API_BASE, httpClient);
 
@@ -99,20 +93,33 @@ export const dataProvider: DataProvider = {
     };
   },
 
-  create: async (resource, params) => {
+  create: async function create<RecordType extends Omit<RaRecord, 'id'> = Omit<RaRecord, 'id'>, ResultRecordType extends RaRecord = RecordType & { id: Identifier }>(
+    resource: string,
+    params: CreateParams<RecordType>
+  ): Promise<CreateResult<ResultRecordType>> {
     const url = buildApiUrl(resource);
     const { json } = await httpClient(url, {
       method: 'POST',
       body: JSON.stringify(params.data),
     });
-    const data = extractData(json);
-    return {
-      data: {
-        ...params.data,
-        ...(data ?? {}),
-        id: data?.id ?? json?.id,
-      } as any,
-    };
+    const data = extractData<Record<string, unknown> | undefined>(json);
+    const resolvedId =
+      getIdentifier(data) ?? getIdentifier(json) ?? getIdentifier(params.data);
+
+    if (resolvedId === undefined) {
+      throw new Error('Create response missing identifier');
+    }
+
+    const basePayload =
+      typeof params.data === 'object' && params.data !== null ? params.data : ({} as RecordType);
+
+    const mergedPayload = {
+      ...basePayload,
+      ...(data ?? {}),
+      id: resolvedId,
+    } satisfies RaRecord;
+
+    return { data: mergedPayload as unknown as ResultRecordType };
   },
 
   update: async (resource, params) => {
@@ -135,8 +142,8 @@ export const dataProvider: DataProvider = {
     );
     return {
       data: responses.map(({ json }, index) => {
-        const data = extractData(json);
-        return data?.id ?? json?.id ?? params.ids[index];
+        const data = extractData<Record<string, unknown> | undefined>(json);
+        return getIdentifier(data) ?? getIdentifier(json) ?? params.ids[index];
       }),
     };
   },
@@ -159,8 +166,8 @@ export const dataProvider: DataProvider = {
     );
     return {
       data: responses.map(({ json }, index) => {
-        const data = extractData(json);
-        return data?.id ?? json?.id ?? params.ids[index];
+        const data = extractData<Record<string, unknown> | undefined>(json);
+        return getIdentifier(data) ?? getIdentifier(json) ?? params.ids[index];
       }),
     };
   },

@@ -28,7 +28,8 @@ import {
   FilterButton,
   CreateButton,
   ExportButton,
-  useTranslate
+  useTranslate,
+  FilterLiveSearch,
 } from 'react-admin';
 import {
   Box,
@@ -47,6 +48,9 @@ import {
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode } from 'react';
+import { ServerPagination } from '../components';
+
+const DEFAULT_USER_PER_PAGE = 25;
 
 // 状态显示组件
 const StatusField = () => {
@@ -239,6 +243,7 @@ const UserFormToolbar = (props: ToolbarProps) => (
 // RADIUS 用户列表操作栏
 const UserListActions = () => (
   <TopToolbar>
+    <FilterLiveSearch source="q" />
     <FilterButton />
     <CreateButton />
     <ExportButton />
@@ -274,7 +279,12 @@ export const RadiusUserList = () => {
   const userFilters = useUserFilters();
   
   return (
-    <List actions={<UserListActions />} filters={userFilters}>
+    <List
+      actions={<UserListActions />}
+      filters={userFilters}
+      perPage={DEFAULT_USER_PER_PAGE}
+      pagination={<ServerPagination />}
+    >
       <Datagrid rowClick="show">
         <TextField source="username" label={translate('resources.radius/users.fields.username')} />
         <TextField source="realname" label={translate('resources.radius/users.fields.realname')} />

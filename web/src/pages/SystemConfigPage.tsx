@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Typography,
@@ -33,6 +34,7 @@ import {
   Router as RouterIcon,
 } from '@mui/icons-material';
 import { useDataProvider, useNotify, useTranslate } from 'react-admin';
+import { useApiQuery } from '../hooks/useApiQuery';
 
 // 配置项类型定义
 interface ConfigSchema {
@@ -46,7 +48,7 @@ interface ConfigSchema {
 }
 
 interface ConfigValue {
-  id?: string;  // 数据库ID
+  id?: string;
   type: string;
   name: string;
   value: string;
@@ -55,30 +57,52 @@ interface ConfigValue {
   updated_at?: string;
 }
 
-interface ApiSchemaData {
-  key: string;
-  type: string;
-  default: string;
-  enum?: string[];
-  min?: number;
-  max?: number;
-  description: string;
-}
+const SCHEMA_QUERY_KEY = ['system', 'config', 'schemas'] as const;
+const SETTINGS_QUERY_KEY = ['system', 'settings'] as const;
 
 export const SystemConfigPage: React.FC = () => {
   const [configs, setConfigs] = useState<Record<string, ConfigValue>>({});
-  const [schemas, setSchemas] = useState<ConfigSchema[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['radius']);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
-  
+
   const dataProvider = useDataProvider();
   const notify = useNotify();
   const translate = useTranslate();
+  const queryClient = useQueryClient();
 
-  // 配置分组定义（使用国际化）
-  const CONFIG_GROUPS = {
+  const schemaQuery = useApiQuery<ConfigSchema[]>({
+    path: '/system/config/schemas',
+    queryKey: SCHEMA_QUERY_KEY,
+    staleTime: 5 * 60 * 1000,
+    retry: 1,
+  });
+
+  const settingsQuery = useQuery<ConfigValue[]>({
+    queryKey: SETTINGS_QUERY_KEY,
+    queryFn: async () => {
+      const response = await dataProvider.getList('system/settings', {
+        pagination: { page: 1, perPage: 1000 },
+        sort: { field: 'type', order: 'ASC' },
+        filter: {},
+      });
+      return response.data as ConfigValue[];
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  useEffect(() => {
+    if (!settingsQuery.data) {
+      return;
+    }
+    const map = settingsQuery.data.reduce<Record<string, ConfigValue>>((acc, config) => {
+      const key = `${config.type}.${config.name}`;
+      acc[key] = config;
+      return acc;
+    }, {});
+    setConfigs(map);
+  }, [settingsQuery.data]);
+
+  const configGroups = useMemo(() => ({
     radius: {
       title: translate('pages.system_config.groups.radius.title'),
       description: translate('pages.system_config.groups.radius.description'),
@@ -97,160 +121,24 @@ export const SystemConfigPage: React.FC = () => {
       icon: <SecurityIcon />,
       color: '#d32f2f',
     },
-  };
+  }), [translate]);
 
-  // 加载配置数据
-  const loadConfigs = useCallback(async () => {
-    setLoading(true);
-    try {
-      console.log('开始加载配置...');
-      
-      // 1. 首先直接调用API加载配置 schema
-      console.log('开始加载配置 schemas...');
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('未找到认证token，请重新登录');
-      }
-      
-      const schemaResponse = await fetch('/api/v1/system/config/schemas', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!schemaResponse.ok) {
-        throw new Error(`Schema API 调用失败: ${schemaResponse.status} ${schemaResponse.statusText}`);
-      }
-
-      const schemaJson = await schemaResponse.json();
-      console.log('Schema 响应:', schemaJson);
-      
-      // 提取数据 - 根据后端API格式调整
-      const schemaData = schemaJson.data || schemaJson;
-      console.log('Schema 数据:', schemaData);
-
-      if (!Array.isArray(schemaData) || schemaData.length === 0) {
-        throw new Error('没有找到配置定义数据');
-      }
-
-      const loadedSchemas: ConfigSchema[] = schemaData.map((schema: ApiSchemaData) => ({
-        key: schema.key,
-        type: schema.type as ConfigSchema['type'],
-        default: schema.default,
-        enum: schema.enum,
-        min: schema.min,
-        max: schema.max,
-        description: schema.description,
-      }));
-
-      setSchemas(loadedSchemas);
-      console.log('处理后的 schemas:', loadedSchemas);
-
-      // 2. 然后加载配置值（使用dataProvider）
-      const configResponse = await dataProvider.getList('system/settings', {
-        pagination: { page: 1, perPage: 1000 },
-        sort: { field: 'type', order: 'ASC' },
-        filter: {},
-      });
-
-      console.log('配置响应:', configResponse);
-      const configData = configResponse.data;
-      console.log('配置数据:', configData);
-
-      const configMap: Record<string, ConfigValue> = {};
-      if (Array.isArray(configData)) {
-        configData.forEach((config: ConfigValue) => {
-          const key = `${config.type}.${config.name}`;
-          configMap[key] = config;
-        });
-      }
-
-      setConfigs(configMap);
-      console.log('处理后的配置映射:', configMap);
-
-    } catch (error) {
-      console.error('加载配置失败:', error);
-      notify('加载配置失败: ' + (error as Error).message, { type: 'error' });
-      
-      // 如果加载失败，显示错误信息但不使用硬编码配置
-      setSchemas([]);
-      setConfigs({});
-    } finally {
-      setLoading(false);
+  const groupedSchemas = useMemo(() => {
+    if (!schemaQuery.data) {
+      return {} as Record<string, ConfigSchema[]>;
     }
-  }, [dataProvider, notify]);
-
-  // 保存配置
-  const saveConfigs = async () => {
-    setSaving(true);
-    try {
-      console.log('开始保存配置...');
-      
-      for (const schema of schemas) {
-        const [type, name] = schema.key.split('.');
-        const currentConfig = configs[schema.key];
-        const currentValue = currentConfig?.value || schema.default;
-
-        console.log(`保存配置 ${schema.key}: ${currentValue}`, currentConfig);
-
-        const updateData = {
-          type,
-          name,
-          value: currentValue,
-          sort: currentConfig?.sort || 0,
-          remark: currentConfig?.remark || schema.description,
-        };
-
-        try {
-          if (currentConfig?.id) {
-            // 配置已存在，使用真实的数据库ID更新
-            await dataProvider.update('system/settings', {
-              id: currentConfig.id,
-              data: updateData,
-              previousData: currentConfig,
-            });
-            console.log(`✓ 更新配置成功: ${schema.key} (ID: ${currentConfig.id})`);
-          } else {
-            // 配置不存在，创建新配置
-            await dataProvider.create('system/settings', {
-              data: updateData,
-            });
-            console.log(`✓ 创建配置成功: ${schema.key}`);
-          }
-        } catch (error) {
-          console.error(`✗ 保存配置失败: ${schema.key}`, error);
-          throw new Error(`保存配置 ${schema.key} 失败: ${(error as Error).message}`);
-        }
+    return schemaQuery.data.reduce<Record<string, ConfigSchema[]>>((groups, schema) => {
+      const group = schema.key.split('.')[0];
+      if (!groups[group]) {
+        groups[group] = [];
       }
+      groups[group].push(schema);
+      return groups;
+    }, {});
+  }, [schemaQuery.data]);
 
-      notify('配置保存成功', { type: 'success' });
-      await loadConfigs();
-    } catch (error) {
-      console.error('Save configs failed:', error);
-      notify('配置保存失败', { type: 'error' });
-    } finally {
-      setSaving(false);
-    }
-  };
+  const isLoading = schemaQuery.isLoading || settingsQuery.isLoading;
 
-  // 重置配置
-  const handleResetConfigs = () => {
-    const resetConfigs = { ...configs };
-    schemas.forEach(schema => {
-      const config = resetConfigs[schema.key];
-      if (config) {
-        config.value = schema.default;
-      }
-    });
-    setConfigs(resetConfigs);
-    setResetDialogOpen(false);
-    notify('已重置为默认值', { type: 'info' });
-  };
-
-  // 更新配置值
   const updateConfigValue = (key: string, value: string) => {
     setConfigs(prev => ({
       ...prev,
@@ -258,17 +146,13 @@ export const SystemConfigPage: React.FC = () => {
         ...prev[key],
         type: key.split('.')[0],
         name: key.split('.')[1],
-        value: value,
-      }
+        value,
+      },
     }));
   };
 
-  // 获取配置值
-  const getConfigValue = (schema: ConfigSchema): string => {
-    return configs[schema.key]?.value || schema.default;
-  };
+  const getConfigValue = (schema: ConfigSchema): string => configs[schema.key]?.value ?? schema.default;
 
-  // 渲染配置输入组件
   const renderConfigInput = (schema: ConfigSchema) => {
     const value = getConfigValue(schema);
 
@@ -285,7 +169,6 @@ export const SystemConfigPage: React.FC = () => {
             label={schema.description}
           />
         );
-
       case 'string':
         if (schema.enum) {
           return (
@@ -297,7 +180,9 @@ export const SystemConfigPage: React.FC = () => {
                 onChange={(e) => updateConfigValue(schema.key, e.target.value)}
               >
                 {schema.enum.map(option => (
-                  <MenuItem key={option} value={option}>{option}</MenuItem>
+                  <MenuItem key={option} value={option}>
+                    {option}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -312,7 +197,6 @@ export const SystemConfigPage: React.FC = () => {
             helperText={schema.description}
           />
         );
-
       case 'int':
         return (
           <TextField
@@ -326,11 +210,10 @@ export const SystemConfigPage: React.FC = () => {
               inputProps: {
                 min: schema.min,
                 max: schema.max,
-              }
+              },
             }}
           />
         );
-
       default:
         return (
           <TextField
@@ -344,28 +227,88 @@ export const SystemConfigPage: React.FC = () => {
     }
   };
 
-  // 分组配置项
-  const groupedSchemas = schemas.reduce((groups, schema) => {
-    const group = schema.key.split('.')[0];
-    if (!groups[group]) {
-      groups[group] = [];
+  const saveMutation = useMutation({
+    mutationFn: async (draft: Record<string, ConfigValue>) => {
+      const schemaList = schemaQuery.data ?? [];
+      await Promise.all(
+        schemaList.map(async schema => {
+          const [type, name] = schema.key.split('.');
+          const currentConfig = draft[schema.key];
+          const payload = {
+            type,
+            name,
+            value: currentConfig?.value ?? schema.default,
+            sort: currentConfig?.sort ?? 0,
+            remark: currentConfig?.remark ?? schema.description,
+          };
+
+          if (currentConfig?.id) {
+            await dataProvider.update('system/settings', {
+              id: currentConfig.id,
+              data: payload,
+              previousData: currentConfig,
+            });
+            return;
+          }
+
+          const created = await dataProvider.create('system/settings', {
+            data: payload,
+          });
+          const createdData = created.data as ConfigValue;
+          draft[schema.key] = {
+            ...payload,
+            id: createdData?.id,
+            updated_at: createdData?.updated_at,
+          };
+        }),
+      );
+    },
+    onSuccess: () => {
+      notify('配置保存成功', { type: 'success' });
+      queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'unknown error';
+      notify(`配置保存失败: ${message}`, { type: 'error' });
+    },
+  });
+
+  const handleResetConfigs = () => {
+    if (!schemaQuery.data?.length) {
+      setResetDialogOpen(false);
+      return;
     }
-    groups[group].push(schema);
-    return groups;
-  }, {} as Record<string, ConfigSchema[]>);
-
-  console.log('分组后的配置:', groupedSchemas);
-
-  useEffect(() => {
-    loadConfigs();
-  }, [loadConfigs]);
+    const nextConfigs = { ...configs };
+    schemaQuery.data.forEach(schema => {
+      nextConfigs[schema.key] = {
+        ...nextConfigs[schema.key],
+        type: schema.key.split('.')[0],
+        name: schema.key.split('.')[1],
+        value: schema.default,
+      };
+    });
+    setConfigs(nextConfigs);
+    setResetDialogOpen(false);
+    notify('已重置为默认值', { type: 'info' });
+  };
 
   const handleGroupToggle = (group: string) => {
-    setExpandedGroups(prev => 
-      prev.includes(group) 
-        ? prev.filter(g => g !== group)
-        : [...prev, group]
+    setExpandedGroups(prev =>
+      prev.includes(group) ? prev.filter(g => g !== group) : [...prev, group],
     );
+  };
+
+  const handleReload = () => {
+    queryClient.invalidateQueries({ queryKey: SCHEMA_QUERY_KEY });
+    queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
+  };
+
+  const handleSave = () => {
+    if (!schemaQuery.data?.length) {
+      notify('暂无可保存的配置项', { type: 'warning' });
+      return;
+    }
+    saveMutation.mutate({ ...configs });
   };
 
   return (
@@ -385,17 +328,17 @@ export const SystemConfigPage: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
-          onClick={saveConfigs}
-          disabled={saving || loading}
+          onClick={handleSave}
+          disabled={saveMutation.isPending || isLoading}
           sx={{ mr: 2 }}
         >
-          {saving ? translate('pages.system_config.saving') : translate('pages.system_config.save')}
+          {saveMutation.isPending ? translate('pages.system_config.saving') : translate('pages.system_config.save')}
         </Button>
         <Button
           variant="outlined"
           startIcon={<RefreshIcon />}
           onClick={() => setResetDialogOpen(true)}
-          disabled={saving || loading}
+          disabled={saveMutation.isPending || isLoading}
           sx={{ mr: 2 }}
         >
           {translate('pages.system_config.reset')}
@@ -403,22 +346,22 @@ export const SystemConfigPage: React.FC = () => {
         <Button
           variant="text"
           startIcon={<RefreshIcon />}
-          onClick={loadConfigs}
-          disabled={loading}
+          onClick={handleReload}
+          disabled={isLoading}
         >
-          {loading ? translate('pages.system_config.loading') : translate('pages.system_config.reload')}
+          {isLoading ? translate('pages.system_config.loading') : translate('pages.system_config.reload')}
         </Button>
       </Box>
 
       {/* 配置分组 */}
-      {!loading && schemas.length > 0 && (
+      {!isLoading && (schemaQuery.data?.length ?? 0) > 0 && (
         <Box sx={{ mb: 2 }}>
           <Alert severity="info" sx={{ mb: 2 }}>
             {translate('pages.system_config.info_message')}
           </Alert>
 
           {Object.entries(groupedSchemas).map(([groupKey, groupSchemas]) => {
-          const groupConfig = CONFIG_GROUPS[groupKey as keyof typeof CONFIG_GROUPS] || {
+          const groupConfig = configGroups[groupKey as keyof typeof configGroups] || {
             title: groupKey,
             description: `${groupKey} 相关配置`,
             icon: <SettingsIcon />,
@@ -501,7 +444,7 @@ export const SystemConfigPage: React.FC = () => {
         </Box>
       )}
 
-      {loading && (
+      {isLoading && (
         <Alert severity="info">
           {translate('pages.system_config.loading_message')}
           <br />
@@ -509,13 +452,13 @@ export const SystemConfigPage: React.FC = () => {
         </Alert>
       )}
 
-      {!loading && schemas.length === 0 && (
+      {!isLoading && (schemaQuery.data?.length ?? 0) === 0 && (
         <Alert severity="warning">
           {translate('pages.system_config.no_config_warning')}
           <br />
           <strong>调试信息：</strong>
           <br />
-          - 配置schema数量：{schemas.length}
+          - 配置schema数量：{schemaQuery.data?.length ?? 0}
           <br />
           - 配置值数量：{Object.keys(configs).length}
           <br />
@@ -525,9 +468,9 @@ export const SystemConfigPage: React.FC = () => {
         </Alert>
       )}
 
-      {!loading && schemas.length > 0 && (
+      {!isLoading && (schemaQuery.data?.length ?? 0) > 0 && (
         <Alert severity="success" sx={{ mb: 2 }}>
-          ✓ {translate('pages.system_config.success_message', { schemaCount: schemas.length, configCount: Object.keys(configs).length })}
+          ✓ {translate('pages.system_config.success_message', { schemaCount: schemaQuery.data?.length ?? 0, configCount: Object.keys(configs).length })}
         </Alert>
       )}
 
@@ -548,7 +491,7 @@ export const SystemConfigPage: React.FC = () => {
           <br />
           <strong>注意：</strong>此操作将清除您对以下配置项的自定义设置：
           <br />
-          {schemas.map(schema => (
+          {schemaQuery.data?.map(schema => (
             <span key={schema.key}>
               • {schema.key.split('.')[1]} ({schema.description})
               <br />

@@ -71,12 +71,7 @@ const customEnglishMessages: TranslationMessages = {
       saturday: 'Sat',
       sunday: 'Sun',
     },
-    connection_types: {
-      pppoe: 'PPPoE',
-      ipoe: 'IPoE',
-      wifi: 'WiFi',
-      other: 'Other',
-    },
+    profile_unassigned: 'Unassigned Profile',
   },
   resources: {
     'radius/users': {

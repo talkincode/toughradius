@@ -55,7 +55,7 @@ func TestMatchVendor(t *testing.T) {
 			name: "huawei match",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: "2011",
+					VendorCode: vendors.CodeHuawei,
 				},
 			},
 			vendorCode: vendors.CodeHuawei,
@@ -65,7 +65,7 @@ func TestMatchVendor(t *testing.T) {
 			name: "h3c match",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: "25506",
+					VendorCode: vendors.CodeH3C,
 				},
 			},
 			vendorCode: vendors.CodeH3C,
@@ -75,7 +75,7 @@ func TestMatchVendor(t *testing.T) {
 			name: "zte match",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: "3902",
+					VendorCode: vendors.CodeZTE,
 				},
 			},
 			vendorCode: vendors.CodeZTE,
@@ -85,7 +85,7 @@ func TestMatchVendor(t *testing.T) {
 			name: "mikrotik match",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: "14988",
+					VendorCode: vendors.CodeMikrotik,
 				},
 			},
 			vendorCode: vendors.CodeMikrotik,
@@ -95,7 +95,7 @@ func TestMatchVendor(t *testing.T) {
 			name: "ikuai match",
 			authCtx: &auth.AuthContext{
 				Nas: &domain.NetNas{
-					VendorCode: "10055",
+					VendorCode: vendors.CodeIkuai,
 				},
 			},
 			vendorCode: vendors.CodeIkuai,
@@ -168,13 +168,4 @@ func TestClampInt64(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
-}
-
-func TestVendorConstants(t *testing.T) {
-	// Validate the correctness of vendor code constants
-	assert.Equal(t, "2011", vendors.CodeHuawei)
-	assert.Equal(t, "25506", vendors.CodeH3C)
-	assert.Equal(t, "3902", vendors.CodeZTE)
-	assert.Equal(t, "14988", vendors.CodeMikrotik)
-	assert.Equal(t, "10055", vendors.CodeIkuai)
 }

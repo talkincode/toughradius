@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -14,7 +15,7 @@ import (
 type ZTEParser struct{}
 
 func (p *ZTEParser) VendorCode() string {
-	return "3902"
+	return vendors.CodeZTE
 }
 
 func (p *ZTEParser) VendorName() string {
@@ -24,7 +25,7 @@ func (p *ZTEParser) VendorName() string {
 func (p *ZTEParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, error) {
 	vr := &vendorparsers.VendorRequest{}
 
-		// Parse MAC addresses; ZTE devices provide 12-digit strings
+	// Parse MAC addresses; ZTE devices provide 12-digit strings
 	macval := rfc2865.CallingStationID_GetString(r.Packet)
 	if macval != "" {
 		if len(macval) >= 12 {

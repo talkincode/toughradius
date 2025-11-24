@@ -105,24 +105,48 @@ func (r *VendorRegistry) List() []*VendorInfo {
 
 **PR #1: 创建 VendorRegistry 基础设施**
 
-- [ ] 创建 `internal/radiusd/vendors/registry.go`
-- [ ] 定义 `VendorInfo` 和 `VendorRegistry` 结构
-- [ ] 添加单元测试覆盖所有方法
-- [ ] 验证并发安全性
+- [x] 创建 `internal/radiusd/vendors/registry.go`
+- [x] 定义 `VendorInfo` 和 `VendorRegistry` 结构
+- [x] 添加单元测试覆盖所有方法
+- [x] 验证并发安全性
 
 **PR #2: 迁移现有厂商到 Registry**
 
-- [ ] 将 `radius.go` 中的常量迁移到 Registry
-- [ ] 更新 `parsers/init.go` 使用 Registry 注册
-- [ ] 修改 `vendor_parse.go` 从 Registry 获取解析器
-- [ ] 确保所有测试通过
+- [x] 将 `radius.go` 中的常量迁移到 Registry
+- [x] 更新 `parsers/init.go` 使用 Registry 注册
+- [x] 修改 `vendor_parse.go` 从 Registry 获取解析器
+- [x] 确保所有测试通过
 
 **PR #3: 清理重复代码**
 
-- [ ] 删除 `vendor_helpers.go` 中的重复常量
-- [ ] 更新所有引用点使用 Registry
-- [ ] 添加 Registry 使用示例到文档
-- [ ] 运行完整测试套件验证
+- [x] 删除 `vendor_helpers.go` 中的重复常量
+- [x] 更新所有引用点使用 Registry
+- [x] 添加 Registry 使用示例到文档（见 `docs/vendor-registry.md`）
+- [x] 运行完整测试套件验证
+
+开发计划：
+
+1. **代码清点与风险评估**
+
+   - 使用 `git grep "Vendor" internal/radiusd/plugins/auth/enhancers` 统计所有仍然存在的厂商常量和辅助函数。
+   - 评估 `vendor_helpers.go` 中剩余逻辑是否仍有业务价值（目前包含 `IsHuaweiDevice` 等辅助函数），若仍需保留则规划迁移路径而非直接删除文件。
+   - 输出一份简要的“剩余重复项”列表，记录常量名称、文件位置、预期 Registry 替代项。
+
+2. **重构方案设计**
+
+   - 若辅助函数只依赖厂商常量，则将常量替换为 `vendors.CodeHuawei` 等 Registry 暴露的常量，并将通用辅助函数移动到更合适的位置（如 `internal/radiusd/vendors/helpers.go`）。
+   - 对复杂函数（例如组合判定逻辑）编写最小可重现的单元测试，以防止删除常量时引入回归。
+   - 明确 Registry 使用示例的落脚点：优先在 `docs/` 或 `internal/radiusd/vendors/README.md` 中添加“如何注册/查询厂商”的示例代码。
+
+3. **实施步骤**
+
+   - 先创建新的辅助模块/方法并切换调用点，确保所有引用处改为通过 Registry 访问厂商信息。
+   - 所有改动完成后，再删除原有重复常量（必要时整个 `vendor_helpers.go` 文件），并更新 `go test ./internal/radiusd/...` 以验证。
+   - 在 PR 描述和文档中附上 Registry 示例片段，满足验收标准。
+
+4. **验证与交付**
+   - 运行 `go test ./internal/radiusd/vendors/... ./internal/radiusd/plugins/...`，确保增强器与解析器仍然通过测试。
+   - 由代码审查者确认不再存在重复常量，同时 Registry 示例文档可指导添加新厂商的流程。
 
 #### 验收标准
 

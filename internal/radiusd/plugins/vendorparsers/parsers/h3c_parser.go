@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/h3c"
 	"go.uber.org/zap"
 	"layeh.com/radius"
@@ -15,7 +16,7 @@ import (
 type H3CParser struct{}
 
 func (p *H3CParser) VendorCode() string {
-	return "25506"
+	return vendors.CodeH3C
 }
 
 func (p *H3CParser) VendorName() string {
