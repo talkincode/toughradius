@@ -8,6 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	radiusErrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
@@ -16,12 +17,12 @@ import (
 )
 
 func TestRejectDelayGuard_Name(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	assert.Equal(t, "reject-delay", guard.Name())
 }
 
 func TestRejectDelayGuard_OnError_NoError(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	ctx := context.Background()
 
 	err := guard.OnError(ctx, &auth.AuthContext{}, "test", nil)
@@ -29,7 +30,7 @@ func TestRejectDelayGuard_OnError_NoError(t *testing.T) {
 }
 
 func TestRejectDelayGuard_OnError_RejectLimit(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	ctx := context.Background()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
@@ -56,7 +57,7 @@ func TestRejectDelayGuard_OnError_RejectLimit(t *testing.T) {
 }
 
 func TestRejectDelayGuard_OnError_ResetWindow(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	guard.resetAfter = 100 * time.Millisecond // Shorten the reset window to speed up the test
 	ctx := context.Background()
 
@@ -69,25 +70,25 @@ func TestRejectDelayGuard_OnError_ResetWindow(t *testing.T) {
 
 	testErr := errors.New("auth failed")
 
-		// Accumulate rejection counts up to the limit
+	// Accumulate rejection counts up to the limit
 	for i := int64(0); i <= guard.maxRejects; i++ {
 		_ = guard.OnError(ctx, authCtx, "test", testErr)
 	}
 
-		// Exceed the limit
+	// Exceed the limit
 	err := guard.OnError(ctx, authCtx, "test", testErr)
 	require.Error(t, err)
 
-		// Wait for the reset window to expire
+	// Wait for the reset window to expire
 	time.Sleep(guard.resetAfter + 50*time.Millisecond)
 
-		// Should be able to authenticate again (counter reset)
+	// Should be able to authenticate again (counter reset)
 	err = guard.OnError(ctx, authCtx, "test", testErr)
 	require.NoError(t, err)
 }
 
 func TestRejectDelayGuard_OnError_DifferentUsers(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	ctx := context.Background()
 
 	testErr := errors.New("auth failed")
@@ -119,7 +120,7 @@ func TestRejectDelayGuard_OnError_DifferentUsers(t *testing.T) {
 }
 
 func TestRejectDelayGuard_ResolveUsername(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 
 	tests := []struct {
 		name     string
@@ -192,7 +193,7 @@ func TestRejectDelayGuard_ResolveUsername(t *testing.T) {
 }
 
 func TestRejectDelayGuard_OnError_AnonymousUser(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	ctx := context.Background()
 
 	// Request without a username
@@ -209,7 +210,7 @@ func TestRejectDelayGuard_OnError_AnonymousUser(t *testing.T) {
 }
 
 func TestRejectDelayGuard_CacheLimit(t *testing.T) {
-	guard := NewRejectDelayGuard()
+	guard := NewRejectDelayGuard(nil)
 	ctx := context.Background()
 
 	testErr := errors.New("auth failed")
@@ -233,4 +234,41 @@ func TestRejectDelayGuard_CacheLimit(t *testing.T) {
 	guard.mu.RUnlock()
 
 	assert.LessOrEqual(t, cacheSize, maxCachedRejectItems)
+}
+
+func TestRejectDelayGuard_ConfigOverrides(t *testing.T) {
+	getter := &mockConfigGetter{values: map[string]int64{
+		"radius." + app.ConfigRadiusRejectDelayMaxRejects:   2,
+		"radius." + app.ConfigRadiusRejectDelayWindowSecond: 1,
+	}}
+	guard := NewRejectDelayGuard(getter)
+	ctx := context.Background()
+
+	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
+	rfc2865.UserName_SetString(packet, "config-user")
+	authCtx := &auth.AuthContext{Request: &radius.Request{Packet: packet}}
+	testErr := errors.New("auth failed")
+
+	limit := getter.values["radius."+app.ConfigRadiusRejectDelayMaxRejects]
+	for i := int64(0); i <= limit; i++ {
+		require.NoError(t, guard.OnError(ctx, authCtx, "test", testErr))
+	}
+	require.Error(t, guard.OnError(ctx, authCtx, "test", testErr))
+
+	time.Sleep(1500 * time.Millisecond)
+	require.NoError(t, guard.OnError(ctx, authCtx, "test", testErr))
+}
+
+type mockConfigGetter struct {
+	values map[string]int64
+}
+
+func (m *mockConfigGetter) GetInt64(category, name string) int64 {
+	if m == nil {
+		return 0
+	}
+	if v, ok := m.values[category+"."+name]; ok {
+		return v
+	}
+	return 0
 }

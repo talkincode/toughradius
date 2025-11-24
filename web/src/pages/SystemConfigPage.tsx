@@ -7,6 +7,7 @@ import {
   Switch,
   FormControl,
   FormControlLabel,
+  FormHelperText,
   InputLabel,
   Select,
   MenuItem,
@@ -45,6 +46,9 @@ interface ConfigSchema {
   min?: number;
   max?: number;
   description: string;
+  title?: string;
+  title_i18n?: string;
+  description_i18n?: string;
 }
 
 interface ConfigValue {
@@ -137,6 +141,22 @@ export const SystemConfigPage: React.FC = () => {
     }, {});
   }, [schemaQuery.data]);
 
+  const resolveSchemaTitle = React.useCallback((schema: ConfigSchema) => {
+    const fallback = schema.title || schema.key.split('.')[1];
+    if (schema.title_i18n) {
+      return translate(schema.title_i18n, { _: fallback });
+    }
+    return fallback;
+  }, [translate]);
+
+  const resolveSchemaDescription = React.useCallback((schema: ConfigSchema) => {
+    const fallback = schema.description;
+    if (schema.description_i18n) {
+      return translate(schema.description_i18n, { _: fallback });
+    }
+    return fallback;
+  }, [translate]);
+
   const isLoading = schemaQuery.isLoading || settingsQuery.isLoading;
 
   const updateConfigValue = (key: string, value: string) => {
@@ -153,30 +173,37 @@ export const SystemConfigPage: React.FC = () => {
 
   const getConfigValue = (schema: ConfigSchema): string => configs[schema.key]?.value ?? schema.default;
 
-  const renderConfigInput = (schema: ConfigSchema) => {
+  const renderConfigInput = (schema: ConfigSchema, label: string, description: string) => {
     const value = getConfigValue(schema);
 
     switch (schema.type) {
       case 'bool':
         return (
-          <FormControlLabel
-            control={
-              <Switch
-                checked={value === 'true'}
-                onChange={(e) => updateConfigValue(schema.key, e.target.checked ? 'true' : 'false')}
-              />
-            }
-            label={schema.description}
-          />
+          <Box>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={value === 'true'}
+                  onChange={(e) => updateConfigValue(schema.key, e.target.checked ? 'true' : 'false')}
+                />
+              }
+              label={label}
+            />
+            {description && (
+              <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 0.5 }}>
+                {description}
+              </Typography>
+            )}
+          </Box>
         );
       case 'string':
         if (schema.enum) {
           return (
             <FormControl fullWidth>
-              <InputLabel>{schema.key.split('.')[1]}</InputLabel>
+              <InputLabel>{label}</InputLabel>
               <Select
                 value={value}
-                label={schema.key.split('.')[1]}
+                label={label}
                 onChange={(e) => updateConfigValue(schema.key, e.target.value)}
               >
                 {schema.enum.map(option => (
@@ -185,16 +212,19 @@ export const SystemConfigPage: React.FC = () => {
                   </MenuItem>
                 ))}
               </Select>
+              {description && (
+                <FormHelperText>{description}</FormHelperText>
+              )}
             </FormControl>
           );
         }
         return (
           <TextField
             fullWidth
-            label={schema.key.split('.')[1]}
+            label={label}
             value={value}
             onChange={(e) => updateConfigValue(schema.key, e.target.value)}
-            helperText={schema.description}
+            helperText={description || undefined}
           />
         );
       case 'int':
@@ -202,10 +232,10 @@ export const SystemConfigPage: React.FC = () => {
           <TextField
             fullWidth
             type="number"
-            label={schema.key.split('.')[1]}
+            label={label}
             value={value}
             onChange={(e) => updateConfigValue(schema.key, e.target.value)}
-            helperText={schema.description}
+            helperText={description || undefined}
             InputProps={{
               inputProps: {
                 min: schema.min,
@@ -218,10 +248,10 @@ export const SystemConfigPage: React.FC = () => {
         return (
           <TextField
             fullWidth
-            label={schema.key.split('.')[1]}
+            label={label}
             value={value}
             onChange={(e) => updateConfigValue(schema.key, e.target.value)}
-            helperText={schema.description}
+            helperText={description || undefined}
           />
         );
     }
@@ -401,14 +431,16 @@ export const SystemConfigPage: React.FC = () => {
               
               <AccordionDetails>
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
-                  {groupSchemas.map((schema) => (
-                    <Box key={schema.key} sx={{ mb: 2 }}>
-                      <Box sx={{ mb: 2 }}>
+                  {groupSchemas.map((schema) => {
+                    const schemaTitle = resolveSchemaTitle(schema);
+                    const schemaDescription = resolveSchemaDescription(schema);
+                    return (
+                      <Box key={schema.key} sx={{ mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                           <Typography variant="subtitle2">
-                            {schema.key.split('.')[1]}
+                            {schemaTitle}
                           </Typography>
-                          <Tooltip title={schema.description}>
+                          <Tooltip title={schemaDescription}>
                             <IconButton size="small">
                               <InfoIcon fontSize="small" />
                             </IconButton>
@@ -420,7 +452,7 @@ export const SystemConfigPage: React.FC = () => {
                             sx={{ ml: 'auto' }}
                           />
                         </Box>
-                        {renderConfigInput(schema)}
+                        {renderConfigInput(schema, schemaTitle, schemaDescription)}
                         {schema.enum && (
                           <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
                             {translate('pages.system_config.available_values')}: {schema.enum.join(', ')}
@@ -434,8 +466,8 @@ export const SystemConfigPage: React.FC = () => {
                           </Typography>
                         )}
                       </Box>
-                    </Box>
-                  ))}
+                    );
+                  })}
                 </Box>
               </AccordionDetails>
             </Accordion>

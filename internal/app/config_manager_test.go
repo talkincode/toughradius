@@ -158,6 +158,9 @@ func TestConfigManagerJSON(t *testing.T) {
 	assert.Equal(t, "eap-md5", radiusEapSchema.Default, "radius.EapMethod default should be eap-md5")
 	assert.Contains(t, radiusEapSchema.Enum, "eap-md5", "Enum values should include eap-md5")
 	assert.Contains(t, radiusEapSchema.Enum, "eap-mschapv2", "Enum values should include eap-mschapv2")
+	assert.Equal(t, "EAP Method", radiusEapSchema.Title)
+	assert.Equal(t, "config.radius.eap_method.title", radiusEapSchema.TitleI18n)
+	assert.Equal(t, "config.radius.eap_method.description", radiusEapSchema.DescI18n)
 
 	// Ensure EAP handler enable list exists
 	enabledHandlerSchema, exists := cm.schemas["radius.EapEnabledHandlers"]
@@ -179,6 +182,29 @@ func TestConfigManagerJSON(t *testing.T) {
 	assert.True(t, exists, "radius.IgnorePassword configuration should exist")
 	assert.Equal(t, TypeBool, ignorePassSchema.Type, "radius.IgnorePassword should be boolean type")
 	assert.Equal(t, "false", ignorePassSchema.Default, "Default should be false")
+	assert.Equal(t, "config.radius.ignore_password.title", ignorePassSchema.TitleI18n)
+
+	maxRejectSchema, exists := cm.schemas["radius.RejectDelayMaxRejects"]
+	assert.True(t, exists, "radius.RejectDelayMaxRejects configuration should exist")
+	assert.Equal(t, TypeInt, maxRejectSchema.Type)
+	assert.Equal(t, "7", maxRejectSchema.Default)
+	if assert.NotNil(t, maxRejectSchema.Min) {
+		assert.Equal(t, int64(1), *maxRejectSchema.Min)
+	}
+	if assert.NotNil(t, maxRejectSchema.Max) {
+		assert.Equal(t, int64(1000), *maxRejectSchema.Max)
+	}
+
+	windowSchema, exists := cm.schemas["radius.RejectDelayWindowSeconds"]
+	assert.True(t, exists, "radius.RejectDelayWindowSeconds configuration should exist")
+	assert.Equal(t, TypeInt, windowSchema.Type)
+	assert.Equal(t, "10", windowSchema.Default)
+	if assert.NotNil(t, windowSchema.Min) {
+		assert.Equal(t, int64(1), *windowSchema.Min)
+	}
+	if assert.NotNil(t, windowSchema.Max) {
+		assert.Equal(t, int64(3600), *windowSchema.Max)
+	}
 }
 
 // Test configuration type parsing

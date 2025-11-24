@@ -34,6 +34,9 @@ type ConfigSchemaJSON struct {
 	Min         *int64   `json:"min"`         // Minimum value
 	Max         *int64   `json:"max"`         // Maximum value
 	Description string   `json:"description"` // Description
+	Title       string   `json:"title"`
+	TitleI18n   string   `json:"title_i18n"`
+	DescI18n    string   `json:"description_i18n"`
 }
 
 // ConfigSchemasJSON groups configuration definitions
@@ -43,13 +46,16 @@ type ConfigSchemasJSON struct {
 
 // ConfigSchema defines a configuration entry
 type ConfigSchema struct {
-	Key         string             // Configuration key "category.name"
-	Type        ConfigType         // Value type
-	Default     string             // Default value
-	Enum        []string           // Enum constraints
-	Min         *int64             // Minimum value
-	Max         *int64             // Maximum value
-	Description string             // Description
+	Key         string     // Configuration key "category.name"
+	Type        ConfigType // Value type
+	Default     string     // Default value
+	Enum        []string   // Enum constraints
+	Min         *int64     // Minimum value
+	Max         *int64     // Maximum value
+	Description string     // Description
+	Title       string
+	TitleI18n   string
+	DescI18n    string
 	Validator   func(string) error // Custom validator
 }
 
@@ -106,6 +112,9 @@ func (cm *ConfigManager) loadSchemasFromJSON() error {
 			Min:         schemaJSON.Min,
 			Max:         schemaJSON.Max,
 			Description: schemaJSON.Description,
+			Title:       schemaJSON.Title,
+			TitleI18n:   schemaJSON.TitleI18n,
+			DescI18n:    schemaJSON.DescI18n,
 		}
 		cm.register(schema)
 	}

@@ -3,6 +3,7 @@ package adminapi
 import (
 	"errors"
 	"net/http"
+	"sort"
 	"strings"
 	"time"
 
@@ -86,12 +87,28 @@ func getConfigSchemas(c echo.Context) error {
 
 	// Convert to a frontend-friendly format
 	var result []map[string]interface{}
-	for key, schema := range schemas {
+	keys := make([]string, 0, len(schemas))
+	for key := range schemas {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		schema := schemas[key]
 		schemaData := map[string]interface{}{
 			"key":         key,
 			"type":        getConfigTypeName(schema.Type),
 			"default":     schema.Default,
 			"description": schema.Description,
+		}
+
+		if schema.Title != "" {
+			schemaData["title"] = schema.Title
+		}
+		if schema.TitleI18n != "" {
+			schemaData["title_i18n"] = schema.TitleI18n
+		}
+		if schema.DescI18n != "" {
+			schemaData["description_i18n"] = schema.DescI18n
 		}
 
 		if len(schema.Enum) > 0 {

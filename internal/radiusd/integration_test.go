@@ -122,7 +122,7 @@ func TestRadiusIntegration(t *testing.T) {
 	// Initialize Radius Service
 	radiusService := NewRadiusService(appCtx)
 	defer radiusService.Release()
-	plugins.InitPlugins(radiusService.SessionRepo, radiusService.AccountingRepo)
+	plugins.InitPlugins(appCtx, radiusService.SessionRepo, radiusService.AccountingRepo)
 	authService := NewAuthService(radiusService)
 	acctService := NewAcctService(radiusService)
 

@@ -538,6 +538,46 @@ const customChineseMessages: TranslationMessages = {
       config_items: '项配置',
     },
   },
+  config: {
+    radius: {
+      eap_method: {
+        title: 'EAP 认证方式',
+        description: '选择 RADIUS 服务器向 NAS 提供的 EAP 认证算法（如 eap-md5、eap-mschapv2）',
+      },
+      eap_enabled_handlers: {
+        title: '启用的 EAP 处理器',
+        description: '使用逗号分隔的处理器名称，* 表示允许所有已注册的处理器',
+      },
+      ignore_password: {
+        title: '忽略密码校验',
+        description: '启用后认证流程将跳过密码验证，仅用于调试或外部认证场景',
+      },
+      accounting_history_days: {
+        title: '计费历史保留天数',
+        description: 'Acct 计费日志的保留天数，0 表示不清理历史记录',
+      },
+      acct_interim_interval: {
+        title: '计费中间更新间隔',
+        description: 'NAS 发送 Interim-Update 报文的时间间隔（秒），影响在线时长与流量统计的实时性',
+      },
+      session_timeout: {
+        title: '默认会话超时时间',
+        description: '当策略未指定 Session-Timeout 时的默认超时时长（秒）',
+      },
+      log_level: {
+        title: '日志级别',
+        description: 'RADIUS 服务输出的日志级别，影响控制台与文件日志详细程度',
+      },
+      reject_delay_max_rejects: {
+        title: '拒绝延迟触发阈值',
+        description: '在触发临时拒绝前允许的连续失败次数，提升暴力破解防护能力',
+      },
+      reject_delay_window_seconds: {
+        title: '拒绝延迟统计窗口',
+        description: '统计连续拒绝次数的时间窗口（秒），超出窗口将自动清零计数',
+      },
+    },
+  },
   common: {
     status: '状态',
     enabled: '启用',

@@ -6,11 +6,13 @@ const (
 	ConfigSystemLoginRemark   = "SystemLoginRemark"
 	ConfigSystemLoginSubtitle = "SystemLoginSubtitle"
 
-	ConfigRadiusIgnorePwd             = "RadiusIgnorePwd"
-	ConfigRadiusAccountingHistoryDays = "AccountingHistoryDays"
-	ConfigRadiusAcctInterimInterval   = "AcctInterimInterval"
-	ConfigRadiusEapMethod             = "RadiusEapMethod"
-	ConfigRadiusEapEnabledHandlers    = "RadiusEapEnabledHandlers"
+	ConfigRadiusIgnorePwd               = "RadiusIgnorePwd"
+	ConfigRadiusAccountingHistoryDays   = "AccountingHistoryDays"
+	ConfigRadiusAcctInterimInterval     = "AcctInterimInterval"
+	ConfigRadiusEapMethod               = "RadiusEapMethod"
+	ConfigRadiusEapEnabledHandlers      = "RadiusEapEnabledHandlers"
+	ConfigRadiusRejectDelayMaxRejects   = "RejectDelayMaxRejects"
+	ConfigRadiusRejectDelayWindowSecond = "RejectDelayWindowSeconds"
 )
 
 var ConfigConstants = []string{
@@ -23,4 +25,6 @@ var ConfigConstants = []string{
 	ConfigRadiusAcctInterimInterval,
 	ConfigRadiusEapMethod,
 	ConfigRadiusEapEnabledHandlers,
+	ConfigRadiusRejectDelayMaxRejects,
+	ConfigRadiusRejectDelayWindowSecond,
 }

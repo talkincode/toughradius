@@ -46,16 +46,23 @@ type RejectDelayGuard struct {
 	maxRejects int64
 	resetAfter time.Duration
 
+	configGetter configInt64Getter
+
 	mu    sync.RWMutex
 	items map[string]*rejectItem
 }
 
+type configInt64Getter interface {
+	GetInt64(category, name string) int64
+}
+
 // NewRejectDelayGuard Create RejectDelayGuard
-func NewRejectDelayGuard() *RejectDelayGuard {
+func NewRejectDelayGuard(getter configInt64Getter) *RejectDelayGuard {
 	return &RejectDelayGuard{
-		maxRejects: defaultRejectLimit,
-		resetAfter: defaultResetWindow,
-		items:      make(map[string]*rejectItem),
+		maxRejects:   defaultRejectLimit,
+		resetAfter:   defaultResetWindow,
+		configGetter: getter,
+		items:        make(map[string]*rejectItem),
 	}
 }
 
@@ -75,11 +82,31 @@ func (g *RejectDelayGuard) OnError(ctx context.Context, authCtx *auth.AuthContex
 	}
 
 	item := g.getItem(username)
-	if item.exceeded(g.maxRejects, g.resetAfter) {
+	if item.exceeded(g.currentMaxRejects(), g.currentResetWindow()) {
 		return errors.NewAuthError(app.MetricsRadiusRejectLimit, err.Error())
 	}
 
 	return nil
+}
+
+func (g *RejectDelayGuard) currentMaxRejects() int64 {
+	if g.configGetter == nil {
+		return g.maxRejects
+	}
+	if val := g.configGetter.GetInt64("radius", app.ConfigRadiusRejectDelayMaxRejects); val > 0 {
+		return val
+	}
+	return g.maxRejects
+}
+
+func (g *RejectDelayGuard) currentResetWindow() time.Duration {
+	if g.configGetter == nil {
+		return g.resetAfter
+	}
+	if seconds := g.configGetter.GetInt64("radius", app.ConfigRadiusRejectDelayWindowSecond); seconds > 0 {
+		return time.Duration(seconds) * time.Second
+	}
+	return g.resetAfter
 }
 
 func (g *RejectDelayGuard) resolveUsername(ctx *auth.AuthContext) string {

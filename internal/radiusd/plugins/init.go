@@ -1,6 +1,7 @@
 package plugins
 
 import (
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/accounting/handlers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth/checkers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth/enhancers"
@@ -15,7 +16,7 @@ import (
 
 // InitPlugins initializes all plugins
 // sessionRepo and accountingRepo must be supplied externally to support dependency injection for plugins
-func InitPlugins(sessionRepo repository.SessionRepository, accountingRepo repository.AccountingRepository) {
+func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.SessionRepository, accountingRepo repository.AccountingRepository) {
 	// Register password validators (stateless plugins)
 	registry.RegisterPasswordValidator(&validators.PAPValidator{})
 	registry.RegisterPasswordValidator(&validators.CHAPValidator{})
@@ -41,7 +42,11 @@ func InitPlugins(sessionRepo repository.SessionRepository, accountingRepo reposi
 	registry.RegisterResponseEnhancer(enhancers.NewIkuaiAcceptEnhancer())
 
 	// Register authentication guards
-	registry.RegisterAuthGuard(guards.NewRejectDelayGuard())
+	var cfgGetter interface{ GetInt64(string, string) int64 }
+	if appCtx != nil {
+		cfgGetter = appCtx.ConfigMgr()
+	}
+	registry.RegisterAuthGuard(guards.NewRejectDelayGuard(cfgGetter))
 
 	// Register accounting handlers (dependency injection required)
 	if sessionRepo != nil && accountingRepo != nil {

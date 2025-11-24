@@ -538,6 +538,46 @@ const customEnglishMessages: TranslationMessages = {
       config_items: 'configuration items',
     },
   },
+  config: {
+    radius: {
+      eap_method: {
+        title: 'EAP Method',
+        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2).',
+      },
+      eap_enabled_handlers: {
+        title: 'Enabled EAP Handlers',
+        description: 'Comma-separated list of handler names. Use * to allow every registered handler.',
+      },
+      ignore_password: {
+        title: 'Ignore Password Check',
+        description: 'Skips password validation during authentication. Only enable for debugging or external auth flows.',
+      },
+      accounting_history_days: {
+        title: 'Accounting History Days',
+        description: 'Retention days for accounting (Acct) logs. Use 0 to keep every record indefinitely.',
+      },
+      acct_interim_interval: {
+        title: 'Accounting Interim Interval',
+        description: 'Interval in seconds for NAS Interim-Update packets, affecting freshness of session statistics.',
+      },
+      session_timeout: {
+        title: 'Default Session Timeout',
+        description: 'Fallback Session-Timeout value (seconds) when no policy-specific timeout is provided.',
+      },
+      log_level: {
+        title: 'Log Level',
+        description: 'Controls the verbosity of the RADIUS service logs emitted to console and files.',
+      },
+      reject_delay_max_rejects: {
+        title: 'Reject Delay Threshold',
+        description: 'Maximum consecutive failures allowed before applying a temporary reject delay to throttle attacks.',
+      },
+      reject_delay_window_seconds: {
+        title: 'Reject Window (seconds)',
+        description: 'Time window used to count consecutive rejects. Counters reset automatically after the window expires.',
+      },
+    },
+  },
   common: {
     status: 'Status',
     enabled: 'Enabled',
