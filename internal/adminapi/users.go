@@ -539,6 +539,39 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 		db = db.Where("radius_user.status = ?", strings.ToLower(status))
 	}
 
+	// Handle username filter (partial match)
+	if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			db = db.Where("radius_user.username ILIKE ?", "%"+username+"%")
+		} else {
+			db = db.Where("LOWER(radius_user.username) LIKE ?", "%"+strings.ToLower(username)+"%")
+		}
+	}
+
+	// Handle realname filter (partial match)
+	if realname := strings.TrimSpace(c.QueryParam("realname")); realname != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			db = db.Where("radius_user.realname ILIKE ?", "%"+realname+"%")
+		} else {
+			db = db.Where("LOWER(radius_user.realname) LIKE ?", "%"+strings.ToLower(realname)+"%")
+		}
+	}
+
+	// Handle email filter (partial match)
+	if email := strings.TrimSpace(c.QueryParam("email")); email != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			db = db.Where("radius_user.email ILIKE ?", "%"+email+"%")
+		} else {
+			db = db.Where("LOWER(radius_user.email) LIKE ?", "%"+strings.ToLower(email)+"%")
+		}
+	}
+
+	// Handle mobile filter (partial match)
+	if mobile := strings.TrimSpace(c.QueryParam("mobile")); mobile != "" {
+		db = db.Where("radius_user.mobile LIKE ?", "%"+mobile+"%")
+	}
+
+	// Global search across multiple fields
 	if q := strings.TrimSpace(c.QueryParam("q")); q != "" {
 		if strings.EqualFold(db.Dialector.Name(), "postgres") {
 			like := "%" + q + "%"

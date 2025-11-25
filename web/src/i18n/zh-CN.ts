@@ -601,6 +601,34 @@ const customChineseMessages: TranslationMessages = {
     no: '否',
     loading: '加载中...',
   },
+  error: {
+    connectivity_title: '连接问题',
+    general_title: '出错了',
+    connectivity_message: '无法连接到服务器。请检查您的网络连接或后端服务是否正常运行。',
+    general_message: '加载数据时发生错误。请稍后重试。',
+    troubleshooting_title: '故障排除建议：',
+    troubleshooting_network: '检查您的网络连接是否正常',
+    troubleshooting_server: '确认后端服务正在运行',
+    troubleshooting_refresh: '刷新页面重试',
+    go_home: '返回首页',
+    retry: '重试',
+  },
+  confirm: {
+    title: '确认操作',
+    delete_title: '确认删除',
+    message: '您确定要执行此操作吗？',
+    delete_message: '您确定要删除此项吗？此操作无法撤销。',
+    delete_user_message: '您确定要删除用户 "%{username}" 吗？此操作无法撤销，该用户的所有数据将被永久删除。',
+    confirm: '确认',
+    delete: '删除',
+    cancel: '取消',
+    processing: '处理中...',
+  },
+  filter: {
+    active_filters: '当前筛选',
+    clear_all: '清除全部',
+    no_filters: '无筛选条件',
+  },
 };
 
 export default customChineseMessages;

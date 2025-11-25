@@ -3,6 +3,7 @@ package adminapi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -44,14 +45,36 @@ func ListProfiles(c echo.Context) error {
 
 	query := db.Model(&domain.RadiusProfile{})
 
-	// Support filtering by name
-	if name := c.QueryParam("name"); name != "" {
-		query = query.Where("name LIKE ?", "%"+name+"%")
+	// Support filtering by name (case-insensitive)
+	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			query = query.Where("name ILIKE ?", "%"+name+"%")
+		} else {
+			query = query.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%")
+		}
 	}
 
 	// Support filtering by status
-	if status := c.QueryParam("status"); status != "" {
+	if status := strings.TrimSpace(c.QueryParam("status")); status != "" {
 		query = query.Where("status = ?", status)
+	}
+
+	// Support filtering by addr_pool (case-insensitive)
+	if addrPool := strings.TrimSpace(c.QueryParam("addr_pool")); addrPool != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			query = query.Where("addr_pool ILIKE ?", "%"+addrPool+"%")
+		} else {
+			query = query.Where("LOWER(addr_pool) LIKE ?", "%"+strings.ToLower(addrPool)+"%")
+		}
+	}
+
+	// Support filtering by domain (case-insensitive)
+	if domain := strings.TrimSpace(c.QueryParam("domain")); domain != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			query = query.Where("domain ILIKE ?", "%"+domain+"%")
+		} else {
+			query = query.Where("LOWER(domain) LIKE ?", "%"+strings.ToLower(domain)+"%")
+		}
 	}
 
 	query.Count(&total)

@@ -3,6 +3,7 @@ package adminapi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -78,19 +79,23 @@ func ListNAS(c echo.Context) error {
 
 	query := db.Model(&domain.NetNas{})
 
-	// Filter by name
-	if name := c.QueryParam("name"); name != "" {
-		query = query.Where("name LIKE ?", "%"+name+"%")
+	// Filter by name (case-insensitive)
+	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
+		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+			query = query.Where("name ILIKE ?", "%"+name+"%")
+		} else {
+			query = query.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%")
+		}
 	}
 
 	// Filter by status
-	if status := c.QueryParam("status"); status != "" {
+	if status := strings.TrimSpace(c.QueryParam("status")); status != "" {
 		query = query.Where("status = ?", status)
 	}
 
-	// Filter by IP address
-	if ipaddr := c.QueryParam("ipaddr"); ipaddr != "" {
-		query = query.Where("ipaddr = ?", ipaddr)
+	// Filter by IP address (exact match or prefix match)
+	if ipaddr := strings.TrimSpace(c.QueryParam("ipaddr")); ipaddr != "" {
+		query = query.Where("ipaddr LIKE ?", ipaddr+"%")
 	}
 
 	query.Count(&total)

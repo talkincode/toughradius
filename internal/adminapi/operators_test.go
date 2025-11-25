@@ -111,6 +111,22 @@ func TestListOperators(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
 		},
+		{
+			name:           "Search by username - case insensitive",
+			queryParams:    "?username=ADMIN1",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				operators := resp.Data.([]domain.SysOpr)
+				assert.Equal(t, "admin1", operators[0].Username)
+			},
+		},
+		{
+			name:           "Search by realname - case insensitive",
+			queryParams:    "?realname=TEST",
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
 	}
 
 	for _, tt := range tests {

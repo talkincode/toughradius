@@ -8,7 +8,7 @@ import Dashboard from './pages/Dashboard';
 import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
 import { LoginPage } from './pages/LoginPage';
-import { CustomLayout } from './components';
+import { CustomLayout, CustomError } from './components';
 import { theme, darkTheme } from './theme';
 
 // 自定义加载组件，避免闪烁
@@ -78,6 +78,7 @@ const App = () => (
     defaultTheme="light"
     layout={CustomLayout}
     loading={CustomLoading}
+    error={CustomError}
     requireAuth
   >
     {/* RADIUS 用户管理 */}

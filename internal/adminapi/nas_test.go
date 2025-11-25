@@ -87,7 +87,13 @@ func TestListNAS(t *testing.T) {
 			},
 		},
 		{
-			name:           "Search by IP address",
+			name:           "Search by IP address (prefix match)",
+			queryParams:    "?ipaddr=192.168.1",
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
+		{
+			name:           "Search by IP address (exact match)",
 			queryParams:    "?ipaddr=192.168.1.1",
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
@@ -97,6 +103,17 @@ func TestListNAS(t *testing.T) {
 			queryParams:    "?status=enabled",
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
+		},
+		{
+			name:           "Search by name - case insensitive",
+			queryParams:    "?name=NAS1",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp map[string]interface{}) {
+				data := resp["data"].([]interface{})
+				nasData := data[0].(map[string]interface{})
+				assert.Equal(t, "nas1", nasData["name"])
+			},
 		},
 	}
 

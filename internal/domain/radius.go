@@ -36,7 +36,9 @@ type RadiusUser struct {
 	NodeId          int64     `json:"node_id,string" form:"node_id"`                    // Node ID
 	ProfileId       int64     `gorm:"index" json:"profile_id,string" form:"profile_id"` // RADIUS profile ID
 	Realname        string    `json:"realname" form:"realname"`                         // Contact name
+	Email           string    `json:"email" form:"email"`                               // Email address
 	Mobile          string    `json:"mobile" form:"mobile"`                             // Contact phone
+	Address         string    `json:"address" form:"address"`                           // Contact address
 	Username        string    `json:"username" gorm:"uniqueIndex" form:"username"`      // Account name
 	Password        string    `json:"password" form:"password"`                         // Password
 	AddrPool        string    `json:"addr_pool" form:"addr_pool"`                       // Address pool

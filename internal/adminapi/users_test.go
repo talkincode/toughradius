@@ -47,6 +47,31 @@ func createTestUser(db *gorm.DB, username string, profileID int64) *domain.Radiu
 	return user
 }
 
+// createTestUserWithDetails creates test user with custom details
+func createTestUserWithDetails(db *gorm.DB, username, realname, email, mobile string, profileID int64) *domain.RadiusUser {
+	user := &domain.RadiusUser{
+		ID:         common.UUIDint64(),
+		Username:   username,
+		Password:   "testpass123",
+		ProfileId:  profileID,
+		Realname:   realname,
+		Email:      email,
+		Mobile:     mobile,
+		Status:     "enabled",
+		NodeId:     1,
+		ActiveNum:  1,
+		UpRate:     1024,
+		DownRate:   2048,
+		AddrPool:   "192.168.1.0/24",
+		ExpireTime: time.Now().AddDate(1, 0, 0),
+		Remark:     "Test user",
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	db.Create(user)
+	return user
+}
+
 func TestListUsers(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
@@ -135,6 +160,118 @@ func TestListUsers(t *testing.T) {
 			response.Data = users
 
 			assert.Len(t, users, tt.expectedCount)
+
+			if tt.checkResponse != nil {
+				tt.checkResponse(t, &response)
+			}
+		})
+	}
+}
+
+// TestListUsersWithFieldFilters tests specific field filters (username, realname, email, mobile)
+func TestListUsersWithFieldFilters(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	// Create Test Profile
+	profile := createTestProfile(db, "test-profile")
+
+	// Create test users with distinct details
+	createTestUserWithDetails(db, "alice", "Alice Chen", "alice@example.com", "13800001111", profile.ID)
+	createTestUserWithDetails(db, "bob", "Bob Wang", "bob@test.com", "13800002222", profile.ID)
+	createTestUserWithDetails(db, "charlie", "Charlie Li", "charlie@example.com", "13900003333", profile.ID)
+
+	tests := []struct {
+		name           string
+		queryParams    string
+		expectedStatus int
+		expectedCount  int
+		checkResponse  func(*testing.T, *Response)
+	}{
+		{
+			name:           "Filter by username - exact partial match",
+			queryParams:    "?username=alice",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				users := resp.Data.([]domain.RadiusUser)
+				assert.Equal(t, "alice", users[0].Username)
+			},
+		},
+		{
+			name:           "Filter by username - partial match",
+			queryParams:    "?username=li",
+			expectedStatus: http.StatusOK,
+			expectedCount:  2, // alice, charlie both contain "li"
+		},
+		{
+			name:           "Filter by realname",
+			queryParams:    "?realname=Wang",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				users := resp.Data.([]domain.RadiusUser)
+				assert.Equal(t, "Bob Wang", users[0].Realname)
+			},
+		},
+		{
+			name:           "Filter by email - partial match",
+			queryParams:    "?email=example.com",
+			expectedStatus: http.StatusOK,
+			expectedCount:  2, // alice and charlie
+		},
+		{
+			name:           "Filter by mobile",
+			queryParams:    "?mobile=138",
+			expectedStatus: http.StatusOK,
+			expectedCount:  2, // alice and bob
+		},
+		{
+			name:           "Filter by mobile - exact match",
+			queryParams:    "?mobile=13900003333",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				users := resp.Data.([]domain.RadiusUser)
+				assert.Equal(t, "charlie", users[0].Username)
+			},
+		},
+		{
+			name:           "Combined filters - username and status",
+			queryParams:    "?username=bob&status=enabled",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+		},
+		{
+			name:           "No match filter",
+			queryParams:    "?username=nonexistent",
+			expectedStatus: http.StatusOK,
+			expectedCount:  0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			e := setupTestEcho()
+			req := httptest.NewRequest(http.MethodGet, "/api/v1/users"+tt.queryParams, nil)
+			rec := httptest.NewRecorder()
+			c := CreateTestContext(e, db, req, rec, appCtx)
+
+			err := listRadiusUsers(c)
+			require.NoError(t, err)
+			assert.Equal(t, tt.expectedStatus, rec.Code)
+
+			var response Response
+			err = json.Unmarshal(rec.Body.Bytes(), &response)
+			require.NoError(t, err)
+
+			// Convert the response data to a slice of users
+			dataBytes, _ := json.Marshal(response.Data)
+			var users []domain.RadiusUser
+			json.Unmarshal(dataBytes, &users)
+			response.Data = users
+
+			assert.Len(t, users, tt.expectedCount, "Expected %d users for query %s", tt.expectedCount, tt.queryParams)
 
 			if tt.checkResponse != nil {
 				tt.checkResponse(t, &response)

@@ -17,7 +17,6 @@ import {
   useRecordContext,
   Toolbar,
   SaveButton,
-  DeleteButton,
   SimpleForm,
   ToolbarProps,
   ReferenceInput,
@@ -30,6 +29,10 @@ import {
   ExportButton,
   useTranslate,
   FilterLiveSearch,
+  useNotify,
+  useRedirect,
+  useDelete,
+  Confirm,
 } from 'react-admin';
 import {
   Box,
@@ -44,11 +47,13 @@ import {
   Card,
   CardContent,
   Divider,
-  Stack
+  Stack,
+  Button,
 } from '@mui/material';
+import { Delete as DeleteIcon } from '@mui/icons-material';
 import { Theme } from '@mui/material/styles';
-import { ReactNode } from 'react';
-import { ServerPagination } from '../components';
+import { ReactNode, useState, useCallback } from 'react';
+import { ServerPagination, ActiveFilters } from '../components';
 
 const DEFAULT_USER_PER_PAGE = 25;
 
@@ -232,11 +237,75 @@ const formLayoutSx = {
   }
 };
 
-// 简化后的自定义工具栏
+// 带确认对话框的删除按钮
+const ConfirmDeleteButton = () => {
+  const record = useRecordContext();
+  const translate = useTranslate();
+  const notify = useNotify();
+  const redirect = useRedirect();
+  const [open, setOpen] = useState(false);
+  const [deleteOne, { isPending }] = useDelete();
+
+  const handleClick = useCallback(() => {
+    setOpen(true);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  const handleConfirm = useCallback(() => {
+    deleteOne(
+      'radius/users',
+      { id: record?.id, previousData: record },
+      {
+        onSuccess: () => {
+          notify('ra.notification.deleted', { type: 'info', messageArgs: { smart_count: 1 } });
+          redirect('list', 'radius/users');
+        },
+        onError: (error: unknown) => {
+          const errorMessage = error instanceof Error ? error.message : 'ra.notification.http_error';
+          notify(errorMessage, { type: 'error' });
+        },
+      }
+    );
+    setOpen(false);
+  }, [deleteOne, record, notify, redirect]);
+
+  if (!record) return null;
+
+  return (
+    <>
+      <Button
+        variant="contained"
+        color="error"
+        startIcon={<DeleteIcon />}
+        onClick={handleClick}
+        disabled={isPending}
+      >
+        {translate('ra.action.delete')}
+      </Button>
+      <Confirm
+        isOpen={open}
+        loading={isPending}
+        title={translate('confirm.delete_title', { _: '确认删除' })}
+        content={translate('confirm.delete_user_message', {
+          username: record.username || record.id,
+          _: `您确定要删除用户 "${record.username || record.id}" 吗？此操作无法撤销。`,
+        })}
+        onConfirm={handleConfirm}
+        onClose={handleClose}
+        confirmColor="warning"
+      />
+    </>
+  );
+};
+
+// 简化后的自定义工具栏（编辑页面使用）
 const UserFormToolbar = (props: ToolbarProps) => (
-  <Toolbar {...props}>
+  <Toolbar {...props} sx={{ display: 'flex', justifyContent: 'space-between' }}>
     <SaveButton />
-    <DeleteButton mutationMode="pessimistic" />
+    <ConfirmDeleteButton />
   </Toolbar>
 );
 
@@ -277,6 +346,24 @@ const useUserFilters = () => {
 export const RadiusUserList = () => {
   const translate = useTranslate();
   const userFilters = useUserFilters();
+
+  // Field labels for ActiveFilters component
+  const fieldLabels = {
+    username: translate('resources.radius/users.fields.username'),
+    realname: translate('resources.radius/users.fields.realname'),
+    email: translate('resources.radius/users.fields.email'),
+    mobile: translate('resources.radius/users.fields.mobile'),
+    status: translate('resources.radius/users.fields.status'),
+    profile_id: translate('resources.radius/users.fields.profile_id'),
+  };
+
+  // Value labels for status field
+  const valueLabels = {
+    status: {
+      enabled: translate('resources.radius/users.status.enabled'),
+      disabled: translate('resources.radius/users.status.disabled'),
+    },
+  };
   
   return (
     <List
@@ -285,19 +372,22 @@ export const RadiusUserList = () => {
       perPage={DEFAULT_USER_PER_PAGE}
       pagination={<ServerPagination />}
     >
-      <Datagrid rowClick="show">
-        <TextField source="username" label={translate('resources.radius/users.fields.username')} />
-        <TextField source="realname" label={translate('resources.radius/users.fields.realname')} />
-        <EmailField source="email" label={translate('resources.radius/users.fields.email')} />
-        <TextField source="mobile" label={translate('resources.radius/users.fields.mobile')} />
-        <TextField source="address" label={translate('resources.radius/users.fields.address')} />
-        <StatusField />
-        <ReferenceField source="profile_id" reference="radius/profiles" label={translate('resources.radius/users.fields.profile_id')}>
-          <TextField source="name" />
-        </ReferenceField>
-        <DateField source="created_at" label={translate('resources.radius/users.fields.created_at')} showTime />
-        <DateField source="expire_time" label={translate('resources.radius/users.fields.expire_time')} showTime />
-      </Datagrid>
+      <Box>
+        <ActiveFilters fieldLabels={fieldLabels} valueLabels={valueLabels} />
+        <Datagrid rowClick="show">
+          <TextField source="username" label={translate('resources.radius/users.fields.username')} />
+          <TextField source="realname" label={translate('resources.radius/users.fields.realname')} />
+          <EmailField source="email" label={translate('resources.radius/users.fields.email')} />
+          <TextField source="mobile" label={translate('resources.radius/users.fields.mobile')} />
+          <TextField source="address" label={translate('resources.radius/users.fields.address')} />
+          <StatusField />
+          <ReferenceField source="profile_id" reference="radius/profiles" label={translate('resources.radius/users.fields.profile_id')}>
+            <TextField source="name" />
+          </ReferenceField>
+          <DateField source="created_at" label={translate('resources.radius/users.fields.created_at')} showTime />
+          <DateField source="expire_time" label={translate('resources.radius/users.fields.expire_time')} showTime />
+        </Datagrid>
+      </Box>
     </List>
   );
 };
@@ -690,12 +780,12 @@ export const RadiusUserCreate = () => {
   );
 };
 
-// 详情页工具栏
+// 详情页工具栏（带确认删除按钮）
 const UserShowActions = () => (
   <TopToolbar>
     <ListButton />
     <EditButton />
-    <DeleteButton mutationMode="pessimistic" />
+    <ConfirmDeleteButton />
   </TopToolbar>
 );
 

@@ -601,6 +601,34 @@ const customEnglishMessages: TranslationMessages = {
     no: 'No',
     loading: 'Loading...',
   },
+  error: {
+    connectivity_title: 'Connection Issue',
+    general_title: 'Something Went Wrong',
+    connectivity_message: 'Unable to connect to the server. Please check your network connection or ensure the backend service is running.',
+    general_message: 'An error occurred while loading data. Please try again later.',
+    troubleshooting_title: 'Troubleshooting Tips:',
+    troubleshooting_network: 'Check your network connection',
+    troubleshooting_server: 'Confirm the backend service is running',
+    troubleshooting_refresh: 'Try refreshing the page',
+    go_home: 'Go Home',
+    retry: 'Retry',
+  },
+  confirm: {
+    title: 'Confirm Action',
+    delete_title: 'Confirm Delete',
+    message: 'Are you sure you want to perform this action?',
+    delete_message: 'Are you sure you want to delete this item? This action cannot be undone.',
+    delete_user_message: 'Are you sure you want to delete user "%{username}"? This action cannot be undone and all user data will be permanently removed.',
+    confirm: 'Confirm',
+    delete: 'Delete',
+    cancel: 'Cancel',
+    processing: 'Processing...',
+  },
+  filter: {
+    active_filters: 'Active Filters',
+    clear_all: 'Clear All',
+    no_filters: 'No filters applied',
+  },
 };
 
 export default customEnglishMessages;

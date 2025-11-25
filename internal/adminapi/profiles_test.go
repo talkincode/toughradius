@@ -104,6 +104,28 @@ func TestListProfiles(t *testing.T) {
 			expectedCount:  3,
 		},
 		{
+			name:           "Search by name - case insensitive",
+			queryParams:    "?name=PROFILE1",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				profiles := resp.Data.([]domain.RadiusProfile)
+				assert.Equal(t, "profile1", profiles[0].Name)
+			},
+		},
+		{
+			name:           "Filter by addr_pool",
+			queryParams:    "?addr_pool=192.168",
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
+		{
+			name:           "Filter by domain",
+			queryParams:    "?domain=test",
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
+		{
 			name:           "Sorting test - ASC",
 			queryParams:    "?sort=name&order=ASC",
 			expectedStatus: http.StatusOK,
