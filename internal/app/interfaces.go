@@ -34,6 +34,11 @@ type ConfigManagerProvider interface {
 	ConfigMgr() *ConfigManager
 }
 
+// ProfileCacheProvider provides profile cache access
+type ProfileCacheProvider interface {
+	ProfileCache() *ProfileCache
+}
+
 // AppContext combines all provider interfaces for full application context
 // Services should depend on specific providers or this combined interface
 type AppContext interface {
@@ -42,7 +47,8 @@ type AppContext interface {
 	SettingsProvider
 	SchedulerProvider
 	ConfigManagerProvider
-	
+	ProfileCacheProvider
+
 	// Application lifecycle methods
 	MigrateDB(track bool) error
 	InitDb()

@@ -22,7 +22,7 @@ func createTestOperator(db *gorm.DB, username string, level string) *domain.SysO
 	opr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
 		Username:  username,
-		Password:  common.Sha256HashWithSalt("Password123", common.SecretSalt),
+		Password:  common.Sha256HashWithSalt("Password123", common.GetSecretSalt()),
 		Realname:  "Test Operator",
 		Mobile:    "13800138000",
 		Email:     "test@example.com",
@@ -482,7 +482,7 @@ func TestUpdateOperator(t *testing.T) {
 				// Validate the password was updated (need to re-query the database)
 				var updatedOpr domain.SysOpr
 				db.Where("id = ?", opr.ID).First(&updatedOpr)
-				expectedHash := common.Sha256HashWithSalt("NewPass456", common.SecretSalt)
+				expectedHash := common.Sha256HashWithSalt("NewPass456", common.GetSecretSalt())
 				assert.Equal(t, expectedHash, updatedOpr.Password)
 			},
 		},
@@ -664,7 +664,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		// Validate the password is stored correctly (trimmed then hashed)
 		var savedOpr domain.SysOpr
 		db.Where("id = ?", opr.ID).First(&savedOpr)
-		expectedHash := common.Sha256HashWithSalt("Password123", common.SecretSalt)
+		expectedHash := common.Sha256HashWithSalt("Password123", common.GetSecretSalt())
 		assert.Equal(t, expectedHash, savedOpr.Password)
 	})
 

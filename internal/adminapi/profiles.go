@@ -84,31 +84,31 @@ func GetProfile(c echo.Context) error {
 
 // ProfileRequest represents the mixed-type JSON sent from the frontend
 type ProfileRequest struct {
-	Name       string      `json:"name" validate:"required,min=1,max=100"`
-	Status     interface{} `json:"status"` // Can be string or boolean
-	AddrPool   string      `json:"addr_pool" validate:"omitempty,addrpool"`
-	ActiveNum  int         `json:"active_num" validate:"gte=0,lte=100"`
-	UpRate     int         `json:"up_rate" validate:"gte=0,lte=10000000"`
-	DownRate   int         `json:"down_rate" validate:"gte=0,lte=10000000"`
-	Domain     string      `json:"domain" validate:"omitempty,max=50"`
-	IPv6Prefix string      `json:"ipv6_prefix" validate:"omitempty"`
-	BindMac    interface{} `json:"bind_mac"`  // Can be int or boolean
-	BindVlan   interface{} `json:"bind_vlan"` // Can be int or boolean
-	Remark     string      `json:"remark" validate:"omitempty,max=500"`
-	NodeId     interface{} `json:"node_id"` // Can be int64 or string
+	Name           string      `json:"name" validate:"required,min=1,max=100"`
+	Status         interface{} `json:"status"` // Can be string or boolean
+	AddrPool       string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	ActiveNum      int         `json:"active_num" validate:"gte=0,lte=100"`
+	UpRate         int         `json:"up_rate" validate:"gte=0,lte=10000000"`
+	DownRate       int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	Domain         string      `json:"domain" validate:"omitempty,max=50"`
+	IPv6PrefixPool string      `json:"ipv6_prefix_pool" validate:"omitempty"`
+	BindMac        interface{} `json:"bind_mac"`  // Can be int or boolean
+	BindVlan       interface{} `json:"bind_vlan"` // Can be int or boolean
+	Remark         string      `json:"remark" validate:"omitempty,max=500"`
+	NodeId         interface{} `json:"node_id"` // Can be int64 or string
 }
 
 // toRadiusProfile Convert ProfileRequest Convert to RadiusProfile
 func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
-		Name:       pr.Name,
-		AddrPool:   pr.AddrPool,
-		ActiveNum:  pr.ActiveNum,
-		UpRate:     pr.UpRate,
-		DownRate:   pr.DownRate,
-		Domain:     pr.Domain,
-		IPv6Prefix: pr.IPv6Prefix,
-		Remark:     pr.Remark,
+		Name:           pr.Name,
+		AddrPool:       pr.AddrPool,
+		ActiveNum:      pr.ActiveNum,
+		UpRate:         pr.UpRate,
+		DownRate:       pr.DownRate,
+		Domain:         pr.Domain,
+		IPv6PrefixPool: pr.IPv6PrefixPool,
+		Remark:         pr.Remark,
 	}
 
 	// Handle status field: boolean true -> "enabled", false -> "disabled", string remains unchanged
@@ -163,31 +163,31 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 
 // ProfileUpdateRequest represents the mixed-type JSON sent from the frontend for updates
 type ProfileUpdateRequest struct {
-	Name       string      `json:"name" validate:"omitempty,min=1,max=100"`
-	Status     interface{} `json:"status"` // Can be string or boolean
-	AddrPool   string      `json:"addr_pool" validate:"omitempty,addrpool"`
-	ActiveNum  int         `json:"active_num" validate:"gte=0,lte=100"`
-	UpRate     int         `json:"up_rate" validate:"gte=0,lte=10000000"`
-	DownRate   int         `json:"down_rate" validate:"gte=0,lte=10000000"`
-	Domain     string      `json:"domain" validate:"omitempty,max=50"`
-	IPv6Prefix string      `json:"ipv6_prefix" validate:"omitempty"`
-	BindMac    interface{} `json:"bind_mac"`  // Can be int or boolean
-	BindVlan   interface{} `json:"bind_vlan"` // Can be int or boolean
-	Remark     string      `json:"remark" validate:"omitempty,max=500"`
-	NodeId     interface{} `json:"node_id"` // Can be int64 or string
+	Name           string      `json:"name" validate:"omitempty,min=1,max=100"`
+	Status         interface{} `json:"status"` // Can be string or boolean
+	AddrPool       string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	ActiveNum      int         `json:"active_num" validate:"gte=0,lte=100"`
+	UpRate         int         `json:"up_rate" validate:"gte=0,lte=10000000"`
+	DownRate       int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	Domain         string      `json:"domain" validate:"omitempty,max=50"`
+	IPv6PrefixPool string      `json:"ipv6_prefix_pool" validate:"omitempty"`
+	BindMac        interface{} `json:"bind_mac"`  // Can be int or boolean
+	BindVlan       interface{} `json:"bind_vlan"` // Can be int or boolean
+	Remark         string      `json:"remark" validate:"omitempty,max=500"`
+	NodeId         interface{} `json:"node_id"` // Can be int64 or string
 }
 
 // toRadiusProfile Convert ProfileUpdateRequest Convert to RadiusProfile
 func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
-		Name:       pr.Name,
-		AddrPool:   pr.AddrPool,
-		ActiveNum:  pr.ActiveNum,
-		UpRate:     pr.UpRate,
-		DownRate:   pr.DownRate,
-		Domain:     pr.Domain,
-		IPv6Prefix: pr.IPv6Prefix,
-		Remark:     pr.Remark,
+		Name:           pr.Name,
+		AddrPool:       pr.AddrPool,
+		ActiveNum:      pr.ActiveNum,
+		UpRate:         pr.UpRate,
+		DownRate:       pr.DownRate,
+		Domain:         pr.Domain,
+		IPv6PrefixPool: pr.IPv6PrefixPool,
+		Remark:         pr.Remark,
 	}
 
 	// Handle status field: boolean true -> "enabled", false -> "disabled", string remains unchanged
@@ -341,8 +341,8 @@ func UpdateProfile(c echo.Context) error {
 	if updateData.Domain != "" {
 		updates["domain"] = updateData.Domain
 	}
-	if updateData.IPv6Prefix != "" {
-		updates["ipv6_prefix"] = updateData.IPv6Prefix
+	if updateData.IPv6PrefixPool != "" {
+		updates["ipv6_prefix_pool"] = updateData.IPv6PrefixPool
 	}
 	if updateData.BindMac >= 0 {
 		updates["bind_mac"] = updateData.BindMac
@@ -360,6 +360,9 @@ func UpdateProfile(c echo.Context) error {
 	if err := GetDB(c).Model(&profile).Updates(updates).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update profile", err.Error())
 	}
+
+	// Invalidate profile cache for dynamic users
+	GetAppContext(c).ProfileCache().Invalidate(id)
 
 	// Re-query latest data
 	GetDB(c).First(&profile, id)
@@ -391,6 +394,9 @@ func DeleteProfile(c echo.Context) error {
 	if err := GetDB(c).Delete(&domain.RadiusProfile{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to delete profile", err.Error())
 	}
+
+	// Invalidate profile cache
+	GetAppContext(c).ProfileCache().Invalidate(id)
 
 	return ok(c, map[string]interface{}{
 		"message": "Deletion successful",

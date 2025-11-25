@@ -20,20 +20,20 @@ import (
 // createTestProfile creates test profile data
 func createTestProfile(db *gorm.DB, name string) *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
-		Name:       name,
-		Status:     "enabled",
-		AddrPool:   "192.168.1.0/24",
-		ActiveNum:  1,
-		UpRate:     10240,
-		DownRate:   20480,
-		Domain:     "test.com",
-		IPv6Prefix: "2001:db8::/64",
-		BindMac:    0,
-		BindVlan:   0,
-		Remark:     "Test profile",
-		NodeId:     1,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
+		Name:           name,
+		Status:         "enabled",
+		AddrPool:       "192.168.1.0/24",
+		ActiveNum:      1,
+		UpRate:         10240,
+		DownRate:       20480,
+		Domain:         "test.com",
+		IPv6PrefixPool: "2001:db8::/64",
+		BindMac:        0,
+		BindVlan:       0,
+		Remark:         "Test profile",
+		NodeId:         1,
+		CreatedAt:      time.Now(),
+		UpdatedAt:      time.Now(),
 	}
 	db.Create(profile)
 	return profile

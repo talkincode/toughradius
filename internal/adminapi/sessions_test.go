@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 	"time"
 
@@ -350,7 +351,8 @@ func TestDeleteOnlineSession(t *testing.T) {
 			setupData: func() *domain.RadiusOnline {
 				return nil
 			},
-			expectedStatus: http.StatusOK, // GORM Delete does not return error
+			expectedStatus: http.StatusNotFound, // API checks existence before delete
+			expectedError:  "NOT_FOUND",
 			checkDeleted:   false,
 		},
 		{
@@ -368,7 +370,8 @@ func TestDeleteOnlineSession(t *testing.T) {
 			setupData: func() *domain.RadiusOnline {
 				return nil
 			},
-			expectedStatus: http.StatusOK, // Negative numbers can be parsed，just no record found
+			expectedStatus: http.StatusNotFound, // Negative numbers can be parsed, but no record found
+			expectedError:  "NOT_FOUND",
 			checkDeleted:   false,
 		},
 		{
@@ -557,15 +560,16 @@ func TestSessionsEdgeCases(t *testing.T) {
 
 	t.Run("Query after deletion", func(t *testing.T) {
 		db.Exec("DELETE FROM radius_online")
-		createTestOnlineSession(db, "delete-test", "192.168.40.1", "10.4.0.1")
+		session := createTestOnlineSession(db, "delete-test", "192.168.40.1", "10.4.0.1")
+		sessionID := strconv.FormatInt(int64(session.ID), 10)
 
 		// Delete first
 		e := setupTestEcho()
-		req := httptest.NewRequest(http.MethodDelete, "/api/v1/sessions/1", nil)
+		req := httptest.NewRequest(http.MethodDelete, "/api/v1/sessions/"+sessionID, nil)
 		rec := httptest.NewRecorder()
 		c := CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
-		c.SetParamValues("1")
+		c.SetParamValues(sessionID)
 
 		err := DeleteOnlineSession(c)
 		require.NoError(t, err)
@@ -573,11 +577,11 @@ func TestSessionsEdgeCases(t *testing.T) {
 
 		// Query again should return 404
 		e = setupTestEcho()
-		req = httptest.NewRequest(http.MethodGet, "/api/v1/sessions/1", nil)
+		req = httptest.NewRequest(http.MethodGet, "/api/v1/sessions/"+sessionID, nil)
 		rec = httptest.NewRecorder()
 		c = CreateTestContext(e, db, req, rec, appCtx)
 		c.SetParamNames("id")
-		c.SetParamValues("1")
+		c.SetParamValues(sessionID)
 
 		err = GetOnlineSession(c)
 		require.NoError(t, err)

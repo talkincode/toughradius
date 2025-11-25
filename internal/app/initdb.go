@@ -16,7 +16,7 @@ func (a *Application) checkSuper() {
 	const superUsername = "admin"
 	const defaultPassword = "toughradius"
 
-	hashedPassword := common.Sha256HashWithSalt(defaultPassword, common.SecretSalt)
+	hashedPassword := common.Sha256HashWithSalt(defaultPassword, common.GetSecretSalt())
 
 	var operator domain.SysOpr
 	err := a.gormDB.Where("username = ?", superUsername).First(&operator).Error

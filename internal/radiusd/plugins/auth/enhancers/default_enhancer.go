@@ -34,6 +34,12 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 	user := authCtx.User
 	response := authCtx.Response
 
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
 	timeout := int64(time.Until(user.ExpireTime).Seconds())
 	if timeout > math.MaxInt32 {
 		timeout = math.MaxInt32
@@ -47,9 +53,13 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 	rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))
 	rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim))
 
-	if common.IsNotEmptyAndNA(user.AddrPool) {
-		rfc2869.FramedPool_SetString(response, user.AddrPool)
+	// Use getter method for AddrPool
+	addrPool := user.GetAddrPool(profileCache)
+	if common.IsNotEmptyAndNA(addrPool) {
+		rfc2869.FramedPool_SetString(response, addrPool)
 	}
+
+	// User-specific IP address (always use direct access)
 	if common.IsNotEmptyAndNA(user.IpAddr) {
 		rfc2865.FramedIPAddress_Set(response, net.ParseIP(user.IpAddr))
 	}
@@ -65,6 +75,12 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 		if _, ipnet, err := net.ParseCIDR(ipv6Prefix); err == nil {
 			rfc3162.FramedIPv6Prefix_Set(response, ipnet)
 		}
+	}
+
+	// Use getter method for IPv6PrefixPool
+	ipv6Pool := user.GetIPv6PrefixPool(profileCache)
+	if common.IsNotEmptyAndNA(ipv6Pool) {
+		rfc3162.FramedIPv6Pool_SetString(response, ipv6Pool)
 	}
 
 	return nil

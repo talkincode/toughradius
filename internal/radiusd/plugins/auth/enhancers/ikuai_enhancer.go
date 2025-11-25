@@ -30,8 +30,18 @@ func (e *IkuaiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCon
 	user := authCtx.User
 	resp := authCtx.Response
 
-	up := clampInt64(int64(user.UpRate)*1024*8, math.MaxInt32)
-	down := clampInt64(int64(user.DownRate)*1024*8, math.MaxInt32)
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
+	// Use getter methods for bandwidth rates
+	upRate := user.GetUpRate(profileCache)
+	downRate := user.GetDownRate(profileCache)
+
+	up := clampInt64(int64(upRate)*1024*8, math.MaxInt32)
+	down := clampInt64(int64(downRate)*1024*8, math.MaxInt32)
 
 	ikuai.RPUpstreamSpeedLimit_Set(resp, ikuai.RPUpstreamSpeedLimit(up))
 	ikuai.RPDownstreamSpeedLimit_Set(resp, ikuai.RPDownstreamSpeedLimit(down))

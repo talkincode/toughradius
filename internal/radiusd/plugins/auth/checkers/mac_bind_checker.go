@@ -23,8 +23,14 @@ func (c *MacBindChecker) Order() int {
 func (c *MacBindChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {
 	user := authCtx.User
 
-		// Skip MAC bind check
-	if user.BindMac == 0 {
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
+	// Skip MAC bind check
+	if user.GetBindMac(profileCache) == 0 {
 		return nil
 	}
 

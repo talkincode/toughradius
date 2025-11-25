@@ -29,6 +29,17 @@ func (e *MikrotikAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.Auth
 
 	user := authCtx.User
 	resp := authCtx.Response
-	mikrotik.MikrotikRateLimit_SetString(resp, fmt.Sprintf("%dk/%dk", user.UpRate, user.DownRate))
+
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
+	// Use getter methods for bandwidth rates
+	upRate := user.GetUpRate(profileCache)
+	downRate := user.GetDownRate(profileCache)
+
+	mikrotik.MikrotikRateLimit_SetString(resp, fmt.Sprintf("%dk/%dk", upRate, downRate))
 	return nil
 }

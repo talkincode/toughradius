@@ -29,8 +29,15 @@ func (c *OnlineCountChecker) Order() int {
 func (c *OnlineCountChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {
 	user := authCtx.User
 
-		// An activeNum of 0 indicates no limit
-	if user.ActiveNum == 0 {
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
+	// An activeNum of 0 indicates no limit
+	activeNum := user.GetActiveNum(profileCache)
+	if activeNum == 0 {
 		return nil
 	}
 
@@ -39,7 +46,7 @@ func (c *OnlineCountChecker) Check(ctx context.Context, authCtx *auth.AuthContex
 		return err
 	}
 
-	if count >= user.ActiveNum {
+	if count >= activeNum {
 		return errors.NewOnlineLimitError("user online count exceeded")
 	}
 

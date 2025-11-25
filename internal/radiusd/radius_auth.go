@@ -166,8 +166,9 @@ func (s *AuthService) handleAuthError(
 	}
 
 	metadata := map[string]interface{}{
-		"stage":      stage,
-		"config_mgr": s.AppContext().ConfigMgr(), // Add config manager for enhancers
+		"stage":         stage,
+		"config_mgr":    s.AppContext().ConfigMgr(),    // Add config manager for enhancers
+		"profile_cache": s.AppContext().ProfileCache(), // Add profile cache for dynamic attribute resolution
 	}
 	if username != "" {
 		metadata["username"] = username

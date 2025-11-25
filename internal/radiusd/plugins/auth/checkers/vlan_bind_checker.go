@@ -22,8 +22,14 @@ func (c *VlanBindChecker) Order() int {
 func (c *VlanBindChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {
 	user := authCtx.User
 
-		// Skip VLAN bind check
-	if user.BindVlan == 0 {
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
+	// Skip VLAN bind check
+	if user.GetBindVlan(profileCache) == 0 {
 		return nil
 	}
 

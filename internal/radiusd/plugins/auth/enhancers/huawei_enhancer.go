@@ -33,8 +33,18 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 	user := authCtx.User
 	resp := authCtx.Response
 
-	up := clampInt64(int64(user.UpRate)*1024, math.MaxInt32)
-	down := clampInt64(int64(user.DownRate)*1024, math.MaxInt32)
+	// Get profile cache from metadata
+	var profileCache interface{}
+	if authCtx.Metadata != nil {
+		profileCache = authCtx.Metadata["profile_cache"]
+	}
+
+	// Use getter methods for bandwidth rates
+	upRate := user.GetUpRate(profileCache)
+	downRate := user.GetDownRate(profileCache)
+
+	up := clampInt64(int64(upRate)*1024, math.MaxInt32)
+	down := clampInt64(int64(downRate)*1024, math.MaxInt32)
 	upPeak := clampInt64(up*4, math.MaxInt32)
 	downPeak := clampInt64(down*4, math.MaxInt32)
 
@@ -57,9 +67,10 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 		}
 	}
 
-	// Set Huawei Domain Name
-	if common.IsNotEmptyAndNA(user.Domain) {
-		huawei.HuaweiDomainName_SetString(resp, user.Domain)
+	// Use getter method for Domain
+	domain := user.GetDomain(profileCache)
+	if common.IsNotEmptyAndNA(domain) {
+		huawei.HuaweiDomainName_SetString(resp, domain)
 	}
 
 	return nil

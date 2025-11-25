@@ -41,8 +41,13 @@ func (c *mockChecker) Check(ctx context.Context, authCtx *auth.AuthContext) erro
 }
 func (c *mockChecker) Order() int { return c.order }
 
+// mockAppContext implements app.AppContext for testing
+type mockAuthAppContext struct {
+	mockAppContext
+}
+
 func newTestAuthService() *AuthService {
-	return &AuthService{RadiusService: &RadiusService{}}
+	return &AuthService{RadiusService: &RadiusService{appCtx: &mockAuthAppContext{}}}
 }
 
 func TestAuthenticateUserWithPluginsRunsValidatorAndPolicies(t *testing.T) {

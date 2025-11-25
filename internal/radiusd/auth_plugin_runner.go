@@ -53,7 +53,9 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 		Nas:           nas,
 		VendorRequest: vendorReq,
 		IsMacAuth:     isMacAuth,
-		Metadata:      make(map[string]interface{}),
+		Metadata: map[string]interface{}{
+			"profile_cache": s.AppContext().ProfileCache(), // Add profile cache for dynamic attribute resolution
+		},
 	}
 
 	var password string

@@ -84,7 +84,7 @@ func updateCurrentOperator(c echo.Context) error {
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
 		}
-		currentOpr.Password = common.Sha256HashWithSalt(password, common.SecretSalt)
+		currentOpr.Password = common.Sha256HashWithSalt(password, common.GetSecretSalt())
 	}
 	if payload.Realname != "" {
 		currentOpr.Realname = payload.Realname
@@ -255,7 +255,7 @@ func createOperator(c echo.Context) error {
 	}
 
 	// PasswordEncrypt（Using SHA256 + Salt，consistent with login validation）
-	hashedPassword := common.Sha256HashWithSalt(payload.Password, common.SecretSalt)
+	hashedPassword := common.Sha256HashWithSalt(payload.Password, common.GetSecretSalt())
 
 	// StatusHandle
 	status := strings.ToLower(payload.Status)
@@ -353,7 +353,7 @@ func updateOperator(c echo.Context) error {
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
 		}
-		operator.Password = common.Sha256HashWithSalt(password, common.SecretSalt)
+		operator.Password = common.Sha256HashWithSalt(password, common.GetSecretSalt())
 	}
 	if payload.Realname != "" {
 		operator.Realname = payload.Realname

@@ -25,6 +25,7 @@ type Application struct {
 	gormDB        *gorm.DB
 	sched         *cron.Cron
 	configManager *ConfigManager
+	profileCache  *ProfileCache
 }
 
 // Ensure Application implements all interfaces
@@ -138,6 +139,9 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	// Initialize the configuration manager
 	a.configManager = NewConfigManager(a)
 
+	// Initialize profile cache for dynamic profile linking
+	a.profileCache = NewProfileCache(a.gormDB, DefaultProfileCacheTTL)
+
 	a.initJob()
 }
 
@@ -210,6 +214,11 @@ func (a *Application) SaveSettings(settings map[string]interface{}) error {
 	return nil
 }
 
+// ProfileCache returns the profile cache instance
+func (a *Application) ProfileCache() *ProfileCache {
+	return a.profileCache
+}
+
 // checkDefaultPNode check default node
 func (a *Application) checkDefaultPNode() {
 	var pnode domain.NetNode
@@ -228,6 +237,10 @@ func (a *Application) checkDefaultPNode() {
 func (a *Application) Release() {
 	if a.sched != nil {
 		a.sched.Stop()
+	}
+
+	if a.profileCache != nil {
+		a.profileCache.Stop()
 	}
 
 	_ = metrics.Close()

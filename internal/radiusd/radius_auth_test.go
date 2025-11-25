@@ -29,6 +29,7 @@ func (m *mockAppContext) GetSettingsBoolValue(category, key string) bool     { r
 func (m *mockAppContext) SaveSettings(settings map[string]interface{}) error { return nil }
 func (m *mockAppContext) Scheduler() *cron.Cron                              { return nil }
 func (m *mockAppContext) ConfigMgr() *app.ConfigManager                      { return nil }
+func (m *mockAppContext) ProfileCache() *app.ProfileCache                    { return nil }
 func (m *mockAppContext) MigrateDB(track bool) error                         { return nil }
 func (m *mockAppContext) InitDb()                                            {}
 func (m *mockAppContext) DropAll()                                           {}

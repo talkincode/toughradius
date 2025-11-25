@@ -33,7 +33,7 @@ func TestCheckSuperCreatesDefaultAdmin(t *testing.T) {
 
 	assert.Equal(t, "super", admin.Level)
 	assert.Equal(t, common.ENABLED, admin.Status)
-	assert.Equal(t, common.Sha256HashWithSalt("toughradius", common.SecretSalt), admin.Password)
+	assert.Equal(t, common.Sha256HashWithSalt("toughradius", common.GetSecretSalt()), admin.Password)
 }
 
 func TestCheckSuperRepairsExistingAdmin(t *testing.T) {
@@ -56,5 +56,5 @@ func TestCheckSuperRepairsExistingAdmin(t *testing.T) {
 
 	assert.Equal(t, "super", admin.Level)
 	assert.Equal(t, common.ENABLED, admin.Status)
-	assert.Equal(t, common.Sha256HashWithSalt("toughradius", common.SecretSalt), admin.Password)
+	assert.Equal(t, common.Sha256HashWithSalt("toughradius", common.GetSecretSalt()), admin.Password)
 }
