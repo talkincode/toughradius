@@ -134,12 +134,12 @@ const formatTimestamp = (value?: string | number): string => {
   return date.toLocaleString();
 };
 
-const NasPortField = () => {
+const NasPortField = ({ label }: { label?: string }) => {
   const translate = useTranslate();
   return (
     <FunctionField
       source="nas_port"
-      label={translate('resources.radius/accounting.fields.nas_port')}
+      label={label || translate('resources.radius/accounting.fields.nas_port')}
       render={(record: AccountingRecord) => {
         if (!record?.nas_port) {
           return '-';
@@ -150,12 +150,12 @@ const NasPortField = () => {
   );
 };
 
-const SessionDurationField = () => {
+const SessionDurationField = ({ label }: { label?: string }) => {
   const translate = useTranslate();
   return (
     <FunctionField
       source="acct_session_time"
-      label={translate('resources.radius/accounting.fields.session_time')}
+      label={label || translate('resources.radius/accounting.fields.session_time')}
       render={(record: AccountingRecord) => formatDuration(record.acct_session_time)}
     />
   );
@@ -1649,7 +1649,7 @@ const AccountingListContent = () => {
               source="nas_addr"
               label={translate('resources.radius/accounting.fields.nas_addr')}
             />
-            <NasPortField />
+            <NasPortField label={translate('resources.radius/accounting.fields.nas_port')} />
             <DateField
               source="acct_start_time"
               label={translate('resources.radius/accounting.fields.acct_start_time')}
@@ -1661,7 +1661,7 @@ const AccountingListContent = () => {
               showTime
               emptyText="-"
             />
-            <SessionDurationField />
+            <SessionDurationField label={translate('resources.radius/accounting.fields.session_time')} />
             <FunctionField
               source="acct_input_total"
               label={translate('resources.radius/accounting.fields.acct_input_total')}

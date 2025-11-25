@@ -163,6 +163,9 @@ const customChineseMessages: TranslationMessages = {
         started_at: '开始时间',
         start_time_gte: '开始时间',
         start_time_lte: '开始时间止',
+        framed_ipv6addr: 'IPv6地址',
+        acct_start_time_gte: '开始时间从',
+        acct_start_time_lte: '开始时间至',
       },
       sections: {
         overview: '会话概览',
@@ -212,6 +215,7 @@ const customChineseMessages: TranslationMessages = {
         acct_start_time_lte: '开始时间至',
         acct_stop_time_gte: '结束时间从',
         acct_stop_time_lte: '结束时间至',
+        framed_ipv6addr: 'IPv6地址',
       },
       sections: {
         overview: '会话概览',

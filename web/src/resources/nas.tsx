@@ -52,7 +52,7 @@ import {
   TextField as MuiTextField,
   alpha
 } from '@mui/material';
-import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   Router as NasIcon,
   NetworkCheck as NetworkIcon,
@@ -69,8 +69,7 @@ import {
   Cancel as DisabledIcon,
   Dns as ServerIcon,
   VpnKey as SecretIcon,
-  Business as VendorIcon,
-  LocalOffer as TagIcon
+  Business as VendorIcon
 } from '@mui/icons-material';
 import {
   ServerPagination,
@@ -79,7 +78,6 @@ import {
   FieldGrid,
   FieldGridItem,
   formLayoutSx,
-  controlWrapperSx,
   DetailItem,
   DetailSectionCard,
   EmptyValue
@@ -475,12 +473,6 @@ const NASNameField = () => {
       </Box>
     </Box>
   );
-};
-
-const StatusField = () => {
-  const record = useRecordContext<NASDevice>();
-  if (!record) return null;
-  return <StatusIndicator isEnabled={record.status === 'enabled'} />;
 };
 
 const VendorField = () => {
@@ -1363,57 +1355,10 @@ const NASDetails = () => {
           {/* 顶部概览卡片 */}
           <NASHeaderCard />
 
-          {/* 基本信息 */}
-          <DetailSectionCard
-            title={translate('resources.network/nas.sections.basic.title', { _: '基本信息' })}
-            description={translate('resources.network/nas.sections.basic.description', { _: 'NAS 设备的基本配置' })}
-            icon={<NasIcon />}
-            color="primary"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(3, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.network/nas.fields.id', { _: '设备ID' })}
-                value={record.id}
-              />
-              <DetailItem
-                label={translate('resources.network/nas.fields.name', { _: '设备名称' })}
-                value={record.name}
-                highlight
-              />
-              <DetailItem
-                label={translate('resources.network/nas.fields.identifier', { _: '标识符' })}
-                value={record.identifier}
-              />
-              <DetailItem
-                label={translate('resources.network/nas.fields.vendor_code', { _: '厂商' })}
-                value={`${getVendorName(record.vendor_code)} (${record.vendor_code || '0'})`}
-              />
-              <DetailItem
-                label={translate('resources.network/nas.fields.model', { _: '型号' })}
-                value={record.model || <EmptyValue />}
-              />
-              <DetailItem
-                label={translate('resources.network/nas.fields.status', { _: '状态' })}
-                value={<StatusIndicator isEnabled={record.status === 'enabled'} />}
-                highlight
-              />
-            </Box>
-          </DetailSectionCard>
-
           {/* 网络配置 */}
           <DetailSectionCard
             title={translate('resources.network/nas.sections.network.title', { _: '网络配置' })}
-            description={translate('resources.network/nas.sections.network.description', { _: 'IP地址和主机名配置' })}
+            description={translate('resources.network/nas.sections.network.description', { _: '主机名配置' })}
             icon={<NetworkIcon />}
             color="success"
           >
@@ -1423,38 +1368,13 @@ const NASDetails = () => {
                 gap: 2,
                 gridTemplateColumns: {
                   xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(3, 1fr)',
+                  sm: 'repeat(2, 1fr)',
                 },
               }}
             >
               <DetailItem
-                label={translate('resources.network/nas.fields.ipaddr', { _: 'IP地址' })}
-                value={
-                  record.ipaddr ? (
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        fontFamily: 'monospace',
-                        bgcolor: theme => alpha(theme.palette.info.main, 0.1),
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        display: 'inline-block',
-                      }}
-                    >
-                      {record.ipaddr}
-                    </Typography>
-                  ) : <EmptyValue />
-                }
-                highlight
-              />
-              <DetailItem
                 label={translate('resources.network/nas.fields.hostname', { _: '主机名' })}
                 value={record.hostname || <EmptyValue />}
-              />
-              <DetailItem
-                label={translate('resources.network/nas.fields.coa_port', { _: 'CoA端口' })}
-                value={record.coa_port || <EmptyValue />}
               />
             </Box>
           </DetailSectionCard>

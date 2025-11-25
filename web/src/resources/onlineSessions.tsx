@@ -120,12 +120,12 @@ const formatTimestamp = (value?: string | number): string => {
   return date.toLocaleString();
 };
 
-const NasPortField = () => {
+const NasPortField = ({ label }: { label?: string }) => {
   const translate = useTranslate();
   return (
     <FunctionField
       source="nas_port"
-      label={translate('resources.radius/online.fields.nas_port')}
+      label={label || translate('resources.radius/online.fields.nas_port')}
       render={(record: OnlineSession) => {
         if (!record?.nas_port) {
           return '-';
@@ -136,12 +136,12 @@ const NasPortField = () => {
   );
 };
 
-const TimeoutField = () => {
+const TimeoutField = ({ label }: { label?: string }) => {
   const translate = useTranslate();
   return (
     <FunctionField
       source="session_timeout"
-      label={translate('resources.radius/online.fields.session_timeout')}
+      label={label || translate('resources.radius/online.fields.session_timeout')}
       render={(record: OnlineSession) => {
         if (record?.session_timeout === undefined || record?.session_timeout === null) {
           return '-';
@@ -152,12 +152,12 @@ const TimeoutField = () => {
   );
 };
 
-const SessionDurationField = () => {
+const SessionDurationField = ({ label }: { label?: string }) => {
   const translate = useTranslate();
   return (
     <FunctionField
       source="acct_session_time"
-      label={translate('resources.radius/online.fields.session_time')}
+      label={label || translate('resources.radius/online.fields.session_time')}
       render={(record: OnlineSession) => formatDuration(record.acct_session_time)}
     />
   );
@@ -1517,14 +1517,14 @@ const OnlineSessionListContent = () => {
               source="nas_addr"
               label={translate('resources.radius/online.fields.nas_addr')}
             />
-            <NasPortField />
+            <NasPortField label={translate('resources.radius/online.fields.nas_port')} />
             <DateField
               source="acct_start_time"
               label={translate('resources.radius/online.fields.acct_start_time')}
               showTime
             />
-            <SessionDurationField />
-            <TimeoutField />
+            <SessionDurationField label={translate('resources.radius/online.fields.session_time')} />
+            <TimeoutField label={translate('resources.radius/online.fields.session_timeout')} />
             <FunctionField
               source="acct_input_octets"
               label={translate('resources.radius/online.fields.acct_input_octets')}

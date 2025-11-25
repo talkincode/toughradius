@@ -46,9 +46,8 @@ import {
   TextField as MuiTextField,
   alpha
 } from '@mui/material';
-import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
-  Person as PersonIcon,
   Security as SecurityIcon,
   Schedule as TimeIcon,
   Note as NoteIcon,
@@ -494,12 +493,6 @@ const OperatorNameField = () => {
       </Box>
     </Box>
   );
-};
-
-const StatusField = () => {
-  const record = useRecordContext<Operator>();
-  if (!record) return null;
-  return <StatusIndicator isEnabled={record.status === 'enabled'} />;
 };
 
 const LevelField = () => {
@@ -1299,102 +1292,10 @@ const OperatorDetails = () => {
           {/* 顶部概览卡片 */}
           <OperatorHeaderCard />
 
-          {/* 基本信息 */}
-          <DetailSectionCard
-            title={translate('resources.system/operators.sections.basic.title', { _: '账号信息' })}
-            description={translate('resources.system/operators.sections.basic.description', { _: '操作员的登录账号信息' })}
-            icon={<PersonIcon />}
-            color="primary"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(3, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.system/operators.fields.id', { _: '操作员ID' })}
-                value={record.id}
-              />
-              <DetailItem
-                label={translate('resources.system/operators.fields.username', { _: '用户名' })}
-                value={record.username}
-                highlight
-              />
-              <DetailItem
-                label={translate('resources.system/operators.fields.realname', { _: '真实姓名' })}
-                value={record.realname || <EmptyValue />}
-              />
-            </Box>
-          </DetailSectionCard>
-
-          {/* 联系方式 */}
-          <DetailSectionCard
-            title={translate('resources.system/operators.sections.personal.title', { _: '联系方式' })}
-            description={translate('resources.system/operators.sections.personal.description', { _: '联系信息' })}
-            icon={<EmailIcon />}
-            color="info"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.system/operators.fields.email', { _: '邮箱' })}
-                value={record.email || <EmptyValue />}
-              />
-              <DetailItem
-                label={translate('resources.system/operators.fields.mobile', { _: '手机号' })}
-                value={record.mobile || <EmptyValue />}
-              />
-            </Box>
-          </DetailSectionCard>
-
-          {/* 权限设置 */}
-          <DetailSectionCard
-            title={translate('resources.system/operators.sections.permissions.title', { _: '权限设置' })}
-            description={translate('resources.system/operators.sections.permissions.description', { _: '账号权限和状态' })}
-            icon={<SecurityIcon />}
-            color="warning"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.system/operators.fields.level', { _: '权限级别' })}
-                value={<LevelChip level={record.level} />}
-                highlight
-              />
-              <DetailItem
-                label={translate('resources.system/operators.fields.status', { _: '状态' })}
-                value={<StatusIndicator isEnabled={record.status === 'enabled'} />}
-                highlight
-              />
-            </Box>
-          </DetailSectionCard>
-
           {/* 时间信息 */}
           <DetailSectionCard
             title={translate('resources.system/operators.sections.other.title', { _: '时间信息' })}
-            description={translate('resources.system/operators.sections.other.description', { _: '登录和创建时间' })}
+            description={translate('resources.system/operators.sections.other.description', { _: '创建和更新时间' })}
             icon={<TimeIcon />}
             color="info"
           >
@@ -1404,14 +1305,10 @@ const OperatorDetails = () => {
                 gap: 2,
                 gridTemplateColumns: {
                   xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(3, 1fr)',
+                  sm: 'repeat(2, 1fr)',
                 },
               }}
             >
-              <DetailItem
-                label={translate('resources.system/operators.fields.last_login', { _: '最后登录' })}
-                value={formatTimestamp(record.last_login)}
-              />
               <DetailItem
                 label={translate('resources.system/operators.fields.created_at', { _: '创建时间' })}
                 value={formatTimestamp(record.created_at)}

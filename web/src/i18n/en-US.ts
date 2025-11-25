@@ -163,6 +163,9 @@ const customEnglishMessages: TranslationMessages = {
         started_at: 'Started At',
         start_time_gte: 'Start Time',
         start_time_lte: 'Start Time To',
+        framed_ipv6addr: 'IPv6 Address',
+        acct_start_time_gte: 'Start Time From',
+        acct_start_time_lte: 'Start Time To',
       },
       sections: {
         overview: 'Session overview',
@@ -212,6 +215,7 @@ const customEnglishMessages: TranslationMessages = {
         acct_start_time_lte: 'Start Time To',
         acct_stop_time_gte: 'Stop Time From',
         acct_stop_time_lte: 'Stop Time To',
+        framed_ipv6addr: 'IPv6 Address',
       },
       sections: {
         overview: 'Session Overview',

@@ -44,7 +44,7 @@ import {
   TextField as MuiTextField,
   alpha
 } from '@mui/material';
-import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   Hub as NodeIcon,
   Label as TagIcon,
@@ -987,8 +987,6 @@ const NodeDetails = () => {
     return null;
   }
 
-  const tags = record.tags?.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag) || [];
-
   return (
     <>
       <style>{printStyles}</style>
@@ -997,60 +995,10 @@ const NodeDetails = () => {
           {/* 顶部概览卡片 */}
           <NodeHeaderCard />
 
-          {/* 基本信息 */}
-          <DetailSectionCard
-            title={translate('resources.network/nodes.sections.basic', { _: '基本信息' })}
-            description={translate('resources.network/nodes.sections.basic_desc', { _: '节点的基本配置信息' })}
-            icon={<NodeIcon />}
-            color="primary"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.network/nodes.fields.id', { _: '节点ID' })}
-                value={record.id}
-              />
-              <DetailItem
-                label={translate('resources.network/nodes.fields.name', { _: '节点名称' })}
-                value={record.name}
-                highlight
-              />
-              <DetailItem
-                label={translate('resources.network/nodes.fields.tags', { _: '标签' })}
-                value={
-                  tags.length > 0 ? (
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                      {tags.map((tag: string, index: number) => (
-                        <Chip
-                          key={index}
-                          label={tag}
-                          size="small"
-                          variant="outlined"
-                          color="primary"
-                          sx={{ height: 22, fontSize: '0.75rem' }}
-                        />
-                      ))}
-                    </Box>
-                  ) : (
-                    <EmptyValue />
-                  )
-                }
-              />
-            </Box>
-          </DetailSectionCard>
-
           {/* 时间信息 */}
           <DetailSectionCard
             title={translate('resources.network/nodes.sections.timing', { _: '时间信息' })}
-            description={translate('resources.network/nodes.sections.timing_desc', { _: '创建和更新时间' })}
+            description={translate('resources.network/nodes.sections.timing_desc', { _: '更新时间记录' })}
             icon={<TimeIcon />}
             color="info"
           >
@@ -1060,14 +1008,9 @@ const NodeDetails = () => {
                 gap: 2,
                 gridTemplateColumns: {
                   xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
                 },
               }}
             >
-              <DetailItem
-                label={translate('resources.network/nodes.fields.created_at', { _: '创建时间' })}
-                value={formatTimestamp(record.created_at)}
-              />
               <DetailItem
                 label={translate('resources.network/nodes.fields.updated_at', { _: '更新时间' })}
                 value={formatTimestamp(record.updated_at)}

@@ -46,7 +46,7 @@ import {
   TextField as MuiTextField,
   alpha
 } from '@mui/material';
-import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
+import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   Settings as ProfileIcon,
   Speed as SpeedIcon,
@@ -461,12 +461,6 @@ const ProfileNameField = () => {
       </Box>
     </Box>
   );
-};
-
-const StatusField = () => {
-  const record = useRecordContext<RadiusProfile>();
-  if (!record) return null;
-  return <StatusIndicator isEnabled={record.status === 'enabled'} />;
 };
 
 const RateField = ({ source }: { source: 'up_rate' | 'down_rate' }) => {
@@ -1295,77 +1289,10 @@ const ProfileDetails = () => {
           {/* 顶部概览卡片 */}
           <ProfileHeaderCard />
 
-          {/* 基本信息 */}
-          <DetailSectionCard
-            title={translate('resources.radius/profiles.sections.basic.title', { _: '基本信息' })}
-            description={translate('resources.radius/profiles.sections.basic.description', { _: '策略的基本配置' })}
-            icon={<ProfileIcon />}
-            color="primary"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(2, 1fr)',
-                  md: 'repeat(3, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.id', { _: '策略ID' })}
-                value={record.id}
-              />
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.name', { _: '策略名称' })}
-                value={record.name}
-                highlight
-              />
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.status', { _: '状态' })}
-                value={<StatusIndicator isEnabled={record.status === 'enabled'} />}
-                highlight
-              />
-            </Box>
-          </DetailSectionCard>
-
-          {/* 速率控制 */}
-          <DetailSectionCard
-            title={translate('resources.radius/profiles.sections.rate_control.title', { _: '速率控制' })}
-            description={translate('resources.radius/profiles.sections.rate_control.description', { _: '并发数和带宽限制配置' })}
-            icon={<SpeedIcon />}
-            color="info"
-          >
-            <Box
-              sx={{
-                display: 'grid',
-                gap: 2,
-                gridTemplateColumns: {
-                  xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(3, 1fr)',
-                },
-              }}
-            >
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.active_num', { _: '并发数' })}
-                value={record.active_num || 0}
-              />
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.up_rate', { _: '上行速率' })}
-                value={formatRate(record.up_rate)}
-              />
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.down_rate', { _: '下行速率' })}
-                value={formatRate(record.down_rate)}
-              />
-            </Box>
-          </DetailSectionCard>
-
           {/* 网络配置 */}
           <DetailSectionCard
             title={translate('resources.radius/profiles.sections.network.title', { _: '网络配置' })}
-            description={translate('resources.radius/profiles.sections.network.description', { _: 'IP地址池和域名配置' })}
+            description={translate('resources.radius/profiles.sections.network.description', { _: 'IPv6和域名配置' })}
             icon={<NetworkIcon />}
             color="success"
           >
@@ -1375,14 +1302,10 @@ const ProfileDetails = () => {
                 gap: 2,
                 gridTemplateColumns: {
                   xs: 'repeat(1, 1fr)',
-                  sm: 'repeat(3, 1fr)',
+                  sm: 'repeat(2, 1fr)',
                 },
               }}
             >
-              <DetailItem
-                label={translate('resources.radius/profiles.fields.addr_pool', { _: '地址池' })}
-                value={record.addr_pool || <EmptyValue />}
-              />
               <DetailItem
                 label={translate('resources.radius/profiles.fields.ipv6_prefix', { _: 'IPv6前缀' })}
                 value={record.ipv6_prefix || <EmptyValue />}
