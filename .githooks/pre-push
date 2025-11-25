@@ -48,11 +48,10 @@ echo -e "${GREEN}✅ Code formatting OK${NC}"
 
 # 4. 完整构建验证
 echo -e "\n${YELLOW}🔨 Running full build verification...${NC}"
-if ! CGO_ENABLED=0 go build -o /tmp/toughradius-test ./... 2>&1; then
+if ! CGO_ENABLED=0 go build ./... 2>&1; then
     echo -e "${RED}❌ Build failed! Push aborted.${NC}"
     exit 1
 fi
-rm -f /tmp/toughradius-test
 echo -e "${GREEN}✅ Build OK${NC}"
 
 # 5. 检查 go.mod 和 go.sum 是否同步
@@ -66,6 +65,26 @@ echo -e "${GREEN}✅ Module dependencies OK${NC}"
 
 # 6. 运行 golangci-lint（如果已安装）
 if command -v golangci-lint &> /dev/null; then
+    echo -e "\n${YELLOW}🔍 Running golangci-lint...${NC}"
+    if ! golangci-lint run --timeout=5m 2>&1; then
+        echo -e "${YELLOW}⚠️  golangci-lint found issues (non-blocking)${NC}"
+    else
+        echo -e "${GREEN}✅ golangci-lint OK${NC}"
+    fi
+else
+    echo -e "\n${YELLOW}💡 Tip: Install golangci-lint for additional checks:${NC}"
+    echo -e "   brew install golangci-lint"
+fi
+
+# 计算耗时
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}✅ All pre-push checks passed! (${DURATION}s)${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+exit 0
     echo -e "\n${YELLOW}🔍 Running golangci-lint...${NC}"
     if ! golangci-lint run --timeout=5m 2>&1; then
         echo -e "${YELLOW}⚠️  golangci-lint found issues (non-blocking)${NC}"
