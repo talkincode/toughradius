@@ -423,6 +423,7 @@ const customChineseMessages: TranslationMessages = {
         username: '3-30个字符，只能包含字母、数字和下划线',
         password: '至少6个字符，必须包含字母和数字',
         password_optional: '留空则不修改密码，至少6个字符，必须包含字母和数字',
+        cannot_change_super_password: '不能直接修改超级管理员密码，请使用账户设置或命令行工具',
         email: '请输入有效的邮箱地址',
         mobile: '请输入11位中国手机号',
         level: '超级管理员拥有所有权限',

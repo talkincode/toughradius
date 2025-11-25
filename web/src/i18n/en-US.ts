@@ -423,6 +423,7 @@ const customEnglishMessages: TranslationMessages = {
         username: '3-30 characters, letters, numbers and underscores only',
         password: 'At least 6 characters, must contain letters and numbers',
         password_optional: 'Leave blank to keep current password, at least 6 characters, must contain letters and numbers',
+        cannot_change_super_password: 'Cannot directly modify super admin password, use account settings or command line tool',
         email: 'Please enter a valid email address',
         mobile: 'Please enter an 11-digit Chinese mobile number',
         level: 'Super admin has all permissions',

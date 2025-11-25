@@ -227,6 +227,28 @@ export const OperatorList = () => {
   );
 };
 
+// 密码输入框组件 - 需要访问 record 上下文
+const PasswordInputWithRecord = () => {
+  const record = useRecordContext();
+  const translate = useTranslate();
+  const validation = useValidationRules();
+  
+  // 检查被编辑的用户是否为超级管理员，如果是则隐藏密码输入框
+  if (record?.level === 'super') {
+    return null;
+  }
+  
+  return (
+    <PasswordInput 
+      source="password" 
+      label={translate('resources.system/operators.fields.password')} 
+      validate={validation.validatePasswordOptional}
+      helperText={translate('resources.system/operators.helpers.password_optional')} 
+      fullWidth
+    />
+  );
+};
+
 // 操作员编辑
 export const OperatorEdit = () => {
   const { identity } = useGetIdentity();
@@ -256,13 +278,7 @@ export const OperatorEdit = () => {
               helperText={translate('resources.system/operators.helpers.username')}
               fullWidth
             />
-            <PasswordInput 
-              source="password" 
-              label={translate('resources.system/operators.fields.password')} 
-              validate={validation.validatePasswordOptional}
-              helperText={translate('resources.system/operators.helpers.password_optional')} 
-              fullWidth
-            />
+            <PasswordInputWithRecord />
           </FieldGrid>
         </FormSection>
 
