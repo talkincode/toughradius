@@ -177,6 +177,18 @@ const customEnglishMessages: TranslationMessages = {
         traffic: 'Traffic statistics',
         traffic_desc: 'Real-time upload/download counters for this session.',
       },
+      actions: {
+        disconnect: 'Force Disconnect',
+        disconnecting: 'Disconnecting...',
+      },
+      dialog: {
+        disconnect_title: 'Confirm Disconnect',
+        disconnect_content: 'Are you sure you want to force disconnect user "%{username}"? This will terminate the network connection.',
+      },
+      notifications: {
+        disconnected: 'User has been disconnected',
+        disconnect_error: 'Failed to disconnect user',
+      },
     },
     'radius/accounting': {
       name: 'Accounting Record |||| Accounting Records',

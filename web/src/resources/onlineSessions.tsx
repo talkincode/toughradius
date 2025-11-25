@@ -15,6 +15,8 @@ import {
   useListContext,
   SortButton,
   RaRecord,
+  useDelete,
+  useRedirect,
 } from 'react-admin';
 import {
   Box,
@@ -32,12 +34,19 @@ import {
   useTheme,
   useMediaQuery,
   TextField as MuiTextField,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
 } from '@mui/material';
 import {
   Router as DeviceIcon,
   AccessTime as TimeIcon,
   DataUsage as TrafficIcon,
   Wifi as OnlineIcon,
+  WifiOff as DisconnectIcon,
   ContentCopy as CopyIcon,
   Refresh as RefreshIcon,
   ArrowBack as BackIcon,
@@ -426,6 +435,9 @@ const SessionHeaderCard = () => {
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
+  const redirect = useRedirect();
+  const [deleteOne, { isPending: isDeleting }] = useDelete();
+  const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
 
   const handleCopy = useCallback((text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -436,6 +448,25 @@ const SessionHeaderCard = () => {
     refresh();
     notify('数据已刷新', { type: 'info' });
   }, [refresh, notify]);
+
+  const handleDisconnect = useCallback(() => {
+    if (!record?.id) return;
+    deleteOne(
+      'radius/online',
+      { id: record.id },
+      {
+        onSuccess: () => {
+          notify(translate('resources.radius/online.notifications.disconnected', { _: '用户已强制下线' }), { type: 'success' });
+          redirect('list', 'radius/online');
+        },
+        onError: (error) => {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          notify(translate('resources.radius/online.notifications.disconnect_error', { _: '强制下线失败' }) + `: ${errorMessage}`, { type: 'error' });
+        },
+      }
+    );
+    setDisconnectDialogOpen(false);
+  }, [record, deleteOne, notify, translate, redirect]);
 
   if (!record) return null;
 
@@ -550,6 +581,21 @@ const SessionHeaderCard = () => {
 
           {/* 右侧：操作按钮 */}
           <Box className="no-print" sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title={translate('resources.radius/online.actions.disconnect', { _: '强制下线' })}>
+              <IconButton
+                onClick={() => setDisconnectDialogOpen(true)}
+                disabled={isDeleting}
+                sx={{
+                  bgcolor: theme => alpha(theme.palette.error.main, 0.1),
+                  color: 'error.main',
+                  '&:hover': {
+                    bgcolor: theme => alpha(theme.palette.error.main, 0.2),
+                  },
+                }}
+              >
+                <DisconnectIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title="打印详情">
               <IconButton
                 onClick={() => window.print()}
@@ -589,6 +635,45 @@ const SessionHeaderCard = () => {
             />
           </Box>
         </Box>
+
+        {/* 强制下线确认对话框 */}
+        <Dialog
+          open={disconnectDialogOpen}
+          onClose={() => setDisconnectDialogOpen(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ color: 'error.main', fontWeight: 600 }}>
+            {translate('resources.radius/online.dialog.disconnect_title', { _: '确认强制下线' })}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText>
+              {translate('resources.radius/online.dialog.disconnect_content', {
+                _: '确定要强制下线用户 "{username}" 吗？此操作将断开用户的网络连接。',
+                username: record.username || '未知用户',
+              })}
+            </DialogContentText>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={() => setDisconnectDialogOpen(false)}
+              disabled={isDeleting}
+            >
+              {translate('ra.action.cancel', { _: '取消' })}
+            </Button>
+            <Button
+              onClick={handleDisconnect}
+              color="error"
+              variant="contained"
+              disabled={isDeleting}
+              startIcon={<DisconnectIcon />}
+            >
+              {isDeleting
+                ? translate('resources.radius/online.actions.disconnecting', { _: '正在下线...' })
+                : translate('resources.radius/online.actions.disconnect', { _: '强制下线' })}
+            </Button>
+          </DialogActions>
+        </Dialog>
 
         {/* 快速统计 */}
         <Box

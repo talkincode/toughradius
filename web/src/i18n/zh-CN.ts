@@ -177,6 +177,18 @@ const customChineseMessages: TranslationMessages = {
         traffic: '流量统计',
         traffic_desc: '当前会话实时的上/下行流量。',
       },
+      actions: {
+        disconnect: '强制下线',
+        disconnecting: '正在下线...',
+      },
+      dialog: {
+        disconnect_title: '确认强制下线',
+        disconnect_content: '确定要强制下线用户 "%{username}" 吗？此操作将断开用户的网络连接。',
+      },
+      notifications: {
+        disconnected: '用户已强制下线',
+        disconnect_error: '强制下线失败',
+      },
     },
     'radius/accounting': {
       name: '计费记录 |||| 计费记录',
