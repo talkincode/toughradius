@@ -21,7 +21,7 @@ const (
 	MSCHAPv2Success   = 3
 	MSCHAPv2Failure   = 4
 
-// MSCHAPv2 constants
+	// MSCHAPv2 constants
 	MSCHAPChallengeSize = 16
 	MSCHAPResponseSize  = 49 // PeerChallenge(16) + Reserved(8) + NTResponse(24) + Flags(1)
 	EAPMethodMSCHAPv2   = "eap-mschapv2"
@@ -177,7 +177,7 @@ func (h *MSCHAPv2Handler) buildChallengeRequest(identifier uint8, challenge []by
 	// MS-CHAPv2 Data
 	offset := 5
 	buffer[offset] = MSCHAPv2Challenge                                       // OpCode
-	buffer[offset+1] = identifier // MS-CHAPv2-ID (matches the EAP identifier)
+	buffer[offset+1] = identifier                                            // MS-CHAPv2-ID (matches the EAP identifier)
 	binary.BigEndian.PutUint16(buffer[offset+2:offset+4], uint16(msDataLen)) // MS-Length
 	buffer[offset+4] = MSCHAPChallengeSize                                   // Value-Size
 	copy(buffer[offset+5:offset+5+MSCHAPChallengeSize], challenge)           // Challenge

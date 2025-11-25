@@ -26,7 +26,7 @@ func TestWriteToFile(t *testing.T) {
 	// Prepare test data
 	now := time.Now()
 	localTime := timeutil.LocalTime(now)
-	
+
 	records := []interface{}{
 		&TestUser{
 			Username:  "user1",
@@ -273,7 +273,7 @@ func TestWriteToFile_DBTag(t *testing.T) {
 	type DBTagStruct struct {
 		Field1 string `db:"database_field"`
 		Field2 int    `db:"age"`
-		Field3 string `db:"-"` // Should be ignored
+		Field3 string `db:"-"`                // Should be ignored
 		Field4 string `json:"-" db:"visible"` // db tag takes precedence
 	}
 

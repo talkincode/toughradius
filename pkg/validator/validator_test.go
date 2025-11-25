@@ -253,9 +253,9 @@ func TestCustomValidations(t *testing.T) {
 		}
 
 		invalidUsernames := []string{
-			"test user",  // Contains a space
-			"test#user",  // Contains special characters
-			"userΩ",      // Contains a non-Latin character
+			"test user", // Contains a space
+			"test#user", // Contains special characters
+			"userΩ",     // Contains a non-Latin character
 		}
 
 		for _, username := range invalidUsernames {

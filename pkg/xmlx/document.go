@@ -167,8 +167,6 @@ func (this *Document) LoadStream(r io.Reader, charset CharsetFunc) (err error) {
 			}
 		}
 	}
-
-	return
 }
 
 // Load the contents of this document from the supplied byte slice.

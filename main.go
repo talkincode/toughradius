@@ -22,7 +22,14 @@ import (
 )
 
 var g errgroup.Group
-var Version = "develop"
+
+// Build information, injected via ldflags at compile time
+// Example: go build -ldflags "-X main.version=1.0.0 -X main.buildTime=2024-01-01T00:00:00Z -X main.gitCommit=abc123"
+var (
+	version   = "develop"
+	buildTime = "unknown"
+	gitCommit = "unknown"
+)
 
 var (
 	h        = flag.Bool("h", false, "help usage")
@@ -33,7 +40,11 @@ var (
 )
 
 func PrintVersion() {
-	fmt.Fprintf(os.Stdout, "version: %s\n", Version)
+	fmt.Fprintf(os.Stdout, "ToughRADIUS %s\n", version)
+	fmt.Fprintf(os.Stdout, "Build Time: %s\n", buildTime)
+	fmt.Fprintf(os.Stdout, "Git Commit: %s\n", gitCommit)
+	fmt.Fprintf(os.Stdout, "Go Version: %s\n", runtime.Version())
+	fmt.Fprintf(os.Stdout, "OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
 }
 
 func printHelp() {

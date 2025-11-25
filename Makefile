@@ -1,4 +1,10 @@
-PHONY: help build runs runf dev clean test initdb killfs
+.PHONY: help build runs runf dev clean test initdb killfs version lint ci setup-hooks
+
+# 版本信息
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "develop")
+BUILD_TIME ?= $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+GIT_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+LDFLAGS := -s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)
 
 # 默认目标
 help:
@@ -14,11 +20,16 @@ help:
 	@echo "  make build      - 构建生产版本 (PostgreSQL only)"
 	@echo "  make buildf     - 构建前端生产版本"
 	@echo ""
+	@echo "Quality:"
+	@echo "  make test       - 运行测试"
+	@echo "  make lint       - 运行代码检查"
+	@echo "  make ci         - 运行完整 CI 检查（本地）"
+	@echo "  make setup-hooks - 安装 Git hooks"
+	@echo ""
 	@echo "Database:"
 	@echo "  make initdb     - 初始化数据库（危险操作，会删除所有数据）"
 	@echo ""
 	@echo "Maintenance:"
-	@echo "  make test       - 运行测试"
 	@echo "  make clean      - 清理构建文件"
 	@echo ""
 
@@ -51,8 +62,19 @@ dev:
 # 构建生产版本（静态编译，支持 PostgreSQL 和 SQLite）
 build:
 	@echo "🔨 构建生产版本..."
+	@echo "📦 Version: $(VERSION)"
+	@echo "🕐 Build Time: $(BUILD_TIME)"
+	@echo "📝 Git Commit: $(GIT_COMMIT)"
 	@echo "⚠️  Static build (CGO_ENABLED=0)"
-	@bash scripts/build-backend.sh
+	@mkdir -p release
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o release/toughradius main.go
+	@echo "✅ 构建完成: release/toughradius"
+
+# 显示版本信息
+version:
+	@echo "Version:    $(VERSION)"
+	@echo "Build Time: $(BUILD_TIME)"
+	@echo "Git Commit: $(GIT_COMMIT)"
 
 # 构建前端生产版本
 buildf:
@@ -76,6 +98,56 @@ test:
 test-integration:
 	@echo "🧪 运行集成测试..."
 	CGO_ENABLED=0 go test -v ./internal/radiusd/... -run TestRadiusIntegration
+
+# 代码检查
+lint:
+	@echo "🔍 运行代码检查..."
+	@echo ""
+	@echo "📝 Checking code formatting..."
+	@UNFORMATTED=$$(gofmt -l . 2>/dev/null | grep -v vendor || true); \
+	if [ -n "$$UNFORMATTED" ]; then \
+		echo "❌ The following files need formatting:"; \
+		echo "$$UNFORMATTED"; \
+		echo "Run 'go fmt ./...' to fix"; \
+		exit 1; \
+	fi
+	@echo "✅ Code formatting OK"
+	@echo ""
+	@echo "🔎 Running go vet..."
+	@CGO_ENABLED=0 go vet ./...
+	@echo "✅ go vet OK"
+	@echo ""
+	@if command -v golangci-lint > /dev/null 2>&1; then \
+		echo "🔍 Running golangci-lint..."; \
+		golangci-lint run --timeout=5m || true; \
+	else \
+		echo "💡 Tip: Install golangci-lint for more thorough checks:"; \
+		echo "   brew install golangci-lint"; \
+	fi
+	@echo ""
+	@echo "✅ Lint checks completed"
+
+# 本地 CI 检查（模拟 GitHub Actions）
+ci: lint test build
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ All CI checks passed!"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+# 安装 Git hooks
+setup-hooks:
+	@echo "🔧 Setting up Git hooks..."
+	@chmod +x .githooks/pre-commit .githooks/pre-push
+	@git config core.hooksPath .githooks
+	@echo "✅ Git hooks installed!"
+	@echo ""
+	@echo "📋 Installed hooks:"
+	@echo "   • pre-commit: 格式检查、go vet、快速构建"
+	@echo "   • pre-push:   完整测试、lint、构建验证"
+	@echo ""
+	@echo "💡 To disable hooks temporarily:"
+	@echo "   git commit --no-verify"
+	@echo "   git push --no-verify"
 
 # 清理构建文件
 clean:

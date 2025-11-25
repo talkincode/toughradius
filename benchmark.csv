@@ -1,3 +1,0 @@
-Timestamp,AuthReq,AuthAccept,AuthReject,AuthDrop,AuthTimeout,AcctStart,AcctStop,AcctUpdate,AcctResp,AcctDrop,AcctTimeout,OnlineCount,OfflineCount,ReqBytes,RespBytes,Auth0-10ms,Auth10-100ms,Auth100-1000ms,Auth>1000ms,Acct0-10ms,Acct10-100ms,Acct100-1000ms,Acct>1000ms,AuthQPS,AcctQPS,TotalQPS,OnlineRate,OfflineRate,UploadRate,DownloadRate
-1763653783,5000,4996,0,0,0,0,0,0,0,0,0,0,0,685000,159872,1611,3308,67,10,0,0,0,0,0,0,0,0,0,0,0
-1763653788,5000,4996,0,0,0,0,0,0,0,0,0,0,0,685000,159872,1611,3308,67,10,0,0,0,0,0,0,0,0,0,0,0

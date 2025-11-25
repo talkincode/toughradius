@@ -116,16 +116,16 @@ func TestMSCHAPv2Handler_HandleIdentity(t *testing.T) {
 		Secret:         "secret",
 	}
 
-		// Call HandleIdentity
+	// Call HandleIdentity
 	handled, err := handler.HandleIdentity(ctx)
 
-		// Validate the result
+	// Validate the result
 	require.NoError(t, err)
 	assert.True(t, handled)
 	assert.NotNil(t, writer.response)
 	assert.Equal(t, radius.CodeAccessChallenge, writer.response.Code)
 
-		// Validate the EAP-Message attributes
+	// Validate the EAP-Message attributes
 	eapMsg, err := rfc2869.EAPMessage_Lookup(writer.response)
 	require.NoError(t, err)
 	assert.NotNil(t, eapMsg)
@@ -133,7 +133,7 @@ func TestMSCHAPv2Handler_HandleIdentity(t *testing.T) {
 	assert.Equal(t, uint8(eap.TypeMSCHAPv2), eapMsg[4])  // EAP Type
 	assert.Equal(t, uint8(MSCHAPv2Challenge), eapMsg[5]) // MS-CHAPv2 OpCode
 
-		// Validate that status is stored
+	// Validate that status is stored
 	stateID := rfc2865.State_GetString(writer.response)
 	assert.NotEmpty(t, stateID)
 

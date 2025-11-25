@@ -286,7 +286,7 @@ func ReadImportExcelData(src io.Reader, sheet string) ([]map[string]interface{},
 	if err != nil {
 		return nil, err
 	}
-		// Retrieve all cells from Sheet1
+	// Retrieve all cells from Sheet1
 	rows := f.GetRows(sheet)
 	head := make(map[int]string)
 	var data []map[string]interface{}

@@ -72,7 +72,7 @@ func TestTableNameUniqueness(t *testing.T) {
 	}
 
 	tableNames := make(map[string]bool)
-	
+
 	for _, table := range Tables {
 		if tn, ok := table.(tableNamer); ok {
 			name := tn.TableName()
@@ -83,19 +83,19 @@ func TestTableNameUniqueness(t *testing.T) {
 
 	// Ensure all table names follow snake_case
 	expectedNames := map[string]bool{
-		"sys_config":         true,
-		"sys_opr":            true,
-		"sys_opr_log":        true,
-		"net_node":           true,
-		"net_nas":            true,
-		"radius_profile":     true,
-		"radius_user":        true,
-		"radius_online":      true,
-		"radius_accounting":  true,
+		"sys_config":        true,
+		"sys_opr":           true,
+		"sys_opr_log":       true,
+		"net_node":          true,
+		"net_nas":           true,
+		"radius_profile":    true,
+		"radius_user":       true,
+		"radius_online":     true,
+		"radius_accounting": true,
 	}
 
 	assert.Equal(t, len(expectedNames), len(tableNames), "Table name count should match")
-	
+
 	for name := range tableNames {
 		assert.True(t, expectedNames[name], "Unexpected table name: %s", name)
 	}

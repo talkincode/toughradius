@@ -28,7 +28,7 @@ func (p *DefaultParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, 
 		vr.MacAddr = strings.ReplaceAll(macval, "-", ":")
 	}
 
-		// The default parser does not parse VLAN attributes
+	// The default parser does not parse VLAN attributes
 	vr.Vlanid1 = 0
 	vr.Vlanid2 = 0
 

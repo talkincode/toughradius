@@ -62,7 +62,7 @@ func (v *MSCHAPValidator) validateMSCHAPv2(
 		return errors.NewPasswordMismatchError()
 	}
 
-		// Generate the encryption key
+	// Generate the encryption key
 	recvKey, err := rfc3079.MakeKey(ntResponse, bytePwd, false)
 	if err != nil {
 		return errors.NewAuthError("radus_reject_passwd_error",
@@ -85,7 +85,7 @@ func (v *MSCHAPValidator) validateMSCHAPv2(
 	success[0] = ident
 	copy(success[1:], authenticatorResponse)
 
-		// Add the response attribute
+	// Add the response attribute
 	microsoft.MSCHAP2Success_Add(authCtx.Response, []byte(success))
 	microsoft.MSMPPERecvKey_Add(authCtx.Response, recvKey)
 	microsoft.MSMPPESendKey_Add(authCtx.Response, sendKey)

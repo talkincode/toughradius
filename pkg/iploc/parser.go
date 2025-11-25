@@ -129,12 +129,12 @@ func (p *Parser) Reader() io.Reader {
 	return p.res
 }
 
-// (*Parser) ReadByte Read1byte(s)，to identify redirect mode
-func (p *Parser) ReadByte(pos int64) byte {
+// (*Parser) ReadByteAt Read1byte(s) at given position，to identify redirect mode
+func (p *Parser) ReadByteAt(pos int64) byte {
 	b := make([]byte, 1)
 	n, err := p.res.ReadAt(b, pos)
 	if err != nil || n != 1 {
-		panic("ReadByte damaged DAT files, position: " + fmt.Sprint(pos))
+		panic("ReadByteAt damaged DAT files, position: " + fmt.Sprint(pos))
 	}
 	return b[0]
 }
@@ -172,7 +172,7 @@ func (p *Parser) ReadText(offset int64) ([]byte, int) {
 	var s []byte
 	var b byte
 	for {
-		b = p.ReadByte(offset)
+		b = p.ReadByteAt(offset)
 		if b != terminatorFlag {
 			s = append(s, b)
 		} else if len(s) > 0 {
@@ -190,7 +190,7 @@ func (p *Parser) ReadString(offset int64) (string, int) {
 
 // (*Parser) ReadRegion Read region data，handle possible redirect
 func (p *Parser) ReadRegion(offset int64) (s []byte) {
-	switch p.ReadByte(offset) {
+	switch p.ReadByteAt(offset) {
 	case redirectPart:
 		s, _ = p.ReadText(p.ReadPosition(offset + 1))
 	default:
@@ -205,10 +205,10 @@ func (p *Parser) ReadRegionString(offset int64) string {
 
 func (p *Parser) digLocation(offset int64) (location Location) {
 	var n int
-	switch p.ReadByte(offset + ipByteSize) {
+	switch p.ReadByteAt(offset + ipByteSize) {
 	case redirectAll:
 		offset = p.ReadPosition(offset + ipByteSize + 1)
-		switch p.ReadByte(offset) {
+		switch p.ReadByteAt(offset) {
 		case redirectPart:
 			location.Country, _ = p.ReadString(p.ReadPosition(offset + 1))
 			location.Region = p.ReadRegionString(offset + 1 + positionByteSize)
@@ -233,7 +233,7 @@ func (p *Parser) digLocation(offset int64) (location Location) {
 }
 
 func (p *Parser) readRegionRaw(offset int64) (s []byte, pos uint32, mode byte) {
-	switch p.ReadByte(offset) {
+	switch p.ReadByteAt(offset) {
 	case redirectPart:
 		pos = uint32(p.ReadPosition(offset + 1))
 		mode = redirectPart
@@ -246,11 +246,11 @@ func (p *Parser) readRegionRaw(offset int64) (s []byte, pos uint32, mode byte) {
 // ReadLocationRaw Used for export or indexing
 func (p *Parser) ReadLocationRaw(offset int64) (raw LocationRaw) {
 	var n int
-	raw.Mode[0] = p.ReadByte(offset + ipByteSize)
+	raw.Mode[0] = p.ReadByteAt(offset + ipByteSize)
 	switch raw.Mode[0] {
 	case redirectAll:
 		offset = p.ReadPosition(offset + ipByteSize + 1)
-		switch p.ReadByte(offset) {
+		switch p.ReadByteAt(offset) {
 		case redirectPart:
 			raw.Mode[0] = redirectPart
 			raw.Pos[0] = uint32(p.ReadPosition(offset + 1))

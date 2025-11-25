@@ -216,7 +216,7 @@ func TestMetrics_MultipleMetrics(t *testing.T) {
 func TestInitMetrics_InvalidPath(t *testing.T) {
 	// Try to initialize with a path that can't be created
 	invalidPath := "/invalid/path/that/cannot/be/created"
-	
+
 	err := InitMetrics(invalidPath)
 	// Some systems might allow this to succeed, so we just check it doesn't panic
 	if err == nil {

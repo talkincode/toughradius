@@ -21,9 +21,9 @@ func TestMSCHAPValidator_CanHandle(t *testing.T) {
 	validator := &MSCHAPValidator{}
 
 	tests := []struct {
-		name         string
-		setupPacket  func(*radius.Packet)
-		expected     bool
+		name        string
+		setupPacket func(*radius.Packet)
+		expected    bool
 	}{
 		{
 			name: "with both challenge and response",
@@ -75,11 +75,11 @@ func TestMSCHAPValidator_Validate_InvalidLength(t *testing.T) {
 	ctx := context.Background()
 
 	tests := []struct {
-		name            string
-		challengeLen    int
-		responseLen     int
-		expectError     bool
-		errorContains   string
+		name          string
+		challengeLen  int
+		responseLen   int
+		expectError   bool
+		errorContains string
 	}{
 		{
 			name:          "invalid challenge length",
@@ -108,7 +108,7 @@ func TestMSCHAPValidator_Validate_InvalidLength(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
-			
+
 			microsoft.MSCHAPChallenge_Add(packet, make([]byte, tt.challengeLen))
 			microsoft.MSCHAP2Response_Add(packet, make([]byte, tt.responseLen))
 
@@ -146,9 +146,9 @@ func TestMSCHAPValidator_Validate_PasswordMismatch(t *testing.T) {
 	// Create a valid-length but random challenge and response
 	challenge := make([]byte, 16)
 	mschapResponse := make([]byte, 50)
-	
+
 	// Set up the basic structure
-	mschapResponse[0] = 1  // ident
+	mschapResponse[0] = 1 // ident
 	// Keep the remaining bytes zero
 
 	microsoft.MSCHAPChallenge_Add(packet, challenge)

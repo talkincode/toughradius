@@ -1,53 +1,60 @@
 name: toughradius docker build and publish
 
 on:
-  # run it on push to the default repository branch
   push:
-    branches: [main]
-  # run it during pull request
-  pull_request:
+    tags:
+      - 'v*'
 
 jobs:
-  # define job to build and publish docker image
   build-and-push-docker-image:
     name: Build Docker image and push to repositories
-    # run only when code is compiling and tests are passing
     runs-on: ubuntu-latest
 
-    # steps to perform in job
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      # setup Docker buld action
+      - name: Extract version from tag
+        id: version
+        run: |
+          # Extract version from tag (e.g., v1.2.3 -> 1.2.3)
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "Building version: ${VERSION}"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to Github Packages
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
-          # 指向带有 Dockerfile 的源代码所在位置的相对路径
           context: ./
-          # Note: tags has to be all lower-case
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            talkincode/toughradius:latest 
+            talkincode/toughradius:latest
+            talkincode/toughradius:${{ steps.version.outputs.version }}
             ghcr.io/talkincode/toughradius:latest
-          # build on feature branches, push only on main branch
-          push: ${{ github.ref == 'refs/heads/main' }}
+            ghcr.io/talkincode/toughradius:${{ steps.version.outputs.version }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

@@ -140,10 +140,10 @@ func (h *MD5Handler) verifyMD5Response(identifier uint8, password string, challe
 	}
 
 	// responseformat: Value-Size (1) + Value (16)
-		// Skip the Value-Size
+	// Skip the Value-Size
 	actualResponse := response[1:]
 
-		// Compute the expected MD5
+	// Compute the expected MD5
 	hash := md5.New()
 	hash.Write([]byte{identifier})
 	hash.Write([]byte(password))

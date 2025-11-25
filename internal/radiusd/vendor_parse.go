@@ -34,7 +34,7 @@ func ParseVlanIds(nasportid string) (int64, int64) {
 
 // ParseVendor uses the plugin system to parse vendor-specific attributes
 func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *VendorRequest {
-		// Retrieve the corresponding VendorParser from the registry
+	// Retrieve the corresponding VendorParser from the registry
 	parser, ok := registry.GetVendorParser(vendorCode)
 	if !ok {
 		zap.L().Warn("vendor parser not found, using default parser",
@@ -52,7 +52,7 @@ func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *Vendo
 		}
 	}
 
-// Use the plugin to parse
+	// Use the plugin to parse
 	vendorReq, err := parser.Parse(r)
 	if err != nil {
 		zap.L().Error("vendor parser error",

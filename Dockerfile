@@ -1,14 +1,25 @@
-FROM golang:1.24-bookworm AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS builder
+
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
 
 COPY . /src
 WORKDIR /src
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags \
-     '-s -w -extldflags "-static"'  -o /toughradius main.go
+# Install UPX for binary compression
+RUN apt-get update && apt-get install -y upx-ucl && rm -rf /var/lib/apt/lists/*
 
-FROM alpine:3.19
+# Build for target platform
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags \
+     '-s -w -extldflags "-static"' -o /toughradius main.go
 
-RUN apk add --no-cache curl
+# Compress binary with UPX (skip on armv7 as UPX may have issues)
+RUN if [ "${TARGETARCH}" != "arm" ]; then upx --best --lzma /toughradius || true; fi
+
+FROM alpine:latest
+
+RUN apk add --no-cache curl ca-certificates tzdata
 
 COPY --from=builder /toughradius /usr/local/bin/toughradius
 

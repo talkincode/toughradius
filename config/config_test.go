@@ -271,7 +271,7 @@ logger:
 }
 
 func TestLoadConfigNonExistent(t *testing.T) {
-// Loading a nonexistent config file should return the default configuration
+	// Loading a nonexistent config file should return the default configuration
 	cfg := LoadConfig("/nonexistent/path/config.yml")
 
 	// Validate that the defaults are returned
