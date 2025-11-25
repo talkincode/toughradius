@@ -5,7 +5,8 @@ assets/buildver.txt
 /release/
 release
 web/node_modules/
-web/dist/
+web/dist/*
+!web/dist/.gitkeep
 web/.vite/
 __debug_bin
 .DS_Store
