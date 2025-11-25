@@ -48,7 +48,7 @@ func (a *Application) checkSuper() {
 	resetLevel := !strings.EqualFold(operator.Level, "super")
 	resetStatus := !strings.EqualFold(operator.Status, common.ENABLED)
 
-	if !(resetPassword || resetLevel || resetStatus) {
+	if !resetPassword && !resetLevel && !resetStatus {
 		return
 	}
 

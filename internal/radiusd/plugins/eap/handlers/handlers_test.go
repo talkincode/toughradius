@@ -9,16 +9,20 @@ import (
 )
 
 // Mock state manager for testing
+//
+//nolint:unused
 type mockStateManagerForTest struct {
 	states map[string]*eap.EAPState
 }
 
+//nolint:unused
 func newMockStateManagerForTest() *mockStateManagerForTest {
 	return &mockStateManagerForTest{
 		states: make(map[string]*eap.EAPState),
 	}
 }
 
+//nolint:unused
 func (m *mockStateManagerForTest) GetState(stateID string) (*eap.EAPState, error) {
 	state, ok := m.states[stateID]
 	if !ok {
@@ -27,11 +31,13 @@ func (m *mockStateManagerForTest) GetState(stateID string) (*eap.EAPState, error
 	return state, nil
 }
 
+//nolint:unused
 func (m *mockStateManagerForTest) SetState(stateID string, state *eap.EAPState) error {
 	m.states[stateID] = state
 	return nil
 }
 
+//nolint:unused
 func (m *mockStateManagerForTest) DeleteState(stateID string) error {
 	delete(m.states, stateID)
 	return nil

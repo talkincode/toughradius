@@ -204,8 +204,8 @@ func DeleteOnlineSession(c echo.Context) error {
 
 			// Build CoA Disconnect-Request packet
 			pkt := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
-			rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId)
-			rfc2865.UserName_SetString(pkt, session.Username)
+			_ = rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId) //nolint:errcheck
+			_ = rfc2865.UserName_SetString(pkt, session.Username)           //nolint:errcheck
 
 			// Send to NAS CoA port (default 3799)
 			coaAddr := net.JoinHostPort(nas.Ipaddr, "3799")

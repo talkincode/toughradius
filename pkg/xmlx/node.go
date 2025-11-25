@@ -2,7 +2,7 @@
 // license. Its contents can be found at:
 // http://creativecommons.org/publicdomain/zero/1.0/
 
-package xmlx
+package xmlx //nolint:staticcheck // third-party library code style preserved
 
 import (
 	"bytes"
@@ -326,6 +326,8 @@ func (this *Node) Au64(namespace, name string) uint64 {
 }
 
 // Get attribute value as float32
+//
+//nolint:staticcheck
 func (this *Node) Af32(namespace, name string) float32 {
 	s := this.As(namespace, name)
 	if s != "" {
@@ -346,6 +348,8 @@ func (this *Node) Af64(namespace, name string) float64 {
 }
 
 // Get attribute value as bool
+//
+//nolint:staticcheck
 func (this *Node) Ab(namespace, name string) bool {
 	s := this.As(namespace, name)
 	if s != "" {
@@ -461,7 +465,6 @@ func (this *Node) SetAttr(name, value string) {
 	attr.Name.Space = ""
 	attr.Value = value
 	this.Attributes = append(this.Attributes, attr)
-	return
 }
 
 // Convert node to appropriate []byte representation based on it's @Type.
@@ -522,7 +525,7 @@ func (this *Node) printText() []byte {
 		return val
 	}
 	var b bytes.Buffer
-	xml.EscapeText(&b, val)
+	_ = xml.EscapeText(&b, val) //nolint:errcheck
 	return b.Bytes()
 }
 
@@ -559,7 +562,7 @@ func (this *Node) printElement() []byte {
 		b.Write(v.bytes())
 	}
 
-	xml.EscapeText(&b, []byte(this.Value))
+	_ = xml.EscapeText(&b, []byte(this.Value)) //nolint:errcheck
 	if len(this.Name.Space) > 0 {
 		b.WriteString("</")
 		b.WriteString(this.Name.Space)
@@ -590,6 +593,8 @@ func (this *Node) spacePrefix(space string) string {
 }
 
 // Add a child node
+//
+//nolint:staticcheck
 func (this *Node) AddChild(t *Node) {
 	if t.Parent != nil {
 		t.Parent.RemoveChild(t)

@@ -189,7 +189,7 @@ func (cm *ConfigManager) loadFromDatabase() {
 		zap.L().Warn("failed to load config from database", zap.Error(err))
 		return
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }() //nolint:errcheck
 
 	loaded := 0
 	for rows.Next() {
@@ -294,7 +294,7 @@ func (cm *ConfigManager) GetInt(category, name string) int64 {
 
 	// Simple integer conversion
 	var result int64
-	fmt.Sscanf(value, "%d", &result)
+	_, _ = fmt.Sscanf(value, "%d", &result) //nolint:errcheck
 	return result
 }
 

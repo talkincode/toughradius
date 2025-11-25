@@ -261,23 +261,23 @@ func FmtRequest(p *radius.Request) string {
 		return ""
 	}
 	var buff = new(strings.Builder)
-	buff.WriteString(fmt.Sprintf("RADIUS Request: %s => %s\n", p.RemoteAddr.String(), p.LocalAddr.String()))
-	buff.WriteString(fmt.Sprintf("\tIdentifier: %v\n", p.Packet.Identifier))
-	buff.WriteString(fmt.Sprintf("\tCode: %v\n", p.Packet.Code))
-	buff.WriteString(fmt.Sprintf("\tAuthenticator: %v\n", p.Packet.Authenticator))
+	_, _ = fmt.Fprintf(buff, "RADIUS Request: %s => %s\n", p.RemoteAddr.String(), p.LocalAddr.String())
+	_, _ = fmt.Fprintf(buff, "\tIdentifier: %v\n", p.Identifier)       //nolint:staticcheck
+	_, _ = fmt.Fprintf(buff, "\tCode: %v\n", p.Code)                   //nolint:staticcheck
+	_, _ = fmt.Fprintf(buff, "\tAuthenticator: %v\n", p.Authenticator) //nolint:staticcheck
 	buff.WriteString("\tAttributes:\n")
-	for _, attribute := range p.Packet.Attributes {
+	for _, attribute := range p.Attributes { //nolint:staticcheck
 		if attribute.Type == rfc2866.AcctStatusType_Type {
-			buff.WriteString(fmt.Sprintf("\t\t%s: %s\n", StringType(attribute.Type),
-				rfc2866.AcctStatusType(binary.BigEndian.Uint32(attribute.Attribute)).String()))
+			_, _ = fmt.Fprintf(buff, "\t\t%s: %s\n", StringType(attribute.Type),
+				rfc2866.AcctStatusType(binary.BigEndian.Uint32(attribute.Attribute)).String())
 		} else if attribute.Type != rfc2865.VendorSpecific_Type {
-			buff.WriteString(fmt.Sprintf("\t\t%s: %s\n", StringType(attribute.Type), FormatType(attribute.Type, attribute.Attribute)))
+			_, _ = fmt.Fprintf(buff, "\t\t%s: %s\n", StringType(attribute.Type), FormatType(attribute.Type, attribute.Attribute))
 		} else {
-			buff.WriteString(fmt.Sprintf("\t\t%s(%d:%d): %x\n",
+			_, _ = fmt.Fprintf(buff, "\t\t%s(%d:%d): %x\n",
 				StringType(attribute.Type),
 				binary.BigEndian.Uint16(attribute.Attribute[2:4]),
 				attribute.Attribute[4:5][0],
-				attribute.Attribute[6:]))
+				attribute.Attribute[6:])
 		}
 	}
 	return buff.String()
@@ -288,20 +288,20 @@ func FmtResponse(p *radius.Packet, RemoteAddr net.Addr) string {
 		return ""
 	}
 	var buff = new(strings.Builder)
-	buff.WriteString(fmt.Sprintf("RADIUS Response: => %s\n", RemoteAddr.String()))
-	buff.WriteString(fmt.Sprintf("\tIdentifier: %v\n", p.Identifier))
-	buff.WriteString(fmt.Sprintf("\tCode: %v\n", p.Code))
-	buff.WriteString(fmt.Sprintf("\tAuthenticator: %v\n", p.Authenticator))
+	_, _ = fmt.Fprintf(buff, "RADIUS Response: => %s\n", RemoteAddr.String())
+	_, _ = fmt.Fprintf(buff, "\tIdentifier: %v\n", p.Identifier)
+	_, _ = fmt.Fprintf(buff, "\tCode: %v\n", p.Code)
+	_, _ = fmt.Fprintf(buff, "\tAuthenticator: %v\n", p.Authenticator)
 	buff.WriteString("\tAttributes:\n")
 	for _, attribute := range p.Attributes {
 		if attribute.Type != rfc2865.VendorSpecific_Type {
-			buff.WriteString(fmt.Sprintf("\t\t%s: %s\n", StringType(attribute.Type), FormatType(attribute.Type, attribute.Attribute)))
+			_, _ = fmt.Fprintf(buff, "\t\t%s: %s\n", StringType(attribute.Type), FormatType(attribute.Type, attribute.Attribute))
 		} else {
-			buff.WriteString(fmt.Sprintf("\t\t%s(%d:%d): %x\n",
+			_, _ = fmt.Fprintf(buff, "\t\t%s(%d:%d): %x\n",
 				StringType(attribute.Type),
 				binary.BigEndian.Uint16(attribute.Attribute[2:4]),
 				attribute.Attribute[4:5][0],
-				attribute.Attribute[6:]))
+				attribute.Attribute[6:])
 		}
 	}
 	return buff.String()
@@ -313,19 +313,19 @@ func FmtPacket(p *radius.Packet) string {
 	}
 	var buff = new(strings.Builder)
 	buff.WriteString("RADIUS Packet: \n")
-	buff.WriteString(fmt.Sprintf("\tIdentifier: %v\n", p.Identifier))
-	buff.WriteString(fmt.Sprintf("\tCode: %v\n", p.Code))
-	buff.WriteString(fmt.Sprintf("\tAuthenticator: %s\n", HexFormat(p.Authenticator[:])))
+	_, _ = fmt.Fprintf(buff, "\tIdentifier: %v\n", p.Identifier)
+	_, _ = fmt.Fprintf(buff, "\tCode: %v\n", p.Code)
+	_, _ = fmt.Fprintf(buff, "\tAuthenticator: %s\n", HexFormat(p.Authenticator[:]))
 	buff.WriteString("\tAttributes:\n")
 	for _, attribute := range p.Attributes {
 		if attribute.Type != rfc2865.VendorSpecific_Type {
-			buff.WriteString(fmt.Sprintf("\t\t%s: %s\n", StringType(attribute.Type), FormatType(attribute.Type, attribute.Attribute)))
+			_, _ = fmt.Fprintf(buff, "\t\t%s: %s\n", StringType(attribute.Type), FormatType(attribute.Type, attribute.Attribute))
 		} else {
-			buff.WriteString(fmt.Sprintf("\t\t%s(%d:%d): %x\n",
+			_, _ = fmt.Fprintf(buff, "\t\t%s(%d:%d): %x\n",
 				StringType(attribute.Type),
 				binary.BigEndian.Uint16(attribute.Attribute[2:4]),
 				attribute.Attribute[4:5][0],
-				attribute.Attribute[6:]))
+				attribute.Attribute[6:])
 		}
 	}
 	return buff.String()

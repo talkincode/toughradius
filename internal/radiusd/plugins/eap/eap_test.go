@@ -86,7 +86,7 @@ func TestParseEAPMessage(t *testing.T) {
 				p := radius.New(radius.CodeAccessRequest, []byte("secret"))
 				// EAP-Message: Code=1, ID=1, Length=10, Type=4, Data=5 bytes
 				eapMsg := []byte{1, 1, 0, 10, 4, 0x01, 0x02, 0x03, 0x04, 0x05}
-				rfc2869.EAPMessage_Set(p, eapMsg)
+				_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
 				return p
 			},
 			expectErr: false,
@@ -110,7 +110,7 @@ func TestParseEAPMessage(t *testing.T) {
 			setupPkt: func() *radius.Packet {
 				p := radius.New(radius.CodeAccessRequest, []byte("secret"))
 				// Only 3 bytes - too short
-				rfc2869.EAPMessage_Set(p, []byte{1, 2, 3})
+				_ = rfc2869.EAPMessage_Set(p, []byte{1, 2, 3}) //nolint:errcheck
 				return p
 			},
 			expectErr: true,

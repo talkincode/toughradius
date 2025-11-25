@@ -86,11 +86,11 @@ func (v *MSCHAPValidator) validateMSCHAPv2(
 	copy(success[1:], authenticatorResponse)
 
 	// Add the response attribute
-	microsoft.MSCHAP2Success_Add(authCtx.Response, []byte(success))
-	microsoft.MSMPPERecvKey_Add(authCtx.Response, recvKey)
-	microsoft.MSMPPESendKey_Add(authCtx.Response, sendKey)
-	microsoft.MSMPPEEncryptionPolicy_Add(authCtx.Response, microsoft.MSMPPEEncryptionPolicy_Value_EncryptionAllowed)
-	microsoft.MSMPPEEncryptionTypes_Add(authCtx.Response, microsoft.MSMPPEEncryptionTypes_Value_RC440or128BitAllowed)
+	_ = microsoft.MSCHAP2Success_Add(authCtx.Response, []byte(success))                                                   //nolint:errcheck
+	_ = microsoft.MSMPPERecvKey_Add(authCtx.Response, recvKey)                                                            //nolint:errcheck
+	_ = microsoft.MSMPPESendKey_Add(authCtx.Response, sendKey)                                                            //nolint:errcheck
+	_ = microsoft.MSMPPEEncryptionPolicy_Add(authCtx.Response, microsoft.MSMPPEEncryptionPolicy_Value_EncryptionAllowed)  //nolint:errcheck
+	_ = microsoft.MSMPPEEncryptionTypes_Add(authCtx.Response, microsoft.MSMPPEEncryptionTypes_Value_RC440or128BitAllowed) //nolint:errcheck
 
 	return nil
 }

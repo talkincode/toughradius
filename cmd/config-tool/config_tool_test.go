@@ -209,7 +209,7 @@ func TestValidateConfigSchemas(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			// Create temporary file with test data
 			tmpFile := createTempConfigFile(t, tt.schemas)
-			defer os.Remove(tmpFile)
+			defer func() { _ = os.Remove(tmpFile) }() //nolint:errcheck
 
 			// Run validation
 			err := validateConfigSchemas(tmpFile)
@@ -256,7 +256,7 @@ func TestValidateConfigSchemasFileErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.filePath != "" && tt.filePath != "/non/existent/path/config.json" {
-				defer os.Remove(tt.filePath)
+				defer func() { _ = os.Remove(tt.filePath) }() //nolint:errcheck
 			}
 
 			err := validateConfigSchemas(tt.filePath)
@@ -345,7 +345,7 @@ func TestPrintConfigSummary(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tmpFile := createTempConfigFile(t, tt.schemas)
-			defer os.Remove(tmpFile)
+			defer func() { _ = os.Remove(tmpFile) }() //nolint:errcheck
 
 			err := printConfigSummary(tmpFile)
 
@@ -384,7 +384,7 @@ func TestPrintConfigSummaryFileErrors(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.filePath != "/non/existent/path/config.json" {
-				defer os.Remove(tt.filePath)
+				defer func() { _ = os.Remove(tt.filePath) }() //nolint:errcheck
 			}
 
 			err := printConfigSummary(tt.filePath)
@@ -483,7 +483,7 @@ func TestValidateAllTypes(t *testing.T) {
 	}
 
 	tmpFile := createTempConfigFile(t, schemas)
-	defer os.Remove(tmpFile)
+	defer func() { _ = os.Remove(tmpFile) }() //nolint:errcheck
 
 	err := validateConfigSchemas(tmpFile)
 	if err != nil {
@@ -547,7 +547,7 @@ func TestValidateIntegerConstraints(t *testing.T) {
 			}
 
 			tmpFile := createTempConfigFile(t, schemas)
-			defer os.Remove(tmpFile)
+			defer func() { _ = os.Remove(tmpFile) }() //nolint:errcheck
 
 			err := validateConfigSchemas(tmpFile)
 

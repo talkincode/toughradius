@@ -25,7 +25,7 @@ of all matching nodes, including nodes inside other matching nodes.
 Note that these search functions can be invoked on individual nodes as well.
 This allows you to search only a subset of the entire document.
 */
-package xmlx
+package xmlx //nolint:staticcheck // third-party library code style preserved
 
 import (
 	"bytes"
@@ -33,7 +33,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
@@ -151,7 +150,7 @@ func (this *Document) LoadStream(r io.Reader, charset CharsetFunc) (err error) {
 			if tt.Target == "xml" { // xml doctype
 				doctype = strings.TrimSpace(string(tt.Inst))
 				if i := strings.Index(doctype, `standalone="`); i > -1 {
-					this.StandAlone = doctype[i+len(`standalone="`) : len(doctype)]
+					this.StandAlone = doctype[i+len(`standalone="`):]
 					i = strings.Index(this.StandAlone, `"`)
 					this.StandAlone = this.StandAlone[0:i]
 				}
@@ -186,7 +185,7 @@ func (this *Document) LoadFile(filename string, charset CharsetFunc) (err error)
 		return
 	}
 
-	defer fd.Close()
+	defer func() { _ = fd.Close() }() //nolint:errcheck
 	return this.LoadStream(fd, charset)
 }
 
@@ -207,7 +206,7 @@ func (this *Document) LoadUriClient(uri string, client *http.Client, charset Cha
 		return
 	}
 
-	defer r.Body.Close()
+	defer func() { _ = r.Body.Close() }() //nolint:errcheck
 	return this.LoadStream(r.Body, charset)
 }
 
@@ -219,7 +218,7 @@ func (this *Document) LoadUri(uri string, charset CharsetFunc) (err error) {
 
 // Save the contents of this document to the supplied file.
 func (this *Document) SaveFile(path string) error {
-	return ioutil.WriteFile(path, this.SaveBytes(), 0600)
+	return os.WriteFile(path, this.SaveBytes(), 0600)
 }
 
 // Save the contents of this document as a byte slice.

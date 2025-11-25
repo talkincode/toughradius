@@ -63,7 +63,7 @@ func (s *Client) ExecCommand(session *ssh.Session, cmd string) (string, error) {
 		if err != nil {
 			return "", err
 		}
-		defer _session.Close()
+		defer func() { _ = _session.Close() }() //nolint:errcheck
 	} else {
 		_session = session
 	}

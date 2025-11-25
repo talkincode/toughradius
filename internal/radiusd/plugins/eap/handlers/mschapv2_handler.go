@@ -89,7 +89,7 @@ func (h *MSCHAPv2Handler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 	}
 
 	// Set the State attribute
-	rfc2865.State_SetString(response, stateID)
+	_ = rfc2865.State_SetString(response, stateID) //nolint:errcheck
 
 	// Set the EAP-Message and Message-Authenticator
 	eap.SetEAPMessageAndAuth(response, eapData, ctx.Secret)
@@ -144,7 +144,7 @@ func (h *MSCHAPv2Handler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 
 	// Mark authentication as successful
 	state.Success = true
-	ctx.StateManager.SetState(stateID, state)
+	_ = ctx.StateManager.SetState(stateID, state) //nolint:errcheck
 
 	return true, nil
 }
@@ -306,12 +306,12 @@ func (h *MSCHAPv2Handler) verifyResponse(
 	copy(success[1:], authenticatorResponse)
 
 	// Add Microsoft-specific attributes to the response
-	microsoft.MSCHAP2Success_Add(response, success)
-	microsoft.MSMPPERecvKey_Add(response, recvKey)
-	microsoft.MSMPPESendKey_Add(response, sendKey)
-	microsoft.MSMPPEEncryptionPolicy_Add(response,
+	_ = microsoft.MSCHAP2Success_Add(response, success) //nolint:errcheck
+	_ = microsoft.MSMPPERecvKey_Add(response, recvKey)  //nolint:errcheck
+	_ = microsoft.MSMPPESendKey_Add(response, sendKey)  //nolint:errcheck
+	_ = microsoft.MSMPPEEncryptionPolicy_Add(response,  //nolint:errcheck
 		microsoft.MSMPPEEncryptionPolicy_Value_EncryptionAllowed)
-	microsoft.MSMPPEEncryptionTypes_Add(response,
+	_ = microsoft.MSMPPEEncryptionTypes_Add(response, //nolint:errcheck
 		microsoft.MSMPPEEncryptionTypes_Value_RC440or128BitAllowed)
 
 	return true, nil

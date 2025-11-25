@@ -156,7 +156,7 @@ func TestListUsers(t *testing.T) {
 			// Convert the response data to a slice of users
 			dataBytes, _ := json.Marshal(response.Data)
 			var users []domain.RadiusUser
-			json.Unmarshal(dataBytes, &users)
+			_ = json.Unmarshal(dataBytes, &users)
 			response.Data = users
 
 			assert.Len(t, users, tt.expectedCount)
@@ -268,7 +268,7 @@ func TestListUsersWithFieldFilters(t *testing.T) {
 			// Convert the response data to a slice of users
 			dataBytes, _ := json.Marshal(response.Data)
 			var users []domain.RadiusUser
-			json.Unmarshal(dataBytes, &users)
+			_ = json.Unmarshal(dataBytes, &users)
 			response.Data = users
 
 			assert.Len(t, users, tt.expectedCount, "Expected %d users for query %s", tt.expectedCount, tt.queryParams)
@@ -339,13 +339,13 @@ func TestGetUser(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var resultUser domain.RadiusUser
-				json.Unmarshal(dataBytes, &resultUser)
+				_ = json.Unmarshal(dataBytes, &resultUser)
 
 				assert.Equal(t, user.Username, resultUser.Username)
 				assert.Empty(t, resultUser.Password) // Password should be cleared
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -483,7 +483,7 @@ func TestCreateUser(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var user domain.RadiusUser
-				json.Unmarshal(dataBytes, &user)
+				_ = json.Unmarshal(dataBytes, &user)
 
 				assert.NotZero(t, user.ID)
 				if tt.checkResult != nil {
@@ -491,7 +491,7 @@ func TestCreateUser(t *testing.T) {
 				}
 			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -629,7 +629,7 @@ func TestUpdateUser(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var updatedUser domain.RadiusUser
-				json.Unmarshal(dataBytes, &updatedUser)
+				_ = json.Unmarshal(dataBytes, &updatedUser)
 
 				assert.Empty(t, updatedUser.Password) // Password should be cleared
 				if tt.checkResult != nil {
@@ -637,7 +637,7 @@ func TestUpdateUser(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -711,7 +711,7 @@ func TestDeleteUser(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -741,10 +741,10 @@ func TestUserEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var user domain.RadiusUser
-		json.Unmarshal(dataBytes, &user)
+		_ = json.Unmarshal(dataBytes, &user)
 
 		assert.Equal(t, "spaceuser", user.Username)
 	})
@@ -765,10 +765,10 @@ func TestUserEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var user domain.RadiusUser
-		json.Unmarshal(dataBytes, &user)
+		_ = json.Unmarshal(dataBytes, &user)
 
 		// Should inherit profile configuration
 		assert.Equal(t, profile.ActiveNum, user.ActiveNum)
@@ -793,10 +793,10 @@ func TestUserEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var updatedUser domain.RadiusUser
-		json.Unmarshal(dataBytes, &updatedUser)
+		_ = json.Unmarshal(dataBytes, &updatedUser)
 
 		// Username should remain unchanged
 		assert.Equal(t, originalUsername, updatedUser.Username)
@@ -820,10 +820,10 @@ func TestUserEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var user domain.RadiusUser
-		json.Unmarshal(dataBytes, &user)
+		_ = json.Unmarshal(dataBytes, &user)
 
 		// Default expiration time should be one year later
 		expectedExpire := time.Now().AddDate(1, 0, 0)

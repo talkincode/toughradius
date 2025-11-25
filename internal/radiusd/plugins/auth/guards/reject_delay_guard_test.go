@@ -34,7 +34,7 @@ func TestRejectDelayGuard_OnError_RejectLimit(t *testing.T) {
 	ctx := context.Background()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2865.UserName_SetString(packet, "testuser")
 
 	authCtx := &auth.AuthContext{
 		Request: &radius.Request{Packet: packet},
@@ -62,7 +62,7 @@ func TestRejectDelayGuard_OnError_ResetWindow(t *testing.T) {
 	ctx := context.Background()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2865.UserName_SetString(packet, "testuser")
 
 	authCtx := &auth.AuthContext{
 		Request: &radius.Request{Packet: packet},
@@ -95,7 +95,7 @@ func TestRejectDelayGuard_OnError_DifferentUsers(t *testing.T) {
 
 	// User1 reaches the limit
 	packet1 := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet1, "user1")
+	_ = rfc2865.UserName_SetString(packet1, "user1")
 	authCtx1 := &auth.AuthContext{
 		Request: &radius.Request{Packet: packet1},
 	}
@@ -110,7 +110,7 @@ func TestRejectDelayGuard_OnError_DifferentUsers(t *testing.T) {
 
 	// User2 should remain unaffected
 	packet2 := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet2, "user2")
+	_ = rfc2865.UserName_SetString(packet2, "user2") //nolint:errcheck
 	authCtx2 := &auth.AuthContext{
 		Request: &radius.Request{Packet: packet2},
 	}
@@ -156,7 +156,7 @@ func TestRejectDelayGuard_ResolveUsername(t *testing.T) {
 				Request: &radius.Request{
 					Packet: func() *radius.Packet {
 						p := radius.New(radius.CodeAccessRequest, []byte("secret"))
-						rfc2865.UserName_SetString(p, "packet_user")
+						_ = rfc2865.UserName_SetString(p, "packet_user") //nolint:errcheck
 						return p
 					}(),
 				},
@@ -175,7 +175,7 @@ func TestRejectDelayGuard_ResolveUsername(t *testing.T) {
 				Request: &radius.Request{
 					Packet: func() *radius.Packet {
 						p := radius.New(radius.CodeAccessRequest, []byte("secret"))
-						rfc2865.UserName_SetString(p, "packet_user")
+						_ = rfc2865.UserName_SetString(p, "packet_user") //nolint:errcheck
 						return p
 					}(),
 				},
@@ -219,13 +219,13 @@ func TestRejectDelayGuard_CacheLimit(t *testing.T) {
 	for i := 0; i < maxCachedRejectItems+100; i++ {
 		packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 		username := "user_" + string(rune(i))
-		rfc2865.UserName_SetString(packet, username)
+		_ = rfc2865.UserName_SetString(packet, username) //nolint:errcheck
 
 		authCtx := &auth.AuthContext{
 			Request: &radius.Request{Packet: packet},
 		}
 
-		guard.OnError(ctx, authCtx, "test", testErr)
+		_ = guard.OnError(ctx, authCtx, "test", testErr) //nolint:errcheck
 	}
 
 	// Validate that cache size stays within the limit
@@ -245,7 +245,7 @@ func TestRejectDelayGuard_ConfigOverrides(t *testing.T) {
 	ctx := context.Background()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "config-user")
+	_ = rfc2865.UserName_SetString(packet, "config-user") //nolint:errcheck
 	authCtx := &auth.AuthContext{Request: &radius.Request{Packet: packet}}
 	testErr := errors.New("auth failed")
 

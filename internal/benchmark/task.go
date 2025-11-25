@@ -81,7 +81,7 @@ func NewTask(cfg *Config) (*Task, error) {
 	users, err := loadUsers(cfg)
 	if err != nil {
 		pool.Release()
-		reporter.Close()
+		_ = reporter.Close() //nolint:errcheck
 		return nil, fmt.Errorf("failed to load users: %w", err)
 	}
 
@@ -327,10 +327,10 @@ func (t *Task) cleanup() {
 		t.workerPool.Release()
 	}
 	if t.client != nil {
-		t.client.Close()
+		_ = t.client.Close() //nolint:errcheck
 	}
 	if t.reporter != nil {
-		t.reporter.Close()
+		_ = t.reporter.Close() //nolint:errcheck
 	}
 }
 

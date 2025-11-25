@@ -143,8 +143,8 @@ func (m *mockAccountingRepository) UpdateStop(ctx context.Context, sessionId str
 func createMockAccountingContext(statusType int) *accounting.AccountingContext {
 	// Create a minimal RADIUS request with required attributes
 	packet := radius.New(radius.CodeAccountingRequest, []byte("secret123456"))
-	rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType(statusType))
-	rfc2866.AcctSessionID_SetString(packet, "test-session-123")
+	_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType(statusType)) //nolint:errcheck
+	_ = rfc2866.AcctSessionID_SetString(packet, "test-session-123")            //nolint:errcheck
 
 	return &accounting.AccountingContext{
 		Context:    context.Background(),

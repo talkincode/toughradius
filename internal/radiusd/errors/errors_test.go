@@ -237,5 +237,5 @@ func TestNewError(t *testing.T) {
 func TestAuthError_ErrorInterface(t *testing.T) {
 	// Verify AuthError implements error interface
 	var _ error = &AuthError{}
-	var _ error = NewAuthError(app.MetricsRadiusRejectNotExists, "test")
+	_ = NewAuthError(app.MetricsRadiusRejectNotExists, "test")
 }

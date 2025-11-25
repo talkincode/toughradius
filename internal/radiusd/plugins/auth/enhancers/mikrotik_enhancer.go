@@ -40,6 +40,6 @@ func (e *MikrotikAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.Auth
 	upRate := user.GetUpRate(profileCache)
 	downRate := user.GetDownRate(profileCache)
 
-	mikrotik.MikrotikRateLimit_SetString(resp, fmt.Sprintf("%dk/%dk", upRate, downRate))
+	_ = mikrotik.MikrotikRateLimit_SetString(resp, fmt.Sprintf("%dk/%dk", upRate, downRate)) //nolint:errcheck
 	return nil
 }

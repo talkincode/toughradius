@@ -44,7 +44,6 @@ var metricsNames = []string{
 }
 
 func GetRadiusMetrics(name string) int64 {
-	var value float64 = 0
 	vals := make([]float64, 0)
 	points, err := metrics.GetTSDB().Select(name, nil,
 		time.Now().Add(-86400*time.Second).Unix(), time.Now().Unix())
@@ -54,7 +53,7 @@ func GetRadiusMetrics(name string) int64 {
 	for _, p := range points {
 		vals = append(vals, p.Value)
 	}
-	value, _ = istats.Sum(vals)
+	value, _ := istats.Sum(vals)
 	if value < 0 {
 		value = 0
 	}

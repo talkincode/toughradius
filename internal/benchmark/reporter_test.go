@@ -18,7 +18,7 @@ func TestReporterCSVOutput(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewReporter returned error: %v", err)
 	}
-	defer reporter.Close()
+	defer func() { _ = reporter.Close() }() //nolint:errcheck
 
 	stats := &Statistics{}
 	stats.Auth.Requests = 10

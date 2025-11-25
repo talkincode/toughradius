@@ -149,6 +149,7 @@ func TestHuaweiAcceptEnhancer_IPv6Address(t *testing.T) {
 			if tt.expectSet {
 				// If we expected it to be set, the code should have executed without error
 				// More detailed validation would require parsing the RADIUS packet
+				_ = tt.expectSet //nolint:staticcheck // intentionally empty branch for documentation
 			}
 		})
 	}

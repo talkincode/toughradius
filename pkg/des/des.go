@@ -42,7 +42,7 @@ func DesEncrypt(src, key []byte) ([]byte, error) {
 	// Complement the plaintext data
 	src = PKCS5Padding(src, bs)
 	if len(src)%bs != 0 {
-		return nil, errors.New("Need a multiple of the blocksize")
+		return nil, errors.New("need a multiple of the blocksize")
 	}
 	out := make([]byte, len(src))
 	dst := out

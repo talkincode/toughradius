@@ -66,7 +66,7 @@ func (ga *GoogleAuth) oneTimePassword(key []byte, data []byte) uint32 {
 // Get secret
 func (ga *GoogleAuth) GetSecret() string {
 	var buf bytes.Buffer
-	binary.Write(&buf, binary.BigEndian, ga.un())
+	_ = binary.Write(&buf, binary.BigEndian, ga.un()) //nolint:errcheck
 	return strings.ToUpper(ga.base32encode(ga.hmacSha1(buf.Bytes(), nil)))
 }
 

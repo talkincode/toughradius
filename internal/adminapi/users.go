@@ -575,7 +575,7 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	// Handle username filter (partial match with escaped pattern)
 	if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
 		escaped := escapeUserLikePattern(username)
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			db = db.Where("radius_user.username ILIKE ?", "%"+escaped+"%")
 		} else {
 			db = db.Where("LOWER(radius_user.username) LIKE ?", "%"+strings.ToLower(escaped)+"%")
@@ -585,7 +585,7 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	// Handle realname filter (partial match with escaped pattern)
 	if realname := strings.TrimSpace(c.QueryParam("realname")); realname != "" {
 		escaped := escapeUserLikePattern(realname)
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			db = db.Where("radius_user.realname ILIKE ?", "%"+escaped+"%")
 		} else {
 			db = db.Where("LOWER(radius_user.realname) LIKE ?", "%"+strings.ToLower(escaped)+"%")
@@ -595,7 +595,7 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	// Handle email filter (partial match with escaped pattern)
 	if email := strings.TrimSpace(c.QueryParam("email")); email != "" {
 		escaped := escapeUserLikePattern(email)
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			db = db.Where("radius_user.email ILIKE ?", "%"+escaped+"%")
 		} else {
 			db = db.Where("LOWER(radius_user.email) LIKE ?", "%"+strings.ToLower(escaped)+"%")
@@ -616,7 +616,7 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	// Global search across multiple fields (with escaped pattern)
 	if q := strings.TrimSpace(c.QueryParam("q")); q != "" {
 		escaped := escapeUserLikePattern(q)
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			like := "%" + escaped + "%"
 			db = db.Where("(radius_user.username ILIKE ? OR radius_user.realname ILIKE ? OR radius_user.mobile ILIKE ?)", like, like, like)
 		} else {

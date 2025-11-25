@@ -305,7 +305,7 @@ func TestGetOnlineSession(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var resultSession domain.RadiusOnline
-				json.Unmarshal(dataBytes, &resultSession)
+				_ = json.Unmarshal(dataBytes, &resultSession)
 
 				assert.NotZero(t, resultSession.ID)
 				if tt.checkResponse != nil {
@@ -313,7 +313,7 @@ func TestGetOnlineSession(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -428,7 +428,7 @@ func TestDeleteOnlineSession(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -455,7 +455,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		assert.NotNil(t, response.Meta)
 		assert.Equal(t, int64(0), response.Meta.Total)
 		data := response.Data.([]interface{})
@@ -479,7 +479,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		data := response.Data.([]interface{})
 		assert.Len(t, data, 10, "Page 3 should have 10 entries")
 	})
@@ -499,7 +499,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		data := response.Data.([]interface{})
 		assert.Len(t, data, 1, "Should find user containing @")
 	})
@@ -520,7 +520,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		data := response.Data.([]interface{})
 		assert.Len(t, data, 1)
 	})
@@ -541,7 +541,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 
 		// ValidateResponse data contains session info
 		require.NotNil(t, response.Data, "Response data should not be empty")
@@ -604,7 +604,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		assert.NotNil(t, response.Meta)
 		assert.Equal(t, int64(3), response.Meta.Total, "Same user should have 3 concurrent sessions")
 	})
@@ -630,7 +630,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		data := response.Data.([]interface{})
 		// Latest session should be first
 		firstSession := data[0].(map[string]interface{})
@@ -704,7 +704,7 @@ func TestSessionsFilterCombinations(t *testing.T) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 
 			var response Response
-			json.Unmarshal(rec.Body.Bytes(), &response)
+			_ = json.Unmarshal(rec.Body.Bytes(), &response)
 			data := response.Data.([]interface{})
 			assert.Len(t, data, tt.expectedCount, tt.description)
 		})

@@ -2,7 +2,7 @@ package excel
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path"
 	"reflect"
 	"strings"
@@ -27,7 +27,7 @@ func WriteToFile(sheet string, records []interface{}, filepath string) error {
 
 func WriteToTmpFile(sheet string, records []interface{}) (string, error) {
 	filename := fmt.Sprintf("%s-%d.xlsx", sheet, time.Now().Unix())
-	tmpdir, _ := ioutil.TempDir("", "excel-export")
+	tmpdir, _ := os.MkdirTemp("", "excel-export")
 	filepath := path.Join(tmpdir, filename)
 	xlsx := excelize.NewFile()
 	index := xlsx.NewSheet(sheet)
@@ -58,9 +58,7 @@ func WriteRow(t interface{}, i int, xlsx *excelize.File, sheet string) {
 			xtag := d.Field(j).Tag.Get("db")
 			if xtag == "" || xtag == "-" {
 				xtag = d.Field(j).Tag.Get("json")
-				if strings.HasSuffix(xtag, ",string") {
-					xtag = strings.TrimSuffix(xtag, ",string")
-				}
+				xtag = strings.TrimSuffix(xtag, ",string")
 			}
 			if xtag == "" || xtag == "-" {
 				continue

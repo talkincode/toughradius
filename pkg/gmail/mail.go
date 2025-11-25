@@ -39,9 +39,9 @@ type MailSender struct {
 func (s *MailSender) SendMail(mailTo []string, subject string, body string, files []string) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", m.FormatAddress(s.Usernam, s.Alias))
-	if mailTo == nil || len(mailTo) == 0 {
-		if s.Mailtos == nil || len(s.Mailtos) == 0 {
-			return fmt.Errorf("Mail receiver not configured")
+	if len(mailTo) == 0 {
+		if len(s.Mailtos) == 0 {
+			return fmt.Errorf("mail receiver not configured")
 		}
 		m.SetHeader("To", s.Mailtos...)
 	}
@@ -49,7 +49,7 @@ func (s *MailSender) SendMail(mailTo []string, subject string, body string, file
 	m.SetHeader("Subject", subject)
 	m.SetBody("text/html", body)
 
-	if files != nil && len(files) > 0 {
+	if len(files) > 0 {
 		m := gomail.NewMessage(
 			gomail.SetEncoding(gomail.Base64),
 		)

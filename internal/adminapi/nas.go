@@ -81,7 +81,7 @@ func ListNAS(c echo.Context) error {
 
 	// Filter by name (case-insensitive)
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			query = query.Where("name ILIKE ?", "%"+name+"%")
 		} else {
 			query = query.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%")

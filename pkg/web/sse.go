@@ -31,9 +31,9 @@ func (sse *SSE) Write(data []byte) (n int, err error) {
 	if err = sse.Err(); err != nil {
 		return
 	}
-	_, err = sse.EchoContext.Response().Writer.Write(sseBegin)
+	_, _ = sse.EchoContext.Response().Writer.Write(sseBegin) //nolint:errcheck
 	n, err = sse.EchoContext.Response().Writer.Write(data)
-	_, err = sse.EchoContext.Response().Writer.Write(sseEnd)
+	_, _ = sse.EchoContext.Response().Writer.Write(sseEnd) //nolint:errcheck
 	if err != nil {
 		return
 	}
@@ -45,9 +45,9 @@ func (sse *SSE) WriteEvent(event string, data []byte) (err error) {
 	if err = sse.Err(); err != nil {
 		return
 	}
-	_, err = sse.EchoContext.Response().Writer.Write(sseEent)
-	_, err = sse.EchoContext.Response().Writer.Write([]byte(event))
-	_, err = sse.EchoContext.Response().Writer.Write([]byte("\n"))
+	_, _ = sse.EchoContext.Response().Writer.Write(sseEent)       //nolint:errcheck
+	_, _ = sse.EchoContext.Response().Writer.Write([]byte(event)) //nolint:errcheck
+	_, _ = sse.EchoContext.Response().Writer.Write([]byte("\n"))  //nolint:errcheck
 	_, err = sse.Write(data)
 	return
 }

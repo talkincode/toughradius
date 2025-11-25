@@ -23,7 +23,7 @@ func (s *AcctService) HandleAccountingWithPlugins(
 	nasIP string,
 ) error {
 	// getAccounting-Status-Type
-	statusTypeAttr := r.Packet.Get(40) // Acct-Status-Type
+	statusTypeAttr := r.Get(40) //nolint:staticcheck // Acct-Status-Type
 	if statusTypeAttr == nil {
 		return fmt.Errorf("missing Acct-Status-Type attribute")
 	}

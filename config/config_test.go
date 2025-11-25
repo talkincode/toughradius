@@ -354,16 +354,16 @@ logger:
 
 	// Set test-specific environment variables
 	for key, value := range testEnvVars {
-		os.Setenv(key, value)
+		_ = os.Setenv(key, value) //nolint:errcheck
 	}
 
 	// Restore environment variables after the test
 	defer func() {
 		for key, value := range originalEnvVars {
 			if value == "" {
-				os.Unsetenv(key)
+				_ = os.Unsetenv(key) //nolint:errcheck
 			} else {
-				os.Setenv(key, value)
+				_ = os.Setenv(key, value) //nolint:errcheck
 			}
 		}
 	}()
@@ -496,10 +496,10 @@ func TestSetEnvValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envKey := "TEST_ENV_VALUE"
-			defer os.Unsetenv(envKey)
+			defer func() { _ = os.Unsetenv(envKey) }() //nolint:errcheck
 
 			if tt.envValue != "" {
-				os.Setenv(envKey, tt.envValue)
+				_ = os.Setenv(envKey, tt.envValue) //nolint:errcheck
 			}
 
 			value := tt.initial
@@ -554,10 +554,10 @@ func TestSetEnvBoolValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envKey := "TEST_ENV_BOOL_VALUE"
-			defer os.Unsetenv(envKey)
+			defer func() { _ = os.Unsetenv(envKey) }() //nolint:errcheck
 
 			if tt.envValue != "" {
-				os.Setenv(envKey, tt.envValue)
+				_ = os.Setenv(envKey, tt.envValue) //nolint:errcheck
 			}
 
 			value := tt.initial
@@ -600,10 +600,10 @@ func TestSetEnvIntValue(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envKey := "TEST_ENV_INT_VALUE"
-			defer os.Unsetenv(envKey)
+			defer func() { _ = os.Unsetenv(envKey) }() //nolint:errcheck
 
 			if tt.envValue != "" {
-				os.Setenv(envKey, tt.envValue)
+				_ = os.Setenv(envKey, tt.envValue) //nolint:errcheck
 			}
 
 			value := tt.initial
@@ -646,10 +646,10 @@ func TestSetEnvInt64Value(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			envKey := "TEST_ENV_INT64_VALUE"
-			defer os.Unsetenv(envKey)
+			defer func() { _ = os.Unsetenv(envKey) }() //nolint:errcheck
 
 			if tt.envValue != "" {
-				os.Setenv(envKey, tt.envValue)
+				_ = os.Setenv(envKey, tt.envValue) //nolint:errcheck
 			}
 
 			value := tt.initial

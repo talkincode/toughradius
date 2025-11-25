@@ -155,7 +155,7 @@ func TestListProfiles(t *testing.T) {
 			// Convert the response data to a slice of profiles
 			dataBytes, _ := json.Marshal(response.Data)
 			var profiles []domain.RadiusProfile
-			json.Unmarshal(dataBytes, &profiles)
+			_ = json.Unmarshal(dataBytes, &profiles)
 			response.Data = profiles
 
 			assert.Len(t, profiles, tt.expectedCount)
@@ -219,13 +219,13 @@ func TestGetProfile(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var resultProfile domain.RadiusProfile
-				json.Unmarshal(dataBytes, &resultProfile)
+				_ = json.Unmarshal(dataBytes, &resultProfile)
 
 				assert.Equal(t, profile.Name, resultProfile.Name)
 				assert.Equal(t, profile.Status, resultProfile.Status)
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -348,7 +348,7 @@ func TestCreateProfile(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var profile domain.RadiusProfile
-				json.Unmarshal(dataBytes, &profile)
+				_ = json.Unmarshal(dataBytes, &profile)
 
 				assert.NotZero(t, profile.ID)
 				if tt.checkResult != nil {
@@ -356,7 +356,7 @@ func TestCreateProfile(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -472,14 +472,14 @@ func TestUpdateProfile(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var updatedProfile domain.RadiusProfile
-				json.Unmarshal(dataBytes, &updatedProfile)
+				_ = json.Unmarshal(dataBytes, &updatedProfile)
 
 				if tt.checkResult != nil {
 					tt.checkResult(t, &updatedProfile)
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -571,7 +571,7 @@ func TestDeleteProfile(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -593,7 +593,7 @@ func TestProfileEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		// perPage should be limited to 100
 		assert.LessOrEqual(t, response.Meta.PageSize, 100)
 	})
@@ -608,7 +608,7 @@ func TestProfileEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		// Should fall back to default values
 		assert.Equal(t, 1, response.Meta.Page)
 		assert.Equal(t, 10, response.Meta.PageSize)
@@ -641,10 +641,10 @@ func TestProfileEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var updatedProfile domain.RadiusProfile
-		json.Unmarshal(dataBytes, &updatedProfile)
+		_ = json.Unmarshal(dataBytes, &updatedProfile)
 
 		// Name should remain unchanged
 		assert.Equal(t, originalName, updatedProfile.Name)

@@ -294,13 +294,13 @@ func (s *RadsecPacketServer) ListenAndServe(capath, crtfile, keyfile string) err
 	if err != nil {
 		return err
 	}
-	defer pc.Close()
+	defer func() { _ = pc.Close() }() //nolint:errcheck
 	for {
 		conn, err := pc.Accept()
 		if err != nil {
 			continue
 		}
-		go s.Serve(conn)
+		go s.Serve(conn) //nolint:errcheck
 	}
 }
 
@@ -316,7 +316,7 @@ func (s *RadsecPacketServer) Shutdown(ctx context.Context) error {
 	s.initLocked()
 	if atomic.CompareAndSwapInt32(&s.shutdownRequested, 0, 1) {
 		for listener := range s.listeners {
-			listener.Close()
+			_ = listener.Close() //nolint:errcheck
 		}
 
 		s.ctxDone()

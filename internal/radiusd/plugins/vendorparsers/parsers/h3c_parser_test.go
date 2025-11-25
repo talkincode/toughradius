@@ -101,7 +101,7 @@ func TestH3CParser_Parse(t *testing.T) {
 			}
 
 			if tt.callingStation != "" {
-				rfc2865.CallingStationID_SetString(packet, tt.callingStation)
+				_ = rfc2865.CallingStationID_SetString(packet, tt.callingStation) //nolint:errcheck
 			}
 
 			req := &radius.Request{Packet: packet}

@@ -111,7 +111,7 @@ func GenerateCA(config CAConfig) error {
 	if err != nil {
 		return fmt.Errorf("create cert file failed: %w", err)
 	}
-	defer certOut.Close()
+	defer func() { _ = certOut.Close() }() //nolint:errcheck
 
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
 		return fmt.Errorf("encode certificate failed: %w", err)
@@ -123,7 +123,7 @@ func GenerateCA(config CAConfig) error {
 	if err != nil {
 		return fmt.Errorf("create key file failed: %w", err)
 	}
-	defer keyOut.Close()
+	defer func() { _ = keyOut.Close() }() //nolint:errcheck
 
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
@@ -196,7 +196,7 @@ func GenerateServerCert(config ServerConfig) error {
 	if err != nil {
 		return fmt.Errorf("create cert file failed: %w", err)
 	}
-	defer certOut.Close()
+	defer func() { _ = certOut.Close() }() //nolint:errcheck
 
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
 		return fmt.Errorf("encode certificate failed: %w", err)
@@ -208,7 +208,7 @@ func GenerateServerCert(config ServerConfig) error {
 	if err != nil {
 		return fmt.Errorf("create key file failed: %w", err)
 	}
-	defer keyOut.Close()
+	defer func() { _ = keyOut.Close() }() //nolint:errcheck
 
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {
@@ -287,7 +287,7 @@ func GenerateClientCert(config ClientConfig) error {
 	if err != nil {
 		return fmt.Errorf("create cert file failed: %w", err)
 	}
-	defer certOut.Close()
+	defer func() { _ = certOut.Close() }() //nolint:errcheck
 
 	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
 		return fmt.Errorf("encode certificate failed: %w", err)
@@ -299,7 +299,7 @@ func GenerateClientCert(config ClientConfig) error {
 	if err != nil {
 		return fmt.Errorf("create key file failed: %w", err)
 	}
-	defer keyOut.Close()
+	defer func() { _ = keyOut.Close() }() //nolint:errcheck
 
 	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
 	if err != nil {

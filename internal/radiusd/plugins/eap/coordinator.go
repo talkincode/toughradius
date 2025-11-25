@@ -123,7 +123,7 @@ func (c *Coordinator) handleIdentityResponse(ctx *EAPContext, configuredMethod s
 // handleNak handles EAP-Response/Nak when the client rejects the current method
 func (c *Coordinator) handleNak(ctx *EAPContext) (bool, bool, error) {
 	if len(ctx.EAPMessage.Data) == 0 {
-		return false, false, fmt.Errorf("Nak message has no alternative methods")
+		return false, false, fmt.Errorf("nak message has no alternative methods")
 	}
 
 	// Take the first method suggested by the client
@@ -210,6 +210,6 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 func (c *Coordinator) CleanupState(r *radius.Request) {
 	stateID := rfc2865.State_GetString(r.Packet)
 	if stateID != "" {
-		c.stateManager.DeleteState(stateID)
+		_ = c.stateManager.DeleteState(stateID) //nolint:errcheck
 	}
 }

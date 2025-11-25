@@ -216,7 +216,7 @@ func fetchProfileDistribution(db *gorm.DB) []DashboardProfileSlice {
 }
 
 func dateBucketExpression(db *gorm.DB, field, granularity string) string {
-	switch db.Dialector.Name() {
+	switch db.Name() { //nolint:staticcheck
 	case "postgres":
 		switch granularity {
 		case "day":

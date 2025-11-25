@@ -58,6 +58,9 @@ func GenerateCaCrt(config Config, crtpath, keypath string) error {
 		return err
 	}
 	rootCert, err := x509.ParseCertificate(rootDer)
+	if err != nil {
+		return err
+	}
 
 	certBlock := &pem.Block{
 		Type:  "CERTIFICATE",

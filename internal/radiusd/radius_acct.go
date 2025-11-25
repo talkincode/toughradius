@@ -65,7 +65,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	// Reset packet secret
 	r.Secret = []byte(nas.Secret)
-	r.Packet.Secret = []byte(nas.Secret)
+	r.Secret = []byte(nas.Secret) //nolint:staticcheck
 
 	statusType := rfc2866.AcctStatusType_Get(r.Packet)
 

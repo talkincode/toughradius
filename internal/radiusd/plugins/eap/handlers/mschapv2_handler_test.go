@@ -93,7 +93,7 @@ func TestMSCHAPv2Handler_HandleIdentity(t *testing.T) {
 
 	// Create RADIUS request
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2865.UserName_SetString(packet, "testuser") //nolint:errcheck
 
 	// Create EAP Identity Response
 	identityMsg := &eap.EAPMessage{
@@ -308,7 +308,7 @@ func TestMSCHAPv2Handler_Integration(t *testing.T) {
 	// 1. Identity phase
 	writer1 := &mockResponseWriter{}
 	packet1 := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet1, "testuser")
+	_ = rfc2865.UserName_SetString(packet1, "testuser") //nolint:errcheck
 
 	identityMsg := &eap.EAPMessage{
 		Code:       eap.CodeResponse,

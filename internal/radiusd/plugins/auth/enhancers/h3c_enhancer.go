@@ -45,9 +45,9 @@ func (e *H3CAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthConte
 	upPeak := clampInt64(up*4, math.MaxInt32)
 	downPeak := clampInt64(down*4, math.MaxInt32)
 
-	h3c.H3CInputAverageRate_Set(resp, h3c.H3CInputAverageRate(up))
-	h3c.H3CInputPeakRate_Set(resp, h3c.H3CInputPeakRate(upPeak))
-	h3c.H3COutputAverageRate_Set(resp, h3c.H3COutputAverageRate(down))
-	h3c.H3COutputPeakRate_Set(resp, h3c.H3COutputPeakRate(downPeak))
+	_ = h3c.H3CInputAverageRate_Set(resp, h3c.H3CInputAverageRate(up))     //nolint:errcheck
+	_ = h3c.H3CInputPeakRate_Set(resp, h3c.H3CInputPeakRate(upPeak))       //nolint:errcheck
+	_ = h3c.H3COutputAverageRate_Set(resp, h3c.H3COutputAverageRate(down)) //nolint:errcheck
+	_ = h3c.H3COutputPeakRate_Set(resp, h3c.H3COutputPeakRate(downPeak))   //nolint:errcheck
 	return nil
 }

@@ -40,11 +40,11 @@ var (
 )
 
 func PrintVersion() {
-	fmt.Fprintf(os.Stdout, "ToughRADIUS %s\n", version)
-	fmt.Fprintf(os.Stdout, "Build Time: %s\n", buildTime)
-	fmt.Fprintf(os.Stdout, "Git Commit: %s\n", gitCommit)
-	fmt.Fprintf(os.Stdout, "Go Version: %s\n", runtime.Version())
-	fmt.Fprintf(os.Stdout, "OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH)
+	_, _ = fmt.Fprintf(os.Stdout, "ToughRADIUS %s\n", version)                         //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "Build Time: %s\n", buildTime)                       //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "Git Commit: %s\n", gitCommit)                       //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "Go Version: %s\n", runtime.Version())               //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH) //nolint:errcheck
 }
 
 func printHelp() {

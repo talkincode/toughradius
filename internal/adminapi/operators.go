@@ -446,7 +446,7 @@ func deleteOperator(c echo.Context) error {
 func applyOperatorFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	// Filter by username (case-insensitive)
 	if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			db = db.Where("username ILIKE ?", "%"+username+"%")
 		} else {
 			db = db.Where("LOWER(username) LIKE ?", "%"+strings.ToLower(username)+"%")
@@ -455,7 +455,7 @@ func applyOperatorFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 
 	// Filter by realname (case-insensitive)
 	if realname := strings.TrimSpace(c.QueryParam("realname")); realname != "" {
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			db = db.Where("realname ILIKE ?", "%"+realname+"%")
 		} else {
 			db = db.Where("LOWER(realname) LIKE ?", "%"+strings.ToLower(realname)+"%")

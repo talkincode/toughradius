@@ -191,7 +191,7 @@ func deleteNode(c echo.Context) error {
 // Filter conditions
 func applyNodeFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
-		if strings.EqualFold(db.Dialector.Name(), "postgres") {
+		if strings.EqualFold(db.Name(), "postgres") { //nolint:staticcheck
 			db = db.Where("name ILIKE ?", "%"+name+"%")
 		} else {
 			db = db.Where("LOWER(name) LIKE ?", "%"+strings.ToLower(name)+"%")

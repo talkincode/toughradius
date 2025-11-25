@@ -69,7 +69,7 @@ func (s *Client) Upload(session *SftpSession, localFilePath, remotePath string) 
 		if err != nil {
 			return err
 		}
-		defer _session.Client.Close()
+		defer func() { _ = _session.Client.Close() }() //nolint:errcheck
 	} else {
 		_session = session
 	}
@@ -77,13 +77,13 @@ func (s *Client) Upload(session *SftpSession, localFilePath, remotePath string) 
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func() { _ = srcFile.Close() }() //nolint:errcheck
 
 	dstFile, err := _session.Client.Create(remotePath)
 	if err != nil {
 		return err
 	}
-	defer dstFile.Close()
+	defer func() { _ = dstFile.Close() }() //nolint:errcheck
 
 	buf := make([]byte, 1024)
 	for {
@@ -111,7 +111,7 @@ func (s *Client) Download(session *SftpSession, remotePath, localFilePath string
 		if err != nil {
 			return err
 		}
-		defer _session.Client.Close()
+		defer func() { _ = _session.Client.Close() }() //nolint:errcheck
 	} else {
 		_session = session
 	}
@@ -120,13 +120,13 @@ func (s *Client) Download(session *SftpSession, remotePath, localFilePath string
 	if err != nil {
 		return err
 	}
-	defer srcFile.Close()
+	defer func() { _ = srcFile.Close() }() //nolint:errcheck
 
 	dstFile, err := os.Create(localFilePath)
 	if err != nil {
 		return err
 	}
-	defer dstFile.Close()
+	defer func() { _ = dstFile.Close() }() //nolint:errcheck
 
 	if _, err = srcFile.WriteTo(dstFile); err != nil {
 		return err
@@ -143,7 +143,7 @@ func (s *Client) Remove(session *SftpSession, remotePath string) error {
 		if err != nil {
 			return err
 		}
-		defer _session.Client.Close()
+		defer func() { _ = _session.Client.Close() }() //nolint:errcheck
 	} else {
 		_session = session
 	}

@@ -200,13 +200,13 @@ func TestGetNAS(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var resultNas domain.NetNas
-				json.Unmarshal(dataBytes, &resultNas)
+				_ = json.Unmarshal(dataBytes, &resultNas) //nolint:errcheck
 
 				assert.Equal(t, nas.Name, resultNas.Name)
 				assert.Equal(t, nas.Ipaddr, resultNas.Ipaddr)
 			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -360,7 +360,7 @@ func TestCreateNAS(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var nas domain.NetNas
-				json.Unmarshal(dataBytes, &nas)
+				_ = json.Unmarshal(dataBytes, &nas) //nolint:errcheck
 
 				assert.NotZero(t, nas.ID)
 				if tt.checkResult != nil {
@@ -368,7 +368,7 @@ func TestCreateNAS(t *testing.T) {
 				}
 			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -499,14 +499,14 @@ func TestUpdateNAS(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var updatedNas domain.NetNas
-				json.Unmarshal(dataBytes, &updatedNas)
+				_ = json.Unmarshal(dataBytes, &updatedNas) //nolint:errcheck
 
 				if tt.checkResult != nil {
 					tt.checkResult(t, &updatedNas)
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -571,7 +571,7 @@ func TestDeleteNAS(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -598,10 +598,10 @@ func TestNASEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response) //nolint:errcheck
 		dataBytes, _ := json.Marshal(response.Data)
 		var updatedNas domain.NetNas
-		json.Unmarshal(dataBytes, &updatedNas)
+		_ = json.Unmarshal(dataBytes, &updatedNas) //nolint:errcheck
 
 		// Name and IP should remain unchanged
 		assert.Equal(t, originalName, updatedNas.Name)
@@ -625,10 +625,10 @@ func TestNASEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response) //nolint:errcheck
 		dataBytes, _ := json.Marshal(response.Data)
 		var nas domain.NetNas
-		json.Unmarshal(dataBytes, &nas)
+		_ = json.Unmarshal(dataBytes, &nas) //nolint:errcheck
 
 		// Default status should be enabled
 		assert.Equal(t, "enabled", nas.Status)

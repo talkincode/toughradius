@@ -46,7 +46,7 @@ func TestPAPValidator_CanHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 			if tt.password != "" {
-				rfc2865.UserPassword_SetString(packet, tt.password)
+				_ = rfc2865.UserPassword_SetString(packet, tt.password) //nolint:errcheck
 			}
 
 			req := &radius.Request{Packet: packet}
@@ -97,7 +97,7 @@ func TestPAPValidator_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-			rfc2865.UserPassword_SetString(packet, tt.requestPassword)
+			_ = rfc2865.UserPassword_SetString(packet, tt.requestPassword) //nolint:errcheck
 
 			req := &radius.Request{Packet: packet}
 			user := &domain.RadiusUser{Username: "testuser", Password: tt.userPassword}

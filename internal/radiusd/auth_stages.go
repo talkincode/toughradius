@@ -82,7 +82,7 @@ func (s *AuthService) stageNasLookup(ctx *AuthPipelineContext) error {
 	if nas != nil {
 		secret := []byte(nas.Secret)
 		ctx.Request.Secret = secret
-		ctx.Request.Packet.Secret = secret
+		ctx.Request.Secret = secret //nolint:staticcheck
 		ctx.Response = ctx.Request.Response(radius.CodeAccessAccept)
 	}
 

@@ -60,8 +60,8 @@ func TestVendorRegistry(t *testing.T) {
 
 	t.Run("List", func(t *testing.T) {
 		registry := NewVendorRegistry()
-		registry.Register(&VendorInfo{Code: "1", Name: "A"})
-		registry.Register(&VendorInfo{Code: "2", Name: "B"})
+		_ = registry.Register(&VendorInfo{Code: "1", Name: "A"}) //nolint:errcheck
+		_ = registry.Register(&VendorInfo{Code: "2", Name: "B"}) //nolint:errcheck
 
 		list := registry.List()
 		assert.Len(t, list, 2)

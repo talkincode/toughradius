@@ -14,7 +14,6 @@ import (
 
 	"github.com/360EntSecGroup-Skylar/excelize"
 	"github.com/gocarina/gocsv"
-	_ "github.com/gocarina/gocsv"
 	"github.com/golang-jwt/jwt/v4"
 	echojwt "github.com/labstack/echo-jwt/v4"
 	"github.com/spf13/cast"
@@ -167,7 +166,7 @@ func (s *AdminServer) setupReactAdminStatic() {
 		if err != nil {
 			return c.String(http.StatusNotFound, "Web UI not found")
 		}
-		defer indexFile.Close()
+		defer func() { _ = indexFile.Close() }() //nolint:errcheck
 
 		c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 		return c.Stream(http.StatusOK, "text/html", indexFile)
@@ -189,7 +188,7 @@ func (s *AdminServer) setupReactAdminStatic() {
 
 		file, err := webStaticFS.Open(path)
 		if err == nil {
-			file.Close()
+			_ = file.Close() //nolint:errcheck
 			return echo.WrapHandler(http.StripPrefix("/admin", staticHandler))(c)
 		}
 
@@ -198,7 +197,7 @@ func (s *AdminServer) setupReactAdminStatic() {
 		if err != nil {
 			return c.String(http.StatusNotFound, "Web UI not found")
 		}
-		defer indexFile.Close()
+		defer func() { _ = indexFile.Close() }() //nolint:errcheck
 
 		c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 		return c.Stream(http.StatusOK, "text/html", indexFile)
@@ -325,7 +324,7 @@ func ImportData(c echo.Context, sheet string) ([]map[string]interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	defer src.Close()
+	defer func() { _ = src.Close() }() //nolint:errcheck
 	var items []map[string]interface{}
 	if strings.HasSuffix(file.Filename, "json") {
 		items, err = web.ReadImportJsonData(src)
@@ -406,7 +405,7 @@ func ExportCsv(c echo.Context, v interface{}, name string) error {
 	if err != nil {
 		return err
 	}
-	defer nfs.Close()
+	defer func() { _ = nfs.Close() }() //nolint:errcheck
 	err = gocsv.Marshal(v, nfs)
 	if err != nil {
 		return err

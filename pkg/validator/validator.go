@@ -102,7 +102,7 @@ func formatValidationError(err error) map[string]interface{} {
 // registerCustomValidations registers custom validation rules
 func registerCustomValidations(v *validator.Validate) {
 	// ValidateAddress pool format (simple CIDR check)
-	v.RegisterValidation("addrpool", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("addrpool", func(fl validator.FieldLevel) bool { //nolint:errcheck
 		value := fl.Field().String()
 		if value == "" {
 			return true // Allow empty values; use the required tag for mandatory fields
@@ -117,19 +117,20 @@ func registerCustomValidations(v *validator.Validate) {
 	})
 
 	// Validate RADIUS status value
-	v.RegisterValidation("radiusstatus", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("radiusstatus", func(fl validator.FieldLevel) bool { //nolint:errcheck
 		value := fl.Field().String()
 		return value == "enabled" || value == "disabled" || value == ""
 	})
 
 	// Validate username format (letters, digits, underscore, hyphen)
-	v.RegisterValidation("username", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("username", func(fl validator.FieldLevel) bool { //nolint:errcheck
 		value := fl.Field().String()
 		if value == "" {
 			return true
 		}
 		// Allow letters, digits, underscore, hyphen, @, and dot
 		for _, c := range value {
+			//nolint:staticcheck // intentionally using verbose comparison for clarity
 			if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
 				(c >= '0' && c <= '9') || c == '_' || c == '-' || c == '@' || c == '.') {
 				return false
@@ -139,7 +140,7 @@ func registerCustomValidations(v *validator.Validate) {
 	})
 
 	// Validate port numbers
-	v.RegisterValidation("port", func(fl validator.FieldLevel) bool {
+	_ = v.RegisterValidation("port", func(fl validator.FieldLevel) bool { //nolint:errcheck
 		field := fl.Field()
 		if field.Kind() == reflect.Ptr {
 			if field.IsNil() {

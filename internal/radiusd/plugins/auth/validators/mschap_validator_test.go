@@ -28,22 +28,22 @@ func TestMSCHAPValidator_CanHandle(t *testing.T) {
 		{
 			name: "with both challenge and response",
 			setupPacket: func(packet *radius.Packet) {
-				microsoft.MSCHAPChallenge_Add(packet, make([]byte, 16))
-				microsoft.MSCHAP2Response_Add(packet, make([]byte, 50))
+				_ = microsoft.MSCHAPChallenge_Add(packet, make([]byte, 16)) //nolint:errcheck
+				_ = microsoft.MSCHAP2Response_Add(packet, make([]byte, 50)) //nolint:errcheck
 			},
 			expected: true,
 		},
 		{
 			name: "with challenge only",
 			setupPacket: func(packet *radius.Packet) {
-				microsoft.MSCHAPChallenge_Add(packet, make([]byte, 16))
+				_ = microsoft.MSCHAPChallenge_Add(packet, make([]byte, 16)) //nolint:errcheck
 			},
 			expected: false,
 		},
 		{
 			name: "with response only",
 			setupPacket: func(packet *radius.Packet) {
-				microsoft.MSCHAP2Response_Add(packet, make([]byte, 50))
+				_ = microsoft.MSCHAP2Response_Add(packet, make([]byte, 50)) //nolint:errcheck
 			},
 			expected: false,
 		},
@@ -109,8 +109,8 @@ func TestMSCHAPValidator_Validate_InvalidLength(t *testing.T) {
 			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
 
-			microsoft.MSCHAPChallenge_Add(packet, make([]byte, tt.challengeLen))
-			microsoft.MSCHAP2Response_Add(packet, make([]byte, tt.responseLen))
+			_ = microsoft.MSCHAPChallenge_Add(packet, make([]byte, tt.challengeLen)) //nolint:errcheck
+			_ = microsoft.MSCHAP2Response_Add(packet, make([]byte, tt.responseLen))  //nolint:errcheck
 
 			req := &radius.Request{Packet: packet}
 			user := &domain.RadiusUser{Username: "testuser", Password: "testpass"}
@@ -151,8 +151,8 @@ func TestMSCHAPValidator_Validate_PasswordMismatch(t *testing.T) {
 	mschapResponse[0] = 1 // ident
 	// Keep the remaining bytes zero
 
-	microsoft.MSCHAPChallenge_Add(packet, challenge)
-	microsoft.MSCHAP2Response_Add(packet, mschapResponse)
+	_ = microsoft.MSCHAPChallenge_Add(packet, challenge)      //nolint:errcheck
+	_ = microsoft.MSCHAP2Response_Add(packet, mschapResponse) //nolint:errcheck
 
 	req := &radius.Request{Packet: packet}
 	user := &domain.RadiusUser{Username: "testuser", Password: "testpass"}

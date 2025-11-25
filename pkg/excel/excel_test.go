@@ -96,7 +96,7 @@ func TestWriteToTmpFile(t *testing.T) {
 	}
 
 	// Clean up
-	defer os.Remove(filepath)
+	defer func() { _ = os.Remove(filepath) }() //nolint:errcheck
 
 	// Verify file exists
 	if _, err := os.Stat(filepath); os.IsNotExist(err) {

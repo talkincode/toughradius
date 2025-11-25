@@ -27,6 +27,9 @@ func (a *Application) initJob() {
 		go a.SchedSystemMonitorTask()
 		go a.SchedProcessMonitorTask()
 	})
+	if err != nil {
+		zap.S().Errorf("init job error %s", err.Error())
+	}
 
 	_, err = a.sched.AddFunc("@daily", func() {
 		a.gormDB.

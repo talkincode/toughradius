@@ -21,7 +21,7 @@ func handleTestError(rec *httptest.ResponseRecorder, err error) {
 		if he, ok := err.(*echo.HTTPError); ok {
 			rec.Code = he.Code
 			rec.Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-			json.NewEncoder(rec).Encode(he.Message)
+			_ = json.NewEncoder(rec).Encode(he.Message) //nolint:errcheck
 		}
 	} else if rec.Code == 0 {
 		rec.Code = http.StatusOK
@@ -125,7 +125,7 @@ func TestListNodes(t *testing.T) {
 			// Convert the response data to a slice of nodes
 			dataBytes, _ := json.Marshal(response.Data)
 			var nodes []domain.NetNode
-			json.Unmarshal(dataBytes, &nodes)
+			_ = json.Unmarshal(dataBytes, &nodes) //nolint:errcheck
 			response.Data = nodes
 
 			assert.Len(t, nodes, tt.expectedCount)
@@ -189,12 +189,12 @@ func TestGetNode(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var resultNode domain.NetNode
-				json.Unmarshal(dataBytes, &resultNode)
+				_ = json.Unmarshal(dataBytes, &resultNode) //nolint:errcheck
 
 				assert.Equal(t, node.Name, resultNode.Name)
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -315,7 +315,7 @@ func TestCreateNode(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var node domain.NetNode
-				json.Unmarshal(dataBytes, &node)
+				_ = json.Unmarshal(dataBytes, &node)
 
 				assert.NotZero(t, node.ID)
 				if tt.checkResult != nil {
@@ -440,14 +440,14 @@ func TestUpdateNode(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var updatedNode domain.NetNode
-				json.Unmarshal(dataBytes, &updatedNode)
+				_ = json.Unmarshal(dataBytes, &updatedNode) //nolint:errcheck
 
 				if tt.checkResult != nil {
 					tt.checkResult(t, &updatedNode)
 				}
 			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -534,7 +534,7 @@ func TestDeleteNode(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -563,10 +563,10 @@ func TestNodeEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var updatedNode domain.NetNode
-		json.Unmarshal(dataBytes, &updatedNode)
+		_ = json.Unmarshal(dataBytes, &updatedNode)
 
 		// Name and tags should remain unchanged
 		assert.Equal(t, originalName, updatedNode.Name)
@@ -587,10 +587,10 @@ func TestNodeEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var node domain.NetNode
-		json.Unmarshal(dataBytes, &node)
+		_ = json.Unmarshal(dataBytes, &node)
 
 		assert.NotZero(t, node.CreatedAt)
 		assert.NotZero(t, node.UpdatedAt)
@@ -616,10 +616,10 @@ func TestNodeEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var updatedNode domain.NetNode
-		json.Unmarshal(dataBytes, &updatedNode)
+		_ = json.Unmarshal(dataBytes, &updatedNode)
 
 		assert.True(t, updatedNode.UpdatedAt.After(originalUpdateTime))
 	})

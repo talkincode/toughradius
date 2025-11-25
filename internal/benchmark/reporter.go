@@ -49,7 +49,7 @@ func NewReporter(csvPath string) (*Reporter, error) {
 			"UploadRate", "DownloadRate",
 		}
 		if err := r.csvWriter.Write(header); err != nil {
-			file.Close()
+			_ = file.Close() //nolint:errcheck
 			return nil, fmt.Errorf("failed to write CSV header: %w", err)
 		}
 		r.csvWriter.Flush()

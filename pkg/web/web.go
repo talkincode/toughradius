@@ -81,7 +81,7 @@ func (f *WebForm) Set(name string, value string) {
 }
 
 func (f *WebForm) Param(name string) string {
-	return f.Param(name)
+	return f.Param2(name, "")
 }
 
 func (f *WebForm) Param2(name string, defval string) string {
@@ -164,10 +164,9 @@ func (f *WebForm) GetInt64Val(name string, defval int64) int64 {
 // now-1day indicates the past day
 func (f *WebForm) ParseTimeDesc(timestr string, defval string) string {
 	val := f.GetVal(timestr)
-	if val == "" {
-		val = defval
-	}
 	switch {
+	case val == "":
+		return defval
 	case strings.HasPrefix(timestr, "now-") && strings.HasSuffix(timestr, "hour"):
 		v := cast.ToInt(timestr[4 : len(timestr)-4])
 		return time.Now().Add(time.Hour * time.Duration(v*-1)).Format(time.RFC3339)
@@ -311,20 +310,21 @@ func ReadImportExcelData(src io.Reader, sheet string) ([]map[string]interface{},
 func ReadImportJsonData(src io.Reader) ([]map[string]interface{}, error) {
 	buff := bufio.NewReader(src)
 	var items []map[string]interface{}
+ReadLoop:
 	for {
 		data, err := buff.ReadBytes('\n')
 		switch {
 		case err == io.EOF:
 			log.Println("Reached EOF - close this connection.\n  ---")
-			break
+			break ReadLoop
 		case err != nil:
 			log.Printf("\nError reading command. %s\n", err)
-			break
+			break ReadLoop
 		}
 		item := make(map[string]interface{})
 		err2 := common.JsonUnmarshal(data, &item)
 		if err2 != nil {
-			break
+			break ReadLoop
 		}
 		items = append(items, item)
 	}

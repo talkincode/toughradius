@@ -117,7 +117,7 @@ func GetAuthGuards() []auth.Guard {
 
 // RegisterVendorParser registers a vendor parser
 func RegisterVendorParser(parser vendorparserspkg.VendorParser) {
-	vendors.Register(&vendors.VendorInfo{
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
 		Code:   parser.VendorCode(),
 		Name:   parser.VendorName(),
 		Parser: parser,
@@ -140,7 +140,7 @@ func GetVendorParser(vendorCode string) (vendorparserspkg.VendorParser, bool) {
 
 // RegisterVendorResponseBuilder registers a vendor response builder
 func RegisterVendorResponseBuilder(builder vendorparserspkg.VendorResponseBuilder) {
-	vendors.Register(&vendors.VendorInfo{
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
 		Code:    builder.VendorCode(),
 		Builder: builder,
 	})

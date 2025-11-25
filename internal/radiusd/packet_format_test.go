@@ -157,8 +157,8 @@ func TestEapMessageFormat(t *testing.T) {
 func TestFmtRequest(t *testing.T) {
 	// CreateTest RADIUS request
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
-	rfc2865.NASIPAddress_Set(packet, net.IPv4(192, 168, 1, 1))
+	_ = rfc2865.UserName_SetString(packet, "testuser")             //nolint:errcheck
+	_ = rfc2865.NASIPAddress_Set(packet, net.IPv4(192, 168, 1, 1)) //nolint:errcheck
 
 	req := &radius.Request{
 		Packet:     packet,
@@ -196,8 +196,8 @@ func TestFmtRequestNil(t *testing.T) {
 func TestFmtResponse(t *testing.T) {
 	// CreateTest RADIUS response
 	packet := radius.New(radius.CodeAccessAccept, []byte("secret"))
-	rfc2865.SessionTimeout_Set(packet, 3600)
-	rfc2865.ReplyMessage_SetString(packet, "Welcome")
+	_ = rfc2865.SessionTimeout_Set(packet, 3600)          //nolint:errcheck
+	_ = rfc2865.ReplyMessage_SetString(packet, "Welcome") //nolint:errcheck
 
 	remoteAddr := &net.UDPAddr{IP: net.ParseIP("10.0.0.1"), Port: 1812}
 
@@ -232,8 +232,8 @@ func TestFmtResponseNil(t *testing.T) {
 func TestFmtPacket(t *testing.T) {
 	// Create a test packet
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
-	rfc2866.AcctSessionID_SetString(packet, "session123")
+	_ = rfc2865.UserName_SetString(packet, "testuser")        //nolint:errcheck
+	_ = rfc2866.AcctSessionID_SetString(packet, "session123") //nolint:errcheck
 
 	result := FmtPacket(packet)
 
@@ -277,8 +277,8 @@ func TestLength(t *testing.T) {
 			name: "Packet with attributes",
 			packet: func() *radius.Packet {
 				p := radius.New(radius.CodeAccessRequest, []byte("secret"))
-				rfc2865.UserName_SetString(p, "testuser")
-				rfc2865.NASIPAddress_Set(p, net.IPv4(192, 168, 1, 1))
+				_ = rfc2865.UserName_SetString(p, "testuser")             //nolint:errcheck
+				_ = rfc2865.NASIPAddress_Set(p, net.IPv4(192, 168, 1, 1)) //nolint:errcheck
 				return p
 			}(),
 			minLen: 20, // At least the header length
@@ -305,8 +305,8 @@ func TestLengthNil(t *testing.T) {
 func TestFmtRequestWithAcctStatusType(t *testing.T) {
 	// Test requests with AcctStatusType (special formatting)
 	packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
-	rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start)
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start) //nolint:errcheck
+	_ = rfc2865.UserName_SetString(packet, "testuser")                         //nolint:errcheck
 
 	req := &radius.Request{
 		Packet:     packet,
@@ -336,7 +336,7 @@ func TestFmtRequestWithVendorSpecific(t *testing.T) {
 	vendorAttr[5] = 4                              // Length
 
 	packet.Add(rfc2865.VendorSpecific_Type, vendorAttr)
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2865.UserName_SetString(packet, "testuser") //nolint:errcheck
 
 	req := &radius.Request{
 		Packet:     packet,

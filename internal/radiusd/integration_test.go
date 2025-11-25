@@ -42,7 +42,7 @@ func getFreePort() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer l.Close()
+	defer func() { _ = l.Close() }()
 	return l.LocalAddr().(*net.UDPAddr).Port, nil
 }
 
@@ -53,7 +53,7 @@ func setupTestEnv(t *testing.T) (*app.Application, *config.AppConfig) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		os.RemoveAll(tmpDir)
+		_ = os.RemoveAll(tmpDir) //nolint:errcheck
 	})
 
 	// Prepare required workdir sub-directories similar to config.AppConfig.initDirs
@@ -231,10 +231,10 @@ func TestRadiusIntegration(t *testing.T) {
 
 	t.Run("Access-Request Success", func(t *testing.T) {
 		packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-		rfc2865.UserName_SetString(packet, "testuser")
-		rfc2865.UserPassword_SetString(packet, "password")
-		rfc2865.NASIdentifier_SetString(packet, "test-nas")
-		rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.1"))
+		_ = rfc2865.UserName_SetString(packet, "testuser")
+		_ = rfc2865.UserPassword_SetString(packet, "password")
+		_ = rfc2865.NASIdentifier_SetString(packet, "test-nas")
+		_ = rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.1"))
 
 		response, err := radius.Exchange(context.Background(), packet, serverAddr)
 		if err != nil {
@@ -249,10 +249,10 @@ func TestRadiusIntegration(t *testing.T) {
 
 	t.Run("Access-Request Failure (Wrong Password)", func(t *testing.T) {
 		packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-		rfc2865.UserName_SetString(packet, "testuser")
-		rfc2865.UserPassword_SetString(packet, "wrongpassword")
-		rfc2865.NASIdentifier_SetString(packet, "test-nas")
-		rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.1"))
+		_ = rfc2865.UserName_SetString(packet, "testuser")
+		_ = rfc2865.UserPassword_SetString(packet, "wrongpassword")
+		_ = rfc2865.NASIdentifier_SetString(packet, "test-nas")
+		_ = rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.1"))
 
 		response, err := radius.Exchange(context.Background(), packet, serverAddr)
 		if err != nil {
@@ -266,17 +266,17 @@ func TestRadiusIntegration(t *testing.T) {
 
 	t.Run("Mikrotik Access-Request With Vendor Attributes", func(t *testing.T) {
 		packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-		rfc2865.UserName_SetString(packet, "mik-user")
-		rfc2865.UserPassword_SetString(packet, "password")
-		rfc2865.NASIdentifier_SetString(packet, "nas-mikrotik")
-		rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.2"))
-		rfc2865.NASPort_Set(packet, 2001)
-		rfc2865.NASPortType_Set(packet, rfc2865.NASPortType_Value_Ethernet)
-		rfc2865.ServiceType_Set(packet, rfc2865.ServiceType_Value_FramedUser)
-		rfc2865.CallingStationID_SetString(packet, "AA-BB-CC-DD-EE-01")
-		rfc2865.CalledStationID_SetString(packet, "Hotspot")
-		rfc2869.NASPortID_SetString(packet, "Gi0/1/0:100.200")
-		rfc2865.FramedIPAddress_Set(packet, net.ParseIP("192.168.88.10"))
+		_ = rfc2865.UserName_SetString(packet, "mik-user")
+		_ = rfc2865.UserPassword_SetString(packet, "password")
+		_ = rfc2865.NASIdentifier_SetString(packet, "nas-mikrotik")
+		_ = rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.2"))
+		_ = rfc2865.NASPort_Set(packet, 2001)
+		_ = rfc2865.NASPortType_Set(packet, rfc2865.NASPortType_Value_Ethernet)
+		_ = rfc2865.ServiceType_Set(packet, rfc2865.ServiceType_Value_FramedUser)
+		_ = rfc2865.CallingStationID_SetString(packet, "AA-BB-CC-DD-EE-01")
+		_ = rfc2865.CalledStationID_SetString(packet, "Hotspot")
+		_ = rfc2869.NASPortID_SetString(packet, "Gi0/1/0:100.200")
+		_ = rfc2865.FramedIPAddress_Set(packet, net.ParseIP("192.168.88.10"))
 
 		response, err := radius.Exchange(context.Background(), packet, serverAddr)
 		if err != nil {
@@ -296,17 +296,17 @@ func TestRadiusIntegration(t *testing.T) {
 
 	t.Run("Huawei Access-Request With Vendor Attributes", func(t *testing.T) {
 		packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-		rfc2865.UserName_SetString(packet, "huawei-user")
-		rfc2865.UserPassword_SetString(packet, "password")
-		rfc2865.NASIdentifier_SetString(packet, "nas-huawei")
-		rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.3"))
-		rfc2865.NASPort_Set(packet, 3001)
-		rfc2865.NASPortType_Set(packet, rfc2865.NASPortType_Value_Ethernet)
-		rfc2865.ServiceType_Set(packet, rfc2865.ServiceType_Value_FramedUser)
-		rfc2865.CallingStationID_SetString(packet, "AA-BB-CC-DD-EE-02")
-		rfc2865.CalledStationID_SetString(packet, "huawei-ap")
-		rfc2869.NASPortID_SetString(packet, "vlanid=310;vlanid2=320;")
-		rfc2865.FramedIPAddress_Set(packet, net.ParseIP("10.10.10.20"))
+		_ = rfc2865.UserName_SetString(packet, "huawei-user")
+		_ = rfc2865.UserPassword_SetString(packet, "password")
+		_ = rfc2865.NASIdentifier_SetString(packet, "nas-huawei")
+		_ = rfc2865.NASIPAddress_Set(packet, net.ParseIP("10.0.0.3"))
+		_ = rfc2865.NASPort_Set(packet, 3001)
+		_ = rfc2865.NASPortType_Set(packet, rfc2865.NASPortType_Value_Ethernet)
+		_ = rfc2865.ServiceType_Set(packet, rfc2865.ServiceType_Value_FramedUser)
+		_ = rfc2865.CallingStationID_SetString(packet, "AA-BB-CC-DD-EE-02")
+		_ = rfc2865.CalledStationID_SetString(packet, "huawei-ap")
+		_ = rfc2869.NASPortID_SetString(packet, "vlanid=310;vlanid2=320;")
+		_ = rfc2865.FramedIPAddress_Set(packet, net.ParseIP("10.10.10.20"))
 
 		response, err := radius.Exchange(context.Background(), packet, serverAddr)
 		if err != nil {
@@ -338,11 +338,11 @@ func TestRadiusIntegration(t *testing.T) {
 
 	t.Run("Accounting-Request Start", func(t *testing.T) {
 		packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
-		rfc2865.UserName_SetString(packet, "testuser")
-		rfc2865.NASIdentifier_SetString(packet, "test-nas")
-		rfc2865.NASIPAddress_Set(packet, net.ParseIP("127.0.0.1"))
-		rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start)
-		rfc2866.AcctSessionID_SetString(packet, "session-1")
+		_ = rfc2865.UserName_SetString(packet, "testuser")
+		_ = rfc2865.NASIdentifier_SetString(packet, "test-nas")
+		_ = rfc2865.NASIPAddress_Set(packet, net.ParseIP("127.0.0.1"))
+		_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start)
+		_ = rfc2866.AcctSessionID_SetString(packet, "session-1")
 
 		response, err := radius.Exchange(context.Background(), packet, acctAddr)
 		if err != nil {
@@ -356,14 +356,14 @@ func TestRadiusIntegration(t *testing.T) {
 
 	t.Run("Accounting-Request Stop", func(t *testing.T) {
 		packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
-		rfc2865.UserName_SetString(packet, "testuser")
-		rfc2865.NASIdentifier_SetString(packet, "test-nas")
-		rfc2865.NASIPAddress_Set(packet, net.ParseIP("127.0.0.1"))
-		rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Stop)
-		rfc2866.AcctSessionID_SetString(packet, "session-1")
-		rfc2866.AcctSessionTime_Set(packet, 60)
-		rfc2866.AcctInputOctets_Set(packet, 1000)
-		rfc2866.AcctOutputOctets_Set(packet, 2000)
+		_ = rfc2865.UserName_SetString(packet, "testuser")
+		_ = rfc2865.NASIdentifier_SetString(packet, "test-nas")
+		_ = rfc2865.NASIPAddress_Set(packet, net.ParseIP("127.0.0.1"))
+		_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Stop)
+		_ = rfc2866.AcctSessionID_SetString(packet, "session-1")
+		_ = rfc2866.AcctSessionTime_Set(packet, 60)
+		_ = rfc2866.AcctInputOctets_Set(packet, 1000)
+		_ = rfc2866.AcctOutputOctets_Set(packet, 2000)
 
 		response, err := radius.Exchange(context.Background(), packet, acctAddr)
 		if err != nil {

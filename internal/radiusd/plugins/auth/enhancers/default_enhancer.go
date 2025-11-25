@@ -50,18 +50,18 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 
 	interim := getIntConfig(authCtx, app.ConfigRadiusAcctInterimInterval, 120)
 
-	rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))
-	rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim))
+	_ = rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))           //nolint:errcheck
+	_ = rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim)) //nolint:errcheck
 
 	// Use getter method for AddrPool
 	addrPool := user.GetAddrPool(profileCache)
 	if common.IsNotEmptyAndNA(addrPool) {
-		rfc2869.FramedPool_SetString(response, addrPool)
+		_ = rfc2869.FramedPool_SetString(response, addrPool) //nolint:errcheck
 	}
 
 	// User-specific IP address (always use direct access)
 	if common.IsNotEmptyAndNA(user.IpAddr) {
-		rfc2865.FramedIPAddress_Set(response, net.ParseIP(user.IpAddr))
+		_ = rfc2865.FramedIPAddress_Set(response, net.ParseIP(user.IpAddr)) //nolint:errcheck
 	}
 
 	// Set FramedIPv6Prefix if user has a fixed IPv6 address
@@ -73,14 +73,14 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 			ipv6Prefix = ipv6Prefix + "/128"
 		}
 		if _, ipnet, err := net.ParseCIDR(ipv6Prefix); err == nil {
-			rfc3162.FramedIPv6Prefix_Set(response, ipnet)
+			_ = rfc3162.FramedIPv6Prefix_Set(response, ipnet) //nolint:errcheck
 		}
 	}
 
 	// Use getter method for IPv6PrefixPool
 	ipv6Pool := user.GetIPv6PrefixPool(profileCache)
 	if common.IsNotEmptyAndNA(ipv6Pool) {
-		rfc3162.FramedIPv6Pool_SetString(response, ipv6Pool)
+		_ = rfc3162.FramedIPv6Pool_SetString(response, ipv6Pool) //nolint:errcheck
 	}
 
 	return nil

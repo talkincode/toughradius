@@ -114,8 +114,8 @@ func (m *mockEAPHandler) HandleIdentity(ctx *EAPContext) (bool, error) {
 		response := ctx.Request.Response(radius.CodeAccessChallenge)
 		eapChallenge := []byte{CodeRequest, ctx.EAPMessage.Identifier, 0, 10, m.eapType, 1, 2, 3, 4, 5}
 		SetEAPMessageAndAuth(response, eapChallenge, ctx.Secret)
-		rfc2865.State_SetString(response, "test-state-id")
-		ctx.ResponseWriter.Write(response)
+		_ = rfc2865.State_SetString(response, "test-state-id") //nolint:errcheck
+		_ = ctx.ResponseWriter.Write(response)                 //nolint:errcheck
 	}
 	return m.handleIdentityOk, nil
 }
@@ -148,7 +148,7 @@ func (m *mockHandlerRegistry) Register(handler EAPHandler) {
 
 func createEAPIdentityResponse(identifier uint8, identity string) *radius.Packet {
 	p := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(p, identity)
+	_ = rfc2865.UserName_SetString(p, identity) //nolint:errcheck
 
 	// EAP-Response/Identity: Code=2, Type=1, Data=identity
 	identityBytes := []byte(identity)
@@ -160,7 +160,7 @@ func createEAPIdentityResponse(identifier uint8, identity string) *radius.Packet
 	eapMsg[3] = byte(eapLen)
 	eapMsg[4] = TypeIdentity
 	copy(eapMsg[5:], identityBytes)
-	rfc2869.EAPMessage_Set(p, eapMsg)
+	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
 
 	return p
 }
@@ -177,7 +177,7 @@ func createEAPNakResponse(identifier uint8, suggestedTypes ...uint8) *radius.Pac
 	eapMsg[3] = byte(eapLen)
 	eapMsg[4] = TypeNak
 	copy(eapMsg[5:], suggestedTypes)
-	rfc2869.EAPMessage_Set(p, eapMsg)
+	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
 
 	return p
 }
@@ -194,7 +194,7 @@ func createEAPChallengeResponse(identifier uint8, eapType uint8, data []byte) *r
 	eapMsg[3] = byte(eapLen)
 	eapMsg[4] = eapType
 	copy(eapMsg[5:], data)
-	rfc2869.EAPMessage_Set(p, eapMsg)
+	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
 
 	return p
 }
@@ -204,7 +204,7 @@ func createEAPRequestPacket(identifier uint8) *radius.Packet {
 
 	// EAP-Request (Code=1)
 	eapMsg := []byte{CodeRequest, identifier, 0, 5, TypeIdentity}
-	rfc2869.EAPMessage_Set(p, eapMsg)
+	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
 
 	return p
 }
@@ -667,7 +667,7 @@ func TestCleanupState_WithState(t *testing.T) {
 	coordinator := NewCoordinator(stateManager, &mockPasswordProvider{}, newMockHandlerRegistry(), false)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.State_SetString(packet, "test-state-123")
+	_ = rfc2865.State_SetString(packet, "test-state-123") //nolint:errcheck
 	req := &radius.Request{Packet: packet}
 
 	coordinator.CleanupState(req)
@@ -695,7 +695,7 @@ func TestCleanupState_StateNotInManager(t *testing.T) {
 	coordinator := NewCoordinator(stateManager, &mockPasswordProvider{}, newMockHandlerRegistry(), false)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.State_SetString(packet, "non-existent-state")
+	_ = rfc2865.State_SetString(packet, "non-existent-state") //nolint:errcheck
 	req := &radius.Request{Packet: packet}
 
 	// Should not panic even if state doesn't exist

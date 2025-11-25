@@ -44,7 +44,7 @@ func TestGetTSDB(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitMetrics failed: %v", err)
 	}
-	defer Close()
+	defer func() { _ = Close() }() //nolint:errcheck
 
 	tsdb := GetTSDB()
 	if tsdb == nil {
@@ -87,7 +87,7 @@ func TestMetrics_WriteAndRead(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitMetrics failed: %v", err)
 	}
-	defer Close()
+	defer func() { _ = Close() }() //nolint:errcheck
 
 	tsdb := GetTSDB()
 	if tsdb == nil {
@@ -150,7 +150,7 @@ func TestMetrics_MultipleMetrics(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitMetrics failed: %v", err)
 	}
-	defer Close()
+	defer func() { _ = Close() }() //nolint:errcheck
 
 	tsdb := GetTSDB()
 	now := time.Now().UnixNano()
@@ -221,7 +221,7 @@ func TestInitMetrics_InvalidPath(t *testing.T) {
 	// Some systems might allow this to succeed, so we just check it doesn't panic
 	if err == nil {
 		// If it succeeded, clean up
-		Close()
+		_ = Close() //nolint:errcheck
 	}
 }
 
@@ -237,7 +237,7 @@ func TestMetrics_Retention(t *testing.T) {
 	if err != nil {
 		t.Fatalf("InitMetrics failed: %v", err)
 	}
-	defer Close()
+	defer func() { _ = Close() }() //nolint:errcheck
 
 	tsdb := GetTSDB()
 
@@ -257,7 +257,7 @@ func BenchmarkMetrics_Insert(b *testing.B) {
 	if err != nil {
 		b.Fatalf("InitMetrics failed: %v", err)
 	}
-	defer Close()
+	defer func() { _ = Close() }() //nolint:errcheck
 
 	tsdb := GetTSDB()
 	metric := "benchmark.metric"
@@ -288,7 +288,7 @@ func BenchmarkMetrics_Select(b *testing.B) {
 	if err != nil {
 		b.Fatalf("InitMetrics failed: %v", err)
 	}
-	defer Close()
+	defer func() { _ = Close() }() //nolint:errcheck
 
 	tsdb := GetTSDB()
 	metric := "benchmark.select"

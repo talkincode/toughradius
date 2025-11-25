@@ -66,7 +66,7 @@ func (h *OTPHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 	}
 
 	// Set the State attribute
-	rfc2865.State_SetString(response, stateID)
+	_ = rfc2865.State_SetString(response, stateID) //nolint:errcheck
 
 	// Set the EAP-Message and Message-Authenticator
 	eap.SetEAPMessageAndAuth(response, eapData, ctx.Secret)
@@ -102,7 +102,7 @@ func (h *OTPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 
 	// Mark authentication as successful
 	state.Success = true
-	ctx.StateManager.SetState(stateID, state)
+	_ = ctx.StateManager.SetState(stateID, state) //nolint:errcheck
 
 	return true, nil
 }

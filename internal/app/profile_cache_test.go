@@ -335,7 +335,7 @@ func TestProfileCache_GetWithNilDB(t *testing.T) {
 
 	// Should panic when trying to get from nil DB (cache miss)
 	assert.Panics(t, func() {
-		cache.Get(1)
+		_, _ = cache.Get(1) //nolint:errcheck
 	})
 }
 
@@ -437,18 +437,18 @@ func BenchmarkProfileCache_Get(b *testing.B) {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
-	db.AutoMigrate(&domain.RadiusProfile{})
+	_ = db.AutoMigrate(&domain.RadiusProfile{}) //nolint:errcheck
 	db.Create(&domain.RadiusProfile{ID: 1, Name: "benchmark", UpRate: 1024})
 
 	cache := NewProfileCache(db, time.Minute)
 	defer cache.Stop()
 
 	// Warm up cache
-	cache.Get(1)
+	_, _ = cache.Get(1) //nolint:errcheck
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		cache.Get(1)
+		_, _ = cache.Get(1) //nolint:errcheck
 	}
 }
 
@@ -472,7 +472,7 @@ func BenchmarkProfileCache_ConcurrentGet(b *testing.B) {
 	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Silent),
 	})
-	db.AutoMigrate(&domain.RadiusProfile{})
+	_ = db.AutoMigrate(&domain.RadiusProfile{}) //nolint:errcheck
 	for i := int64(1); i <= 100; i++ {
 		db.Create(&domain.RadiusProfile{ID: i, Name: "benchmark", UpRate: 1024})
 	}
@@ -482,14 +482,14 @@ func BenchmarkProfileCache_ConcurrentGet(b *testing.B) {
 
 	// Warm up cache
 	for i := int64(1); i <= 100; i++ {
-		cache.Get(i)
+		_, _ = cache.Get(i) //nolint:errcheck
 	}
 
 	b.ResetTimer()
 	b.RunParallel(func(pb *testing.PB) {
 		id := int64(1)
 		for pb.Next() {
-			cache.Get(id)
+			_, _ = cache.Get(id) //nolint:errcheck
 			id = (id % 100) + 1
 		}
 	})

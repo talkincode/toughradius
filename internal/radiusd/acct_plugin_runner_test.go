@@ -43,7 +43,7 @@ func TestHandleAccountingWithPluginsDispatchesToHandler(t *testing.T) {
 
 	acctSvc := &AcctService{RadiusService: &RadiusService{}}
 	packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
-	rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start)
+	_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Start)
 	req := &radius.Request{
 		Packet:     packet,
 		RemoteAddr: &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 1813},
@@ -75,7 +75,7 @@ func TestHandleAccountingWithPluginsNoHandler(t *testing.T) {
 
 	acctSvc := &AcctService{RadiusService: &RadiusService{}}
 	packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
-	rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Stop)
+	_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_Stop)
 	req := &radius.Request{
 		Packet:     packet,
 		RemoteAddr: &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 1813},

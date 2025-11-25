@@ -84,10 +84,10 @@ func GenerateMessageAuthenticator(packet *radius.Packet, secret string) []byte {
 
 // SetEAPMessageAndAuth sets the EAP-Message and Message-Authenticator attributes
 func SetEAPMessageAndAuth(response *radius.Packet, eapData []byte, secret string) {
-	rfc2869.EAPMessage_Set(response, eapData)
-	rfc2869.MessageAuthenticator_Set(response, make([]byte, 16))
+	_ = rfc2869.EAPMessage_Set(response, eapData)                    //nolint:errcheck
+	_ = rfc2869.MessageAuthenticator_Set(response, make([]byte, 16)) //nolint:errcheck
 	authenticator := GenerateMessageAuthenticator(response, secret)
-	rfc2869.MessageAuthenticator_Set(response, authenticator)
+	_ = rfc2869.MessageAuthenticator_Set(response, authenticator) //nolint:errcheck
 }
 
 // ComputeMD5Hash computes the MD5 hash

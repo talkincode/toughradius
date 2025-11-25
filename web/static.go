@@ -54,7 +54,7 @@ func RegisterStaticRoutes(e *echo.Echo) error {
 		// Attempt to open the requested file
 		file, err := fsys.Open(path)
 		if err == nil {
-			file.Close()
+			_ = file.Close() //nolint:errcheck
 			return echo.WrapHandler(staticHandler)(c)
 		}
 
@@ -63,7 +63,7 @@ func RegisterStaticRoutes(e *echo.Echo) error {
 		if err != nil {
 			return err
 		}
-		defer indexFile.Close()
+		defer func() { _ = indexFile.Close() }() //nolint:errcheck
 
 		c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 		return c.Stream(http.StatusOK, "text/html", indexFile)

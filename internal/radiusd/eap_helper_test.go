@@ -70,7 +70,7 @@ func TestEAPAuthHelperHandleEAPAuthenticationBasic(t *testing.T) {
 
 	// Create test data
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2865.UserName_SetString(packet, "testuser") //nolint:errcheck
 
 	req := &radius.Request{
 		Packet:     packet,
@@ -200,7 +200,7 @@ func TestEAPAuthHelperMacAuth(t *testing.T) {
 	// Create a MAC authentication scenario
 	macAddr := "aa:bb:cc:dd:ee:ff"
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, macAddr)
+	_ = rfc2865.UserName_SetString(packet, macAddr) //nolint:errcheck
 
 	req := &radius.Request{
 		Packet:     packet,
@@ -253,7 +253,7 @@ func TestEAPAuthHelperDifferentMethods(t *testing.T) {
 	helper := NewEAPAuthHelper(rs, nil)
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
-	rfc2865.UserName_SetString(packet, "testuser")
+	_ = rfc2865.UserName_SetString(packet, "testuser") //nolint:errcheck
 
 	req := &radius.Request{
 		Packet:     packet,

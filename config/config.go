@@ -110,12 +110,12 @@ func (c *AppConfig) GetRadsecKeyPath() string {
 }
 
 func (c *AppConfig) initDirs() {
-	os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0755)
-	os.MkdirAll(path.Join(c.System.Workdir, "public"), 0755)
-	os.MkdirAll(path.Join(c.System.Workdir, "data"), 0755)
-	os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0755)
-	os.MkdirAll(path.Join(c.System.Workdir, "private"), 0644)
-	os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0755)
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0755)         //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "public"), 0755)       //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "data"), 0755)         //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0755) //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "private"), 0644)      //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0755)       //nolint:errcheck
 }
 
 func setEnvValue(name string, val *string) {

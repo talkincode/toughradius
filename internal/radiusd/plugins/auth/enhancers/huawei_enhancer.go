@@ -48,10 +48,10 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 	upPeak := clampInt64(up*4, math.MaxInt32)
 	downPeak := clampInt64(down*4, math.MaxInt32)
 
-	huawei.HuaweiInputAverageRate_Set(resp, huawei.HuaweiInputAverageRate(up))
-	huawei.HuaweiInputPeakRate_Set(resp, huawei.HuaweiInputPeakRate(upPeak))
-	huawei.HuaweiOutputAverageRate_Set(resp, huawei.HuaweiOutputAverageRate(down))
-	huawei.HuaweiOutputPeakRate_Set(resp, huawei.HuaweiOutputPeakRate(downPeak))
+	_ = huawei.HuaweiInputAverageRate_Set(resp, huawei.HuaweiInputAverageRate(up))     //nolint:errcheck
+	_ = huawei.HuaweiInputPeakRate_Set(resp, huawei.HuaweiInputPeakRate(upPeak))       //nolint:errcheck
+	_ = huawei.HuaweiOutputAverageRate_Set(resp, huawei.HuaweiOutputAverageRate(down)) //nolint:errcheck
+	_ = huawei.HuaweiOutputPeakRate_Set(resp, huawei.HuaweiOutputPeakRate(downPeak))   //nolint:errcheck
 
 	// Set Huawei FramedIPv6Address if user has a fixed IPv6 address
 	if common.IsNotEmptyAndNA(user.IpV6Addr) {
@@ -63,14 +63,14 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 			ipv6Str = parts[0]
 		}
 		if ipv6Addr := net.ParseIP(ipv6Str); ipv6Addr != nil {
-			huawei.HuaweiFramedIPv6Address_Set(resp, ipv6Addr)
+			_ = huawei.HuaweiFramedIPv6Address_Set(resp, ipv6Addr) //nolint:errcheck
 		}
 	}
 
 	// Use getter method for Domain
 	domain := user.GetDomain(profileCache)
 	if common.IsNotEmptyAndNA(domain) {
-		huawei.HuaweiDomainName_SetString(resp, domain)
+		_ = huawei.HuaweiDomainName_SetString(resp, domain) //nolint:errcheck
 	}
 
 	return nil

@@ -99,7 +99,7 @@ func TestZTEParser_Parse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 			if tt.callingStation != "" {
-				rfc2865.CallingStationID_SetString(packet, tt.callingStation)
+				_ = rfc2865.CallingStationID_SetString(packet, tt.callingStation) //nolint:errcheck
 			}
 
 			req := &radius.Request{Packet: packet}

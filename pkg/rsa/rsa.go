@@ -34,7 +34,7 @@ func split(buf []byte, lim int) [][]byte {
 		chunks = append(chunks, chunk)
 	}
 	if len(buf) > 0 {
-		chunks = append(chunks, buf[:len(buf)])
+		chunks = append(chunks, buf[:])
 	}
 	return chunks
 }
@@ -65,7 +65,7 @@ func RsaEncrypt(origData []byte, pubkey string) (string, error) {
 func RsaDecrypt(encrypted string, prikey string, oubklen int) (string, error) {
 	block, _ := pem.Decode([]byte(prikey))
 	if block == nil {
-		return "", errors.New("private key error!")
+		return "", errors.New("private key error")
 	}
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {

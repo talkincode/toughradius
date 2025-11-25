@@ -42,7 +42,7 @@ func TestCHAPValidator_CanHandle(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 			if tt.chapPassword != nil {
-				rfc2865.CHAPPassword_Add(packet, tt.chapPassword)
+				_ = rfc2865.CHAPPassword_Add(packet, tt.chapPassword) //nolint:errcheck
 			}
 
 			req := &radius.Request{Packet: packet}
@@ -88,8 +88,8 @@ func TestCHAPValidator_Validate(t *testing.T) {
 				chapPassword[0] = chapID
 				copy(chapPassword[1:], response)
 
-				rfc2865.CHAPPassword_Add(packet, chapPassword)
-				rfc2865.CHAPChallenge_Add(packet, challenge)
+				_ = rfc2865.CHAPPassword_Add(packet, chapPassword) //nolint:errcheck
+				_ = rfc2865.CHAPChallenge_Add(packet, challenge)   //nolint:errcheck
 			},
 			expectError: false,
 		},
@@ -114,8 +114,8 @@ func TestCHAPValidator_Validate(t *testing.T) {
 				chapPassword[0] = chapID
 				copy(chapPassword[1:], response)
 
-				rfc2865.CHAPPassword_Add(packet, chapPassword)
-				rfc2865.CHAPChallenge_Add(packet, challenge)
+				_ = rfc2865.CHAPPassword_Add(packet, chapPassword) //nolint:errcheck
+				_ = rfc2865.CHAPChallenge_Add(packet, challenge)   //nolint:errcheck
 			},
 			expectError: true,
 		},
@@ -127,8 +127,8 @@ func TestCHAPValidator_Validate(t *testing.T) {
 				chapPassword := make([]byte, 10)
 				challenge := make([]byte, 16)
 
-				rfc2865.CHAPPassword_Add(packet, chapPassword)
-				rfc2865.CHAPChallenge_Add(packet, challenge)
+				_ = rfc2865.CHAPPassword_Add(packet, chapPassword) //nolint:errcheck
+				_ = rfc2865.CHAPChallenge_Add(packet, challenge)   //nolint:errcheck
 			},
 			expectError: true,
 			errorMsg:    "must be 17 bytes",
@@ -141,8 +141,8 @@ func TestCHAPValidator_Validate(t *testing.T) {
 				// Challenge with incorrect length
 				challenge := make([]byte, 8)
 
-				rfc2865.CHAPPassword_Add(packet, chapPassword)
-				rfc2865.CHAPChallenge_Add(packet, challenge)
+				_ = rfc2865.CHAPPassword_Add(packet, chapPassword) //nolint:errcheck
+				_ = rfc2865.CHAPChallenge_Add(packet, challenge)   //nolint:errcheck
 			},
 			expectError: true,
 			errorMsg:    "must be 16 bytes",

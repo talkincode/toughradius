@@ -42,7 +42,7 @@ func TestListOperators(t *testing.T) {
 	appCtx := setupTestApp(t, db)
 
 	// Automatically migrate the operator table
-	db.AutoMigrate(&domain.SysOpr{})
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
 
 	// Create test data
 	createTestOperator(db, "admin1", "admin")
@@ -147,7 +147,7 @@ func TestListOperators(t *testing.T) {
 			// Convert the response data to a slice of operators
 			dataBytes, _ := json.Marshal(response.Data)
 			var operators []domain.SysOpr
-			json.Unmarshal(dataBytes, &operators)
+			_ = json.Unmarshal(dataBytes, &operators)
 			response.Data = operators
 
 			assert.Len(t, operators, tt.expectedCount)
@@ -162,7 +162,7 @@ func TestListOperators(t *testing.T) {
 func TestGetOperator(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
-	db.AutoMigrate(&domain.SysOpr{})
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
 
 	// Create test data
 	opr := createTestOperator(db, "testadmin", "admin")
@@ -206,13 +206,13 @@ func TestGetOperator(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var resultOpr domain.SysOpr
-				json.Unmarshal(dataBytes, &resultOpr)
+				_ = json.Unmarshal(dataBytes, &resultOpr)
 
 				assert.Equal(t, opr.Username, resultOpr.Username)
 				assert.Empty(t, resultOpr.Password) // Password should be cleared
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse)
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -222,7 +222,7 @@ func TestGetOperator(t *testing.T) {
 func TestCreateOperator(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
-	db.AutoMigrate(&domain.SysOpr{})
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
 
 	tests := []struct {
 		name           string
@@ -430,7 +430,7 @@ func TestCreateOperator(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var opr domain.SysOpr
-				json.Unmarshal(dataBytes, &opr)
+				_ = json.Unmarshal(dataBytes, &opr) //nolint:errcheck
 
 				assert.NotZero(t, opr.ID)
 				if tt.checkResult != nil {
@@ -438,7 +438,7 @@ func TestCreateOperator(t *testing.T) {
 				}
 			} else if tt.expectedError != "" {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -448,7 +448,7 @@ func TestCreateOperator(t *testing.T) {
 func TestUpdateOperator(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
-	db.AutoMigrate(&domain.SysOpr{})
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
 
 	// Create test data
 	opr := createTestOperator(db, "originaluser", "operator")
@@ -610,7 +610,7 @@ func TestUpdateOperator(t *testing.T) {
 
 				dataBytes, _ := json.Marshal(response.Data)
 				var updatedOpr domain.SysOpr
-				json.Unmarshal(dataBytes, &updatedOpr)
+				_ = json.Unmarshal(dataBytes, &updatedOpr) //nolint:errcheck
 
 				assert.Empty(t, updatedOpr.Password) // Password should be cleared
 				if tt.checkResult != nil {
@@ -618,7 +618,7 @@ func TestUpdateOperator(t *testing.T) {
 				}
 			} else {
 				var errResponse ErrorResponse
-				json.Unmarshal(rec.Body.Bytes(), &errResponse)
+				_ = json.Unmarshal(rec.Body.Bytes(), &errResponse) //nolint:errcheck
 				assert.Equal(t, tt.expectedError, errResponse.Error)
 			}
 		})
@@ -629,7 +629,7 @@ func TestUpdateOperator(t *testing.T) {
 func TestOperatorEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
-	db.AutoMigrate(&domain.SysOpr{})
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
 
 	t.Run("Username trims spaces automatically", func(t *testing.T) {
 		e := setupTestEcho()
@@ -647,10 +647,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response) //nolint:errcheck
 		dataBytes, _ := json.Marshal(response.Data)
 		var opr domain.SysOpr
-		json.Unmarshal(dataBytes, &opr)
+		_ = json.Unmarshal(dataBytes, &opr) //nolint:errcheck
 
 		assert.Equal(t, "spaceadmin", opr.Username)
 	})
@@ -672,10 +672,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		assert.Equal(t, http.StatusOK, rec.Code)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response) //nolint:errcheck
 		dataBytes, _ := json.Marshal(response.Data)
 		var opr domain.SysOpr
-		json.Unmarshal(dataBytes, &opr)
+		_ = json.Unmarshal(dataBytes, &opr) //nolint:errcheck
 
 		// Validate the password is stored correctly (trimmed then hashed)
 		var savedOpr domain.SysOpr
@@ -701,10 +701,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response) //nolint:errcheck
 		dataBytes, _ := json.Marshal(response.Data)
 		var updatedOpr domain.SysOpr
-		json.Unmarshal(dataBytes, &updatedOpr)
+		_ = json.Unmarshal(dataBytes, &updatedOpr) //nolint:errcheck
 
 		// Username and permission level should not change
 		assert.Equal(t, originalUsername, updatedOpr.Username)
@@ -730,10 +730,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response) //nolint:errcheck
 		dataBytes, _ := json.Marshal(response.Data)
 		var opr domain.SysOpr
-		json.Unmarshal(dataBytes, &opr)
+		_ = json.Unmarshal(dataBytes, &opr) //nolint:errcheck
 
 		assert.Equal(t, "admin", opr.Level) // Should be converted to lowercase
 	})
@@ -755,10 +755,10 @@ func TestOperatorEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		json.Unmarshal(rec.Body.Bytes(), &response)
+		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		dataBytes, _ := json.Marshal(response.Data)
 		var opr domain.SysOpr
-		json.Unmarshal(dataBytes, &opr)
+		_ = json.Unmarshal(dataBytes, &opr)
 
 		assert.Equal(t, "disabled", opr.Status) // Should be converted to lowercase
 	})

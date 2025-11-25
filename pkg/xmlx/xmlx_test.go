@@ -55,6 +55,7 @@ func TestWildcardRecursive(t *testing.T) {
 	}
 }
 
+//nolint:unused
 func _TestLoadRemote(t *testing.T) {
 	doc := New()
 
