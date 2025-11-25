@@ -7,3 +7,9 @@ export * from './CustomError';
 export * from './LoadingSkeletons';
 export * from './ConfirmDialog';
 export * from './ActiveFilters';
+
+// Form components
+export * from './form';
+
+// Detail components
+export * from './detail';
