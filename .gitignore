@@ -25,4 +25,5 @@ toughradius
 rundata/
 bin/
 .playwright-mcp/
-test-reports/
+test-reports/.github/prompts/rework.prompt.md
+.github/prompts/review.prompt.md
