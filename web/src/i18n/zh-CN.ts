@@ -4,7 +4,7 @@ import chineseMessages from 'ra-language-chinese';
 const customChineseMessages: TranslationMessages = {
   ...chineseMessages,
   app: {
-    title: 'ToughRADIUS v9',
+    title: 'TOUGHRADIUS v9',
     subtitle: '企业级 RADIUS 服务器管理平台',
     loading: '正在加载...',
   },
@@ -36,6 +36,8 @@ const customChineseMessages: TranslationMessages = {
     toggle_theme: '切换主题',
     system_settings: '系统设置',
     account_settings: '账号设置',
+    expand_menu: '展开菜单',
+    collapse_menu: '收起菜单',
     language: {
       zh_CN: '简体中文',
       en_US: 'English',

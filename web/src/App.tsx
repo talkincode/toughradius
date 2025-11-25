@@ -72,7 +72,7 @@ const App = () => (
     i18nProvider={i18nProvider}
     dashboard={Dashboard}
     loginPage={LoginPage}
-    title="ToughRADIUS v9"
+    title="TOUGHRADIUS v9"
     theme={theme}
     darkTheme={darkTheme}
     defaultTheme="light"

@@ -4,7 +4,7 @@ import englishMessages from 'ra-language-english';
 const customEnglishMessages: TranslationMessages = {
   ...englishMessages,
   app: {
-    title: 'ToughRADIUS v9',
+    title: 'TOUGHRADIUS v9',
     subtitle: 'Enterprise-grade RADIUS Server Management Platform',
     loading: 'Loading...',
   },
@@ -36,6 +36,8 @@ const customEnglishMessages: TranslationMessages = {
     toggle_theme: 'Toggle Theme',
     system_settings: 'System Settings',
     account_settings: 'Account Settings',
+    expand_menu: 'Expand Menu',
+    collapse_menu: 'Collapse Menu',
     language: {
       zh_CN: '简体中文',
       en_US: 'English',

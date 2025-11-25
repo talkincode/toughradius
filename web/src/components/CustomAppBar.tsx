@@ -1,8 +1,10 @@
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LanguageIcon from '@mui/icons-material/Language';
+import MenuIcon from '@mui/icons-material/Menu';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { Box, IconButton, Stack, Tooltip, Typography, useTheme, Menu, MenuItem, ListItemIcon, ListItemText } from '@mui/material';
-import { AppBar, AppBarProps, TitlePortal, ToggleThemeButton, useRedirect, useGetIdentity, useSetLocale, useLocaleState, useTranslate } from 'react-admin';
+import { AppBar, AppBarProps, TitlePortal, ToggleThemeButton, useRedirect, useGetIdentity, useSetLocale, useLocaleState, useTranslate, useSidebarState } from 'react-admin';
 import { useState } from 'react';
 
 export const CustomAppBar = (props: AppBarProps) => {
@@ -14,6 +16,7 @@ export const CustomAppBar = (props: AppBarProps) => {
   const [locale] = useLocaleState();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const translate = useTranslate();
+  const [sidebarOpen, setSidebarOpen] = useSidebarState();
 
   const handleLanguageClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -28,11 +31,16 @@ export const CustomAppBar = (props: AppBarProps) => {
     handleLanguageClose();
   };
 
+  const handleToggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
   return (
     <AppBar
       {...props}
       toolbar={false}
       elevation={0}
+      alwaysOn={true}
       sx={{
         // 浅色主题使用白色背景，深色主题使用深色背景
         backgroundColor: isDark ? '#1e293b' : '#ffffff',
@@ -44,36 +52,56 @@ export const CustomAppBar = (props: AppBarProps) => {
           ? 'none' 
           : '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
         transition: 'all 0.3s ease',
+        // 隐藏默认的汉堡菜单按钮，我们自己添加
+        '& .RaAppBar-menuButton': {
+          display: 'none',
+        },
       }}
     >
       <TitlePortal />
       <Box
         sx={{
           width: '100%',
-          px: 3,
-          py: 1,
+          px: 2,
+          py: 0.5,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
         }}
       >
-        <Stack direction="row" spacing={2} alignItems="center">
-          <Box>
-            <Typography 
-              variant="h6" 
-              sx={{ 
-                fontSize: 18, 
-                fontWeight: 700, 
-                color: isDark ? '#f1f5f9' : '#1f2937',
-                letterSpacing: '0.5px',
+        <Stack direction="row" spacing={1} alignItems="center">
+          {/* 侧边栏展开/收起按钮 */}
+          <Tooltip title={sidebarOpen ? translate('appbar.collapse_menu') : translate('appbar.expand_menu')}>
+            <IconButton 
+              size="medium"
+              onClick={handleToggleSidebar}
+              sx={{
+                color: isDark ? '#f1f5f9' : '#6b7280',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  backgroundColor: isDark 
+                    ? 'rgba(255, 255, 255, 0.1)'
+                    : 'rgba(0, 0, 0, 0.05)',
+                },
               }}
             >
-              ToughRADIUS
-            </Typography>
-          </Box>
+              {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+            </IconButton>
+          </Tooltip>
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontSize: 18, 
+              fontWeight: 700, 
+              color: isDark ? '#f1f5f9' : '#1f2937',
+              letterSpacing: '0.5px',
+            }}
+          >
+            TOUGHRADIUS
+          </Typography>
         </Stack>
 
-        <Stack direction="row" spacing={1.5} alignItems="center">
+        <Stack direction="row" spacing={1} alignItems="center">
           <Tooltip title={translate('appbar.switch_language')}>
             <IconButton 
               size="large"

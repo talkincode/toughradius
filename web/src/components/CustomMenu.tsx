@@ -73,7 +73,7 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
           transition: 'all 0.3s ease',
         }}
       >
-        <div style={{ fontWeight: 600, marginBottom: 4 }}>ToughRADIUS v9</div>
+        <div style={{ fontWeight: 600, marginBottom: 4 }}>TOUGHRADIUS v9</div>
         <div>© {currentYear} ALL RIGHTS RESERVED</div>
         {logout && <Box sx={{ mt: 2 }}>{logout}</Box>}
       </Box>
