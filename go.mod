@@ -6,29 +6,23 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/bwmarrin/snowflake v0.3.0
-	github.com/c-robinson/iplib v1.0.6
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-gota/gota v0.12.0
 	github.com/gocarina/gocsv v0.0.0-20230616125104-99d496ca653d
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.3.0
 	github.com/labstack/echo-jwt/v4 v4.3.1
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
-	github.com/mitchellh/mapstructure v1.5.0
 	github.com/montanaflynn/stats v0.7.1
 	github.com/nakabonne/tstorage v0.3.6
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/pkg/errors v0.9.1
-	github.com/pkg/sftp v1.13.10
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/shirou/gopsutil/v4 v4.25.10
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.11.1
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.43.0
 	golang.org/x/sync v0.17.0
-	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.0
@@ -44,6 +38,7 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
+	golang.org/x/crypto v0.43.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	modernc.org/libc v1.22.5 // indirect
 	modernc.org/mathutil v1.5.0 // indirect
@@ -63,7 +58,6 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
-	github.com/kr/fs v0.1.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
@@ -77,10 +71,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/net v0.46.0 // indirect
 	golang.org/x/sys v0.37.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
-	gonum.org/v1/gonum v0.13.0 // indirect
-	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
