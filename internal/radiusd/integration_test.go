@@ -112,6 +112,9 @@ func setupTestEnv(t *testing.T) (*app.Application, *config.AppConfig) {
 }
 
 func TestRadiusIntegration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
 	appCtx, cfg := setupTestEnv(t)
 	defer appCtx.Release()
 

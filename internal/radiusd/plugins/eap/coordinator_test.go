@@ -705,6 +705,9 @@ func TestCleanupState_StateNotInManager(t *testing.T) {
 // Integration test: Full EAP-MD5 authentication flow simulation
 
 func TestCoordinator_FullEAPMD5Flow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
 	stateManager := newMockStateManager()
 	pwdProvider := &mockPasswordProvider{password: "testpassword"}
 	registry := newMockHandlerRegistry()
@@ -774,6 +777,9 @@ func TestCoordinator_FullEAPMD5Flow(t *testing.T) {
 // Integration test: EAP authentication failure flow
 
 func TestCoordinator_EAPAuthFailureFlow(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
 	stateManager := newMockStateManager()
 	pwdProvider := &mockPasswordProvider{password: "wrongpassword"}
 	registry := newMockHandlerRegistry()

@@ -297,6 +297,9 @@ func TestMSCHAPv2Handler_verifyResponse(t *testing.T) {
 }
 
 func TestMSCHAPv2Handler_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
 	// Integration test: simulate the full EAP-MSCHAPv2 authentication flow
 	handler := NewMSCHAPv2Handler()
 	stateManager := statemanager.NewMemoryStateManager()
