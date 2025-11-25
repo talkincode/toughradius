@@ -222,7 +222,7 @@ func (s *AuthService) sendAcceptResponse(ctx *AuthPipelineContext, isEapFlow boo
 		s.UpdateUserLastOnline(ctx.User.Username)
 	}
 
-	zap.L().Info("radius auth sucess",
+	zap.L().Info("radius auth success",
 		zap.String("namespace", "radius"),
 		zap.String("username", ctx.Username),
 		zap.String("nasip", ctx.RemoteIP),

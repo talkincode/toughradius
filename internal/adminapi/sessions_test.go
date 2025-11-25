@@ -561,7 +561,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 	t.Run("Query after deletion", func(t *testing.T) {
 		db.Exec("DELETE FROM radius_online")
 		session := createTestOnlineSession(db, "delete-test", "192.168.40.1", "10.4.0.1")
-		sessionID := strconv.FormatInt(int64(session.ID), 10)
+		sessionID := strconv.FormatInt(session.ID, 10)
 
 		// Delete first
 		e := setupTestEcho()

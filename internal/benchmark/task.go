@@ -150,7 +150,7 @@ func (t *Task) submitTasks() {
 			return
 		}
 
-		// Check if context is cancelled
+		// Check if context is canceled
 		select {
 		case <-t.ctx.Done():
 			return

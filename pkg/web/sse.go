@@ -37,7 +37,7 @@ func (sse *SSE) Write(data []byte) (n int, err error) {
 	if err != nil {
 		return
 	}
-	sse.EchoContext.Response().Writer.(http.Flusher).Flush()
+	sse.EchoContext.Response().Writer.(http.Flusher).Flush() //nolint:errcheck
 	return
 }
 

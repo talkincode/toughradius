@@ -398,7 +398,7 @@ func CreateToken(secret, uid, level string, exp time.Duration) (string, error) {
 	// Create token
 	token := jwt.New(jwt.SigningMethodHS256)
 	// Set claims
-	claims := token.Claims.(jwt.MapClaims)
+	claims := token.Claims.(jwt.MapClaims) //nolint:errcheck
 	claims["usr"] = uid
 	claims["uid"] = uid
 	claims["lvl"] = level

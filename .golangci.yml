@@ -1,9 +1,28 @@
-# golangci-lint v2 configuration
 version: "2"
 
+run:
+  timeout: 5m
+  tests: true
+
 linters:
-  default: standard
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - unconvert
+    - gosec
+
   settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: false # Don't check explicitly ignored errors with _ =
+
+    misspell:
+      locale: US
+
     staticcheck:
       checks:
         - all
@@ -15,6 +34,19 @@ linters:
         - "-ST1020" # Disable function comment format check
         - "-ST1021" # Disable type comment format check
 
-issues:
-  exclude-dirs:
-    - pkg/xmlx
+    gosec:
+      excludes:
+        # MD5/DES/SHA1 are required by RADIUS protocol (RFC 2865) - not a security issue
+        - G401 # Use of weak cryptographic primitive (MD5)
+        - G405 # Use of weak cryptographic primitive (DES)
+        - G501 # Blocklisted import crypto/md5
+        - G502 # Blocklisted import crypto/des
+        - G505 # Blocklisted import crypto/sha1
+        # Integer overflow conversions are safe in our context
+        - G115 # Integer overflow conversion
+        # These are intentional for flexibility
+        - G304 # Potential file inclusion via variable
+        - G404 # Use of weak random number generator (acceptable for non-crypto use)
+        # Directory/file permissions are acceptable for this project
+        - G301 # Expect directory permissions to be 0750 or less
+        - G306 # Expect WriteFile permissions to be 0600 or less
