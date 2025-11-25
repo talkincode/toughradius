@@ -1,102 +1,208 @@
-BUILD_ORG   := talkincode
-BUILD_VERSION   := latest
-BUILD_TIME      := $(shell date "+%F %T")
-BUILD_NAME      := toughradius
-RELEASE_VERSION := v8.0.7
-SOURCE          := main.go
-RELEASE_DIR     := ./release
-COMMIT_SHA1     := $(shell git show -s --format=%H )
-COMMIT_DATE     := $(shell git show -s --format=%cD )
-COMMIT_USER     := $(shell git show -s --format=%ce )
-COMMIT_SUBJECT     := $(shell git show -s --format=%s )
+.PHONY: help build runs runf dev clean test initdb killfs version lint ci setup-hooks
 
-buildpre:
-	echo "BuildVersion=${BUILD_VERSION} ${RELEASE_VERSION} ${BUILD_TIME}" > assets/buildinfo.txt
-	echo "ReleaseVersion=${RELEASE_VERSION}" >> assets/buildinfo.txt
-	echo "BuildTime=${BUILD_TIME}" >> assets/buildinfo.txt
-	echo "BuildName=${BUILD_NAME}" >> assets/buildinfo.txt
-	echo "CommitID=${COMMIT_SHA1}" >> assets/buildinfo.txt
-	echo "CommitDate=${COMMIT_DATE}" >> assets/buildinfo.txt
-	echo "CommitUser=${COMMIT_USER}" >> assets/buildinfo.txt
-	echo "CommitSubject=${COMMIT_SUBJECT}" >> assets/buildinfo.txt
+# 版本信息
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "develop")
+BUILD_TIME ?= $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
+GIT_COMMIT ?= $(shell git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+LDFLAGS := -s -w -X main.version=$(VERSION) -X main.buildTime=$(BUILD_TIME) -X main.gitCommit=$(GIT_COMMIT)
 
+# 默认目标
+help:
+	@echo "ToughRADIUS v9 Makefile Commands"
+	@echo "================================="
+	@echo "Development:"
+	@echo "  make runs       - 启动后端服务 (支持 SQLite)"
+	@echo "  make runf       - 启动前端开发服务"
+	@echo "  make dev        - 同时启动前后端服务"
+	@echo "  make killfs     - 停止前后端所有服务"
+	@echo ""
+	@echo "Build:"
+	@echo "  make build      - 构建生产版本 (PostgreSQL only)"
+	@echo "  make buildf     - 构建前端生产版本"
+	@echo ""
+	@echo "Quality:"
+	@echo "  make test       - 运行测试"
+	@echo "  make lint       - 运行代码检查"
+	@echo "  make ci         - 运行完整 CI 检查（本地）"
+	@echo "  make setup-hooks - 安装 Git hooks"
+	@echo ""
+	@echo "Database:"
+	@echo "  make initdb     - 初始化数据库（危险操作，会删除所有数据）"
+	@echo ""
+	@echo "Maintenance:"
+	@echo "  make clean      - 清理构建文件"
+	@echo ""
+
+# 启动后端服务（开发模式，支持 SQLite）
+runs:
+	@echo "🚀 启动 ToughRADIUS 后端服务..."
+	@echo "📝 配置文件: toughradius.yml"
+	@echo "🔧 SQLite 支持: 已启用 (CGO_ENABLED=0)"
+	@echo ""
+	CGO_ENABLED=0 go run main.go -c toughradius.yml
+
+# 启动前端开发服务
+runf:
+	@echo "🎨 启动前端开发服务..."
+	@echo "📂 工作目录: web/"
+	@echo "🌐 访问地址: http://localhost:3000/admin"
+	@echo ""
+	cd web && npm run dev
+
+# 同时启动前后端（需要 tmux 或在不同终端运行）
+dev:
+	@echo "⚠️  请在两个不同的终端窗口运行："
+	@echo "   终端1: make runs"
+	@echo "   终端2: make runf"
+	@echo ""
+	@echo "或使用以下命令在后台运行："
+	@echo "   make runs > /tmp/toughradius-backend.log 2>&1 &"
+	@echo "   make runf > /tmp/toughradius-frontend.log 2>&1 &"
+
+# 构建生产版本（静态编译，支持 PostgreSQL 和 SQLite）
 build:
-	test -d ./release || mkdir -p ./release
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
-	upx ./release/toughradius
+	@echo "🔨 构建生产版本..."
+	@echo "📦 Version: $(VERSION)"
+	@echo "🕐 Build Time: $(BUILD_TIME)"
+	@echo "📝 Git Commit: $(GIT_COMMIT)"
+	@echo "⚠️  Static build (CGO_ENABLED=0)"
+	@mkdir -p release
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o release/toughradius main.go
+	@echo "✅ 构建完成: release/toughradius"
 
-buildarm64:
-	test -d ./release || mkdir -p ./release
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags  '-s -w -extldflags "-static"'  -o ./release/toughradius main.go
-	upx ./release/toughradius
+# 显示版本信息
+version:
+	@echo "Version:    $(VERSION)"
+	@echo "Build Time: $(BUILD_TIME)"
+	@echo "Git Commit: $(GIT_COMMIT)"
 
-build-tradtest:
-	CGO_ENABLED=0 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest commands/benchmark/bmtest.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/lbmtest commands/benchmark/bmtest.go
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags '-s -w -extldflags "-static"' -o release/bmtest.exe commands/benchmark/bmtest.go
+# 构建前端生产版本
+buildf:
+	@echo "🔨 构建前端生产版本..."
+	@cd web && npm run build
+	@echo "✅ 前端构建完成: web/dist/"
 
+# 初始化数据库（危险操作）
+initdb:
+	@echo "⚠️  警告：此操作将删除并重建所有数据库表！"
+	@read -p "确认继续？(yes/no): " confirm && [ "$$confirm" = "yes" ] || (echo "已取消"; exit 1)
+	@echo "🗄️  初始化数据库..."
+	CGO_ENABLED=0 go run main.go -initdb -c toughradius.yml
 
-tr069crt:
-	# 1 Generate CA private key
-	test -f assets/ca.key || openssl genrsa -out assets/ca.key 4096
-	# 2 Generate CA certificate
-	test -f assets/ca.crt || openssl req -x509 -new -nodes -key assets/ca.key -days 3650 -out assets/ca.crt -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=ToughradiusCA/emailAddress=master@toughstruct.net"
-	# 3 Generate server private key
-	openssl genrsa -out assets/server.key 2048
-	# 4 Generate a certificate request file
-	openssl req -new -key assets/server.key -out assets/server.csr -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=*.toughstruct.net/emailAddress=master@toughstruct.net"
-	# 5 Generate a server certificate based on the CA's private key and the above certificate request file
-	openssl x509 -req -in assets/server.csr -CA assets/ca.crt -CAkey assets/ca.key -CAcreateserial -out assets/server.crt -days 7300
-	mv assets/server.key assets/cwmp.tls.key
-	mv assets/server.crt assets/cwmp.tls.crt
+# 运行测试
+test:
+	@echo "🧪 运行测试..."
+	CGO_ENABLED=0 go test ./...
 
-radseccrt:
-	# 1 Generate CA private key
-	test -f assets/ca.key || openssl genrsa -out assets/ca.key 4096
-	# 2 Generate CA certificate
-	test -f assets/ca.crt || openssl req -x509 -new -nodes -key assets/ca.key -days 3650 -out assets/ca.crt -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=ToughradiusCA/emailAddress=master@toughstruct.net"
-	# 3 Generate server private key
-	openssl genrsa -out assets/server.key 2048
-	# 4 Generate a certificate request file
-	openssl req -new -key assets/server.key -out assets/server.csr -subj \
-	"/C=CN/ST=Shanghai/O=toughradius/CN=*.toughstruct.net/emailAddress=master@toughstruct.net"
-	# 5 Generate a server certificate based on the CA's private key and the above certificate request file
-	openssl x509 -req -in assets/server.csr -CA assets/ca.crt -CAkey assets/ca.key -CAcreateserial -out assets/server.crt -days 7300
-	mv assets/server.key assets/radsec.tls.key
-	mv assets/server.crt assets/radsec.tls.crt
+# 运行集成测试
+test-integration:
+	@echo "🧪 运行集成测试..."
+	CGO_ENABLED=0 go test -v ./internal/radiusd/... -run TestRadiusIntegration
 
-clicrt:
-	# 1 生成client私钥
-	openssl genrsa -out assets/client.key 2048
-	# 2 生成client请求文件
-	openssl req -new -key assets/client.key -subj "/CN=*.toughstruct.net" -out assets/client.csr
-	# 3 生成client证书
-	openssl x509 -req -in assets/client.csr -CA assets/ca.crt -CAkey assets/ca.key -CAcreateserial -out assets/client.crt -days 7300
-	mv assets/client.key assets/client.tls.key
-	mv assets/client.crt assets/client.tls.crt
+# 代码检查
+lint:
+	@echo "🔍 运行代码检查..."
+	@echo ""
+	@echo "📝 Checking code formatting..."
+	@UNFORMATTED=$$(gofmt -l . 2>/dev/null | grep -v vendor || true); \
+	if [ -n "$$UNFORMATTED" ]; then \
+		echo "❌ The following files need formatting:"; \
+		echo "$$UNFORMATTED"; \
+		echo "Run 'go fmt ./...' to fix"; \
+		exit 1; \
+	fi
+	@echo "✅ Code formatting OK"
+	@echo ""
+	@echo "🔎 Running go vet..."
+	@CGO_ENABLED=0 go vet ./...
+	@echo "✅ go vet OK"
+	@echo ""
+	@if command -v golangci-lint > /dev/null 2>&1; then \
+		echo "🔍 Running golangci-lint..."; \
+		golangci-lint run --timeout=5m || true; \
+	else \
+		echo "💡 Tip: Install golangci-lint for more thorough checks:"; \
+		echo "   brew install golangci-lint"; \
+	fi
+	@echo ""
+	@echo "✅ Lint checks completed"
 
-updev:
-	make buildpre
-	make build
-	scp ${RELEASE_DIR}/${BUILD_NAME} trdev-server:/tmp/toughradius
-	ssh trdev-server "systemctl stop toughradius && /tmp/toughradius -install && systemctl start toughradius"
+# 本地 CI 检查（模拟 GitHub Actions）
+ci: lint test build
+	@echo ""
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+	@echo "✅ All CI checks passed!"
+	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
-swag:
-	swag fmt && swag init
+# 安装 Git hooks
+setup-hooks:
+	@echo "🔧 Setting up Git hooks..."
+	@chmod +x .githooks/pre-commit .githooks/pre-push
+	@git config core.hooksPath .githooks
+	@echo "✅ Git hooks installed!"
+	@echo ""
+	@echo "📋 Installed hooks:"
+	@echo "   • pre-commit: 格式检查、go vet、快速构建"
+	@echo "   • pre-push:   完整测试、lint、构建验证"
+	@echo ""
+	@echo "💡 To disable hooks temporarily:"
+	@echo "   git commit --no-verify"
+	@echo "   git push --no-verify"
 
-syncdev:
-	@echo "🚀 开始执行同步流程（develop → main）..."
-	@./scripts/syncdev.sh
+# 清理构建文件
+clean:
+	@echo "🧹 清理构建文件..."
+	rm -rf release/
+	rm -rf web/dist/
+	rm -f /tmp/toughradius-test
+	@echo "✅ 清理完成"
 
-tag:
-	@echo "🏷️  开始标签创建流程..."
-	@./scripts/tag.sh
+# 安装前端依赖
+install-frontend:
+	@echo "📦 安装前端依赖..."
+	cd web && npm install
 
-release:
-	@./scripts/release-text.sh
+# 检查代码格式
+fmt:
+	@echo "📝 格式化 Go 代码..."
+	go fmt ./...
+	@echo "📝 格式化前端代码..."
+	cd web && npm run format || echo "提示: 如需格式化前端代码，请在 package.json 中添加 format 脚本"
 
-.PHONY: clean build tr069crt radseccrt release
+# 查看后端日志
+logs:
+	@tail -f /tmp/toughradius.log
 
+# 查看前端日志
+logsf:
+	@tail -f /tmp/frontend.log
+
+# 停止前后端所有服务
+killfs:
+	@echo "🛑 停止前后端所有服务..."
+	@pkill -f "go run main.go" 2>/dev/null || true
+	@pkill -f "toughradius" 2>/dev/null || true
+	@pkill -f "vite" 2>/dev/null || true
+	@pkill -f "npm run dev" 2>/dev/null || true
+	@echo "✅ 所有服务已停止"
+
+# 重启后端服务
+restart-backend: killfs
+	@echo "🔄 重启后端服务..."
+	@make runs
+
+# 快速启动（后台运行前后端）
+quick-start: killfs
+	@echo "🚀 快速启动前后端服务（后台运行）..."
+	@make runs > /tmp/toughradius-backend.log 2>&1 &
+	@sleep 3
+	@make runf > /tmp/toughradius-frontend.log 2>&1 &
+	@sleep 2
+	@echo ""
+	@echo "✅ 服务已启动！"
+	@echo "📊 后端: http://localhost:1816"
+	@echo "🎨 前端: http://localhost:3000/admin"
+	@echo "📝 后端日志: tail -f /tmp/toughradius-backend.log"
+	@echo "📝 前端日志: tail -f /tmp/toughradius-frontend.log"
+	@echo ""
+	@echo "🛑 停止服务: make killfs"

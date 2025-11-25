@@ -5,103 +5,171 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+  issues: read
+
 jobs:
   build:
     name: Build and Release
     runs-on: ubuntu-latest
     steps:
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: '1.21'
-
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # Build for ARM64
-      - name: Build for ARM64
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+          cache: true
+
+      - name: Extract version info
+        id: version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          VERSION_NUM=${VERSION#v}
+          COMMIT_SHA=$(git rev-parse --short HEAD)
+          BUILD_TIME=$(date -u '+%Y-%m-%d_%H:%M:%S')
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version_num=${VERSION_NUM}" >> $GITHUB_OUTPUT
+          echo "commit=${COMMIT_SHA}" >> $GITHUB_OUTPUT
+          echo "build_time=${BUILD_TIME}" >> $GITHUB_OUTPUT
+          echo "Building ToughRADIUS ${VERSION} (${COMMIT_SHA})"
+
+      - name: Install UPX
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y upx-ucl
+
+      - name: Build binaries
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          COMMIT: ${{ steps.version.outputs.commit }}
+          BUILD_TIME: ${{ steps.version.outputs.build_time }}
         run: |
           mkdir -p ./release
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags  '-s -w -extldflags "-static"' -o ./release/toughradius_arm64 main.go
+          LDFLAGS="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${COMMIT} -extldflags '-static'"
+          
+          # Build for Linux AMD64
+          echo "Building for Linux AMD64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_amd64 main.go
+          upx --best --lzma ./release/toughradius_linux_amd64 || true
+          
+          # Build for Linux ARM64
+          echo "Building for Linux ARM64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_arm64 main.go
+          upx --best --lzma ./release/toughradius_linux_arm64 || true
+          
+          # Build for Linux ARMv7
+          echo "Building for Linux ARMv7..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_armv7 main.go
+          
+          # Build for macOS AMD64
+          echo "Building for macOS AMD64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_darwin_amd64 main.go
+          
+          # Build for macOS ARM64 (Apple Silicon)
+          echo "Building for macOS ARM64..."
+          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_darwin_arm64 main.go
+          
+          # Build for Windows AMD64
+          echo "Building for Windows AMD64..."
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_windows_amd64.exe main.go
+          upx --best --lzma ./release/toughradius_windows_amd64.exe || true
+          
+          # Create checksums
+          cd ./release
+          sha256sum * > checksums.txt
+          cd ..
+          
+          echo "Build completed!"
+          ls -lah ./release/
 
-      # Build for AMD64
-      - name: Build for AMD64
+      - name: Generate release notes from closed issues
+        id: release_notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags  '-s -w -extldflags "-static"' -o ./release/toughradius_amd64 main.go
+          VERSION=${{ steps.version.outputs.version }}
+          
+          # Get previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 ${VERSION}^ 2>/dev/null || echo "")
+          
+          echo "## ToughRADIUS ${VERSION}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "### 📦 Downloads" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "| Platform | Architecture | File |" >> release_notes.md
+          echo "|----------|--------------|------|" >> release_notes.md
+          echo "| Linux | AMD64 | \`toughradius_linux_amd64\` |" >> release_notes.md
+          echo "| Linux | ARM64 | \`toughradius_linux_arm64\` |" >> release_notes.md
+          echo "| Linux | ARMv7 | \`toughradius_linux_armv7\` |" >> release_notes.md
+          echo "| macOS | AMD64 | \`toughradius_darwin_amd64\` |" >> release_notes.md
+          echo "| macOS | ARM64 (Apple Silicon) | \`toughradius_darwin_arm64\` |" >> release_notes.md
+          echo "| Windows | AMD64 | \`toughradius_windows_amd64.exe\` |" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "### 🐳 Docker" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "\`\`\`bash" >> release_notes.md
+          echo "docker pull talkincode/toughradius:${{ steps.version.outputs.version_num }}" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+          echo "" >> release_notes.md
+          
+          # Fetch closed issues since last release
+          if [ -n "$PREV_TAG" ]; then
+            SINCE_DATE=$(git log -1 --format=%aI ${PREV_TAG})
+            echo "### 🔄 Changes since ${PREV_TAG}" >> release_notes.md
+            echo "" >> release_notes.md
+            
+            # Get closed issues
+            ISSUES=$(gh issue list --state closed --search "closed:>=${SINCE_DATE:0:10}" --json number,title,labels --limit 50 2>/dev/null || echo "[]")
+            
+            if [ "$ISSUES" != "[]" ] && [ -n "$ISSUES" ]; then
+              echo "#### 🐛 Bug Fixes" >> release_notes.md
+              echo "$ISSUES" | jq -r '.[] | select(.labels | map(.name) | contains(["bug"])) | "- #\(.number) \(.title)"' >> release_notes.md 2>/dev/null || true
+              echo "" >> release_notes.md
+              
+              echo "#### ✨ Features" >> release_notes.md
+              echo "$ISSUES" | jq -r '.[] | select(.labels | map(.name) | contains(["enhancement"])) | "- #\(.number) \(.title)"' >> release_notes.md 2>/dev/null || true
+              echo "" >> release_notes.md
+              
+              echo "#### 📝 Other Changes" >> release_notes.md
+              echo "$ISSUES" | jq -r '.[] | select((.labels | map(.name) | contains(["bug"]) | not) and (.labels | map(.name) | contains(["enhancement"]) | not)) | "- #\(.number) \(.title)"' >> release_notes.md 2>/dev/null || true
+              echo "" >> release_notes.md
+            fi
+            
+            # Get commits
+            echo "#### 📋 Commits" >> release_notes.md
+            git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --no-merges | head -20 >> release_notes.md
+            echo "" >> release_notes.md
+          fi
+          
+          echo "" >> release_notes.md
+          echo "### 📊 Build Info" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "- **Version:** ${VERSION}" >> release_notes.md
+          echo "- **Commit:** ${{ steps.version.outputs.commit }}" >> release_notes.md
+          echo "- **Build Time:** ${{ steps.version.outputs.build_time }}" >> release_notes.md
+          echo "- **Go Version:** 1.24" >> release_notes.md
+          
+          cat release_notes.md
 
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          name: ToughRADIUS ${{ steps.version.outputs.version }}
+          body_path: release_notes.md
           draft: false
-          prerelease: false
-
-      # Upload ARM64 Asset
-      - name: Upload Release Asset for ARM64
-        uses: actions/upload-release-asset@v1
+          prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') || contains(steps.version.outputs.version, 'rc') }}
+          files: |
+            ./release/toughradius_linux_amd64
+            ./release/toughradius_linux_arm64
+            ./release/toughradius_linux_armv7
+            ./release/toughradius_darwin_amd64
+            ./release/toughradius_darwin_arm64
+            ./release/toughradius_windows_amd64.exe
+            ./release/checksums.txt
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/toughradius_arm64
-          asset_name: toughradius_arm64
-          asset_content_type: application/octet-stream
-
-      # Upload AMD64 Asset
-      - name: Upload Release Asset for AMD64
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./release/toughradius_amd64
-          asset_name: toughradius_amd64
-          asset_content_type: application/octet-stream
-
-            # define job to build and publish docker image
-  build-and-push-docker-image:
-    name: Build Docker image and push to repositories
-    # run only when code is compiling and tests are passing
-    runs-on: ubuntu-latest
-
-    # steps to perform in job
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # setup Docker buld action
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to Github Packages
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.MY_GITHUB_TOKEN }}
-
-      - name: Build image and push to Docker Hub and GitHub Container Registry
-        uses: docker/build-push-action@v2
-        with:
-          # 指向带有 Dockerfile 的源代码所在位置的相对路径
-          context: ./
-          # Note: tags has to be all lower-case
-          tags: |
-            talkincode/toughradius:${{ github.ref_name }} 
-            ghcr.io/talkincode/toughradius:${{ github.ref_name }}
-          # build on feature branches, push only on main branch
-          push: ${{ startsWith(github.ref, 'refs/tags/') }}
-
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

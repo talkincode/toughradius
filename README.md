@@ -1,108 +1,206 @@
 Welcome to the TOUGHRADIUS project!
 
-     _____   _____   _   _   _____   _   _   _____        ___   _____   _   _   _   _____  
-    |_   _| /  _  \ | | | | /  ___| | | | | |  _  \      /   | |  _  \ | | | | | | /  ___/ 
-      | |   | | | | | | | | | |     | |_| | | |_| |     / /| | | | | | | | | | | | | |___  
-      | |   | | | | | | | | | |  _  |  _  | |  _  /    / / | | | | | | | | | | | | \___  \ 
-      | |   | |_| | | |_| | | |_| | | | | | | | \ \   / /  | | | |_| | | | | |_| |  ___| | 
-      |_|   \_____/ \_____/ \_____/ |_| |_| |_|  \_\ /_/   |_| |_____/ |_| \_____/ /_____/ 
+     _____   _____   _   _   _____   _   _   _____        ___   _____   _   _   _   _____
+    |_   _| /  _  \ | | | | /  ___| | | | | |  _  \      /   | |  _  \ | | | | | | /  ___/
+      | |   | | | | | | | | | |     | |_| | | |_| |     / /| | | | | | | | | | | | | |___
+      | |   | | | | | | | | | |  _  |  _  | |  _  /    / / | | | | | | | | | | | | \___  \
+      | |   | |_| | | |_| | | |_| | | | | | | | \ \   / /  | | | |_| | | | | |_| |  ___| |
+      |_|   \_____/ \_____/ \_____/ |_| |_| |_|  \_\ /_/   |_| |_____/ |_| \_____/ /_____/
 
 # TOUGHRADIUS
 
-TOUGHRADIUS is committed to providing comprehensive and superior network management solutions.
-The core technology is based on RADIUS and can extend the system functions to support various network protocols, such as TR069.
-TOUGHRADIUS not only provides a user-friendly system interface, but also powerful data analysis and management features such as real-time network monitoring, usage reports and automatic billing. TOUGHRADIUS is dedicated to providing secure, reliable and efficient network management services, enabling them to realize more efficient network operations.
+[![License](https://img.shields.io/github/license/talkincode/toughradius)](https://github.com/talkincode/toughradius/blob/main/LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/talkincode/toughradius)](go.mod)
+[![Release](https://img.shields.io/github/v/release/talkincode/toughradius)](https://github.com/talkincode/toughradius/releases)
 
-TOUGHRADIUS uses advanced Golang technology to develop the system core, providing excellent system performance and easy deployment experience.
+一个功能强大、开源的 RADIUS 服务器，专为 ISP、企业网络和运营商设计。支持标准 RADIUS 协议、RadSec（RADIUS over TLS）以及现代化的 Web 管理界面。
 
-## Quick Install
+## ✨ 核心特性
 
-[quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
+### RADIUS 协议支持
 
-- Use curl 
+- 🔐 **标准 RADIUS** - 完整支持 RFC 2865/2866 认证和计费协议
+- 🔒 **RadSec** - TLS 加密的 RADIUS over TCP（RFC 6614）
+- 🌐 **多厂商支持** - 兼容 Cisco、Mikrotik、华为等主流网络设备
+- ⚡ **高性能** - 基于 Go 语言构建，支持高并发处理
+
+### 管理功能
+
+- 📊 **React Admin 界面** - 现代化的 Web 管理后台
+- 👥 **用户管理** - 完整的用户账号、配置文件（Profile）管理
+- 📈 **实时监控** - 在线会话监控、计费记录查询
+- 🔍 **日志审计** - 详细的认证和计费日志
+
+### 集成能力
+
+- **多数据库支持** - PostgreSQL、SQLite
+- 🔌 **灵活扩展** - 支持自定义认证、计费逻辑
+- 📡 **多厂商 VSA** - Huawei, Mikrotik, Cisco, H3C 等
+
+## 🚀 快速开始
+
+### 前置要求
+
+- Go 1.24+ (用于从源码构建)
+- PostgreSQL 或 SQLite
+- Node.js 18+ (用于前端开发)
+
+### 安装
+
+#### 1. 从源码构建
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh)"
+# 克隆仓库
+git clone https://github.com/talkincode/toughradius.git
+cd toughradius
+
+# 构建前端
+cd web
+npm install
+npm run build
+cd ..
+
+# 构建后端
+go build -o toughradius main.go
 ```
 
-- Use wget
+#### 2. 使用预编译版本
+
+从 [Releases](https://github.com/talkincode/toughradius/releases) 页面下载最新版本。
+
+### 配置
+
+1. 复制配置文件模板：
 
 ```bash
-sudo bash -c "$(wget https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh -O -)"
+cp toughradius.yml toughradius.prod.yml
 ```
 
-## System structure
+2. 编辑 `toughradius.prod.yml` 配置文件：
 
-![architecture](assets/architecture.png)
+```yaml
+system:
+  appid: ToughRADIUS
+  location: Asia/Shanghai
+  workdir: ./rundata
 
+database:
+  type: sqlite # 或 postgres
+  name: toughradius.db
+  # PostgreSQL 配置
+  # host: localhost
+  # port: 5432
+  # user: toughradius
+  # passwd: your_password
 
-## System features
+radiusd:
+  enabled: true
+  host: 0.0.0.0
+  auth_port: 1812 # RADIUS 认证端口
+  acct_port: 1813 # RADIUS 计费端口
+  radsec_port: 2083 # RadSec 端口
 
-### TR069 ACS
+web:
+  host: 0.0.0.0
+  port: 1816 # Web 管理界面端口
+```
 
-TR069 ACS can provide real-time monitoring and maintenance of CPE devices in the network to ensure their normal operation. It supports multiple data models and allows custom Settings to accommodate different types of CPE devices. In addition, TR069 ACS also supports secure encryption to protect data privacy and security. Therefore, TR069 ACS not only improves the efficiency of network management, but also ensures network security.
+### EAP 配置
 
-- Configure or get device configuration parameters and operating status
-- Provide vendor device configuration download
-- Provide device factory reset configuration download
-- Provide upgrade firmware download
+通过系统配置（`sys_config`）可以微调认证行为：
 
-### Radius Server
+- `radius.EapMethod`：首选的 EAP 方法（默认 `eap-md5`）。
+- `radius.EapEnabledHandlers`：允许加载的 EAP handler 列表，使用逗号分隔，例如 `eap-md5,eap-mschapv2`，填写 `*` 表示启用全部注册的 handler。
 
-TOUGHRADIUS is a RADIUS server that supports the RADIUS protocol and the RADIUS over TLS (RadSec) protocol.
+这样可以在不中断服务的情况下，快速关闭未授权的 EAP 方式。
 
-Standard RADIUS features
+### 运行
 
-- Authentication message
-- Authentication PAP authentication method
-- Authentication CHAP authentication method
-- Authentication MS-CHAPv2 authentication method
-- Authorization message
+```bash
+# 初始化数据库
+./toughradius -initdb -c toughradius.prod.yml
 
-  > After receiving the BAS Authentication request message, the RADIUS Server encapsulates the user authorization information according to the user information resources, and authorizes the user bandwidth limit, maximum duration, IP and other information to the BAS through the Authentication response message.
+# 启动服务
+./toughradius -c toughradius.prod.yml
+```
 
-- Accounting-On message
-- Accounting-Off message
-- Accounting-Start message
-- Accounting-Interium-Update message
-- Accounting-Stop message
-- Deliver the SessionTimeout attribute
-- Deliver the AcctInterimInterval attribute
-- Deliver the FramedPool attribute
-- Deliver the FramedIPAddress attribute
-- Deliver attributes of the customized vendor，such as Huawei, ZTE, Cisco，Mikrotik etc.
+访问 Web 管理界面：<http://localhost:1816>
 
-#### freeRADIUS integration
+默认管理员账号：
 
-![freeradius-toughradius](https://github.com/talkincode/toughradius/assets/377938/f735d45d-3325-49e5-8b73-21c6205248e3)
+- 用户名：admin
+- 密码：请查看初始化日志输出
 
-TOUGHRADIUS integrates with the FreeRADIUS API interface, extending its already comprehensive authentication capabilities to provide a more robust solution.
-Integration with the FreeRADIUS API enables seamless integration with existing network infrastructures, providing a wider range of authentication options to meet unique requirements.
-Whether you need to support 802.1X, Wi-Fi, VPNs or other network access protocols, TOUGHRADIUS has you covered. With advanced authentication capabilities and integration with FreeRADIUS, users can enjoy a secure, reliable and efficient network management experience.
+## 📖 文档
 
-### Northbound Interface
+- [架构说明](docs/v9-architecture.md) - v9 版本架构设计
+- [React Admin 重构](docs/react-admin-refactor.md) - 前端管理界面说明
+- [SQLite 支持](docs/sqlite-support.md) - SQLite 数据库配置
+- [环境变量](docs/environment-variables.md) - 环境变量配置说明
 
-- Provide a unified API for various third-party management systems, based on the HTTPS Json protocol.
-- Provide basic equipment information and status data query API, and data maintenance API.
-- Provide various policy management APIs, such as firewall rules, routing tables, etc.
+## 🏗️ 项目结构
 
-## Links
+```text
+toughradius/
+├── cmd/             # 应用程序入口
+├── internal/        # 私有应用代码
+│   ├── adminapi/   # Admin API（新版）
+│   ├── radiusd/    # RADIUS 服务核心
+│   ├── domain/     # 数据模型
+│   └── webserver/  # Web 服务器
+├── pkg/            # 公共库
+├── web/            # React Admin 前端
+└── docs/           # 文档
+```
 
-- [Home](https://www.toughradius.net/)
-- [TOUGHRADIUS Documentation](https://github.com/talkincode/toughradius/wiki)
-- [TLS encryption for RADIUS over TCP (RadSec) 00)](https://tools.ietf.org/id/draft-ietf-radext-radsec-00.html)
-- [TLS encryption for RADIUS over TCP (RadSec) 05](https://tools.ietf.org/html/draft-ietf-radext-radsec-05)
-- [mikrotik RADIUS Client](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
+## 🔧 开发
 
+### 后端开发
 
-## sponsors
+```bash
+# 运行测试
+go test ./...
 
-Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) 
-for supporting this project!
+# 运行基准测试
+go test -bench=. ./internal/radiusd/
 
-<img alt="JetBrains Logo (Main) logo" height="100" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="100"/>
+# 启动开发模式
+go run main.go -c toughradius.yml
+```
 
-## Contribute
+### 前端开发
 
-We welcome contributions of any kind, including but not limited to issues, pull requests, documentation, examples, etc.
+```bash
+cd web
+npm install
+npm run dev       # 开发服务器
+npm run build     # 生产构建
+npm run lint      # 代码检查
+```
 
+## 🤝 贡献
+
+我们欢迎各种形式的贡献，包括但不限于：
+
+- 🐛 提交 Bug 报告和功能请求
+- 📝 改进文档
+- 💻 提交代码补丁和新特性
+- 🌍 帮助翻译
+
+## 📜 许可证
+
+本项目采用 [MIT License](LICENSE) 开源协议。
+
+## 🔗 相关链接
+
+- [官方网站](https://www.toughradius.net/)
+- [在线文档](https://github.com/talkincode/toughradius/wiki)
+- [RadSec RFC 6614](https://tools.ietf.org/html/rfc6614)
+- [RADIUS RFC 2865](https://tools.ietf.org/html/rfc2865)
+- [Mikrotik RADIUS 配置](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
+
+## 💎 赞助商
+
+感谢 [JetBrains](https://jb.gg/OpenSourceSupport) 对本项目的支持！
+
+![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)

@@ -1,0 +1,96 @@
+{
+  "schemas": [
+    {
+      "key": "radius.EapMethod",
+      "type": "string",
+      "default": "eap-md5",
+      "enum": ["eap-md5", "eap-mschapv2"],
+      "title": "EAP Method",
+      "title_i18n": "config.radius.eap_method.title",
+      "description": "EAP authentication method",
+      "description_i18n": "config.radius.eap_method.description"
+    },
+    {
+      "key": "radius.EapEnabledHandlers",
+      "type": "string",
+      "default": "*",
+      "title": "Enabled EAP Handlers",
+      "title_i18n": "config.radius.eap_enabled_handlers.title",
+      "description": "Comma-separated list of enabled EAP handler names (e.g., eap-md5,eap-mschapv2). Use * to allow all registered handlers",
+      "description_i18n": "config.radius.eap_enabled_handlers.description"
+    },
+    {
+      "key": "radius.IgnorePassword",
+      "type": "bool",
+      "default": "false",
+      "title": "Ignore Password",
+      "title_i18n": "config.radius.ignore_password.title",
+      "description": "Ignore password check",
+      "description_i18n": "config.radius.ignore_password.description"
+    },
+    {
+      "key": "radius.AccountingHistoryDays",
+      "type": "int",
+      "default": "90",
+      "min": 0,
+      "title": "Accounting History Days",
+      "title_i18n": "config.radius.accounting_history_days.title",
+      "description": "Accounting log retention days (0=disabled)",
+      "description_i18n": "config.radius.accounting_history_days.description"
+    },
+    {
+      "key": "radius.AcctInterimInterval",
+      "type": "int",
+      "default": "300",
+      "min": 60,
+      "max": 3600,
+      "title": "Accounting Interim Interval",
+      "title_i18n": "config.radius.acct_interim_interval.title",
+      "description": "Accounting interim interval in seconds",
+      "description_i18n": "config.radius.acct_interim_interval.description"
+    },
+    {
+      "key": "radius.SessionTimeout",
+      "type": "int",
+      "default": "3600",
+      "min": 300,
+      "max": 86400,
+      "title": "Session Timeout",
+      "title_i18n": "config.radius.session_timeout.title",
+      "description": "Default session timeout in seconds",
+      "description_i18n": "config.radius.session_timeout.description"
+    },
+    {
+      "key": "radius.LogLevel",
+      "type": "string",
+      "default": "info",
+      "enum": ["debug", "info", "warn", "error"],
+      "title": "Log Level",
+      "title_i18n": "config.radius.log_level.title",
+      "description": "RADIUS service log level",
+      "description_i18n": "config.radius.log_level.description"
+    },
+    {
+      "key": "radius.RejectDelayMaxRejects",
+      "type": "int",
+      "default": "7",
+      "min": 1,
+      "max": 1000,
+      "title": "Reject Delay Threshold",
+      "title_i18n": "config.radius.reject_delay_max_rejects.title",
+      "description": "Maximum consecutive rejects before temporary block",
+      "description_i18n": "config.radius.reject_delay_max_rejects.description"
+    },
+    {
+      "key": "radius.RejectDelayWindowSeconds",
+      "type": "int",
+      "default": "10",
+      "min": 1,
+      "max": 3600,
+      "title": "Reject Delay Window",
+      "title_i18n": "config.radius.reject_delay_window_seconds.title",
+      "description": "Observation window (seconds) for reject counter reset",
+      "description_i18n": "config.radius.reject_delay_window_seconds.description"
+    }
+  ]
+}
