@@ -3,6 +3,7 @@ package adminapi
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -18,9 +19,13 @@ import (
 // @Param sort query string false "Sort field"
 // @Param order query string false "Sort direction"
 // @Param username query string false "Username"
-// @Param nas_addr query string false "NAS addresses"
-// @Param start_time query string false "Start time"
-// @Param end_time query string false "End time"
+// @Param nas_addr query string false "NAS address"
+// @Param acct_session_id query string false "Session ID"
+// @Param framed_ipaddr query string false "User IP address"
+// @Param mac_addr query string false "MAC address"
+// @Param framed_ipv6addr query string false "IPv6 address"
+// @Param acct_start_time_gte query string false "Start time from (RFC3339 or datetime-local format)"
+// @Param acct_start_time_lte query string false "Start time to (RFC3339 or datetime-local format)"
 // @Success 200 {object} ListResponse
 // @Router /api/v1/accounting [get]
 func ListAccounting(c echo.Context) error {
@@ -37,7 +42,14 @@ func ListAccounting(c echo.Context) error {
 
 	sortField := c.QueryParam("sort")
 	order := c.QueryParam("order")
-	if sortField == "" {
+
+	// 白名单验证排序字段，防止 SQL 注入
+	allowedSortFields := map[string]bool{
+		"id": true, "username": true, "acct_session_id": true,
+		"acct_start_time": true, "acct_stop_time": true, "acct_session_time": true,
+		"nas_addr": true, "framed_ipaddr": true, "acct_input_total": true, "acct_output_total": true,
+	}
+	if !allowedSortFields[sortField] {
 		sortField = "acct_start_time"
 	}
 	if order != "ASC" && order != "DESC" {
@@ -49,32 +61,47 @@ func ListAccounting(c echo.Context) error {
 
 	query := db.Model(&domain.RadiusAccounting{})
 
-	// Filter by username
+	// Filter by username (使用转义防止 LIKE 通配符注入)
 	if username := c.QueryParam("username"); username != "" {
-		query = query.Where("username LIKE ?", "%"+username+"%")
+		query = query.Where("username LIKE ?", "%"+escapeLikePattern(username)+"%")
 	}
 
 	// Filter by NAS address
 	if nasAddr := c.QueryParam("nas_addr"); nasAddr != "" {
-		query = query.Where("nas_addr = ?", nasAddr)
+		query = query.Where("nas_addr LIKE ?", "%"+escapeLikePattern(nasAddr)+"%")
 	}
 
 	// Filter by session ID
 	if sessionId := c.QueryParam("acct_session_id"); sessionId != "" {
-		query = query.Where("acct_session_id = ?", sessionId)
+		query = query.Where("acct_session_id LIKE ?", "%"+escapeLikePattern(sessionId)+"%")
 	}
 
-	// Filter by time range
-	if startTime := c.QueryParam("start_time"); startTime != "" {
-		parsedTime, err := time.Parse(time.RFC3339, startTime)
+	// Filter by framed IP address
+	if framedIp := c.QueryParam("framed_ipaddr"); framedIp != "" {
+		query = query.Where("framed_ipaddr LIKE ?", "%"+escapeLikePattern(framedIp)+"%")
+	}
+
+	// Filter by MAC address
+	if macAddr := c.QueryParam("mac_addr"); macAddr != "" {
+		query = query.Where("mac_addr LIKE ?", "%"+escapeLikePattern(macAddr)+"%")
+	}
+
+	// Filter by IPv6 address
+	if framedIpv6 := c.QueryParam("framed_ipv6addr"); framedIpv6 != "" {
+		query = query.Where("framed_ipv6addr LIKE ?", "%"+escapeLikePattern(framedIpv6)+"%")
+	}
+
+	// Filter by start time range (支持 RFC3339 和 datetime-local 两种格式)
+	if startTimeGte := c.QueryParam("acct_start_time_gte"); startTimeGte != "" {
+		parsedTime, err := parseFlexibleTime(startTimeGte)
 		if err == nil {
 			query = query.Where("acct_start_time >= ?", parsedTime)
 		}
 	}
-	if endTime := c.QueryParam("end_time"); endTime != "" {
-		parsedTime, err := time.Parse(time.RFC3339, endTime)
+	if startTimeLte := c.QueryParam("acct_start_time_lte"); startTimeLte != "" {
+		parsedTime, err := parseFlexibleTime(startTimeLte)
 		if err == nil {
-			query = query.Where("acct_stop_time <= ?", parsedTime)
+			query = query.Where("acct_start_time <= ?", parsedTime)
 		}
 	}
 
@@ -104,6 +131,32 @@ func GetAccounting(c echo.Context) error {
 	}
 
 	return ok(c, record)
+}
+
+// parseFlexibleTime parses time string in RFC3339 or datetime-local format
+func parseFlexibleTime(s string) (time.Time, error) {
+	// Try RFC3339 first (e.g., "2025-11-01T21:16:00Z")
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		return t, nil
+	}
+	// Try datetime-local format (e.g., "2025-11-01T21:16")
+	if t, err := time.ParseInLocation("2006-01-02T15:04", s, time.Local); err == nil {
+		return t, nil
+	}
+	// Try date only format (e.g., "2025-11-01")
+	if t, err := time.ParseInLocation("2006-01-02", s, time.Local); err == nil {
+		return t, nil
+	}
+	return time.Time{}, &time.ParseError{Layout: "multiple", Value: s, Message: "unable to parse time"}
+}
+
+// escapeLikePattern escapes special characters in LIKE pattern to prevent wildcard injection
+// This escapes %, _, and \ which are SQL LIKE wildcards
+func escapeLikePattern(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\") // escape backslash first
+	s = strings.ReplaceAll(s, "%", "\\%")   // escape percent
+	s = strings.ReplaceAll(s, "_", "\\_")   // escape underscore
+	return s
 }
 
 // registerAccountingRoutes registers accounting routes

@@ -5,6 +5,7 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -16,6 +17,43 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
+// allowedSessionSortFields defines the whitelist of sortable fields for online sessions
+// This prevents SQL injection through the sort parameter
+var allowedSessionSortFields = map[string]bool{
+	"id":              true,
+	"username":        true,
+	"nas_addr":        true,
+	"framed_ipaddr":   true,
+	"acct_start_time": true,
+	"acct_session_id": true,
+	"mac_addr":        true,
+}
+
+// escapeSessionLikePattern escapes special characters in LIKE pattern to prevent wildcard injection
+// This escapes %, _, and \ which are SQL LIKE wildcards
+func escapeSessionLikePattern(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\") // escape backslash first
+	s = strings.ReplaceAll(s, "%", "\\%")   // escape percent
+	s = strings.ReplaceAll(s, "_", "\\_")   // escape underscore
+	return s
+}
+
+// parseSessionTime attempts to parse time in multiple formats
+func parseSessionTime(s string) (time.Time, error) {
+	formats := []string{
+		time.RFC3339,
+		"2006-01-02T15:04",    // datetime-local format from HTML5
+		"2006-01-02 15:04:05", // standard datetime format
+		"2006-01-02",          // date only
+	}
+	for _, format := range formats {
+		if t, err := time.Parse(format, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, &time.ParseError{Layout: "multiple", Value: s, Message: "unable to parse time"}
+}
+
 // ListOnlineSessions List online sessions
 // @Summary List online sessions
 // @Tags OnlineSession
@@ -25,6 +63,12 @@ import (
 // @Param order query string false "Sort direction"
 // @Param username query string false "Username"
 // @Param nas_addr query string false "NAS addresses"
+// @Param framed_ipaddr query string false "User IP address"
+// @Param framed_ipv6addr query string false "User IPv6 address"
+// @Param mac_addr query string false "MAC address"
+// @Param acct_session_id query string false "Session ID"
+// @Param acct_start_time_gte query string false "Start time from (RFC3339 or datetime-local)"
+// @Param acct_start_time_lte query string false "Start time to (RFC3339 or datetime-local)"
 // @Success 200 {object} ListResponse
 // @Router /api/v1/sessions [get]
 func ListOnlineSessions(c echo.Context) error {
@@ -41,7 +85,9 @@ func ListOnlineSessions(c echo.Context) error {
 
 	sortField := c.QueryParam("sort")
 	order := c.QueryParam("order")
-	if sortField == "" {
+
+	// Validate sort field against whitelist to prevent SQL injection
+	if sortField == "" || !allowedSessionSortFields[sortField] {
 		sortField = "acct_start_time"
 	}
 	if order != "ASC" && order != "DESC" {
@@ -53,9 +99,9 @@ func ListOnlineSessions(c echo.Context) error {
 
 	query := db.Model(&domain.RadiusOnline{})
 
-	// Filter by username
+	// Filter by username (LIKE with escaped pattern)
 	if username := c.QueryParam("username"); username != "" {
-		query = query.Where("username LIKE ?", "%"+username+"%")
+		query = query.Where("username LIKE ?", "%"+escapeSessionLikePattern(username)+"%")
 	}
 
 	// Filter by NAS address
@@ -66,6 +112,33 @@ func ListOnlineSessions(c echo.Context) error {
 	// Filter by IP address
 	if framedIp := c.QueryParam("framed_ipaddr"); framedIp != "" {
 		query = query.Where("framed_ipaddr = ?", framedIp)
+	}
+
+	// Filter by IPv6 address (LIKE with escaped pattern)
+	if framedIpv6 := c.QueryParam("framed_ipv6addr"); framedIpv6 != "" {
+		query = query.Where("framed_ipv6addr LIKE ?", "%"+escapeSessionLikePattern(framedIpv6)+"%")
+	}
+
+	// Filter by MAC address (LIKE with escaped pattern)
+	if macAddr := c.QueryParam("mac_addr"); macAddr != "" {
+		query = query.Where("mac_addr LIKE ?", "%"+escapeSessionLikePattern(macAddr)+"%")
+	}
+
+	// Filter by Session ID (LIKE with escaped pattern)
+	if acctSessionId := c.QueryParam("acct_session_id"); acctSessionId != "" {
+		query = query.Where("acct_session_id LIKE ?", "%"+escapeSessionLikePattern(acctSessionId)+"%")
+	}
+
+	// Filter by start time range
+	if startTimeGte := c.QueryParam("acct_start_time_gte"); startTimeGte != "" {
+		if t, err := parseSessionTime(startTimeGte); err == nil {
+			query = query.Where("acct_start_time >= ?", t)
+		}
+	}
+	if startTimeLte := c.QueryParam("acct_start_time_lte"); startTimeLte != "" {
+		if t, err := parseSessionTime(startTimeLte); err == nil {
+			query = query.Where("acct_start_time <= ?", t)
+		}
 	}
 
 	query.Count(&total)

@@ -15,6 +15,29 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
+// allowedUserSortFields defines the whitelist of sortable fields for users
+// This prevents SQL injection through the sort parameter
+var allowedUserSortFields = map[string]bool{
+	"id":          true,
+	"username":    true,
+	"realname":    true,
+	"email":       true,
+	"mobile":      true,
+	"status":      true,
+	"profile_id":  true,
+	"created_at":  true,
+	"updated_at":  true,
+	"expire_time": true,
+}
+
+// escapeUserLikePattern escapes special characters in LIKE pattern to prevent wildcard injection
+func escapeUserLikePattern(s string) string {
+	s = strings.ReplaceAll(s, "\\", "\\\\") // escape backslash first
+	s = strings.ReplaceAll(s, "%", "\\%")   // escape percent
+	s = strings.ReplaceAll(s, "_", "\\_")   // escape underscore
+	return s
+}
+
 // UserRequest Used to handle user data sent from frontend
 type UserRequest struct {
 	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
@@ -231,6 +254,16 @@ func registerUserRoutes() {
 func listRadiusUsers(c echo.Context) error {
 	page, pageSize := parsePagination(c)
 
+	// Validate and sanitize sort field
+	sortField := c.QueryParam("sort")
+	order := c.QueryParam("order")
+	if sortField == "" || !allowedUserSortFields[sortField] {
+		sortField = "username"
+	}
+	if order != "ASC" && order != "DESC" {
+		order = "ASC"
+	}
+
 	base := GetDB(c).Model(&domain.RadiusUser{}).
 		Select("radius_user.*, COALESCE(ro.count, 0) AS online_count").
 		Joins("LEFT JOIN (SELECT username, COUNT(1) AS count FROM radius_online GROUP BY username) ro ON radius_user.username = ro.username")
@@ -245,7 +278,7 @@ func listRadiusUsers(c echo.Context) error {
 
 	var users []domain.RadiusUser
 	if err := base.
-		Order("radius_user.username ASC").
+		Order("radius_user." + sortField + " " + order).
 		Offset((page - 1) * pageSize).
 		Limit(pageSize).
 		Find(&users).Error; err != nil {
@@ -539,45 +572,55 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 		db = db.Where("radius_user.status = ?", strings.ToLower(status))
 	}
 
-	// Handle username filter (partial match)
+	// Handle username filter (partial match with escaped pattern)
 	if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
+		escaped := escapeUserLikePattern(username)
 		if strings.EqualFold(db.Dialector.Name(), "postgres") {
-			db = db.Where("radius_user.username ILIKE ?", "%"+username+"%")
+			db = db.Where("radius_user.username ILIKE ?", "%"+escaped+"%")
 		} else {
-			db = db.Where("LOWER(radius_user.username) LIKE ?", "%"+strings.ToLower(username)+"%")
+			db = db.Where("LOWER(radius_user.username) LIKE ?", "%"+strings.ToLower(escaped)+"%")
 		}
 	}
 
-	// Handle realname filter (partial match)
+	// Handle realname filter (partial match with escaped pattern)
 	if realname := strings.TrimSpace(c.QueryParam("realname")); realname != "" {
+		escaped := escapeUserLikePattern(realname)
 		if strings.EqualFold(db.Dialector.Name(), "postgres") {
-			db = db.Where("radius_user.realname ILIKE ?", "%"+realname+"%")
+			db = db.Where("radius_user.realname ILIKE ?", "%"+escaped+"%")
 		} else {
-			db = db.Where("LOWER(radius_user.realname) LIKE ?", "%"+strings.ToLower(realname)+"%")
+			db = db.Where("LOWER(radius_user.realname) LIKE ?", "%"+strings.ToLower(escaped)+"%")
 		}
 	}
 
-	// Handle email filter (partial match)
+	// Handle email filter (partial match with escaped pattern)
 	if email := strings.TrimSpace(c.QueryParam("email")); email != "" {
+		escaped := escapeUserLikePattern(email)
 		if strings.EqualFold(db.Dialector.Name(), "postgres") {
-			db = db.Where("radius_user.email ILIKE ?", "%"+email+"%")
+			db = db.Where("radius_user.email ILIKE ?", "%"+escaped+"%")
 		} else {
-			db = db.Where("LOWER(radius_user.email) LIKE ?", "%"+strings.ToLower(email)+"%")
+			db = db.Where("LOWER(radius_user.email) LIKE ?", "%"+strings.ToLower(escaped)+"%")
 		}
 	}
 
-	// Handle mobile filter (partial match)
+	// Handle mobile filter (partial match with escaped pattern)
 	if mobile := strings.TrimSpace(c.QueryParam("mobile")); mobile != "" {
-		db = db.Where("radius_user.mobile LIKE ?", "%"+mobile+"%")
+		escaped := escapeUserLikePattern(mobile)
+		db = db.Where("radius_user.mobile LIKE ?", "%"+escaped+"%")
 	}
 
-	// Global search across multiple fields
+	// Handle IP address filter
+	if ipAddr := strings.TrimSpace(c.QueryParam("ip_addr")); ipAddr != "" {
+		db = db.Where("radius_user.ip_addr = ?", ipAddr)
+	}
+
+	// Global search across multiple fields (with escaped pattern)
 	if q := strings.TrimSpace(c.QueryParam("q")); q != "" {
+		escaped := escapeUserLikePattern(q)
 		if strings.EqualFold(db.Dialector.Name(), "postgres") {
-			like := "%" + q + "%"
+			like := "%" + escaped + "%"
 			db = db.Where("(radius_user.username ILIKE ? OR radius_user.realname ILIKE ? OR radius_user.mobile ILIKE ?)", like, like, like)
 		} else {
-			qLower := strings.ToLower(q)
+			qLower := strings.ToLower(escaped)
 			like := "%" + qLower + "%"
 			db = db.Where("(LOWER(radius_user.username) LIKE ? OR LOWER(radius_user.realname) LIKE ? OR LOWER(radius_user.mobile) LIKE ?)", like, like, like)
 		}
