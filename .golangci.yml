@@ -1,3 +1,4 @@
+# golangci-lint v2 configuration
 version: "2"
 
 linters:
@@ -16,4 +17,4 @@ linters:
 
 issues:
   exclude-dirs:
-    - pkg/xmlx # Third-party library style code
+    - pkg/xmlx
