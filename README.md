@@ -12,71 +12,74 @@ Welcome to the TOUGHRADIUS project!
 [![License](https://img.shields.io/github/license/talkincode/toughradius)](https://github.com/talkincode/toughradius/blob/main/LICENSE)
 [![Go Version](https://img.shields.io/github/go-mod/go-version/talkincode/toughradius)](go.mod)
 [![Release](https://img.shields.io/github/v/release/talkincode/toughradius)](https://github.com/talkincode/toughradius/releases)
+[![Build Status](https://github.com/talkincode/toughradius/actions/workflows/ci.yml/badge.svg)](https://github.com/talkincode/toughradius/actions/workflows/ci.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/talkincode/toughradius)](https://goreportcard.com/report/github.com/talkincode/toughradius)
+[![Docker Pulls](https://img.shields.io/docker/pulls/talkincode/toughradius)](https://hub.docker.com/r/talkincode/toughradius)
 
-一个功能强大、开源的 RADIUS 服务器，专为 ISP、企业网络和运营商设计。支持标准 RADIUS 协议、RadSec（RADIUS over TLS）以及现代化的 Web 管理界面。
+A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, RadSec (RADIUS over TLS), and a modern Web management interface.
 
-## ✨ 核心特性
+## ✨ Core Features
 
-### RADIUS 协议支持
+### RADIUS Protocol Support
 
-- 🔐 **标准 RADIUS** - 完整支持 RFC 2865/2866 认证和计费协议
-- 🔒 **RadSec** - TLS 加密的 RADIUS over TCP（RFC 6614）
-- 🌐 **多厂商支持** - 兼容 Cisco、Mikrotik、华为等主流网络设备
-- ⚡ **高性能** - 基于 Go 语言构建，支持高并发处理
+- 🔐 **Standard RADIUS** - Full support for RFC 2865/2866 authentication and accounting protocols
+- 🔒 **RadSec** - TLS encrypted RADIUS over TCP (RFC 6614)
+- 🌐 **Multi-Vendor Support** - Compatible with major network devices like Cisco, Mikrotik, Huawei, etc.
+- ⚡ **High Performance** - Built with Go, supporting high concurrency processing
 
-### 管理功能
+### Management Features
 
-- 📊 **React Admin 界面** - 现代化的 Web 管理后台
-- 👥 **用户管理** - 完整的用户账号、配置文件（Profile）管理
-- 📈 **实时监控** - 在线会话监控、计费记录查询
-- 🔍 **日志审计** - 详细的认证和计费日志
+- 📊 **React Admin Interface** - Modern Web management dashboard
+- 👥 **User Management** - Complete user account and profile management
+- 📈 **Real-time Monitoring** - Online session monitoring and accounting record queries
+- 🔍 **Log Auditing** - Detailed authentication and accounting logs
 
-### 集成能力
+### Integration Capabilities
 
-- **多数据库支持** - PostgreSQL、SQLite
-- 🔌 **灵活扩展** - 支持自定义认证、计费逻辑
-- 📡 **多厂商 VSA** - Huawei, Mikrotik, Cisco, H3C 等
+- **Multi-Database Support** - PostgreSQL, SQLite
+- 🔌 **Flexible Extension** - Supports custom authentication and accounting logic
+- 📡 **Multi-Vendor VSA** - Huawei, Mikrotik, Cisco, H3C, etc.
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 前置要求
+### Prerequisites
 
-- Go 1.24+ (用于从源码构建)
-- PostgreSQL 或 SQLite
-- Node.js 18+ (用于前端开发)
+- Go 1.24+ (for building from source)
+- PostgreSQL or SQLite
+- Node.js 18+ (for frontend development)
 
-### 安装
+### Installation
 
-#### 1. 从源码构建
+#### 1. Build from Source
 
 ```bash
-# 克隆仓库
+# Clone repository
 git clone https://github.com/talkincode/toughradius.git
 cd toughradius
 
-# 构建前端
+# Build frontend
 cd web
 npm install
 npm run build
 cd ..
 
-# 构建后端
+# Build backend
 go build -o toughradius main.go
 ```
 
-#### 2. 使用预编译版本
+#### 2. Use Pre-compiled Version
 
-从 [Releases](https://github.com/talkincode/toughradius/releases) 页面下载最新版本。
+Download the latest version from the [Releases](https://github.com/talkincode/toughradius/releases) page.
 
-### 配置
+### Configuration
 
-1. 复制配置文件模板：
+1. Copy the configuration template:
 
 ```bash
 cp toughradius.yml toughradius.prod.yml
 ```
 
-2. 编辑 `toughradius.prod.yml` 配置文件：
+2. Edit `toughradius.prod.yml` configuration file:
 
 ```yaml
 system:
@@ -85,9 +88,9 @@ system:
   workdir: ./rundata
 
 database:
-  type: sqlite # 或 postgres
+  type: sqlite # or postgres
   name: toughradius.db
-  # PostgreSQL 配置
+  # PostgreSQL configuration
   # host: localhost
   # port: 5432
   # user: toughradius
@@ -96,111 +99,111 @@ database:
 radiusd:
   enabled: true
   host: 0.0.0.0
-  auth_port: 1812 # RADIUS 认证端口
-  acct_port: 1813 # RADIUS 计费端口
-  radsec_port: 2083 # RadSec 端口
+  auth_port: 1812 # RADIUS authentication port
+  acct_port: 1813 # RADIUS accounting port
+  radsec_port: 2083 # RadSec port
 
 web:
   host: 0.0.0.0
-  port: 1816 # Web 管理界面端口
+  port: 1816 # Web management interface port
 ```
 
-### EAP 配置
+### EAP Configuration
 
-通过系统配置（`sys_config`）可以微调认证行为：
+You can fine-tune authentication behavior via system configuration (`sys_config`):
 
-- `radius.EapMethod`：首选的 EAP 方法（默认 `eap-md5`）。
-- `radius.EapEnabledHandlers`：允许加载的 EAP handler 列表，使用逗号分隔，例如 `eap-md5,eap-mschapv2`，填写 `*` 表示启用全部注册的 handler。
+- `radius.EapMethod`: Preferred EAP method (default `eap-md5`).
+- `radius.EapEnabledHandlers`: List of allowed EAP handlers, separated by commas, e.g., `eap-md5,eap-mschapv2`. Use `*` to enable all registered handlers.
 
-这样可以在不中断服务的情况下，快速关闭未授权的 EAP 方式。
+This allows you to quickly disable unauthorized EAP methods without interrupting the service.
 
-### 运行
+### Running
 
 ```bash
-# 初始化数据库
+# Initialize database
 ./toughradius -initdb -c toughradius.prod.yml
 
-# 启动服务
+# Start service
 ./toughradius -c toughradius.prod.yml
 ```
 
-访问 Web 管理界面：<http://localhost:1816>
+Access Web Management Interface: <http://localhost:1816>
 
-默认管理员账号：
+Default Admin Account:
 
-- 用户名：admin
-- 密码：请查看初始化日志输出
+- Username: admin
+- Password: Please check the initialization log output
 
-## 📖 文档
+## 📖 Documentation
 
-- [架构说明](docs/v9-architecture.md) - v9 版本架构设计
-- [React Admin 重构](docs/react-admin-refactor.md) - 前端管理界面说明
-- [SQLite 支持](docs/sqlite-support.md) - SQLite 数据库配置
-- [环境变量](docs/environment-variables.md) - 环境变量配置说明
+- [Architecture](docs/v9-architecture.md) - v9 version architecture design
+- [React Admin Refactor](docs/react-admin-refactor.md) - Frontend management interface explanation
+- [SQLite Support](docs/sqlite-support.md) - SQLite database configuration
+- [Environment Variables](docs/environment-variables.md) - Environment variable configuration guide
 
-## 🏗️ 项目结构
+## 🏗️ Project Structure
 
 ```text
 toughradius/
-├── cmd/             # 应用程序入口
-├── internal/        # 私有应用代码
-│   ├── adminapi/   # Admin API（新版）
-│   ├── radiusd/    # RADIUS 服务核心
-│   ├── domain/     # 数据模型
-│   └── webserver/  # Web 服务器
-├── pkg/            # 公共库
-├── web/            # React Admin 前端
-└── docs/           # 文档
+├── cmd/             # Application entry points
+├── internal/        # Private application code
+│   ├── adminapi/   # Admin API (New version)
+│   ├── radiusd/    # RADIUS service core
+│   ├── domain/     # Data models
+│   └── webserver/  # Web server
+├── pkg/            # Public libraries
+├── web/            # React Admin frontend
+└── docs/           # Documentation
 ```
 
-## 🔧 开发
+## 🔧 Development
 
-### 后端开发
+### Backend Development
 
 ```bash
-# 运行测试
+# Run tests
 go test ./...
 
-# 运行基准测试
+# Run benchmark tests
 go test -bench=. ./internal/radiusd/
 
-# 启动开发模式
+# Start development mode
 go run main.go -c toughradius.yml
 ```
 
-### 前端开发
+### Frontend Development
 
 ```bash
 cd web
 npm install
-npm run dev       # 开发服务器
-npm run build     # 生产构建
-npm run lint      # 代码检查
+npm run dev       # Development server
+npm run build     # Production build
+npm run lint      # Code linting
 ```
 
-## 🤝 贡献
+## 🤝 Contribution
 
-我们欢迎各种形式的贡献，包括但不限于：
+We welcome contributions in various forms, including but not limited to:
 
-- 🐛 提交 Bug 报告和功能请求
-- 📝 改进文档
-- 💻 提交代码补丁和新特性
-- 🌍 帮助翻译
+- 🐛 Submitting Bug reports and feature requests
+- 📝 Improving documentation
+- 💻 Submitting code patches and new features
+- 🌍 Helping with translation
 
-## 📜 许可证
+## 📜 License
 
-本项目采用 [MIT License](LICENSE) 开源协议。
+This project is licensed under the [MIT License](LICENSE).
 
-## 🔗 相关链接
+## 🔗 Related Links
 
-- [官方网站](https://www.toughradius.net/)
-- [在线文档](https://github.com/talkincode/toughradius/wiki)
+- [Official Website](https://www.toughradius.net/)
+- [Online Documentation](https://github.com/talkincode/toughradius/wiki)
 - [RadSec RFC 6614](https://tools.ietf.org/html/rfc6614)
 - [RADIUS RFC 2865](https://tools.ietf.org/html/rfc2865)
-- [Mikrotik RADIUS 配置](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
+- [Mikrotik RADIUS Configuration](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
 
-## 💎 赞助商
+## 💎 Sponsors
 
-感谢 [JetBrains](https://jb.gg/OpenSourceSupport) 对本项目的支持！
+Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) for supporting this project!
 
 ![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
