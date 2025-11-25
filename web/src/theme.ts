@@ -306,11 +306,19 @@ export const createAppTheme = (mode: PaletteMode) => {
         styleOverrides: {
           root: {
             borderBottom: `1px solid ${palette.divider}`,
+            padding: '8px 16px',
+            fontSize: '0.875rem',
+            lineHeight: 1.4,
           },
           head: {
             fontWeight: 600,
             backgroundColor: isDark ? '#1e293b' : '#f8fafc',
             color: palette.text.primary,
+            padding: '10px 16px',
+            fontSize: '0.8125rem',
+            textTransform: 'none',
+            letterSpacing: '0.01em',
+            whiteSpace: 'nowrap',
           },
         },
       },
@@ -327,19 +335,20 @@ export const createAppTheme = (mode: PaletteMode) => {
           root: {
             borderRadius: 8,
             marginInline: 8,
-            marginBlock: 4,
-            paddingBlock: 10,
+            marginBlock: 3,
+            paddingBlock: 8,
             paddingInline: 12,
             // 菜单项始终使用浅色文字
             color: 'rgba(255, 255, 255, 0.9) !important',
             transition: 'all 0.2s ease',
             '& .RaMenuItemLink-label': {
-              fontWeight: 600,
-              fontSize: '0.95rem',
+              fontWeight: 500,
+              fontSize: '0.80rem',
               color: 'rgba(255, 255, 255, 0.9) !important',
             },
             '& .RaMenuItemLink-icon': {
               color: 'rgba(255, 255, 255, 0.85) !important',
+              fontSize: '1.25rem',
             },
             '&:hover': {
               backgroundColor: 'rgba(255, 255, 255, 0.12)',
@@ -355,7 +364,7 @@ export const createAppTheme = (mode: PaletteMode) => {
             '&.RaMenuItemLink-active': {
               backgroundColor: 'rgba(59, 130, 246, 0.4)',
               color: '#ffffff !important',
-              fontWeight: 700,
+              fontWeight: 600,
               '& .RaMenuItemLink-label': {
                 color: '#ffffff !important',
               },
@@ -383,9 +392,40 @@ export const createAppTheme = (mode: PaletteMode) => {
         styleOverrides: {
           root: {
             backgroundColor: palette.background.paper,
+            // 统一表格边距
+            '& .MuiTableContainer-root': {
+              padding: '0 8px',
+            },
+            '& .MuiTable-root': {
+              borderCollapse: 'separate',
+              borderSpacing: 0,
+            },
             '& .RaDatagrid-headerCell': {
-              fontWeight: 700,
+              fontWeight: 600,
               backgroundColor: isDark ? '#1e293b' : '#f8fafc',
+              padding: '10px 16px',
+              fontSize: '0.8125rem',
+              color: palette.text.primary,
+              borderBottom: `2px solid ${isDark ? 'rgba(148, 163, 184, 0.2)' : 'rgba(100, 116, 139, 0.15)'}`,
+              whiteSpace: 'nowrap',
+              '&:first-of-type': {
+                paddingLeft: 24,
+              },
+              '&:last-of-type': {
+                paddingRight: 24,
+              },
+            },
+            '& .RaDatagrid-rowCell': {
+              padding: '8px 16px',
+              fontSize: '0.875rem',
+              lineHeight: 1.4,
+              verticalAlign: 'middle',
+              '&:first-of-type': {
+                paddingLeft: 24,
+              },
+              '&:last-of-type': {
+                paddingRight: 24,
+              },
             },
             '& .RaDatagrid-row': {
               transition: 'background-color 0.15s ease',
@@ -394,6 +434,18 @@ export const createAppTheme = (mode: PaletteMode) => {
                   ? alpha(palette.primary.main, 0.08)
                   : alpha(palette.primary.main, 0.04),
               },
+            },
+            '& .RaDatagrid-clickableRow': {
+              cursor: 'pointer',
+            },
+            // 复选框列统一宽度
+            '& .RaDatagrid-checkbox': {
+              padding: '8px 8px 8px 16px',
+              width: 48,
+            },
+            '& .RaDatagrid-headerCheckbox': {
+              padding: '10px 8px 10px 16px',
+              width: 48,
             },
           },
         },

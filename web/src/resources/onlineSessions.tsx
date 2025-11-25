@@ -368,18 +368,6 @@ export const OnlineSessionList = () => {
       <Datagrid
         rowClick="show"
         bulkActionButtons={false}
-        sx={{
-          '& .RaDatagrid-headerCell': {
-            fontWeight: 600,
-          },
-          '& .RaDatagrid-row': {
-            borderRadius: 2,
-            transition: 'box-shadow 0.2s ease',
-          },
-          '& .RaDatagrid-row:hover': {
-            boxShadow: theme => `0 4px 12px ${theme.palette.divider}`,
-          },
-        }}
       >
         <TextField
           source="acct_session_id"
