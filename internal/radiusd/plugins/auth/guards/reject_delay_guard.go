@@ -89,6 +89,31 @@ func (g *RejectDelayGuard) OnError(ctx context.Context, authCtx *auth.AuthContex
 	return nil
 }
 
+// OnAuthError implements the new Guard interface with GuardResult.
+// It provides the same behavior as OnError but with more explicit control flow.
+func (g *RejectDelayGuard) OnAuthError(ctx context.Context, authCtx *auth.AuthContext, stage string, err error) *auth.GuardResult {
+	if err == nil {
+		return &auth.GuardResult{Action: auth.GuardActionContinue}
+	}
+
+	username := g.resolveUsername(authCtx)
+	if username == "" {
+		username = "anonymous"
+	}
+
+	item := g.getItem(username)
+	if item.exceeded(g.currentMaxRejects(), g.currentResetWindow()) {
+		// Return rate limit error and stop processing other guards
+		return &auth.GuardResult{
+			Action: auth.GuardActionStop,
+			Err:    errors.NewAuthError(app.MetricsRadiusRejectLimit, err.Error()),
+		}
+	}
+
+	// Continue to next guard, keeping original error
+	return &auth.GuardResult{Action: auth.GuardActionContinue, Err: err}
+}
+
 func (g *RejectDelayGuard) currentMaxRejects() int64 {
 	if g.configGetter == nil {
 		return g.maxRejects

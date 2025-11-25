@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"go.uber.org/zap"
@@ -61,8 +62,11 @@ func (s *AuthService) stageRequestMetadata(ctx *AuthPipelineContext) error {
 	ctx.CallingStationID = rfc2865.CallingStationID_GetString(r.Packet)
 
 	if ctx.Username == "" {
-		s.handleAuthError("validate_username", r, nil, nil, nil, false, ctx.CallingStationID, ctx.RemoteIP,
-			NewAuthError(app.MetricsRadiusRejectNotExists, "username is empty of client mac"))
+		return radiuserrors.NewAuthErrorWithStage(
+			app.MetricsRadiusRejectNotExists,
+			"username is empty of client mac",
+			StageRequestMetadata,
+		)
 	}
 
 	return nil
@@ -70,7 +74,9 @@ func (s *AuthService) stageRequestMetadata(ctx *AuthPipelineContext) error {
 
 func (s *AuthService) stageNasLookup(ctx *AuthPipelineContext) error {
 	nas, err := s.GetNas(ctx.RemoteIP, ctx.NasIdentifier)
-	s.handleAuthError("load_nas", ctx.Request, nil, nil, nil, false, ctx.Username, ctx.RemoteIP, err)
+	if err != nil {
+		return err
+	}
 	ctx.NAS = nas
 
 	if nas != nil {
@@ -87,8 +93,9 @@ func (s *AuthService) stageRateLimit(ctx *AuthPipelineContext) error {
 	if ctx.IsEAP {
 		return nil
 	}
-	err := s.CheckAuthRateLimit(ctx.Username)
-	s.handleAuthError(StageRateLimit, ctx.Request, nil, ctx.NAS, nil, false, ctx.Username, ctx.RemoteIP, err)
+	if err := s.CheckAuthRateLimit(ctx.Username); err != nil {
+		return err
+	}
 	ctx.RateLimitChecked = true
 	return nil
 }
@@ -112,7 +119,9 @@ func (s *AuthService) stageVendorParsing(ctx *AuthPipelineContext) error {
 
 func (s *AuthService) stageLoadUser(ctx *AuthPipelineContext) error {
 	user, err := s.GetValidUser(ctx.Username, ctx.IsMacAuth)
-	s.handleAuthError(StageLoadUser, ctx.Request, nil, ctx.NAS, nil, ctx.IsMacAuth, ctx.Username, ctx.RemoteIP, err)
+	if err != nil {
+		return err
+	}
 	ctx.User = user
 	return nil
 }
@@ -166,7 +175,9 @@ func (s *AuthService) stagePluginAuth(ctx *AuthPipelineContext) error {
 	}
 
 	err := s.AuthenticateUserWithPlugins(ctx.Context, ctx.Request, ctx.Response, ctx.User, ctx.NAS, ctx.VendorRequestForPlugin, ctx.IsMacAuth)
-	s.handleAuthError(StagePluginAuth, ctx.Request, ctx.User, ctx.NAS, ctx.VendorRequestForPlugin, ctx.IsMacAuth, ctx.Username, ctx.RemoteIP, err)
+	if err != nil {
+		return err
+	}
 
 	s.sendAcceptResponse(ctx, false)
 	ctx.Stop()

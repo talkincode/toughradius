@@ -49,6 +49,9 @@ func (m *mockGuard) Name() string { return m.name }
 func (m *mockGuard) OnError(ctx context.Context, authCtx *auth.AuthContext, stage string, err error) error {
 	return err
 }
+func (m *mockGuard) OnAuthError(ctx context.Context, authCtx *auth.AuthContext, stage string, err error) *auth.GuardResult {
+	return nil // Use fallback to OnError
+}
 
 // Mock implementations for accounting interfaces
 

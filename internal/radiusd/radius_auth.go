@@ -5,10 +5,10 @@ import (
 
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
-	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -34,26 +34,26 @@ func NewAuthService(radiusService *RadiusService) *AuthService {
 }
 
 func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
+	// Recover from unexpected panics only (programming errors)
+	// Normal errors should be handled via error return values
 	defer func() {
 		if ret := recover(); ret != nil {
-			switch ret.(type) {
+			var err error
+			switch v := ret.(type) {
 			case error:
-				err := ret.(error)
-				zap.L().Error("radius auth error",
-					zap.Error(err),
-					zap.String("namespace", "radius"),
-					zap.String("metrics", app.MetricsRadiusAuthDrop),
-				)
-				s.SendReject(w, r, err)
-			case AuthError:
-				err := ret.(AuthError)
-				zap.L().Error("radius auth error",
-					zap.String("namespace", "radius"),
-					zap.String("metrics", err.Type),
-					zap.Error(err.Err),
-				)
-				s.SendReject(w, r, err.Err)
+				err = v
+			case string:
+				err = radiuserrors.NewError(v)
+			default:
+				err = radiuserrors.NewError("unknown panic")
 			}
+			zap.L().Error("radius auth unexpected panic",
+				zap.Error(err),
+				zap.String("namespace", "radius"),
+				zap.String("metrics", app.MetricsRadiusAuthDrop),
+				zap.Stack("stacktrace"),
+			)
+			s.SendReject(w, r, err)
 		}
 	}()
 
@@ -72,8 +72,15 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			s.ReleaseAuthRateLimit(pipelineCtx.Username)
 		}
 	}()
+
 	if err := s.authPipeline.Execute(pipelineCtx); err != nil {
-		s.handleAuthError("auth_pipeline", r, pipelineCtx.User, pipelineCtx.NAS, pipelineCtx.VendorRequestForPlugin, pipelineCtx.IsMacAuth, pipelineCtx.Username, pipelineCtx.RemoteIP, err)
+		// Process error through guards and log appropriately
+		finalErr := s.processAuthError("auth_pipeline", r, pipelineCtx.User, pipelineCtx.NAS,
+			pipelineCtx.VendorRequestForPlugin, pipelineCtx.IsMacAuth,
+			pipelineCtx.Username, pipelineCtx.RemoteIP, err)
+		if finalErr != nil {
+			s.logAndReject(w, r, finalErr)
+		}
 	}
 }
 
@@ -84,20 +91,14 @@ func (s *AuthService) Pipeline() *AuthPipeline {
 }
 
 func (s *AuthService) SendAccept(w radius.ResponseWriter, r *radius.Request, resp *radius.Packet) {
-	defer func() {
-		if ret := recover(); ret != nil {
-			err2, ok := ret.(error)
-			if ok {
-				zap.L().Error("radius write accept error",
-					zap.String("namespace", "radius"),
-					zap.String("metrics", app.MetricsRadiusAuthDrop),
-					zap.Error(err2),
-				)
-			}
-		}
-	}()
-
-	common.Must(w.Write(resp))
+	if err := w.Write(resp); err != nil {
+		zap.L().Error("radius write accept error",
+			zap.String("namespace", "radius"),
+			zap.String("metrics", app.MetricsRadiusAuthDrop),
+			zap.Error(err),
+		)
+		return
+	}
 
 	if s.eapHelper != nil {
 		s.eapHelper.CleanupState(r)
@@ -106,23 +107,9 @@ func (s *AuthService) SendAccept(w radius.ResponseWriter, r *radius.Request, res
 	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtResponse(resp, r.RemoteAddr))
 	}
-
 }
 
 func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err error) {
-	defer func() {
-		if ret := recover(); ret != nil {
-			err2, ok := ret.(error)
-			if ok {
-				zap.L().Error("radius write reject response error",
-					zap.String("namespace", "radius"),
-					zap.String("metrics", app.MetricsRadiusAuthDrop),
-					zap.Error(err2),
-				)
-			}
-		}
-	}()
-
 	var code = radius.CodeAccessReject
 	var resp = r.Response(code)
 	if err != nil {
@@ -133,7 +120,13 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 		_ = rfc2865.ReplyMessage_SetString(resp, msg)
 	}
 
-	_ = w.Write(resp)
+	if writeErr := w.Write(resp); writeErr != nil {
+		zap.L().Error("radius write reject response error",
+			zap.String("namespace", "radius"),
+			zap.String("metrics", app.MetricsRadiusAuthDrop),
+			zap.Error(writeErr),
+		)
+	}
 
 	if s.eapHelper != nil {
 		s.eapHelper.CleanupState(r)
@@ -145,7 +138,40 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 	}
 }
 
-func (s *AuthService) handleAuthError(
+// logAndReject logs the error with appropriate metrics and sends reject response.
+func (s *AuthService) logAndReject(w radius.ResponseWriter, r *radius.Request, err error) {
+	metricsKey := app.MetricsRadiusAuthDrop
+	if radiusErr, ok := radiuserrors.GetRadiusError(err); ok {
+		metricsKey = radiusErr.MetricsKey()
+	}
+
+	zap.L().Error("radius auth error",
+		zap.Error(err),
+		zap.String("namespace", "radius"),
+		zap.String("metrics", metricsKey),
+	)
+
+	s.SendReject(w, r, err)
+}
+
+// processAuthError processes authentication errors through registered guards.
+// It returns the final error after all guards have been consulted.
+// This replaces the old handleAuthError which used panic for flow control.
+//
+// Parameters:
+//   - stage: The pipeline stage where the error occurred
+//   - r: The RADIUS request
+//   - user: The user being authenticated (may be nil)
+//   - nas: The NAS device (may be nil)
+//   - vendorReq: Vendor-specific request data
+//   - isMacAuth: Whether this is MAC authentication
+//   - username: The username (for logging)
+//   - nasip: The NAS IP (for logging)
+//   - err: The original error
+//
+// Returns:
+//   - error: The final error after guard processing, or nil if suppressed
+func (s *AuthService) processAuthError(
 	stage string,
 	r *radius.Request,
 	user interface{},
@@ -155,9 +181,9 @@ func (s *AuthService) handleAuthError(
 	username string,
 	nasip string,
 	err error,
-) {
+) error {
 	if err == nil {
-		return
+		return nil
 	}
 
 	var radiusUser *domain.RadiusUser
@@ -166,9 +192,11 @@ func (s *AuthService) handleAuthError(
 	}
 
 	metadata := map[string]interface{}{
-		"stage":         stage,
-		"config_mgr":    s.AppContext().ConfigMgr(),    // Add config manager for enhancers
-		"profile_cache": s.AppContext().ProfileCache(), // Add profile cache for dynamic attribute resolution
+		"stage": stage,
+	}
+	if appCtx := s.AppContext(); appCtx != nil {
+		metadata["config_mgr"] = appCtx.ConfigMgr()
+		metadata["profile_cache"] = appCtx.ProfileCache()
 	}
 	if username != "" {
 		metadata["username"] = username
@@ -186,11 +214,38 @@ func (s *AuthService) handleAuthError(
 		Metadata:      metadata,
 	}
 
+	ctx := context.Background()
+	currentErr := err
+
+	// Process through all guards
 	for _, guard := range registry.GetAuthGuards() {
-		if guardErr := guard.OnError(context.Background(), authCtx, stage, err); guardErr != nil {
-			panic(guardErr)
+		// Try new interface first
+		if result := guard.OnAuthError(ctx, authCtx, stage, currentErr); result != nil {
+			switch result.Action {
+			case auth.GuardActionStop:
+				// Use the error from guard and stop processing
+				if result.Err != nil {
+					return result.Err
+				}
+				return currentErr
+			case auth.GuardActionSuppress:
+				// Error is suppressed, treat as success
+				return nil
+			case auth.GuardActionContinue:
+				// Update error if guard modified it
+				if result.Err != nil {
+					currentErr = result.Err
+				}
+				continue
+			}
+		}
+
+		// Fallback to old interface for backward compatibility
+		if guardErr := guard.OnError(ctx, authCtx, stage, currentErr); guardErr != nil {
+			// Old behavior: guard returns error means replace current error
+			currentErr = guardErr
 		}
 	}
 
-	panic(err)
+	return currentErr
 }

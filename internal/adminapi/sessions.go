@@ -189,7 +189,7 @@ func DeleteOnlineSession(c echo.Context) error {
 
 	// Fetch NAS info for CoA
 	var nas domain.NetNas
-	nasErr := GetDB(c).Where("ip_addr = ?", session.NasAddr).First(&nas).Error
+	nasErr := GetDB(c).Where("ipaddr = ?", session.NasAddr).First(&nas).Error
 
 	// Delete online session record
 	if err := GetDB(c).Delete(&domain.RadiusOnline{}, id).Error; err != nil {

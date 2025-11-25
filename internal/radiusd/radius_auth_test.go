@@ -63,6 +63,10 @@ func (g *testGuard) OnError(ctx context.Context, authCtx *auth.AuthContext, stag
 	return g.result
 }
 
+func (g *testGuard) OnAuthError(ctx context.Context, authCtx *auth.AuthContext, stage string, err error) *auth.GuardResult {
+	return nil // Use fallback to OnError
+}
+
 func TestApplyAcceptEnhancersInvokesRegisteredEnhancers(t *testing.T) {
 	registry.ResetForTest()
 	t.Cleanup(registry.ResetForTest)
@@ -92,7 +96,7 @@ func TestApplyAcceptEnhancersInvokesRegisteredEnhancers(t *testing.T) {
 	}
 }
 
-func TestHandleAuthErrorInvokesGuards(t *testing.T) {
+func TestProcessAuthErrorInvokesGuards(t *testing.T) {
 	registry.ResetForTest()
 	t.Cleanup(registry.ResetForTest)
 
@@ -109,20 +113,8 @@ func TestHandleAuthErrorInvokesGuards(t *testing.T) {
 	mockAppCtx := &mockAppContext{}
 	authSvc := &AuthService{RadiusService: &RadiusService{appCtx: mockAppCtx}}
 
-	defer func() {
-		r := recover()
-		if r == nil {
-			t.Fatalf("expected panic from handleAuthError")
-		}
-		if !errors.Is(r.(error), guardErr) {
-			t.Fatalf("expected panic with guard error, got %v", r)
-		}
-		if got := atomic.LoadInt32(&called); got != 1 {
-			t.Fatalf("expected guard to be called once, got %d", got)
-		}
-	}()
-
-	authSvc.handleAuthError(
+	// processAuthError should return error instead of panic
+	finalErr := authSvc.processAuthError(
 		"test-stage",
 		nil,
 		nil,
@@ -133,4 +125,51 @@ func TestHandleAuthErrorInvokesGuards(t *testing.T) {
 		"10.0.0.1",
 		errors.New("original error"),
 	)
+
+	// Verify guard was called
+	if got := atomic.LoadInt32(&called); got != 1 {
+		t.Fatalf("expected guard to be called once, got %d", got)
+	}
+
+	// Verify error is returned (not panic)
+	if finalErr == nil {
+		t.Fatal("expected error to be returned")
+	}
+	if !errors.Is(finalErr, guardErr) {
+		t.Fatalf("expected guard error, got %v", finalErr)
+	}
+}
+
+func TestProcessAuthErrorWithNilError(t *testing.T) {
+	authSvc := &AuthService{RadiusService: &RadiusService{}}
+
+	// nil error should return nil
+	finalErr := authSvc.processAuthError(
+		"test-stage",
+		nil, nil, nil, nil, false, "", "",
+		nil,
+	)
+
+	if finalErr != nil {
+		t.Fatalf("expected nil error, got %v", finalErr)
+	}
+}
+
+func TestProcessAuthErrorNoGuards(t *testing.T) {
+	registry.ResetForTest()
+	t.Cleanup(registry.ResetForTest)
+
+	authSvc := &AuthService{RadiusService: &RadiusService{}}
+	originalErr := errors.New("original error")
+
+	// Without guards, original error should be returned
+	finalErr := authSvc.processAuthError(
+		"test-stage",
+		nil, nil, nil, nil, false, "", "",
+		originalErr,
+	)
+
+	if !errors.Is(finalErr, originalErr) {
+		t.Fatalf("expected original error, got %v", finalErr)
+	}
 }

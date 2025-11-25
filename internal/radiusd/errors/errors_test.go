@@ -190,7 +190,10 @@ func TestNewUnauthorizedNasError(t *testing.T) {
 	assert.Equal(t, app.MetricsRadiusRejectUnauthorized, authErr.MetricsType)
 	assert.Contains(t, authErr.Message, ip)
 	assert.Contains(t, authErr.Message, identifier)
-	assert.Contains(t, authErr.Message, "secret mismatch")
+	// The underlying cause should be wrapped
+	assert.Equal(t, originalErr, authErr.Cause)
+	// The full error message should include the cause
+	assert.Contains(t, err.Error(), "secret mismatch")
 }
 
 func TestWrapError(t *testing.T) {

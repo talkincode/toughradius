@@ -18,6 +18,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	cachepkg "github.com/talkincode/toughradius/v9/internal/radiusd/cache"
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
 	repogorm "github.com/talkincode/toughradius/v9/internal/radiusd/repository/gorm"
@@ -125,10 +126,8 @@ func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err e
 	// Adapter: delegate to repository layer
 	nas, err = s.NasRepo.GetByIPOrIdentifier(context.Background(), ip, identifier)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, NewAuthError(app.MetricsRadiusRejectUnauthorized,
-				fmt.Sprintf("unauthorized access to device, Ip=%s, Identifier=%s, %s",
-					ip, identifier, err.Error()))
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, radiuserrors.NewUnauthorizedNasError(ip, identifier, err)
 		}
 		return nil, err
 	}
@@ -152,19 +151,19 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	}
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, NewAuthError(app.MetricsRadiusRejectNotExists, "user not exists")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, radiuserrors.NewUserNotExistsError()
 		}
 		return nil, err
 	}
 
 	// Keep original validation logic for backward compatibility
 	if user.Status == common.DISABLED {
-		return nil, NewAuthError(app.MetricsRadiusRejectDisable, "user status is disabled")
+		return nil, radiuserrors.NewUserDisabledError()
 	}
 
 	if user.ExpireTime.Before(time.Now()) {
-		return nil, NewAuthError(app.MetricsRadiusRejectExpire, "user expire")
+		return nil, radiuserrors.NewUserExpiredError()
 	}
 	s.userCache.Set(cacheKey, user)
 	return user, nil
@@ -176,8 +175,8 @@ func (s *RadiusService) GetUserForAcct(username string) (user *domain.RadiusUser
 	// Adapter: delegate to repository layer
 	user, err = s.UserRepo.GetByUsername(context.Background(), username)
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, NewAuthError(app.MetricsRadiusRejectNotExists, "user not exists")
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, radiuserrors.NewUserNotExistsError()
 		}
 		return nil, err
 	}
@@ -284,7 +283,7 @@ func (s *RadiusService) CheckAuthRateLimit(username string) error {
 	val, ok := s.AuthRateCache[username]
 	if ok {
 		if time.Now().Before(val.Starttime.Add(time.Duration(RadiusAuthRateInterval) * time.Second)) {
-			return NewAuthError(app.MetricsRadiusRejectLimit, "there is a authentication still in process")
+			return radiuserrors.NewOnlineLimitError("there is a authentication still in process")
 		}
 		delete(s.AuthRateCache, username)
 	}
@@ -394,16 +393,22 @@ func (s *RadiusService) Release() {
 	_ = s.TaskPool.ReleaseTimeout(time.Second * 5)
 }
 
-var secretError = errors.New("secret error")
+// ErrSecretEmpty indicates an empty RADIUS secret
+var ErrSecretEmpty = errors.New("secret is empty")
 
-func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
+// ErrSecretMismatch indicates a RADIUS secret mismatch
+var ErrSecretMismatch = errors.New("secret mismatch")
+
+// CheckRequestSecret validates the RADIUS packet authenticator against the shared secret.
+// Returns an error if validation fails, nil on success.
+func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) error {
 	request, err := r.MarshalBinary()
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("failed to marshal packet: %w", err)
 	}
 
 	if len(secret) == 0 {
-		panic(secretError)
+		return ErrSecretEmpty
 	}
 
 	hash := md5.New()
@@ -414,8 +419,9 @@ func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) {
 	hash.Write(secret)
 	var sum [md5.Size]byte
 	if !bytes.Equal(hash.Sum(sum[:0]), request[4:20]) {
-		panic(secretError)
+		return ErrSecretMismatch
 	}
+	return nil
 }
 
 // State add

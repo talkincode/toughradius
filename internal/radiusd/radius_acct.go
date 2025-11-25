@@ -2,12 +2,11 @@ package radiusd
 
 import (
 	"context"
-	"errors"
 	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	vendorparserspkg "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
-	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -24,16 +23,24 @@ func NewAcctService(radiusService *RadiusService) *AcctService {
 }
 
 func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
+	// Recover from unexpected panics only (programming errors)
 	defer func() {
 		if ret := recover(); ret != nil {
-			err, ok := ret.(error)
-			if ok {
-				zap.S().Error("radius accounting error",
-					zap.Error(err),
-					zap.String("namespace", "radius"),
-					zap.String("metrics", app.MetricsRadiusAcctDrop),
-				)
+			var err error
+			switch v := ret.(type) {
+			case error:
+				err = v
+			case string:
+				err = radiuserrors.NewError(v)
+			default:
+				err = radiuserrors.NewError("unknown panic")
 			}
+			zap.L().Error("radius accounting unexpected panic",
+				zap.Error(err),
+				zap.String("namespace", "radius"),
+				zap.String("metrics", app.MetricsRadiusAcctDrop),
+				zap.Stack("stacktrace"),
+			)
 		}
 	}()
 
@@ -49,8 +56,12 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	raddrstr := r.RemoteAddr.String()
 	nasrip := raddrstr[:strings.Index(raddrstr, ":")]
 	var identifier = rfc2865.NASIdentifier_GetString(r.Packet)
+
 	nas, err := s.GetNas(nasrip, identifier)
-	common.Must(err)
+	if err != nil {
+		s.logAcctError("nas_lookup", nasrip, "", err)
+		return
+	}
 
 	// Reset packet secret
 	r.Secret = []byte(nas.Secret)
@@ -64,7 +75,8 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		statusType != rfc2866.AcctStatusType_Value_AccountingOff {
 		username = rfc2865.UserName_GetString(r.Packet)
 		if username == "" {
-			common.Must(errors.New("username is empty"))
+			s.logAcctError("validate_username", nasrip, "", radiuserrors.NewAcctUsernameEmptyError())
+			return
 		}
 	}
 
@@ -111,10 +123,32 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 	}
 }
 
+// logAcctError logs accounting errors with appropriate metrics.
+func (s *AcctService) logAcctError(stage, nasip, username string, err error) {
+	metricsKey := app.MetricsRadiusAcctDrop
+	if radiusErr, ok := radiuserrors.GetRadiusError(err); ok {
+		metricsKey = radiusErr.MetricsKey()
+	}
+
+	fields := []zap.Field{
+		zap.Error(err),
+		zap.String("namespace", "radius"),
+		zap.String("metrics", metricsKey),
+		zap.String("stage", stage),
+	}
+	if nasip != "" {
+		fields = append(fields, zap.String("nasip", nasip))
+	}
+	if username != "" {
+		fields = append(fields, zap.String("username", username))
+	}
+
+	zap.L().Error("radius accounting error", fields...)
+}
+
 func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
 	resp := r.Response(radius.CodeAccountingResponse)
-	err := w.Write(resp)
-	if err != nil {
+	if err := w.Write(resp); err != nil {
 		zap.L().Error("radius accounting response error",
 			zap.Error(err),
 			zap.String("namespace", "radius"),
@@ -126,5 +160,4 @@ func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
 	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtResponse(resp, r.RemoteAddr))
 	}
-
 }

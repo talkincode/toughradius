@@ -5,6 +5,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 )
 
 // Testpure logic functions without database dependency
@@ -28,11 +30,11 @@ func TestCheckAuthRateLimitBasic(t *testing.T) {
 	}
 
 	// Validate error types
-	authErr, ok := err.(*AuthError)
+	authErr, ok := radiuserrors.GetAuthError(err)
 	if !ok {
 		t.Errorf("expected AuthError, got %T", err)
-	} else if authErr.Type != "radus_reject_limit" {
-		t.Errorf("expected reject limit error, got %s", authErr.Type)
+	} else if authErr.MetricsType != "radus_reject_limit" {
+		t.Errorf("expected reject limit error, got %s", authErr.MetricsType)
 	}
 }
 
