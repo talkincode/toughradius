@@ -12,7 +12,7 @@ require (
 	github.com/gocarina/gocsv v0.0.0-20230616125104-99d496ca653d
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/btree v1.1.3
-	github.com/json-iterator/go v1.1.12
+	github.com/google/uuid v1.3.0
 	github.com/labstack/echo-jwt/v4 v4.3.1
 	github.com/labstack/echo/v4 v4.13.4
 	github.com/labstack/gommon v0.4.2
@@ -44,7 +44,6 @@ require (
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	modernc.org/libc v1.22.5 // indirect
@@ -69,8 +68,6 @@ require (
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
