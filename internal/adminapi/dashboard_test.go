@@ -17,7 +17,6 @@ func TestGetDashboardStats(t *testing.T) {
 	appCtx := setupTestApp(t, db)
 
 	now := time.Now()
-	today := startOfDay(now)
 
 	profiles := []*domain.RadiusProfile{
 		{Name: "default", Status: "enabled"},
@@ -92,21 +91,21 @@ func TestGetDashboardStats(t *testing.T) {
 		{
 			Username:        "alice",
 			AcctSessionId:   "acct-1",
-			AcctStartTime:   today.Add(2 * time.Hour),
+			AcctStartTime:   now.Add(-1 * time.Minute), // 1 minute ago - within today and 24h window
 			AcctInputTotal:  int64(1 * 1024 * 1024 * 1024),
 			AcctOutputTotal: int64(2 * 1024 * 1024 * 1024),
 		},
 		{
 			Username:        "alice",
 			AcctSessionId:   "acct-2",
-			AcctStartTime:   today.Add(-26 * time.Hour),
+			AcctStartTime:   now.Add(-26 * time.Hour), // 26 hours ago - outside 24h window
 			AcctInputTotal:  int64(500 * 1024 * 1024),
 			AcctOutputTotal: int64(256 * 1024 * 1024),
 		},
 		{
 			Username:        "carol",
 			AcctSessionId:   "acct-3",
-			AcctStartTime:   today.Add(-5 * 24 * time.Hour),
+			AcctStartTime:   now.Add(-5 * 24 * time.Hour), // 5 days ago - outside both windows
 			AcctInputTotal:  int64(200 * 1024 * 1024),
 			AcctOutputTotal: int64(300 * 1024 * 1024),
 		},
@@ -154,7 +153,8 @@ func TestGetDashboardStats(t *testing.T) {
 	for _, point := range stats.Traffic24h {
 		trafficMap[point.Hour] = point
 	}
-	targetHour := today.Add(2 * time.Hour).Format(hourKeyFormat)
+	// The record was created at now.Add(-1 * time.Minute), truncate to hour start
+	targetHour := now.Add(-1 * time.Minute).Truncate(time.Hour).Format(hourKeyFormat)
 	if point, ok := trafficMap[targetHour]; ok {
 		assert.InDelta(t, 2.0, point.DownloadGB, 0.01)
 	} else {

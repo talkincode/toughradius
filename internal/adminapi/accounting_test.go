@@ -284,9 +284,9 @@ func TestAccountingFilters(t *testing.T) {
 		{
 			name: "Time range filter - start time",
 			queryParams: map[string]string{
-				"page":       "1",
-				"perPage":    "10",
-				"start_time": now.Add(-90 * time.Minute).Format(time.RFC3339),
+				"page":                "1",
+				"perPage":             "10",
+				"acct_start_time_gte": now.Add(-90 * time.Minute).Format(time.RFC3339),
 			},
 			expectedCount: 1, // Only user2 (1hour(s) ago) meets condition
 		},
