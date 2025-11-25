@@ -27,3 +27,6 @@ bin/
 .playwright-mcp/
 test-reports/.github/prompts/rework.prompt.md
 .github/prompts/review.prompt.md
+
+# Test reports
+test-reports/
