@@ -30,3 +30,8 @@ test-reports/.github/prompts/rework.prompt.md
 
 # Test reports
 test-reports/
+pkg/tls
+pkg/tls/ca.crt
+pkg/tls/ca.key
+pkg/tls/my.crt
+pkg/tls/my.key
