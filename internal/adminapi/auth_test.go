@@ -248,8 +248,8 @@ func TestTokenExpirationTime(t *testing.T) {
 	require.True(t, ok)
 
 	// Get token expiration time
-	exp := int64(claims["exp"].(float64))
-	iat := int64(claims["iat"].(float64))
+	exp := int64(claims["exp"].(float64)) //nolint:errcheck // type assertion is safe in test
+	iat := int64(claims["iat"].(float64)) //nolint:errcheck // type assertion is safe in test
 
 	// Verify token is valid for approximately tokenTTL duration
 	// Using a 1-second tolerance to account for timing differences

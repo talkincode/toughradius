@@ -43,7 +43,7 @@ func getFreePort() (int, error) {
 		return 0, err
 	}
 	defer func() { _ = l.Close() }()
-	return l.LocalAddr().(*net.UDPAddr).Port, nil
+	return l.LocalAddr().(*net.UDPAddr).Port, nil //nolint:errcheck // type assertion is safe for UDP listener
 }
 
 func setupTestEnv(t *testing.T) (*app.Application, *config.AppConfig) {

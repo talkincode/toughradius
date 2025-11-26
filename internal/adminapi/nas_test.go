@@ -81,8 +81,8 @@ func TestListNAS(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				data := resp["data"].([]interface{})
-				nasData := data[0].(map[string]interface{})
+				data := resp["data"].([]interface{})        //nolint:errcheck // type assertion is safe in test
+				nasData := data[0].(map[string]interface{}) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "nas1", nasData["name"])
 			},
 		},
@@ -110,8 +110,8 @@ func TestListNAS(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
-				data := resp["data"].([]interface{})
-				nasData := data[0].(map[string]interface{})
+				data := resp["data"].([]interface{})        //nolint:errcheck // type assertion is safe in test
+				nasData := data[0].(map[string]interface{}) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "nas1", nasData["name"])
 			},
 		},

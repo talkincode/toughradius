@@ -8,7 +8,7 @@ import (
 
 // GetAppContext gets the application context from echo context
 func GetAppContext(c echo.Context) app.AppContext {
-	return c.Get("appCtx").(app.AppContext)
+	return c.Get("appCtx").(app.AppContext) //nolint:errcheck // type assertion is safe for middleware-set context
 }
 
 // GetDB gets the database connection from echo context

@@ -84,7 +84,7 @@ func TestListOperators(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				operators := resp.Data.([]domain.SysOpr)
+				operators := resp.Data.([]domain.SysOpr) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "admin1", operators[0].Username)
 				assert.Empty(t, operators[0].Password) // Password should be cleared
 			},
@@ -101,7 +101,7 @@ func TestListOperators(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				operators := resp.Data.([]domain.SysOpr)
+				operators := resp.Data.([]domain.SysOpr) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "super", operators[0].Level)
 			},
 		},
@@ -117,7 +117,7 @@ func TestListOperators(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				operators := resp.Data.([]domain.SysOpr)
+				operators := resp.Data.([]domain.SysOpr) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "admin1", operators[0].Username)
 			},
 		},

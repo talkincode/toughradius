@@ -254,6 +254,7 @@ func (s *RadsecPacketServer) initTLSConfig(capath, crtfile, keyfile string) (*tl
 		Time:         time.Now,
 		Rand:         rand.Reader,
 		ClientAuth:   tls.VerifyClientCertIfGiven,
+		MinVersion:   tls.VersionTLS12,
 	}
 
 	if common.FileExists(capath) {

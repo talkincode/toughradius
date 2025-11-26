@@ -46,7 +46,7 @@ const (
 )
 
 // defaultSecretSalt is used only for development/testing when env var is not set
-const defaultSecretSalt = "toughradius-dev-salt-change-me"
+const defaultSecretSalt = "toughradius-dev-salt-change-me" //nolint:gosec // G101: this is a default dev value, not a credential
 
 // GetSecretSalt returns the secret salt from environment variable TOUGHRADIUS_SECRET_SALT.
 // Falls back to a default value for development only.

@@ -17,7 +17,7 @@ const (
 	MetricsRadiusRejectLimit        = "radus_reject_limit"
 	MetricsRadiusRejectBindError    = "radus_reject_bind_error"
 	MetricsRadiusRejectLdapError    = "radus_reject_ldap_error"
-	MetricsRadiusRejectPasswdError  = "radus_reject_passwd_error"
+	MetricsRadiusRejectPasswdError  = "radus_reject_passwd_error" //nolint:gosec // G101: this is a metric name, not a credential
 	MetricsRadiusRejectUnauthorized = "radus_reject_unauthorized"
 	MetricsRadiusAuthDrop           = "radus_auth_drop"
 	MetricsRadiusAcctDrop           = "radus_acct_drop"

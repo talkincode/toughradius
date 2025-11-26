@@ -209,7 +209,7 @@ func LoadConfig(cfile string) *AppConfig {
 	cfg := new(AppConfig)
 	if common.FileExists(cfile) {
 		data := common.Must2(os.ReadFile(cfile))
-		common.Must(yaml.Unmarshal(data.([]byte), cfg))
+		common.Must(yaml.Unmarshal(data.([]byte), cfg)) //nolint:errcheck // type assertion is safe after Must2
 	} else {
 		cfg = DefaultAppConfig
 	}

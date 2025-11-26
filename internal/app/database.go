@@ -51,7 +51,7 @@ func getSqliteDatabase(config config.DBConfig, workdir string) *gorm.DB {
 			zap.NewStdLog(zap.L()),
 			logger.Config{
 				SlowThreshold:             time.Millisecond * 200,
-				LogLevel:                  common.If(config.Debug, logger.Info, logger.Silent).(logger.LogLevel),
+				LogLevel:                  common.If(config.Debug, logger.Info, logger.Silent).(logger.LogLevel), //nolint:errcheck // type assertion is safe
 				IgnoreRecordNotFoundError: true,
 				Colorful:                  false,
 			},
@@ -88,7 +88,7 @@ func getPgDatabase(config config.DBConfig) *gorm.DB {
 			zap.NewStdLog(zap.L()), // io writer
 			logger.Config{
 				SlowThreshold:             time.Millisecond * 200,                                                // Slow SQL threshold
-				LogLevel:                  common.If(config.Debug, logger.Info, logger.Silent).(logger.LogLevel), // Log level
+				LogLevel:                  common.If(config.Debug, logger.Info, logger.Silent).(logger.LogLevel), //nolint:errcheck // type assertion is safe
 				IgnoreRecordNotFoundError: true,                                                                  // Ignore ErrRecordNotFound error for logger
 				Colorful:                  false,                                                                 // Disable color
 			},

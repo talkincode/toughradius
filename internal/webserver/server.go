@@ -88,7 +88,7 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 
 	s.root.HideBanner = true
 	// Set the log level
-	s.root.Logger.SetLevel(common.If(appconfig.System.Debug, elog.DEBUG, elog.INFO).(elog.Lvl))
+	s.root.Logger.SetLevel(common.If(appconfig.System.Debug, elog.DEBUG, elog.INFO).(elog.Lvl)) //nolint:errcheck // type assertion is safe
 	s.root.Debug = appconfig.System.Debug
 
 	// Redirect the root path to /admin
@@ -273,7 +273,7 @@ func (s *AdminServer) ParseJwtToken(tokenstr string) (jwt.MapClaims, error) {
 	if err != nil {
 		return nil, err
 	}
-	claims := token.Claims.(jwt.MapClaims)
+	claims := token.Claims.(jwt.MapClaims) //nolint:errcheck // type assertion is safe for JWT claims
 	return claims, err
 }
 
@@ -360,7 +360,7 @@ func ImportData(c echo.Context, sheet string) ([]map[string]interface{}, error) 
 }
 
 func ExportData(c echo.Context, data []map[string]interface{}, sheet string) error {
-	appCtx := c.Get("appCtx").(app.AppContext)
+	appCtx := c.Get("appCtx").(app.AppContext) //nolint:errcheck // type assertion is safe for middleware-set context
 	filename := fmt.Sprintf("%s-%d.xlsx", sheet, common.UUIDint64())
 	filepath := path.Join(appCtx.Config().GetDataDir(), filename)
 	xlsx := excelize.NewFile()
@@ -398,7 +398,7 @@ func ExportData(c echo.Context, data []map[string]interface{}, sheet string) err
 }
 
 func ExportCsv(c echo.Context, v interface{}, name string) error {
-	appCtx := c.Get("appCtx").(app.AppContext)
+	appCtx := c.Get("appCtx").(app.AppContext) //nolint:errcheck // type assertion is safe for middleware-set context
 	filename := fmt.Sprintf("%s-%d.csv", name, common.UUIDint64())
 	filepath := path.Join(appCtx.Config().GetDataDir(), filename)
 	nfs, err := os.Create(filepath)

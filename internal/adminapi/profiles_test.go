@@ -93,7 +93,7 @@ func TestListProfiles(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				profiles := resp.Data.([]domain.RadiusProfile)
+				profiles := resp.Data.([]domain.RadiusProfile) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "profile1", profiles[0].Name)
 			},
 		},
@@ -109,7 +109,7 @@ func TestListProfiles(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				profiles := resp.Data.([]domain.RadiusProfile)
+				profiles := resp.Data.([]domain.RadiusProfile) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "profile1", profiles[0].Name)
 			},
 		},
@@ -131,7 +131,7 @@ func TestListProfiles(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  3,
 			checkResponse: func(t *testing.T, resp *Response) {
-				profiles := resp.Data.([]domain.RadiusProfile)
+				profiles := resp.Data.([]domain.RadiusProfile) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "profile1", profiles[0].Name)
 			},
 		},

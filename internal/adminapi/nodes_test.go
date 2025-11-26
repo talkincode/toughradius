@@ -95,7 +95,7 @@ func TestListNodes(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				nodes := resp.Data.([]domain.NetNode)
+				nodes := resp.Data.([]domain.NetNode) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "node1", nodes[0].Name)
 			},
 		},

@@ -104,8 +104,8 @@ func TestListOnlineSessions(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				data := resp.Data.([]interface{})
-				sessionData := data[0].(map[string]interface{})
+				data := resp.Data.([]interface{})               //nolint:errcheck // type assertion is safe in test
+				sessionData := data[0].(map[string]interface{}) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "user1", sessionData["username"])
 			},
 		},
@@ -135,8 +135,8 @@ func TestListOnlineSessions(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  1,
 			checkResponse: func(t *testing.T, resp *Response) {
-				data := resp.Data.([]interface{})
-				sessionData := data[0].(map[string]interface{})
+				data := resp.Data.([]interface{})               //nolint:errcheck // type assertion is safe in test
+				sessionData := data[0].(map[string]interface{}) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "10.0.0.1", sessionData["framed_ipaddr"])
 			},
 		},
@@ -152,8 +152,8 @@ func TestListOnlineSessions(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			expectedCount:  4,
 			checkResponse: func(t *testing.T, resp *Response) {
-				data := resp.Data.([]interface{})
-				first := data[0].(map[string]interface{})
+				data := resp.Data.([]interface{})         //nolint:errcheck // type assertion is safe in test
+				first := data[0].(map[string]interface{}) //nolint:errcheck // type assertion is safe in test
 				assert.Equal(t, "testuser", first["username"])
 			},
 		},
@@ -220,7 +220,7 @@ func TestListOnlineSessions(t *testing.T) {
 			err = json.Unmarshal(rec.Body.Bytes(), &response)
 			require.NoError(t, err)
 
-			data := response.Data.([]interface{})
+			data := response.Data.([]interface{}) //nolint:errcheck // type assertion is safe in test
 			assert.Len(t, data, tt.expectedCount)
 
 			if tt.checkResponse != nil {
@@ -458,7 +458,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 		_ = json.Unmarshal(rec.Body.Bytes(), &response)
 		assert.NotNil(t, response.Meta)
 		assert.Equal(t, int64(0), response.Meta.Total)
-		data := response.Data.([]interface{})
+		data := response.Data.([]interface{}) //nolint:errcheck // type assertion is safe in test
 		assert.Len(t, data, 0)
 	})
 
@@ -480,7 +480,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 
 		var response Response
 		_ = json.Unmarshal(rec.Body.Bytes(), &response)
-		data := response.Data.([]interface{})
+		data := response.Data.([]interface{}) //nolint:errcheck // type assertion is safe in test
 		assert.Len(t, data, 10, "Page 3 should have 10 entries")
 	})
 
@@ -500,7 +500,7 @@ func TestSessionsEdgeCases(t *testing.T) {
 
 		var response Response
 		_ = json.Unmarshal(rec.Body.Bytes(), &response)
-		data := response.Data.([]interface{})
+		data := response.Data.([]interface{}) //nolint:errcheck // type assertion is safe in test
 		assert.Len(t, data, 1, "Should find user containing @")
 	})
 

@@ -84,9 +84,9 @@ func WriteRow(t interface{}, i int, xlsx *excelize.File, sheet string) {
 		case "float64":
 			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+2), fmt.Sprintf("%f", reflect.ValueOf(t).Elem().Field(j).Float()))
 		case "time.Time":
-			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+2), reflect.ValueOf(t).Elem().Field(j).Interface().(time.Time).Format("2006-01-02 15:04:05"))
+			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+2), reflect.ValueOf(t).Elem().Field(j).Interface().(time.Time).Format("2006-01-02 15:04:05")) //nolint:errcheck // type is validated by case match
 		case "timeutil.LocalTime":
-			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+2), time.Time(reflect.ValueOf(t).Elem().Field(j).Interface().(timeutil.LocalTime)).Format("2006-01-02 15:04:05"))
+			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+2), time.Time(reflect.ValueOf(t).Elem().Field(j).Interface().(timeutil.LocalTime)).Format("2006-01-02 15:04:05")) //nolint:errcheck // type is validated by case match
 		default:
 			xlsx.SetCellValue(sheet, fmt.Sprintf("%s%d", column, i+2), reflect.ValueOf(t).Elem().Field(j).String())
 		}
