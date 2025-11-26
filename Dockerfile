@@ -24,15 +24,9 @@ COPY --from=frontend-builder /web/dist /src/web/dist
 # Verify frontend is present (built to dist/admin/)
 RUN test -f /src/web/dist/admin/index.html || (echo "ERROR: Frontend not found!" && exit 1)
 
-# Install UPX for binary compression
-RUN apt-get update && apt-get install -y upx && rm -rf /var/lib/apt/lists/*
-
 # Build for target platform
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags \
      '-s -w -extldflags "-static"' -o /toughradius main.go
-
-# Compress binary with UPX (skip on armv7 as UPX may have issues)
-RUN if [ "${TARGETARCH}" != "arm" ]; then upx --best --lzma /toughradius || true; fi
 
 FROM alpine:latest
 
