@@ -60,7 +60,7 @@ func (a *Application) SchedSystemMonitorTask() {
 	// Collect memory usage
 	_meminfo, err := mem.VirtualMemory()
 	if err == nil {
-		metrics.SetGauge("system_memuse", int64(_meminfo.Used/1024/1024)) // MB
+		metrics.SetGauge("system_memuse", int64(_meminfo.Used/1024/1024)) //nolint:gosec // G115: memory MB value fits in int64
 	}
 }
 
@@ -86,7 +86,7 @@ func (a *Application) SchedProcessMonitorTask() {
 	// Collect process memory usage
 	meminfo, err := p.MemoryInfo()
 	if err == nil {
-		metrics.SetGauge("toughradius_memuse", int64(meminfo.RSS/1024/1024)) // MB
+		metrics.SetGauge("toughradius_memuse", int64(meminfo.RSS/1024/1024)) //nolint:gosec // G115: memory MB value fits in int64
 	}
 }
 
