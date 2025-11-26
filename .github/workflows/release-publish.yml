@@ -125,11 +125,6 @@ jobs:
           rm -f /tmp/test_build
           echo "✅ Go embed verification passed!"
 
-      - name: Install UPX
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y upx-ucl
-
       - name: Build binaries
         env:
           VERSION: ${{ steps.version.outputs.version }}
@@ -142,12 +137,10 @@ jobs:
           # Build for Linux AMD64 (x86_64)
           echo "Building for Linux AMD64..."
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_amd64 main.go
-          upx --best --lzma ./release/toughradius_linux_amd64 || true
           
           # Build for Linux ARM64 (aarch64)
           echo "Building for Linux ARM64..."
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_arm64 main.go
-          upx --best --lzma ./release/toughradius_linux_arm64 || true
           
           # Build for Linux ARMv7
           echo "Building for Linux ARMv7..."
@@ -172,7 +165,6 @@ jobs:
           # Build for Windows AMD64
           echo "Building for Windows AMD64..."
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_windows_amd64.exe main.go
-          upx --best --lzma ./release/toughradius_windows_amd64.exe || true
           
           # Build for Windows ARM64
           echo "Building for Windows ARM64..."
