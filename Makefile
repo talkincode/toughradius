@@ -1,4 +1,4 @@
-.PHONY: help build runs runf dev clean test initdb killfs version lint ci setup-hooks
+.PHONY: help build build-backend buildf runs runf dev clean test initdb killfs version lint ci setup-hooks
 
 # 版本信息
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "develop")
@@ -17,8 +17,9 @@ help:
 	@echo "  make killfs     - 停止前后端所有服务"
 	@echo ""
 	@echo "Build:"
-	@echo "  make build      - 构建生产版本 (PostgreSQL only)"
-	@echo "  make buildf     - 构建前端生产版本"
+	@echo "  make build      - 构建完整版本 (前端+后端，推荐)"
+	@echo "  make buildf     - 仅构建前端"
+	@echo "  make build-backend - 仅构建后端（假设前端已构建）"
 	@echo ""
 	@echo "Quality:"
 	@echo "  make test       - 运行测试"
@@ -60,15 +61,45 @@ dev:
 	@echo "   make runf > /tmp/toughradius-frontend.log 2>&1 &"
 
 # 构建生产版本（静态编译，支持 PostgreSQL 和 SQLite）
-build:
-	@echo "🔨 构建生产版本..."
+build: buildf
+	@echo ""
+	@echo "🔨 构建后端生产版本..."
 	@echo "📦 Version: $(VERSION)"
 	@echo "🕐 Build Time: $(BUILD_TIME)"
 	@echo "📝 Git Commit: $(GIT_COMMIT)"
 	@echo "⚠️  Static build (CGO_ENABLED=0)"
+	@echo ""
+	@echo "🔍 验证前端构建..."
+	@test -f web/dist/admin/index.html || (echo "❌ 错误: web/dist/admin/index.html 不存在！" && exit 1)
+	@test -d web/dist/admin/assets || (echo "❌ 错误: web/dist/admin/assets 目录不存在！" && exit 1)
+	@ASSET_COUNT=$$(find web/dist/admin/assets -type f 2>/dev/null | wc -l | tr -d ' '); \
+	if [ "$$ASSET_COUNT" -lt 1 ]; then \
+		echo "❌ 错误: web/dist/admin/assets 中没有文件！"; \
+		exit 1; \
+	fi; \
+	echo "✅ 前端验证通过 ($$ASSET_COUNT 个资源文件)"
+	@echo ""
 	@mkdir -p release
 	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o release/toughradius main.go
-	@echo "✅ 构建完成: release/toughradius"
+	@echo ""
+	@SIZE=$$(ls -lh release/toughradius | awk '{print $$5}'); \
+	echo "✅ 构建完成: release/toughradius ($$SIZE)"
+	@echo "📁 前端已嵌入二进制文件"
+
+# 仅构建后端（不重新构建前端，假设前端已存在）
+build-backend:
+	@echo "🔨 仅构建后端（跳过前端构建）..."
+	@echo "📦 Version: $(VERSION)"
+	@echo "🕐 Build Time: $(BUILD_TIME)"
+	@echo "📝 Git Commit: $(GIT_COMMIT)"
+	@if [ ! -f web/dist/admin/index.html ]; then \
+		echo "⚠️  警告: 前端未构建，正在构建..."; \
+		$(MAKE) buildf; \
+	fi
+	@mkdir -p release
+	CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o release/toughradius main.go
+	@SIZE=$$(ls -lh release/toughradius | awk '{print $$5}'); \
+	echo "✅ 构建完成: release/toughradius ($$SIZE)"
 
 # 显示版本信息
 version:
@@ -78,9 +109,19 @@ version:
 
 # 构建前端生产版本
 buildf:
-	@echo "🔨 构建前端生产版本..."
+	@echo "🎨 构建前端生产版本..."
+	@if [ ! -d web/node_modules ]; then \
+		echo "📦 安装前端依赖..."; \
+		cd web && npm ci; \
+	fi
+	@echo "🔍 运行 TypeScript 类型检查..."
+	@cd web && npm run type-check
+	@echo "🏗️  编译前端资源..."
 	@cd web && npm run build
-	@echo "✅ 前端构建完成: web/dist/"
+	@echo ""
+	@ASSET_COUNT=$$(find web/dist/admin/assets -type f 2>/dev/null | wc -l | tr -d ' '); \
+	echo "✅ 前端构建完成: web/dist/admin/ ($$ASSET_COUNT 个资源文件)"
+	@ls -lh web/dist/admin/index.html web/dist/admin/assets/*.js 2>/dev/null | head -5
 
 # 初始化数据库（危险操作）
 initdb:

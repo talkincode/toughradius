@@ -19,6 +19,63 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build Frontend
+        working-directory: ./web
+        run: |
+          echo "📦 Installing frontend dependencies..."
+          npm ci
+          
+          echo "🔍 Running TypeScript type check..."
+          npm run type-check
+          
+          echo "🏗️ Building frontend for production..."
+          npm run build
+          
+          echo "✅ Frontend build completed!"
+          ls -lah dist/
+
+      - name: Verify Frontend Build
+        run: |
+          echo "🔍 Verifying frontend build output..."
+          
+          # Check if dist/admin directory exists
+          if [ ! -d "web/dist/admin" ]; then
+            echo "❌ Error: web/dist/admin directory not found!"
+            exit 1
+          fi
+          
+          # Check if index.html exists
+          if [ ! -f "web/dist/admin/index.html" ]; then
+            echo "❌ Error: web/dist/admin/index.html not found!"
+            exit 1
+          fi
+          
+          # Check if assets directory exists and has files
+          if [ ! -d "web/dist/admin/assets" ]; then
+            echo "❌ Error: web/dist/admin/assets directory not found!"
+            exit 1
+          fi
+          
+          ASSET_COUNT=$(find web/dist/admin/assets -type f | wc -l)
+          if [ "$ASSET_COUNT" -lt 1 ]; then
+            echo "❌ Error: No assets found in web/dist/admin/assets!"
+            exit 1
+          fi
+          
+          echo "✅ Frontend verification passed!"
+          echo "   - index.html: present"
+          echo "   - assets: ${ASSET_COUNT} files"
+          echo ""
+          echo "📁 Frontend build contents:"
+          find web/dist -type f | head -20
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -38,6 +95,36 @@ jobs:
           echo "build_time=${BUILD_TIME}" >> $GITHUB_OUTPUT
           echo "Building ToughRADIUS ${VERSION} (${COMMIT_SHA})"
 
+      - name: Verify Go Embed
+        run: |
+          echo "🔍 Verifying Go embed configuration..."
+          
+          # Check if static.go has the correct embed directive
+          if ! grep -q '//go:embed dist/\*' web/static.go; then
+            echo "❌ Error: web/static.go missing embed directive!"
+            exit 1
+          fi
+          
+          # Test that the build can find embedded files
+          echo "Testing Go build with embedded frontend..."
+          CGO_ENABLED=0 go build -o /tmp/test_build main.go
+          
+          if [ ! -f "/tmp/test_build" ]; then
+            echo "❌ Error: Test build failed!"
+            exit 1
+          fi
+          
+          # Check binary size (should be > 10MB with embedded frontend)
+          SIZE=$(stat -f%z /tmp/test_build 2>/dev/null || stat -c%s /tmp/test_build 2>/dev/null)
+          if [ "$SIZE" -lt 10000000 ]; then
+            echo "⚠️ Warning: Binary size (${SIZE} bytes) seems small. Frontend may not be embedded correctly."
+          else
+            echo "✅ Binary size: ${SIZE} bytes - frontend appears to be embedded"
+          fi
+          
+          rm -f /tmp/test_build
+          echo "✅ Go embed verification passed!"
+
       - name: Install UPX
         run: |
           sudo apt-get update
@@ -52,12 +139,12 @@ jobs:
           mkdir -p ./release
           LDFLAGS="-s -w -X main.Version=${VERSION} -X main.BuildTime=${BUILD_TIME} -X main.GitCommit=${COMMIT} -extldflags '-static'"
           
-          # Build for Linux AMD64
+          # Build for Linux AMD64 (x86_64)
           echo "Building for Linux AMD64..."
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_amd64 main.go
           upx --best --lzma ./release/toughradius_linux_amd64 || true
           
-          # Build for Linux ARM64
+          # Build for Linux ARM64 (aarch64)
           echo "Building for Linux ARM64..."
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_arm64 main.go
           upx --best --lzma ./release/toughradius_linux_arm64 || true
@@ -65,6 +152,14 @@ jobs:
           # Build for Linux ARMv7
           echo "Building for Linux ARMv7..."
           CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_armv7 main.go
+          
+          # Build for Linux RISC-V 64-bit
+          echo "Building for Linux RISC-V 64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=riscv64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_riscv64 main.go
+          
+          # Build for Linux LoongArch 64-bit
+          echo "Building for Linux LoongArch 64..."
+          CGO_ENABLED=0 GOOS=linux GOARCH=loong64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_linux_loong64 main.go
           
           # Build for macOS AMD64
           echo "Building for macOS AMD64..."
@@ -78,6 +173,10 @@ jobs:
           echo "Building for Windows AMD64..."
           CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_windows_amd64.exe main.go
           upx --best --lzma ./release/toughradius_windows_amd64.exe || true
+          
+          # Build for Windows ARM64
+          echo "Building for Windows ARM64..."
+          CGO_ENABLED=0 GOOS=windows GOARCH=arm64 go build -a -ldflags "${LDFLAGS}" -o ./release/toughradius_windows_arm64.exe main.go
           
           # Create checksums
           cd ./release
@@ -103,12 +202,15 @@ jobs:
           echo "" >> release_notes.md
           echo "| Platform | Architecture | File |" >> release_notes.md
           echo "|----------|--------------|------|" >> release_notes.md
-          echo "| Linux | AMD64 | \`toughradius_linux_amd64\` |" >> release_notes.md
-          echo "| Linux | ARM64 | \`toughradius_linux_arm64\` |" >> release_notes.md
+          echo "| Linux | x86_64 (AMD64) | \`toughradius_linux_amd64\` |" >> release_notes.md
+          echo "| Linux | ARM64 (aarch64) | \`toughradius_linux_arm64\` |" >> release_notes.md
           echo "| Linux | ARMv7 | \`toughradius_linux_armv7\` |" >> release_notes.md
-          echo "| macOS | AMD64 | \`toughradius_darwin_amd64\` |" >> release_notes.md
+          echo "| Linux | RISC-V 64 | \`toughradius_linux_riscv64\` |" >> release_notes.md
+          echo "| Linux | LoongArch 64 | \`toughradius_linux_loong64\` |" >> release_notes.md
+          echo "| macOS | x86_64 (Intel) | \`toughradius_darwin_amd64\` |" >> release_notes.md
           echo "| macOS | ARM64 (Apple Silicon) | \`toughradius_darwin_arm64\` |" >> release_notes.md
-          echo "| Windows | AMD64 | \`toughradius_windows_amd64.exe\` |" >> release_notes.md
+          echo "| Windows | x86_64 (AMD64) | \`toughradius_windows_amd64.exe\` |" >> release_notes.md
+          echo "| Windows | ARM64 | \`toughradius_windows_arm64.exe\` |" >> release_notes.md
           echo "" >> release_notes.md
           echo "### 🐳 Docker" >> release_notes.md
           echo "" >> release_notes.md
@@ -167,9 +269,12 @@ jobs:
             ./release/toughradius_linux_amd64
             ./release/toughradius_linux_arm64
             ./release/toughradius_linux_armv7
+            ./release/toughradius_linux_riscv64
+            ./release/toughradius_linux_loong64
             ./release/toughradius_darwin_amd64
             ./release/toughradius_darwin_arm64
             ./release/toughradius_windows_amd64.exe
+            ./release/toughradius_windows_arm64.exe
             ./release/checksums.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

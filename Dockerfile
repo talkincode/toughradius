@@ -1,3 +1,14 @@
+FROM --platform=$BUILDPLATFORM node:20-bookworm AS frontend-builder
+
+COPY web/package*.json /web/
+WORKDIR /web
+RUN npm ci
+
+COPY web/ /web/
+RUN npm run build && \
+     echo "Frontend build completed:" && \
+     ls -lah dist/
+
 FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS builder
 
 ARG TARGETPLATFORM
@@ -6,6 +17,12 @@ ARG TARGETARCH
 
 COPY . /src
 WORKDIR /src
+
+# Copy built frontend from frontend-builder stage
+COPY --from=frontend-builder /web/dist /src/web/dist
+
+# Verify frontend is present (built to dist/admin/)
+RUN test -f /src/web/dist/admin/index.html || (echo "ERROR: Frontend not found!" && exit 1)
 
 # Install UPX for binary compression
 RUN apt-get update && apt-get install -y upx-ucl && rm -rf /var/lib/apt/lists/*

@@ -1,3 +1,0 @@
-# This file ensures the dist directory exists for go:embed during CI/lint
-
-# The actual frontend build artifacts will replace this directory's contents
