@@ -342,7 +342,7 @@ func (s *demoSeeder) seedAccountingHistory(tx *gorm.DB) error {
 	for name := range s.ctx.users {
 		usernames = append(usernames, name)
 	}
-	rng := rand.New(rand.NewSource(42))
+	rng := rand.New(rand.NewSource(42)) //nolint:gosec // G404: deterministic seed for reproducible demo data
 	startDay := startOfDay(s.now).AddDate(0, 0, -(s.historyDays - 1))
 
 	for day := 0; day < s.historyDays; day++ {

@@ -98,7 +98,7 @@ func NewDefaultConfig() *Config {
 //   - *Config: Loaded configuration
 //   - error: Error if file cannot be read or parsed
 func LoadFromFile(path string) (*Config, error) {
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is user-specified config file
 	if err != nil {
 		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
@@ -163,7 +163,7 @@ func (c *Config) SaveToFile(path string) error {
 		return fmt.Errorf("failed to marshal config: %w", err)
 	}
 
-	if err := os.WriteFile(path, data, 0644); err != nil {
+	if err := os.WriteFile(path, data, 0600); err != nil { //nolint:gosec // G306: config file permissions
 		return fmt.Errorf("failed to write config file: %w", err)
 	}
 

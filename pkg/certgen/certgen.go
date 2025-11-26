@@ -65,7 +65,7 @@ func DefaultCertConfig() CertConfig {
 
 // GenerateCA Generate CA certificate
 func GenerateCA(config CAConfig) error {
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
+	if err := os.MkdirAll(config.OutputDir, 0755); err != nil { //nolint:gosec // G301: 0755 is standard for certificate directories
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
@@ -107,7 +107,7 @@ func GenerateCA(config CAConfig) error {
 
 	// Save certificate
 	certPath := filepath.Join(config.OutputDir, "ca.crt")
-	certOut, err := os.Create(certPath)
+	certOut, err := os.Create(certPath) //nolint:gosec // G304: path is constructed from validated config
 	if err != nil {
 		return fmt.Errorf("create cert file failed: %w", err)
 	}
@@ -119,7 +119,7 @@ func GenerateCA(config CAConfig) error {
 
 	// Save private key
 	keyPath := filepath.Join(config.OutputDir, "ca.key")
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600) //nolint:gosec // G304: path is constructed from validated config
 	if err != nil {
 		return fmt.Errorf("create key file failed: %w", err)
 	}
@@ -143,7 +143,7 @@ func GenerateCA(config CAConfig) error {
 
 // GenerateServerCert generates the server certificate (supports SAN)
 func GenerateServerCert(config ServerConfig) error {
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
+	if err := os.MkdirAll(config.OutputDir, 0755); err != nil { //nolint:gosec // G301: 0755 is standard for certificate directories
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
@@ -192,7 +192,7 @@ func GenerateServerCert(config ServerConfig) error {
 
 	// Save certificate
 	certPath := filepath.Join(config.OutputDir, "server.crt")
-	certOut, err := os.Create(certPath)
+	certOut, err := os.Create(certPath) //nolint:gosec // G304: path is constructed from validated config
 	if err != nil {
 		return fmt.Errorf("create cert file failed: %w", err)
 	}
@@ -204,7 +204,7 @@ func GenerateServerCert(config ServerConfig) error {
 
 	// Save private key
 	keyPath := filepath.Join(config.OutputDir, "server.key")
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600) //nolint:gosec // G304: path is constructed from validated config
 	if err != nil {
 		return fmt.Errorf("create key file failed: %w", err)
 	}
@@ -234,7 +234,7 @@ func GenerateServerCert(config ServerConfig) error {
 
 // GenerateClientCert generates the client certificate (supports SAN)
 func GenerateClientCert(config ClientConfig) error {
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil {
+	if err := os.MkdirAll(config.OutputDir, 0755); err != nil { //nolint:gosec // G301: 0755 is standard for certificate directories
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
@@ -283,7 +283,7 @@ func GenerateClientCert(config ClientConfig) error {
 
 	// Save certificate
 	certPath := filepath.Join(config.OutputDir, "client.crt")
-	certOut, err := os.Create(certPath)
+	certOut, err := os.Create(certPath) //nolint:gosec // G304: path is constructed from validated config
 	if err != nil {
 		return fmt.Errorf("create cert file failed: %w", err)
 	}
@@ -295,7 +295,7 @@ func GenerateClientCert(config ClientConfig) error {
 
 	// Save private key
 	keyPath := filepath.Join(config.OutputDir, "client.key")
-	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	keyOut, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600) //nolint:gosec // G304: path is constructed from validated config
 	if err != nil {
 		return fmt.Errorf("create key file failed: %w", err)
 	}
@@ -326,7 +326,7 @@ func GenerateClientCert(config ClientConfig) error {
 // loadCAFiles loads the CA certificate and private key files
 func loadCAFiles(certPath, keyPath string) (*x509.Certificate, *rsa.PrivateKey, error) {
 	// Read CA certificate
-	certPEM, err := os.ReadFile(certPath)
+	certPEM, err := os.ReadFile(certPath) //nolint:gosec // G304: path is user-specified CA cert file
 	if err != nil {
 		return nil, nil, fmt.Errorf("read CA cert failed: %w", err)
 	}
@@ -342,7 +342,7 @@ func loadCAFiles(certPath, keyPath string) (*x509.Certificate, *rsa.PrivateKey, 
 	}
 
 	// Read CA private key
-	keyPEM, err := os.ReadFile(keyPath)
+	keyPEM, err := os.ReadFile(keyPath) //nolint:gosec // G304: path is user-specified CA key file
 	if err != nil {
 		return nil, nil, fmt.Errorf("read CA key failed: %w", err)
 	}

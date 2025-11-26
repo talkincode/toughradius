@@ -66,7 +66,7 @@ func setupTestEnv(t *testing.T) (*app.Application, *config.AppConfig) {
 		filepath.Join("data", "metrics"),
 	}
 	for _, dir := range requiredDirs {
-		if err := os.MkdirAll(filepath.Join(tmpDir, dir), 0o755); err != nil {
+		if err := os.MkdirAll(filepath.Join(tmpDir, dir), 0o755); err != nil { //nolint:gosec // G301: test directory
 			t.Fatalf("failed to create dir %s: %v", dir, err)
 		}
 	}
@@ -322,16 +322,16 @@ func TestRadiusIntegration(t *testing.T) {
 		inputPeak := huawei.HuaweiInputPeakRate_Get(response)
 		outputPeak := huawei.HuaweiOutputPeakRate_Get(response)
 
-		if uint32(inputAvg) != uint32(huaweiUser.UpRate*1024) {
+		if uint32(inputAvg) != uint32(huaweiUser.UpRate*1024) { //nolint:gosec // G115: test comparison
 			t.Fatalf("unexpected Huawei input average rate, got %d", uint32(inputAvg))
 		}
-		if uint32(outputAvg) != uint32(huaweiUser.DownRate*1024) {
+		if uint32(outputAvg) != uint32(huaweiUser.DownRate*1024) { //nolint:gosec // G115: test comparison
 			t.Fatalf("unexpected Huawei output average rate, got %d", uint32(outputAvg))
 		}
-		if uint32(inputPeak) != uint32(huaweiUser.UpRate*1024*4) {
+		if uint32(inputPeak) != uint32(huaweiUser.UpRate*1024*4) { //nolint:gosec // G115: test comparison
 			t.Fatalf("unexpected Huawei input peak rate, got %d", uint32(inputPeak))
 		}
-		if uint32(outputPeak) != uint32(huaweiUser.DownRate*1024*4) {
+		if uint32(outputPeak) != uint32(huaweiUser.DownRate*1024*4) { //nolint:gosec // G115: test comparison
 			t.Fatalf("unexpected Huawei output peak rate, got %d", uint32(outputPeak))
 		}
 	})

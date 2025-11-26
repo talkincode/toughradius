@@ -43,7 +43,7 @@ func (e *ZTEAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthConte
 	up := clampInt64(int64(upRate)*1024, math.MaxInt32)
 	down := clampInt64(int64(downRate)*1024, math.MaxInt32)
 
-	_ = zte.ZTERateCtrlSCRUp_Set(resp, zte.ZTERateCtrlSCRUp(up))       //nolint:errcheck
-	_ = zte.ZTERateCtrlSCRDown_Set(resp, zte.ZTERateCtrlSCRDown(down)) //nolint:errcheck
+	_ = zte.ZTERateCtrlSCRUp_Set(resp, zte.ZTERateCtrlSCRUp(up))       //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	_ = zte.ZTERateCtrlSCRDown_Set(resp, zte.ZTERateCtrlSCRDown(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
 	return nil
 }

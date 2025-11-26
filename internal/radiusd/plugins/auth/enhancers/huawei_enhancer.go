@@ -48,10 +48,10 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 	upPeak := clampInt64(up*4, math.MaxInt32)
 	downPeak := clampInt64(down*4, math.MaxInt32)
 
-	_ = huawei.HuaweiInputAverageRate_Set(resp, huawei.HuaweiInputAverageRate(up))     //nolint:errcheck
-	_ = huawei.HuaweiInputPeakRate_Set(resp, huawei.HuaweiInputPeakRate(upPeak))       //nolint:errcheck
-	_ = huawei.HuaweiOutputAverageRate_Set(resp, huawei.HuaweiOutputAverageRate(down)) //nolint:errcheck
-	_ = huawei.HuaweiOutputPeakRate_Set(resp, huawei.HuaweiOutputPeakRate(downPeak))   //nolint:errcheck
+	_ = huawei.HuaweiInputAverageRate_Set(resp, huawei.HuaweiInputAverageRate(up))     //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	_ = huawei.HuaweiInputPeakRate_Set(resp, huawei.HuaweiInputPeakRate(upPeak))       //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	_ = huawei.HuaweiOutputAverageRate_Set(resp, huawei.HuaweiOutputAverageRate(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	_ = huawei.HuaweiOutputPeakRate_Set(resp, huawei.HuaweiOutputPeakRate(downPeak))   //nolint:errcheck,gosec // G115: clamped to MaxInt32
 
 	// Set Huawei FramedIPv6Address if user has a fixed IPv6 address
 	if common.IsNotEmptyAndNA(user.IpV6Addr) {

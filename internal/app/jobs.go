@@ -102,7 +102,7 @@ func (a *Application) SchedProcessMonitorTask() {
 
 	timestamp := time.Now().Unix()
 
-	p, err := process.NewProcess(int32(os.Getpid()))
+	p, err := process.NewProcess(int32(os.Getpid())) //nolint:gosec // G115: PID is always within int32 range
 	if err != nil {
 		return
 	}

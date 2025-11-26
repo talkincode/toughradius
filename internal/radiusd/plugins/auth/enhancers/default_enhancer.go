@@ -50,8 +50,8 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 
 	interim := getIntConfig(authCtx, app.ConfigRadiusAcctInterimInterval, 120)
 
-	_ = rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))           //nolint:errcheck
-	_ = rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim)) //nolint:errcheck
+	_ = rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))           //nolint:errcheck,gosec // G115: timeout is validated
+	_ = rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim)) //nolint:errcheck,gosec // G115: interim is validated
 
 	// Use getter method for AddrPool
 	addrPool := user.GetAddrPool(profileCache)

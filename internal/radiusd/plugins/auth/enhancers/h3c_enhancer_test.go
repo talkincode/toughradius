@@ -169,11 +169,11 @@ func TestH3CAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 			// Peak rate should be four times the average rate
 			upPeak := h3c.H3CInputPeakRate_Get(response)
 			expectedUpPeak := clampInt64(int64(tt.expectedUpAvg)*4, math.MaxInt32)
-			assert.Equal(t, uint32(expectedUpPeak), uint32(upPeak))
+			assert.Equal(t, uint32(expectedUpPeak), uint32(upPeak)) //nolint:gosec // G115: test comparison
 
 			downPeak := h3c.H3COutputPeakRate_Get(response)
 			expectedDownPeak := clampInt64(int64(tt.expectedDownAvg)*4, math.MaxInt32)
-			assert.Equal(t, uint32(expectedDownPeak), uint32(downPeak))
+			assert.Equal(t, uint32(expectedDownPeak), uint32(downPeak)) //nolint:gosec // G115: test comparison
 		})
 	}
 }

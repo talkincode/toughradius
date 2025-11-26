@@ -45,7 +45,7 @@ func (msg *EAPMessage) Encode() []byte {
 	buffer := make([]byte, length)
 	buffer[0] = msg.Code
 	buffer[1] = msg.Identifier
-	binary.BigEndian.PutUint16(buffer[2:4], uint16(length))
+	binary.BigEndian.PutUint16(buffer[2:4], uint16(length)) //nolint:gosec // G115: EAP length is bounded by packet size
 	buffer[4] = msg.Type
 
 	if len(data) > 0 {

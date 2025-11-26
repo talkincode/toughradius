@@ -74,7 +74,7 @@ func Must2(v interface{}, err error) interface{} {
 
 // UUID generates a UUID string
 func UUID() string {
-	unix32bits := uint32(time.Now().UTC().Unix())
+	unix32bits := uint32(time.Now().UTC().Unix()) //nolint:gosec // G115: Unix timestamp fits in uint32 until 2106
 	buff := make([]byte, 12)
 	numRead, err := rand.Read(buff)
 	if numRead != len(buff) || err != nil {
@@ -83,7 +83,7 @@ func UUID() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x-%x", unix32bits, buff[0:2], buff[2:4], buff[4:6], buff[6:8], buff[8:])
 }
 
-var snowflakeNode, _ = snowflake.NewNode(int64(mathrand.Intn(1000)))
+var snowflakeNode, _ = snowflake.NewNode(int64(mathrand.Intn(1000))) //nolint:gosec // G404: weak random is acceptable for node ID
 
 // UUIDint64 generates a unique int64 ID using snowflake algorithm
 func UUIDint64() int64 {

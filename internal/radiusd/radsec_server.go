@@ -258,7 +258,7 @@ func (s *RadsecPacketServer) initTLSConfig(capath, crtfile, keyfile string) (*tl
 	}
 
 	if common.FileExists(capath) {
-		cabytes, _ := os.ReadFile(capath)
+		cabytes, _ := os.ReadFile(capath) //nolint:gosec // G304: path is from validated config
 		pool := x509.NewCertPool()
 		pool.AppendCertsFromPEM(cabytes)
 		tlsConfig.ClientCAs = pool

@@ -401,7 +401,7 @@ func ExportCsv(c echo.Context, v interface{}, name string) error {
 	appCtx := c.Get("appCtx").(app.AppContext) //nolint:errcheck // type assertion is safe for middleware-set context
 	filename := fmt.Sprintf("%s-%d.csv", name, common.UUIDint64())
 	filepath := path.Join(appCtx.Config().GetDataDir(), filename)
-	nfs, err := os.Create(filepath)
+	nfs, err := os.Create(filepath) //nolint:gosec // G304: path is constructed from app data directory
 	if err != nil {
 		return err
 	}

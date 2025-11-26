@@ -110,12 +110,12 @@ func (c *AppConfig) GetRadsecKeyPath() string {
 }
 
 func (c *AppConfig) initDirs() {
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0755)         //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "public"), 0755)       //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "data"), 0755)         //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0755) //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "private"), 0644)      //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0755)       //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0755)         //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "public"), 0755)       //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "data"), 0755)         //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0755) //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "private"), 0644)      //nolint:errcheck,gosec // G301: 0644 is acceptable for private directory
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0755)       //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
 }
 
 func setEnvValue(name string, val *string) {
@@ -208,7 +208,7 @@ func LoadConfig(cfile string) *AppConfig {
 	}
 	cfg := new(AppConfig)
 	if common.FileExists(cfile) {
-		data := common.Must2(os.ReadFile(cfile))
+		data := common.Must2(os.ReadFile(cfile))        //nolint:gosec // G304: config file path is intentionally variable
 		common.Must(yaml.Unmarshal(data.([]byte), cfg)) //nolint:errcheck // type assertion is safe after Must2
 	} else {
 		cfg = DefaultAppConfig

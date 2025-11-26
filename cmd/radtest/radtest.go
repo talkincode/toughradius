@@ -495,8 +495,8 @@ func buildAcctPacket(opts *options, status rfc2866.AcctStatusType) (*radius.Pack
 func setCommonNasAttributes(pkt *radius.Packet, opts *options) {
 	_ = rfc2865.NASIdentifier_Set(pkt, []byte(opts.nasIdentifier))
 	_ = rfc2865.NASIPAddress_Set(pkt, parseIP(opts.nasIP))
-	_ = rfc2865.NASPort_Set(pkt, rfc2865.NASPort(uint32(opts.nasPort)))
-	_ = rfc2865.NASPortType_Set(pkt, rfc2865.NASPortType(uint32(opts.nasPortType)))
+	_ = rfc2865.NASPort_Set(pkt, rfc2865.NASPort(uint32(opts.nasPort)))             //nolint:gosec // G115: port values are within uint32 range
+	_ = rfc2865.NASPortType_Set(pkt, rfc2865.NASPortType(uint32(opts.nasPortType))) //nolint:gosec // G115: port type values are within uint32 range
 }
 
 // sendPacket transmits a RADIUS packet via UDP and waits for response.

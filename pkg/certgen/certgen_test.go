@@ -36,7 +36,7 @@ func TestGenerateCA(t *testing.T) {
 	}
 
 	// Validate the certificate contents
-	certPEM, err := os.ReadFile(certPath)
+	certPEM, err := os.ReadFile(certPath) //nolint:gosec // G304: test file path
 	if err != nil {
 		t.Fatalf("Failed to read CA cert: %v", err)
 	}
@@ -104,7 +104,7 @@ func TestGenerateServerCert(t *testing.T) {
 	}
 
 	// Validate the certificate contents and SAN
-	certPEM, err := os.ReadFile(certPath)
+	certPEM, err := os.ReadFile(certPath) //nolint:gosec // G304: test file path
 	if err != nil {
 		t.Fatalf("Failed to read server cert: %v", err)
 	}
@@ -188,7 +188,7 @@ func TestGenerateClientCert(t *testing.T) {
 	}
 
 	// Validate the certificate contents
-	certPEM, err := os.ReadFile(certPath)
+	certPEM, err := os.ReadFile(certPath) //nolint:gosec // G304: test file path
 	if err != nil {
 		t.Fatalf("Failed to read client cert: %v", err)
 	}

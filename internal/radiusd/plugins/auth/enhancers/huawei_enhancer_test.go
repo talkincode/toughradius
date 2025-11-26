@@ -183,11 +183,11 @@ func TestHuaweiAcceptEnhancer_Enhance_RateCalculation(t *testing.T) {
 			// Peak rate should be four times the average rate (with a cap)
 			upPeak := huawei.HuaweiInputPeakRate_Get(response)
 			expectedUpPeak := clampInt64(int64(tt.expectedUpAvg)*4, math.MaxInt32)
-			assert.Equal(t, uint32(expectedUpPeak), uint32(upPeak))
+			assert.Equal(t, uint32(expectedUpPeak), uint32(upPeak)) //nolint:gosec // G115: test comparison
 
 			downPeak := huawei.HuaweiOutputPeakRate_Get(response)
 			expectedDownPeak := clampInt64(int64(tt.expectedDownAvg)*4, math.MaxInt32)
-			assert.Equal(t, uint32(expectedDownPeak), uint32(downPeak))
+			assert.Equal(t, uint32(expectedDownPeak), uint32(downPeak)) //nolint:gosec // G115: test comparison
 		})
 	}
 }

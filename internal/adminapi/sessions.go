@@ -233,7 +233,7 @@ func DeleteOnlineSession(c echo.Context) error {
 				zap.L().Warn("CoA Disconnect-Request NAK received",
 					zap.String("nas_addr", coaAddr),
 					zap.String("username", session.Username),
-					zap.Uint8("response_code", uint8(response.Code)),
+					zap.Uint8("response_code", uint8(response.Code)), //nolint:gosec // G115: RADIUS code is always in uint8 range
 					zap.String("namespace", "adminapi"))
 			}
 		}()

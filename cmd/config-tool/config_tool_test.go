@@ -577,7 +577,7 @@ func createTempConfigFile(t *testing.T, schemas app.ConfigSchemasJSON) string {
 	}
 
 	tmpFile := filepath.Join(t.TempDir(), "config_test.json")
-	if err := os.WriteFile(tmpFile, data, 0644); err != nil {
+	if err := os.WriteFile(tmpFile, data, 0600); err != nil { //nolint:gosec // G306: test file
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 
@@ -589,7 +589,7 @@ func createTempInvalidJSON(t *testing.T) string {
 	t.Helper()
 
 	tmpFile := filepath.Join(t.TempDir(), "invalid.json")
-	if err := os.WriteFile(tmpFile, []byte("{invalid json"), 0644); err != nil {
+	if err := os.WriteFile(tmpFile, []byte("{invalid json"), 0600); err != nil { //nolint:gosec // G306: test file
 		t.Fatalf("Failed to create temp file: %v", err)
 	}
 

@@ -192,7 +192,7 @@ logger:
   filename: /tmp/test.log
 `
 
-	err := os.WriteFile(configFile, []byte(configContent), 0644)
+	err := os.WriteFile(configFile, []byte(configContent), 0600) //nolint:gosec // G306: test file permissions
 	if err != nil {
 		t.Fatalf("Failed to write config file: %v", err)
 	}
@@ -321,7 +321,7 @@ logger:
   file_enable: false
 `
 
-	err := os.WriteFile(configFile, []byte(configContent), 0644)
+	err := os.WriteFile(configFile, []byte(configContent), 0600) //nolint:gosec // G306: test file permissions
 	if err != nil {
 		t.Fatalf("Failed to write config file: %v", err)
 	}
@@ -742,7 +742,7 @@ logger:
   filename: ` + filepath.Join(tmpDir, "app.log") + `
 `
 
-	err := os.WriteFile(configFile, []byte(configContent), 0644)
+	err := os.WriteFile(configFile, []byte(configContent), 0600) //nolint:gosec // G306: test file
 	if err != nil {
 		t.Fatalf("Failed to write config file: %v", err)
 	}

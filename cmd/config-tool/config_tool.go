@@ -59,10 +59,10 @@ import (
 // Example:
 //
 //	if err := validateConfigSchemas("config/config_schemas.json"); err != nil {
-//	    log.Fatalf("Validation failed: %v", err)
+//	   log.Fatalf("Validation failed: %v", err)
 //	}
 func validateConfigSchemas(filePath string) error {
-	data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath) //nolint:gosec // G304: path is user-specified config file
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
@@ -160,10 +160,10 @@ func validateConfigSchemas(filePath string) error {
 // Example:
 //
 //	if err := printConfigSummary("config/config_schemas.json"); err != nil {
-//	    return fmt.Errorf("failed to display summary: %w", err)
+//	   return fmt.Errorf("failed to display summary: %w", err)
 //	}
 func printConfigSummary(filePath string) error {
-	data, err := os.ReadFile(filePath)
+	data, err := os.ReadFile(filePath) //nolint:gosec // G304: path is user-specified config file
 	if err != nil {
 		return err
 	}

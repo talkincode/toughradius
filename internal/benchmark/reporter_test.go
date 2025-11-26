@@ -64,7 +64,7 @@ func TestReporterCSVOutput(t *testing.T) {
 		t.Fatalf("Close returned error: %v", err)
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) //nolint:gosec // G304: test file path
 	if err != nil {
 		t.Fatalf("failed to read csv: %v", err)
 	}

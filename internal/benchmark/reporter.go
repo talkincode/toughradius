@@ -28,7 +28,7 @@ func NewReporter(csvPath string) (*Reporter, error) {
 	r := &Reporter{}
 
 	if csvPath != "" {
-		file, err := os.Create(csvPath)
+		file, err := os.Create(csvPath) //nolint:gosec // G304: path is user-specified output file
 		if err != nil {
 			return nil, fmt.Errorf("failed to create CSV file: %w", err)
 		}

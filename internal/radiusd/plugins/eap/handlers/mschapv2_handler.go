@@ -169,7 +169,7 @@ func (h *MSCHAPv2Handler) buildChallengeRequest(identifier uint8, challenge []by
 	// EAP Header
 	buffer[0] = eap.CodeRequest
 	buffer[1] = identifier
-	binary.BigEndian.PutUint16(buffer[2:4], uint16(totalLen))
+	binary.BigEndian.PutUint16(buffer[2:4], uint16(totalLen)) //nolint:gosec // G115: totalLen is bounded by EAP packet size
 
 	// EAP Type
 	buffer[4] = eap.TypeMSCHAPv2
@@ -178,7 +178,7 @@ func (h *MSCHAPv2Handler) buildChallengeRequest(identifier uint8, challenge []by
 	offset := 5
 	buffer[offset] = MSCHAPv2Challenge                                       // OpCode
 	buffer[offset+1] = identifier                                            // MS-CHAPv2-ID (matches the EAP identifier)
-	binary.BigEndian.PutUint16(buffer[offset+2:offset+4], uint16(msDataLen)) // MS-Length
+	binary.BigEndian.PutUint16(buffer[offset+2:offset+4], uint16(msDataLen)) //nolint:gosec // G115: msDataLen is bounded - MS-Length
 	buffer[offset+4] = MSCHAPChallengeSize                                   // Value-Size
 	copy(buffer[offset+5:offset+5+MSCHAPChallengeSize], challenge)           // Challenge
 	copy(buffer[offset+5+MSCHAPChallengeSize:], serverName)                  // Name
