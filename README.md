@@ -13,7 +13,7 @@ Welcome to the TOUGHRADIUS project!
 [![Go Version](https://img.shields.io/github/go-mod/go-version/talkincode/toughradius)](go.mod)
 [![Release](https://img.shields.io/github/v/release/talkincode/toughradius)](https://github.com/talkincode/toughradius/releases)
 [![Build Status](https://github.com/talkincode/toughradius/actions/workflows/ci.yml/badge.svg)](https://github.com/talkincode/toughradius/actions/workflows/ci.yml)
-[![Go Report Card](https://goreportcard.com/badge/github.com/talkincode/toughradius)](https://goreportcard.com/report/github.com/talkincode/toughradius)
+[![codecov](https://codecov.io/gh/talkincode/toughradius/graph/badge.svg)](https://codecov.io/gh/talkincode/toughradius)
 [![Docker Pulls](https://img.shields.io/docker/pulls/talkincode/toughradius)](https://hub.docker.com/r/talkincode/toughradius)
 
 A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, RadSec (RADIUS over TLS), and a modern Web management interface.
