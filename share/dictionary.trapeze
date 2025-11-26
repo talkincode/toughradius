@@ -1,0 +1,40 @@
+# -*- text -*-
+# Copyright (C) 2019 The FreeRADIUS Server project and contributors
+# This work is licensed under CC-BY version 4.0 https://creativecommons.org/licenses/by/4.0
+#
+#	dictionary.trapeze
+#
+#	For use with FreeRadius and Trapeze/Juniper MSS software
+#	1.1 or greater.
+#
+#	Trapeze Networks has been acquired by Juniper in 2010.
+#
+#	$Id: aa99390439e71fb433eae9c7042a74dca73992ec $
+#
+#
+VENDOR		Trapeze				14525
+
+# Attributes for MSS 1.1 and later
+
+BEGIN-VENDOR	Trapeze
+
+ATTRIBUTE	Trapeze-VLAN-Name			1	string
+ATTRIBUTE	Trapeze-Mobility-Profile		2	string
+ATTRIBUTE	Trapeze-Encryption-Type			3	string
+ATTRIBUTE	Trapeze-Time-Of-Day			4	string
+
+# New attributes for MSS 3.0 and later
+
+ATTRIBUTE	Trapeze-SSID				5	string
+ATTRIBUTE	Trapeze-End-Date			6	string
+ATTRIBUTE	Trapeze-Start-Date			7	string
+ATTRIBUTE	Trapeze-URL				8	string
+
+# Additional attributes, not known when added
+ATTRIBUTE	Trapeze-User-Group-Name			9	string
+ATTRIBUTE	Trapeze-QoS-Profile			10	string
+ATTRIBUTE	Trapeze-Simultaneous-Logins		11	string
+ATTRIBUTE	Trapeze-CoA-Username			12	string
+ATTRIBUTE	Trapeze-Audit				13	string
+
+END-VENDOR	Trapeze

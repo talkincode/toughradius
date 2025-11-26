@@ -1,0 +1,24 @@
+# -*- text -*-
+# Copyright (C) 2019 The FreeRADIUS Server project and contributors
+# This work is licensed under CC-BY version 4.0 https://creativecommons.org/licenses/by/4.0
+#
+##############################################################################
+#
+#	British Sky Broadcasting Group plc VSA's
+#
+#	$Id: 2415970f42892a58aa9d3020dae4984258f7a9ea $
+#
+##############################################################################
+
+VENDOR		BSkyB				16924
+
+BEGIN-VENDOR	BSkyB
+
+ATTRIBUTE	Sky-Wifi-AP-ID				1	integer
+ATTRIBUTE	Sky-Wifi-Service-ID			2	integer
+ATTRIBUTE	Sky-Wifi-Filter-Profile			3	string
+ATTRIBUTE	Sky-Wifi-Billing-Class			4	octets
+ATTRIBUTE	Sky-Wifi-Provider-ID			5	integer
+ATTRIBUTE	Sky-Wifi-Credentials			6	string
+
+END-VENDOR	BSkyB

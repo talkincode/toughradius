@@ -1,0 +1,32 @@
+# -*- text -*-
+# Copyright (C) 2019 The FreeRADIUS Server project and contributors
+# This work is licensed under CC-BY version 4.0 https://creativecommons.org/licenses/by/4.0
+#
+##############################################################################
+#
+#	Fortinet's VSA's
+#	As posted to the list by Richie Lee.
+#
+#	$Id: e51970003adee255768d59e03a7d5b8415123cf2 $
+#
+##############################################################################
+
+#
+#	Fortinet's VSA's
+#
+
+VENDOR		Fortinet			12356
+
+BEGIN-VENDOR	Fortinet
+ATTRIBUTE	Fortinet-Group-Name			1	string
+ATTRIBUTE	Fortinet-Client-IP-Address		2	ipaddr
+ATTRIBUTE	Fortinet-Vdom-Name			3	string
+ATTRIBUTE	Fortinet-Client-IPv6-Address		4	octets
+ATTRIBUTE	Fortinet-Interface-Name			5	string
+ATTRIBUTE	Fortinet-Access-Profile			6	string
+
+#
+# Integer Translations
+#
+
+END-VENDOR Fortinet

@@ -1,0 +1,23 @@
+# -*- text -*-
+# Copyright (C) 2019 The FreeRADIUS Server project and contributors
+# This work is licensed under CC-BY version 4.0 https://creativecommons.org/licenses/by/4.0
+#
+##############################################################################
+#
+#	Palo Alto Networks.
+#
+#	$Id: 42aa7afb0b6c1a5b04fd29be781ea99136f4afd8 $
+#
+##############################################################################
+
+VENDOR		PaloAlto			25461
+
+BEGIN-VENDOR	PaloAlto
+
+ATTRIBUTE	PaloAlto-Admin-Role			1	string
+ATTRIBUTE	PaloAlto-Admin-Access-Domain		2	string
+ATTRIBUTE	PaloAlto-Panorama-Admin-Role		3	string
+ATTRIBUTE	PaloAlto-Panorama-Admin-Access-Domain	4	string
+ATTRIBUTE	PaloAlto-User-Group			5	string
+
+END-VENDOR	PaloAlto

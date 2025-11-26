@@ -1,0 +1,185 @@
+# -*- text -*-
+# Copyright (C) 2019 The FreeRADIUS Server project and contributors
+# This work is licensed under CC-BY version 4.0 https://creativecommons.org/licenses/by/4.0
+#
+#	The FreeRADIUS Vendor-Specific dictionary.
+#
+# Version:	$Id: c92c5214ad45337b636e89532d811002cdeb9c2d $
+#
+
+VENDOR		FreeRADIUS			11344
+
+BEGIN-VENDOR	FreeRADIUS
+
+ATTRIBUTE	FreeRADIUS-Proxied-To			1	ipaddr
+ATTRIBUTE	FreeRADIUS-Acct-Session-Start-Time	2	date
+
+#
+#  This attribute is really a bitmask.
+#
+ATTRIBUTE	FreeRADIUS-Statistics-Type		127	integer
+
+VALUE	FreeRADIUS-Statistics-Type	None			0
+VALUE	FreeRADIUS-Statistics-Type	Authentication		1
+VALUE	FreeRADIUS-Statistics-Type	Accounting		2
+VALUE	FreeRADIUS-Statistics-Type	Proxy-Authentication	4
+VALUE	FreeRADIUS-Statistics-Type	Proxy-Accounting	8
+VALUE	FreeRADIUS-Statistics-Type	Internal		0x10
+VALUE	FreeRADIUS-Statistics-Type	Client			0x20
+VALUE	FreeRADIUS-Statistics-Type	Server			0x40
+VALUE	FreeRADIUS-Statistics-Type	Home-Server		0x80
+
+VALUE	FreeRADIUS-Statistics-Type	Auth-Acct		0x03
+VALUE	FreeRADIUS-Statistics-Type	Proxy-Auth-Acct		0x0c
+
+VALUE	FreeRADIUS-Statistics-Type	All			0x1f
+
+#
+#  Global authentication statistics for packets received by the server.
+#
+ATTRIBUTE	FreeRADIUS-Total-Access-Requests	128	integer
+ATTRIBUTE	FreeRADIUS-Total-Access-Accepts		129	integer
+ATTRIBUTE	FreeRADIUS-Total-Access-Rejects		130	integer
+ATTRIBUTE	FreeRADIUS-Total-Access-Challenges	131	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Responses		132	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Duplicate-Requests 133	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Malformed-Requests 134	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Invalid-Requests	135	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Dropped-Requests	136	integer
+ATTRIBUTE	FreeRADIUS-Total-Auth-Unknown-Types	137	integer
+
+#
+#  Global statistics for auth packets sent by the server to all home servers
+#
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Access-Requests	138	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Access-Accepts	139	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Access-Rejects	140	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Access-Challenges 141	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Auth-Responses	142	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Auth-Duplicate-Requests 143	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Auth-Malformed-Requests 144	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Auth-Invalid-Requests 145	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Auth-Dropped-Requests 146	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Auth-Unknown-Types 147	integer
+
+#
+#  Global accounting statistics for packets received by the server.
+#
+ATTRIBUTE	FreeRADIUS-Total-Accounting-Requests	148	integer
+ATTRIBUTE	FreeRADIUS-Total-Accounting-Responses	149	integer
+ATTRIBUTE	FreeRADIUS-Total-Acct-Duplicate-Requests 150	integer
+ATTRIBUTE	FreeRADIUS-Total-Acct-Malformed-Requests 151	integer
+ATTRIBUTE	FreeRADIUS-Total-Acct-Invalid-Requests	152	integer
+ATTRIBUTE	FreeRADIUS-Total-Acct-Dropped-Requests	153	integer
+ATTRIBUTE	FreeRADIUS-Total-Acct-Unknown-Types	154	integer
+
+#
+#  Global statistics for acct packets sent by the server to all home servers
+#
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Accounting-Requests 155	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Accounting-Responses 156	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Acct-Duplicate-Requests 157	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Acct-Malformed-Requests 158	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Acct-Invalid-Requests 159	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Acct-Dropped-Requests 160	integer
+ATTRIBUTE	FreeRADIUS-Total-Proxy-Acct-Unknown-Types 161	integer
+
+#
+#  Internal queues.  Different packet types are put into different queues.
+#
+ATTRIBUTE	FreeRADIUS-Queue-Len-Internal		162	integer
+ATTRIBUTE	FreeRADIUS-Queue-Len-Proxy		163	integer
+ATTRIBUTE	FreeRADIUS-Queue-Len-Auth		164	integer
+ATTRIBUTE	FreeRADIUS-Queue-Len-Acct		165	integer
+ATTRIBUTE	FreeRADIUS-Queue-Len-Detail		166	integer
+
+ATTRIBUTE	FreeRADIUS-Stats-Client-IP-Address	167	ipaddr
+ATTRIBUTE	FreeRADIUS-Stats-Client-Number		168	integer
+ATTRIBUTE	FreeRADIUS-Stats-Client-Netmask		169	integer
+
+ATTRIBUTE	FreeRADIUS-Stats-Server-IP-Address	170	ipaddr
+ATTRIBUTE	FreeRADIUS-Stats-Server-Port		171	integer
+
+ATTRIBUTE	FreeRADIUS-Stats-Server-Outstanding-Requests 172	integer
+ATTRIBUTE	FreeRADIUS-Stats-Server-State		173	integer
+
+VALUE	FreeRADIUS-Stats-Server-State	Alive			0
+VALUE	FreeRADIUS-Stats-Server-State	Zombie			1
+VALUE	FreeRADIUS-Stats-Server-State	Dead			2
+VALUE	FreeRADIUS-Stats-Server-State	Idle			3
+
+#
+#  When a home server is marked "dead" or "alive"
+#
+ATTRIBUTE	FreeRADIUS-Stats-Server-Time-Of-Death	174	date
+ATTRIBUTE	FreeRADIUS-Stats-Server-Time-Of-Life	175	date
+
+#
+#  When this server was started.  If start == hup, it hasn't been
+#  hup'd yet.  This is friendlier than having hup == 0 on start.
+#
+ATTRIBUTE	FreeRADIUS-Stats-Start-Time		176	date
+ATTRIBUTE	FreeRADIUS-Stats-HUP-Time		177	date
+
+#
+#  Exponential moving average of home server response time
+#  Window-1 is the average is calculated over "window" packets.
+#  Window-10 is the average is calculated over "10 * window" packets.
+#
+#  Both Window-1 and Window-10 are times in microseconds
+#  (1/1000000 of a second).
+#
+ATTRIBUTE	FreeRADIUS-Server-EMA-Window		178	integer
+ATTRIBUTE	FreeRADIUS-Server-EMA-USEC-Window-1	179	integer
+ATTRIBUTE	FreeRADIUS-Server-EMA-USEC-Window-10	180	integer
+
+ATTRIBUTE	FreeRADIUS-Queue-PPS-In			181	integer
+ATTRIBUTE	FreeRADIUS-Queue-PPS-Out		182	integer
+ATTRIBUTE	FreeRADIUS-Queue-Use-Percentage		183	integer
+
+ATTRIBUTE	FreeRADIUS-Stats-Last-Packet-Recv	184	date
+ATTRIBUTE	FreeRADIUS-Stats-Last-Packet-Sent	185	date
+
+#
+# EAP-FAST TLVs
+#
+ATTRIBUTE	FreeRADIUS-EAP-FAST-TLV			186	tlv
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Result		186.3	short
+ATTRIBUTE	FreeRADIUS-EAP-FAST-NAK			186.4	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Error		186.5	integer
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Vendor-Specific	186.7	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-EAP-Payload		186.9	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Intermediate-Result	186.10	octets
+
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC			186.11	tlv
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Key		186.11.1	octets
+
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Opaque-TLV	186.11.2	tlv
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Opaque-PAC-Key	186.11.2.1	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Opaque-PAC-Lifetime 186.11.2.3	integer
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Opaque-I-ID	186.11.2.5	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Opaque-PAC-Type	186.11.2.10	short
+
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Lifetime	186.11.3	integer
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-A-ID		186.11.4	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-I-ID		186.11.5	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-A-ID-Info	186.11.7	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Acknowledge	186.11.8	short
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Info-TLV	186.11.9	tlv
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Info-PAC-Lifetime 186.11.9.3	integer
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Info-A-ID	186.11.9.4	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Info-I-ID	186.11.9.5	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Info-A-ID-Info	186.11.9.7	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Info-PAC-Type	186.11.9.10	short
+
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PAC-Type		186.11.10	short
+
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Crypto-Binding	186.12	octets
+
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Trusted-Root	186.18	octets
+ATTRIBUTE	FreeRADIUS-EAP-FAST-Request-Action	186.19	short
+ATTRIBUTE	FreeRADIUS-EAP-FAST-PKCS		186.20	octets
+
+ATTRIBUTE	FreeRADIUS-Stats-Error			187	string
+
+END-VENDOR FreeRADIUS
