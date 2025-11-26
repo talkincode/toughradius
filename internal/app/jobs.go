@@ -4,7 +4,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/nakabonne/tstorage"
 	"github.com/robfig/cron/v3"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
@@ -52,43 +51,16 @@ func (a *Application) SchedSystemMonitorTask() {
 		}
 	}()
 
-	timestamp := time.Now().Unix()
-
-	var cpuuse float64
+	// Collect CPU usage
 	_cpuuse, err := cpu.Percent(0, false)
 	if err == nil && len(_cpuuse) > 0 {
-		cpuuse = _cpuuse[0]
-	}
-	err = metrics.GetTSDB().InsertRows([]tstorage.Row{
-		{
-			Metric: "system_cpuuse",
-			DataPoint: tstorage.DataPoint{
-				Value:     cpuuse,
-				Timestamp: timestamp,
-			},
-		},
-	})
-	if err != nil {
-		zap.S().Error("add timeseries data error:", err.Error())
+		metrics.SetGauge("system_cpuuse", int64(_cpuuse[0]*100)) // Store as percentage * 100
 	}
 
+	// Collect memory usage
 	_meminfo, err := mem.VirtualMemory()
-	var memuse uint64
 	if err == nil {
-		memuse = _meminfo.Used
-	}
-
-	err = metrics.GetTSDB().InsertRows([]tstorage.Row{
-		{
-			Metric: "system_memuse",
-			DataPoint: tstorage.DataPoint{
-				Value:     float64(memuse),
-				Timestamp: timestamp,
-			},
-		},
-	})
-	if err != nil {
-		zap.S().Error("add timeseries data error:", err.Error())
+		metrics.SetGauge("system_memuse", int64(_meminfo.Used/1024/1024)) // MB
 	}
 }
 
@@ -100,48 +72,21 @@ func (a *Application) SchedProcessMonitorTask() {
 		}
 	}()
 
-	timestamp := time.Now().Unix()
-
 	p, err := process.NewProcess(int32(os.Getpid())) //nolint:gosec // G115: PID is always within int32 range
 	if err != nil {
 		return
 	}
 
+	// Collect process CPU usage
 	cpuuse, err := p.CPUPercent()
-	if err != nil {
-		cpuuse = 0
+	if err == nil {
+		metrics.SetGauge("toughradius_cpuuse", int64(cpuuse*100)) // Store as percentage * 100
 	}
 
-	err = metrics.GetTSDB().InsertRows([]tstorage.Row{
-		{
-			Metric: "toughradius_cpuuse",
-			DataPoint: tstorage.DataPoint{
-				Value:     cpuuse,
-				Timestamp: timestamp,
-			},
-		},
-	})
-	if err != nil {
-		zap.S().Error("add timeseries data error:", err.Error())
-	}
-
+	// Collect process memory usage
 	meminfo, err := p.MemoryInfo()
-	if err != nil {
-		return
-	}
-	memuse := meminfo.RSS / 1024 / 1024
-
-	err = metrics.GetTSDB().InsertRows([]tstorage.Row{
-		{
-			Metric: "toughradius_memuse",
-			DataPoint: tstorage.DataPoint{
-				Value:     float64(memuse),
-				Timestamp: timestamp,
-			},
-		},
-	})
-	if err != nil {
-		zap.S().Error("add timeseries data error:", err.Error())
+	if err == nil {
+		metrics.SetGauge("toughradius_memuse", int64(meminfo.RSS/1024/1024)) // MB
 	}
 }
 

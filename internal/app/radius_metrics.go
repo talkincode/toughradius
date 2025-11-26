@@ -1,9 +1,6 @@
 package app
 
 import (
-	"time"
-
-	istats "github.com/montanaflynn/stats"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 )
 
@@ -43,27 +40,21 @@ var metricsNames = []string{
 	MetricsRadiusAccounting,
 }
 
+// GetRadiusMetrics returns the counter value for a specific metric
 func GetRadiusMetrics(name string) int64 {
-	vals := make([]float64, 0)
-	points, err := metrics.GetTSDB().Select(name, nil,
-		time.Now().Add(-86400*time.Second).Unix(), time.Now().Unix())
-	if err != nil {
-		return 0
-	}
-	for _, p := range points {
-		vals = append(vals, p.Value)
-	}
-	value, _ := istats.Sum(vals)
-	if value < 0 {
-		value = 0
-	}
-	return int64(value)
+	return metrics.GetCounter(name)
 }
 
+// GetAllRadiusMetrics returns all RADIUS metrics as a map
 func GetAllRadiusMetrics() map[string]int64 {
-	var result = make(map[string]int64)
+	result := make(map[string]int64)
 	for _, name := range metricsNames {
 		result[name] = GetRadiusMetrics(name)
 	}
 	return result
+}
+
+// IncRadiusMetric increments a RADIUS metric counter
+func IncRadiusMetric(name string) {
+	metrics.Inc(name)
 }
