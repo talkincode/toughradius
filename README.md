@@ -194,6 +194,10 @@ We welcome contributions in various forms, including but not limited to:
 
 This project is licensed under the [MIT License](LICENSE).
 
+### Third-Party Resources
+
+The RADIUS dictionary files in the `share/` directory are derived from the [FreeRADIUS](https://freeradius.org/) project and are licensed under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](share/LICENSE).
+
 ## 🔗 Related Links
 
 - [Official Website](https://www.toughradius.net/)
