@@ -75,10 +75,18 @@ Your goal is to analyze the provided code (module, package, or specific function
     - Verify comments are parseable by documentation tools (`go doc`, godoc, JSDoc, etc.)
 
 4.  **Output Format**:
+
     - **Edit the source code file** to add/update comments
     - **DO NOT create** separate `.md` files
     - **DO NOT output** lengthy summaries in chat
     - **Brief confirmation** only (1-2 sentences)
+
+5.  **Test Execution (MANDATORY for Go)**:
+    - **ALWAYS run tests** after modifying Go source files
+    - Use `go test ./path/to/modified/package/...`
+    - If tests fail, fix the code before completing
+    - Report test status in completion message
+    - Do NOT skip this step - it's non-negotiable
 
 ### Language-Specific Guidelines
 
@@ -164,12 +172,29 @@ function functionName(param1: string, param2: number): ReturnType {
 
 ### Verification
 
-After adding documentation, verify:
+After adding documentation, **ALWAYS** perform these verification steps:
 
-- Run `go doc package.Symbol` (for Go) to ensure it displays correctly
-- Check IDE tooltips show the documentation
-- Ensure no separate `.md` files were created
-- Git diff shows only source code changes with added comments
+1. **Documentation Display**:
+
+   - Run `go doc package.Symbol` (for Go) to ensure it displays correctly
+   - Check IDE tooltips show the documentation
+   - Ensure no separate `.md` files were created
+   - Git diff shows only source code changes with added comments
+
+2. **Run Tests (MANDATORY for Go code)**:
+   - **CRITICAL**: Code changes require test validation
+   - Run `go test ./...` or specific package tests
+   - If tests fail, fix the code (not just documentation)
+   - Do NOT consider the task complete until tests pass
+   - Report test results to user
+
+**Test Execution Rules:**
+
+- ✅ Always run tests after modifying Go source files
+- ✅ Run tests for the modified package: `go test ./internal/radiusd/...`
+- ✅ If tests fail, analyze and fix the root cause
+- ✅ Include test results in completion summary
+- ❌ Never skip tests "because only comments changed" - comments might have broken code formatting
 
 ### Example Workflow
 
@@ -181,24 +206,45 @@ DOCUMENTATION.md created  # This is wrong!
 main.go modified with comprehensive comments
 git diff shows function comments added
 go doc package.Function displays correctly
-```
 
+# ✅ MANDATORY: Run tests after code changes
 ### Completion Response
 
 **Correct response:**
 
 ```
-✅ Added comprehensive documentation comments to source code, verifiable with `go doc`.
+
+✅ Added comprehensive documentation comments to `internal/radiusd/auth.go`
+✅ Tests passed: `go test ./internal/radiusd/... ` (0.123s)
+
 ```
 
-**Incorrect response:**
+**Incorrect responses:**
 
 ```
-# Documentation Summary  ❌
+
+# ❌ Creating separate documentation file
+
 Created detailed documentation in DOCUMENTATION.md...
 (This is wrong - should be in code comments!)
+
+# ❌ Skipping tests
+
+Added documentation comments to auth.go
+(This is incomplete - must run tests!)
+
+```
+
+```
+
+# Documentation Summary ❌
+
+Created detailed documentation in DOCUMENTATION.md...
+(This is wrong - should be in code comments!)
+
 ```
 
 ### Input Code
 
 {{selection}}
+```
