@@ -43,6 +43,7 @@ jobs:
           password: ${{ secrets.MY_GITHUB_TOKEN }}
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
+        id: docker_build
         uses: docker/build-push-action@v5
         with:
           context: ./
