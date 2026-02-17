@@ -77,36 +77,47 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	s.root.Use(ServerRecover(appconfig.System.Debug))
 	// Logging middleware
 	s.root.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogLatency:   true,
-		LogMethod:    true,
-		LogURI:       true,
-		LogUserAgent: true,
-		LogStatus:    true,
-		LogError:     true,
-		LogRemoteIP:  true,
-		LogRequestID: true,
-		HandleError:  true,
+		LogLatency:       true,
+		LogMethod:        true,
+		LogURI:           true,
+		LogUserAgent:     true,
+		LogStatus:        true,
+		LogError:         true,
+		LogRemoteIP:      true,
+		LogRequestID:     true,
+		HandleError:      true,
+		LogContentLength: true,
+		LogResponseSize:  true,
+		LogProtocol:      true,
 		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
 			if v.Error != nil {
 				zap.S().Errorw("request error",
+					"app_id", appconfig.System.Appid,
 					"id", v.RequestID,
 					"remote_ip", v.RemoteIP,
 					"method", v.Method,
 					"uri", v.URI,
+					"protocol", v.Protocol,
 					"status", v.Status,
 					"latency", v.Latency,
 					"user_agent", v.UserAgent,
+					"bytes_in", v.ContentLength,
+					"bytes_out", v.ResponseSize,
 					"error", v.Error,
 				)
 			} else {
 				zap.S().Infow("request",
+					"app_id", appconfig.System.Appid,
 					"id", v.RequestID,
 					"remote_ip", v.RemoteIP,
 					"method", v.Method,
 					"uri", v.URI,
+					"protocol", v.Protocol,
 					"status", v.Status,
 					"latency", v.Latency,
 					"user_agent", v.UserAgent,
+					"bytes_in", v.ContentLength,
+					"bytes_out", v.ResponseSize,
 				)
 			}
 			return nil
