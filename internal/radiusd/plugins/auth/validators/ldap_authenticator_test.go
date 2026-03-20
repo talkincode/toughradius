@@ -15,6 +15,7 @@ import (
 	"layeh.com/radius"
 )
 
+// mockLDAPConfig is a test double for ldapConfigReader backed by a simple key/value map.
 type mockLDAPConfig struct {
 	values map[string]string
 }
@@ -23,6 +24,7 @@ func (m *mockLDAPConfig) GetString(category, name string) string {
 	return m.values[category+"."+name]
 }
 
+// fakeLDAPClient is a test double for ldapClient that records calls and returns scripted responses.
 type fakeLDAPClient struct {
 	bindErrs   []error
 	bindCalls  [][2]string

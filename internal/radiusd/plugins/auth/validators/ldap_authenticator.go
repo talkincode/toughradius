@@ -27,8 +27,11 @@ type ldapConn struct {
 	*ldap.Conn
 }
 
+// defaultLDAPTimeoutSeconds is the fallback timeout used when LdapTimeoutSeconds is missing or invalid.
 const defaultLDAPTimeoutSeconds int64 = 5
 
+// newLDAPClient is a replaceable factory for creating LDAP connections.
+// It is a package-level variable to enable unit tests to inject fake clients.
 var newLDAPClient = func(serverURL string, timeout time.Duration) (ldapClient, error) {
 	conn, err := ldap.DialURL(serverURL)
 	if err != nil {
@@ -137,6 +140,7 @@ func validatePasswordWithLDAP(authCtx *auth.AuthContext, requestPassword string)
 
 // isLDAPEnabled parses configurable LDAP enable values.
 // Accepted true values are: "true", "1", "enabled", "yes", "on" (case-insensitive).
+// All other values are treated as disabled/false.
 func isLDAPEnabled(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "true", "1", "enabled", "yes", "on":
