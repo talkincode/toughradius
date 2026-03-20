@@ -42,6 +42,7 @@ func escapeUserLikePattern(s string) string {
 type UserRequest struct {
 	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
 	ProfileID  interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
+	ProfileID2 interface{} `json:"profileid"`                                   // Compatible with legacy profileid payload
 	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // Real name
 	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // Email
 	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
@@ -141,6 +142,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 type UserUpdateRequest struct {
 	NodeID          interface{} `json:"node_id"`                                       // Can be int64 or string
 	ProfileID       interface{} `json:"profile_id"`                                    // Can be int64 or string
+	ProfileID2      interface{} `json:"profileid"`                                     // Compatible with legacy profileid payload
 	Realname        string      `json:"realname" validate:"omitempty,max=100"`         // Real name
 	Email           string      `json:"email" validate:"omitempty,email,max=100"`      // Email
 	Mobile          string      `json:"mobile" validate:"omitempty,max=20"`            // Mobile number (optional, max 20 characters)
@@ -312,6 +314,9 @@ func createRadiusUser(c echo.Context) error {
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
 	}
+	if req.ProfileID == nil || req.ProfileID == "" {
+		req.ProfileID = req.ProfileID2
+	}
 
 	// Auto-validate request parameters
 	if err := c.Validate(&req); err != nil {
@@ -393,6 +398,9 @@ func updateRadiusUser(c echo.Context) error {
 	var req UserUpdateRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
+	}
+	if req.ProfileID == nil || req.ProfileID == "" {
+		req.ProfileID = req.ProfileID2
 	}
 
 	// Auto-validate request parameters
