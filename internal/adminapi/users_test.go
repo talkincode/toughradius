@@ -399,6 +399,21 @@ func TestCreateUser(t *testing.T) {
 			},
 		},
 		{
+			name: "Both profile_id and profileid provided - profile_id takes precedence",
+			requestBody: `{
+				"username": "precedenceuser",
+				"password": "password123",
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `",
+				"profileid": "99999",
+				"status": "enabled"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, user *domain.RadiusUser) {
+				assert.Equal(t, "precedenceuser", user.Username)
+				assert.Equal(t, profile.ID, user.ProfileId)
+			},
+		},
+		{
 			name: "Missing status on create - use default",
 			requestBody: `{
 				"username": "defaultuser",
