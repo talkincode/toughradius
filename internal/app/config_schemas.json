@@ -71,6 +71,71 @@
       "description_i18n": "config.radius.log_level.description"
     },
     {
+      "key": "radius.LdapEnabled",
+      "type": "bool",
+      "default": "false",
+      "title": "Enable LDAP Authentication",
+      "title_i18n": "config.radius.ldap_enabled.title",
+      "description": "Enable LDAP password authentication for PAP/CHAP requests",
+      "description_i18n": "config.radius.ldap_enabled.description"
+    },
+    {
+      "key": "radius.LdapServer",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Server URL",
+      "title_i18n": "config.radius.ldap_server.title",
+      "description": "LDAP server URL, e.g. ldap://127.0.0.1:389 or ldaps://ldap.example.com:636",
+      "description_i18n": "config.radius.ldap_server.description"
+    },
+    {
+      "key": "radius.LdapBaseDN",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Base DN",
+      "title_i18n": "config.radius.ldap_base_dn.title",
+      "description": "Base DN for LDAP user search, e.g. dc=example,dc=com",
+      "description_i18n": "config.radius.ldap_base_dn.description"
+    },
+    {
+      "key": "radius.LdapUserFilter",
+      "type": "string",
+      "default": "(uid={username})",
+      "title": "LDAP User Filter",
+      "title_i18n": "config.radius.ldap_user_filter.title",
+      "description": "LDAP user search filter template. {username} will be escaped and substituted.",
+      "description_i18n": "config.radius.ldap_user_filter.description"
+    },
+    {
+      "key": "radius.LdapBindDN",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Bind DN",
+      "title_i18n": "config.radius.ldap_bind_dn.title",
+      "description": "Optional LDAP service account DN used for searching users",
+      "description_i18n": "config.radius.ldap_bind_dn.description"
+    },
+    {
+      "key": "radius.LdapBindPassword",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Bind Password",
+      "title_i18n": "config.radius.ldap_bind_password.title",
+      "description": "Optional LDAP service account password",
+      "description_i18n": "config.radius.ldap_bind_password.description"
+    },
+    {
+      "key": "radius.LdapTimeoutSeconds",
+      "type": "int",
+      "default": "5",
+      "min": 1,
+      "max": 60,
+      "title": "LDAP Timeout Seconds",
+      "title_i18n": "config.radius.ldap_timeout_seconds.title",
+      "description": "LDAP network timeout in seconds",
+      "description_i18n": "config.radius.ldap_timeout_seconds.description"
+    },
+    {
       "key": "radius.RejectDelayMaxRejects",
       "type": "int",
       "default": "7",

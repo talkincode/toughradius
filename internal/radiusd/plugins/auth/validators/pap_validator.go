@@ -24,6 +24,11 @@ func (v *PAPValidator) CanHandle(authCtx *auth.AuthContext) bool {
 func (v *PAPValidator) Validate(ctx context.Context, authCtx *auth.AuthContext, password string) error {
 	requestPassword := rfc2865.UserPassword_GetString(authCtx.Request.Packet)
 
+	handled, err := validatePasswordWithLDAP(authCtx, requestPassword)
+	if handled {
+		return err
+	}
+
 	if strings.TrimSpace(requestPassword) != password {
 		return errors.NewPasswordMismatchError()
 	}

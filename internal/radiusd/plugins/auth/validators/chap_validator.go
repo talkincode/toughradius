@@ -25,6 +25,12 @@ func (v *CHAPValidator) CanHandle(authCtx *auth.AuthContext) bool {
 
 func (v *CHAPValidator) Validate(ctx context.Context, authCtx *auth.AuthContext, password string) error {
 	chapPassword := rfc2865.CHAPPassword_Get(authCtx.Request.Packet)
+
+	handled, err := validatePasswordWithLDAP(authCtx, password)
+	if handled {
+		return err
+	}
+
 	if len(chapPassword) != 17 {
 		return errors.NewAuthError("radus_reject_passwd_error",
 			"user chap password must be 17 bytes")
