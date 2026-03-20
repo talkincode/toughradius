@@ -27,6 +27,8 @@ type ldapConn struct {
 	*ldap.Conn
 }
 
+const defaultLDAPTimeoutSeconds int64 = 5
+
 var newLDAPClient = func(serverURL string, timeout time.Duration) (ldapClient, error) {
 	conn, err := ldap.DialURL(serverURL)
 	if err != nil {
@@ -36,6 +38,11 @@ var newLDAPClient = func(serverURL string, timeout time.Duration) (ldapClient, e
 	return &ldapConn{Conn: conn}, nil
 }
 
+// validatePasswordWithLDAP validates PAP cleartext password against LDAP when enabled.
+//
+// Returns:
+//   - handled=true when LDAP is enabled and an LDAP auth attempt was made (err indicates result)
+//   - handled=false when LDAP is disabled or configuration is unavailable, allowing local password validation fallback
 func validatePasswordWithLDAP(authCtx *auth.AuthContext, requestPassword string) (bool, error) {
 	cfgMgr, ok := authCtx.Metadata["config_mgr"].(ldapConfigReader)
 	if !ok || cfgMgr == nil {
@@ -71,7 +78,7 @@ func validatePasswordWithLDAP(authCtx *auth.AuthContext, requestPassword string)
 		return true, radiuserrors.NewAuthError(app.MetricsRadiusRejectLdapError, "ldap auth failed: username is empty")
 	}
 
-	timeoutSeconds := int64(5)
+	timeoutSeconds := defaultLDAPTimeoutSeconds
 	if raw := strings.TrimSpace(cfgMgr.GetString("radius", "LdapTimeoutSeconds")); raw != "" {
 		if parsed, err := strconv.ParseInt(raw, 10, 64); err == nil && parsed > 0 {
 			timeoutSeconds = parsed
@@ -122,6 +129,8 @@ func validatePasswordWithLDAP(authCtx *auth.AuthContext, requestPassword string)
 	return true, nil
 }
 
+// isLDAPEnabled parses configurable LDAP enable values.
+// Accepted true values are: "true", "1", "enabled", "yes", "on" (case-insensitive).
 func isLDAPEnabled(value string) bool {
 	switch strings.ToLower(strings.TrimSpace(value)) {
 	case "true", "1", "enabled", "yes", "on":

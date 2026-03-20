@@ -117,9 +117,9 @@ You can fine-tune authentication behavior via system configuration (`sys_config`
 
 This allows you to quickly disable unauthorized EAP methods without interrupting the service.
 
-### LDAP Authentication (Optional)
+### LDAP Authentication (Optional, PAP)
 
-ToughRADIUS supports optional LDAP password verification for PAP/CHAP authentication requests.
+ToughRADIUS supports optional LDAP password verification for PAP authentication requests.
 When enabled, password validation is delegated to LDAP; otherwise, local `radius_user.password` validation is used.
 
 Configure the following keys in `sys_config`:
