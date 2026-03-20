@@ -75,7 +75,10 @@ func validatePasswordWithLDAP(authCtx *auth.AuthContext, requestPassword string)
 		username = strings.TrimSpace(rfc2865.UserName_GetString(authCtx.Request.Packet))
 	}
 	if username == "" {
-		return true, radiuserrors.NewAuthError(app.MetricsRadiusRejectLdapError, "ldap auth failed: username is empty")
+		return true, radiuserrors.NewAuthError(
+			app.MetricsRadiusRejectLdapError,
+			"ldap auth failed: username not found in user context or RADIUS packet",
+		)
 	}
 
 	timeoutSeconds := defaultLDAPTimeoutSeconds
@@ -115,10 +118,13 @@ func validatePasswordWithLDAP(authCtx *auth.AuthContext, requestPassword string)
 	if err != nil {
 		return true, radiuserrors.NewAuthErrorWithCause(app.MetricsRadiusRejectLdapError, "ldap search failed", err)
 	}
-	if len(searchResult.Entries) != 1 {
+	if len(searchResult.Entries) == 0 {
+		return true, radiuserrors.NewAuthError(app.MetricsRadiusRejectLdapError, "ldap user not found")
+	}
+	if len(searchResult.Entries) > 1 {
 		return true, radiuserrors.NewAuthError(
 			app.MetricsRadiusRejectLdapError,
-			fmt.Sprintf("ldap user search returned %d entries", len(searchResult.Entries)),
+			fmt.Sprintf("ldap user search returned multiple entries (%d)", len(searchResult.Entries)),
 		)
 	}
 

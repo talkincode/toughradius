@@ -76,7 +76,7 @@
       "default": "false",
       "title": "Enable LDAP Authentication",
       "title_i18n": "config.radius.ldap_enabled.title",
-      "description": "Enable LDAP password authentication for PAP/CHAP requests",
+      "description": "Enable LDAP password authentication for PAP requests only",
       "description_i18n": "config.radius.ldap_enabled.description"
     },
     {

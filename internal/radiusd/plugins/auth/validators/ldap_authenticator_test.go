@@ -73,6 +73,15 @@ func TestValidatePasswordWithLDAP_Disabled(t *testing.T) {
 	assert.False(t, handled)
 }
 
+func TestIsLDAPEnabled_TruthyValues(t *testing.T) {
+	for _, v := range []string{"true", "1", "enabled", "yes", "on", " TRUE "} {
+		assert.True(t, isLDAPEnabled(v), "value %q should be truthy", v)
+	}
+	for _, v := range []string{"false", "0", "disabled", "no", "off", ""} {
+		assert.False(t, isLDAPEnabled(v), "value %q should be falsy", v)
+	}
+}
+
 func TestValidatePasswordWithLDAP_MissingRequiredConfig(t *testing.T) {
 	authCtx := &auth.AuthContext{
 		User: &domain.RadiusUser{Username: "alice"},
@@ -181,4 +190,63 @@ func TestValidatePasswordWithLDAP_ConnectionError(t *testing.T) {
 	handled, err := validatePasswordWithLDAP(authCtx, "userpass")
 	require.Error(t, err)
 	assert.True(t, handled)
+}
+
+func TestValidatePasswordWithLDAP_InvalidTimeoutFallsBackToDefault(t *testing.T) {
+	origFactory := newLDAPClient
+	t.Cleanup(func() { newLDAPClient = origFactory })
+
+	client := &fakeLDAPClient{
+		searchDNs: []string{"uid=alice,ou=users,dc=example,dc=com"},
+	}
+	newLDAPClient = func(serverURL string, timeout time.Duration) (ldapClient, error) {
+		assert.Equal(t, time.Duration(defaultLDAPTimeoutSeconds)*time.Second, timeout)
+		return client, nil
+	}
+
+	authCtx := &auth.AuthContext{
+		User: &domain.RadiusUser{Username: "alice"},
+		Metadata: map[string]interface{}{
+			"config_mgr": &mockLDAPConfig{values: map[string]string{
+				"radius.LdapEnabled":        "true",
+				"radius.LdapServer":         "ldap://127.0.0.1:389",
+				"radius.LdapBaseDN":         "dc=example,dc=com",
+				"radius.LdapTimeoutSeconds": "invalid",
+			}},
+		},
+	}
+
+	handled, err := validatePasswordWithLDAP(authCtx, "userpass")
+	require.NoError(t, err)
+	assert.True(t, handled)
+}
+
+func TestValidatePasswordWithLDAP_MultipleSearchResults(t *testing.T) {
+	origFactory := newLDAPClient
+	t.Cleanup(func() { newLDAPClient = origFactory })
+
+	newLDAPClient = func(serverURL string, timeout time.Duration) (ldapClient, error) {
+		return &fakeLDAPClient{
+			searchDNs: []string{
+				"uid=alice,ou=users,dc=example,dc=com",
+				"uid=alice2,ou=users,dc=example,dc=com",
+			},
+		}, nil
+	}
+
+	authCtx := &auth.AuthContext{
+		User: &domain.RadiusUser{Username: "alice"},
+		Metadata: map[string]interface{}{
+			"config_mgr": &mockLDAPConfig{values: map[string]string{
+				"radius.LdapEnabled": "true",
+				"radius.LdapServer":  "ldap://127.0.0.1:389",
+				"radius.LdapBaseDN":  "dc=example,dc=com",
+			}},
+		},
+	}
+
+	handled, err := validatePasswordWithLDAP(authCtx, "userpass")
+	require.Error(t, err)
+	assert.True(t, handled)
+	assert.Contains(t, err.Error(), "multiple entries")
 }

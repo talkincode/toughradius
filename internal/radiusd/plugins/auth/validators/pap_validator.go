@@ -24,6 +24,7 @@ func (v *PAPValidator) CanHandle(authCtx *auth.AuthContext) bool {
 func (v *PAPValidator) Validate(ctx context.Context, authCtx *auth.AuthContext, password string) error {
 	requestPassword := rfc2865.UserPassword_GetString(authCtx.Request.Packet)
 
+	// LDAP takes precedence for PAP when enabled; local password comparison is used as fallback.
 	handled, err := validatePasswordWithLDAP(authCtx, requestPassword)
 	if handled {
 		return err
