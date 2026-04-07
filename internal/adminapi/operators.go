@@ -59,7 +59,8 @@ func updateCurrentOperator(c echo.Context) error {
 	var operator domain.SysOpr
 	if err := GetDB(c).Where("id = ?", currentOpr.ID).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
-	} else if err != nil {
+	}
+	if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", err.Error())
 	}
 
@@ -266,7 +267,7 @@ func createOperator(c echo.Context) error {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
 
-	// PasswordEncrypt（Using bcrypt + pepper）
+	// PasswordEncrypt (using bcrypt + pepper)
 	hashedPassword, hashErr := common.HashPassword(payload.Password)
 	if hashErr != nil {
 		return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
