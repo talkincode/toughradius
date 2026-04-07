@@ -52,7 +52,11 @@ func main() {
 	}
 
 	// Hash the new password
-	hashedPassword := common.Sha256HashWithSalt(password, common.GetSecretSalt())
+	hashedPassword, err := common.HashPassword(password)
+	if err != nil {
+		fmt.Printf("Error: Failed to hash password: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Update the password
 	result := db.Model(&domain.SysOpr{}).

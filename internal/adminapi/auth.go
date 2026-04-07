@@ -49,8 +49,7 @@ func loginHandler(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query user", err.Error())
 	}
 
-	hashed := common.Sha256HashWithSalt(req.Password, common.GetSecretSalt())
-	if hashed != operator.Password {
+	if !common.VerifyPassword(req.Password, operator.Password) {
 		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Incorrect username or password", nil)
 	}
 	if strings.EqualFold(operator.Status, common.DISABLED) {

@@ -19,10 +19,11 @@ import (
 
 // createTestOperator creates test operator data
 func createTestOperator(db *gorm.DB, username string, level string) *domain.SysOpr {
+	hashedPassword, _ := common.HashPassword("Password123") //nolint:errcheck // deterministic in test setup
 	opr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
 		Username:  username,
-		Password:  common.Sha256HashWithSalt("Password123", common.GetSecretSalt()),
+		Password:  hashedPassword,
 		Realname:  "Test Operator",
 		Mobile:    "13800138000",
 		Email:     "test@example.com",
@@ -498,8 +499,7 @@ func TestUpdateOperator(t *testing.T) {
 				// Validate the password was updated (need to re-query the database)
 				var updatedOpr domain.SysOpr
 				db.Where("id = ?", opr.ID).First(&updatedOpr)
-				expectedHash := common.Sha256HashWithSalt("NewPass456", common.GetSecretSalt())
-				assert.Equal(t, expectedHash, updatedOpr.Password)
+				assert.True(t, common.VerifyPassword("NewPass456", updatedOpr.Password))
 			},
 		},
 		{
@@ -625,6 +625,46 @@ func TestUpdateOperator(t *testing.T) {
 	}
 }
 
+func TestUpdateCurrentOperatorKeepPassword(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
+
+	opr := createTestOperator(db, "selfadmin", "admin")
+	originalPassword := opr.Password
+
+	e := setupTestEcho()
+	requestBody := `{
+		"email": "selfupdated@example.com",
+		"mobile": "13912345678"
+	}`
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/system/operators/me", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+	c.Set("current_operator", nil)
+	setJWTUser(t, c, opr)
+
+	err := updateCurrentOperator(c)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var response Response
+	err = json.Unmarshal(rec.Body.Bytes(), &response)
+	require.NoError(t, err)
+	dataBytes, _ := json.Marshal(response.Data)
+	var updatedResp domain.SysOpr
+	_ = json.Unmarshal(dataBytes, &updatedResp) //nolint:errcheck
+	assert.Empty(t, updatedResp.Password)
+
+	var updatedDB domain.SysOpr
+	err = db.Where("id = ?", opr.ID).First(&updatedDB).Error
+	require.NoError(t, err)
+	assert.Equal(t, originalPassword, updatedDB.Password)
+	assert.Equal(t, "selfupdated@example.com", updatedDB.Email)
+	assert.Equal(t, "13912345678", updatedDB.Mobile)
+}
+
 // TestOperatorEdgeCases Test edge cases
 func TestOperatorEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
@@ -680,8 +720,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		// Validate the password is stored correctly (trimmed then hashed)
 		var savedOpr domain.SysOpr
 		db.Where("id = ?", opr.ID).First(&savedOpr)
-		expectedHash := common.Sha256HashWithSalt("Password123", common.GetSecretSalt())
-		assert.Equal(t, expectedHash, savedOpr.Password)
+		assert.True(t, common.VerifyPassword("Password123", savedOpr.Password))
 	})
 
 	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {

@@ -55,6 +55,16 @@ func updateCurrentOperator(c echo.Context) error {
 		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Unable to retrieve current user information", nil)
 	}
 
+	// resolveOperatorFromContext masks password for security, so reload full record before Save.
+	var operator domain.SysOpr
+	queryErr := GetDB(c).Where("id = ?", currentOpr.ID).First(&operator).Error
+	if errors.Is(queryErr, gorm.ErrRecordNotFound) {
+		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
+	}
+	if queryErr != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", queryErr.Error())
+	}
+
 	var payload operatorPayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse operator parameters", nil)
@@ -67,14 +77,14 @@ func updateCurrentOperator(c echo.Context) error {
 			return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "Username length must be between 3 and 30 characters", nil)
 		}
 		// Checkusername already used by other account
-		if username != currentOpr.Username {
+		if username != operator.Username {
 			var exists int64
-			GetDB(c).Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, currentOpr.ID).Count(&exists)
+			GetDB(c).Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, operator.ID).Count(&exists)
 			if exists > 0 {
 				return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 			}
 		}
-		currentOpr.Username = username
+		operator.Username = username
 	}
 	if payload.Password != "" {
 		password := strings.TrimSpace(payload.Password)
@@ -84,34 +94,38 @@ func updateCurrentOperator(c echo.Context) error {
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
 		}
-		currentOpr.Password = common.Sha256HashWithSalt(password, common.GetSecretSalt())
+		hashedPassword, hashErr := common.HashPassword(password)
+		if hashErr != nil {
+			return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
+		}
+		operator.Password = hashedPassword
 	}
 	if payload.Realname != "" {
-		currentOpr.Realname = payload.Realname
+		operator.Realname = payload.Realname
 	}
 	if payload.Mobile != "" {
 		if !validutil.IsCnMobile(payload.Mobile) {
 			return fail(c, http.StatusBadRequest, "INVALID_MOBILE", "Invalid mobile number format", nil)
 		}
-		currentOpr.Mobile = payload.Mobile
+		operator.Mobile = payload.Mobile
 	}
 	if payload.Email != "" {
 		if !validutil.IsEmail(payload.Email) {
 			return fail(c, http.StatusBadRequest, "INVALID_EMAIL", "Invalid email format", nil)
 		}
-		currentOpr.Email = payload.Email
+		operator.Email = payload.Email
 	}
 	if payload.Remark != "" {
-		currentOpr.Remark = payload.Remark
+		operator.Remark = payload.Remark
 	}
-	currentOpr.UpdatedAt = time.Now()
+	operator.UpdatedAt = time.Now()
 
-	if err := GetDB(c).Save(&currentOpr).Error; err != nil {
+	if err := GetDB(c).Save(&operator).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to update operator", err.Error())
 	}
 
-	currentOpr.Password = ""
-	return ok(c, currentOpr)
+	operator.Password = ""
+	return ok(c, operator)
 }
 
 // List operators（Only super admin and admin can access）
@@ -254,8 +268,11 @@ func createOperator(c echo.Context) error {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
 
-	// PasswordEncrypt（Using SHA256 + Salt，consistent with login validation）
-	hashedPassword := common.Sha256HashWithSalt(payload.Password, common.GetSecretSalt())
+	// PasswordEncrypt (using bcrypt + pepper)
+	hashedPassword, hashErr := common.HashPassword(payload.Password)
+	if hashErr != nil {
+		return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
+	}
 
 	// StatusHandle
 	status := strings.ToLower(payload.Status)
@@ -353,7 +370,11 @@ func updateOperator(c echo.Context) error {
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
 		}
-		operator.Password = common.Sha256HashWithSalt(password, common.GetSecretSalt())
+		hashedPassword, hashErr := common.HashPassword(password)
+		if hashErr != nil {
+			return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
+		}
+		operator.Password = hashedPassword
 	}
 	if payload.Realname != "" {
 		operator.Realname = payload.Realname

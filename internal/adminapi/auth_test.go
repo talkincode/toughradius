@@ -25,10 +25,13 @@ func setupAuthTest(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext, *domain.
 	db, e, appCtx := CreateTestAppContext(t)
 
 	// Create the test user
+	hashedPassword, err := common.HashPassword("password123")
+	require.NoError(t, err)
+
 	testOpr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
 		Username:  "testuser",
-		Password:  common.Sha256HashWithSalt("password123", common.GetSecretSalt()),
+		Password:  hashedPassword,
 		Realname:  "Test User",
 		Email:     "test@example.com",
 		Mobile:    "13800138000",
