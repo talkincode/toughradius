@@ -625,6 +625,46 @@ func TestUpdateOperator(t *testing.T) {
 	}
 }
 
+func TestUpdateCurrentOperatorKeepPassword(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	_ = db.AutoMigrate(&domain.SysOpr{}) //nolint:errcheck
+
+	opr := createTestOperator(db, "selfadmin", "admin")
+	originalPassword := opr.Password
+
+	e := setupTestEcho()
+	requestBody := `{
+		"email": "selfupdated@example.com",
+		"mobile": "13912345678"
+	}`
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/system/operators/me", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+	c.Set("current_operator", nil)
+	setJWTUser(t, c, opr)
+
+	err := updateCurrentOperator(c)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var response Response
+	err = json.Unmarshal(rec.Body.Bytes(), &response)
+	require.NoError(t, err)
+	dataBytes, _ := json.Marshal(response.Data)
+	var updatedResp domain.SysOpr
+	_ = json.Unmarshal(dataBytes, &updatedResp) //nolint:errcheck
+	assert.Empty(t, updatedResp.Password)
+
+	var updatedDB domain.SysOpr
+	err = db.Where("id = ?", opr.ID).First(&updatedDB).Error
+	require.NoError(t, err)
+	assert.Equal(t, originalPassword, updatedDB.Password)
+	assert.Equal(t, "selfupdated@example.com", updatedDB.Email)
+	assert.Equal(t, "13912345678", updatedDB.Mobile)
+}
+
 // TestOperatorEdgeCases Test edge cases
 func TestOperatorEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
