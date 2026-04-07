@@ -42,6 +42,7 @@ func escapeUserLikePattern(s string) string {
 type UserRequest struct {
 	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
 	ProfileID  interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
+	LegacyProfileID interface{} `json:"profileid"`                              // Legacy fallback field from older clients, used when profile_id is missing
 	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // Real name
 	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // Email
 	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
@@ -141,6 +142,7 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 type UserUpdateRequest struct {
 	NodeID          interface{} `json:"node_id"`                                       // Can be int64 or string
 	ProfileID       interface{} `json:"profile_id"`                                    // Can be int64 or string
+	LegacyProfileID interface{} `json:"profileid"`                                     // Legacy fallback field from older clients, used when profile_id is missing
 	Realname        string      `json:"realname" validate:"omitempty,max=100"`         // Real name
 	Email           string      `json:"email" validate:"omitempty,email,max=100"`      // Email
 	Mobile          string      `json:"mobile" validate:"omitempty,max=20"`            // Mobile number (optional, max 20 characters)
@@ -243,6 +245,19 @@ func (ur *UserUpdateRequest) toRadiusUser() *domain.RadiusUser {
 	return user
 }
 
+func isEmptyValue(v interface{}) bool {
+	if v == nil {
+		return true
+	}
+	if s, ok := v.(string); ok {
+		return strings.TrimSpace(s) == ""
+	}
+	if n, ok := v.(float64); ok {
+		return n == 0
+	}
+	return false
+}
+
 func registerUserRoutes() {
 	webserver.ApiGET("/users", listRadiusUsers)
 	webserver.ApiGET("/users/:id", getRadiusUser)
@@ -311,6 +326,9 @@ func createRadiusUser(c echo.Context) error {
 	var req UserRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
+	}
+	if isEmptyValue(req.ProfileID) {
+		req.ProfileID = req.LegacyProfileID
 	}
 
 	// Auto-validate request parameters
@@ -393,6 +411,9 @@ func updateRadiusUser(c echo.Context) error {
 	var req UserUpdateRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
+	}
+	if isEmptyValue(req.ProfileID) {
+		req.ProfileID = req.LegacyProfileID
 	}
 
 	// Auto-validate request parameters
