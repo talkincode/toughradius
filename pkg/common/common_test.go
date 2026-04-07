@@ -25,6 +25,22 @@ func TestSha256HashWithSalt(t *testing.T) {
 	t.Log(hash)
 }
 
+func TestHashPasswordAndVerify(t *testing.T) {
+	hash, err := HashPassword("password123")
+	if err != nil {
+		t.Fatalf("HashPassword() error = %v", err)
+	}
+	if hash == "" {
+		t.Fatal("expected non-empty bcrypt hash")
+	}
+	if !VerifyPassword("password123", hash) {
+		t.Fatal("expected password verification success")
+	}
+	if VerifyPassword("wrong-password", hash) {
+		t.Fatal("expected password verification failure")
+	}
+}
+
 func TestInSlice(t *testing.T) {
 	tests := []struct {
 		name     string

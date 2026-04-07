@@ -19,10 +19,11 @@ import (
 
 // createTestOperator creates test operator data
 func createTestOperator(db *gorm.DB, username string, level string) *domain.SysOpr {
+	hashedPassword, _ := common.HashPassword("Password123") //nolint:errcheck // deterministic in test setup
 	opr := &domain.SysOpr{
 		ID:        common.UUIDint64(),
 		Username:  username,
-		Password:  common.Sha256HashWithSalt("Password123", common.GetSecretSalt()),
+		Password:  hashedPassword,
 		Realname:  "Test Operator",
 		Mobile:    "13800138000",
 		Email:     "test@example.com",
@@ -498,8 +499,7 @@ func TestUpdateOperator(t *testing.T) {
 				// Validate the password was updated (need to re-query the database)
 				var updatedOpr domain.SysOpr
 				db.Where("id = ?", opr.ID).First(&updatedOpr)
-				expectedHash := common.Sha256HashWithSalt("NewPass456", common.GetSecretSalt())
-				assert.Equal(t, expectedHash, updatedOpr.Password)
+				assert.True(t, common.VerifyPassword("NewPass456", updatedOpr.Password))
 			},
 		},
 		{
@@ -720,8 +720,7 @@ func TestOperatorEdgeCases(t *testing.T) {
 		// Validate the password is stored correctly (trimmed then hashed)
 		var savedOpr domain.SysOpr
 		db.Where("id = ?", opr.ID).First(&savedOpr)
-		expectedHash := common.Sha256HashWithSalt("Password123", common.GetSecretSalt())
-		assert.Equal(t, expectedHash, savedOpr.Password)
+		assert.True(t, common.VerifyPassword("Password123", savedOpr.Password))
 	})
 
 	t.Run("Updating non-existent fields should not affect others", func(t *testing.T) {

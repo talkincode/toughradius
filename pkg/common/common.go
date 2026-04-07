@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"crypto/rand"
 	sha256_ "crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/pkg/errors"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
@@ -97,6 +99,35 @@ func Sha256HashWithSalt(src string, salt string) string {
 	h.Write([]byte(salt))
 	bs := h.Sum(nil)
 	return hex.EncodeToString(bs)
+}
+
+// HashPassword hashes password with bcrypt and a secret salt (pepper).
+func HashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password+GetSecretSalt()), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hash), nil
+}
+
+// VerifyPassword checks password against a bcrypt hash.
+func VerifyPassword(password, hashedPassword string) bool {
+	if !IsBcryptHash(hashedPassword) {
+		return false
+	}
+	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password+GetSecretSalt())) == nil
+}
+
+// IsBcryptHash checks whether the given hash uses bcrypt format.
+func IsBcryptHash(hashedPassword string) bool {
+	return strings.HasPrefix(hashedPassword, "$2a$") ||
+		strings.HasPrefix(hashedPassword, "$2b$") ||
+		strings.HasPrefix(hashedPassword, "$2y$")
+}
+
+// ConstantTimeEquals compares two strings in constant time.
+func ConstantTimeEquals(a, b string) bool {
+	return subtle.ConstantTimeCompare([]byte(a), []byte(b)) == 1
 }
 
 // InSlice checks if a string is in a slice

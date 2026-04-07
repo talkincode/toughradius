@@ -91,7 +91,11 @@ func updateCurrentOperator(c echo.Context) error {
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
 		}
-		operator.Password = common.Sha256HashWithSalt(password, common.GetSecretSalt())
+		hashedPassword, hashErr := common.HashPassword(password)
+		if hashErr != nil {
+			return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
+		}
+		operator.Password = hashedPassword
 	}
 	if payload.Realname != "" {
 		operator.Realname = payload.Realname
@@ -261,8 +265,11 @@ func createOperator(c echo.Context) error {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
 
-	// PasswordEncrypt（Using SHA256 + Salt，consistent with login validation）
-	hashedPassword := common.Sha256HashWithSalt(payload.Password, common.GetSecretSalt())
+	// PasswordEncrypt（Using bcrypt + pepper）
+	hashedPassword, hashErr := common.HashPassword(payload.Password)
+	if hashErr != nil {
+		return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
+	}
 
 	// StatusHandle
 	status := strings.ToLower(payload.Status)
@@ -360,7 +367,11 @@ func updateOperator(c echo.Context) error {
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
 		}
-		operator.Password = common.Sha256HashWithSalt(password, common.GetSecretSalt())
+		hashedPassword, hashErr := common.HashPassword(password)
+		if hashErr != nil {
+			return fail(c, http.StatusInternalServerError, "HASH_PASSWORD_ERROR", "Failed to hash password", hashErr.Error())
+		}
+		operator.Password = hashedPassword
 	}
 	if payload.Realname != "" {
 		operator.Realname = payload.Realname

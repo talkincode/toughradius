@@ -16,10 +16,14 @@ func (a *Application) checkSuper() {
 	const superUsername = "admin"
 	const defaultPassword = "toughradius"
 
-	hashedPassword := common.Sha256HashWithSalt(defaultPassword, common.GetSecretSalt())
+	hashedPassword, err := common.HashPassword(defaultPassword)
+	if err != nil {
+		zap.L().Error("failed to hash default super admin password", zap.Error(err))
+		return
+	}
 
 	var operator domain.SysOpr
-	err := a.gormDB.Where("username = ?", superUsername).First(&operator).Error
+	err = a.gormDB.Where("username = ?", superUsername).First(&operator).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		if err := a.gormDB.Create(&domain.SysOpr{
