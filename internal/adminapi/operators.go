@@ -55,6 +55,7 @@ func updateCurrentOperator(c echo.Context) error {
 		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Unable to retrieve current user information", nil)
 	}
 
+	// resolveOperatorFromContext masks password for security, so reload full record before Save.
 	var operator domain.SysOpr
 	if err := GetDB(c).Where("id = ?", currentOpr.ID).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
