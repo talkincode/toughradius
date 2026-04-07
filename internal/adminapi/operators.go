@@ -57,11 +57,12 @@ func updateCurrentOperator(c echo.Context) error {
 
 	// resolveOperatorFromContext masks password for security, so reload full record before Save.
 	var operator domain.SysOpr
-	if err := GetDB(c).Where("id = ?", currentOpr.ID).First(&operator).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	queryErr := GetDB(c).Where("id = ?", currentOpr.ID).First(&operator).Error
+	if errors.Is(queryErr, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "OPERATOR_NOT_FOUND", "Operator not found", nil)
 	}
-	if err != nil {
-		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", err.Error())
+	if queryErr != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query operators", queryErr.Error())
 	}
 
 	var payload operatorPayload
