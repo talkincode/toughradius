@@ -53,9 +53,11 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 		Nas:           nas,
 		VendorRequest: vendorReq,
 		IsMacAuth:     isMacAuth,
-		Metadata: map[string]interface{}{
-			"profile_cache": s.AppContext().ProfileCache(), // Add profile cache for dynamic attribute resolution
-		},
+		Metadata:      map[string]interface{}{},
+	}
+	if appCtx := s.AppContext(); appCtx != nil {
+		authCtx.Metadata["profile_cache"] = appCtx.ProfileCache() // Add profile cache for dynamic attribute resolution
+		authCtx.Metadata["config_mgr"] = appCtx.ConfigMgr()
 	}
 
 	var password string

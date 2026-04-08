@@ -117,6 +117,21 @@ You can fine-tune authentication behavior via system configuration (`sys_config`
 
 This allows you to quickly disable unauthorized EAP methods without interrupting the service.
 
+### LDAP Authentication (Optional, PAP)
+
+ToughRADIUS supports optional LDAP password verification for PAP authentication requests.
+When enabled, password validation is delegated to LDAP; otherwise, local `radius_user.password` validation is used.
+
+Configure the following keys in `sys_config`:
+
+- `radius.LdapEnabled`: Enable/disable LDAP auth (`false` by default).
+- `radius.LdapServer`: LDAP URL (e.g., `ldap://127.0.0.1:389` or `ldaps://ldap.example.com:636`).
+- `radius.LdapBaseDN`: Base DN used to search users.
+- `radius.LdapUserFilter`: User filter template (`(uid={username})` by default).
+- `radius.LdapBindDN`: Optional service account DN for LDAP search.
+- `radius.LdapBindPassword`: Optional service account password.
+- `radius.LdapTimeoutSeconds`: LDAP network timeout in seconds (`5` by default).
+
 ### Running
 
 ```bash
