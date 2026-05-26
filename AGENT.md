@@ -1,5 +1,17 @@
 # ToughRADIUS AI Agent Development Guide
 
+## Product Scope Baseline
+
+### Mandatory Requirement: Development Must Follow the Feature Checklist
+
+**All future development must stay anchored to the project feature checklist.**
+
+- The canonical feature baseline is [`docs/feature-checklist.md`](docs/feature-checklist.md).
+- Before implementing a requirement, identify the matching feature ID such as `TR-F001` and keep the task, issue, PR, tests, and review notes aligned with that scope.
+- If a request does not map to an existing feature ID, update the feature checklist first with the new scope, status, acceptance boundary, and rationale before changing code.
+- Do not casually expand ToughRADIUS into unrelated product directions. Items listed as non-goals in the checklist are out of scope unless the checklist is explicitly revised first.
+- Bug fixes, refactors, UI changes, and protocol extensions must preserve the acceptance boundaries in the checklist or update the checklist in the same change.
+
 ## 🤖 AI Agent Working Guidelines
 
 ### 🔍 Mandatory Requirement: Understand Existing Code Before Editing

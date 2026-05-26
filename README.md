@@ -136,6 +136,7 @@ Default Admin Account:
 
 ## 📖 Documentation
 
+- [Feature Checklist](docs/feature-checklist.md) / [English](docs/feature-checklist.en.md) - Product scope baseline for aligning future development with feature IDs and avoiding uncontrolled direction changes
 - [Architecture](docs/v9-architecture.md) - v9 version architecture design
 - [React Admin Refactor](docs/react-admin-refactor.md) - Frontend management interface explanation
 - [SQLite Support](docs/sqlite-support.md) - SQLite database configuration
