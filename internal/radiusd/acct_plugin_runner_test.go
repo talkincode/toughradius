@@ -15,14 +15,18 @@ import (
 )
 
 type mockAccountingHandler struct {
-	name      string
-	calls     *int32
-	canHandle bool
-	err       error
+	name       string
+	calls      *int32
+	canHandle  bool
+	expectType int
+	err        error
 }
 
 func (h *mockAccountingHandler) Name() string { return h.name }
 func (h *mockAccountingHandler) CanHandle(ctx *accounting.AccountingContext) bool {
+	if h.expectType != 0 {
+		return ctx.StatusType == h.expectType
+	}
 	return h.canHandle
 }
 func (h *mockAccountingHandler) Handle(ctx *accounting.AccountingContext) error {
@@ -91,5 +95,41 @@ func TestHandleAccountingWithPluginsNoHandler(t *testing.T) {
 	)
 	if err == nil {
 		t.Fatalf("expected error when no handlers registered")
+	}
+}
+
+func TestHandleAccountingWithPluginsParsesInterimUpdateStatusType(t *testing.T) {
+	registry.ResetForTest()
+	t.Cleanup(registry.ResetForTest)
+
+	var calls int32
+	registry.RegisterAccountingHandler(&mockAccountingHandler{
+		name:       "interim-update-handler",
+		calls:      &calls,
+		expectType: int(rfc2866.AcctStatusType_Value_InterimUpdate),
+	})
+
+	acctSvc := &AcctService{RadiusService: &RadiusService{}}
+	packet := radius.New(radius.CodeAccountingRequest, []byte("secret"))
+	_ = rfc2866.AcctStatusType_Set(packet, rfc2866.AcctStatusType_Value_InterimUpdate)
+	req := &radius.Request{
+		Packet:     packet,
+		RemoteAddr: &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 1813},
+	}
+
+	err := acctSvc.HandleAccountingWithPlugins(
+		context.Background(),
+		req,
+		&vendorparsers.VendorRequest{},
+		"alice",
+		&domain.NetNas{},
+		"10.0.0.1",
+	)
+	if err != nil {
+		t.Fatalf("expected Interim-Update handler to be called, got error: %v", err)
+	}
+
+	if got := atomic.LoadInt32(&calls); got != 1 {
+		t.Fatalf("expected handler to be called once, got %d", got)
 	}
 }
