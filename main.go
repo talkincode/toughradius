@@ -24,11 +24,14 @@ import (
 var g errgroup.Group
 
 // Build information, injected via ldflags at compile time
-// Example: go build -ldflags "-X main.version=1.0.0 -X main.buildTime=2024-01-01T00:00:00Z -X main.gitCommit=abc123"
+// Example: go build -ldflags "-X main.Version=1.0.0 -X main.BuildTime=2024-01-01T00:00:00Z -X main.GitCommit=abc123"
 var (
-	version   = "develop"
-	buildTime = "unknown"
-	gitCommit = "unknown"
+	// Version is the application version injected at build time.
+	Version = "develop"
+	// BuildTime is the UTC build timestamp injected at build time.
+	BuildTime = "unknown"
+	// GitCommit is the source commit hash injected at build time.
+	GitCommit = "unknown"
 )
 
 var (
@@ -40,9 +43,9 @@ var (
 )
 
 func PrintVersion() {
-	_, _ = fmt.Fprintf(os.Stdout, "ToughRADIUS %s\n", version)                         //nolint:errcheck
-	_, _ = fmt.Fprintf(os.Stdout, "Build Time: %s\n", buildTime)                       //nolint:errcheck
-	_, _ = fmt.Fprintf(os.Stdout, "Git Commit: %s\n", gitCommit)                       //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "ToughRADIUS %s\n", Version)                         //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "Build Time: %s\n", BuildTime)                       //nolint:errcheck
+	_, _ = fmt.Fprintf(os.Stdout, "Git Commit: %s\n", GitCommit)                       //nolint:errcheck
 	_, _ = fmt.Fprintf(os.Stdout, "Go Version: %s\n", runtime.Version())               //nolint:errcheck
 	_, _ = fmt.Fprintf(os.Stdout, "OS/Arch:    %s/%s\n", runtime.GOOS, runtime.GOARCH) //nolint:errcheck
 }
