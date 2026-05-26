@@ -116,15 +116,15 @@ func (h *MD5Handler) buildChallengeRequest(identifier uint8, challenge []byte) [
 	// EAP-MD5 format:
 	// Code (1) | Identifier (1) | Length (2) | Type (1) | Value-Size (1) | Value (16) | Name (optional)
 
-	valueSize := byte(len(challenge))
+	valueSize := byte(len(challenge)) //nolint:gosec // RADIUS challenge size is bounded by protocol (max 253 bytes)
 	dataLen := 1 + len(challenge) // Value-Size + Value
 	totalLen := 5 + dataLen       // EAP header (4) + Type (1) + data
 
 	buffer := make([]byte, totalLen)
 	buffer[0] = eap.CodeRequest
 	buffer[1] = identifier
-	buffer[2] = byte(totalLen >> 8)
-	buffer[3] = byte(totalLen)
+	buffer[2] = byte(totalLen >> 8) //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
+	buffer[3] = byte(totalLen)      //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
 	buffer[4] = eap.TypeMD5Challenge
 	buffer[5] = valueSize
 	copy(buffer[6:], challenge)

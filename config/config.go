@@ -430,7 +430,7 @@ var DefaultAppConfig = &AppConfig{
 		Workdir:  "/var/toughradius",
 		Debug:    true,
 	},
-	Web: WebConfig{
+	Web: WebConfig{ //nolint:gosec // Default secret is a placeholder for development/testing only
 		Host:    "0.0.0.0",
 		Port:    1816,
 		TlsPort: 1817,

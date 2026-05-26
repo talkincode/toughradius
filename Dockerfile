@@ -9,7 +9,7 @@ RUN npm run build && \
      echo "Frontend build completed:" && \
      ls -lah dist/
 
-FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS builder
+FROM --platform=$BUILDPLATFORM golang:1.25-bookworm AS builder
 
 ARG TARGETPLATFORM
 ARG TARGETOS

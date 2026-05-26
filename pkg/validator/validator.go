@@ -142,7 +142,7 @@ func registerCustomValidations(v *validator.Validate) {
 	// Validate port numbers
 	_ = v.RegisterValidation("port", func(fl validator.FieldLevel) bool { //nolint:errcheck
 		field := fl.Field()
-		if field.Kind() == reflect.Ptr {
+		if field.Kind() == reflect.Pointer {
 			if field.IsNil() {
 				return true
 			}

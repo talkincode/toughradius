@@ -123,7 +123,7 @@ func TestMD5Handler_buildChallengeRequest(t *testing.T) {
 	assert.Equal(t, expectedLen, actualLen, "Length should be correct")
 
 	// Verify value-size
-	assert.Equal(t, byte(len(challenge)), result[5], "Value-Size should be challenge length")
+	assert.Equal(t, byte(len(challenge)), result[5], "Value-Size should be challenge length") //nolint:gosec // challenge length is bounded by RADIUS protocol
 
 	// Verify challenge is included
 	assert.Equal(t, challenge, result[6:6+len(challenge)], "Challenge should be included")
@@ -274,7 +274,7 @@ func TestMD5Handler_buildChallengeRequest_VariousSizes(t *testing.T) {
 			assert.Equal(t, expectedLen, actualLen)
 
 			// Check value-size
-			assert.Equal(t, byte(len(tt.challenge)), result[5])
+			assert.Equal(t, byte(len(tt.challenge)), result[5]) //nolint:gosec // challenge length is bounded by RADIUS protocol
 		})
 	}
 }

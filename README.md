@@ -44,7 +44,7 @@ A powerful, open-source RADIUS server designed for ISPs, enterprise networks, an
 
 ### Prerequisites
 
-- Go 1.24+ (for building from source)
+- Go 1.25+ (for building from source)
 - PostgreSQL or SQLite
 - Node.js 18+ (for frontend development)
 

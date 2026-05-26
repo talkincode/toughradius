@@ -23,7 +23,7 @@ func (msg *EAPMessage) String() string {
 	builder.WriteString(", Type=")
 	builder.WriteString(strconv.FormatUint(uint64(msg.Type), 10))
 	builder.WriteString(", Data=")
-	builder.WriteString(fmt.Sprintf("%x", msg.Data))
+	fmt.Fprintf(&builder, "%x", msg.Data)
 	builder.WriteString("}")
 	return builder.String()
 }
