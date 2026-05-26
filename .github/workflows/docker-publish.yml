@@ -48,7 +48,7 @@ jobs:
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
@@ -60,8 +60,8 @@ jobs:
           tags: |
             talkincode/toughradius:latest
             talkincode/toughradius:${{ steps.version.outputs.version }}
-            ghcr.io/talkincode/toughradius:latest
-            ghcr.io/talkincode/toughradius:${{ steps.version.outputs.version }}
+            ghcr.io/${{ github.repository_owner }}/toughradius:latest
+            ghcr.io/${{ github.repository_owner }}/toughradius:${{ steps.version.outputs.version }}
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
