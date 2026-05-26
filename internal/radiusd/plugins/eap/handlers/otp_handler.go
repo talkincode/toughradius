@@ -118,8 +118,8 @@ func (h *OTPHandler) buildChallengeRequest(identifier uint8, challenge []byte) [
 	buffer := make([]byte, totalLen)
 	buffer[0] = eap.CodeRequest
 	buffer[1] = identifier
-	buffer[2] = byte(totalLen >> 8)
-	buffer[3] = byte(totalLen)
+	buffer[2] = byte(totalLen >> 8) //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
+	buffer[3] = byte(totalLen)      //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
 	buffer[4] = eap.TypeOTP
 	copy(buffer[5:], challenge)
 

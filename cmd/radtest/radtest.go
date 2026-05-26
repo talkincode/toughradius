@@ -157,7 +157,7 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatalf("%s failed: %v", subcommand, err)
+		log.Fatalf("%s failed: %v", subcommand, err) //nolint:gosec // subcommand is a controlled string, not user-supplied
 	}
 }
 
@@ -277,7 +277,7 @@ func runAuth(opts *options) error {
 		return err
 	}
 	addr := fmt.Sprintf("%s:%d", opts.server, opts.authPort)
-	log.Printf("Sending Access-Request to %s (user=%s)", addr, opts.username)
+	log.Printf("Sending Access-Request to %s (user=%s)", addr, opts.username) //nolint:gosec // addr and username are CLI tool inputs, log injection risk is acceptable
 	logPacket("-> Access-Request", pkt)
 	resp, err := sendPacket(pkt, addr, opts.timeout)
 	if err != nil {
@@ -316,7 +316,7 @@ func runAcct(opts *options) error {
 		return err
 	}
 	addr := fmt.Sprintf("%s:%d", opts.server, opts.acctPort)
-	log.Printf("Sending Accounting-Request (%s) to %s (session=%s)", strings.ToUpper(opts.acctType), addr, sessionID)
+	log.Printf("Sending Accounting-Request (%s) to %s (session=%s)", strings.ToUpper(opts.acctType), addr, sessionID) //nolint:gosec // CLI tool inputs, log injection risk is acceptable
 	logPacket(fmt.Sprintf("-> Accounting-Request (%s)", strings.ToUpper(opts.acctType)), pkt)
 	resp, err := sendPacket(pkt, addr, opts.timeout)
 	if err != nil {
@@ -363,7 +363,7 @@ func runFlow(opts *options) error {
 		return fmt.Errorf("accounting-start failed: %w", err)
 	}
 	if opts.flowDelay > 0 {
-		log.Printf("Waiting %s before accounting-stop", opts.flowDelay)
+		log.Printf("Waiting %s before accounting-stop", opts.flowDelay) //nolint:gosec // flowDelay is a time.Duration, not user-controlled text
 		time.Sleep(opts.flowDelay)
 	}
 	stopOpts := *opts
@@ -596,7 +596,7 @@ func logPacket(label string, pkt *radius.Packet) {
 		return
 	}
 	formatted := strings.TrimRight(radiusd.FmtPacket(pkt), "\n")
-	log.Printf("%s\n%s", label, formatted)
+	log.Printf("%s\n%s", label, formatted) //nolint:gosec // label and formatted are internal diagnostic strings
 }
 
 // printUsage displays command-line help text to stdout.

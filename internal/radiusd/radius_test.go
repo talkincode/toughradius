@@ -2,6 +2,7 @@ package radiusd
 
 import (
 	"bytes"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -228,7 +229,7 @@ func TestEAPStateConcurrentAccess(t *testing.T) {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			stateID := "state-" + string(rune(id))
+			stateID := "state-" + strconv.Itoa(id)
 			service.AddEapState(stateID, "user", []byte("challenge"), "eap-md5")
 		}(i)
 	}
@@ -259,7 +260,7 @@ func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 		wg.Add(1)
 		go func(id int) {
 			defer wg.Done()
-			username := "user-" + string(rune(id))
+			username := "user-" + strconv.Itoa(id)
 			_ = service.CheckAuthRateLimit(username)
 		}(i)
 	}

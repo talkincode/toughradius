@@ -156,8 +156,8 @@ func createEAPIdentityResponse(identifier uint8, identity string) *radius.Packet
 	eapMsg := make([]byte, eapLen)
 	eapMsg[0] = CodeResponse
 	eapMsg[1] = identifier
-	eapMsg[2] = byte(eapLen >> 8)
-	eapMsg[3] = byte(eapLen)
+	eapMsg[2] = byte(eapLen >> 8) //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
+	eapMsg[3] = byte(eapLen)      //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
 	eapMsg[4] = TypeIdentity
 	copy(eapMsg[5:], identityBytes)
 	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
@@ -173,8 +173,8 @@ func createEAPNakResponse(identifier uint8, suggestedTypes ...uint8) *radius.Pac
 	eapMsg := make([]byte, eapLen)
 	eapMsg[0] = CodeResponse
 	eapMsg[1] = identifier
-	eapMsg[2] = byte(eapLen >> 8)
-	eapMsg[3] = byte(eapLen)
+	eapMsg[2] = byte(eapLen >> 8) //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
+	eapMsg[3] = byte(eapLen)      //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
 	eapMsg[4] = TypeNak
 	copy(eapMsg[5:], suggestedTypes)
 	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
@@ -190,8 +190,8 @@ func createEAPChallengeResponse(identifier uint8, eapType uint8, data []byte) *r
 	eapMsg := make([]byte, eapLen)
 	eapMsg[0] = CodeResponse
 	eapMsg[1] = identifier
-	eapMsg[2] = byte(eapLen >> 8)
-	eapMsg[3] = byte(eapLen)
+	eapMsg[2] = byte(eapLen >> 8) //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
+	eapMsg[3] = byte(eapLen)      //nolint:gosec // EAP packet length is bounded by RADIUS protocol (max 65535)
 	eapMsg[4] = eapType
 	copy(eapMsg[5:], data)
 	_ = rfc2869.EAPMessage_Set(p, eapMsg) //nolint:errcheck
