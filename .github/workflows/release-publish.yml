@@ -83,7 +83,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.24'
+          go-version: '1.25'
           cache: true
 
       - name: Extract version info
@@ -250,7 +250,7 @@ jobs:
           echo "- **Version:** ${VERSION}" >> release_notes.md
           echo "- **Commit:** ${{ steps.version.outputs.commit }}" >> release_notes.md
           echo "- **Build Time:** ${{ steps.version.outputs.build_time }}" >> release_notes.md
-          echo "- **Go Version:** 1.24" >> release_notes.md
+          echo "- **Go Version:** 1.25" >> release_notes.md
           
           cat release_notes.md
 
