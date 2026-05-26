@@ -197,7 +197,7 @@ jobs:
           govulncheck ./...
 
       - name: Run gosec
-        uses: securego/gosec@v2.22.4
+        uses: securego/gosec@v2.26.1
         with:
           args: -exclude-generated ./...
         continue-on-error: ${{ github.event_name == 'pull_request' }}
