@@ -177,9 +177,12 @@ func TestListUsersWithFieldFilters(t *testing.T) {
 	profile := createTestProfile(db, "test-profile")
 
 	// Create test users with distinct details
-	createTestUserWithDetails(db, "alice", "Alice Chen", "alice@example.com", "13800001111", profile.ID)
-	createTestUserWithDetails(db, "bob", "Bob Wang", "bob@test.com", "13800002222", profile.ID)
+	alice := createTestUserWithDetails(db, "alice", "Alice Chen", "alice@example.com", "13800001111", profile.ID)
+	bob := createTestUserWithDetails(db, "bob", "Bob Wang", "bob@test.com", "13800002222", profile.ID)
 	createTestUserWithDetails(db, "charlie", "Charlie Li", "charlie@example.com", "13900003333", profile.ID)
+
+	require.NoError(t, db.Model(alice).Update("ip_addr", "192.168.1.100").Error)
+	require.NoError(t, db.Model(bob).Update("ip_addr", "192.168.1.101").Error)
 
 	tests := []struct {
 		name           string
@@ -196,6 +199,7 @@ func TestListUsersWithFieldFilters(t *testing.T) {
 			checkResponse: func(t *testing.T, resp *Response) {
 				users := resp.Data.([]domain.RadiusUser)
 				assert.Equal(t, "alice", users[0].Username)
+				assert.Equal(t, "192.168.1.100", users[0].IpAddr)
 			},
 		},
 		{
@@ -234,6 +238,17 @@ func TestListUsersWithFieldFilters(t *testing.T) {
 			checkResponse: func(t *testing.T, resp *Response) {
 				users := resp.Data.([]domain.RadiusUser)
 				assert.Equal(t, "charlie", users[0].Username)
+			},
+		},
+		{
+			name:           "Filter by static IP address",
+			queryParams:    "?ip_addr=192.168.1.100",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				users := resp.Data.([]domain.RadiusUser)
+				assert.Equal(t, "alice", users[0].Username)
+				assert.Equal(t, "192.168.1.100", users[0].IpAddr)
 			},
 		},
 		{
