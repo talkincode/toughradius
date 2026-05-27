@@ -301,12 +301,12 @@ func (c *AppConfig) GetRadsecKeyPath() string {
 // exist before services start. Creates the following directory tree under
 // System.Workdir:
 //
-//   - logs/          (0755) - Application logs
-//   - public/        (0755) - Static web assets
-//   - data/          (0755) - Runtime data and SQLite database
-//   - data/metrics/  (0755) - Prometheus metrics storage
-//   - private/       (0644) - TLS certificates and private keys
-//   - backup/        (0755) - Database and config backups
+//   - logs/          (0750) - Application logs
+//   - public/        (0750) - Static web assets
+//   - data/          (0750) - Runtime data and SQLite database
+//   - data/metrics/  (0750) - Prometheus metrics storage
+//   - private/       (0700) - TLS certificates and private keys
+//   - backup/        (0750) - Database and config backups
 //
 // Errors during directory creation are intentionally ignored as the directories
 // may already exist. Subsequent file operations will fail with clear errors
@@ -316,12 +316,12 @@ func (c *AppConfig) GetRadsecKeyPath() string {
 //   - Creates directories on filesystem
 //   - Uses default umask for actual permissions
 func (c *AppConfig) initDirs() {
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0755)         //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "public"), 0755)       //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "data"), 0755)         //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0755) //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "private"), 0644)      //nolint:errcheck,gosec // G301: 0644 is acceptable for private directory
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0755)       //nolint:errcheck,gosec // G301: 0755 is acceptable for app directories
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0750)         //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "public"), 0750)       //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "data"), 0750)         //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0750) //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "private"), 0700)      //nolint:errcheck
+	_ = os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0750)       //nolint:errcheck
 }
 
 // setEnvValue sets a string configuration value from an environment variable.

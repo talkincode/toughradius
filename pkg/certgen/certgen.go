@@ -180,7 +180,7 @@ func DefaultCertConfig() CertConfig {
 //   - {OutputDir}/ca.key: CA private key (PEM, mode 0600 - protect carefully!)
 //
 // Side effects:
-//   - Creates OutputDir if it doesn't exist (mode 0755)
+//   - Creates OutputDir if it doesn't exist (mode 0750)
 //   - Prints file paths to stdout on success
 //
 // Example:
@@ -194,7 +194,7 @@ func DefaultCertConfig() CertConfig {
 //	    log.Fatalf("CA generation failed: %v", err)
 //	}
 func GenerateCA(config CAConfig) error {
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil { //nolint:gosec // G301: 0755 is standard for certificate directories
+	if err := os.MkdirAll(config.OutputDir, 0750); err != nil {
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
@@ -306,7 +306,7 @@ func GenerateCA(config CAConfig) error {
 //	    log.Fatalf("Server cert generation failed: %v", err)
 //	}
 func GenerateServerCert(config ServerConfig) error {
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil { //nolint:gosec // G301: 0755 is standard for certificate directories
+	if err := os.MkdirAll(config.OutputDir, 0750); err != nil {
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 
@@ -428,7 +428,7 @@ func GenerateServerCert(config ServerConfig) error {
 //	    log.Fatalf("Client cert generation failed: %v", err)
 //	}
 func GenerateClientCert(config ClientConfig) error {
-	if err := os.MkdirAll(config.OutputDir, 0755); err != nil { //nolint:gosec // G301: 0755 is standard for certificate directories
+	if err := os.MkdirAll(config.OutputDir, 0750); err != nil {
 		return fmt.Errorf("create output directory failed: %w", err)
 	}
 

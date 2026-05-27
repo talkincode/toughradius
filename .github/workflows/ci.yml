@@ -197,7 +197,8 @@ jobs:
           govulncheck ./...
 
       - name: Run gosec
-        uses: securego/gosec@v2.26.1
+        uses: golangci/golangci-lint-action@v9
         with:
-          args: -exclude-generated ./...
+          version: v2.12.2
+          args: --enable-only=gosec --timeout=5m
         continue-on-error: ${{ github.event_name == 'pull_request' }}
