@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -469,6 +470,33 @@ func TestInitDirs(t *testing.T) {
 		if !info.IsDir() {
 			t.Errorf("%s is not a directory", dir)
 		}
+	}
+}
+
+func TestInitDirsTightensExistingDirectoryModes(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("directory permission bits are platform-specific on Windows")
+	}
+
+	tmpDir := t.TempDir()
+	cfg := &AppConfig{System: SysConfig{Workdir: tmpDir}}
+
+	looseDir := filepath.Join(tmpDir, "private")
+	if err := os.MkdirAll(looseDir, 0777); err != nil { //nolint:gosec
+		t.Fatalf("create loose private dir: %v", err)
+	}
+	if err := os.Chmod(looseDir, 0777); err != nil { //nolint:gosec
+		t.Fatalf("loosen private dir permissions: %v", err)
+	}
+
+	cfg.initDirs()
+
+	info, err := os.Stat(looseDir)
+	if err != nil {
+		t.Fatalf("stat private dir: %v", err)
+	}
+	if got := info.Mode().Perm(); got != 0700 {
+		t.Fatalf("private dir mode = %o, want 0700", got)
 	}
 }
 

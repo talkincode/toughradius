@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -217,5 +218,31 @@ func TestGenerateClientCert(t *testing.T) {
 	}
 	if !hasClientAuth {
 		t.Error("Certificate does not have ClientAuth ExtKeyUsage")
+	}
+}
+
+func TestEnsureOutputDirTightensExistingMode(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("directory permission bits are platform-specific on Windows")
+	}
+
+	outputDir := filepath.Join(t.TempDir(), "certs")
+	if err := os.MkdirAll(outputDir, 0777); err != nil { //nolint:gosec
+		t.Fatalf("create output dir: %v", err)
+	}
+	if err := os.Chmod(outputDir, 0777); err != nil { //nolint:gosec
+		t.Fatalf("loosen output dir permissions: %v", err)
+	}
+
+	if err := ensureOutputDir(outputDir); err != nil {
+		t.Fatalf("ensure output dir: %v", err)
+	}
+
+	info, err := os.Stat(outputDir)
+	if err != nil {
+		t.Fatalf("stat output dir: %v", err)
+	}
+	if got := info.Mode().Perm(); got != 0750 {
+		t.Fatalf("output dir mode = %o, want 0750", got)
 	}
 }
