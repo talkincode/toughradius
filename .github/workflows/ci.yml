@@ -200,5 +200,5 @@ jobs:
         uses: securego/gosec@v2.26.1
         with:
           args: -exclude-generated ./...
-        # Keep scan non-blocking until legacy findings are remediated in code.
-        continue-on-error: true
+        # Temporary: keep non-blocking while remediating legacy baseline findings, then switch back to blocking.
+        continue-on-error: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
