@@ -21,7 +21,7 @@ package config
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strconv"
 
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -182,57 +182,57 @@ type AppConfig struct {
 // GetLogDir returns the full path to the logs directory.
 //
 // This directory stores application logs when Logger.FileEnable is true.
-// The directory is automatically created by initDirs() with 0755 permissions.
+// The directory is automatically created by initDirs() with 0750 permissions.
 //
 // Returns:
 //   - string: Absolute path to {Workdir}/logs
 func (c *AppConfig) GetLogDir() string {
-	return path.Join(c.System.Workdir, "logs")
+	return filepath.Join(c.System.Workdir, "logs")
 }
 
 // GetPublicDir returns the full path to the public directory.
 //
 // This directory stores publicly accessible static files served by the web server.
-// The directory is automatically created by initDirs() with 0755 permissions.
+// The directory is automatically created by initDirs() with 0750 permissions.
 //
 // Returns:
 //   - string: Absolute path to {Workdir}/public
 func (c *AppConfig) GetPublicDir() string {
-	return path.Join(c.System.Workdir, "public")
+	return filepath.Join(c.System.Workdir, "public")
 }
 
 // GetPrivateDir returns the full path to the private directory.
 //
 // This directory stores sensitive files such as TLS certificates and private keys
-// for RadSec. The directory is created with 0644 permissions to restrict access.
+// for RadSec. The directory is created with 0700 permissions to restrict access.
 //
 // Returns:
 //   - string: Absolute path to {Workdir}/private
 func (c *AppConfig) GetPrivateDir() string {
-	return path.Join(c.System.Workdir, "private")
+	return filepath.Join(c.System.Workdir, "private")
 }
 
 // GetDataDir returns the full path to the data directory.
 //
 // This directory stores application runtime data including metrics and the
 // SQLite database file (when Database.Type is "sqlite").
-// The directory is automatically created by initDirs() with 0755 permissions.
+// The directory is automatically created by initDirs() with 0750 permissions.
 //
 // Returns:
 //   - string: Absolute path to {Workdir}/data
 func (c *AppConfig) GetDataDir() string {
-	return path.Join(c.System.Workdir, "data")
+	return filepath.Join(c.System.Workdir, "data")
 }
 
 // GetBackupDir returns the full path to the backup directory.
 //
 // This directory stores database backups and exported configuration files.
-// The directory is automatically created by initDirs() with 0755 permissions.
+// The directory is automatically created by initDirs() with 0750 permissions.
 //
 // Returns:
 //   - string: Absolute path to {Workdir}/backup
 func (c *AppConfig) GetBackupDir() string {
-	return path.Join(c.System.Workdir, "backup")
+	return filepath.Join(c.System.Workdir, "backup")
 }
 
 // GetRadsecCaCertPath returns the full path to the RadSec CA certificate.
@@ -248,10 +248,10 @@ func (c *AppConfig) GetBackupDir() string {
 //
 // See also: RFC 6614 for RadSec specification
 func (c *AppConfig) GetRadsecCaCertPath() string {
-	if path.IsAbs(c.Radiusd.RadsecCaCert) {
+	if filepath.IsAbs(c.Radiusd.RadsecCaCert) {
 		return c.Radiusd.RadsecCaCert
 	}
-	return path.Join(c.System.Workdir, c.Radiusd.RadsecCaCert)
+	return filepath.Join(c.System.Workdir, c.Radiusd.RadsecCaCert)
 }
 
 // GetRadsecCertPath returns the full path to the RadSec server certificate.
@@ -267,10 +267,10 @@ func (c *AppConfig) GetRadsecCaCertPath() string {
 //
 // See also: RFC 6614 for RadSec specification
 func (c *AppConfig) GetRadsecCertPath() string {
-	if path.IsAbs(c.Radiusd.RadsecCert) {
+	if filepath.IsAbs(c.Radiusd.RadsecCert) {
 		return c.Radiusd.RadsecCert
 	}
-	return path.Join(c.System.Workdir, c.Radiusd.RadsecCert)
+	return filepath.Join(c.System.Workdir, c.Radiusd.RadsecCert)
 }
 
 // GetRadsecKeyPath returns the full path to the RadSec server private key.
@@ -289,10 +289,10 @@ func (c *AppConfig) GetRadsecCertPath() string {
 //
 // See also: RFC 6614 for RadSec specification
 func (c *AppConfig) GetRadsecKeyPath() string {
-	if path.IsAbs(c.Radiusd.RadsecKey) {
+	if filepath.IsAbs(c.Radiusd.RadsecKey) {
 		return c.Radiusd.RadsecKey
 	}
-	return path.Join(c.System.Workdir, c.Radiusd.RadsecKey)
+	return filepath.Join(c.System.Workdir, c.Radiusd.RadsecKey)
 }
 
 // initDirs creates the required runtime directory structure.
@@ -314,14 +314,21 @@ func (c *AppConfig) GetRadsecKeyPath() string {
 //
 // Side effects:
 //   - Creates directories on filesystem
-//   - Uses default umask for actual permissions
+//   - Applies explicit directory permissions where supported by the OS
 func (c *AppConfig) initDirs() {
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "logs"), 0750)         //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "public"), 0750)       //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "data"), 0750)         //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "data/metrics"), 0750) //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "private"), 0700)      //nolint:errcheck
-	_ = os.MkdirAll(path.Join(c.System.Workdir, "backup"), 0750)       //nolint:errcheck
+	_ = ensureDir(filepath.Join(c.System.Workdir, "logs"), 0750)            //nolint:errcheck
+	_ = ensureDir(filepath.Join(c.System.Workdir, "public"), 0750)          //nolint:errcheck
+	_ = ensureDir(filepath.Join(c.System.Workdir, "data"), 0750)            //nolint:errcheck
+	_ = ensureDir(filepath.Join(c.System.Workdir, "data", "metrics"), 0750) //nolint:errcheck
+	_ = ensureDir(filepath.Join(c.System.Workdir, "private"), 0700)         //nolint:errcheck
+	_ = ensureDir(filepath.Join(c.System.Workdir, "backup"), 0750)          //nolint:errcheck
+}
+
+func ensureDir(dir string, mode os.FileMode) error {
+	if err := os.MkdirAll(dir, mode); err != nil {
+		return err
+	}
+	return os.Chmod(dir, mode)
 }
 
 // setEnvValue sets a string configuration value from an environment variable.
