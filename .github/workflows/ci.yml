@@ -197,8 +197,8 @@ jobs:
           govulncheck ./...
 
       - name: Run gosec
-        uses: securego/gosec@v2.26.1
+        uses: golangci/golangci-lint-action@v9
         with:
-          args: -exclude-generated ./...
-        # Temporary: keep non-blocking while remediating legacy baseline findings, then switch back to blocking.
-        continue-on-error: ${{ github.event_name == 'pull_request' || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+          version: v2.12.2
+          args: --enable-only=gosec --timeout=5m
+        continue-on-error: ${{ github.event_name == 'pull_request' }}
