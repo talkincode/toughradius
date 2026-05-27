@@ -1,0 +1,87 @@
+#!/bin/bash
+# ToughRADIUS Pre-push Hook
+# 在推送前运行完整测试，确保绝不推送有问题的代码
+
+set -e
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${BLUE}       ToughRADIUS Pre-push Quality Gate${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+# 记录开始时间
+START_TIME=$(date +%s)
+
+# 1. 运行完整测试套件
+echo -e "\n${YELLOW}🧪 Running full test suite...${NC}"
+if ! CGO_ENABLED=0 go test ./... 2>&1; then
+    echo -e "${RED}❌ Tests failed! Push aborted.${NC}"
+    echo -e "${YELLOW}Fix the failing tests before pushing.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ All tests passed${NC}"
+
+# 2. 运行代码检查
+echo -e "\n${YELLOW}🔎 Running go vet...${NC}"
+if ! CGO_ENABLED=0 go vet ./... 2>&1; then
+    echo -e "${RED}❌ go vet found issues! Push aborted.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ go vet OK${NC}"
+
+# 3. 检查代码格式
+echo -e "\n${YELLOW}📝 Checking code formatting...${NC}"
+UNFORMATTED=$(gofmt -l . 2>/dev/null | grep -v vendor || true)
+if [ -n "$UNFORMATTED" ]; then
+    echo -e "${RED}❌ The following files are not properly formatted:${NC}"
+    echo "$UNFORMATTED"
+    echo -e "${YELLOW}Run 'go fmt ./...' to fix${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Code formatting OK${NC}"
+
+# 4. 完整构建验证
+echo -e "\n${YELLOW}� Running full build verification...${NC}"
+if ! CGO_ENABLED=0 go build ./... 2>&1; then
+    echo -e "${RED}❌ Build failed! Push aborted.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}✅ Build OK${NC}"
+
+# 5. 检查 go.mod 和 go.sum 是否同步
+echo -e "\n${YELLOW}� Checking module dependencies...${NC}"
+go mod tidy
+if ! git diff --quiet go.mod go.sum 2>/dev/null; then
+    echo -e "${YELLOW}⚠️  Warning: go.mod or go.sum changed after 'go mod tidy'${NC}"
+    echo -e "${YELLOW}   Consider committing these changes${NC}"
+fi
+echo -e "${GREEN}✅ Module dependencies OK${NC}"
+
+# 6. 运行 golangci-lint（如果已安装）
+if command -v golangci-lint &> /dev/null; then
+    echo -e "\n${YELLOW}� Running golangci-lint...${NC}"
+    if ! golangci-lint run --timeout=5m 2>&1; then
+        echo -e "${YELLOW}⚠️  golangci-lint found issues (non-blocking)${NC}"
+    else
+        echo -e "${GREEN}✅ golangci-lint OK${NC}"
+    fi
+else
+    echo -e "\n${YELLOW}💡 Tip: Install golangci-lint for additional checks:${NC}"
+    echo -e "   brew install golangci-lint"
+fi
+
+# 计算耗时
+END_TIME=$(date +%s)
+DURATION=$((END_TIME - START_TIME))
+
+echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${GREEN}✅ All pre-push checks passed! (${DURATION}s)${NC}"
+echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+
+exit 0

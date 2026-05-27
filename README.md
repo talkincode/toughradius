@@ -1,108 +1,214 @@
 Welcome to the TOUGHRADIUS project!
 
-     _____   _____   _   _   _____   _   _   _____        ___   _____   _   _   _   _____  
-    |_   _| /  _  \ | | | | /  ___| | | | | |  _  \      /   | |  _  \ | | | | | | /  ___/ 
-      | |   | | | | | | | | | |     | |_| | | |_| |     / /| | | | | | | | | | | | | |___  
-      | |   | | | | | | | | | |  _  |  _  | |  _  /    / / | | | | | | | | | | | | \___  \ 
-      | |   | |_| | | |_| | | |_| | | | | | | | \ \   / /  | | | |_| | | | | |_| |  ___| | 
-      |_|   \_____/ \_____/ \_____/ |_| |_| |_|  \_\ /_/   |_| |_____/ |_| \_____/ /_____/ 
+     _____   _____   _   _   _____   _   _   _____        ___   _____   _   _   _   _____
+    |_   _| /  _  \ | | | | /  ___| | | | | |  _  \      /   | |  _  \ | | | | | | /  ___/
+      | |   | | | | | | | | | |     | |_| | | |_| |     / /| | | | | | | | | | | | | |___
+      | |   | | | | | | | | | |  _  |  _  | |  _  /    / / | | | | | | | | | | | | \___  \
+      | |   | |_| | | |_| | | |_| | | | | | | | \ \   / /  | | | |_| | | | | |_| |  ___| |
+      |_|   \_____/ \_____/ \_____/ |_| |_| |_|  \_\ /_/   |_| |_____/ |_| \_____/ /_____/
 
 # TOUGHRADIUS
 
-TOUGHRADIUS is committed to providing comprehensive and superior network management solutions.
-The core technology is based on RADIUS and can extend the system functions to support various network protocols, such as TR069.
-TOUGHRADIUS not only provides a user-friendly system interface, but also powerful data analysis and management features such as real-time network monitoring, usage reports and automatic billing. TOUGHRADIUS is dedicated to providing secure, reliable and efficient network management services, enabling them to realize more efficient network operations.
+[![License](https://img.shields.io/github/license/talkincode/toughradius)](https://github.com/talkincode/toughradius/blob/main/LICENSE)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/talkincode/toughradius)](go.mod)
+[![Release](https://img.shields.io/github/v/release/talkincode/toughradius)](https://github.com/talkincode/toughradius/releases)
+[![Build Status](https://github.com/talkincode/toughradius/actions/workflows/ci.yml/badge.svg)](https://github.com/talkincode/toughradius/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/talkincode/toughradius/graph/badge.svg)](https://codecov.io/gh/talkincode/toughradius)
+[![Docker Pulls](https://img.shields.io/docker/pulls/talkincode/toughradius)](https://hub.docker.com/r/talkincode/toughradius)
 
-TOUGHRADIUS uses advanced Golang technology to develop the system core, providing excellent system performance and easy deployment experience.
+A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, RadSec (RADIUS over TLS), and a modern Web management interface.
 
-## Quick Install
+## ✨ Core Features
 
-[quick Start](https://github.com/talkincode/toughradius/wiki/quickstart)
+### RADIUS Protocol Support
 
-- Use curl 
+- 🔐 **Standard RADIUS** - Full support for RFC 2865/2866 authentication and accounting protocols
+- 🔒 **RadSec** - TLS encrypted RADIUS over TCP (RFC 6614)
+- 🌐 **Multi-Vendor Support** - Compatible with major network devices like Cisco, Mikrotik, Huawei, etc.
+- ⚡ **High Performance** - Built with Go, supporting high concurrency processing
+
+### Management Features
+
+- 📊 **React Admin Interface** - Modern Web management dashboard
+- 👥 **User Management** - Complete user account and profile management
+- 📈 **Real-time Monitoring** - Online session monitoring and accounting record queries
+- 🔍 **Log Auditing** - Detailed authentication and accounting logs
+
+### Integration Capabilities
+
+- **Multi-Database Support** - PostgreSQL, SQLite
+- 🔌 **Flexible Extension** - Supports custom authentication and accounting logic
+- 📡 **Multi-Vendor VSA** - Huawei, Mikrotik, Cisco, H3C, etc.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Go 1.25+ (for building from source)
+- PostgreSQL or SQLite
+- Node.js 18+ (for frontend development)
+
+### Installation
+
+#### 1. Build from Source
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh)"
+# Clone repository
+git clone https://github.com/talkincode/toughradius.git
+cd toughradius
+
+# Build frontend
+cd web
+npm install
+npm run build
+cd ..
+
+# Build backend
+go build -o toughradius main.go
 ```
 
-- Use wget
+#### 2. Use Pre-compiled Version
+
+Download the latest version from the [Releases](https://github.com/talkincode/toughradius/releases) page.
+
+### Configuration
+
+1. Copy the configuration template:
 
 ```bash
-sudo bash -c "$(wget https://raw.githubusercontent.com/talkincode/toughradius/main/installer.sh -O -)"
+cp toughradius.yml toughradius.prod.yml
 ```
 
-## System structure
+2. Edit `toughradius.prod.yml` configuration file:
 
-![architecture](assets/architecture.png)
+```yaml
+system:
+  appid: ToughRADIUS
+  location: Asia/Shanghai
+  workdir: ./rundata
 
+database:
+  type: sqlite # or postgres
+  name: toughradius.db
+  # PostgreSQL configuration
+  # host: localhost
+  # port: 5432
+  # user: toughradius
+  # passwd: your_password
 
-## System features
+radiusd:
+  enabled: true
+  host: 0.0.0.0
+  auth_port: 1812 # RADIUS authentication port
+  acct_port: 1813 # RADIUS accounting port
+  radsec_port: 2083 # RadSec port
 
-### TR069 ACS
+web:
+  host: 0.0.0.0
+  port: 1816 # Web management interface port
+```
 
-TR069 ACS can provide real-time monitoring and maintenance of CPE devices in the network to ensure their normal operation. It supports multiple data models and allows custom Settings to accommodate different types of CPE devices. In addition, TR069 ACS also supports secure encryption to protect data privacy and security. Therefore, TR069 ACS not only improves the efficiency of network management, but also ensures network security.
+### EAP Configuration
 
-- Configure or get device configuration parameters and operating status
-- Provide vendor device configuration download
-- Provide device factory reset configuration download
-- Provide upgrade firmware download
+You can fine-tune authentication behavior via system configuration (`sys_config`):
 
-### Radius Server
+- `radius.EapMethod`: Preferred EAP method (default `eap-md5`).
+- `radius.EapEnabledHandlers`: List of allowed EAP handlers, separated by commas, e.g., `eap-md5,eap-mschapv2`. Use `*` to enable all registered handlers.
 
-TOUGHRADIUS is a RADIUS server that supports the RADIUS protocol and the RADIUS over TLS (RadSec) protocol.
+This allows you to quickly disable unauthorized EAP methods without interrupting the service.
 
-Standard RADIUS features
+### Running
 
-- Authentication message
-- Authentication PAP authentication method
-- Authentication CHAP authentication method
-- Authentication MS-CHAPv2 authentication method
-- Authorization message
+```bash
+# Initialize database
+./toughradius -initdb -c toughradius.prod.yml
 
-  > After receiving the BAS Authentication request message, the RADIUS Server encapsulates the user authorization information according to the user information resources, and authorizes the user bandwidth limit, maximum duration, IP and other information to the BAS through the Authentication response message.
+# Start service
+./toughradius -c toughradius.prod.yml
+```
 
-- Accounting-On message
-- Accounting-Off message
-- Accounting-Start message
-- Accounting-Interium-Update message
-- Accounting-Stop message
-- Deliver the SessionTimeout attribute
-- Deliver the AcctInterimInterval attribute
-- Deliver the FramedPool attribute
-- Deliver the FramedIPAddress attribute
-- Deliver attributes of the customized vendor，such as Huawei, ZTE, Cisco，Mikrotik etc.
+Access Web Management Interface: <http://localhost:1816>
 
-#### freeRADIUS integration
+Default Admin Account:
 
-![freeradius-toughradius](https://github.com/talkincode/toughradius/assets/377938/f735d45d-3325-49e5-8b73-21c6205248e3)
+- Username: admin
+- Password: Please check the initialization log output
 
-TOUGHRADIUS integrates with the FreeRADIUS API interface, extending its already comprehensive authentication capabilities to provide a more robust solution.
-Integration with the FreeRADIUS API enables seamless integration with existing network infrastructures, providing a wider range of authentication options to meet unique requirements.
-Whether you need to support 802.1X, Wi-Fi, VPNs or other network access protocols, TOUGHRADIUS has you covered. With advanced authentication capabilities and integration with FreeRADIUS, users can enjoy a secure, reliable and efficient network management experience.
+## 📖 Documentation
 
-### Northbound Interface
+- [Feature Checklist](docs/feature-checklist.md) / [English](docs/feature-checklist.en.md) - Product scope baseline for aligning future development with feature IDs and avoiding uncontrolled direction changes
+- [Architecture](docs/v9-architecture.md) - v9 version architecture design
+- [React Admin Refactor](docs/react-admin-refactor.md) - Frontend management interface explanation
+- [SQLite Support](docs/sqlite-support.md) - SQLite database configuration
+- [Environment Variables](docs/environment-variables.md) - Environment variable configuration guide
 
-- Provide a unified API for various third-party management systems, based on the HTTPS Json protocol.
-- Provide basic equipment information and status data query API, and data maintenance API.
-- Provide various policy management APIs, such as firewall rules, routing tables, etc.
+## 🏗️ Project Structure
 
-## Links
+```text
+toughradius/
+├── cmd/             # Application entry points
+├── internal/        # Private application code
+│   ├── adminapi/   # Admin API (New version)
+│   ├── radiusd/    # RADIUS service core
+│   ├── domain/     # Data models
+│   └── webserver/  # Web server
+├── pkg/            # Public libraries
+├── web/            # React Admin frontend
+└── docs/           # Documentation
+```
 
-- [Home](https://www.toughradius.net/)
-- [TOUGHRADIUS Documentation](https://github.com/talkincode/toughradius/wiki)
-- [TLS encryption for RADIUS over TCP (RadSec) 00)](https://tools.ietf.org/id/draft-ietf-radext-radsec-00.html)
-- [TLS encryption for RADIUS over TCP (RadSec) 05](https://tools.ietf.org/html/draft-ietf-radext-radsec-05)
-- [mikrotik RADIUS Client](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
+## 🔧 Development
 
+### Backend Development
 
-## sponsors
+```bash
+# Run tests
+go test ./...
 
-Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) 
-for supporting this project!
+# Run benchmark tests
+go test -bench=. ./internal/radiusd/
 
-<img alt="JetBrains Logo (Main) logo" height="100" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg" width="100"/>
+# Start development mode
+go run main.go -c toughradius.yml
+```
 
-## Contribute
+### Frontend Development
 
-We welcome contributions of any kind, including but not limited to issues, pull requests, documentation, examples, etc.
+```bash
+cd web
+npm install
+npm run dev       # Development server
+npm run build     # Production build
+npm run lint      # Code linting
+```
 
+## 🤝 Contribution
+
+We welcome contributions in various forms, including but not limited to:
+
+- 🐛 Submitting Bug reports and feature requests
+- 📝 Improving documentation
+- 💻 Submitting code patches and new features
+- 🌍 Helping with translation
+
+## 📜 License
+
+This project is licensed under the [MIT License](LICENSE).
+
+### Third-Party Resources
+
+The RADIUS dictionary files in the `share/` directory are derived from the [FreeRADIUS](https://freeradius.org/) project and are licensed under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](share/LICENSE).
+
+## 🔗 Related Links
+
+- [Official Website](https://www.toughradius.net/)
+- [Online Documentation](https://github.com/talkincode/toughradius/wiki)
+- [RadSec RFC 6614](https://tools.ietf.org/html/rfc6614)
+- [RADIUS RFC 2865](https://tools.ietf.org/html/rfc2865)
+- [Mikrotik RADIUS Configuration](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
+
+## 💎 Sponsors
+
+Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) for supporting this project!
+
+![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
