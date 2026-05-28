@@ -24,13 +24,13 @@
     "ra-data-simple-rest": "^5.0.0",
     "ra-language-chinese": "^2.0.10",
     "ra-language-english": "^5.12.3",
-    "react": "^18.3.1",
+    "react": "^19.2.6",
     "react-admin": "^5.0.0",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
-    "@types/react": "^18.3.3",
+    "@types/react": "^19.2.15",
     "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^7.13.1",
     "@typescript-eslint/parser": "^7.13.1",
