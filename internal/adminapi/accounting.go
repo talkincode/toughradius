@@ -11,6 +11,15 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
+// allowedAcctSortFields is the allowlist of sortable columns for the accounting
+// log list. It prevents SQL injection through the sort parameter, which is
+// interpolated directly into the ORDER BY clause.
+var allowedAcctSortFields = map[string]bool{
+	"id": true, "username": true, "acct_session_id": true,
+	"acct_start_time": true, "acct_stop_time": true, "acct_session_time": true,
+	"nas_addr": true, "framed_ipaddr": true, "acct_input_total": true, "acct_output_total": true,
+}
+
 // ListAccounting retrieves the accounting logs table
 // @Summary get accounting logs table
 // @Tags Accounting
@@ -40,21 +49,7 @@ func ListAccounting(c echo.Context) error {
 		perPage = 10
 	}
 
-	sortField := c.QueryParam("sort")
-	order := c.QueryParam("order")
-
-	// 白名单验证排序字段，防止 SQL 注入
-	allowedSortFields := map[string]bool{
-		"id": true, "username": true, "acct_session_id": true,
-		"acct_start_time": true, "acct_stop_time": true, "acct_session_time": true,
-		"nas_addr": true, "framed_ipaddr": true, "acct_input_total": true, "acct_output_total": true,
-	}
-	if !allowedSortFields[sortField] {
-		sortField = "acct_start_time"
-	}
-	if order != "ASC" && order != "DESC" {
-		order = "DESC"
-	}
+	sortField, order := parseSort(c, allowedAcctSortFields, "acct_start_time", "DESC")
 
 	var total int64
 	var records []domain.RadiusAccounting

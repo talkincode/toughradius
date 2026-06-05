@@ -84,14 +84,7 @@ func ListNAS(c echo.Context) error {
 		perPage = 10
 	}
 
-	sortField := c.QueryParam("sort")
-	order := c.QueryParam("order")
-	if sortField == "" || !allowedNasSortFields[sortField] {
-		sortField = "id"
-	}
-	if order != "ASC" && order != "DESC" {
-		order = "DESC"
-	}
+	sortField, order := parseSort(c, allowedNasSortFields, "id", "DESC")
 
 	var total int64
 	var devices []domain.NetNas
