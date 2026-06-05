@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -15,10 +16,18 @@ import (
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
+	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
 // backupVersion identifies the backup payload schema.
 const backupVersion = "9.0"
+
+// supportedBackupMajor is the only schema major version restoreSystem accepts.
+const supportedBackupMajor = "9"
+
+// maxRestoreRecords caps the number of records accepted per table on restore,
+// bounding the work a single (potentially malicious) payload can trigger.
+const maxRestoreRecords = 100000
 
 // SystemBackup is the serialized snapshot of the core configuration tables.
 type SystemBackup struct {
@@ -124,10 +133,24 @@ func restoreSystem(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_BACKUP", "Invalid backup file format", err.Error())
 	}
 
-	// Guard against arbitrary or incompatible JSON: a valid backup always carries
-	// a version stamp written by backupSystem.
-	if backup.Version == "" {
-		return fail(c, http.StatusBadRequest, "INVALID_BACKUP", "Backup file is missing a version and may be incompatible", nil)
+	// Strong validation: reject arbitrary, incompatible, or malformed payloads
+	// before touching the database.
+	if err := validateBackup(&backup); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_BACKUP", "Backup failed validation", err.Error())
+	}
+
+	// Restoring the operators table can rewrite admin password hashes and
+	// privilege levels, so it is a potential privilege-escalation vector.
+	// Restrict it to super operators even though admins may restore other tables.
+	if len(backup.Operators) > 0 {
+		current, err := resolveOperatorFromContext(c)
+		if err != nil {
+			return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication required", nil)
+		}
+		if !strings.EqualFold(current.Level, LevelSuper) {
+			return fail(c, http.StatusForbidden, "PERMISSION_DENIED",
+				"Only super operators may restore the operators table", nil)
+		}
 	}
 
 	result := SystemRestoreResult{}
@@ -180,4 +203,96 @@ func restoreSystem(c echo.Context) error {
 	}
 
 	return ok(c, result)
+}
+
+// validateBackup performs strong, write-free validation of a restore payload.
+// It rejects incompatible schema versions, oversized payloads, and records that
+// are missing required identifiers or carry invalid enum-like values, ensuring a
+// malformed or malicious backup cannot be upserted into the configuration tables.
+func validateBackup(b *SystemBackup) error {
+	major := b.Version
+	if i := strings.IndexByte(major, '.'); i >= 0 {
+		major = major[:i]
+	}
+	if major != supportedBackupMajor {
+		return fmt.Errorf("incompatible backup version %q, expected %s.x", b.Version, supportedBackupMajor)
+	}
+
+	for name, n := range map[string]int{
+		"nodes":     len(b.Nodes),
+		"nas":       len(b.Nas),
+		"profiles":  len(b.Profiles),
+		"users":     len(b.Users),
+		"configs":   len(b.Configs),
+		"operators": len(b.Operators),
+	} {
+		if n > maxRestoreRecords {
+			return fmt.Errorf("table %q has %d records, exceeding the limit of %d", name, n, maxRestoreRecords)
+		}
+	}
+
+	for i := range b.Nodes {
+		if b.Nodes[i].ID == 0 || strings.TrimSpace(b.Nodes[i].Name) == "" {
+			return fmt.Errorf("nodes[%d]: id and name are required", i)
+		}
+	}
+	for i := range b.Nas {
+		if b.Nas[i].ID == 0 || strings.TrimSpace(b.Nas[i].Name) == "" {
+			return fmt.Errorf("nas[%d]: id and name are required", i)
+		}
+		if !isValidStatus(b.Nas[i].Status) {
+			return fmt.Errorf("nas[%d]: invalid status %q", i, b.Nas[i].Status)
+		}
+	}
+	for i := range b.Profiles {
+		if b.Profiles[i].ID == 0 || strings.TrimSpace(b.Profiles[i].Name) == "" {
+			return fmt.Errorf("profiles[%d]: id and name are required", i)
+		}
+	}
+	for i := range b.Users {
+		if b.Users[i].ID == 0 || strings.TrimSpace(b.Users[i].Username) == "" {
+			return fmt.Errorf("users[%d]: id and username are required", i)
+		}
+		if !isValidStatus(b.Users[i].Status) {
+			return fmt.Errorf("users[%d]: invalid status %q", i, b.Users[i].Status)
+		}
+	}
+	for i := range b.Configs {
+		if b.Configs[i].ID == 0 || strings.TrimSpace(b.Configs[i].Name) == "" {
+			return fmt.Errorf("configs[%d]: id and name are required", i)
+		}
+	}
+	for i := range b.Operators {
+		if b.Operators[i].ID == 0 || strings.TrimSpace(b.Operators[i].Username) == "" {
+			return fmt.Errorf("operators[%d]: id and username are required", i)
+		}
+		if !isValidLevel(b.Operators[i].Level) {
+			return fmt.Errorf("operators[%d]: invalid level %q", i, b.Operators[i].Level)
+		}
+		if !isValidStatus(b.Operators[i].Status) {
+			return fmt.Errorf("operators[%d]: invalid status %q", i, b.Operators[i].Status)
+		}
+	}
+	return nil
+}
+
+// isValidStatus reports whether s is an accepted account/device status. An empty
+// status is allowed because callers default it elsewhere.
+func isValidStatus(s string) bool {
+	switch s {
+	case "", common.ENABLED, common.DISABLED:
+		return true
+	default:
+		return false
+	}
+}
+
+// isValidLevel reports whether l is a recognized operator privilege level.
+func isValidLevel(l string) bool {
+	switch l {
+	case LevelSuper, LevelAdmin, LevelOperator:
+		return true
+	default:
+		return false
+	}
 }

@@ -129,3 +129,87 @@ func TestRestoreSystem_MissingVersion(t *testing.T) {
 	require.NoError(t, restoreSystem(c))
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
+
+// restoreRequest builds a multipart restore request body for the given payload.
+func restoreRequest(t *testing.T, payload []byte) (*http.Request, *httptest.ResponseRecorder) {
+	t.Helper()
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, err := writer.CreateFormFile("upload", "backup.json")
+	require.NoError(t, err)
+	_, err = part.Write(payload)
+	require.NoError(t, err)
+	require.NoError(t, writer.Close())
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/system/restore", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	return req, httptest.NewRecorder()
+}
+
+func TestRestoreSystem_IncompatibleVersion(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	req, rec := restoreRequest(t, []byte(`{"version":"8.5"}`))
+	c := CreateTestContext(setupTestEcho(), db, req, rec, appCtx)
+
+	require.NoError(t, restoreSystem(c))
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var resp ErrorResponse
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+	assert.Equal(t, "INVALID_BACKUP", resp.Error)
+}
+
+func TestRestoreSystem_InvalidOperatorLevel(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	// Operator with an unrecognized privilege level must be rejected outright.
+	payload := []byte(`{"version":"9.0","operators":[{"id":"42","username":"evil","level":"root","status":"enabled"}]}`)
+	req, rec := restoreRequest(t, payload)
+	c := CreateTestContext(setupTestEcho(), db, req, rec, appCtx)
+
+	require.NoError(t, restoreSystem(c))
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+
+	var count int64
+	db.Model(&domain.SysOpr{}).Count(&count)
+	assert.Equal(t, int64(0), count, "no operator should have been written")
+}
+
+func TestRestoreSystem_OperatorsRequireSuper(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	// A well-formed operator payload, but the caller is only an admin (not super):
+	// restoring the operators table must be forbidden to prevent escalation.
+	payload := []byte(`{"version":"9.0","operators":[{"id":"42","username":"newadmin","level":"super","status":"enabled"}]}`)
+	req, rec := restoreRequest(t, payload)
+	c := CreateTestContext(setupTestEcho(), db, req, rec, appCtx)
+	c.Set("current_operator", &domain.SysOpr{ID: 7, Username: "admin", Level: LevelAdmin, Status: "enabled"})
+
+	require.NoError(t, restoreSystem(c))
+	assert.Equal(t, http.StatusForbidden, rec.Code)
+
+	var count int64
+	db.Model(&domain.SysOpr{}).Count(&count)
+	assert.Equal(t, int64(0), count, "operators must not be written for non-super callers")
+}
+
+func TestRestoreSystem_OperatorsAllowedForSuper(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	payload := []byte(`{"version":"9.0","operators":[{"id":"42","username":"newadmin","level":"admin","status":"enabled"}]}`)
+	req, rec := restoreRequest(t, payload)
+	// CreateTestContext injects a super operator by default.
+	c := CreateTestContext(setupTestEcho(), db, req, rec, appCtx)
+
+	require.NoError(t, restoreSystem(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var count int64
+	db.Model(&domain.SysOpr{}).Where("username = ?", "newadmin").Count(&count)
+	assert.Equal(t, int64(1), count)
+}
