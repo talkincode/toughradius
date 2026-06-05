@@ -135,6 +135,12 @@ func TestListProfiles(t *testing.T) {
 				assert.Equal(t, "profile1", profiles[0].Name)
 			},
 		},
+		{
+			name:           "Malicious sort field is ignored (SQLi guard)",
+			queryParams:    "?sort=id%29%3BDROP+TABLE+radius_profile%3B--&order=ASC",
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
 	}
 
 	for _, tt := range tests {

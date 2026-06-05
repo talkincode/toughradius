@@ -42,6 +42,25 @@ type nasUpdatePayload struct {
 	Remark     string `json:"remark" validate:"omitempty,max=500"`
 }
 
+// allowedNasSortFields defines the whitelist of sortable columns for the NAS
+// device list. It prevents SQL injection through the sort parameter, which is
+// otherwise interpolated directly into the ORDER BY clause.
+var allowedNasSortFields = map[string]bool{
+	"id":          true,
+	"node_id":     true,
+	"name":        true,
+	"identifier":  true,
+	"hostname":    true,
+	"ipaddr":      true,
+	"coa_port":    true,
+	"model":       true,
+	"vendor_code": true,
+	"status":      true,
+	"tags":        true,
+	"created_at":  true,
+	"updated_at":  true,
+}
+
 // ListNAS retrieves the NAS device list
 // @Summary get the NAS device list
 // @Tags NAS
@@ -67,7 +86,7 @@ func ListNAS(c echo.Context) error {
 
 	sortField := c.QueryParam("sort")
 	order := c.QueryParam("order")
-	if sortField == "" {
+	if sortField == "" || !allowedNasSortFields[sortField] {
 		sortField = "id"
 	}
 	if order != "ASC" && order != "DESC" {

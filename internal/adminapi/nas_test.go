@@ -115,6 +115,12 @@ func TestListNAS(t *testing.T) {
 				assert.Equal(t, "nas1", nasData["name"])
 			},
 		},
+		{
+			name:           "Malicious sort field is ignored (SQLi guard)",
+			queryParams:    "?sort=id%29%3BDROP+TABLE+net_nas%3B--&order=ASC",
+			expectedStatus: http.StatusOK,
+			expectedCount:  3,
+		},
 	}
 
 	for _, tt := range tests {

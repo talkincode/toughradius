@@ -10,6 +10,26 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
+// allowedProfileSortFields defines the whitelist of sortable columns for the
+// RADIUS profile list. It prevents SQL injection through the sort parameter,
+// which is otherwise interpolated directly into the ORDER BY clause.
+var allowedProfileSortFields = map[string]bool{
+	"id":               true,
+	"node_id":          true,
+	"name":             true,
+	"status":           true,
+	"addr_pool":        true,
+	"active_num":       true,
+	"up_rate":          true,
+	"down_rate":        true,
+	"domain":           true,
+	"ipv6_prefix_pool": true,
+	"bind_mac":         true,
+	"bind_vlan":        true,
+	"created_at":       true,
+	"updated_at":       true,
+}
+
 // ListProfiles retrieves the RADIUS profile list
 // @Summary get the RADIUS profile list
 // @Tags RadiusProfile
@@ -33,7 +53,7 @@ func ListProfiles(c echo.Context) error {
 
 	sortField := c.QueryParam("sort")
 	order := c.QueryParam("order")
-	if sortField == "" {
+	if sortField == "" || !allowedProfileSortFields[sortField] {
 		sortField = "id"
 	}
 	if order != "ASC" && order != "DESC" {
