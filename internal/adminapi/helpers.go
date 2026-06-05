@@ -21,6 +21,27 @@ func parsePagination(c echo.Context) (int, int) {
 	return page, pageSize
 }
 
+// parseSort extracts and validates the `sort` and `order` query parameters
+// against an allowlist of sortable columns, returning values that are safe to
+// interpolate into an ORDER BY clause. Unknown or empty inputs fall back to
+// defaultField/defaultOrder. Centralizing this guard ensures every list
+// endpoint applies the same SQL-injection-safe column allowlist instead of
+// re-implementing (and potentially forgetting) it.
+func parseSort(c echo.Context, allowed map[string]bool, defaultField, defaultOrder string) (field, order string) {
+	field = c.QueryParam("sort")
+	if field == "" || !allowed[field] {
+		field = defaultField
+	}
+	order = strings.ToUpper(strings.TrimSpace(c.QueryParam("order")))
+	if order != "ASC" && order != "DESC" {
+		order = strings.ToUpper(strings.TrimSpace(defaultOrder))
+	}
+	if order != "ASC" && order != "DESC" {
+		order = "ASC"
+	}
+	return field, order
+}
+
 func parseIDParam(c echo.Context, name string) (int64, error) {
 	param := c.Param(name)
 	if param == "" {

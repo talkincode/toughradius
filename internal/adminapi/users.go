@@ -271,14 +271,7 @@ func listRadiusUsers(c echo.Context) error {
 	page, pageSize := parsePagination(c)
 
 	// Validate and sanitize sort field
-	sortField := c.QueryParam("sort")
-	order := c.QueryParam("order")
-	if sortField == "" || !allowedUserSortFields[sortField] {
-		sortField = "username"
-	}
-	if order != "ASC" && order != "DESC" {
-		order = "ASC"
-	}
+	sortField, order := parseSort(c, allowedUserSortFields, "username", "ASC")
 
 	base := GetDB(c).Model(&domain.RadiusUser{}).
 		Select("radius_user.*, COALESCE(ro.count, 0) AS online_count").

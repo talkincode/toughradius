@@ -51,14 +51,7 @@ func ListProfiles(c echo.Context) error {
 		perPage = 10
 	}
 
-	sortField := c.QueryParam("sort")
-	order := c.QueryParam("order")
-	if sortField == "" || !allowedProfileSortFields[sortField] {
-		sortField = "id"
-	}
-	if order != "ASC" && order != "DESC" {
-		order = "DESC"
-	}
+	sortField, order := parseSort(c, allowedProfileSortFields, "id", "DESC")
 
 	var total int64
 	var profiles []domain.RadiusProfile

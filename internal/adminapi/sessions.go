@@ -83,16 +83,7 @@ func ListOnlineSessions(c echo.Context) error {
 		perPage = 10
 	}
 
-	sortField := c.QueryParam("sort")
-	order := c.QueryParam("order")
-
-	// Validate sort field against whitelist to prevent SQL injection
-	if sortField == "" || !allowedSessionSortFields[sortField] {
-		sortField = "acct_start_time"
-	}
-	if order != "ASC" && order != "DESC" {
-		order = "DESC"
-	}
+	sortField, order := parseSort(c, allowedSessionSortFields, "acct_start_time", "DESC")
 
 	var total int64
 	var sessions []domain.RadiusOnline
