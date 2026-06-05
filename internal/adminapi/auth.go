@@ -158,6 +158,11 @@ func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Reject tokens issued to accounts that have since been disabled so that
+	// revoking an operator takes effect immediately, before the JWT expires.
+	if strings.EqualFold(operator.Status, common.DISABLED) {
+		return nil, errors.New("account disabled")
+	}
 	operator.Password = ""
 	return &operator, nil
 }
