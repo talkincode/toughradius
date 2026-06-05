@@ -166,7 +166,10 @@ func (c *Coordinator) handleChallengeResponse(ctx *EAPContext) (bool, bool, erro
 
 // SendEAPSuccess Send EAP-Success response
 func (c *Coordinator) SendEAPSuccess(w radius.ResponseWriter, r *radius.Request, response *radius.Packet, secret string) error {
-	eapMsg, _ := ParseEAPMessage(r.Packet)
+	eapMsg, err := ParseEAPMessage(r.Packet)
+	if err != nil || eapMsg == nil {
+		return fmt.Errorf("cannot send EAP-Success: failed to parse EAP message: %w", err)
+	}
 	identifier := eapMsg.Identifier
 
 	// Create the EAP-Success message
@@ -186,7 +189,10 @@ func (c *Coordinator) SendEAPSuccess(w radius.ResponseWriter, r *radius.Request,
 
 // SendEAPFailure Send EAP-Failure response
 func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request, secret string, reason error) error {
-	eapMsg, _ := ParseEAPMessage(r.Packet)
+	eapMsg, err := ParseEAPMessage(r.Packet)
+	if err != nil || eapMsg == nil {
+		return fmt.Errorf("cannot send EAP-Failure: failed to parse EAP message: %w", err)
+	}
 	identifier := eapMsg.Identifier
 
 	// Create the EAP-Failure message
