@@ -78,6 +78,11 @@ const customChineseMessages: TranslationMessages = {
   resources: {
     'radius/users': {
       name: 'RADIUS用户 |||| RADIUS用户',
+      import: {
+        button: '批量导入',
+        failed: '导入失败',
+        result: '导入完成：成功 %{success} 条，失败 %{failed} 条',
+      },
       fields: {
         id: 'ID',
         username: '用户名',
@@ -528,6 +533,21 @@ const customChineseMessages: TranslationMessages = {
       reset: '重置默认值',
       reload: '重新加载',
       loading: '加载中...',
+      backup: {
+        button: '系统备份',
+        success: '备份成功，文件已开始下载',
+        failed: '备份失败',
+        notice: '备份文件包含明文密码与凭据，请务必妥善保管。',
+      },
+      restore: {
+        button: '系统恢复',
+        success: '恢复成功',
+        failed: '恢复失败',
+        confirm_title: '确认系统恢复',
+        confirm_warning: '系统恢复将用备份文件中的数据覆盖现有配置（节点、NAS、套餐、用户、系统配置、操作员）。这会覆盖当前管理员账号及密码，恢复后可能需要使用备份中的凭据重新登录。确定要继续吗？',
+        confirm: '确认恢复',
+        cancel: '取消',
+      },
       confirm_reset: '确认重置配置',
       reset_warning: '确定要将所有配置项重置为默认值吗？',
       reset_notice: '重置后需要点击"保存配置"才会生效。',

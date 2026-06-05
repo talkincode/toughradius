@@ -78,6 +78,11 @@ const customEnglishMessages: TranslationMessages = {
   resources: {
     'radius/users': {
       name: 'RADIUS User |||| RADIUS Users',
+      import: {
+        button: 'Batch Import',
+        failed: 'Import failed',
+        result: 'Import finished: %{success} succeeded, %{failed} failed',
+      },
       fields: {
         id: 'ID',
         username: 'Username',
@@ -528,6 +533,21 @@ const customEnglishMessages: TranslationMessages = {
       reset: 'Reset to Default',
       reload: 'Reload',
       loading: 'Loading...',
+      backup: {
+        button: 'System Backup',
+        success: 'Backup created, download started',
+        failed: 'Backup failed',
+        notice: 'The backup file contains plaintext passwords and credentials. Keep it secure.',
+      },
+      restore: {
+        button: 'System Restore',
+        success: 'Restore completed',
+        failed: 'Restore failed',
+        confirm_title: 'Confirm System Restore',
+        confirm_warning: 'System restore overwrites the existing configuration (nodes, NAS, profiles, users, system config, operators) with the data from the backup file. This will overwrite the current administrator account and password — you may need to log in again using the credentials from the backup. Continue?',
+        confirm: 'Confirm Restore',
+        cancel: 'Cancel',
+      },
       confirm_reset: 'Confirm Reset Configuration',
       reset_warning: 'Are you sure you want to reset all configurations to default values?',
       reset_notice: 'You need to click "Save Configuration" for the reset to take effect.',
