@@ -1,0 +1,33 @@
+// ToughRADIUS development container.
+//
+// Provides a reproducible environment (Go + Node + PostgreSQL) for building the
+// backend/frontend and running the container-backed integration suite. The
+// PostgreSQL "db" service is wired via TEST_DATABASE_* so the integration tests
+// run out of the box:
+//
+//   go test -tags=integration ./test/integration/...
+//
+{
+  "name": "ToughRADIUS Dev",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/toughradius",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  // Web/Admin API (1816) and Vite dev server (5173/3000).
+  "forwardPorts": [1816, 5173, 3000],
+  "postCreateCommand": "go mod download && (cd web && npm ci)",
+  "remoteUser": "vscode",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "golang.go",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
