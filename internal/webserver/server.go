@@ -301,10 +301,6 @@ func ServerRecover(debug bool) echo.MiddlewareFunc {
 // skipFunc filters web requests in middleware
 func jwtSkipFunc() func(c echo.Context) bool {
 	return func(c echo.Context) bool {
-		if os.Getenv("TOUGHRADIUS_DEVMODE") == "true" {
-			return true
-		}
-
 		for _, prefix := range JwtSkipPrefix {
 			if strings.HasPrefix(c.Path(), prefix) {
 				return true
