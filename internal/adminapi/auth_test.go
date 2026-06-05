@@ -347,6 +347,26 @@ func TestResolveOperatorFromContext_DisabledAccount(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, rec2.Code)
 }
 
+// TestResolveOperatorFromContext_IgnoresInjectedOperatorInProduction proves the
+// FIX-022 hardening: with the test-only seam disabled (as in production builds),
+// an operator placed directly into the request context is NOT trusted, and
+// resolution falls through to the signed-JWT path.
+func TestResolveOperatorFromContext_IgnoresInjectedOperatorInProduction(t *testing.T) {
+	saved := testOperatorResolver
+	testOperatorResolver = nil // simulate the production build (no test seam)
+	t.Cleanup(func() { testOperatorResolver = saved })
+
+	e := echo.New()
+	req := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
+	c.Set("current_operator", &domain.SysOpr{ID: 1, Username: "attacker", Level: "super", Status: "enabled"})
+
+	op, err := resolveOperatorFromContext(c)
+	require.Error(t, err, "injected current_operator must not be trusted in production")
+	require.Nil(t, op)
+}
+
 // TestCurrentUserHandler_NoUser tests the current user handler without a user in context
 func TestCurrentUserHandler_NoUser(t *testing.T) {
 	_, e, _, _, cleanup := setupAuthTest(t)

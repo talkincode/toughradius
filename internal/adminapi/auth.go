@@ -126,10 +126,19 @@ func currentUserHandler(c echo.Context) error {
 	})
 }
 
+// testOperatorResolver is a test-only seam. It is nil in production builds and
+// is assigned only by test code (see test_helpers_test.go), letting unit tests
+// inject an already-resolved operator without standing up the full JWT
+// middleware. Production code never assigns it, so the shipped binary always
+// resolves caller identity from the signed JWT below and never trusts an
+// operator placed directly into the request context.
+var testOperatorResolver func(c echo.Context) (*domain.SysOpr, bool)
+
 func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
-	// Check for directly injected operator (for testing)
-	if op, ok := c.Get("current_operator").(*domain.SysOpr); ok {
-		return op, nil
+	if testOperatorResolver != nil {
+		if op, ok := testOperatorResolver(c); ok {
+			return op, nil
+		}
 	}
 
 	userVal := c.Get("user")
