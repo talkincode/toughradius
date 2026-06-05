@@ -62,21 +62,11 @@ type AuthRateUser struct {
 	Starttime time.Time
 }
 
-type EapState struct {
-	Username  string
-	Challenge []byte
-	StateID   string
-	EapMethad string
-	Success   bool
-}
-
 type RadiusService struct {
 	appCtx        app.AppContext // Use interface instead of concrete type
 	AuthRateCache map[string]AuthRateUser
-	EapStateCache map[string]EapState
 	TaskPool      *ants.Pool
 	arclock       sync.Mutex
-	eaplock       sync.Mutex
 	nasCache      *cachepkg.TTLCache[*domain.NetNas]
 	userCache     *cachepkg.TTLCache[*domain.RadiusUser]
 
@@ -100,7 +90,6 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 	s := &RadiusService{
 		appCtx:        appCtx,
 		AuthRateCache: make(map[string]AuthRateUser),
-		EapStateCache: make(map[string]EapState),
 		arclock:       sync.Mutex{},
 		TaskPool:      pool,
 		nasCache:      cachepkg.NewTTLCache[*domain.NetNas](time.Minute, 512),
@@ -441,37 +430,6 @@ func (s *RadiusService) CheckRequestSecret(r *radius.Packet, secret []byte) erro
 		return ErrSecretMismatch
 	}
 	return nil
-}
-
-// State add
-func (s *RadiusService) AddEapState(stateid, username string, challenge []byte, eapMethad string) {
-	s.eaplock.Lock()
-	defer s.eaplock.Unlock()
-	s.EapStateCache[stateid] = EapState{
-		Username:  username,
-		StateID:   stateid,
-		Challenge: challenge,
-		EapMethad: eapMethad,
-		Success:   false,
-	}
-}
-
-// State get
-func (s *RadiusService) GetEapState(stateid string) (state *EapState, err error) {
-	s.eaplock.Lock()
-	defer s.eaplock.Unlock()
-	val, ok := s.EapStateCache[stateid]
-	if ok {
-		return &val, nil
-	}
-	return nil, errors.New("state not found")
-}
-
-// State delete
-func (s *RadiusService) DeleteEapState(stateid string) {
-	s.eaplock.Lock()
-	defer s.eaplock.Unlock()
-	delete(s.EapStateCache, stateid)
 }
 
 func (s *AuthService) GetLocalPassword(user *domain.RadiusUser, isMacAuth bool) (string, error) {

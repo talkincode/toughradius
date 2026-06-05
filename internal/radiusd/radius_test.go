@@ -1,7 +1,6 @@
 package radiusd
 
 import (
-	"bytes"
 	"strconv"
 	"sync"
 	"testing"
@@ -153,99 +152,6 @@ func TestCheckAuthRateLimitConcurrent(t *testing.T) {
 	t.Logf("Concurrent test: %d success, %d failed", successCount, failCount)
 }
 
-func TestEAPStateManagement(t *testing.T) {
-	service := &RadiusService{
-		EapStateCache: make(map[string]EapState),
-		eaplock:       sync.Mutex{},
-	}
-
-	// Add EAP Status
-	stateID := "test-state-id"
-	username := "testuser"
-	challenge := []byte("challenge-data")
-	eapMethod := "eap-md5"
-
-	service.AddEapState(stateID, username, challenge, eapMethod)
-
-	// get EAP Status
-	state, err := service.GetEapState(stateID)
-	if err != nil {
-		t.Fatalf("failed to get EAP state: %v", err)
-	}
-
-	if state.Username != username {
-		t.Errorf("expected username %s, got %s", username, state.Username)
-	}
-
-	if !bytes.Equal(state.Challenge, challenge) {
-		t.Errorf("challenge data mismatch")
-	}
-
-	if state.EapMethad != eapMethod {
-		t.Errorf("expected method %s, got %s", eapMethod, state.EapMethad)
-	}
-
-	if state.Success {
-		t.Error("initial state should have Success=false")
-	}
-
-	// Delete EAP Status
-	service.DeleteEapState(stateID)
-
-	// Validatedeleted
-	_, err = service.GetEapState(stateID)
-	if err == nil {
-		t.Error("expected error when getting deleted state")
-	}
-}
-
-func TestGetEapStateNotFound(t *testing.T) {
-	service := &RadiusService{
-		EapStateCache: make(map[string]EapState),
-		eaplock:       sync.Mutex{},
-	}
-
-	_, err := service.GetEapState("nonexistent")
-	if err == nil {
-		t.Error("expected error for nonexistent state")
-	}
-
-	if err.Error() != "state not found" {
-		t.Errorf("expected 'state not found' error, got: %v", err)
-	}
-}
-
-func TestEAPStateConcurrentAccess(t *testing.T) {
-	service := &RadiusService{
-		EapStateCache: make(map[string]EapState),
-		eaplock:       sync.Mutex{},
-	}
-
-	var wg sync.WaitGroup
-	stateCount := 100
-
-	// Concurrent add states
-	for i := 0; i < stateCount; i++ {
-		wg.Add(1)
-		go func(id int) {
-			defer wg.Done()
-			stateID := "state-" + strconv.Itoa(id)
-			service.AddEapState(stateID, "user", []byte("challenge"), "eap-md5")
-		}(i)
-	}
-
-	wg.Wait()
-
-	// ValidateAll states added
-	service.eaplock.Lock()
-	count := len(service.EapStateCache)
-	service.eaplock.Unlock()
-
-	if count != stateCount {
-		t.Errorf("expected %d states, got %d", stateCount, count)
-	}
-}
-
 func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 	service := &RadiusService{
 		AuthRateCache: make(map[string]AuthRateUser),
@@ -277,35 +183,6 @@ func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 	}
 }
 
-func TestEAPStateUpdate(t *testing.T) {
-	service := &RadiusService{
-		EapStateCache: make(map[string]EapState),
-		eaplock:       sync.Mutex{},
-	}
-
-	stateID := "test-state"
-
-	// Add the initial status
-	service.AddEapState(stateID, "user1", []byte("challenge1"), "eap-md5")
-
-	// Update state（by overwriting）
-	service.AddEapState(stateID, "user2", []byte("challenge2"), "eap-mschapv2")
-
-	// ValidateStatusupdated
-	state, err := service.GetEapState(stateID)
-	if err != nil {
-		t.Fatalf("failed to get state: %v", err)
-	}
-
-	if state.Username != "user2" {
-		t.Errorf("expected username user2, got %s", state.Username)
-	}
-
-	if state.EapMethad != "eap-mschapv2" {
-		t.Errorf("expected method eap-mschapv2, got %s", state.EapMethad)
-	}
-}
-
 func TestReleaseAuthRateLimitNonexistent(t *testing.T) {
 	service := &RadiusService{
 		AuthRateCache: make(map[string]AuthRateUser),
@@ -322,55 +199,6 @@ func TestReleaseAuthRateLimitNonexistent(t *testing.T) {
 
 	if count != 0 {
 		t.Errorf("expected empty cache, got %d entries", count)
-	}
-}
-
-func TestDeleteEapStateNonexistent(t *testing.T) {
-	service := &RadiusService{
-		EapStateCache: make(map[string]EapState),
-		eaplock:       sync.Mutex{},
-	}
-
-	// DeleteNon-existent state should not panic
-	service.DeleteEapState("nonexistent-state")
-
-	// Validate the cache is empty
-	service.eaplock.Lock()
-	count := len(service.EapStateCache)
-	service.eaplock.Unlock()
-
-	if count != 0 {
-		t.Errorf("expected empty cache, got %d entries", count)
-	}
-}
-
-func TestMultipleEAPStates(t *testing.T) {
-	service := &RadiusService{
-		EapStateCache: make(map[string]EapState),
-		eaplock:       sync.Mutex{},
-	}
-
-	// Add multiple different EAP Status
-	states := map[string]string{
-		"state1": "user1",
-		"state2": "user2",
-		"state3": "user3",
-	}
-
-	for stateID, username := range states {
-		service.AddEapState(stateID, username, []byte("challenge"), "eap-md5")
-	}
-
-	// ValidateAll states exist
-	for stateID, expectedUser := range states {
-		state, err := service.GetEapState(stateID)
-		if err != nil {
-			t.Errorf("failed to get state %s: %v", stateID, err)
-			continue
-		}
-		if state.Username != expectedUser {
-			t.Errorf("state %s: expected user %s, got %s", stateID, expectedUser, state.Username)
-		}
 	}
 }
 
