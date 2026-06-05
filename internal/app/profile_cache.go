@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"sync"
 	"time"
 
@@ -94,6 +95,10 @@ func NewProfileCache(db *gorm.DB, ttl time.Duration) *ProfileCache {
 //	    return fmt.Errorf("profile not found: %w", err)
 //	}
 func (pc *ProfileCache) Get(profileID int64) (*domain.RadiusProfile, error) {
+	if pc.db == nil {
+		return nil, errors.New("profile cache: database connection is nil")
+	}
+
 	// Try cache first
 	pc.mu.RLock()
 	entry, found := pc.cache[profileID]

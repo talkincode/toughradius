@@ -333,10 +333,9 @@ func TestProfileCache_GetWithNilDB(t *testing.T) {
 		stopClean: make(chan struct{}),
 	}
 
-	// Should panic when trying to get from nil DB (cache miss)
-	assert.Panics(t, func() {
-		_, _ = cache.Get(1) //nolint:errcheck
-	})
+	// Should return an error when the database connection is nil (cache miss).
+	_, err := cache.Get(1)
+	assert.Error(t, err)
 }
 
 func TestProfileCache_TTLExpiration(t *testing.T) {
