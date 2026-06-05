@@ -38,6 +38,40 @@ const apiBasePath = "/api/v1"
 // generous enough for normal admin API JSON and configuration-table backups.
 const DefaultBodyLimit = "16M"
 
+// corsEnvVar is the environment variable holding a comma-separated list of
+// origins allowed for cross-origin requests to the admin API.
+const corsEnvVar = "TOUGHRADIUS_WEB_CORS_ORIGINS"
+
+// securityHeaders returns middleware that sets baseline security response
+// headers: X-Frame-Options (clickjacking), X-Content-Type-Options (MIME
+// sniffing), and X-XSS-Protection. HSTS is intentionally left disabled so plain
+// HTTP deployments are not broken; it should be enabled by a TLS-terminating
+// proxy when applicable.
+func securityHeaders() echo.MiddlewareFunc {
+	return middleware.SecureWithConfig(middleware.SecureConfig{
+		XFrameOptions:      "SAMEORIGIN",
+		ContentTypeNosniff: "nosniff",
+		XSSProtection:      "1; mode=block",
+	})
+}
+
+// corsAllowedOrigins parses the configured CORS allow-list. An empty/unset value
+// yields nil, meaning CORS is not enabled (same-origin only).
+func corsAllowedOrigins() []string {
+	raw := strings.TrimSpace(os.Getenv(corsEnvVar))
+	if raw == "" {
+		return nil
+	}
+	parts := strings.Split(raw, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if o := strings.TrimSpace(p); o != "" {
+			origins = append(origins, o)
+		}
+	}
+	return origins
+}
+
 var JwtSkipPrefix = []string{
 	"/ready",
 	"/realip",
@@ -77,6 +111,26 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 		},
 		Level: 1,
 	}))
+
+	// Security response headers (clickjacking, MIME sniffing, reflected XSS).
+	s.root.Use(securityHeaders())
+
+	// CORS is disabled by default (the admin UI is served same-origin). When
+	// cross-origin access is required it can be enabled by listing the allowed
+	// origins in TOUGHRADIUS_WEB_CORS_ORIGINS (comma-separated).
+	if origins := corsAllowedOrigins(); len(origins) > 0 {
+		s.root.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins: origins,
+			AllowMethods: []string{
+				http.MethodGet, http.MethodHead, http.MethodPost,
+				http.MethodPut, http.MethodPatch, http.MethodDelete, http.MethodOptions,
+			},
+			AllowHeaders: []string{
+				echo.HeaderOrigin, echo.HeaderContentType, echo.HeaderAuthorization,
+			},
+			AllowCredentials: true,
+		}))
+	}
 
 	// Register the custom validator
 	s.root.Validator = customValidator.NewValidator()
