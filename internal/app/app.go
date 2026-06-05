@@ -1,12 +1,16 @@
 package app
 
 import (
+	"errors"
+	"fmt"
 	"os"
 	"runtime/debug"
+	"strings"
 	"time"
 	_ "time/tzdata"
 
 	"github.com/robfig/cron/v3"
+	"github.com/spf13/cast"
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
@@ -207,11 +211,35 @@ func (a *Application) GetSettingsBoolValue(category, key string) bool {
 	return a.configManager.GetBool(category, key)
 }
 
-// SaveSettings saves configuration settings
+// SaveSettings persists a batch of configuration settings.
+//
+// Each map key is a fully-qualified configuration key in "category.name" form
+// (matching the keys registered in config_schemas.json) and the value is the
+// new value, which is rendered to its string representation before being
+// written. Every entry is validated and stored through the ConfigManager, which
+// updates both the in-memory cache and the sys_config table atomically per key.
+//
+// If one or more keys fail (unknown key, validation error, or database error),
+// the remaining keys are still attempted and a single joined error describing
+// every failure is returned.
 func (a *Application) SaveSettings(settings map[string]interface{}) error {
-	// TODO: Implement proper settings save logic
-	// This is a placeholder to satisfy the interface
-	return nil
+	if len(settings) == 0 {
+		return nil
+	}
+
+	var errs []error
+	for key, raw := range settings {
+		category, name, ok := strings.Cut(key, ".")
+		if !ok || category == "" || name == "" {
+			errs = append(errs, fmt.Errorf("invalid settings key %q: expected \"category.name\"", key))
+			continue
+		}
+		if err := a.configManager.Set(category, name, cast.ToString(raw)); err != nil {
+			errs = append(errs, fmt.Errorf("save setting %q: %w", key, err))
+		}
+	}
+
+	return errors.Join(errs...)
 }
 
 // ProfileCache returns the profile cache instance
