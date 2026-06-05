@@ -30,10 +30,10 @@ func registerSettingsRoutes() {
 	webserver.ApiGET("/system/settings", listSettings)
 	webserver.ApiGET("/system/settings/:id", getSettings)
 	webserver.ApiGET("/system/config/schemas", getConfigSchemas)
-	webserver.ApiPOST("/system/settings", createSettings)
-	webserver.ApiPUT("/system/settings/:id", updateSettings)
-	webserver.ApiDELETE("/system/settings/:id", deleteSettings)
-	webserver.ApiPOST("/system/config/reload", reloadConfig)
+	webserver.ApiPOST("/system/settings", createSettings, requireAdmin())
+	webserver.ApiPUT("/system/settings/:id", updateSettings, requireAdmin())
+	webserver.ApiDELETE("/system/settings/:id", deleteSettings, requireAdmin())
+	webserver.ApiPOST("/system/config/reload", reloadConfig, requireAdmin())
 }
 
 // listSettings retrieves the system settings list

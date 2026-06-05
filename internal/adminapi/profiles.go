@@ -450,7 +450,7 @@ func DeleteProfile(c echo.Context) error {
 func registerProfileRoutes() {
 	webserver.ApiGET("/radius-profiles", ListProfiles)
 	webserver.ApiGET("/radius-profiles/:id", GetProfile)
-	webserver.ApiPOST("/radius-profiles", CreateProfile)
-	webserver.ApiPUT("/radius-profiles/:id", UpdateProfile)
-	webserver.ApiDELETE("/radius-profiles/:id", DeleteProfile)
+	webserver.ApiPOST("/radius-profiles", CreateProfile, requireAdmin())
+	webserver.ApiPUT("/radius-profiles/:id", UpdateProfile, requireAdmin())
+	webserver.ApiDELETE("/radius-profiles/:id", DeleteProfile, requireAdmin())
 }

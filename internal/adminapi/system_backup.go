@@ -33,8 +33,8 @@ type SystemBackup struct {
 }
 
 func registerSystemBackupRoutes() {
-	webserver.ApiGET("/system/backup", backupSystem)
-	webserver.ApiPOST("/system/restore", restoreSystem)
+	webserver.ApiGET("/system/backup", backupSystem, requireAdmin())
+	webserver.ApiPOST("/system/restore", restoreSystem, requireAdmin())
 }
 
 // backupSystem exports the core configuration tables as a downloadable JSON file.
