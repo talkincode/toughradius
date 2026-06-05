@@ -82,7 +82,15 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	defer s.ReleaseAuthRateLimit(username)
 
-	// s.CheckRequestSecret(r.Packet, []byte(nas.Secret))
+	// Validate the Accounting-Request authenticator against the NAS shared secret.
+	// Unlike Access-Request (which carries a random authenticator), accounting
+	// packets are signed with a keyed Request Authenticator (RFC 2866). A mismatch
+	// means the request is forged or the NAS is misconfigured, so it must be
+	// dropped before any session state is mutated.
+	if err := s.CheckRequestSecret(r.Packet, []byte(nas.Secret)); err != nil {
+		s.logAcctError("verify_secret", nasrip, username, err)
+		return
+	}
 
 	vendorReq := s.ParseVendor(r, nas.VendorCode)
 
