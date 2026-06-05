@@ -311,6 +311,42 @@ func TestCurrentUserHandler(t *testing.T) {
 	assert.Equal(t, testOpr.Username, user["username"])
 }
 
+// TestResolveOperatorFromContext_DisabledAccount verifies that a token issued to
+// an operator that is subsequently disabled is rejected immediately, before the
+// JWT itself expires (FIX-012).
+func TestResolveOperatorFromContext_DisabledAccount(t *testing.T) {
+	db, e, appCtx, testOpr, cleanup := setupAuthTest(t)
+	defer cleanup()
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/me", nil)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+	c.Set("current_operator", nil) // force resolution from the JWT, not the test backdoor
+	setJWTUser(t, c, testOpr)
+
+	// While enabled, the token resolves successfully.
+	op, err := resolveOperatorFromContext(c)
+	require.NoError(t, err)
+	require.Equal(t, testOpr.Username, op.Username)
+
+	// Disable the account after the token was issued.
+	testOpr.Status = common.DISABLED
+	require.NoError(t, db.Save(testOpr).Error)
+
+	// The previously valid token must now be rejected.
+	_, err = resolveOperatorFromContext(c)
+	require.Error(t, err)
+
+	// And the protected handler returns 401.
+	rec2 := httptest.NewRecorder()
+	c2 := CreateTestContext(e, db, req, rec2, appCtx)
+	c2.Set("current_operator", nil)
+	setJWTUser(t, c2, testOpr)
+	err = currentUserHandler(c2)
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusUnauthorized, rec2.Code)
+}
+
 // TestCurrentUserHandler_NoUser tests the current user handler without a user in context
 func TestCurrentUserHandler_NoUser(t *testing.T) {
 	_, e, _, _, cleanup := setupAuthTest(t)
