@@ -9,7 +9,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -129,8 +128,8 @@ func (s *RadiusService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) (
 	return []byte(nas.Secret), nil
 }
 
-// GetNas looks up a NAS device, preferring IP before ID
-// Deprecated: Use NasRepo.GetByIPOrIdentifier instead
+// GetNas looks up a NAS device by source IP (preferred) or identifier. Results
+// are cached, and a missing record is mapped to an unauthorized-NAS error.
 func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err error) {
 	cacheKey := fmt.Sprintf("%s|%s", ip, identifier)
 	if cached, ok := s.nasCache.Get(cacheKey); ok {
@@ -148,8 +147,8 @@ func (s *RadiusService) GetNas(ip, identifier string) (nas *domain.NetNas, err e
 	return nas, nil
 }
 
-// GetValidUser retrieves a valid user and performs initial checks
-// Deprecated: Use UserRepo methods with plugin-based validation instead
+// GetValidUser retrieves a user by username (or MAC address for MAC auth),
+// caches the result, and rejects disabled or expired accounts.
 func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *domain.RadiusUser, err error) {
 	cacheKey := fmt.Sprintf("%t|%s", macauth, usernameOrMac)
 	if cached, ok := s.userCache.Get(cacheKey); ok {
@@ -182,44 +181,12 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	return user, nil
 }
 
-// GetUserForAcct fetches the user without validating expiration or status
-// Deprecated: Use UserRepo.GetByUsername instead
-func (s *RadiusService) GetUserForAcct(username string) (user *domain.RadiusUser, err error) {
-	// Adapter: delegate to repository layer
-	user, err = s.UserRepo.GetByUsername(context.Background(), username)
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, radiuserrors.NewUserNotExistsError()
-		}
-		return nil, err
-	}
-	return user, nil
-}
-
-// Deprecated: Use UserRepo.UpdateField instead
-func (s *RadiusService) UpdateUserField(username string, field string, value interface{}) {
-	err := s.UserRepo.UpdateField(context.Background(), username, field, value)
-	if err != nil {
-		zap.L().Error(fmt.Sprintf("update user %s error", field), zap.Error(err), zap.String("namespace", "radius"))
-	}
-}
-
-// Deprecated: Use UserRepo.UpdateMacAddr instead
+// UpdateUserMac persists the most recently seen MAC address for a user.
 func (s *RadiusService) UpdateUserMac(username string, macaddr string) {
 	_ = s.UserRepo.UpdateMacAddr(context.Background(), username, macaddr)
 }
 
-// Deprecated: Use UserRepo.UpdateVlanId instead
-func (s *RadiusService) UpdateUserVlanid1(username string, vlanid1 int) {
-	_ = s.UserRepo.UpdateVlanId(context.Background(), username, vlanid1, 0)
-}
-
-// Deprecated: Use UserRepo.UpdateVlanId instead
-func (s *RadiusService) UpdateUserVlanid2(username string, vlanid2 int) {
-	_ = s.UserRepo.UpdateVlanId(context.Background(), username, 0, vlanid2)
-}
-
-// Deprecated: Use UserRepo.UpdateLastOnline instead
+// UpdateUserLastOnline records the user's last-online timestamp.
 func (s *RadiusService) UpdateUserLastOnline(username string) {
 	_ = s.UserRepo.UpdateLastOnline(context.Background(), username)
 }
@@ -311,94 +278,6 @@ func (s *RadiusService) ReleaseAuthRateLimit(username string) {
 	s.arclock.Lock()
 	defer s.arclock.Unlock()
 	delete(s.AuthRateCache, username)
-}
-
-// Deprecated: Use SessionRepo.Create instead
-func (s *RadiusService) AddRadiusOnline(ol domain.RadiusOnline) error {
-	ol.ID = common.UUIDint64()
-	return s.SessionRepo.Create(context.Background(), &ol)
-}
-
-// Deprecated: Use AccountingRepo.Create instead
-func (s *RadiusService) AddRadiusAccounting(ol domain.RadiusOnline, start bool) error {
-	accounting := domain.RadiusAccounting{
-		ID:                  common.UUIDint64(),
-		Username:            ol.Username,
-		AcctSessionId:       ol.AcctSessionId,
-		NasId:               ol.NasId,
-		NasAddr:             ol.NasAddr,
-		NasPaddr:            ol.NasPaddr,
-		SessionTimeout:      ol.SessionTimeout,
-		FramedIpaddr:        ol.FramedIpaddr,
-		FramedNetmask:       ol.FramedNetmask,
-		FramedIpv6Prefix:    ol.FramedIpv6Prefix,
-		FramedIpv6Address:   ol.FramedIpv6Address,
-		DelegatedIpv6Prefix: ol.DelegatedIpv6Prefix,
-		MacAddr:             ol.MacAddr,
-		NasPort:             ol.NasPort,
-		NasClass:            ol.NasClass,
-		NasPortId:           ol.NasPortId,
-		NasPortType:         ol.NasPortType,
-		ServiceType:         ol.ServiceType,
-		AcctSessionTime:     ol.AcctSessionTime,
-		AcctInputTotal:      ol.AcctInputTotal,
-		AcctOutputTotal:     ol.AcctOutputTotal,
-		AcctInputPackets:    ol.AcctInputPackets,
-		AcctOutputPackets:   ol.AcctOutputPackets,
-		LastUpdate:          time.Now(),
-		AcctStartTime:       ol.AcctStartTime,
-		AcctStopTime:        time.Time{},
-	}
-
-	if !start {
-		accounting.AcctStopTime = time.Now()
-	}
-	return s.AccountingRepo.Create(context.Background(), &accounting)
-}
-
-// Deprecated: Use SessionRepo.CountByUsername instead
-func (s *RadiusService) GetRadiusOnlineCount(username string) int {
-	count, _ := s.SessionRepo.CountByUsername(context.Background(), username)
-	return count
-}
-
-// Deprecated: Use SessionRepo.Exists instead
-func (s *RadiusService) ExistRadiusOnline(sessionId string) bool {
-	exists, _ := s.SessionRepo.Exists(context.Background(), sessionId)
-	return exists
-}
-
-// Deprecated: Use SessionRepo.Update instead
-func (s *RadiusService) UpdateRadiusOnlineData(data domain.RadiusOnline) error {
-	return s.SessionRepo.Update(context.Background(), &data)
-}
-
-// Deprecated: Use AccountingRepo.UpdateStop instead
-func (s *RadiusService) EndRadiusAccounting(online domain.RadiusOnline) error {
-	accounting := domain.RadiusAccounting{
-		AcctSessionId:     online.AcctSessionId,
-		AcctSessionTime:   online.AcctSessionTime,
-		AcctInputTotal:    online.AcctInputTotal,
-		AcctOutputTotal:   online.AcctOutputTotal,
-		AcctInputPackets:  online.AcctInputPackets,
-		AcctOutputPackets: online.AcctOutputPackets,
-	}
-	return s.AccountingRepo.UpdateStop(context.Background(), online.AcctSessionId, &accounting)
-}
-
-// Deprecated: Use SessionRepo.Delete instead
-func (s *RadiusService) RemoveRadiusOnline(sessionId string) error {
-	return s.SessionRepo.Delete(context.Background(), sessionId)
-}
-
-// Deprecated: Use SessionRepo.BatchDelete instead
-func (s *RadiusService) BatchClearRadiusOnline(ids string) error {
-	return s.SessionRepo.BatchDelete(context.Background(), strings.Split(ids, ","))
-}
-
-// Deprecated: Use SessionRepo.BatchDeleteByNas instead
-func (s *RadiusService) BatchClearRadiusOnlineByNas(nasip, nasid string) {
-	_ = s.SessionRepo.BatchDeleteByNas(context.Background(), nasip, nasid)
 }
 
 func (s *RadiusService) Release() {
