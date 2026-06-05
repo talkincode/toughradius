@@ -468,11 +468,11 @@ func (s *AuthService) UpdateBind(user *domain.RadiusUser, vendorReq *VendorReque
 	}
 	reqvid1 := int(vendorReq.Vlanid1)
 	reqvid2 := int(vendorReq.Vlanid2)
-	if user.Vlanid1 != reqvid1 {
-		s.UpdateUserVlanid2(user.Username, reqvid1)
-	}
-	if user.Vlanid2 != reqvid2 {
-		s.UpdateUserVlanid2(user.Username, reqvid2)
+	// UpdateVlanId writes both vlanid columns at once, so persist them together
+	// when either differs. Updating them via the single-field helpers would zero
+	// out the other column (and the old code also wrote vlanid1 into vlanid2).
+	if user.Vlanid1 != reqvid1 || user.Vlanid2 != reqvid2 {
+		_ = s.UserRepo.UpdateVlanId(context.Background(), user.Username, reqvid1, reqvid2)
 	}
 }
 
