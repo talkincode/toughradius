@@ -55,3 +55,37 @@ func TestUpdateBindVlanid1ChangeKeepsVlanid2(t *testing.T) {
 	require.Equal(t, 99, got.Vlanid1, "vlanid1 must be persisted to vlanid1")
 	require.Equal(t, 20, got.Vlanid2, "vlanid2 must be preserved")
 }
+
+// TestUpdateBindMacOnlyChange verifies that a MAC-address change is persisted
+// while the VLAN columns are left untouched when they already match.
+func TestUpdateBindMacOnlyChange(t *testing.T) {
+	svc, db := newUpdateBindTestService(t)
+
+	user := &domain.RadiusUser{Username: "u3", Vlanid1: 10, Vlanid2: 20, MacAddr: "aa:bb"}
+	require.NoError(t, db.Create(user).Error)
+
+	svc.UpdateBind(user, &VendorRequest{Vlanid1: 10, Vlanid2: 20, MacAddr: "cc:dd"})
+
+	var got domain.RadiusUser
+	require.NoError(t, db.Where("username = ?", "u3").First(&got).Error)
+	require.Equal(t, "cc:dd", got.MacAddr, "mac must be updated")
+	require.Equal(t, 10, got.Vlanid1, "vlanid1 must be preserved")
+	require.Equal(t, 20, got.Vlanid2, "vlanid2 must be preserved")
+}
+
+// TestUpdateBindNoChangeIsNoop verifies that an identical request leaves the
+// stored record unchanged (neither the MAC nor the VLAN write branches fire).
+func TestUpdateBindNoChangeIsNoop(t *testing.T) {
+	svc, db := newUpdateBindTestService(t)
+
+	user := &domain.RadiusUser{Username: "u4", Vlanid1: 10, Vlanid2: 20, MacAddr: "aa:bb"}
+	require.NoError(t, db.Create(user).Error)
+
+	svc.UpdateBind(user, &VendorRequest{Vlanid1: 10, Vlanid2: 20, MacAddr: "aa:bb"})
+
+	var got domain.RadiusUser
+	require.NoError(t, db.Where("username = ?", "u4").First(&got).Error)
+	require.Equal(t, "aa:bb", got.MacAddr)
+	require.Equal(t, 10, got.Vlanid1)
+	require.Equal(t, 20, got.Vlanid2)
+}
