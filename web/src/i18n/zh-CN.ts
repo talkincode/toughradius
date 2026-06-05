@@ -557,7 +557,7 @@ const customChineseMessages: TranslationMessages = {
       loading_message: '加载配置中，请稍候...',
       loading_detail: '正在从后端API获取配置定义和当前配置值。',
       no_config_warning: '没有找到配置项，请检查后端API是否正常工作。',
-      success_message: '成功加载 {schemaCount} 个配置定义，{configCount} 个配置值',
+      success_message: '成功加载 %{schemaCount} 个配置定义，%{configCount} 个配置值',
       groups: {
         radius: {
           title: 'RADIUS 配置',

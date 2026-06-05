@@ -557,7 +557,7 @@ const customEnglishMessages: TranslationMessages = {
       loading_message: 'Loading configuration, please wait...',
       loading_detail: 'Fetching configuration definitions and current values from backend API.',
       no_config_warning: 'No configuration items found. Please check if backend API is working properly.',
-      success_message: 'Successfully loaded {schemaCount} configuration definitions, {configCount} configuration values',
+      success_message: 'Successfully loaded %{schemaCount} configuration definitions, %{configCount} configuration values',
       groups: {
         radius: {
           title: 'RADIUS Configuration',
