@@ -126,6 +126,15 @@ func importRadiusUsers(c echo.Context) error {
 			status = common.ENABLED
 		}
 
+		addrPool := importMapString(item, "addr_pool", "AddrPool")
+		if addrPool == "" {
+			addrPool = profile.AddrPool
+		}
+		userDomain := importMapString(item, "domain", "Domain")
+		if userDomain == "" {
+			userDomain = profile.Domain
+		}
+
 		user := &domain.RadiusUser{
 			ID:              common.UUIDint64(),
 			NodeId:          cast.ToInt64(importMapString(item, "node_id", "NodeId")),
@@ -136,7 +145,7 @@ func importRadiusUsers(c echo.Context) error {
 			Address:         importMapString(item, "address", "Address"),
 			Username:        username,
 			Password:        password,
-			AddrPool:        common.If(importMapString(item, "addr_pool", "AddrPool") != "", importMapString(item, "addr_pool", "AddrPool"), profile.AddrPool).(string),
+			AddrPool:        addrPool,
 			ActiveNum:       profile.ActiveNum,
 			UpRate:          profile.UpRate,
 			DownRate:        profile.DownRate,
@@ -144,7 +153,7 @@ func importRadiusUsers(c echo.Context) error {
 			Vlanid2:         cast.ToInt(importMapString(item, "vlanid2", "Vlanid2")),
 			IpAddr:          importMapString(item, "ip_addr", "IpAddr"),
 			MacAddr:         importMapString(item, "mac_addr", "MacAddr"),
-			Domain:          common.If(importMapString(item, "domain", "Domain") != "", importMapString(item, "domain", "Domain"), profile.Domain).(string),
+			Domain:          userDomain,
 			IPv6PrefixPool:  profile.IPv6PrefixPool,
 			BindVlan:        profile.BindVlan,
 			BindMac:         profile.BindMac,
