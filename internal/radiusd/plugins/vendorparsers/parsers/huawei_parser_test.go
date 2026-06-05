@@ -8,6 +8,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
+	"layeh.com/radius/rfc2869"
 )
 
 func TestHuaweiParser_VendorCode(t *testing.T) {
@@ -101,4 +102,38 @@ func TestHuaweiParser_Parse_NoAttributes(t *testing.T) {
 	assert.Equal(t, "", vr.MacAddr)
 	assert.Equal(t, int64(0), vr.Vlanid1)
 	assert.Equal(t, int64(0), vr.Vlanid2)
+}
+
+// TestHuaweiParser_Parse_VLAN verifies that the Huawei parser extracts VLAN IDs
+// from NAS-Port-Id instead of leaving them stubbed at zero (FIX-017).
+func TestHuaweiParser_Parse_VLAN(t *testing.T) {
+	parser := &HuaweiParser{}
+
+	tests := []struct {
+		name          string
+		nasPortID     string
+		expectedVlan1 int64
+		expectedVlan2 int64
+	}{
+		{"dual vlan", "3/0/1:2814.727", 2814, 727},
+		{"single vlan", "3/0/1:2814", 2814, 0},
+		{"kv dual vlan", "slot=2;subslot=2;port=22;vlanid=503;vlanid2=100;", 503, 100},
+		{"no vlan", "", 0, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
+			if tt.nasPortID != "" {
+				_ = rfc2869.NASPortID_SetString(packet, tt.nasPortID) //nolint:errcheck
+			}
+			req := &radius.Request{Packet: packet}
+
+			vr, err := parser.Parse(req)
+			require.NoError(t, err)
+			require.NotNil(t, vr)
+			assert.Equal(t, tt.expectedVlan1, vr.Vlanid1)
+			assert.Equal(t, tt.expectedVlan2, vr.Vlanid2)
+		})
+	}
 }

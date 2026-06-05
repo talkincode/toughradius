@@ -45,12 +45,9 @@ func (p *H3CParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, erro
 		}
 	}
 
-	// H3C VLAN parsing
+	// H3C VLAN parsing from NAS-Port-Id.
 	nasportid := rfc2869.NASPortID_GetString(r.Packet)
-	if nasportid == "" {
-		vr.Vlanid1 = 0
-		vr.Vlanid2 = 0
-	}
+	vr.Vlanid1, vr.Vlanid2 = vendorparsers.ParseVlanIDs(nasportid)
 
 	return vr, nil
 }

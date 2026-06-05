@@ -7,9 +7,14 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
+	"layeh.com/radius/rfc2869"
 )
 
-// HuaweiParser handles Huawei vendor attributes
+// HuaweiParser handles Huawei vendor attributes.
+//
+// Note: registering a vendor (or shipping its attribute dictionary) does not by
+// itself parse anything — dictionary support is not parse support. A field on
+// VendorRequest is only populated when this parser explicitly extracts it.
 type HuaweiParser struct{}
 
 func (p *HuaweiParser) VendorCode() string {
@@ -29,10 +34,10 @@ func (p *HuaweiParser) Parse(r *radius.Request) (*vendorparsers.VendorRequest, e
 		vr.MacAddr = strings.ReplaceAll(macval, "-", ":")
 	}
 
-	// Huawei devices parse VLANs from NAS-Port-Id or other vendor-specific attributes
-	// Keep it simple here by using default values
-	vr.Vlanid1 = 0
-	vr.Vlanid2 = 0
+	// Huawei encodes VLAN IDs in the NAS-Port-Id attribute. Parse them with the
+	// shared standard parser instead of leaving them stubbed at zero.
+	nasPortID := rfc2869.NASPortID_GetString(r.Packet)
+	vr.Vlanid1, vr.Vlanid2 = vendorparsers.ParseVlanIDs(nasPortID)
 
 	return vr, nil
 }

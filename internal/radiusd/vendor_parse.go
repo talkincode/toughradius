@@ -1,35 +1,17 @@
 package radiusd
 
 import (
-	"regexp"
-	"strconv"
-
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 )
 
-var (
-	vlanStdRegexp1 = regexp.MustCompile(`\w?\s?\d+/\d+/\d+:(\d+)(\.(\d+))?\s?`)
-	vlanStdRegexp2 = regexp.MustCompile(`vlanid=(\d+);(vlanid2=?(\d+);)?`)
-)
-
-// ParseVlanIds parses standard VLAN ID values
+// ParseVlanIds parses standard VLAN ID values from a NAS-Port-Id string. It
+// delegates to vendorparsers.ParseVlanIDs, the single shared implementation
+// used by the vendor parsers.
 func ParseVlanIds(nasportid string) (int64, int64) {
-	var vlanid1 int64 = 0
-	var vlanid2 int64 = 0
-	attrs := vlanStdRegexp1.FindStringSubmatch(nasportid)
-	if attrs == nil {
-		attrs = vlanStdRegexp2.FindStringSubmatch(nasportid)
-	}
-
-	if attrs != nil {
-		vlanid1, _ = strconv.ParseInt(attrs[1], 10, 64)
-		if attrs[2] != "" {
-			vlanid2, _ = strconv.ParseInt(attrs[3], 10, 64)
-		}
-	}
-	return vlanid1, vlanid2
+	return vendorparsers.ParseVlanIDs(nasportid)
 }
 
 // ParseVendor uses the plugin system to parse vendor-specific attributes
