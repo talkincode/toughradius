@@ -3,6 +3,7 @@ package statemanager
 import (
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -11,12 +12,14 @@ import (
 
 func TestNewMemoryStateManager(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 	assert.NotNil(t, mgr)
 	assert.NotNil(t, mgr.states)
 }
 
 func TestMemoryStateManager_SetState(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	state := &eap.EAPState{
 		StateID:  "state-123",
@@ -39,6 +42,7 @@ func TestMemoryStateManager_SetState(t *testing.T) {
 
 func TestMemoryStateManager_SetState_WithNilData(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	state := &eap.EAPState{
 		StateID:  "state-123",
@@ -57,6 +61,7 @@ func TestMemoryStateManager_SetState_WithNilData(t *testing.T) {
 
 func TestMemoryStateManager_GetState_NotFound(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	state, err := mgr.GetState("nonexistent")
 	assert.Error(t, err)
@@ -66,6 +71,7 @@ func TestMemoryStateManager_GetState_NotFound(t *testing.T) {
 
 func TestMemoryStateManager_GetState_ReturnsCopy(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	originalData := map[string]interface{}{
 		"key1": "value1",
@@ -92,6 +98,7 @@ func TestMemoryStateManager_GetState_ReturnsCopy(t *testing.T) {
 
 func TestMemoryStateManager_SetState_StoresCopy(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	data := map[string]interface{}{
 		"key1": "value1",
@@ -116,6 +123,7 @@ func TestMemoryStateManager_SetState_StoresCopy(t *testing.T) {
 
 func TestMemoryStateManager_DeleteState(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	state := &eap.EAPState{
 		StateID: "state-123",
@@ -132,6 +140,7 @@ func TestMemoryStateManager_DeleteState(t *testing.T) {
 
 func TestMemoryStateManager_DeleteState_NonExistent(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	err := mgr.DeleteState("nonexistent")
 	assert.NoError(t, err)
@@ -139,6 +148,7 @@ func TestMemoryStateManager_DeleteState_NonExistent(t *testing.T) {
 
 func TestMemoryStateManager_OverwriteState(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	state1 := &eap.EAPState{
 		StateID:  "state-1",
@@ -163,6 +173,7 @@ func TestMemoryStateManager_OverwriteState(t *testing.T) {
 
 func TestMemoryStateManager_ConcurrentAccess(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 	var wg sync.WaitGroup
 
 	for i := 0; i < 100; i++ {
@@ -200,6 +211,7 @@ func TestMemoryStateManager_ConcurrentAccess(t *testing.T) {
 
 func TestMemoryStateManager_MultipleStates(t *testing.T) {
 	mgr := NewMemoryStateManager()
+	defer mgr.Close()
 
 	states := map[string]*eap.EAPState{
 		"state-1": {StateID: "id-1", Username: "user1"},
@@ -233,4 +245,43 @@ func TestMemoryStateManager_MultipleStates(t *testing.T) {
 func TestMemoryStateManager_ImplementsInterface(t *testing.T) {
 	// Verify MemoryStateManager implements EAPStateManager
 	var _ eap.EAPStateManager = (*MemoryStateManager)(nil)
+}
+
+func TestMemoryStateManager_ExpiresAfterTTL(t *testing.T) {
+mgr := NewMemoryStateManagerWithTTL(20*time.Millisecond, 0)
+defer mgr.Close()
+
+require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1", Username: "u"}))
+
+// Before expiry the state is retrievable.
+got, err := mgr.GetState("s1")
+require.NoError(t, err)
+assert.Equal(t, "u", got.Username)
+
+// After the TTL elapses the state is treated as absent and removed lazily.
+time.Sleep(40 * time.Millisecond)
+_, err = mgr.GetState("s1")
+require.Error(t, err)
+assert.Contains(t, err.Error(), "not found")
+
+mgr.mu.RLock()
+_, exists := mgr.states["s1"]
+mgr.mu.RUnlock()
+assert.False(t, exists, "expired state should be removed on read")
+}
+
+func TestMemoryStateManager_JanitorSweepsExpired(t *testing.T) {
+mgr := NewMemoryStateManagerWithTTL(15*time.Millisecond, 10*time.Millisecond)
+defer mgr.Close()
+
+require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1"}))
+require.NoError(t, mgr.SetState("s2", &eap.EAPState{StateID: "s2"}))
+
+// Wait long enough for the janitor to run at least once after expiry.
+assert.Eventually(t, func() bool {
+mgr.mu.RLock()
+n := len(mgr.states)
+mgr.mu.RUnlock()
+return n == 0
+}, time.Second, 5*time.Millisecond, "janitor should reclaim expired states")
 }
