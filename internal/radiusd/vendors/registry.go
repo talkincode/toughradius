@@ -1,3 +1,13 @@
+// Package vendors is the registry of RADIUS vendor definitions. Each vendor is
+// described by a VendorInfo that bundles its code, human-readable metadata, and
+// the vendor-specific attribute Parser and response Builder. It is the single
+// source of truth for vendor attribute handling.
+//
+// This is distinct from the internal/radiusd/registry package, which is the
+// plugin pipeline registry (password validators, policy checkers, response
+// enhancers, auth guards, accounting and EAP handlers). Vendor parsers and
+// builders live here, in vendors; cross-cutting auth/acct/eap plugins live in
+// registry. The two registries do not overlap.
 package vendors
 
 import (
@@ -94,6 +104,47 @@ func Register(info *VendorInfo) error {
 // Get retrieves a vendor from the global registry
 func Get(code string) (*VendorInfo, bool) {
 	return globalRegistry.Get(code)
+}
+
+// GetParser returns the attribute parser registered for the given vendor code,
+// falling back to the parser registered under the "default" vendor when the
+// code has no parser of its own. This is the single lookup the RADIUS request
+// pipeline uses to obtain a vendor attribute parser.
+func GetParser(code string) (vendorparsers.VendorParser, bool) {
+	if info, ok := Get(code); ok && info.Parser != nil {
+		return info.Parser, true
+	}
+	if info, ok := Get("default"); ok && info.Parser != nil {
+		return info.Parser, true
+	}
+	return nil, false
+}
+
+// GetResponseBuilder returns the response builder registered for the given
+// vendor code, if one exists.
+func GetResponseBuilder(code string) (vendorparsers.VendorResponseBuilder, bool) {
+	if info, ok := Get(code); ok && info.Builder != nil {
+		return info.Builder, true
+	}
+	return nil, false
+}
+
+// RegisterParser registers a vendor attribute parser under its own vendor code.
+func RegisterParser(parser vendorparsers.VendorParser) error {
+	return Register(&VendorInfo{
+		Code:   parser.VendorCode(),
+		Name:   parser.VendorName(),
+		Parser: parser,
+	})
+}
+
+// RegisterResponseBuilder registers a vendor response builder under its own
+// vendor code.
+func RegisterResponseBuilder(builder vendorparsers.VendorResponseBuilder) error {
+	return Register(&VendorInfo{
+		Code:    builder.VendorCode(),
+		Builder: builder,
+	})
 }
 
 // List returns all registered vendors from the global registry

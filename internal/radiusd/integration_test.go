@@ -26,10 +26,10 @@ import (
 )
 
 func reRegisterVendorParsers() {
-	registry.RegisterVendorParser(&parsers.DefaultParser{})
-	registry.RegisterVendorParser(&parsers.HuaweiParser{})
-	registry.RegisterVendorParser(&parsers.H3CParser{})
-	registry.RegisterVendorParser(&parsers.ZTEParser{})
+	_ = vendors.RegisterParser(&parsers.DefaultParser{})
+	_ = vendors.RegisterParser(&parsers.HuaweiParser{})
+	_ = vendors.RegisterParser(&parsers.H3CParser{})
+	_ = vendors.RegisterParser(&parsers.ZTEParser{})
 }
 
 func getFreePort() (int, error) {
