@@ -317,7 +317,7 @@ func DeleteNAS(c echo.Context) error {
 func registerNASRoutes() {
 	webserver.ApiGET("/network/nas", ListNAS)
 	webserver.ApiGET("/network/nas/:id", GetNAS)
-	webserver.ApiPOST("/network/nas", CreateNAS)
-	webserver.ApiPUT("/network/nas/:id", UpdateNAS)
-	webserver.ApiDELETE("/network/nas/:id", DeleteNAS)
+	webserver.ApiPOST("/network/nas", CreateNAS, requireAdmin())
+	webserver.ApiPUT("/network/nas/:id", UpdateNAS, requireAdmin())
+	webserver.ApiDELETE("/network/nas/:id", DeleteNAS, requireAdmin())
 }

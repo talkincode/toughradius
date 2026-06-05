@@ -30,9 +30,9 @@ type nodeUpdatePayload struct {
 func registerNodesRoutes() {
 	webserver.ApiGET("/network/nodes", listNodes)
 	webserver.ApiGET("/network/nodes/:id", getNode)
-	webserver.ApiPOST("/network/nodes", createNode)
-	webserver.ApiPUT("/network/nodes/:id", updateNode)
-	webserver.ApiDELETE("/network/nodes/:id", deleteNode)
+	webserver.ApiPOST("/network/nodes", createNode, requireAdmin())
+	webserver.ApiPUT("/network/nodes/:id", updateNode, requireAdmin())
+	webserver.ApiDELETE("/network/nodes/:id", deleteNode, requireAdmin())
 }
 
 // listNodes retrieves the network node list
