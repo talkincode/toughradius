@@ -333,9 +333,17 @@ func TestProfileCache_GetWithNilDB(t *testing.T) {
 		stopClean: make(chan struct{}),
 	}
 
-	// Should return an error when the database connection is nil (cache miss).
+	// Cache miss with a nil DB must error instead of dereferencing pc.db.
 	_, err := cache.Get(1)
 	assert.Error(t, err)
+
+	// A populated, unexpired entry must still be served from memory even when
+	// no DB handle is configured (the nil-DB guard only applies to cache misses).
+	cached := &domain.RadiusProfile{ID: 1, Name: "cached"}
+	cache.Set(1, cached)
+	got, err := cache.Get(1)
+	assert.NoError(t, err)
+	assert.Equal(t, cached, got)
 }
 
 func TestProfileCache_TTLExpiration(t *testing.T) {

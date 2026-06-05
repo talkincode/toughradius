@@ -95,21 +95,22 @@ func NewProfileCache(db *gorm.DB, ttl time.Duration) *ProfileCache {
 //	    return fmt.Errorf("profile not found: %w", err)
 //	}
 func (pc *ProfileCache) Get(profileID int64) (*domain.RadiusProfile, error) {
-	if pc.db == nil {
-		return nil, errors.New("profile cache: database connection is nil")
-	}
-
 	// Try cache first
 	pc.mu.RLock()
 	entry, found := pc.cache[profileID]
 	pc.mu.RUnlock()
 
 	if found && time.Now().Before(entry.expiresAt) {
-		// Cache hit and not expired
+		// Cache hit and not expired: serve it even if no DB handle is configured.
 		return entry.profile, nil
 	}
 
-	// Cache miss or expired, fetch from database
+	// Cache miss or expired: a database read is required, so a DB handle must exist.
+	if pc.db == nil {
+		return nil, errors.New("profile cache: database connection is nil")
+	}
+
+	// Fetch from database
 	var profile domain.RadiusProfile
 	if err := pc.db.Where("id = ?", profileID).First(&profile).Error; err != nil {
 		return nil, err
