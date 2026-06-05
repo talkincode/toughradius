@@ -1,4 +1,4 @@
-.PHONY: help build build-backend buildf runs runf dev clean test initdb killfs version lint ci setup-hooks
+.PHONY: help build build-backend buildf runs runf dev clean test test-integration test-integration-pg initdb killfs version lint ci setup-hooks
 
 # 版本信息
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "develop")
@@ -139,6 +139,29 @@ test:
 test-integration:
 	@echo "🧪 运行集成测试..."
 	CGO_ENABLED=0 go test -v ./internal/radiusd/... -run TestRadiusIntegration
+
+# 运行基于容器 PostgreSQL 的集成测试（真实数据库）
+# 自动拉起 docker-compose.test.yml 中的 Postgres，运行 //go:build integration 套件，最后清理。
+test-integration-pg:
+	@echo "🐘 启动 PostgreSQL 测试容器并运行集成测试..."
+	@set -e; \
+	COMPOSE="docker compose -p toughradius-it -f docker-compose.test.yml"; \
+	cleanup() { echo "🧹 清理测试容器..."; $$COMPOSE down -v >/dev/null 2>&1 || true; }; \
+	trap cleanup EXIT; \
+	$$COMPOSE up -d; \
+	echo "⏳ 等待 Postgres 健康检查..."; \
+	for i in $$(seq 1 30); do \
+		status=$$($$COMPOSE ps --format '{{.Health}}' 2>/dev/null || true); \
+		[ "$$status" = "healthy" ] && break; \
+		sleep 2; \
+	done; \
+	TEST_DATABASE_HOST=127.0.0.1 \
+	TEST_DATABASE_PORT=15432 \
+	TEST_DATABASE_USER=toughradius \
+	TEST_DATABASE_PASSWORD=toughradius \
+	TEST_DATABASE_NAME=postgres \
+	INTEGRATION_REQUIRED=1 \
+	CGO_ENABLED=0 go test -tags=integration -count=1 -v ./test/integration/...
 
 # 代码检查
 lint:

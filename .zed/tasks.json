@@ -1,0 +1,31 @@
+// Project tasks configuration. See https://zed.dev/docs/tasks for documentation.
+[
+  {
+    // Start the ToughRADIUS backend (Web/Admin API + RADIUS auth/acct + RadSec).
+    // SQLite is supported because CGO is disabled.
+    "label": "Dev: Backend (go run)",
+    "command": "go run main.go -c toughradius.yml",
+    "env": { "CGO_ENABLED": "0" },
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "reveal_target": "dock",
+    "hide": "never",
+    "shell": "system",
+    "save": "all"
+  },
+  {
+    // Start the React Admin frontend dev server (Vite, hot reload).
+    "label": "Dev: Frontend (vite)",
+    "command": "npm run dev",
+    "cwd": "$ZED_WORKTREE_ROOT/web",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": false,
+    "reveal": "always",
+    "reveal_target": "dock",
+    "hide": "never",
+    "shell": "system",
+    "save": "all"
+  }
+]

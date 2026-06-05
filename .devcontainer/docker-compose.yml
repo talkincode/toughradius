@@ -1,0 +1,37 @@
+# Compose stack backing the ToughRADIUS dev container (see devcontainer.json).
+# `app` is the workspace container (Go provided by the base image, Node added via
+# devcontainer feature); `db` is a PostgreSQL instance the integration suite
+# connects to through the TEST_DATABASE_* environment variables.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/go:1-bookworm
+    volumes:
+      - ..:/workspaces/toughradius:cached
+    command: sleep infinity
+    environment:
+      TEST_DATABASE_HOST: db
+      TEST_DATABASE_PORT: "5432"
+      TEST_DATABASE_USER: toughradius
+      TEST_DATABASE_PASSWORD: toughradius
+      TEST_DATABASE_NAME: postgres
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: toughradius
+      POSTGRES_PASSWORD: toughradius
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toughradius -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
