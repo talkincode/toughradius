@@ -109,3 +109,23 @@ func TestRestoreSystem_InvalidFile(t *testing.T) {
 	require.NoError(t, restoreSystem(c))
 	assert.Equal(t, http.StatusBadRequest, rec.Code)
 }
+
+func TestRestoreSystem_MissingVersion(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	// Valid JSON but without a version stamp should be rejected.
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("upload", "backup.json")
+	_, _ = part.Write([]byte(`{"nodes":[],"users":[]}`))
+	_ = writer.Close()
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/system/restore", body)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(setupTestEcho(), db, req, rec, appCtx)
+
+	require.NoError(t, restoreSystem(c))
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}

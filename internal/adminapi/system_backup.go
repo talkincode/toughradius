@@ -39,6 +39,11 @@ func registerSystemBackupRoutes() {
 
 // backupSystem exports the core configuration tables as a downloadable JSON file.
 // A copy is also written to the configured backup directory when available.
+//
+// SECURITY: the exported payload contains sensitive credentials in clear form —
+// RADIUS user passwords are stored in plaintext (required for PAP/CHAP) and the
+// operators table includes admin password hashes. Both the downloaded file and
+// the on-disk copy in the backup directory must be handled and stored securely.
 func backupSystem(c echo.Context) error {
 	db := GetDB(c)
 
@@ -119,6 +124,12 @@ func restoreSystem(c echo.Context) error {
 	var backup SystemBackup
 	if err := json.Unmarshal(bs, &backup); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_BACKUP", "Invalid backup file format", err.Error())
+	}
+
+	// Guard against arbitrary or incompatible JSON: a valid backup always carries
+	// a version stamp written by backupSystem.
+	if backup.Version == "" {
+		return fail(c, http.StatusBadRequest, "INVALID_BACKUP", "Backup file is missing a version and may be incompatible", nil)
 	}
 
 	result := SystemRestoreResult{}

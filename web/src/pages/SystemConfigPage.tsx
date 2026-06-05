@@ -73,6 +73,8 @@ export const SystemConfigPage: React.FC = () => {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+  const [pendingRestoreFile, setPendingRestoreFile] = useState<File | null>(null);
   const restoreInputRef = React.useRef<HTMLInputElement>(null);
 
   const dataProvider = useDataProvider();
@@ -364,6 +366,10 @@ export const SystemConfigPage: React.FC = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       notify(translate('pages.system_config.backup.success', { _: '备份成功' }), { type: 'success' });
+      notify(
+        translate('pages.system_config.backup.notice', { _: '备份文件包含明文密码与凭据，请务必妥善保管。' }),
+        { type: 'info', autoHideDuration: 8000 }
+      );
     } catch (error) {
       notify((error as Error).message, { type: 'error' });
     } finally {
@@ -371,11 +377,34 @@ export const SystemConfigPage: React.FC = () => {
     }
   };
 
-  const handleRestoreFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  // 选择恢复文件后先弹确认框，避免误覆盖现有配置（含管理员账号/密码）
+  const handleRestoreSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null;
+    if (restoreInputRef.current) {
+      restoreInputRef.current.value = '';
+    }
     if (!file) {
       return;
     }
+    setPendingRestoreFile(file);
+    setRestoreDialogOpen(true);
+  };
+
+  const handleRestoreConfirm = () => {
+    const file = pendingRestoreFile;
+    setRestoreDialogOpen(false);
+    setPendingRestoreFile(null);
+    if (file) {
+      void doRestore(file);
+    }
+  };
+
+  const handleRestoreCancel = () => {
+    setRestoreDialogOpen(false);
+    setPendingRestoreFile(null);
+  };
+
+  const doRestore = async (file: File) => {
     setRestoreLoading(true);
     try {
       const formData = new FormData();
@@ -396,9 +425,6 @@ export const SystemConfigPage: React.FC = () => {
       notify((error as Error).message, { type: 'error' });
     } finally {
       setRestoreLoading(false);
-      if (restoreInputRef.current) {
-        restoreInputRef.current.value = '';
-      }
     }
   };
 
@@ -472,7 +498,7 @@ export const SystemConfigPage: React.FC = () => {
           type="file"
           accept=".json"
           style={{ display: 'none' }}
-          onChange={handleRestoreFile}
+          onChange={handleRestoreSelect}
         />
       </Box>
 
@@ -635,6 +661,33 @@ export const SystemConfigPage: React.FC = () => {
         </Button>
       </DialogActions>
     </Dialog>
+
+      {/* 系统恢复确认对话框 */}
+      <Dialog
+        open={restoreDialogOpen}
+        onClose={handleRestoreCancel}
+        aria-labelledby="restore-dialog-title"
+        aria-describedby="restore-dialog-description"
+      >
+        <DialogTitle id="restore-dialog-title">
+          {translate('pages.system_config.restore.confirm_title', { _: '确认系统恢复' })}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="restore-dialog-description">
+            {translate('pages.system_config.restore.confirm_warning', {
+              _: '系统恢复将用备份文件中的数据覆盖现有配置（节点、NAS、套餐、用户、系统配置、操作员）。这会覆盖当前管理员账号及密码，恢复后可能需要使用备份中的凭据重新登录。确定要继续吗？',
+            })}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRestoreCancel}>
+            {translate('pages.system_config.restore.cancel', { _: '取消' })}
+          </Button>
+          <Button onClick={handleRestoreConfirm} color="warning" variant="contained" disabled={restoreLoading}>
+            {translate('pages.system_config.restore.confirm', { _: '确认恢复' })}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };
