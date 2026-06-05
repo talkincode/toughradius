@@ -76,7 +76,7 @@ func (h *MD5Handler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 	// Set the EAP-Message and Message-Authenticator
 	eap.SetEAPMessageAndAuth(response, eapData, ctx.Secret)
 
-	// Sendresponse
+	// Send the EAP response
 	return true, ctx.ResponseWriter.Write(response)
 }
 
