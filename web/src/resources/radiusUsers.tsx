@@ -31,6 +31,7 @@ import {
   useNotify,
   useListContext,
   SortButton,
+  Button,
   RaRecord,
   FunctionField
 } from 'react-admin';
@@ -52,7 +53,7 @@ import {
   TextField as MuiTextField
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
-import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
+import { ReactNode, useMemo, useCallback, useState, useEffect, useRef } from 'react';
 import {
   Person as PersonIcon,
   ContactPhone as ContactIcon,
@@ -71,9 +72,11 @@ import {
   Clear as ClearIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  UploadFile as UploadIcon
 } from '@mui/icons-material';
 import { ServerPagination, ActiveFilters } from '../components';
+import { API_BASE } from '../utils/apiClient';
 
 const LARGE_LIST_PER_PAGE = 50;
 
@@ -849,6 +852,73 @@ const IpAddressField = () => {
 
 // ============ 列表操作栏组件 ============
 
+// 批量导入用户按钮：支持 Excel(.xlsx)、CSV(.csv)、JSON(.json) 文件
+const ImportUsersButton = () => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('upload', file);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/users/import`, {
+        method: 'POST',
+        headers: token ? { Authorization: 'Bearer ' + token } : undefined,
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.message || translate('resources.radius/users.import.failed', { _: '导入失败' }));
+      }
+      const result = payload?.data ?? payload;
+      notify(
+        translate('resources.radius/users.import.result', {
+          _: '导入完成：成功 %{success} 条，失败 %{failed} 条',
+          success: result?.success ?? 0,
+          failed: result?.failed ?? 0,
+        }),
+        { type: (result?.failed ?? 0) > 0 ? 'warning' : 'success' }
+      );
+      refresh();
+    } catch (error) {
+      notify((error as Error).message, { type: 'error' });
+    } finally {
+      setLoading(false);
+      if (inputRef.current) {
+        inputRef.current.value = '';
+      }
+    }
+  };
+
+  return (
+    <>
+      <Button
+        label={translate('resources.radius/users.import.button', { _: '批量导入' })}
+        onClick={() => inputRef.current?.click()}
+        disabled={loading}
+      >
+        <UploadIcon />
+      </Button>
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".xlsx,.csv,.json"
+        style={{ display: 'none' }}
+        onChange={handleFileChange}
+      />
+    </>
+  );
+};
+
 const UserListActions = () => {
   const translate = useTranslate();
   return (
@@ -858,6 +928,7 @@ const UserListActions = () => {
         label={translate('ra.action.sort', { _: '排序' })}
       />
       <CreateButton />
+      <ImportUsersButton />
       <ExportButton />
     </TopToolbar>
   );

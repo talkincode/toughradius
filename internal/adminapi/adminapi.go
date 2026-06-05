@@ -17,4 +17,5 @@ func Init(appCtx app.AppContext) {
 	registerNodesRoutes()
 	registerOperatorsRoutes()
 	registerSystemLogRoutes()
+	registerSystemBackupRoutes()
 }

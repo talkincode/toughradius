@@ -33,9 +33,12 @@ import {
   Settings as SettingsIcon,
   Security as SecurityIcon,
   Router as RouterIcon,
+  Backup as BackupIcon,
+  RestorePage as RestoreIcon,
 } from '@mui/icons-material';
 import { useDataProvider, useNotify, useTranslate } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
+import { API_BASE } from '../utils/apiClient';
 
 // 配置项类型定义
 interface ConfigSchema {
@@ -68,6 +71,9 @@ export const SystemConfigPage: React.FC = () => {
   const [configs, setConfigs] = useState<Record<string, ConfigValue>>({});
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['radius']);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [restoreLoading, setRestoreLoading] = useState(false);
+  const restoreInputRef = React.useRef<HTMLInputElement>(null);
 
   const dataProvider = useDataProvider();
   const notify = useNotify();
@@ -333,6 +339,69 @@ export const SystemConfigPage: React.FC = () => {
     queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
   };
 
+  const handleBackup = async () => {
+    setBackupLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/system/backup`, {
+        method: 'GET',
+        headers: token ? { Authorization: 'Bearer ' + token } : undefined,
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}));
+        throw new Error(payload?.message || translate('pages.system_config.backup.failed', { _: '备份失败' }));
+      }
+      const blob = await response.blob();
+      const disposition = response.headers.get('Content-Disposition') || '';
+      const match = disposition.match(/filename=([^;]+)/);
+      const filename = match ? match[1].trim() : `toughradius-backup-${Date.now()}.json`;
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      notify(translate('pages.system_config.backup.success', { _: '备份成功' }), { type: 'success' });
+    } catch (error) {
+      notify((error as Error).message, { type: 'error' });
+    } finally {
+      setBackupLoading(false);
+    }
+  };
+
+  const handleRestoreFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+    setRestoreLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('upload', file);
+      const token = localStorage.getItem('token');
+      const response = await fetch(`${API_BASE}/system/restore`, {
+        method: 'POST',
+        headers: token ? { Authorization: 'Bearer ' + token } : undefined,
+        body: formData,
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.message || translate('pages.system_config.restore.failed', { _: '恢复失败' }));
+      }
+      notify(translate('pages.system_config.restore.success', { _: '恢复成功' }), { type: 'success' });
+      handleReload();
+    } catch (error) {
+      notify((error as Error).message, { type: 'error' });
+    } finally {
+      setRestoreLoading(false);
+      if (restoreInputRef.current) {
+        restoreInputRef.current.value = '';
+      }
+    }
+  };
+
   const handleSave = () => {
     if (!schemaQuery.data?.length) {
       notify('暂无可保存的配置项', { type: 'warning' });
@@ -381,6 +450,30 @@ export const SystemConfigPage: React.FC = () => {
         >
           {isLoading ? translate('pages.system_config.loading') : translate('pages.system_config.reload')}
         </Button>
+        <Button
+          variant="outlined"
+          startIcon={<BackupIcon />}
+          onClick={handleBackup}
+          disabled={backupLoading}
+          sx={{ ml: 2, mr: 2 }}
+        >
+          {translate('pages.system_config.backup.button', { _: '系统备份' })}
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<RestoreIcon />}
+          onClick={() => restoreInputRef.current?.click()}
+          disabled={restoreLoading}
+        >
+          {translate('pages.system_config.restore.button', { _: '系统恢复' })}
+        </Button>
+        <input
+          ref={restoreInputRef}
+          type="file"
+          accept=".json"
+          style={{ display: 'none' }}
+          onChange={handleRestoreFile}
+        />
       </Box>
 
       {/* 配置分组 */}

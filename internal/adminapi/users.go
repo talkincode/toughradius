@@ -262,6 +262,7 @@ func registerUserRoutes() {
 	webserver.ApiGET("/users", listRadiusUsers)
 	webserver.ApiGET("/users/:id", getRadiusUser)
 	webserver.ApiPOST("/users", createRadiusUser)
+	webserver.ApiPOST("/users/import", importRadiusUsers)
 	webserver.ApiPUT("/users/:id", updateRadiusUser)
 	webserver.ApiDELETE("/users/:id", deleteRadiusUser)
 }

@@ -78,6 +78,11 @@ const customEnglishMessages: TranslationMessages = {
   resources: {
     'radius/users': {
       name: 'RADIUS User |||| RADIUS Users',
+      import: {
+        button: 'Batch Import',
+        failed: 'Import failed',
+        result: 'Import finished: %{success} succeeded, %{failed} failed',
+      },
       fields: {
         id: 'ID',
         username: 'Username',
@@ -528,6 +533,16 @@ const customEnglishMessages: TranslationMessages = {
       reset: 'Reset to Default',
       reload: 'Reload',
       loading: 'Loading...',
+      backup: {
+        button: 'System Backup',
+        success: 'Backup created, download started',
+        failed: 'Backup failed',
+      },
+      restore: {
+        button: 'System Restore',
+        success: 'Restore completed',
+        failed: 'Restore failed',
+      },
       confirm_reset: 'Confirm Reset Configuration',
       reset_warning: 'Are you sure you want to reset all configurations to default values?',
       reset_notice: 'You need to click "Save Configuration" for the reset to take effect.',
