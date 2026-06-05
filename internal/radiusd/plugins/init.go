@@ -58,7 +58,9 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 
 	// Register EAP handlers
 	registry.RegisterEAPHandler(eaphandlers.NewMD5Handler())
-	registry.RegisterEAPHandler(eaphandlers.NewOTPHandler())
+	// EAP-OTP is intentionally not registered: its handler has no real OTP
+	// validation backend yet. Registering it would expose an unauthenticated
+	// EAP method. Re-enable only once a real validation service is wired in.
 	registry.RegisterEAPHandler(eaphandlers.NewMSCHAPv2Handler())
 
 	// Vendor parsers under vendor/parsers register themselves via init()

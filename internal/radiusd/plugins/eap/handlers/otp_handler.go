@@ -83,28 +83,16 @@ func (h *OTPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 		return false, eap.ErrStateNotFound
 	}
 
-	state, err := ctx.StateManager.GetState(stateID)
-	if err != nil {
+	if _, err := ctx.StateManager.GetState(stateID); err != nil {
 		return false, err
 	}
 
-	// Get the OTP password (simplified here; a real implementation should call an OTP validation service)
-	// TODO: Integrate with a real OTP validation logic
-	expectedOTP := "123456" // Sample fixed value; in reality retrieve from the validation service
-
-	// Extract the user's entered OTP from the EAP data
-	userOTP := string(ctx.EAPMessage.Data)
-
-	// Validate OTP
-	if userOTP != expectedOTP {
-		return false, eap.ErrPasswordMismatch
-	}
-
-	// Mark authentication as successful
-	state.Success = true
-	_ = ctx.StateManager.SetState(stateID, state) //nolint:errcheck
-
-	return true, nil
+	// EAP-OTP has no real validation backend yet. Never authenticate against a
+	// hardcoded/sample password (the previous implementation accepted a fixed
+	// "123456", which was an authentication bypass). Reject until a real OTP
+	// validation service is integrated. This handler is also not registered by
+	// default (see internal/radiusd/plugins/init.go).
+	return false, eap.ErrOTPNotConfigured
 }
 
 // buildChallengeRequest constructs the OTP Challenge Request
