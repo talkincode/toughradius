@@ -33,6 +33,11 @@ import (
 
 const apiBasePath = "/api/v1"
 
+// DefaultBodyLimit caps the size of any single request body to bound memory use
+// and reject oversized uploads (including the system restore endpoint). It is
+// generous enough for normal admin API JSON and configuration-table backups.
+const DefaultBodyLimit = "16M"
+
 var JwtSkipPrefix = []string{
 	"/ready",
 	"/realip",
@@ -63,6 +68,9 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	s := &AdminServer{appCtx: appCtx}
 	s.root = echo.New()
 	s.root.Pre(middleware.RemoveTrailingSlash())
+	// Bound request body size globally to mitigate memory-exhaustion via oversized
+	// payloads (e.g. the system restore upload).
+	s.root.Use(middleware.BodyLimit(DefaultBodyLimit))
 	s.root.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Skipper: func(c echo.Context) bool {
 			return strings.HasPrefix(c.Path(), "/metrics")

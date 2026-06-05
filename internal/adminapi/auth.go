@@ -10,6 +10,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
+	"golang.org/x/time/rate"
 	"gorm.io/gorm"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -24,8 +26,32 @@ type loginRequest struct {
 	Password string `json:"password"`
 }
 
+// loginRateLimiter throttles authentication attempts per client IP to slow down
+// brute-force / credential-stuffing attacks. It allows a short burst of attempts
+// and then refills slowly; exhausting the budget yields HTTP 429.
+func loginRateLimiter() echo.MiddlewareFunc {
+	store := middleware.NewRateLimiterMemoryStoreWithConfig(middleware.RateLimiterMemoryStoreConfig{
+		Rate:      rate.Every(3 * time.Second),
+		Burst:     5,
+		ExpiresIn: 3 * time.Minute,
+	})
+	return middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+		Store: store,
+		IdentifierExtractor: func(c echo.Context) (string, error) {
+			return c.RealIP(), nil
+		},
+		ErrorHandler: func(c echo.Context, err error) error {
+			return fail(c, http.StatusForbidden, "RATE_LIMIT_ERROR", "Unable to evaluate rate limit", nil)
+		},
+		DenyHandler: func(c echo.Context, identifier string, err error) error {
+			return fail(c, http.StatusTooManyRequests, "RATE_LIMITED",
+				"Too many login attempts, please try again later", nil)
+		},
+	})
+}
+
 func registerAuthRoutes() {
-	webserver.ApiPOST("/auth/login", loginHandler)
+	webserver.ApiPOST("/auth/login", loginHandler, loginRateLimiter())
 	webserver.ApiGET("/auth/me", currentUserHandler)
 }
 
