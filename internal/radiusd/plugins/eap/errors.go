@@ -9,4 +9,5 @@ var (
 	ErrPasswordMismatch     = errors.New("password mismatch")
 	ErrUnsupportedEAPType   = errors.New("unsupported EAP type")
 	ErrAuthenticationFailed = errors.New("authentication failed")
+	ErrOTPNotConfigured     = errors.New("EAP-OTP validation is not configured")
 )

@@ -6,6 +6,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
+	"layeh.com/radius"
+	"layeh.com/radius/rfc2865"
 )
 
 // Mock state manager for testing
@@ -194,6 +196,29 @@ func TestOTPHandler_CanHandle(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+// TestOTPHandler_HandleResponse_NeverAuthenticates ensures the OTP handler no
+// longer authenticates against the previously hardcoded "123456" password and
+// instead reports that OTP validation is not configured.
+func TestOTPHandler_HandleResponse_NeverAuthenticates(t *testing.T) {
+	h := NewOTPHandler()
+
+	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
+	require.NoError(t, rfc2865.State_SetString(packet, "state-otp-1"))
+
+	sm := newMockStateManagerForTest()
+	require.NoError(t, sm.SetState("state-otp-1", &eap.EAPState{StateID: "state-otp-1", Method: "eap-otp"}))
+
+	ctx := &eap.EAPContext{
+		Request:      &radius.Request{Packet: packet},
+		StateManager: sm,
+		EAPMessage:   &eap.EAPMessage{Type: eap.TypeOTP, Data: []byte("123456")},
+	}
+
+	success, err := h.HandleResponse(ctx)
+	assert.False(t, success, "the former fixed password must not authenticate")
+	assert.ErrorIs(t, err, eap.ErrOTPNotConfigured)
 }
 
 func TestOTPHandler_buildChallengeRequest(t *testing.T) {

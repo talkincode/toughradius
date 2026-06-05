@@ -91,7 +91,7 @@ func TestInitPlugins_EAPHandlers(t *testing.T) {
 	eapHandlers := registry.GetAllEAPHandlers()
 
 	assert.NotNil(t, eapHandlers[4], "EAP-MD5 should be registered")
-	assert.NotNil(t, eapHandlers[5], "EAP-OTP should be registered")
+	assert.Nil(t, eapHandlers[5], "EAP-OTP must not be registered (stub handler has no real validation backend)")
 	assert.NotNil(t, eapHandlers[26], "EAP-MSCHAPv2 should be registered")
 }
 
