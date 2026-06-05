@@ -43,6 +43,12 @@ import (
 const (
 	RadiusRejectDelayTimes = 7
 	RadiusAuthRateInterval = 1 // Original: 1 second rate limit
+
+	// unknownNasSecret is a placeholder secret returned for packets from an
+	// unrecognized NAS source IP. It is intentionally not a real credential; it
+	// only lets the packet reach the request handler so the unauthorized NAS can
+	// be logged and rejected with the correct metric.
+	unknownNasSecret = "__unknown_nas__" //nolint:gosec // G101: placeholder, not a real secret
 )
 
 type VendorRequest struct {
@@ -112,8 +118,21 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 	return s
 }
 
+// RADIUSSecret resolves the shared secret for an incoming UDP packet by looking
+// up the originating NAS by its source IP address. When the NAS is unknown a
+// non-empty placeholder is returned so the packet still reaches the request
+// handler, where the unauthorized NAS is logged and rejected with the proper
+// metric instead of being silently dropped by the server library.
 func (s *RadiusService) RADIUSSecret(ctx context.Context, remoteAddr net.Addr) ([]byte, error) {
-	return []byte("mysecret"), nil
+	ip := remoteAddr.String()
+	if host, _, err := net.SplitHostPort(ip); err == nil {
+		ip = host
+	}
+	nas, err := s.GetNas(ip, "")
+	if err != nil {
+		return []byte(unknownNasSecret), nil
+	}
+	return []byte(nas.Secret), nil
 }
 
 // GetNas looks up a NAS device, preferring IP before ID
