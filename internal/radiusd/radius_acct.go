@@ -121,14 +121,26 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		}
 	}
 
+	s.submitAcctTask(task, username)
+}
+
+// submitAcctTask schedules an accounting task on the bounded worker pool.
+//
+// When the pool is saturated the task is dropped (and recorded as an accounting
+// drop) rather than spawning a goroutine per request. Spawning an unbounded
+// goroutine on overload would let a flood of accounting traffic exhaust memory;
+// dropping preserves back-pressure. Returns true if the task was accepted.
+func (s *AcctService) submitAcctTask(task func(), username string) bool {
 	if err := s.TaskPool.Submit(task); err != nil {
-		zap.L().Warn("accounting task pool saturated, running fallback goroutine",
+		zap.L().Warn("accounting task pool saturated, dropping accounting update",
 			zap.String("namespace", "radius"),
+			zap.String("username", username),
 			zap.String("metrics", app.MetricsRadiusAcctDrop),
 			zap.Error(err),
 		)
-		go task()
+		return false
 	}
+	return true
 }
 
 // logAcctError logs accounting errors with appropriate metrics.

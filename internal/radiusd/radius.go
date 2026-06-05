@@ -82,7 +82,12 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 	if err != nil {
 		poolsize = 1024
 	}
-	pool, err := ants.NewPool(poolsize)
+	// Nonblocking: when all workers are busy, Submit returns ErrPoolOverload
+	// immediately instead of blocking the caller. Accounting overflow is then
+	// dropped and metered (see AcctService.submitAcctTask), which bounds the
+	// number of goroutines under load rather than letting blocked submitters
+	// accumulate without limit.
+	pool, err := ants.NewPool(poolsize, ants.WithNonblocking(true))
 	common.Must(err)
 
 	// Initialize all repositories using injected context
