@@ -79,12 +79,10 @@ func backupSystem(c echo.Context) error {
 	filename := fmt.Sprintf("toughradius-backup-%s.json", backup.CreatedAt.Format("20060102-150405"))
 
 	// Best-effort: persist a copy of the backup to the backup directory.
-	if appCtx := GetAppContext(c); appCtx != nil {
-		if cfg := appCtx.Config(); cfg != nil {
-			if dir := cfg.GetBackupDir(); dir != "" {
-				if mkErr := os.MkdirAll(dir, 0750); mkErr == nil {
-					_ = os.WriteFile(filepath.Join(dir, filename), bs, 0600) //nolint:errcheck
-				}
+	if cfg := GetAppContext(c).Config(); cfg != nil {
+		if dir := cfg.GetBackupDir(); dir != "" {
+			if mkErr := os.MkdirAll(dir, 0750); mkErr == nil {
+				_ = os.WriteFile(filepath.Join(dir, filename), bs, 0600) //nolint:errcheck
 			}
 		}
 	}
