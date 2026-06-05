@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 )
 
 // Meta describes pagination information
@@ -45,6 +46,19 @@ func paged(c echo.Context, data interface{}, total int64, page, pageSize int) er
 func fail(c echo.Context, status int, code, message string, details interface{}) error {
 	if status == 0 {
 		status = http.StatusBadRequest
+	}
+	// Never expose internal error details (e.g. raw database errors that contain
+	// table/column names) to clients on server-side failures. Log them for
+	// operators and return only the generic code and message.
+	if status >= http.StatusInternalServerError && details != nil {
+		zap.L().Error("adminapi internal error",
+			zap.String("namespace", "adminapi"),
+			zap.Int("status", status),
+			zap.String("code", code),
+			zap.String("path", c.Path()),
+			zap.Any("details", details),
+		)
+		details = nil
 	}
 	return c.JSON(status, ErrorResponse{
 		Error:   code,
