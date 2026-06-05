@@ -15,6 +15,20 @@ import (
 	"gorm.io/gorm"
 )
 
+// init wires the test-only operator-resolution seam so that tests can inject an
+// authenticated operator by calling c.Set("current_operator", op). This runs
+// only in the test binary; the production build leaves testOperatorResolver nil
+// and therefore never trusts a context-injected operator.
+func init() {
+	testOperatorResolver = func(c echo.Context) (*domain.SysOpr, bool) {
+		op, ok := c.Get("current_operator").(*domain.SysOpr)
+		if !ok || op == nil {
+			return nil, false
+		}
+		return op, true
+	}
+}
+
 // setupTestEcho creates an Echo instance with a validator
 func setupTestEcho() *echo.Echo {
 	e := echo.New()
