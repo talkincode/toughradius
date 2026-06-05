@@ -1,3 +1,12 @@
+// Package registry is the plugin pipeline registry for the RADIUS server. It
+// holds the cross-cutting auth/accounting/EAP plugins that run for every
+// request: password validators, policy checkers, response enhancers, auth
+// guards, accounting handlers, and EAP handlers.
+//
+// It is distinct from the internal/radiusd/vendors package, which is the
+// registry of vendor definitions (vendor codes plus their attribute parsers and
+// response builders). Vendor parser/builder registration and lookup belong in
+// vendors, not here; this package intentionally does not deal with vendors.
 package registry
 
 import (
@@ -7,8 +16,6 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/accounting"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
-	vendorparserspkg "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
-	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 )
 
 // Registry holds plugin registrations
@@ -113,46 +120,6 @@ func GetAuthGuards() []auth.Guard {
 	guards := make([]auth.Guard, len(globalRegistry.authGuards))
 	copy(guards, globalRegistry.authGuards)
 	return guards
-}
-
-// RegisterVendorParser registers a vendor parser
-func RegisterVendorParser(parser vendorparserspkg.VendorParser) {
-	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
-		Code:   parser.VendorCode(),
-		Name:   parser.VendorName(),
-		Parser: parser,
-	})
-}
-
-// GetVendorParser returns a vendor parser
-func GetVendorParser(vendorCode string) (vendorparserspkg.VendorParser, bool) {
-	info, ok := vendors.Get(vendorCode)
-	if ok && info.Parser != nil {
-		return info.Parser, true
-	}
-	// Fallback to default
-	info, ok = vendors.Get("default")
-	if ok && info.Parser != nil {
-		return info.Parser, true
-	}
-	return nil, false
-}
-
-// RegisterVendorResponseBuilder registers a vendor response builder
-func RegisterVendorResponseBuilder(builder vendorparserspkg.VendorResponseBuilder) {
-	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
-		Code:    builder.VendorCode(),
-		Builder: builder,
-	})
-}
-
-// GetVendorResponseBuilder returns a vendor response builder
-func GetVendorResponseBuilder(vendorCode string) (vendorparserspkg.VendorResponseBuilder, bool) {
-	info, ok := vendors.Get(vendorCode)
-	if ok && info.Builder != nil {
-		return info.Builder, true
-	}
-	return nil, false
 }
 
 // RegisterAccountingHandler registers an accounting handler

@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 )
@@ -34,15 +34,15 @@ func ParseVlanIds(nasportid string) (int64, int64) {
 
 // ParseVendor uses the plugin system to parse vendor-specific attributes
 func (s *RadiusService) ParseVendor(r *radius.Request, vendorCode string) *VendorRequest {
-	// Retrieve the corresponding VendorParser from the registry
-	parser, ok := registry.GetVendorParser(vendorCode)
+	// Retrieve the corresponding VendorParser from the vendor registry
+	parser, ok := vendors.GetParser(vendorCode)
 	if !ok {
 		zap.L().Warn("vendor parser not found, using default parser",
 			zap.String("namespace", "radius"),
 			zap.String("vendor_code", vendorCode),
 		)
 		// e.g., if not found, try the default parser
-		parser, ok = registry.GetVendorParser("default")
+		parser, ok = vendors.GetParser("default")
 		if !ok {
 			// e.g., if even the default parser is missing, return an empty result
 			zap.L().Error("default vendor parser not found",
