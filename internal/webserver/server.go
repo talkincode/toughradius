@@ -168,19 +168,6 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 
 	s.root.GET("/.well-known/appspecific/com.chrome.devtools.json", chromeDevtoolsManifest)
 
-	// Chrome DevTools config filerequestHandle
-	s.root.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c echo.Context) error {
-		return c.JSON(200, map[string]interface{}{
-			"applications": []map[string]interface{}{
-				{
-					"name":    "ToughRADIUS",
-					"version": "9.0",
-					"url":     "/admin",
-				},
-			},
-		})
-	})
-
 	// JWT middleware
 	s.jwtConfig = echojwt.Config{
 		SigningKey:    []byte(appconfig.Web.Secret),
