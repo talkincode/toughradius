@@ -13,6 +13,7 @@ __debug_bin
 /.fleet/
 /testdatas/
 /toughradius.yml
+/.toughradius/
 /.env
 /tmp/
 log_info.log
