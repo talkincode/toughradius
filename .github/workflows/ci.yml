@@ -51,6 +51,12 @@ jobs:
         with:
           version: v2.12.2
           args: --timeout=5m
+          # setup-go already provides the Go module/build cache (and only
+          # re-uploads it when go.sum changes). The action's own cache stores
+          # the go-build cache too, which changes on every run and therefore
+          # re-uploads ~70MB during "Post job cleanup" each time. Restore it for
+          # a faster lint run, but skip the slow save to keep CI snappy.
+          skip-save-cache: true
 
   test:
     name: Test
@@ -260,4 +266,7 @@ jobs:
         with:
           version: v2.12.2
           args: --enable-only=gosec --timeout=5m
+          # See the Lint job: skip the redundant ~70MB go-build cache upload
+          # that runs during "Post job cleanup" on every run.
+          skip-save-cache: true
         continue-on-error: ${{ github.event_name == 'pull_request' }}
