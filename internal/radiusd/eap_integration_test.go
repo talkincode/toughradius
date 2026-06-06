@@ -93,7 +93,7 @@ func buildMD5Response(identifier uint8, password string, challenge []byte) []byt
 
 	// EAP-MD5 value format: Value-Size (1 byte) || Value (16 bytes)
 	data := make([]byte, 0, 1+len(digest))
-	data = append(data, byte(len(digest)))
+	data = append(data, byte(md5.Size))
 	data = append(data, digest...)
 	return data
 }
