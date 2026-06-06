@@ -407,9 +407,9 @@ func setEnvIntValue(name string, val *int) {
 		return
 	}
 
-	p, err := strconv.ParseInt(evalue, 10, 64)
+	p, err := strconv.Atoi(evalue)
 	if err == nil {
-		*val = int(p)
+		*val = p
 	}
 }
 

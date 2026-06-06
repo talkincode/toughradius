@@ -174,8 +174,7 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 		SigningMethod: echojwt.AlgorithmHS256,
 		Skipper:       jwtSkipFunc(),
 		ErrorHandler: func(c echo.Context, err error) error {
-			zap.S().Warnf("JWT validation failed: %v, Path: %s, Auth Header: %s",
-				err, c.Path(), c.Request().Header.Get("Authorization"))
+			zap.S().Warnf("JWT validation failed: %v, Path: %s", err, c.Path())
 			return c.JSON(http.StatusUnauthorized, web.RestError("Authentication failed: "+err.Error()))
 		},
 	}
