@@ -25,8 +25,8 @@ func (m *mockSessionRepository) CountByUsername(ctx context.Context, username st
 }
 
 // Implement other interface methods (unused in tests)
-func (m *mockSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) error {
-	return nil
+func (m *mockSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) (bool, error) {
+	return true, nil
 }
 
 func (m *mockSessionRepository) Update(ctx context.Context, session *domain.RadiusOnline) error {

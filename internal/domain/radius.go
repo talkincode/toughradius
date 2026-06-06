@@ -89,7 +89,7 @@ type RadiusOnline struct {
 	NasPortId           string    `json:"nas_port_id"`
 	NasPortType         int       `json:"nas_port_type"`
 	ServiceType         int       `json:"service_type"`
-	AcctSessionId       string    `gorm:"index" json:"acct_session_id"`
+	AcctSessionId       string    `gorm:"uniqueIndex:udx_radius_online_acct_session_id" json:"acct_session_id"`
 	AcctSessionTime     int       `json:"acct_session_time"`
 	AcctInputTotal      int64     `json:"acct_input_total,string"`
 	AcctOutputTotal     int64     `json:"acct_output_total,string"`
