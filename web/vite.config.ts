@@ -21,10 +21,11 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       output: {
-        manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
-          'react-admin': ['react-admin', 'ra-data-simple-rest'],
-          'echarts': ['echarts', 'echarts-for-react']
+        manualChunks(id) {
+          if (!id.includes('/node_modules/')) return
+          if (id.includes('/node_modules/react-admin/') || id.includes('/node_modules/ra-data-simple-rest/')) return 'react-admin'
+          if (id.includes('/node_modules/echarts/') || id.includes('/node_modules/echarts-for-react/')) return 'echarts'
+          if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) return 'react-vendor'
         }
       }
     }
