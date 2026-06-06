@@ -32,6 +32,19 @@ type eapTestClient struct {
 	nasIP         net.IP
 }
 
+// eapExchangeTimeout bounds each RADIUS round-trip so a missing response (e.g.
+// the server failing to bind or a handler stopping without writing a reply)
+// fails the test promptly instead of hanging the package.
+const eapExchangeTimeout = 5 * time.Second
+
+// exchange performs a single bounded RADIUS request/response round-trip.
+func (c *eapTestClient) exchange(t *testing.T, packet *radius.Packet) (*radius.Packet, error) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(context.Background(), eapExchangeTimeout)
+	defer cancel()
+	return radius.Exchange(ctx, packet, c.serverAddr)
+}
+
 // newAccessRequest builds a fresh Access-Request carrying the mandatory
 // identity attributes shared by every round of the handshake.
 func (c *eapTestClient) newAccessRequest() *radius.Packet {
@@ -58,7 +71,7 @@ func (c *eapTestClient) sendIdentity(t *testing.T) (*eap.EAPMessage, []byte) {
 	packet := c.newAccessRequest()
 	eap.SetEAPMessageAndAuth(packet, identity.Encode(), c.secret)
 
-	resp, err := radius.Exchange(context.Background(), packet, c.serverAddr)
+	resp, err := c.exchange(t, packet)
 	if err != nil {
 		t.Fatalf("identity exchange failed: %v", err)
 	}
@@ -128,7 +141,7 @@ func (c *eapTestClient) sendMD5Response(t *testing.T, challenge *eap.EAPMessage,
 	_ = rfc2865.State_Set(packet, state) //nolint:errcheck
 	eap.SetEAPMessageAndAuth(packet, response.Encode(), c.secret)
 
-	resp, err := radius.Exchange(context.Background(), packet, c.serverAddr)
+	resp, err := c.exchange(t, packet)
 	if err != nil {
 		t.Fatalf("md5 response exchange failed: %v", err)
 	}
@@ -150,7 +163,7 @@ func (c *eapTestClient) sendNak(t *testing.T, identifier uint8, state []byte, su
 	_ = rfc2865.State_Set(packet, state) //nolint:errcheck
 	eap.SetEAPMessageAndAuth(packet, nak.Encode(), c.secret)
 
-	resp, err := radius.Exchange(context.Background(), packet, c.serverAddr)
+	resp, err := c.exchange(t, packet)
 	if err != nil {
 		t.Fatalf("nak exchange failed: %v", err)
 	}
@@ -241,7 +254,7 @@ func (c *eapTestClient) sendMSCHAPv2Response(t *testing.T, challenge *eap.EAPMes
 	_ = rfc2865.State_Set(packet, state) //nolint:errcheck
 	eap.SetEAPMessageAndAuth(packet, response.Encode(), c.secret)
 
-	resp, err := radius.Exchange(context.Background(), packet, c.serverAddr)
+	resp, err := c.exchange(t, packet)
 	if err != nil {
 		t.Fatalf("mschapv2 response exchange failed: %v", err)
 	}
