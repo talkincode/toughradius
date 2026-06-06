@@ -285,3 +285,60 @@ mgr.mu.RUnlock()
 return n == 0
 }, time.Second, 5*time.Millisecond, "janitor should reclaim expired states")
 }
+
+// TestMemoryStateManager_DeleteIfExpired_ReCheck verifies the re-check inside
+// deleteIfExpired: a live (non-expired) entry must never be removed, while a
+// genuinely expired entry is removed. This guards the read path that releases
+// the read lock before taking the write lock to evict an expired entry.
+func TestMemoryStateManager_DeleteIfExpired_ReCheck(t *testing.T) {
+	mgr := NewMemoryStateManagerWithTTL(time.Minute, 0)
+	defer mgr.Close()
+
+	require.NoError(t, mgr.SetState("live", &eap.EAPState{StateID: "live"}))
+
+	// A live entry must survive a deleteIfExpired call (simulating a refresh
+	// that won the race after GetState observed an expired snapshot).
+	mgr.deleteIfExpired("live")
+	if _, err := mgr.GetState("live"); err != nil {
+		t.Fatalf("live entry must not be deleted by deleteIfExpired: %v", err)
+	}
+
+	// Force an already-expired entry and confirm it is evicted.
+	mgr.mu.Lock()
+	mgr.states["stale"] = &stateEntry{
+		state:     &eap.EAPState{StateID: "stale"},
+		expiresAt: time.Now().Add(-time.Minute),
+	}
+	mgr.mu.Unlock()
+
+	mgr.deleteIfExpired("stale")
+
+	mgr.mu.RLock()
+	_, exists := mgr.states["stale"]
+	mgr.mu.RUnlock()
+	assert.False(t, exists, "expired entry should be evicted by deleteIfExpired")
+}
+
+// BenchmarkMemoryStateManager_GetStateParallel measures concurrent reads of
+// pre-populated live states, the scenario where the read-locked GetState path
+// avoids serializing parallel EAP handshakes.
+func BenchmarkMemoryStateManager_GetStateParallel(b *testing.B) {
+	mgr := NewMemoryStateManagerWithTTL(time.Hour, 0)
+	defer mgr.Close()
+
+	const keys = 64
+	ids := make([]string, keys)
+	for i := 0; i < keys; i++ {
+		ids[i] = "state-" + string(rune('a'+i%26)) + string(rune('0'+i/26))
+		_ = mgr.SetState(ids[i], &eap.EAPState{StateID: ids[i], Username: "u"})
+	}
+
+	b.ResetTimer()
+	b.RunParallel(func(pb *testing.PB) {
+		i := 0
+		for pb.Next() {
+			_, _ = mgr.GetState(ids[i%keys])
+			i++
+		}
+	})
+}
