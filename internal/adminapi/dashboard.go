@@ -25,6 +25,18 @@ type DashboardStats struct {
 	AuthTrend           []DashboardAuthTrendPoint `json:"auth_trend"`           // Daily authentication trend (last 7 days)
 	Traffic24h          []DashboardTrafficPoint   `json:"traffic_24h"`          // Hourly traffic statistics (last 24 hours)
 	ProfileDistribution []DashboardProfileSlice   `json:"profile_distribution"` // Online users grouped by profile
+	IPv6Stats           DashboardIPv6Stats        `json:"ipv6_stats"`           // IPv6 adoption among currently online sessions
+}
+
+// DashboardIPv6Stats summarizes IPv6 usage across currently online sessions so
+// operators can quickly answer "which subscribers are currently using IPv6 or
+// delegated prefixes?" without inspecting the database manually.
+type DashboardIPv6Stats struct {
+	OnlineWithIPv6            int64   `json:"online_with_ipv6"`             // Online sessions carrying any IPv6 attribute
+	OnlineWithIPv6Address     int64   `json:"online_with_ipv6_address"`     // Online sessions with a Framed-IPv6-Address
+	OnlineWithFramedPrefix    int64   `json:"online_with_framed_prefix"`    // Online sessions with a Framed-IPv6-Prefix
+	OnlineWithDelegatedPrefix int64   `json:"online_with_delegated_prefix"` // Online sessions with a Delegated-IPv6-Prefix
+	AdoptionRate              float64 `json:"adoption_rate"`                // Percentage of online sessions carrying any IPv6 attribute
 }
 
 // DashboardAuthTrendPoint represents authentication count per day
@@ -103,6 +115,7 @@ func GetDashboardStats(c echo.Context) error {
 	stats.AuthTrend = fetchAuthTrend(db, now)
 	stats.Traffic24h = fetchTrafficStats(db, now)
 	stats.ProfileDistribution = fetchProfileDistribution(db)
+	stats.IPv6Stats = fetchIPv6Stats(db, stats.OnlineUsers)
 
 	return ok(c, stats)
 }
@@ -213,6 +226,38 @@ func fetchProfileDistribution(db *gorm.DB) []DashboardProfileSlice {
 		})
 	}
 	return result
+}
+
+// fetchIPv6Stats aggregates IPv6 usage across currently online sessions. A field
+// is considered "present" when it is non-null and not an empty/"NA" placeholder.
+// onlineTotal is the total online session count used to compute the adoption rate.
+func fetchIPv6Stats(db *gorm.DB, onlineTotal int64) DashboardIPv6Stats {
+	stats := DashboardIPv6Stats{}
+	notEmpty := func(col string) string {
+		return fmt.Sprintf("%s IS NOT NULL AND %s <> '' AND %s <> 'NA'", col, col, col)
+	}
+	model := func() *gorm.DB { return db.Model(&domain.RadiusOnline{}) }
+
+	if err := model().Where(notEmpty("framed_ipv6_address")).Count(&stats.OnlineWithIPv6Address).Error; err != nil {
+		logDashboardQueryError("fetch ipv6 address count", err)
+	}
+	if err := model().Where(notEmpty("framed_ipv6_prefix")).Count(&stats.OnlineWithFramedPrefix).Error; err != nil {
+		logDashboardQueryError("fetch ipv6 framed prefix count", err)
+	}
+	if err := model().Where(notEmpty("delegated_ipv6_prefix")).Count(&stats.OnlineWithDelegatedPrefix).Error; err != nil {
+		logDashboardQueryError("fetch ipv6 delegated prefix count", err)
+	}
+
+	anyCond := fmt.Sprintf("(%s) OR (%s) OR (%s)",
+		notEmpty("framed_ipv6_address"), notEmpty("framed_ipv6_prefix"), notEmpty("delegated_ipv6_prefix"))
+	if err := model().Where(anyCond).Count(&stats.OnlineWithIPv6).Error; err != nil {
+		logDashboardQueryError("fetch ipv6 any count", err)
+	}
+
+	if onlineTotal > 0 {
+		stats.AdoptionRate = float64(stats.OnlineWithIPv6) / float64(onlineTotal) * 100
+	}
+	return stats
 }
 
 func dateBucketExpression(db *gorm.DB, field, granularity string) string {

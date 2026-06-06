@@ -32,7 +32,9 @@ var allowedAcctSortFields = map[string]bool{
 // @Param acct_session_id query string false "Session ID"
 // @Param framed_ipaddr query string false "User IP address"
 // @Param mac_addr query string false "MAC address"
-// @Param framed_ipv6addr query string false "IPv6 address"
+// @Param framed_ipv6_address query string false "Framed IPv6 address"
+// @Param framed_ipv6_prefix query string false "Framed IPv6 prefix"
+// @Param delegated_ipv6_prefix query string false "Delegated IPv6 prefix"
 // @Param acct_start_time_gte query string false "Start time from (RFC3339 or datetime-local format)"
 // @Param acct_start_time_lte query string false "Start time to (RFC3339 or datetime-local format)"
 // @Success 200 {object} ListResponse
@@ -82,8 +84,18 @@ func ListAccounting(c echo.Context) error {
 	}
 
 	// Filter by IPv6 address
-	if framedIpv6 := c.QueryParam("framed_ipv6addr"); framedIpv6 != "" {
-		query = query.Where("framed_ipv6addr LIKE ?", "%"+escapeLikePattern(framedIpv6)+"%")
+	if framedIpv6 := c.QueryParam("framed_ipv6_address"); framedIpv6 != "" {
+		query = query.Where("framed_ipv6_address LIKE ?", "%"+escapeLikePattern(framedIpv6)+"%")
+	}
+
+	// Filter by Framed IPv6 prefix
+	if framedIpv6Prefix := c.QueryParam("framed_ipv6_prefix"); framedIpv6Prefix != "" {
+		query = query.Where("framed_ipv6_prefix LIKE ?", "%"+escapeLikePattern(framedIpv6Prefix)+"%")
+	}
+
+	// Filter by Delegated IPv6 prefix
+	if delegatedIpv6Prefix := c.QueryParam("delegated_ipv6_prefix"); delegatedIpv6Prefix != "" {
+		query = query.Where("delegated_ipv6_prefix LIKE ?", "%"+escapeLikePattern(delegatedIpv6Prefix)+"%")
 	}
 
 	// Filter by start time range (支持 RFC3339 和 datetime-local 两种格式)

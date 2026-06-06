@@ -70,7 +70,9 @@ interface OnlineSession extends RaRecord {
   username?: string;
   nas_addr?: string;
   framed_ipaddr?: string;
-  framed_ipv6addr?: string;
+  framed_ipv6_address?: string;
+  framed_ipv6_prefix?: string;
+  delegated_ipv6_prefix?: string;
   mac_addr?: string;
   nas_port?: string | number;
   service_type?: string;
@@ -867,6 +869,18 @@ const OnlineSessionDetails = () => {
               value={record.framed_netmask || <EmptyValue />}
             />
             <DetailItem
+              label={translate('resources.radius/online.fields.framed_ipv6_address')}
+              value={record.framed_ipv6_address || <EmptyValue message="未配置" />}
+            />
+            <DetailItem
+              label={translate('resources.radius/online.fields.framed_ipv6_prefix')}
+              value={record.framed_ipv6_prefix || <EmptyValue message="未配置" />}
+            />
+            <DetailItem
+              label={translate('resources.radius/online.fields.delegated_ipv6_prefix')}
+              value={record.delegated_ipv6_prefix || <EmptyValue message="未配置" />}
+            />
+            <DetailItem
               label={translate('resources.radius/online.fields.mac_addr')}
               value={
                 record.mac_addr ? (
@@ -1210,7 +1224,9 @@ const SearchHeaderCard = () => {
     { key: 'username', label: translate('resources.radius/online.fields.username', { _: '用户名' }) },
     { key: 'acct_session_id', label: translate('resources.radius/online.fields.acct_session_id', { _: '会话ID' }) },
     { key: 'framed_ipaddr', label: translate('resources.radius/online.fields.framed_ipaddr', { _: '用户IP' }) },
-    { key: 'framed_ipv6addr', label: translate('resources.radius/online.fields.framed_ipv6addr', { _: 'IPv6地址' }) },
+    { key: 'framed_ipv6_address', label: translate('resources.radius/online.fields.framed_ipv6_address', { _: 'IPv6地址' }) },
+    { key: 'framed_ipv6_prefix', label: translate('resources.radius/online.fields.framed_ipv6_prefix', { _: 'IPv6前缀' }) },
+    { key: 'delegated_ipv6_prefix', label: translate('resources.radius/online.fields.delegated_ipv6_prefix', { _: '委派IPv6前缀' }) },
     { key: 'nas_addr', label: translate('resources.radius/online.fields.nas_addr', { _: 'NAS地址' }) },
     { key: 'mac_addr', label: translate('resources.radius/online.fields.mac_addr', { _: 'MAC地址' }) },
   ];
@@ -1464,7 +1480,9 @@ const OnlineSessionListContent = () => {
       username: translate('resources.radius/online.fields.username'),
       acct_session_id: translate('resources.radius/online.fields.acct_session_id'),
       framed_ipaddr: translate('resources.radius/online.fields.framed_ipaddr'),
-      framed_ipv6addr: translate('resources.radius/online.fields.framed_ipv6addr'),
+      framed_ipv6_address: translate('resources.radius/online.fields.framed_ipv6_address'),
+      framed_ipv6_prefix: translate('resources.radius/online.fields.framed_ipv6_prefix'),
+      delegated_ipv6_prefix: translate('resources.radius/online.fields.delegated_ipv6_prefix'),
       nas_addr: translate('resources.radius/online.fields.nas_addr'),
       mac_addr: translate('resources.radius/online.fields.mac_addr'),
       acct_start_time_gte: translate('resources.radius/online.fields.acct_start_time_gte'),

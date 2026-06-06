@@ -64,7 +64,9 @@ func parseSessionTime(s string) (time.Time, error) {
 // @Param username query string false "Username"
 // @Param nas_addr query string false "NAS addresses"
 // @Param framed_ipaddr query string false "User IP address"
-// @Param framed_ipv6addr query string false "User IPv6 address"
+// @Param framed_ipv6_address query string false "Framed IPv6 address"
+// @Param framed_ipv6_prefix query string false "Framed IPv6 prefix"
+// @Param delegated_ipv6_prefix query string false "Delegated IPv6 prefix"
 // @Param mac_addr query string false "MAC address"
 // @Param acct_session_id query string false "Session ID"
 // @Param acct_start_time_gte query string false "Start time from (RFC3339 or datetime-local)"
@@ -106,8 +108,18 @@ func ListOnlineSessions(c echo.Context) error {
 	}
 
 	// Filter by IPv6 address (LIKE with escaped pattern)
-	if framedIpv6 := c.QueryParam("framed_ipv6addr"); framedIpv6 != "" {
-		query = query.Where("framed_ipv6addr LIKE ?", "%"+escapeSessionLikePattern(framedIpv6)+"%")
+	if framedIpv6 := c.QueryParam("framed_ipv6_address"); framedIpv6 != "" {
+		query = query.Where("framed_ipv6_address LIKE ?", "%"+escapeSessionLikePattern(framedIpv6)+"%")
+	}
+
+	// Filter by Framed IPv6 prefix (LIKE with escaped pattern)
+	if framedIpv6Prefix := c.QueryParam("framed_ipv6_prefix"); framedIpv6Prefix != "" {
+		query = query.Where("framed_ipv6_prefix LIKE ?", "%"+escapeSessionLikePattern(framedIpv6Prefix)+"%")
+	}
+
+	// Filter by Delegated IPv6 prefix (LIKE with escaped pattern)
+	if delegatedIpv6Prefix := c.QueryParam("delegated_ipv6_prefix"); delegatedIpv6Prefix != "" {
+		query = query.Where("delegated_ipv6_prefix LIKE ?", "%"+escapeSessionLikePattern(delegatedIpv6Prefix)+"%")
 	}
 
 	// Filter by MAC address (LIKE with escaped pattern)

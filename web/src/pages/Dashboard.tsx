@@ -31,6 +31,15 @@ interface DashboardStats {
   auth_trend: DashboardAuthTrendPoint[];
   traffic_24h: DashboardTrafficPoint[];
   profile_distribution: DashboardProfileSlice[];
+  ipv6_stats: DashboardIPv6Stats;
+}
+
+interface DashboardIPv6Stats {
+  online_with_ipv6: number;
+  online_with_ipv6_address: number;
+  online_with_framed_prefix: number;
+  online_with_delegated_prefix: number;
+  adoption_rate: number;
 }
 
 interface DashboardAuthTrendPoint {
@@ -63,6 +72,13 @@ const emptyStats: DashboardStats = {
   auth_trend: [],
   traffic_24h: [],
   profile_distribution: [],
+  ipv6_stats: {
+    online_with_ipv6: 0,
+    online_with_ipv6_address: 0,
+    online_with_framed_prefix: 0,
+    online_with_delegated_prefix: 0,
+    adoption_rate: 0,
+  },
 };
 
 const Dashboard = () => {
@@ -155,6 +171,14 @@ const Dashboard = () => {
       accent: '#f97316',
       highlights: [{ label: translate('dashboard.unit_gb'), value: 'GB' }],
     },
+  ];
+
+  const ipv6 = stats.ipv6_stats ?? emptyStats.ipv6_stats;
+  const ipv6Cards = [
+    { label: translate('dashboard.ipv6_online'), value: ipv6.online_with_ipv6, accent: '#6366f1' },
+    { label: translate('dashboard.ipv6_address'), value: ipv6.online_with_ipv6_address, accent: '#0ea5e9' },
+    { label: translate('dashboard.ipv6_framed_prefix'), value: ipv6.online_with_framed_prefix, accent: '#10b981' },
+    { label: translate('dashboard.ipv6_delegated_prefix'), value: ipv6.online_with_delegated_prefix, accent: '#f59e0b' },
   ];
 
   const authTrendOption = useMemo(
@@ -433,6 +457,46 @@ const Dashboard = () => {
           </Grid>
         ))}
       </Grid>
+
+      <Card sx={{ borderRadius: 4 }}>
+        <CardContent>
+          <Stack
+            direction={{ xs: 'column', sm: 'row' }}
+            justifyContent="space-between"
+            alignItems={{ xs: 'flex-start', sm: 'center' }}
+            spacing={2}
+            sx={{ mb: 2 }}
+          >
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {translate('dashboard.ipv6_coverage')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {translate('dashboard.ipv6_coverage_desc')}
+              </Typography>
+            </Box>
+            <Chip
+              label={`${translate('dashboard.ipv6_adoption')}: ${ipv6.adoption_rate.toFixed(1)}%`}
+              color="primary"
+              sx={{ fontWeight: 600 }}
+            />
+          </Stack>
+          <Grid container spacing={2}>
+            {ipv6Cards.map((item) => (
+              <Grid item xs={6} md={3} key={item.label}>
+                <Box sx={{ p: 2, borderRadius: 3, backgroundColor: alpha(item.accent, 0.1) }}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    {item.label}
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: item.accent }}>
+                    {numberFormatter.format(item.value)}
+                  </Typography>
+                </Box>
+              </Grid>
+            ))}
+          </Grid>
+        </CardContent>
+      </Card>
 
       <Grid container spacing={3}>
         <Grid item xs={12} md={6}>
