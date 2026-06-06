@@ -2,6 +2,12 @@
 # package ecosystems to update and where the package manifests are located.
 # Please see the documentation for all configuration options:
 # https://docs.github.com/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file
+#
+# Updates are grouped so related dependencies land in a single pull request.
+# This prevents the overlapping / duplicate dependency PRs that otherwise pile
+# up (for example multiple golang.org/x security-library bumps or separate
+# npm / esbuild / Vite PRs) and keeps one clear review path. Major version
+# updates are kept out of the grouped PRs so they can be migrated manually.
 
 version: 2
 updates:
@@ -9,13 +15,36 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    groups:
+      golang-x:
+        patterns:
+          - "golang.org/x/*"
+      gomod-minor-patch:
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "npm"
     directory: "/web"
     schedule:
       interval: "weekly"
+    groups:
+      npm-production:
+        dependency-type: "production"
+        update-types:
+          - "minor"
+          - "patch"
+      npm-development:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
