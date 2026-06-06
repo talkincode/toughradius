@@ -233,8 +233,10 @@ func TestStartHandler_Handle_AccountingCreateError(t *testing.T) {
 	err := handler.Handle(ctx)
 
 	assert.Error(t, err)
-	// Session was created, but accounting failed
-	assert.Len(t, sessionRepo.sessions, 1)
+	// The online row is rolled back (compensating delete) when accounting
+	// creation fails, so a retransmission re-creates both records instead of
+	// being skipped as a duplicate.
+	assert.Empty(t, sessionRepo.sessions)
 }
 
 func TestStartHandler_Handle_NilVendorRequest(t *testing.T) {
@@ -264,6 +266,29 @@ func TestStartHandler_Handle_DuplicateStartIdempotent(t *testing.T) {
 
 	assert.Len(t, sessionRepo.sessions, 1, "duplicate start must not add an online row")
 	assert.Len(t, acctRepo.records, 1, "duplicate start must not add an accounting record")
+}
+
+// TestStartHandler_Handle_AccountingErrorThenRetry verifies that when the
+// accounting insert fails, the rolled-back online row lets a subsequent
+// retransmission recreate both records (no permanently missing accounting).
+func TestStartHandler_Handle_AccountingErrorThenRetry(t *testing.T) {
+	sessionRepo := newMockSessionRepo()
+	acctRepo := newMockAccountingRepo()
+	acctRepo.createErr = errors.New("transient accounting error")
+	handler := NewStartHandler(sessionRepo, acctRepo)
+
+	ctx := createMockAccountingContext(int(rfc2866.AcctStatusType_Value_Start))
+
+	// First attempt fails on accounting; the online row is rolled back.
+	require.Error(t, handler.Handle(ctx))
+	assert.Empty(t, sessionRepo.sessions)
+	assert.Empty(t, acctRepo.records)
+
+	// Retransmission after the accounting backend recovers.
+	acctRepo.createErr = nil
+	require.NoError(t, handler.Handle(ctx))
+	assert.Len(t, sessionRepo.sessions, 1)
+	assert.Len(t, acctRepo.records, 1)
 }
 
 // ============ StopHandler Tests ============

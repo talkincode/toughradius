@@ -83,6 +83,19 @@ func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 			zap.String("username", acctCtx.Username),
 			zap.Error(err),
 		)
+		// Compensating delete: the online row was just inserted but the
+		// accounting record could not be created. Remove the online row so the
+		// NAS retransmission is treated as a fresh start (Create returns
+		// created=true) and both records are recreated, instead of being
+		// skipped as a duplicate and leaving the session without accounting.
+		if delErr := h.sessionRepo.Delete(acctCtx.Context, online.AcctSessionId); delErr != nil {
+			zap.L().Error("rollback online after accounting error failed",
+				zap.String("namespace", "radius"),
+				zap.String("username", acctCtx.Username),
+				zap.String("session_id", online.AcctSessionId),
+				zap.Error(delErr),
+			)
+		}
 		return err
 	}
 
