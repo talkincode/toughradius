@@ -169,6 +169,27 @@ func TestRadsecPacketServer_AcquireWorkerSlotShutdownFreeSlot(t *testing.T) {
 	}
 }
 
+// TestRadsecPacketServer_KeepSlotUnlessShutdownReleases verifies the race-closing
+// re-check: when shutdown is signaled after a slot was acquired, the slot is
+// released and false is returned, so a handler is not started during shutdown.
+func TestRadsecPacketServer_KeepSlotUnlessShutdownReleases(t *testing.T) {
+	s := &RadsecPacketServer{RadsecWorker: 1}
+	s.mu.Lock()
+	s.initLocked()
+	s.mu.Unlock()
+
+	// Simulate a successful non-blocking send that raced with shutdown.
+	s.workerPool <- struct{}{}
+	s.ctxDone()
+
+	if s.keepSlotUnlessShutdown() {
+		t.Fatal("keepSlotUnlessShutdown should return false during shutdown")
+	}
+	if len(s.workerPool) != 0 {
+		t.Fatalf("slot should be released on shutdown, occupied=%d", len(s.workerPool))
+	}
+}
+
 // TestRadsecPacketServer_DefaultWorkerPool verifies that an unconfigured
 // RadsecWorker falls back to a bounded, buffered pool instead of producing an
 // unbuffered (deadlock-prone) channel.

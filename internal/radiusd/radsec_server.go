@@ -119,7 +119,7 @@ func (s *RadsecPacketServer) acquireWorkerSlot() bool {
 	}
 	select {
 	case s.workerPool <- struct{}{}:
-		return true
+		return s.keepSlotUnlessShutdown()
 	default:
 	}
 	// Pool saturated: record the back-pressure event for observability, then
@@ -127,10 +127,23 @@ func (s *RadsecPacketServer) acquireWorkerSlot() bool {
 	app.IncRadiusMetric(app.MetricsRadiusRadsecSaturated)
 	select {
 	case s.workerPool <- struct{}{}:
-		return true
+		return s.keepSlotUnlessShutdown()
 	case <-s.ctx.Done():
 		return false
 	}
+}
+
+// keepSlotUnlessShutdown re-checks the shutdown signal after a slot was acquired.
+// Acquiring a free slot (a non-blocking channel send) and observing ctx are two
+// separate steps, so Shutdown can cancel ctx in between. Re-checking here and
+// releasing the slot on shutdown closes that race deterministically: no new
+// handler is started once shutdown has begun, and the slot is handed back.
+func (s *RadsecPacketServer) keepSlotUnlessShutdown() bool {
+	if s.ctx.Err() != nil {
+		<-s.workerPool
+		return false
+	}
+	return true
 }
 
 // releaseWorkerSlot returns a slot to the bounded worker pool. It must be called
