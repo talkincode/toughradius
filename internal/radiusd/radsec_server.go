@@ -251,6 +251,17 @@ func parseTcpPacket(r io.Reader, secret []byte) (*radius.Packet, error) {
 
 // Serve accepts incoming connections on conn.
 func (s *RadsecPacketServer) Serve(conn net.Conn) error {
+	// Always close the connection when Serve returns, on every exit path
+	// (nil handler/secret, EOF, network error, fatal framing error, or
+	// shutdown). ListenAndServe runs Serve in a goroutine and discards its
+	// return value, so without this the underlying socket would stay open
+	// until GC/finalizers ran, leaking connections under attack or noisy
+	// clients. Close is idempotent-safe here: Shutdown may also close this
+	// conn via s.listeners, and net.Conn permits concurrent Close/Write, so an
+	// in-flight handler writing to an already-terminating connection simply
+	// gets a write error rather than racing.
+	defer func() { _ = conn.Close() }() //nolint:errcheck
+
 	if s.Handler == nil {
 		return errors.New("radius: nil RadsecHandler")
 	}

@@ -260,6 +260,14 @@ func TestRadsecPacketServer_MalformedFrameClosesConnection(t *testing.T) {
 		t.Fatalf("expected exactly 1 served packet, got %d (stream desynchronized)", got)
 	}
 
+	// Serve must have actually closed its side of the connection, not merely
+	// returned. With net.Pipe, the peer observes io.EOF once the other end is
+	// closed.
+	_ = clientConn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if _, err := clientConn.Read(make([]byte, 1)); err == nil {
+		t.Fatal("expected the connection to be closed by Serve, but read succeeded")
+	}
+
 	_ = clientConn.Close()
 	_ = server.Shutdown(context.Background())
 }
