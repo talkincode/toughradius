@@ -2,6 +2,7 @@ package radiusd
 
 import (
 	"bytes"
+	"errors"
 	"net"
 	"sync"
 	"testing"
@@ -121,23 +122,32 @@ func TestParseTcpPacket_RoundTrip(t *testing.T) {
 }
 
 // TestParseTcpPacket_RejectsMalformedLength verifies the length guards added for
-// safe buffer pooling: a length below the header size and a payload shorter than
-// the 16-byte authenticator are both rejected instead of underflowing or panicking.
+// safe buffer pooling: a length below the header size, a payload shorter than
+// the 16-byte authenticator, and a length above the RFC 2865 maximum are all
+// rejected instead of underflowing, panicking, or driving a large allocation.
+// Each must be classified as a framing error so the Serve loop closes the
+// connection rather than misreading the unconsumed body as the next header.
 func TestParseTcpPacket_RejectsMalformedLength(t *testing.T) {
 	belowHeader := []byte{1, 2, 0, 3} // Length 3 < 4-byte header
 	if _, err := parseTcpPacket(bytes.NewReader(belowHeader), []byte("s")); err == nil {
 		t.Fatal("expected error for length below header size")
+	} else if !errors.Is(err, errMalformedFrame) {
+		t.Fatalf("expected errMalformedFrame, got %v", err)
 	}
 
 	shortPayload := []byte{1, 2, 0, 18} // Length 18 => dataLen 14 < 16
 	if _, err := parseTcpPacket(bytes.NewReader(shortPayload), []byte("s")); err == nil {
 		t.Fatal("expected error for payload shorter than authenticator")
+	} else if !errors.Is(err, errMalformedFrame) {
+		t.Fatalf("expected errMalformedFrame, got %v", err)
 	}
 
 	// Length above the RFC 2865 maximum must be rejected before allocation.
 	overMax := []byte{1, 2, 0xFF, 0xFF} // Length 65535 > 4096
 	if _, err := parseTcpPacket(bytes.NewReader(overMax), []byte("s")); err == nil {
 		t.Fatal("expected error for length above RFC 2865 maximum")
+	} else if !errors.Is(err, errMalformedFrame) {
+		t.Fatalf("expected errMalformedFrame, got %v", err)
 	}
 }
 
