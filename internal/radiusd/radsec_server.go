@@ -25,7 +25,7 @@ import (
 // defaultRadsecWorkers bounds the number of concurrent RadSec handler goroutines
 // when RadsecWorker is left unconfigured (<= 0). A zero-capacity worker channel
 // would otherwise be unbuffered and deadlock the read loop, so a sane default is
-// applied. It mirrors the config default (config.DefaultConfig: radsec_worker).
+// applied. It mirrors config.DefaultAppConfig.Radiusd.RadsecWorker.
 const defaultRadsecWorkers = 100
 
 type packetResponseWriter struct {
@@ -111,6 +111,12 @@ func (s *RadsecPacketServer) initLocked() {
 // the bounded back-pressure used on the UDP accounting path
 // (AcctService.submitAcctTask), adapted to RadSec's connection-oriented transport.
 func (s *RadsecPacketServer) acquireWorkerSlot() bool {
+	// Honor shutdown first: once the server is stopping, never start a new
+	// handler even if the pool still has free slots. This keeps the documented
+	// "returns false when shutting down" contract consistent.
+	if s.ctx.Err() != nil {
+		return false
+	}
 	select {
 	case s.workerPool <- struct{}{}:
 		return true
