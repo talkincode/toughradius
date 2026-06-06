@@ -140,7 +140,7 @@ func (s *RadsecPacketServer) acquireWorkerSlot() bool {
 // handler is started once shutdown has begun, and the slot is handed back.
 func (s *RadsecPacketServer) keepSlotUnlessShutdown() bool {
 	if s.ctx.Err() != nil {
-		<-s.workerPool
+		s.releaseWorkerSlot()
 		return false
 	}
 	return true
