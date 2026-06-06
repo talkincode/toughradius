@@ -46,6 +46,7 @@ import {
   TextField as MuiTextField,
   alpha
 } from '@mui/material';
+import { Theme } from '@mui/material/styles';
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   Settings as ProfileIcon,
@@ -1148,9 +1149,9 @@ const ProfileHeaderCard = () => {
               icon={<BackIcon />}
               sx={{
                 minWidth: 'auto',
-                bgcolor: theme => alpha(theme.palette.grey[500], 0.1),
+                bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.1),
                 '&:hover': {
-                  bgcolor: theme => alpha(theme.palette.grey[500], 0.2),
+                  bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.2),
                 },
               }}
             />
