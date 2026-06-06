@@ -1,7 +1,6 @@
 package statemanager
 
 import (
-"errors"
 "sync"
 "time"
 
@@ -92,29 +91,28 @@ func (m *MemoryStateManager) Close() {
 m.stopOnce.Do(func() { close(m.stopCh) })
 }
 
-// errStateNotFound is returned by GetState when no live state exists for the
-// requested ID (either never stored, already deleted, or expired). It is a
-// package-level sentinel to avoid allocating on the hot not-found path.
-var errStateNotFound = errors.New("state not found")
-
 // GetState returns the EAP state for the given ID. It is a read-mostly
 // operation: the common (non-expired) path holds only a read lock, so
 // concurrent EAP handshakes reading distinct or shared states are not
 // serialized. Expired states are treated as absent and removed lazily under a
 // brief write lock taken only when an expired entry is actually encountered.
+//
+// When no live state exists it returns eap.ErrStateNotFound, matching the
+// EAPStateManager contract and the sentinel used across the EAP subsystem so
+// callers can rely on errors.Is(err, eap.ErrStateNotFound).
 func (m *MemoryStateManager) GetState(stateID string) (*eap.EAPState, error) {
 m.mu.RLock()
 entry, ok := m.states[stateID]
 if !ok {
 m.mu.RUnlock()
-return nil, errStateNotFound
+return nil, eap.ErrStateNotFound
 }
 if time.Now().After(entry.expiresAt) {
 m.mu.RUnlock()
 // Rare path: drop the read lock and remove the expired entry under a
 // write lock so the common path above stays read-only.
 m.deleteIfExpired(stateID)
-return nil, errStateNotFound
+return nil, eap.ErrStateNotFound
 }
 
 // Return a copy to avoid concurrent modification.
