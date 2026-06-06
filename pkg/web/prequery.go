@@ -2,12 +2,27 @@ package web
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"gorm.io/gorm"
 )
+
+// sqlIdentifierPattern matches a safe SQL identifier reference, optionally
+// table-qualified (e.g. "username" or "radius_user.id"). It deliberately
+// rejects whitespace, quotes, parentheses and any other character that could
+// be used to break out of a column reference and inject SQL.
+var sqlIdentifierPattern = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)?$`)
+
+// isValidSQLIdentifier reports whether name is a safe column/identifier
+// reference that can be interpolated into a query clause. User-supplied
+// sort/equal/filter field names are validated with this before being used in
+// ORDER BY / WHERE fragments to prevent SQL injection via column names.
+func isValidSQLIdentifier(name string) bool {
+	return sqlIdentifierPattern.MatchString(name)
+}
 
 // PreQuery is a fluent query builder for constructing GORM queries from HTTP request parameters.
 // It provides a chainable API for building complex database queries with:
@@ -249,6 +264,9 @@ func (p *PreQuery) Query(query *gorm.DB) *gorm.DB {
 		query = query.Order(p.defaultOrderby)
 	} else {
 		for name, stype := range ParseSortMap(p.context) {
+			if !isValidSQLIdentifier(name) {
+				continue
+			}
 			query = query.Order(fmt.Sprintf("%s %s", name, stype))
 		}
 	}
@@ -268,6 +286,9 @@ func (p *PreQuery) Query(query *gorm.DB) *gorm.DB {
 		if _, ok := p.params[name]; ok {
 			continue
 		}
+		if !isValidSQLIdentifier(name) {
+			continue
+		}
 		query = query.Where(fmt.Sprintf("%s = ?", name), value)
 	}
 
@@ -280,6 +301,9 @@ func (p *PreQuery) Query(query *gorm.DB) *gorm.DB {
 			continue
 		}
 		if _, ok := p.params[name]; ok {
+			continue
+		}
+		if !isValidSQLIdentifier(name) {
 			continue
 		}
 		if common.InSlice(name, p.equalFieldds) {

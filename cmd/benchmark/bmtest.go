@@ -157,10 +157,19 @@ func runBenchmark() {
 	}
 }
 
+// maskSecret redacts a sensitive value so credentials are never written to
+// stdout/logs by the benchmark tool while still indicating whether one was set.
+func maskSecret(s string) string {
+	if s == "" {
+		return "(empty)"
+	}
+	return "***"
+}
+
 // runAuthTest sends a single authentication request.
 func runAuthTest() {
 	fmt.Printf("Sending Access-Request to %s:%d\n", *server, *authport)
-	fmt.Printf("Username: %s, Password: %s, Secret: %s\n", *user, *passwd, *secret)
+	fmt.Printf("Username: %s, Password: %s, Secret: %s\n", *user, maskSecret(*passwd), maskSecret(*secret))
 
 	pb := bm.NewPacketBuilder(*secret, "bmtest", *nasip)
 	packet, err := pb.BuildAuthRequest(*user, *passwd, *usermac)
