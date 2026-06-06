@@ -18,6 +18,7 @@ const (
 	MetricsRadiusRejectUnauthorized = "radus_reject_unauthorized"
 	MetricsRadiusAuthDrop           = "radus_auth_drop"
 	MetricsRadiusAcctDrop           = "radus_acct_drop"
+	MetricsRadiusRadsecSaturated    = "radus_radsec_saturated"
 	MetricsRadiusAccept             = "radus_accept"
 	MetricsRadiusAccounting         = "radus_accounting"
 )
@@ -36,6 +37,7 @@ var metricsNames = []string{
 	MetricsRadiusRejectUnauthorized,
 	MetricsRadiusAuthDrop,
 	MetricsRadiusAcctDrop,
+	MetricsRadiusRadsecSaturated,
 	MetricsRadiusAccept,
 	MetricsRadiusAccounting,
 }
