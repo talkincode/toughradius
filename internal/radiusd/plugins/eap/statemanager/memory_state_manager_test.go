@@ -67,6 +67,20 @@ func TestMemoryStateManager_GetState_NotFound(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, state)
 	assert.Contains(t, err.Error(), "not found")
+	// GetState must return the subsystem's sentinel so callers can match it
+	// with errors.Is, consistently with the EAPStateManager contract.
+	assert.ErrorIs(t, err, eap.ErrStateNotFound)
+}
+
+func TestMemoryStateManager_GetState_ExpiredReturnsSentinel(t *testing.T) {
+	mgr := NewMemoryStateManagerWithTTL(10*time.Millisecond, 0)
+	defer mgr.Close()
+
+	require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1"}))
+	time.Sleep(25 * time.Millisecond)
+
+	_, err := mgr.GetState("s1")
+	assert.ErrorIs(t, err, eap.ErrStateNotFound)
 }
 
 func TestMemoryStateManager_GetState_ReturnsCopy(t *testing.T) {
