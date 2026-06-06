@@ -18,7 +18,7 @@
   "dependencies": {
     "@tanstack/react-query": "^5.56.2",
     "@tanstack/react-query-devtools": "^5.100.14",
-    "echarts": "^5.5.0",
+    "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.2",
     "node-polyglot": "^2.6.0",
     "ra-data-simple-rest": "^5.0.0",
