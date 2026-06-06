@@ -162,6 +162,24 @@ func (s *RadsecPacketServer) activeDone() {
 	}
 }
 
+// tcpPacketBufferPool recycles the per-packet payload buffer used by
+// parseTcpPacket. radius.ParseAttributes copies attribute bytes out (it appends
+// into freshly allocated slices rather than aliasing the input), and the request
+// authenticator is copied into a fixed-size array, so the buffer holds no live
+// references once parseTcpPacket returns and can be safely reused across packets.
+//
+// Pointers to slices are pooled (not slices directly) to avoid allocating a slice
+// header on every Put. pprof identified this buffer as the largest allocation in
+// our own RadSec ingest path; the remaining per-packet allocations live inside
+// layeh.com/radius and are out of scope for in-tree pooling.
+var tcpPacketBufferPool = sync.Pool{
+	New: func() any {
+		// Most RADIUS packets are well under 512 bytes; the buffer grows on demand.
+		b := make([]byte, 0, 512)
+		return &b
+	},
+}
+
 func parseTcpPacket(r io.Reader, secret []byte) (*radius.Packet, error) {
 	var header struct {
 		Code       uint8
@@ -174,8 +192,25 @@ func parseTcpPacket(r io.Reader, secret []byte) (*radius.Packet, error) {
 		return nil, err
 	}
 
-	s := unsafe.Sizeof(header)
-	var data = make([]byte, header.Length-uint16(s))
+	headerSize := uint16(unsafe.Sizeof(header))
+	// Guard against malformed lengths: a Length below the header size would
+	// underflow the unsigned subtraction and request a huge allocation, and a
+	// payload shorter than the 16-byte authenticator would make data[16:] panic.
+	if header.Length < headerSize {
+		return nil, errors.New("radius: invalid packet length")
+	}
+	dataLen := int(header.Length - headerSize)
+	if dataLen < 16 {
+		return nil, errors.New("radius: short packet")
+	}
+
+	bufp := tcpPacketBufferPool.Get().(*[]byte)
+	defer tcpPacketBufferPool.Put(bufp)
+	if cap(*bufp) < dataLen {
+		*bufp = make([]byte, dataLen)
+	}
+	data := (*bufp)[:dataLen]
+
 	if _, err := io.ReadFull(r, data); err != nil {
 		return nil, err
 	}
