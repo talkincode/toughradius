@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"io"
 	"net"
 	"sync/atomic"
 	"testing"
@@ -261,11 +262,17 @@ func TestRadsecPacketServer_MalformedFrameClosesConnection(t *testing.T) {
 	}
 
 	// Serve must have actually closed its side of the connection, not merely
-	// returned. With net.Pipe, the peer observes io.EOF once the other end is
-	// closed.
+	// returned. With net.Pipe the peer observes io.EOF once the other end is
+	// closed; if Serve left the connection open, the read would instead block
+	// until the deadline and return a timeout — so a timeout must be treated as
+	// a failure, not accepted as "some error".
 	_ = clientConn.SetReadDeadline(time.Now().Add(2 * time.Second))
-	if _, err := clientConn.Read(make([]byte, 1)); err == nil {
-		t.Fatal("expected the connection to be closed by Serve, but read succeeded")
+	_, err := clientConn.Read(make([]byte, 1))
+	if ne, ok := err.(net.Error); ok && ne.Timeout() {
+		t.Fatal("read timed out: Serve returned but did not close the connection")
+	}
+	if !errors.Is(err, io.EOF) {
+		t.Fatalf("expected io.EOF from the closed connection, got %v", err)
 	}
 
 	_ = clientConn.Close()
