@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"io"
 	"net"
 	"os"
@@ -33,6 +34,14 @@ const defaultRadsecWorkers = 100
 // exceeds 4096 bytes; rejecting anything larger bounds per-packet allocations
 // (and the size a pooled parse buffer can retain).
 const maxRadiusPacketLength = 4096
+
+// errMalformedFrame indicates the RadSec length prefix could not be trusted to
+// delimit the frame: it is smaller than a valid packet or larger than the RFC
+// 2865 maximum. Because the announced body bytes are NOT consumed from the
+// stream when this is returned, the TCP connection is desynchronized — the
+// remaining bytes would be misread as subsequent packet headers. Callers must
+// treat it as fatal and close the connection rather than continue parsing.
+var errMalformedFrame = errors.New("radius: malformed packet framing")
 
 type packetResponseWriter struct {
 	// listener that received the packet
@@ -204,13 +213,14 @@ func parseTcpPacket(r io.Reader, secret []byte) (*radius.Packet, error) {
 	// than the 16-byte authenticator would make data[16:] panic; and a Length
 	// above the RFC 2865 maximum (4096) must be rejected so a malicious/garbled
 	// length cannot drive a large allocation+read or, via the buffer pool,
-	// permanently retain an oversized backing array.
+	// permanently retain an oversized backing array. These are framing errors:
+	// the body has not been consumed, so the caller must close the connection.
 	if header.Length < headerSize || header.Length > maxRadiusPacketLength {
-		return nil, errors.New("radius: invalid packet length")
+		return nil, fmt.Errorf("%w: length %d", errMalformedFrame, header.Length)
 	}
 	dataLen := int(header.Length - headerSize)
 	if dataLen < 16 {
-		return nil, errors.New("radius: short packet")
+		return nil, fmt.Errorf("%w: payload shorter than authenticator", errMalformedFrame)
 	}
 
 	bufp := tcpPacketBufferPool.Get().(*[]byte)
@@ -301,6 +311,14 @@ func (s *RadsecPacketServer) Serve(conn net.Conn) error {
 			}
 			if _, ok := err.(net.Error); ok {
 				zap.S().Infof("radius: connection error %s: %v", conn.RemoteAddr(), err)
+				return err
+			}
+			// A framing error means the length prefix could not delimit the
+			// frame and its announced body was not consumed, so the stream is
+			// desynchronized. Continuing would misread the body as the next
+			// header; close the connection instead. The client may reconnect.
+			if errors.Is(err, errMalformedFrame) {
+				zap.S().Errorf("radius: closing connection %s on malformed frame: %v", conn.RemoteAddr(), err)
 				return err
 			}
 			zap.S().Errorf("radius: unable to parse packet: %v", err)

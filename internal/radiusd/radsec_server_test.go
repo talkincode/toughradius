@@ -3,6 +3,7 @@ package radiusd
 import (
 	"context"
 	"encoding/binary"
+	"errors"
 	"net"
 	"sync/atomic"
 	"testing"
@@ -202,4 +203,63 @@ func TestRadsecPacketServer_DefaultWorkerPool(t *testing.T) {
 	if cap(s.workerPool) != defaultRadsecWorkers {
 		t.Fatalf("expected default worker pool capacity %d, got %d", defaultRadsecWorkers, cap(s.workerPool))
 	}
+}
+
+// TestRadsecPacketServer_MalformedFrameClosesConnection verifies that an
+// over-max length prefix is treated as a fatal framing error: Serve returns
+// (closing the connection) instead of continuing, which would misread the
+// frame's unconsumed body as subsequent packet headers and desynchronize the
+// stream. A valid packet sent before the malformed frame must still be served,
+// and the bytes embedded in the malformed frame's body must NOT be processed.
+func TestRadsecPacketServer_MalformedFrameClosesConnection(t *testing.T) {
+	var handled int32
+	served := make(chan struct{}, 8)
+	handler := radsecHandlerFunc(func(w radius.ResponseWriter, r *radius.Request) {
+		atomic.AddInt32(&handled, 1)
+		served <- struct{}{}
+	})
+
+	server := &RadsecPacketServer{
+		Handler: handler,
+		SecretSource: radsecSecretSourceFunc(func(context.Context, net.Addr) ([]byte, error) {
+			return []byte("testing123"), nil
+		}),
+		RadsecWorker: 4,
+	}
+
+	clientConn, serverConn := net.Pipe()
+	serveErr := make(chan error, 1)
+	go func() { serveErr <- server.Serve(serverConn) }()
+
+	// A valid packet must be served normally.
+	go func() { _, _ = clientConn.Write(radsecTestPacket(1)) }()
+	select {
+	case <-served:
+	case <-time.After(3 * time.Second):
+		t.Fatal("timed out waiting for the valid packet to be served")
+	}
+
+	// Now send a frame advertising an over-max Length, followed by a valid
+	// 20-byte packet as its body. Without the framing guard the read loop would
+	// continue and misread that body as the next packet's header.
+	overMax := []byte{1, 9, 0xFF, 0xFF}
+	overMax = append(overMax, radsecTestPacket(2)...)
+	go func() { _, _ = clientConn.Write(overMax) }()
+
+	select {
+	case err := <-serveErr:
+		if !errors.Is(err, errMalformedFrame) {
+			t.Fatalf("expected Serve to return errMalformedFrame, got %v", err)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("Serve did not close the connection on a malformed frame")
+	}
+
+	// The embedded body must not have been processed as a second packet.
+	if got := atomic.LoadInt32(&handled); got != 1 {
+		t.Fatalf("expected exactly 1 served packet, got %d (stream desynchronized)", got)
+	}
+
+	_ = clientConn.Close()
+	_ = server.Shutdown(context.Background())
 }
