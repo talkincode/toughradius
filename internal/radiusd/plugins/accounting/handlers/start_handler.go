@@ -50,8 +50,10 @@ func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	// Construct the online session record
 	online := h.buildRadiusOnline(acctCtx.Request, vendorReq, acctCtx.NAS, acctCtx.NASIP)
 
-	// Create online session
-	err := h.sessionRepo.Create(acctCtx.Context, &online)
+	// Create online session. Create is idempotent on Acct-Session-Id: a
+	// retransmitted Accounting-Start returns created=false instead of
+	// inserting a duplicate online row.
+	created, err := h.sessionRepo.Create(acctCtx.Context, &online)
 	if err != nil {
 		zap.L().Error("add radius online error",
 			zap.String("namespace", "radius"),
@@ -61,7 +63,19 @@ func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 		return err
 	}
 
-	// Create accounting record
+	// Duplicate Accounting-Start retransmission: the online session already
+	// exists for this Acct-Session-Id. Skip creating another accounting record
+	// so traffic/time counters are not double-billed.
+	if !created {
+		zap.L().Debug("duplicate accounting start ignored",
+			zap.String("namespace", "radius"),
+			zap.String("username", acctCtx.Username),
+			zap.String("session_id", online.AcctSessionId),
+		)
+		return nil
+	}
+
+	// Create accounting record (only for newly created sessions)
 	accounting := h.buildRadiusAccounting(&online, true)
 	if err := h.accountingRepo.Create(acctCtx.Context, &accounting); err != nil {
 		zap.L().Error("add radius accounting error",

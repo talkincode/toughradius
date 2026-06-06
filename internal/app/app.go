@@ -162,6 +162,9 @@ func (a *Application) MigrateDB(track bool) (err error) {
 			}
 		}
 	}()
+	// Remove duplicate online rows before AutoMigrate creates the unique
+	// index on radius_online.acct_session_id (idempotency backstop).
+	a.dedupOnlineSessions()
 	if track {
 		if err := a.gormDB.Debug().Migrator().AutoMigrate(domain.Tables...); err != nil {
 			zap.S().Error(err)
@@ -172,6 +175,31 @@ func (a *Application) MigrateDB(track bool) (err error) {
 		}
 	}
 	return nil
+}
+
+// dedupOnlineSessions removes duplicate radius_online rows that share the same
+// Acct-Session-Id before AutoMigrate creates the unique index on that column.
+// Existing deployments may already contain duplicate online rows produced by
+// retransmitted Accounting-Start packets; without this cleanup the unique
+// index creation would fail and the idempotency guarantee would silently not
+// apply. It keeps the row with the smallest id per Acct-Session-Id and is
+// best-effort: failures are logged but never abort startup.
+func (a *Application) dedupOnlineSessions() {
+	if a.gormDB == nil {
+		return
+	}
+	if !a.gormDB.Migrator().HasTable(&domain.RadiusOnline{}) {
+		return
+	}
+	table := domain.RadiusOnline{}.TableName()
+	sql := fmt.Sprintf(
+		"DELETE FROM %s WHERE id NOT IN (SELECT min_id FROM (SELECT MIN(id) AS min_id FROM %s GROUP BY acct_session_id) AS keep_ids)",
+		table, table,
+	)
+	if err := a.gormDB.Exec(sql).Error; err != nil {
+		zap.L().Warn("dedup radius_online before unique index failed",
+			zap.String("namespace", "radius"), zap.Error(err))
+	}
 }
 
 func (a *Application) DropAll() {

@@ -29,8 +29,12 @@ type UserRepository interface {
 
 // SessionRepository manages online sessions
 type SessionRepository interface {
-	// Create Create online session
-	Create(ctx context.Context, session *domain.RadiusOnline) error
+	// Create inserts an online session idempotently keyed on Acct-Session-Id.
+	// It returns created=true when a new row was inserted, and created=false
+	// when a row with the same Acct-Session-Id already exists (for example a
+	// retransmitted Accounting-Start). Duplicate inserts are a no-op rather
+	// than an error so accounting stays idempotent under UDP retransmission.
+	Create(ctx context.Context, session *domain.RadiusOnline) (created bool, err error)
 
 	// Update updates session data
 	Update(ctx context.Context, session *domain.RadiusOnline) error

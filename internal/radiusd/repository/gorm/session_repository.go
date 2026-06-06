@@ -9,6 +9,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // GormSessionRepository is the GORM implementation of the session repository
@@ -25,17 +26,28 @@ func NewGormSessionRepository(db *gorm.DB) repository.SessionRepository {
 	}
 }
 
-func (r *GormSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) error {
+// Create inserts the online session idempotently. The insert relies on the
+// unique index on acct_session_id together with an ON CONFLICT DO NOTHING
+// clause, so a retransmitted Accounting-Start can never produce a duplicate
+// online row. It returns created=false when the row already existed.
+func (r *GormSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) (bool, error) {
 	if session.ID == 0 {
 		session.ID = common.UUIDint64()
 	}
-	if err := r.db.WithContext(ctx).Create(session).Error; err != nil {
-		return err
+	result := r.db.WithContext(ctx).
+		Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "acct_session_id"}},
+			DoNothing: true,
+		}).
+		Create(session)
+	if result.Error != nil {
+		return false, result.Error
 	}
-	if session != nil {
+	created := result.RowsAffected > 0
+	if created {
 		r.invalidate(session.Username)
 	}
-	return nil
+	return created, nil
 }
 
 func (r *GormSessionRepository) Update(ctx context.Context, session *domain.RadiusOnline) error {

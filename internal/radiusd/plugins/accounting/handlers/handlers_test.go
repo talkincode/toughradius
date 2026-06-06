@@ -32,12 +32,15 @@ func newMockSessionRepo() *mockSessionRepository {
 	}
 }
 
-func (m *mockSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) error {
+func (m *mockSessionRepository) Create(ctx context.Context, session *domain.RadiusOnline) (bool, error) {
 	if m.createErr != nil {
-		return m.createErr
+		return false, m.createErr
+	}
+	if _, ok := m.sessions[session.AcctSessionId]; ok {
+		return false, nil
 	}
 	m.sessions[session.AcctSessionId] = session
-	return nil
+	return true, nil
 }
 
 func (m *mockSessionRepository) Update(ctx context.Context, session *domain.RadiusOnline) error {
@@ -244,6 +247,23 @@ func TestStartHandler_Handle_NilVendorRequest(t *testing.T) {
 
 	err := handler.Handle(ctx)
 	assert.NoError(t, err)
+}
+
+// TestStartHandler_Handle_DuplicateStartIdempotent reproduces issue #302: a
+// retransmitted Accounting-Start for the same Acct-Session-Id must not create a
+// second online row nor a second accounting record.
+func TestStartHandler_Handle_DuplicateStartIdempotent(t *testing.T) {
+	sessionRepo := newMockSessionRepo()
+	acctRepo := newMockAccountingRepo()
+	handler := NewStartHandler(sessionRepo, acctRepo)
+
+	ctx := createMockAccountingContext(int(rfc2866.AcctStatusType_Value_Start))
+
+	require.NoError(t, handler.Handle(ctx))
+	require.NoError(t, handler.Handle(ctx)) // retransmission
+
+	assert.Len(t, sessionRepo.sessions, 1, "duplicate start must not add an online row")
+	assert.Len(t, acctRepo.records, 1, "duplicate start must not add an accounting record")
 }
 
 // ============ StopHandler Tests ============
