@@ -198,8 +198,8 @@ func DeleteOnlineSession(c echo.Context) error {
 			_ = rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId) //nolint:errcheck
 			_ = rfc2865.UserName_SetString(pkt, session.Username)           //nolint:errcheck
 
-			// Send to NAS CoA port (default 3799)
-			coaAddr := net.JoinHostPort(nas.Ipaddr, "3799")
+			// Send to NAS CoA port (default 3799 when not configured)
+			coaAddr := net.JoinHostPort(nas.Ipaddr, strconv.Itoa(resolveCoaPort(nas.CoaPort)))
 			client := &radius.Client{
 				Retry: time.Second * 2,
 			}
@@ -238,6 +238,15 @@ func DeleteOnlineSession(c echo.Context) error {
 	return ok(c, map[string]interface{}{
 		"message": "User has been forced offline",
 	})
+}
+
+// resolveCoaPort returns the NAS RADIUS CoA port, falling back to the
+// RFC 5176 default (3799) when no valid port is configured.
+func resolveCoaPort(coaPort int) int {
+	if coaPort <= 0 || coaPort > 65535 {
+		return 3799
+	}
+	return coaPort
 }
 
 // registerSessionRoutes Register online session routes

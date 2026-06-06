@@ -435,6 +435,29 @@ func TestDeleteOnlineSession(t *testing.T) {
 	}
 }
 
+// TestResolveCoaPort verifies CoA port resolution honors the configured NAS
+// CoA port and falls back to the RFC 5176 default when unset/invalid.
+func TestResolveCoaPort(t *testing.T) {
+	tests := []struct {
+		name     string
+		coaPort  int
+		expected int
+	}{
+		{"Custom port", 3800, 3800},
+		{"Default RFC 5176 port", 3799, 3799},
+		{"Unset (zero) falls back to default", 0, 3799},
+		{"Negative falls back to default", -1, 3799},
+		{"Out of range falls back to default", 70000, 3799},
+		{"Max valid port", 65535, 65535},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.expected, resolveCoaPort(tt.coaPort))
+		})
+	}
+}
+
 // TestSessionsEdgeCases Test edge cases
 func TestSessionsEdgeCases(t *testing.T) {
 	db := setupTestDB(t)
