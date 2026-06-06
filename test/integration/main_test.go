@@ -32,6 +32,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins"
 	parsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers/parsers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
@@ -210,10 +211,10 @@ func runSuite(env pgEnv, m *testing.M) (code int, err error) {
 
 	// Boot the RADIUS auth/acct servers backed by the same Postgres database.
 	registry.ResetForTest()
-	registry.RegisterVendorParser(&parsers.DefaultParser{})
-	registry.RegisterVendorParser(&parsers.HuaweiParser{})
-	registry.RegisterVendorParser(&parsers.H3CParser{})
-	registry.RegisterVendorParser(&parsers.ZTEParser{})
+	_ = vendors.RegisterParser(&parsers.DefaultParser{})
+	_ = vendors.RegisterParser(&parsers.HuaweiParser{})
+	_ = vendors.RegisterParser(&parsers.H3CParser{})
+	_ = vendors.RegisterParser(&parsers.ZTEParser{})
 
 	radiusSvc := radiusd.NewRadiusService(appCtx)
 	defer radiusSvc.Release()
