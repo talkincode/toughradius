@@ -32,6 +32,7 @@ import {
   useMediaQuery,
   TextField as MuiTextField,
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import {
   Router as DeviceIcon,
   AccessTime as TimeIcon,
@@ -596,9 +597,9 @@ const AccountingHeaderCard = () => {
               icon={<BackIcon />}
               sx={{
                 minWidth: 'auto',
-                bgcolor: theme => alpha(theme.palette.grey[500], 0.1),
+                bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.1),
                 '&:hover': {
-                  bgcolor: theme => alpha(theme.palette.grey[500], 0.2),
+                  bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.2),
                 },
               }}
             />

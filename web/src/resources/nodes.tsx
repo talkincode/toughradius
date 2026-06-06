@@ -44,6 +44,7 @@ import {
   TextField as MuiTextField,
   alpha
 } from '@mui/material';
+import type { Theme } from '@mui/material/styles';
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import {
   Hub as NodeIcon,
@@ -346,9 +347,9 @@ const NodeSearchHeaderCard = () => {
                 onClick={handleClear}
                 size="small"
                 sx={{
-                  bgcolor: theme => alpha(theme.palette.grey[500], 0.1),
+                  bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.1),
                   '&:hover': {
-                    bgcolor: theme => alpha(theme.palette.grey[500], 0.2),
+                    bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.2),
                   },
                 }}
               >
@@ -879,9 +880,9 @@ const NodeHeaderCard = () => {
               icon={<BackIcon />}
               sx={{
                 minWidth: 'auto',
-                bgcolor: theme => alpha(theme.palette.grey[500], 0.1),
+                bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.1),
                 '&:hover': {
-                  bgcolor: theme => alpha(theme.palette.grey[500], 0.2),
+                  bgcolor: (theme: Theme) => alpha(theme.palette.grey[500], 0.2),
                 },
               }}
             />
