@@ -16,10 +16,17 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 )
+
+// defaultRadsecWorkers bounds the number of concurrent RadSec handler goroutines
+// when RadsecWorker is left unconfigured (<= 0). A zero-capacity worker channel
+// would otherwise be unbuffered and deadlock the read loop, so a sane default is
+// applied. It mirrors the config default (config.DefaultConfig: radsec_worker).
+const defaultRadsecWorkers = 100
 
 type packetResponseWriter struct {
 	// listener that received the packet
@@ -82,11 +89,48 @@ type RadsecPacketServer struct {
 
 func (s *RadsecPacketServer) initLocked() {
 	if s.ctx == nil {
+		workers := s.RadsecWorker
+		if workers <= 0 {
+			workers = defaultRadsecWorkers
+		}
 		s.ctx, s.ctxDone = context.WithCancel(context.Background())
 		s.listeners = make(map[net.Conn]uint)
 		s.lastActive = make(chan struct{})
-		s.workerPool = make(chan struct{}, s.RadsecWorker)
+		s.workerPool = make(chan struct{}, workers)
 	}
+}
+
+// acquireWorkerSlot reserves a slot in the bounded worker pool before a handler
+// goroutine is spawned. It returns false when the server is shutting down.
+//
+// Acquiring the slot synchronously in the read loop (rather than inside the
+// spawned goroutine) is what actually bounds the number of in-flight handler
+// goroutines to the pool capacity: when the pool is saturated the read loop
+// stops pulling packets off the connection, which applies natural TCP back-
+// pressure instead of letting a flood spawn unbounded goroutines. This mirrors
+// the bounded back-pressure used on the UDP accounting path
+// (AcctService.submitAcctTask), adapted to RadSec's connection-oriented transport.
+func (s *RadsecPacketServer) acquireWorkerSlot() bool {
+	select {
+	case s.workerPool <- struct{}{}:
+		return true
+	default:
+	}
+	// Pool saturated: record the back-pressure event for observability, then
+	// block until a slot frees or the server shuts down.
+	app.IncRadiusMetric(app.MetricsRadiusRadsecSaturated)
+	select {
+	case s.workerPool <- struct{}{}:
+		return true
+	case <-s.ctx.Done():
+		return false
+	}
+}
+
+// releaseWorkerSlot returns a slot to the bounded worker pool. It must be called
+// exactly once for every successful acquireWorkerSlot.
+func (s *RadsecPacketServer) releaseWorkerSlot() {
+	<-s.workerPool
 }
 
 func (s *RadsecPacketServer) activeAdd() {
@@ -200,12 +244,18 @@ func (s *RadsecPacketServer) Serve(conn net.Conn) error {
 			continue
 		}
 
+		// Reserve a worker slot before spawning the handler goroutine. This
+		// bounds in-flight handler goroutines to the pool size and applies TCP
+		// back-pressure when saturated instead of spawning goroutines without
+		// limit. On shutdown the acquire is interrupted and Serve returns.
+		if !s.acquireWorkerSlot() {
+			return radius.ErrServerShutdown
+		}
+
 		s.activeAdd()
 		go func(packet *radius.Packet, conn net.Conn) {
 			defer s.activeDone()
-
-			s.workerPool <- struct{}{}
-			defer func() { <-s.workerPool }()
+			defer s.releaseWorkerSlot()
 
 			key := requestKey{
 				IP:         conn.RemoteAddr().String(),
