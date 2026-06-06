@@ -28,6 +28,12 @@ import (
 // applied. It mirrors config.DefaultAppConfig.Radiusd.RadsecWorker.
 const defaultRadsecWorkers = 100
 
+// maxRadiusPacketLength is the maximum RADIUS packet length per RFC 2865 §3. The
+// 2-byte Length field can encode up to 65535, but a conformant packet never
+// exceeds 4096 bytes; rejecting anything larger bounds per-packet allocations
+// (and the size a pooled parse buffer can retain).
+const maxRadiusPacketLength = 4096
+
 type packetResponseWriter struct {
 	// listener that received the packet
 	conn net.Conn
@@ -193,10 +199,13 @@ func parseTcpPacket(r io.Reader, secret []byte) (*radius.Packet, error) {
 	}
 
 	headerSize := uint16(unsafe.Sizeof(header))
-	// Guard against malformed lengths: a Length below the header size would
-	// underflow the unsigned subtraction and request a huge allocation, and a
-	// payload shorter than the 16-byte authenticator would make data[16:] panic.
-	if header.Length < headerSize {
+	// Guard the length field before allocating or reading. A Length below the
+	// header size would underflow the unsigned subtraction; a payload shorter
+	// than the 16-byte authenticator would make data[16:] panic; and a Length
+	// above the RFC 2865 maximum (4096) must be rejected so a malicious/garbled
+	// length cannot drive a large allocation+read or, via the buffer pool,
+	// permanently retain an oversized backing array.
+	if header.Length < headerSize || header.Length > maxRadiusPacketLength {
 		return nil, errors.New("radius: invalid packet length")
 	}
 	dataLen := int(header.Length - headerSize)

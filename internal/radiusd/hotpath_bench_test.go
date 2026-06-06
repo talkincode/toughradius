@@ -19,15 +19,21 @@ func buildBenchAcctPacket(tb testing.TB) (*radius.Packet, []byte) {
 	tb.Helper()
 	secret := []byte("testing123")
 	p := radius.New(radius.CodeAccountingRequest, secret)
-	_ = rfc2865.UserName_SetString(p, "user0001")
-	_ = rfc2865.NASIPAddress_Set(p, net.IPv4(10, 0, 0, 1))
-	_ = rfc2865.CallingStationID_SetString(p, "00:11:22:33:44:55")
-	_ = rfc2865.CalledStationID_SetString(p, "AP-Office-01")
-	_ = rfc2866.AcctSessionID_SetString(p, "sess-0000000000000001")
-	_ = rfc2866.AcctStatusType_Set(p, rfc2866.AcctStatusType_Value_InterimUpdate)
-	_ = rfc2866.AcctInputOctets_Set(p, 123456)
-	_ = rfc2866.AcctOutputOctets_Set(p, 654321)
-	_ = rfc2866.AcctSessionTime_Set(p, 3600)
+	set := func(err error) {
+		tb.Helper()
+		if err != nil {
+			tb.Fatalf("set attribute: %v", err)
+		}
+	}
+	set(rfc2865.UserName_SetString(p, "user0001"))
+	set(rfc2865.NASIPAddress_Set(p, net.IPv4(10, 0, 0, 1)))
+	set(rfc2865.CallingStationID_SetString(p, "00:11:22:33:44:55"))
+	set(rfc2865.CalledStationID_SetString(p, "AP-Office-01"))
+	set(rfc2866.AcctSessionID_SetString(p, "sess-0000000000000001"))
+	set(rfc2866.AcctStatusType_Set(p, rfc2866.AcctStatusType_Value_InterimUpdate))
+	set(rfc2866.AcctInputOctets_Set(p, 123456))
+	set(rfc2866.AcctOutputOctets_Set(p, 654321))
+	set(rfc2866.AcctSessionTime_Set(p, 3600))
 
 	encoded, err := p.Encode()
 	if err != nil {
@@ -126,6 +132,12 @@ func TestParseTcpPacket_RejectsMalformedLength(t *testing.T) {
 	shortPayload := []byte{1, 2, 0, 18} // Length 18 => dataLen 14 < 16
 	if _, err := parseTcpPacket(bytes.NewReader(shortPayload), []byte("s")); err == nil {
 		t.Fatal("expected error for payload shorter than authenticator")
+	}
+
+	// Length above the RFC 2865 maximum must be rejected before allocation.
+	overMax := []byte{1, 2, 0xFF, 0xFF} // Length 65535 > 4096
+	if _, err := parseTcpPacket(bytes.NewReader(overMax), []byte("s")); err == nil {
+		t.Fatal("expected error for length above RFC 2865 maximum")
 	}
 }
 
