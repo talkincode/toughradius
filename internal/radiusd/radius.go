@@ -9,7 +9,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	"github.com/panjf2000/ants/v2"
@@ -63,9 +62,8 @@ type AuthRateUser struct {
 
 type RadiusService struct {
 	appCtx        app.AppContext // Use interface instead of concrete type
-	AuthRateCache map[string]AuthRateUser
+	authRate      *authRateLimiter
 	TaskPool      *ants.Pool
-	arclock       sync.Mutex
 	nasCache      *cachepkg.TTLCache[*domain.NetNas]
 	userCache     *cachepkg.TTLCache[*domain.RadiusUser]
 
@@ -93,8 +91,7 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 	db := appCtx.DB()
 	s := &RadiusService{
 		appCtx:        appCtx,
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate:      newAuthRateLimiter(defaultAuthRateShards),
 		TaskPool:      pool,
 		nasCache:      cachepkg.NewTTLCache[*domain.NetNas](time.Minute, 512),
 		userCache:     cachepkg.NewTTLCache[*domain.RadiusUser](10*time.Second, 2048),
@@ -256,28 +253,14 @@ func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, nas *do
 }
 
 // CheckAuthRateLimit
-// Authentication frequency detection, each user can only authenticate once every few seconds
+// Authentication frequency detection, each user can only authenticate once every few seconds.
+// Backed by a sharded limiter so different users do not contend on a single global lock.
 func (s *RadiusService) CheckAuthRateLimit(username string) error {
-	s.arclock.Lock()
-	defer s.arclock.Unlock()
-	val, ok := s.AuthRateCache[username]
-	if ok {
-		if time.Now().Before(val.Starttime.Add(time.Duration(RadiusAuthRateInterval) * time.Second)) {
-			return radiuserrors.NewOnlineLimitError("there is a authentication still in process")
-		}
-		delete(s.AuthRateCache, username)
-	}
-	s.AuthRateCache[username] = AuthRateUser{
-		Username:  username,
-		Starttime: time.Now(),
-	}
-	return nil
+	return s.authRate.check(username, time.Duration(RadiusAuthRateInterval)*time.Second)
 }
 
 func (s *RadiusService) ReleaseAuthRateLimit(username string) {
-	s.arclock.Lock()
-	defer s.arclock.Unlock()
-	delete(s.AuthRateCache, username)
+	s.authRate.release(username)
 }
 
 func (s *RadiusService) Release() {

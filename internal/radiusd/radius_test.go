@@ -13,8 +13,7 @@ import (
 
 func TestCheckAuthRateLimitBasic(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	// TestFirst authentication
@@ -40,8 +39,7 @@ func TestCheckAuthRateLimitBasic(t *testing.T) {
 
 func TestCheckAuthRateLimitAfterWait(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	// First authentication
@@ -59,8 +57,7 @@ func TestCheckAuthRateLimitAfterWait(t *testing.T) {
 
 func TestCheckAuthRateLimitDifferentUsers(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	// Authentication of different users should not affect each other
@@ -75,9 +72,7 @@ func TestCheckAuthRateLimitDifferentUsers(t *testing.T) {
 	}
 
 	// Validate two users currently in the cache
-	service.arclock.Lock()
-	count := len(service.AuthRateCache)
-	service.arclock.Unlock()
+	count := service.authRate.len()
 
 	if count != 2 {
 		t.Errorf("expected 2 users in cache, got %d", count)
@@ -86,8 +81,7 @@ func TestCheckAuthRateLimitDifferentUsers(t *testing.T) {
 
 func TestReleaseAuthRateLimit(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	// Add user to rate limit cache
@@ -97,9 +91,7 @@ func TestReleaseAuthRateLimit(t *testing.T) {
 	service.ReleaseAuthRateLimit("user1")
 
 	// Validate the user is removed from the cache
-	service.arclock.Lock()
-	_, exists := service.AuthRateCache["user1"]
-	service.arclock.Unlock()
+	_, exists := service.authRate.get("user1")
 
 	if exists {
 		t.Error("user should be removed from cache after release")
@@ -114,8 +106,7 @@ func TestReleaseAuthRateLimit(t *testing.T) {
 
 func TestCheckAuthRateLimitConcurrent(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	var wg sync.WaitGroup
@@ -154,8 +145,7 @@ func TestCheckAuthRateLimitConcurrent(t *testing.T) {
 
 func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	var wg sync.WaitGroup
@@ -174,9 +164,7 @@ func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 	wg.Wait()
 
 	// Validate the number of users in the cache
-	service.arclock.Lock()
-	count := len(service.AuthRateCache)
-	service.arclock.Unlock()
+	count := service.authRate.len()
 
 	if count != userCount {
 		t.Logf("Note: Expected %d users, got %d", userCount, count)
@@ -185,17 +173,14 @@ func TestAuthRateCacheConcurrentAccess(t *testing.T) {
 
 func TestReleaseAuthRateLimitNonexistent(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	// Releasing a non-existent user should not panic
 	service.ReleaseAuthRateLimit("nonexistent-user")
 
 	// Validate the cache is empty
-	service.arclock.Lock()
-	count := len(service.AuthRateCache)
-	service.arclock.Unlock()
+	count := service.authRate.len()
 
 	if count != 0 {
 		t.Errorf("expected empty cache, got %d entries", count)
@@ -204,17 +189,15 @@ func TestReleaseAuthRateLimitNonexistent(t *testing.T) {
 
 func TestAuthRateLimitExpiry(t *testing.T) {
 	service := &RadiusService{
-		AuthRateCache: make(map[string]AuthRateUser),
-		arclock:       sync.Mutex{},
+		authRate: newAuthRateLimiter(defaultAuthRateShards),
 	}
 
 	// Add user
 	_ = service.CheckAuthRateLimit("user1")
 
 	// Get add time
-	service.arclock.Lock()
-	startTime := service.AuthRateCache["user1"].Starttime
-	service.arclock.Unlock()
+	entry, _ := service.authRate.get("user1")
+	startTime := entry.Starttime
 
 	// Validatetimestamp
 	if time.Since(startTime) > time.Second {
