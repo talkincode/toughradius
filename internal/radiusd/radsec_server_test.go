@@ -153,6 +153,22 @@ func TestRadsecPacketServer_AcquireWorkerSlotShutdown(t *testing.T) {
 	}
 }
 
+// TestRadsecPacketServer_AcquireWorkerSlotShutdownFreeSlot verifies that once the
+// server is shutting down, acquireWorkerSlot returns false even when the pool
+// still has free capacity, so no new handlers are started during shutdown.
+func TestRadsecPacketServer_AcquireWorkerSlotShutdownFreeSlot(t *testing.T) {
+	s := &RadsecPacketServer{RadsecWorker: 4}
+	s.mu.Lock()
+	s.initLocked()
+	s.mu.Unlock()
+
+	s.ctxDone()
+
+	if s.acquireWorkerSlot() {
+		t.Fatal("acquire should fail after shutdown even with free pool capacity")
+	}
+}
+
 // TestRadsecPacketServer_DefaultWorkerPool verifies that an unconfigured
 // RadsecWorker falls back to a bounded, buffered pool instead of producing an
 // unbuffered (deadlock-prone) channel.
