@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,6 +15,12 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"gorm.io/gorm"
 )
+
+// testSessionSeq guarantees each created test session gets a unique
+// Acct-Session-Id, which the unique index on radius_online.acct_session_id now
+// enforces. Real concurrent sessions for one user always carry distinct
+// Acct-Session-Id values.
+var testSessionSeq atomic.Int64
 
 // createTestOnlineSession Create test online session data
 func createTestOnlineSession(db *gorm.DB, username, nasAddr, framedIp string) *domain.RadiusOnline {
@@ -31,7 +38,7 @@ func createTestOnlineSession(db *gorm.DB, username, nasAddr, framedIp string) *d
 		NasPortId:         "port-1",
 		NasPortType:       15, // Ethernet
 		ServiceType:       2,  // Framed
-		AcctSessionId:     "session-" + username,
+		AcctSessionId:     fmt.Sprintf("session-%s-%d", username, testSessionSeq.Add(1)),
 		AcctSessionTime:   1800,
 		AcctInputTotal:    1024000,
 		AcctOutputTotal:   2048000,
