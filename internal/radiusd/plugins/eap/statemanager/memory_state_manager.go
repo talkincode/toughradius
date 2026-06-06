@@ -92,31 +92,55 @@ func (m *MemoryStateManager) Close() {
 m.stopOnce.Do(func() { close(m.stopCh) })
 }
 
-// GetState returns the EAP state for the given ID. Expired states are treated as
-// absent and removed.
-func (m *MemoryStateManager) GetState(stateID string) (*eap.EAPState, error) {
-m.mu.Lock()
-defer m.mu.Unlock()
+// errStateNotFound is returned by GetState when no live state exists for the
+// requested ID (either never stored, already deleted, or expired). It is a
+// package-level sentinel to avoid allocating on the hot not-found path.
+var errStateNotFound = errors.New("state not found")
 
+// GetState returns the EAP state for the given ID. It is a read-mostly
+// operation: the common (non-expired) path holds only a read lock, so
+// concurrent EAP handshakes reading distinct or shared states are not
+// serialized. Expired states are treated as absent and removed lazily under a
+// brief write lock taken only when an expired entry is actually encountered.
+func (m *MemoryStateManager) GetState(stateID string) (*eap.EAPState, error) {
+m.mu.RLock()
 entry, ok := m.states[stateID]
 if !ok {
-return nil, errors.New("state not found")
+m.mu.RUnlock()
+return nil, errStateNotFound
 }
 if time.Now().After(entry.expiresAt) {
-delete(m.states, stateID)
-return nil, errors.New("state not found")
+m.mu.RUnlock()
+// Rare path: drop the read lock and remove the expired entry under a
+// write lock so the common path above stays read-only.
+m.deleteIfExpired(stateID)
+return nil, errStateNotFound
 }
 
 // Return a copy to avoid concurrent modification.
 stateCopy := *entry.state
 if entry.state.Data != nil {
-stateCopy.Data = make(map[string]interface{})
+stateCopy.Data = make(map[string]interface{}, len(entry.state.Data))
 for k, v := range entry.state.Data {
 stateCopy.Data[k] = v
 }
 }
+m.mu.RUnlock()
 
 return &stateCopy, nil
+}
+
+// deleteIfExpired removes the entry for stateID only if it is still present and
+// still expired. The re-check under the write lock prevents racing with a
+// concurrent SetState that may have refreshed the entry after GetState released
+// the read lock.
+func (m *MemoryStateManager) deleteIfExpired(stateID string) {
+now := time.Now()
+m.mu.Lock()
+defer m.mu.Unlock()
+if entry, ok := m.states[stateID]; ok && now.After(entry.expiresAt) {
+delete(m.states, stateID)
+}
 }
 
 // SetState stores the EAP state and (re)sets its expiry deadline.
