@@ -15,6 +15,12 @@ linters:
     - unconvert
     - gosec
 
+  exclusions:
+    paths:
+      # Some npm packages (e.g. flatted) vendor Go sources under node_modules;
+      # these must never be treated as project code or linted.
+      - node_modules
+
   settings:
     errcheck:
       check-type-assertions: false # Disable type assertion checks - too many false positives in test files
