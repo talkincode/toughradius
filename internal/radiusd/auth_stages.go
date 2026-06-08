@@ -232,8 +232,18 @@ func (s *AuthService) logEAPFailure(ctx *AuthPipelineContext, err error) {
 		zap.String("username", ctx.Username),
 		zap.String("nasip", ctx.RemoteIP),
 		zap.String("metrics", metricsKey),
-		zap.Error(err),
+		zap.String("reason", safeEAPFailureReason(err)),
 	)
+}
+
+func safeEAPFailureReason(err error) string {
+	if authErr, ok := radiuserrors.GetAuthError(err); ok {
+		return authErr.Message
+	}
+	if err == nil {
+		return "eap authentication failed"
+	}
+	return "eap authentication failed"
 }
 
 func (s *AuthService) stagePluginAuth(ctx *AuthPipelineContext) error {

@@ -80,3 +80,10 @@ func TestMapEAPDispatchError_PreservesExistingAuthErrorMetric(t *testing.T) {
 	assert.Equal(t, StageEAPDispatch, authErr.ErrorStage)
 	assert.Equal(t, "rate limited", authErr.Message)
 }
+
+func TestSafeEAPFailureReason_DoesNotExposeCause(t *testing.T) {
+	err := radiuserrors.NewAuthErrorWithCause(app.MetricsRadiusRejectOther, "eap-tls handshake failed", errors.New("sensitive password leak"))
+	reason := safeEAPFailureReason(err)
+	assert.Equal(t, "eap-tls handshake failed", reason)
+	assert.NotContains(t, reason, "sensitive")
+}
