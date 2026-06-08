@@ -1,30 +1,30 @@
 ---
 name: align-feature-checklist
-description: 需求对齐与更新功能清单 docs/feature-checklist.md。接到任何新需求/Issue 开发前，或需求无法映射到现有 TR-F 编号时使用。
+description: Align requirements with and update the feature checklist docs/feature-checklist.md. Use before developing any new requirement/issue, or when a requirement cannot be mapped to an existing TR-F ID.
 ---
 
-# 技能：需求对齐 / 更新功能清单
+# Skill: Align Requirements / Update the Feature Checklist
 
-> 关联：全部功能编号　基线文档：`docs/feature-checklist.md`（英文版 `feature-checklist.en.md`）
+> Scope: all feature IDs | Baseline doc: `docs/feature-checklist.md` (English version `feature-checklist.en.md`)
 
-## 何时使用
-- 接到任何新需求 / Issue，开发前。
-- 需求无法映射到现有 `TR-F` 编号时。
+## When to use
+- Before developing any new requirement / issue.
+- When a requirement cannot be mapped to an existing `TR-F` ID.
 
-## 流程
-1. **映射检查**：在 `docs/feature-checklist.md` 找到匹配的 `TR-F0xx`。能映射则直接锚定，进入实现。
-2. **非目标检查**：确认需求不属于 `TR-N001`~`TR-N005`（支付/订单、CRM/工单、通用监控、多租户 SaaS、重写协议栈/框架）。命中非目标则拒绝或先发起范围决策。
-3. **无法映射**：先提交一个 **仅修改功能清单** 的 PR：
-   - 新增功能编号、所属分类、范围描述、状态、关联代码路径、验收/开发边界。
-   - 同步更新英文版 `feature-checklist.en.md`。
-4. **排期**：必要时在 `docs/roadmap.md` 新增里程碑或子任务。
-5. **实现**：清单合并后再进入代码实现，PR 引用对应编号。
+## Steps
+1. **Mapping check**: find the matching `TR-F0xx` in `docs/feature-checklist.md`. If it maps, anchor it and proceed to implementation.
+2. **Non-goal check**: confirm the requirement is not in `TR-N001`-`TR-N005` (payment/orders, CRM/tickets, generic monitoring, multi-tenant SaaS, rewriting the protocol stack/framework). If it hits a non-goal, reject it or raise a scope decision first.
+3. **Cannot map**: first submit a PR that **only modifies the feature checklist**:
+   - Add the feature ID, category, scope description, status, related code paths, and acceptance/dev boundary.
+   - Sync the English version `feature-checklist.en.md`.
+4. **Scheduling**: if needed, add a milestone or subtask in `docs/roadmap.md`.
+5. **Implementation**: only enter code implementation after the checklist is merged; the PR references the corresponding ID.
 
-## 约定
-- 清单只描述能力边界；接口 / 结构体 / 算法以代码、测试、内联注释为准。
-- 一次只交付一个最小闭环。
+## Conventions
+- The checklist describes capability boundaries only; interfaces / structs / algorithms are governed by code, tests, and inline comments.
+- Deliver only one minimal closed loop at a time.
 
-## 验收
-- [ ] 需求已锚定 / 新增 `TR-F` 编号
-- [ ] 未触碰非目标方向
-- [ ] 中英文清单同步
+## Acceptance
+- [ ] The requirement is anchored to / added as a `TR-F` ID
+- [ ] No non-goal direction was touched
+- [ ] CN and EN checklists are in sync

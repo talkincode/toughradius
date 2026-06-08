@@ -1,35 +1,35 @@
 ---
 name: groom-roadmap
-description: 路线图与开发计划自我迭代（grooming）。每次子任务交付后、或周期性维护时，勾选已完成项、更新里程碑状态、回填 / 拆分 / 重排子任务，并把新发现的需求经 feature-checklist 纳入，保持计划自洽、与功能清单一致。
+description: Roadmap and development-plan self-iteration (grooming). After each subtask delivery, or during periodic maintenance, check off completed items, update milestone status, backfill / split / re-prioritize subtasks, and fold newly discovered needs in via the feature checklist to keep the plan self-consistent and aligned with the checklist.
 ---
 
-# 技能：路线图 / 计划自我迭代（Grooming）
+# Skill: Roadmap / Plan Self-Iteration (Grooming)
 
-> 关联：`TR-F022`　通常由 `../orchestrate-roadmap/SKILL.md` 在交付后调用，也可单独运行。
+> Scope: `TR-F022` | Usually invoked by `../orchestrate-roadmap/SKILL.md` after delivery; can also run standalone.
 
-## 何时使用
-- 一个里程碑子任务交付（PR 合并或就绪）后。
-- 周期性维护路线图，发现子任务过大 / 过时 / 已隐性完成时。
-- 实施中发现新缺口、新依赖或需求边界变化时。
+## When to use
+- After a milestone subtask is delivered (PR merged or ready).
+- During periodic roadmap maintenance, when a subtask is too large / outdated / already implicitly done.
+- When implementation surfaces a new gap, new dependency, or a change in requirement boundary.
 
-## 流程
-1. **勾选交付**：将已交付子任务 `- [ ] M*.*` 改为 `- [x]`；同步更新「里程碑总览」表与该里程碑章节状态（`计划中 → 进行中 → 已交付`，交付以合并 `main` + CI 通过为准）。
-2. **回填学习**：依据本轮 PR 结果 / 阻塞，
-   - 把实施中发现的后续工作拆成新的 `- [ ] M*.*` 子任务（保持可独立交付、可回滚、可验证）；
-   - 过大的子任务拆分；已不需要的标注删除原因；
-   - 有外部依赖 / 待决策的标 `阻塞` 并写明原因。
-3. **重排优先级**：默认维持 `M1 → M2 → M3`；仅当依赖关系 / 阻塞 / 新交付证据变化时调整，并在 PR 说明理由。
-4. **范围对齐**：新发现需求先过 `../align-feature-checklist/SKILL.md`——能映射 `TR-F` 才排期；命中 `TR-N001`~`TR-N005` 一律拒绝，不得在路线图里隐性扩张。
-5. **一致性校验**：确保「里程碑总览」状态 ↔ 子任务勾选 ↔ `docs/feature-checklist.md` 状态三者一致；中英文清单同步；无指向已删文件 / 技能的悬挂引用。
-6. **提交**：计划文档改动走 PR——可并入对应交付 PR，或作为小的后续 PR；引用里程碑编号。
+## Steps
+1. **Check off delivery**: change the delivered subtask `- [ ] M*.*` to `- [x]`; sync the milestone overview table and the milestone section status (`planned -> in progress -> delivered`; delivery means merged to `main` + CI passing).
+2. **Backfill learnings**: based on the round's PR result / blockers,
+   - split follow-up work discovered during implementation into new `- [ ] M*.*` subtasks (keep each independently deliverable, revertible, verifiable);
+   - split oversized subtasks; annotate removals with the reason;
+   - mark items with an external dependency / pending decision as `blocked` with the reason.
+3. **Re-prioritize**: keep `M1 -> M2 -> M3` by default; adjust only when dependencies / blockers / new delivery evidence change, and explain the reason in the PR.
+4. **Align scope**: route newly discovered needs through `../align-feature-checklist/SKILL.md` - schedule only what maps to a `TR-F`; reject anything hitting `TR-N001`-`TR-N005`; never silently expand the roadmap.
+5. **Consistency check**: ensure the milestone overview status <-> subtask checkboxes <-> `docs/feature-checklist.md` status are consistent; keep the CN/EN checklists in sync; no dangling references to deleted files / skills.
+6. **Commit**: plan-doc changes go through a PR - either folded into the delivery PR or as a small follow-up PR; reference the milestone ID.
 
-## 边界
-- 只编辑**计划 / 范围文档**（`docs/roadmap.md`、`docs/feature-checklist.md` 及英文版、会话内计划），不在本技能里改产品代码。
-- 不凭空发明任务：每个新增子任务必须锚定 `TR-F` 且为最小闭环。
-- 不放宽护栏：禁区、PR-only、质量门禁要求保持不变。
+## Boundaries
+- Only edit **plan / scope docs** (`docs/roadmap.md`, `docs/feature-checklist.md` and its English version, the in-session plan); do not change product code in this skill.
+- Do not invent tasks: every new subtask must anchor to a `TR-F` and be a minimal closed loop.
+- Do not relax guardrails: non-goals, PR-only, and quality-gate requirements stay unchanged.
 
-## 验收
-- [ ] 已交付子任务已勾选，里程碑状态表同步
-- [ ] 新增 / 拆分 / 阻塞子任务均锚定 `TR-F` 且可独立验证
-- [ ] 新需求经 feature-checklist 对齐（中英文同步），未触碰 `TR-N`
-- [ ] 路线图 ↔ 功能清单状态一致，无悬挂引用
+## Acceptance
+- [ ] Delivered subtasks are checked off; the milestone status table is in sync
+- [ ] Added / split / blocked subtasks all anchor to a `TR-F` and are independently verifiable
+- [ ] New needs are aligned via the feature checklist (CN/EN in sync); no `TR-N` touched
+- [ ] Roadmap <-> feature checklist status are consistent; no dangling references

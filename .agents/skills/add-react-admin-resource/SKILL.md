@@ -1,35 +1,35 @@
 ---
 name: add-react-admin-resource
-description: 在 React Admin 管理后台新增资源或页面 (TR-F013)。后端新增 Admin API 后需在前端暴露对应管理界面时使用。
+description: Add a resource or page in the React Admin management backend (TR-F013). Use when a new Admin API needs a corresponding management UI in the frontend.
 ---
 
-# 技能：新增前端管理资源 / 页面
+# Skill: Add a Frontend Management Resource / Page
 
-> 关联功能编号：`TR-F013`　适用里程碑：M2 等
+> Feature ID: `TR-F013` | Milestone: M2 and others
 
-## 何时使用
-后端新增 Admin API 后，需要在 React Admin 后台暴露对应资源或页面时。
+## When to use
+After adding an Admin API on the backend, when the React Admin backend needs to expose the corresponding resource or page.
 
-## 前置检索
+## Pre-research
 ```text
-view web/src/App.tsx                       # 资源 / 路由注册
-file_search "web/src/resources/*.tsx"      # 资源范本
-view web/src/providers/dataProvider.ts     # REST 映射
-view web/src/resources/nodes.tsx           # 标准资源范本
+view web/src/App.tsx                       # resource / route registration
+file_search "web/src/resources/*.tsx"      # resource references
+view web/src/providers/dataProvider.ts     # REST mapping
+view web/src/resources/nodes.tsx           # standard resource reference
 ```
 
-## 实现步骤
-1. **资源文件**：在 `web/src/resources/<feature>.tsx` 定义 List/Edit/Create（模仿 `nodes.tsx`）。
-2. **注册资源**：在 `web/src/App.tsx` 加入 `<Resource name="<api-path>" .../>`，name 对齐后端 API 路径。
-3. **数据映射**：确认 `dataProvider.ts` 的分页 / 过滤 / 排序参数与后端一致。
-4. **页面（如非标准 CRUD）**：放在 `web/src/pages/`，不要新建独立管理入口。
-5. **国际化**：如项目有 i18n key，补齐对应文案。
+## Implementation steps
+1. **Resource file**: define List/Edit/Create in `web/src/resources/<feature>.tsx` (mirror `nodes.tsx`).
+2. **Register the resource**: add `<Resource name="<api-path>" .../>` in `web/src/App.tsx`; the name must align with the backend API path.
+3. **Data mapping**: confirm `dataProvider.ts` pagination / filter / sort params match the backend.
+4. **Pages (if not standard CRUD)**: put them under `web/src/pages/`; do not create a separate management entry.
+5. **i18n**: if the project has i18n keys, add the corresponding strings.
 
-## 边界
-- 不引入独立管理入口；所有页面挂在统一 Admin 框架下。
-- 前端只暴露后端已支持且可验证的安全动作（尤其 CoA 等），禁止前端拼装协议包。
+## Boundaries
+- Do not introduce a separate management entry; all pages hang under the unified Admin framework.
+- The frontend only exposes backend-supported, verifiable, safe actions (especially CoA); never assemble protocol packets in the frontend.
 
-## 验收
-- [ ] `cd web && npm run build` 成功
-- [ ] 列表 / 过滤 / 增删改与后端联通
-- [ ] PR 引用 `TR-F013` 与里程碑编号
+## Acceptance
+- [ ] `cd web && npm run build` succeeds
+- [ ] List / filter / CRUD are connected to the backend
+- [ ] PR references `TR-F013` and the milestone ID

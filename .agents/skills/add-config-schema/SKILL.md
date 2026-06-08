@@ -1,35 +1,35 @@
 ---
 name: add-config-schema
-description: 新增可在系统配置页编辑的动态配置项 (TR-F014)。需要新增 RADIUS 运行参数并支持查询/编辑/reload 时使用。
+description: Add a dynamic config item editable on the system config page (TR-F014). Use when adding a RADIUS runtime parameter that must support query/edit/reload.
 ---
 
-# 技能：新增动态配置项
+# Skill: Add a Dynamic Config Item
 
-> 关联功能编号：`TR-F014`
+> Feature ID: `TR-F014`
 
-## 何时使用
-需要新增可在系统配置页编辑的 RADIUS 运行参数时。
+## When to use
+When adding a RADIUS runtime parameter that should be editable on the system config page.
 
-## 前置检索
+## Pre-research
 ```text
-view internal/app/config_schemas.json      # 配置 schema（先改这里）
-view internal/app/config_manager.go        # 读取 / reload 逻辑
-view internal/adminapi/settings.go         # 配置接口
+view internal/app/config_schemas.json      # config schema (edit here first)
+view internal/app/config_manager.go        # read / reload logic
+view internal/adminapi/settings.go         # config endpoints
 grep_search "GetSettingsStringValue\|GetSettingsInt64Value" --include internal/**
 ```
 
-## 实现步骤
-1. **Schema**：在 `config_schemas.json` 新增配置项，提供 `默认值 / 类型 / 范围 / 国际化 key`。
-2. **读取**：通过 `app.GApp().GetSettings*Value("<group>", "<Key>")` 读取，不要硬编码。
-3. **默认值初始化**：确认 `checkSettings()` / 初始化逻辑会写入默认值。
-4. **前端**：系统配置页 `web/src/pages/SystemConfigPage.tsx` 自动按 schema 渲染；如需特殊控件再定制。
+## Implementation steps
+1. **Schema**: add the config item to `config_schemas.json` with `default / type / range / i18n key`.
+2. **Read**: read via `app.GApp().GetSettings*Value("<group>", "<Key>")`; do not hardcode.
+3. **Default initialization**: confirm `checkSettings()` / init logic writes the default value.
+4. **Frontend**: the system config page `web/src/pages/SystemConfigPage.tsx` renders from the schema automatically; customize only if a special control is needed.
 
-## 约定
-- 新配置项必须先进 schema 再被代码读取。
-- 类型、范围、默认值、国际化 key 缺一不可。
+## Conventions
+- A new config item must enter the schema before any code reads it.
+- Type, range, default, and i18n key are all required.
 
-## 验收
-- [ ] 配置可在后台查询 / 编辑 / reload
-- [ ] 新增配置读取路径有测试
-- [ ] `go test ./internal/app/...` 通过
-- [ ] PR 引用 `TR-F014`
+## Acceptance
+- [ ] The config can be queried / edited / reloaded in the backend
+- [ ] The new config read path has a test
+- [ ] `go test ./internal/app/...` passes
+- [ ] PR references `TR-F014`

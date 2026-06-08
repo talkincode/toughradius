@@ -1,38 +1,38 @@
 ---
 name: add-radius-vendor
-description: 新增或扩展厂商 VSA 解析与响应增强 (TR-F005)。当需要让 ToughRADIUS 识别某厂商请求 VSA，或在 Access-Accept 中下发该厂商专有属性时使用。
+description: Add or extend vendor VSA parsing and response enhancement (TR-F005). Use when ToughRADIUS must recognize a vendor's request VSAs, or emit that vendor's proprietary attributes in Access-Accept.
 ---
 
-# 技能：新增厂商 VSA 解析 / 响应增强
+# Skill: Add Vendor VSA Parsing / Response Enhancement
 
-> 关联功能编号：`TR-F005`　适用里程碑：M5
+> Feature ID: `TR-F005` | Milestone: M5
 
-## 何时使用
-需要让 ToughRADIUS 识别某厂商的请求 VSA，或在 Access-Accept 中下发该厂商特有属性时。
+## When to use
+When ToughRADIUS must recognize a vendor's request VSAs, or emit that vendor's specific attributes in Access-Accept.
 
-## 前置检索（先读后写）
+## Pre-research (read before writing)
 ```text
 grep_search "VendorCode" --include internal/radiusd/**
 file_search "internal/radiusd/plugins/vendorparsers/parsers/*_parser.go"
 file_search "internal/radiusd/plugins/auth/enhancers/*_enhancer.go"
-view internal/radiusd/plugins/vendorparsers/parsers/init.go      # 注册位置
-view internal/radiusd/vendors/<已有厂商>/                          # 字典与常量
+view internal/radiusd/plugins/vendorparsers/parsers/init.go      # registration point
+view internal/radiusd/vendors/<existing-vendor>/                 # dictionary & constants
 ```
-重点理解：字典 ≠ 解析。字典只描述属性，必须有 parser 才会被提取。
+Key insight: a dictionary != a parser. A dictionary only describes attributes; without a parser they are never extracted.
 
-## 实现步骤
-1. **常量 / 字典**：在 `internal/radiusd/vendors/<vendor>/` 定义 VendorCode 与 VSA 常量（参考 huawei）。若 `vendors` 包缺少 `Code<Vendor>` 常量，先补充。
-2. **Parser**：在 `internal/radiusd/plugins/vendorparsers/parsers/<vendor>_parser.go` 实现解析器，模仿 `huawei_parser.go` 的接口与字段提取。
-3. **注册 Parser**：在 `parsers/init.go` 的 `init()` 中 `vendors.Register(&vendors.VendorInfo{Code: vendors.Code<Vendor>, ...Parser: &<Vendor>Parser{}})`。
-4. **Enhancer（如需下发响应属性）**：在 `internal/radiusd/plugins/auth/enhancers/<vendor>_enhancer.go` 实现，模仿 `huawei_enhancer.go`（速率、VLAN 等下发）。
-5. **样例包测试**：新增 `<vendor>_parser_test.go` / `<vendor>_enhancer_test.go`，用真实属性样例覆盖解析与下发。
+## Implementation steps
+1. **Constants / dictionary**: define the VendorCode and VSA constants under `internal/radiusd/vendors/<vendor>/` (reference huawei). If the `vendors` package lacks the `Code<Vendor>` constant, add it first.
+2. **Parser**: implement the parser at `internal/radiusd/plugins/vendorparsers/parsers/<vendor>_parser.go`, mirroring `huawei_parser.go`'s interface and field extraction.
+3. **Register the parser**: in `parsers/init.go`'s `init()`, call `vendors.Register(&vendors.VendorInfo{Code: vendors.Code<Vendor>, ...Parser: &<Vendor>Parser{}})`.
+4. **Enhancer (if emitting response attributes)**: implement `internal/radiusd/plugins/auth/enhancers/<vendor>_enhancer.go`, mirroring `huawei_enhancer.go` (rate, VLAN, etc.).
+5. **Sample-based tests**: add `<vendor>_parser_test.go` / `<vendor>_enhancer_test.go` covering parsing and emission with real attribute samples.
 
-## 约定
-- Huawei 等厂商带宽单位差异、二进制 vs 十进制换算必须加内联注释说明 "why"。
-- 速率/VLAN/MAC 绑定行为必须与已有厂商语义一致。
+## Conventions
+- Vendor bandwidth-unit differences and binary-vs-decimal conversions must carry inline comments explaining the "why".
+- Rate / VLAN / MAC-binding behavior must be semantically consistent with existing vendors.
 
-## 验收
-- [ ] `go test ./internal/radiusd/...` 通过
-- [ ] `golangci-lint run` 无新增问题
-- [ ] 新厂商解析与响应均有样例测试覆盖
-- [ ] PR 引用 `TR-F005` 与里程碑编号
+## Acceptance
+- [ ] `go test ./internal/radiusd/...` passes
+- [ ] `golangci-lint run` reports no new issues
+- [ ] Both new vendor parsing and response have sample test coverage
+- [ ] PR references `TR-F005` and the milestone ID

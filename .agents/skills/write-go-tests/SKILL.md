@@ -1,41 +1,41 @@
 ---
 name: write-go-tests
-description: 编写 Go 单元/集成测试的统一约定 (TR-F022)。任何 Go 代码改动配套测试时使用。
+description: Unified conventions for writing Go unit/integration tests (TR-F022). Use when adding tests for any Go code change.
 ---
 
-# 技能：编写 Go 单元 / 集成测试
+# Skill: Write Go Unit / Integration Tests
 
-> 关联功能编号：`TR-F022`
+> Feature ID: `TR-F022`
 
-## 何时使用
-任何 Go 代码改动都必须配套测试。本技能统一测试约定。
+## When to use
+Any Go code change must ship with tests. This skill unifies the test conventions.
 
-## 前置检索
+## Pre-research
 ```text
-file_search "internal/**/*_test.go"            # 找最接近的范本
-view internal/adminapi/nodes_test.go           # API 测试范本
-view internal/radiusd/*_test.go                # 协议测试范本
-view internal/app/*_test.go                    # app 层测试范本
+file_search "internal/**/*_test.go"            # find the closest template
+view internal/adminapi/nodes_test.go           # API test template
+view internal/radiusd/*_test.go                # protocol test template
+view internal/app/*_test.go                    # app-layer test template
 ```
 
-## 约定
-1. **就近测试**：测试文件与被测文件同包同目录，命名 `<file>_test.go`。
-2. **短测试标记**：耗时 / 需外部依赖的用 `if testing.Short() { t.Skip(...) }`，CI 跑 `go test -short`。
-3. **数据库**：开发 / 测试用 SQLite（纯 Go，`CGO_ENABLED=0`）；schema 改动须双数据库兼容。
-4. **覆盖重点**：成功路径 + 失败路径（拒绝原因、超时、校验失败、鉴权失败）。
-5. **指标 / 错误**：认证拒绝类改动必须断言对应 `AuthError` / metrics 标签。
-6. **表驱动**：多场景用 table-driven test。
+## Conventions
+1. **Co-located tests**: the test file is in the same package and directory as the code under test, named `<file>_test.go`.
+2. **Short-test marking**: for slow / externally dependent tests use `if testing.Short() { t.Skip(...) }`; CI runs `go test -short`.
+3. **Database**: dev / test use SQLite (pure Go, `CGO_ENABLED=0`); schema changes must be compatible with both databases.
+4. **Coverage focus**: success path + failure path (reject reasons, timeouts, validation failures, authz failures).
+5. **Metrics / errors**: auth-reject changes must assert the corresponding `AuthError` / metrics tag.
+6. **Table-driven**: use table-driven tests for multiple scenarios.
 
-## 运行
+## Run
 ```bash
-go test ./...                       # 全量
-go test -short ./...                # CI 等价（快速）
-go test -run TestXxx ./internal/... # 单测
-go test -bench=. ./internal/radiusd/ # 基准
+go test ./...                       # all
+go test -short ./...                # CI-equivalent (fast)
+go test -run TestXxx ./internal/... # single test
+go test -bench=. ./internal/radiusd/ # benchmark
 golangci-lint run                   # lint (v2.12.2)
 ```
 
-## 验收
-- [ ] 新增 / 改动逻辑均有测试覆盖
-- [ ] `go test ./...` 与 `golangci-lint run` 通过
-- [ ] 关键失败路径有断言
+## Acceptance
+- [ ] New / changed logic has test coverage
+- [ ] `go test ./...` and `golangci-lint run` pass
+- [ ] Critical failure paths are asserted
