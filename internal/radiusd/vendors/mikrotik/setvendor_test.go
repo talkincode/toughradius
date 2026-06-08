@@ -79,11 +79,19 @@ func TestSetVendorReplaceSameAttribute(t *testing.T) {
 // wrong elements; it must be "i+1".
 func TestSetVendorDeletesEmptyVSAAtNonZeroIndex(t *testing.T) {
 	p := &radius.Packet{}
-	rfc2865.UserName_SetString(p, "alice")
-	rfc2865.NASIdentifier_SetString(p, "nas-1")
+	if err := rfc2865.UserName_SetString(p, "alice"); err != nil {
+		t.Fatalf("set UserName: %v", err)
+	}
+	if err := rfc2865.NASIdentifier_SetString(p, "nas-1"); err != nil {
+		t.Fatalf("set NASIdentifier: %v", err)
+	}
 
-	MikrotikRecvLimit_Set(p, 1000) // VSA now at index 2
-	MikrotikRecvLimit_Set(p, 2000) // removes the empty VSA at index 2, re-adds
+	if err := MikrotikRecvLimit_Set(p, 1000); err != nil { // VSA now at index 2
+		t.Fatalf("first set: %v", err)
+	}
+	if err := MikrotikRecvLimit_Set(p, 2000); err != nil { // removes the empty VSA at index 2, re-adds
+		t.Fatalf("second set: %v", err)
+	}
 
 	if got, err := MikrotikRecvLimit_Lookup(p); err != nil || got != 2000 {
 		t.Fatalf("MikrotikRecvLimit_Lookup = %d, %v; want 2000, nil", got, err)
