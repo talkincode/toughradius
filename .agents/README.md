@@ -72,7 +72,7 @@ personality = "pragmatic"
 [model_providers.azure]
 name = "Azure"
 base_url = "<你的 Azure 端点>"
-env_key = "WJT_AZURE_OPENAI_API_KEY"
+env_key = "AZURE_OPENAI_API_KEY"
 wire_api = "responses"
 service_tier = "priority"
 ```
@@ -80,7 +80,7 @@ service_tier = "priority"
 3. 导出密钥后，把一轮开发**委托给总调度技能**（推荐）——由它自动选题、派工、门禁、提 PR 并迭代路线图：
 
 ```bash
-export WJT_AZURE_OPENAI_API_KEY=...   # 仅留在你本机环境，不入库、不落配置
+export AZURE_OPENAI_API_KEY=...   # 仅留在你本机环境，不入库、不落配置
 codex exec "自动委托开发：严格按 .agents/skills/orchestrate-roadmap/SKILL.md 统筹一轮。先读 AGENT.md、.agents/README.md、docs/roadmap.md、docs/feature-checklist.md；自上而下选第一个未勾选子任务，选用匹配的执行 SKILL；只做最小闭环；协议改动引用 docs/rfcs/；补 CI 可执行测试；通过 go build/test、golangci-lint、（涉及前端）npm run build；改动走 PR，禁止直接推 main；交付后按 groom-roadmap 勾选并迭代路线图。"
 ```
 
