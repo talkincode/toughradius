@@ -150,6 +150,9 @@ func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	// Phase A: the server has finished sending its final flight and is waiting
 	// for the peer's closing ACK before EAP-Success.
 	if getBool(state, stateKeyPendingSuccess) {
+		if !frag.IsACK() {
+			return false, eap.ErrTLSUnexpectedFragment
+		}
 		return h.finalize(ctx, state)
 	}
 
