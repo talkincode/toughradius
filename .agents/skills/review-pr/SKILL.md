@@ -27,7 +27,7 @@ Therefore this skill encodes its verdict with **labels + a COMMENT review**, not
 The gate has teeth only because it is **anchored to mechanical signals (CI) and run as an independent pass**, not because of the label name. Never approve on "looks fine" alone.
 
 ## Reviewing one PR
-1. **Precondition - CI must be green.** `gh pr checks <n>`:
+1. **CI gate - evaluate the checks.** `gh pr checks <n>` (approval later requires this to be fully green):
    - Any job failing for a **real** reason (compile/test/lint/integration) -> this is a blocking issue; go to step 3 (rework) and cite the failing job.
    - Failing only from transient infra (e.g. registry/network timeout in "Initialize containers") -> `gh run rerun <run-id> --failed` once; re-check.
    - Still pending -> do not approve this round; leave the PR untouched. A pending-CI PR still counts as **unreviewed**, so per the in-flight gate below the round does **not** select a new task while it is open - move on to the next PR in the drain list, then wait for CI / stop the round rather than starting new work.
@@ -41,9 +41,14 @@ The gate has teeth only because it is **anchored to mechanical signals (CI) and 
    - Do **not** comment on style, formatting, or naming taste.
 3. **Record the verdict.**
    - **Blocking issues found** -> `gh pr comment`/`gh pr review --comment` enumerating each issue with `file:line` and a concrete fix; `gh pr edit <n> --add-label needs-rework --remove-label agent-approved`. Do not merge.
-   - **No blocking issues AND CI green** -> post a COMMENT review summarizing what was checked; `gh pr edit <n> --add-label agent-approved --remove-label needs-rework`.
-4. **Merge gate.** Only when the PR carries `agent-approved`, has **no** `needs-rework`/`needs-human`, and `gh pr checks <n>` re-confirms all green:
-   `gh pr merge <n> --squash --delete-branch`.
+   - **No blocking issues AND CI green** -> post a COMMENT review that summarizes what was checked **and records the exact reviewed head SHA** (`gh pr view <n> --json headRefOid -q .headRefOid`); `gh pr edit <n> --add-label agent-approved --remove-label needs-rework`. The recorded SHA is what binds the approval to the reviewed code.
+4. **Merge gate.** Merge only when **all** hold: the PR carries `agent-approved`, has **no** `needs-rework`/`needs-human`, `gh pr checks <n>` re-confirms all green, **and the current head SHA equals the SHA recorded in the approval comment**. A label is not bound to a commit, so always re-verify:
+   ```
+   reviewed=<sha from approval comment>
+   current=$(gh pr view <n> --json headRefOid -q .headRefOid)
+   [ "$reviewed" = "$current" ] && gh pr merge <n> --squash --delete-branch
+   ```
+   If the head moved since approval (new commits pushed, or the label was applied manually/out of band), the approval is **stale**: `gh pr edit <n> --remove-label agent-approved`, re-run "Reviewing one PR" against the new head, and only then re-approve. Never merge on a label alone.
    After merge, the round's `groom-roadmap` checks the subtask off on `main`.
 
 ## Clearing in-flight PRs (run first, every new round)
@@ -52,7 +57,7 @@ Before `orchestrate-roadmap` selects any new task, drain the queue - oldest firs
 gh pr list --state open --label agent-roadmap --json number,labels,headRefName
 ```
 - `needs-rework` -> read the review thread, **address every blocking comment** by re-running the original execution SOP on that branch, push, then re-run "Reviewing one PR" from step 1. This is mandatory work, not optional.
-- `agent-approved` + green -> merge (gate above).
+- `agent-approved` + green -> merge **via the step-4 gate** (re-verify head SHA == approved SHA first; if it moved, the approval is stale -> re-review).
 - `needs-human` -> skip; leave it for a human.
 - pending CI / no verdict yet -> run "Reviewing one PR".
 
