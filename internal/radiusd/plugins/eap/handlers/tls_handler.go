@@ -163,9 +163,13 @@ func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	}
 
 	// Phase C: accumulate the inbound flight, then feed it to the TLS engine.
-	reassembler := loadReassembler(state)
 	complete, err := reassembler.Accept(frag)
 	if err != nil {
+		if state.Data != nil {
+			if eng, ok := state.Data[stateKeyEngine].(*tlsengine.Engine); ok && eng != nil {
+				_ = eng.Close()
+			}
+		}
 		return false, err
 	}
 
