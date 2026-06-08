@@ -11,6 +11,7 @@
 3. 状态流转：`计划中 → 进行中 → 已交付`；交付以合并到 `main` 且 CI 通过为准。
 4. 严禁触碰非目标方向（见功能清单 `TR-N001`~`TR-N005`）：支付/订单、CRM/工单、通用监控平台、多租户 SaaS、重写协议栈或管理框架。
 5. Agent 产出一律走 Pull Request + CI + 人工 Review，禁止直接推送 `main`。
+6. **自我迭代**：每交付一个子任务后，按 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选、更新里程碑状态、回填/拆分/重排子任务，并把新发现需求经功能清单纳入，保持本路线图与清单自洽。
 
 ## 状态说明
 
@@ -123,6 +124,7 @@
 - [x] M4.3 制定 agent 通用护栏与质量门禁（`AGENT.md` / `.agents/README.md` / `.github/copilot-instructions.md`）
 - [x] M4.6 协议规范检索技能与 CI 验收测试技能
 - [x] M4.9 约定本机无头运行 agent 的方式与护栏（不在 CI 执行；见 `.agents/README.md`）
+- [x] M4.10 建立总调度与自我迭代技能（`orchestrate-roadmap` 统筹委托循环 + `groom-roadmap` 路线图自我迭代）
 - [ ] M4.7 为 agent 任务建立 PR 模板与 review checklist
 - [ ] M4.8 收敛 agent 产出质量度量（CI 通过率、回滚率）
 
@@ -166,8 +168,10 @@
 
 ## Agent 排期约定
 
+- **入口（自动委托）**：收到"自动委托开发 / 继续推进路线图"类指令时，由 [`.agents/skills/orchestrate-roadmap/SKILL.md`](../.agents/skills/orchestrate-roadmap/SKILL.md) 作为总调度统筹一轮：选题 → 选执行 SOP → 派工 → 质量门禁 → PR → 迭代路线图。
 - 调度优先级：`M1 → M2 → M3`，P2/P3 在 P1 里程碑无可执行子任务时填充。
 - 单次 agent 任务只认领一个未勾选子任务（最小闭环），完成后在本文件勾选并在 PR 引用里程碑编号。
+- **自我迭代**：每轮交付后由 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选已交付项、更新里程碑状态、回填/拆分/重排子任务，并保持本文件与功能清单状态一致。
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。
 - 每个涉及协议或数据流的子任务，交付时必须带 **CI 可自动执行的验收测试**（单元或 `test/integration/`）。
 - 选任务口径：`docs/roadmap.md` 自上而下第一个未勾选的 `- [ ] M*.*`。agent 在**本机**运行（如 Codex 无头），不在 CI 执行；运行参考与护栏见 [`.agents/README.md`](../.agents/README.md)。

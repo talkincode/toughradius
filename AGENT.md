@@ -17,7 +17,8 @@
 Agent-driven development is organized around three artifacts:
 
 - [`docs/roadmap.md`](docs/roadmap.md) — long-term roadmap and milestones (`M1`–`M7`), each mapped to `TR-F` feature IDs. This is the task source for agent work.
-- [`.agents/skills/`](.agents/README.md) — reusable skill SOPs, one folder per skill (`.agents/skills/<name>/SKILL.md`): add vendor VSA, add EAP method, add admin API, add React Admin resource, add config schema, add acceptance test, sync upstream radius, reference RFC, align checklist, write Go tests. Pick the matching skill before starting a task type.
+- [`.agents/skills/`](.agents/README.md) — reusable skill SOPs, one folder per skill (`.agents/skills/<name>/SKILL.md`). A **coordinator layer** drives the loop: `orchestrate-roadmap` (entry role — on an "auto-delegate development" command it selects the next subtask, dispatches the matching skill, enforces gates, opens a PR) and `groom-roadmap` (self-iterates the roadmap/plan after each delivery). The execution SOPs it orchestrates: add vendor VSA, add EAP method, add admin API, add React Admin resource, add config schema, add acceptance test, sync upstream radius, reference RFC, align checklist, write Go tests. Pick the matching skill before starting a task type.
+- To delegate a whole development round, point the agent at [`orchestrate-roadmap`](.agents/skills/orchestrate-roadmap/SKILL.md); it coordinates select → dispatch → quality gates → PR → roadmap self-iteration.
 - Agents are run **on your own host** (e.g. Codex CLI headless), not via a CI workflow. See [`.agents/README.md`](.agents/README.md) for the local run reference and guardrails.
 
 Quality gates for every agent change:走 PR（禁止直接推 `main`）, then `go build ./...`, `go test ./...`, `golangci-lint run` (v2.12.2), and `cd web && npm run build` for frontend changes.

@@ -29,8 +29,12 @@
 
 ## 技能索引
 
+> **总调度层**：`orchestrate-roadmap` 是入口角色——收到"自动委托开发"类指令时由它统筹全程，并在交付后调用 `groom-roadmap` 迭代计划；其余技能是被它编排的执行 SOP。
+
 | 技能 | 适用场景 | 关联编号 |
 | --- | --- | --- |
+| [orchestrate-roadmap](skills/orchestrate-roadmap/SKILL.md) | **总调度**：接自动委托指令，统筹 选任务→选 SOP→派工→门禁→PR→迭代 | 全部 / TR-F022 |
+| [groom-roadmap](skills/groom-roadmap/SKILL.md) | 交付后自我迭代路线图与计划（勾选 / 补子任务 / 重排 / 对齐清单） | TR-F022 |
 | [add-radius-vendor](skills/add-radius-vendor/SKILL.md) | 新增厂商 VSA 解析 / 响应增强 | TR-F005 |
 | [add-eap-method](skills/add-eap-method/SKILL.md) | 新增 EAP 认证方法 | TR-F004 |
 | [add-adminapi-endpoint](skills/add-adminapi-endpoint/SKILL.md) | 新增 Admin REST 接口 | TR-F012 |
@@ -73,13 +77,15 @@ wire_api = "responses"
 service_tier = "priority"
 ```
 
-3. 导出密钥、选取路线图下一个未完成子任务后运行：
+3. 导出密钥后，把一轮开发**委托给总调度技能**（推荐）——由它自动选题、派工、门禁、提 PR 并迭代路线图：
 
 ```bash
 export WJT_AZURE_OPENAI_API_KEY=...   # 仅留在你本机环境，不入库、不落配置
-task="$(grep -nE '^- \[ \] M[0-9]+\.[0-9]+' docs/roadmap.md | head -1)"
-codex exec "实现路线图子任务：$task。严格遵循 AGENT.md、docs/feature-checklist.md 与 .agents/skills/<对应技能>/SKILL.md；只做最小闭环；协议改动引用 docs/rfcs/；补 CI 可执行的测试；通过 go build/test、golangci-lint、（涉及前端）npm run build；改动走 PR，禁止直接推 main。"
+codex exec "自动委托开发：严格按 .agents/skills/orchestrate-roadmap/SKILL.md 统筹一轮。先读 AGENT.md、.agents/README.md、docs/roadmap.md、docs/feature-checklist.md；自上而下选第一个未勾选子任务，选用匹配的执行 SKILL；只做最小闭环；协议改动引用 docs/rfcs/；补 CI 可执行测试；通过 go build/test、golangci-lint、（涉及前端）npm run build；改动走 PR，禁止直接推 main；交付后按 groom-roadmap 勾选并迭代路线图。"
 ```
+
+> 想自己指定任务时，也可手动取下一个子任务再委托具体执行技能：
+> `task="$(grep -nE '^- \[ \] M[0-9]+\.[0-9]+' docs/roadmap.md | head -1)"`，再在 prompt 里替换 `orchestrate-roadmap` 为对应的 `.agents/skills/<技能>/SKILL.md`。
 
 > `sandbox_mode = "danger-full-access"` 或 `--dangerously-bypass-approvals-and-sandbox` 这类"免审批全权限"参数，请仅在你信任的隔离环境里自行决定是否启用，本仓库不预设。
 
