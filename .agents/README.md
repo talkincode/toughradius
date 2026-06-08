@@ -55,39 +55,11 @@
 
 ## 在自己的主机上运行 Agent（不在 CI 里执行）
 
-> 本仓库**不内置任何自动执行 agent 的 GitHub workflow**。路线图、技能库与约束是供 agent 使用的"知识与护栏"；具体执行由你在**自己的主机**上手动或定时运行（例如 Codex CLI 无头模式）。这样密钥不进 CI，执行环境完全自控。
+> 本仓库**不内置任何自动执行 agent 的 GitHub workflow**。路线图、技能库与约束是供 agent 使用的"知识与护栏"；具体执行由你用**自己的 agent**在**自己的主机**上手动或定时运行。这样密钥不进 CI，执行环境完全自控。
 
-### 本地运行 Codex（无头）参考
+### 委托一轮开发
 
-1. 安装：`npm install -g @openai/codex`
-2. 配置 `~/.codex/config.toml`（Azure 端点示例；API Key 经 `env_key` 从环境变量读取，**不要写进配置文件**）：
-
-```toml
-preferred_auth_method = "apikey"
-model = "gpt-5.5"
-model_provider = "azure"
-model_reasoning_effort = "high"
-personality = "pragmatic"
-
-[model_providers.azure]
-name = "Azure"
-base_url = "<你的 Azure 端点>"
-env_key = "AZURE_OPENAI_API_KEY"
-wire_api = "responses"
-service_tier = "priority"
-```
-
-3. 导出密钥后，把一轮开发**委托给总调度技能**（推荐）——由它自动选题、派工、门禁、提 PR 并迭代路线图：
-
-```bash
-export AZURE_OPENAI_API_KEY=...   # 仅留在你本机环境，不入库、不落配置
-codex exec "自动委托开发：严格按 .agents/skills/orchestrate-roadmap/SKILL.md 统筹一轮。先读 AGENT.md、.agents/README.md、docs/roadmap.md、docs/feature-checklist.md；自上而下选第一个未勾选子任务，选用匹配的执行 SKILL；只做最小闭环；协议改动引用 docs/rfcs/；补 CI 可执行测试；通过 go build/test、golangci-lint、（涉及前端）npm run build；改动走 PR，禁止直接推 main；交付后按 groom-roadmap 勾选并迭代路线图。"
-```
-
-> 想自己指定任务时，也可手动取下一个子任务再委托具体执行技能：
-> `task="$(grep -nE '^- \[ \] M[0-9]+\.[0-9]+' docs/roadmap.md | head -1)"`，再在 prompt 里替换 `orchestrate-roadmap` 为对应的 `.agents/skills/<技能>/SKILL.md`。
-
-> `sandbox_mode = "danger-full-access"` 或 `--dangerously-bypass-approvals-and-sandbox` 这类"免审批全权限"参数，请仅在你信任的隔离环境里自行决定是否启用，本仓库不预设。
+用任意支持工具调用的编码 agent 即可，本仓库不绑定具体 agent 或 CLI。委托一轮开发时，让 agent 严格按 [`orchestrate-roadmap`](skills/orchestrate-roadmap/SKILL.md) 统筹：先读 `AGENT.md`、本文件、`docs/roadmap.md`、`docs/feature-checklist.md`；自上而下取第一个未勾选的 `- [ ] M*.*` 子任务；选用匹配的执行 SKILL；只做最小闭环；协议改动引用 `docs/rfcs/`；补 CI 可执行测试；通过质量门禁；改动走 PR，禁止直接推 `main`；交付后按 [`groom-roadmap`](skills/groom-roadmap/SKILL.md) 勾选并迭代路线图。
 
 ### 给 agent 的护栏（无论在哪运行都适用）
 

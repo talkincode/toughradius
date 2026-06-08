@@ -2,7 +2,7 @@
 
 > 本路线图是 ToughRADIUS 的长期开发计划，与功能清单 [`docs/feature-checklist.md`](feature-checklist.md) 强绑定。
 > 所有里程碑任务必须引用至少一个功能编号（如 `TR-F004`），不在清单中的方向先更新清单再排期。
-> 本路线图同时是 **Agent 驱动开发** 的任务来源：agent 由你在**自己的主机**上运行（如 Codex CLI 无头模式），从这里自上而下取第一个未完成子任务实现并提 PR；不在 CI 中执行。运行方式与护栏见 [`.agents/README.md`](../.agents/README.md)。
+> 本路线图同时是 **Agent 驱动开发** 的任务来源：agent 由你用自己的 agent/CLI 在**自己的主机**上运行，从这里自上而下取第一个未完成子任务实现并提 PR；不在 CI 中执行。运行方式与护栏见 [`.agents/README.md`](../.agents/README.md)。
 
 ## 维护规则
 
@@ -174,5 +174,5 @@
 - **自我迭代**：每轮交付后由 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选已交付项、更新里程碑状态、回填/拆分/重排子任务，并保持本文件与功能清单状态一致。
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。
 - 每个涉及协议或数据流的子任务，交付时必须带 **CI 可自动执行的验收测试**（单元或 `test/integration/`）。
-- 选任务口径：`docs/roadmap.md` 自上而下第一个未勾选的 `- [ ] M*.*`。agent 在**本机**运行（如 Codex 无头），不在 CI 执行；运行参考与护栏见 [`.agents/README.md`](../.agents/README.md)。
+- 选任务口径：`docs/roadmap.md` 自上而下第一个未勾选的 `- [ ] M*.*`。agent 在**本机**用你自己的 agent 运行，不在 CI 执行；运行参考与护栏见 [`.agents/README.md`](../.agents/README.md)。
 
