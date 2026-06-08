@@ -1,5 +1,16 @@
 # ToughRADIUS AI Coding Agent Instructions
 
+## 📌 Project Guardrails (read first)
+
+When working on this repository (including any AI agent session, however it is run), align with these baselines:
+
+- **`AGENT.md`** — project-level AI development guide and working rules.
+- **`docs/feature-checklist.md`** — feature scope baseline. Anchor every task to a `TR-F` ID; do not pursue non-goals `TR-N001`–`TR-N005`.
+- **`docs/roadmap.md`** — long-term roadmap / milestones (the source of agent tasks).
+- **`.agents/skills/<name>/SKILL.md`** — reusable task SOPs (add vendor VSA, EAP method, admin API, React resource, config schema, acceptance test, sync upstream radius, reference RFC, align checklist, write Go tests). Pick the matching skill before starting.
+- **Quality gates**: open a PR (never push `main`), and pass `go build ./...`, `go test ./...`, `golangci-lint run` (v2.12.2); for protocol/E2E changes add a CI acceptance test under `test/integration/`; for frontend changes run `cd web && npm run build`.
+- **Protocol changes** must cite the relevant spec under `docs/rfcs/`.
+
 ## 🔍 Mandatory Requirements Before Development
 
 **Never modify code blindly. Always gather context from the existing implementation, related tests, and documentation first.**
