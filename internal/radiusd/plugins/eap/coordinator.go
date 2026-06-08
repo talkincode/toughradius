@@ -202,6 +202,13 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 
 	// Create RADIUS Reject response
 	response := r.Response(radius.CodeAccessReject)
+	if reason != nil {
+		reply := reason.Error()
+		if len(reply) > 253 {
+			reply = reply[:253]
+		}
+		_ = rfc2865.ReplyMessage_SetString(response, reply) //nolint:errcheck
+	}
 
 	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapFailure, secret)

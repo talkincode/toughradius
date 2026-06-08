@@ -639,6 +639,9 @@ func TestSendEAPFailure(t *testing.T) {
 	assert.Equal(t, uint8(CodeFailure), eapMsg[0])
 	assert.Equal(t, uint8(7), eapMsg[1]) // Identifier should match
 	assert.Equal(t, uint16(4), uint16(eapMsg[2])<<8|uint16(eapMsg[3]))
+
+	reply := rfc2865.ReplyMessage_GetString(writer.response)
+	assert.Contains(t, reply, "auth failed")
 }
 
 func TestSendEAPFailure_WithNilReason(t *testing.T) {
@@ -653,6 +656,7 @@ func TestSendEAPFailure_WithNilReason(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, writer.response)
 	assert.Equal(t, radius.CodeAccessReject, writer.response.Code)
+	assert.Equal(t, "", rfc2865.ReplyMessage_GetString(writer.response))
 }
 
 // Tests for CleanupState
