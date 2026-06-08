@@ -74,3 +74,5 @@ require (
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/time v0.14.0
 )
+
+replace layeh.com/radius => github.com/talkincode/radius v0.1.0
