@@ -243,6 +243,11 @@ func (h *TLSHandler) startFlight(ctx *eap.EAPContext, state *eap.EAPState, tlsDa
 // flight, transmitting the next queued fragment.
 func (h *TLSHandler) sendNextFragment(ctx *eap.EAPContext, state *eap.EAPState, frag *tlsfragment.Packet) (bool, error) {
 	if !frag.IsACK() {
+		if state.Data != nil {
+			if eng, ok := state.Data[stateKeyEngine].(*tlsengine.Engine); ok && eng != nil {
+				_ = eng.Close()
+			}
+		}
 		return false, eap.ErrTLSUnexpectedFragment
 	}
 
