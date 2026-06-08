@@ -151,6 +151,7 @@ func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	// for the peer's closing ACK before EAP-Success.
 	if getBool(state, stateKeyPendingSuccess) {
 		if !frag.IsACK() {
+			closeEngine(state)
 			return false, eap.ErrTLSUnexpectedFragment
 		}
 		return h.finalize(ctx, state)
@@ -166,11 +167,7 @@ func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	reassembler := loadReassembler(state)
 	complete, err := reassembler.Accept(frag)
 	if err != nil {
-		if state.Data != nil {
-			if eng, ok := state.Data[stateKeyEngine].(*tlsengine.Engine); ok && eng != nil {
-				_ = eng.Close()
-			}
-		}
+		closeEngine(state)
 		return false, err
 	}
 
@@ -179,6 +176,7 @@ func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 		// fragment so the peer sends the next one (RFC 5216 §2.1.5).
 		saveReassembler(state, reassembler)
 		if err := ctx.StateManager.SetState(stateID, state); err != nil {
+			closeEngine(state)
 			return false, err
 		}
 		ackData := h.buildFragmentACK(ctx.EAPMessage.Identifier + 1)
@@ -202,6 +200,7 @@ func (h *TLSHandler) advanceHandshake(ctx *eap.EAPContext, state *eap.EAPState, 
 	if hsErr != nil {
 		// A handshake failure (including an untrusted client certificate)
 		// rejects with an explicit, wrapped reason (RFC 5216 §2.2 / §5.3).
+		closeEngine(state)
 		return false, fmt.Errorf("%w: %v", eap.ErrTLSHandshakeFailed, hsErr)
 	}
 
@@ -210,10 +209,11 @@ func (h *TLSHandler) advanceHandshake(ctx *eap.EAPContext, state *eap.EAPState, 
 			// Nothing left to transmit: authenticate immediately.
 			return h.finalize(ctx, state)
 		}
-		// No output and not done is unexpected for a complete inbound flight;
-		// acknowledge to keep the exchange alive rather than silently stalling.
-		ackData := h.buildFragmentACK(ctx.EAPMessage.Identifier + 1)
-		return false, h.writeChallenge(ctx, state.StateID, ackData)
+		// A complete inbound EAP-TLS message that neither advances the TLS
+		// handshake nor completes it is a protocol violation; do not keep an
+		// unreachable engine alive after state cleanup.
+		closeEngine(state)
+		return false, eap.ErrTLSUnexpectedFragment
 	}
 
 	return h.startFlight(ctx, state, out, done)
@@ -239,6 +239,7 @@ func (h *TLSHandler) startFlight(ctx *eap.EAPContext, state *eap.EAPState, tlsDa
 	}
 
 	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+		closeEngine(state)
 		return false, err
 	}
 	return false, h.writeChallenge(ctx, state.StateID, h.buildEAPRequest(ctx.EAPMessage.Identifier+1, first))
@@ -248,11 +249,7 @@ func (h *TLSHandler) startFlight(ctx *eap.EAPContext, state *eap.EAPState, tlsDa
 // flight, transmitting the next queued fragment.
 func (h *TLSHandler) sendNextFragment(ctx *eap.EAPContext, state *eap.EAPState, frag *tlsfragment.Packet) (bool, error) {
 	if !frag.IsACK() {
-		if state.Data != nil {
-			if eng, ok := state.Data[stateKeyEngine].(*tlsengine.Engine); ok && eng != nil {
-				_ = eng.Close()
-			}
-		}
+		closeEngine(state)
 		return false, eap.ErrTLSUnexpectedFragment
 	}
 
@@ -272,6 +269,7 @@ func (h *TLSHandler) sendNextFragment(ctx *eap.EAPContext, state *eap.EAPState, 
 	}
 
 	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+		closeEngine(state)
 		return false, err
 	}
 	return false, h.writeChallenge(ctx, state.StateID, h.buildEAPRequest(ctx.EAPMessage.Identifier+1, next))
@@ -458,4 +456,14 @@ func clearKey(state *eap.EAPState, key string) {
 	if state.Data != nil {
 		delete(state.Data, key)
 	}
+}
+
+func closeEngine(state *eap.EAPState) {
+	if state.Data == nil {
+		return
+	}
+	if eng, ok := state.Data[stateKeyEngine].(*tlsengine.Engine); ok && eng != nil {
+		_ = eng.Close()
+	}
+	delete(state.Data, stateKeyEngine)
 }

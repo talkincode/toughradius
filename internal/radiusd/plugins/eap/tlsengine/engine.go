@@ -37,6 +37,9 @@ const DefaultHandshakeTimeout = 30 * time.Second
 var (
 	// ErrNoConfig is returned when New is called without a usable config.
 	ErrNoConfig = errors.New("tlsengine: nil config")
+	// ErrNoServerCertificate is returned when the server cannot present a
+	// usable certificate/private key for the TLS handshake.
+	ErrNoServerCertificate = errors.New("tlsengine: missing server certificate")
 	// ErrHandshakeIncomplete is returned by Identity when the handshake has not
 	// completed successfully yet.
 	ErrHandshakeIncomplete = errors.New("tlsengine: handshake not completed")
@@ -90,6 +93,9 @@ func New(cfg *Config) (*Engine, error) {
 	}
 	if cfg.ClientCAs == nil {
 		return nil, fmt.Errorf("%w: ClientCAs is required for EAP-TLS peer authentication", ErrNoConfig)
+	}
+	if len(cfg.ServerCertificate.Certificate) == 0 || cfg.ServerCertificate.PrivateKey == nil {
+		return nil, ErrNoServerCertificate
 	}
 
 	tlsCfg := &tls.Config{

@@ -56,19 +56,22 @@ func identityFromCertificate(cert *x509.Certificate) *PeerIdentity {
 }
 
 // Matches reports whether the supplied username corresponds to this peer
-// identity. The comparison is case-insensitive and considers the primary
-// identity Name, the subject CommonName, and every subjectAltName entry, so an
-// EAP-Response/Identity that carries any of the certificate's names is accepted.
-// An empty username never matches.
+// identity. The comparison is case-insensitive. When a subjectAltName exists,
+// RFC 5216 §5.2 makes it the peer identity, so the subject CommonName is not
+// accepted as an alternate username. CN matching is only allowed for CN-only
+// certificates. An empty username never matches.
 func (p *PeerIdentity) Matches(username string) bool {
 	want := strings.TrimSpace(username)
 	if want == "" {
 		return false
 	}
-	candidates := make([]string, 0, len(p.SANEmails)+len(p.SANDNSNames)+2)
-	candidates = append(candidates, p.Name, p.CommonName)
-	candidates = append(candidates, p.SANEmails...)
-	candidates = append(candidates, p.SANDNSNames...)
+	candidates := []string{p.Name}
+	if p.Source == SourceSubject {
+		candidates = append(candidates, p.CommonName)
+	} else {
+		candidates = append(candidates, p.SANEmails...)
+		candidates = append(candidates, p.SANDNSNames...)
+	}
 	for _, c := range candidates {
 		if strings.EqualFold(strings.TrimSpace(c), want) {
 			return true

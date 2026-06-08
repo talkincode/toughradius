@@ -414,6 +414,26 @@ func TestTLSHandler_FullHandshake_IdentityMismatchRejected(t *testing.T) {
 	assert.ErrorIs(t, err, eap.ErrTLSIdentityMismatch)
 }
 
+func TestTLSHandler_FullHandshake_SANIdentityDoesNotMatchCN(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice", "secret")
+	sup := newSupplicant(t, h, sm, stateID, "secret", clientCfg(ca, clientCert))
+	success, err := sup.run()
+	assert.False(t, success)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTLSIdentityMismatch)
+}
+
 func TestTLSHandler_FullHandshake_OutboundFragmentation(t *testing.T) {
 	ca := newHSTestCA(t, "Test Root CA")
 	clientCert := ca.issue(t, "carol", func(c *x509.Certificate) {

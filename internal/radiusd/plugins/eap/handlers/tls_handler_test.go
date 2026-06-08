@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
@@ -170,6 +171,43 @@ func TestTLSHandler_HandleResponse_MalformedFragment(t *testing.T) {
 	assert.False(t, success)
 	assert.Error(t, err)
 	assert.NotErrorIs(t, err, eap.ErrTLSNotConfigured)
+}
+
+func TestTLSHandler_HandleResponse_PendingSuccessRequiresACK(t *testing.T) {
+	h := NewTLSHandler()
+	sm := statemanager.NewMemoryStateManager()
+	const stateID = "state-tls-pending"
+	require.NoError(t, sm.SetState(stateID, &eap.EAPState{
+		StateID: stateID,
+		Method:  EAPMethodTLS,
+		Data: map[string]interface{}{
+			stateKeyPendingSuccess: true,
+		},
+	}))
+
+	writer := &mockResponseWriter{}
+	ctx := newTLSResponseCtx(t, stateID, writer, sm, 10, []byte{TLSFlagStart})
+	success, err := h.HandleResponse(ctx)
+	assert.False(t, success)
+	assert.ErrorIs(t, err, eap.ErrTLSUnexpectedFragment)
+	assert.Nil(t, writer.response)
+}
+
+func TestTLSHandler_HandleResponse_EmptyInitialTLSRoundRejected(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	const stateID = "state-tls-empty"
+	require.NoError(t, sm.SetState(stateID, &eap.EAPState{StateID: stateID, Method: EAPMethodTLS}))
+
+	writer := &mockResponseWriter{}
+	ctx := newTLSResponseCtx(t, stateID, writer, sm, 10, []byte{0x00})
+	success, err := h.HandleResponse(ctx)
+	assert.False(t, success)
+	assert.ErrorIs(t, err, eap.ErrTLSUnexpectedFragment)
+	assert.Nil(t, writer.response)
 }
 
 // TestTLSHandler_HandleResponse_FragmentReassembly drives a fragmented inbound

@@ -247,6 +247,13 @@ func TestEngine_New_RequiresClientCAs(t *testing.T) {
 	}
 }
 
+func TestEngine_New_RequiresServerCertificate(t *testing.T) {
+	ca := newTestCA(t, "Root")
+	if _, err := New(&Config{ClientCAs: ca.pool}); err != ErrNoServerCertificate {
+		t.Fatalf("expected ErrNoServerCertificate, got %v", err)
+	}
+}
+
 func TestEngine_TrustedClientHandshakeSucceeds(t *testing.T) {
 	ca := newTestCA(t, "Test Root CA")
 	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
@@ -277,8 +284,8 @@ func TestEngine_TrustedClientHandshakeSucceeds(t *testing.T) {
 	if !id.Matches("alice@example.com") {
 		t.Fatal("expected identity to match SAN email")
 	}
-	if !id.Matches("alice") {
-		t.Fatal("expected identity to match subject CN")
+	if id.Matches("alice") {
+		t.Fatal("did not expect SAN identity to match subject CN")
 	}
 	if id.Matches("bob") {
 		t.Fatal("did not expect match for unrelated name")
@@ -350,6 +357,9 @@ func TestEngine_IdentityPrefersSANThenCN(t *testing.T) {
 	}
 	if id.Name != "cn-only-user" || id.Source != SourceSubject {
 		t.Fatalf("expected subject-cn identity, got %+v", id)
+	}
+	if !id.Matches("cn-only-user") {
+		t.Fatal("expected CN-only identity to match subject CN")
 	}
 }
 
