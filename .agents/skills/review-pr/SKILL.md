@@ -30,7 +30,7 @@ The gate has teeth only because it is **anchored to mechanical signals (CI) and 
 1. **Precondition - CI must be green.** `gh pr checks <n>`:
    - Any job failing for a **real** reason (compile/test/lint/integration) -> this is a blocking issue; go to step 3 (rework) and cite the failing job.
    - Failing only from transient infra (e.g. registry/network timeout in "Initialize containers") -> `gh run rerun <run-id> --failed` once; re-check.
-   - Still pending -> do not approve this round; leave the PR untouched and move on (it will be re-evaluated next round).
+   - Still pending -> do not approve this round; leave the PR untouched. A pending-CI PR still counts as **unreviewed**, so per the in-flight gate below the round does **not** select a new task while it is open - move on to the next PR in the drain list, then wait for CI / stop the round rather than starting new work.
 2. **Independent adversarial read.** Review as a *separate pass* with fresh context - in a multi-agent environment dispatch a `code-review` sub-agent; otherwise consciously switch roles. Feed it only: `gh pr diff <n>`, the PR description, the linked milestone + `TR-F` ID, and the acceptance criteria. Apply a high signal bar - flag only issues that genuinely matter:
    - correctness / logic bugs, nil-deref, race, resource leaks;
    - security: leaked secrets, auth bypass, injection, plaintext where hashing is required;
