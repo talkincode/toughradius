@@ -62,6 +62,11 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	// validation backend yet. Registering it would expose an unauthenticated
 	// EAP method. Re-enable only once a real validation service is wired in.
 	registry.RegisterEAPHandler(eaphandlers.NewMSCHAPv2Handler())
+	// EAP-TLS is the M1.1 skeleton: it sends a valid EAP-TLS Start but rejects
+	// handshake responses until the TLS handshake / fragmentation and
+	// certificate validation land (milestones M1.2/M1.3). Registering it is safe
+	// because the handler can never authenticate a client yet.
+	registry.RegisterEAPHandler(eaphandlers.NewTLSHandler())
 
 	// Vendor parsers under vendor/parsers register themselves via init()
 }
