@@ -26,7 +26,7 @@
 
 | 里程碑 | 主题 | 关联编号 | 优先级 | 状态 |
 | --- | --- | --- | --- | --- |
-| M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 计划中 |
+| M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 进行中 |
 | M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 计划中 |
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 计划中 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
@@ -69,7 +69,7 @@
 - **参考实现**：BeryJu `radius-eap` <https://github.com/BeryJu/radius-eap>、实现笔记 <https://beryju.io/blog/2025-05-implementing-eap/>（仅作思路参考；注意许可与协议兼容，禁止直接拷贝不兼容代码）。
 
 子任务：
-- [ ] M1.1 在 `internal/radiusd/plugins/eap` 注册 EAP-TLS handler 骨架与启用列表配置
+- [x] M1.1 在 `internal/radiusd/plugins/eap` 注册 EAP-TLS handler 骨架与启用列表配置
 - [ ] M1.2 实现 TLS 握手状态管理与分片重组（参照 RFC 5216 §3 / RFC 7499）
 - [ ] M1.3 证书校验（CA 链）与用户身份映射
 - [ ] M1.4 明确失败原因 + AuthError 指标 + 单元/集成测试

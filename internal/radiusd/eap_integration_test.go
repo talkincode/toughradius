@@ -388,8 +388,8 @@ func TestEAPMD5IntegrationNakUnsupportedMethod(t *testing.T) {
 
 	challenge, state := client.sendIdentity(t)
 
-	// Suggest EAP-TLS, which has no registered handler; the server must reject.
-	resp := client.sendNak(t, challenge.Identifier, state, eap.TypeTLS)
+	// Suggest EAP-GTC, which has no registered handler; the server must reject.
+	resp := client.sendNak(t, challenge.Identifier, state, eap.TypeGTC)
 
 	if resp.Code != radius.CodeAccessReject {
 		t.Fatalf("expected Access-Reject after Nak to unsupported method, got %v", resp.Code)
@@ -401,6 +401,48 @@ func setEapMethod(t *testing.T, rs *RadiusService, method string) {
 	t.Helper()
 	if err := rs.AppContext().ConfigMgr().Set("radius", "EapMethod", method); err != nil {
 		t.Fatalf("failed to set EapMethod=%s: %v", method, err)
+	}
+}
+
+// TestEAPTLSIntegrationStartThenSafeReject verifies the M1.1 EAP-TLS skeleton is
+// wired end-to-end: selecting eap-tls makes the server answer identity with an
+// EAP-TLS Start (RFC 5216 §2.1.1), and a subsequent handshake response is
+// rejected because the handshake is not implemented yet (no auth bypass).
+func TestEAPTLSIntegrationStartThenSafeReject(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
+
+	client, rs := startEAPTestServer(t)
+	seedEAPUser(t, rs, "eapuser", "eappass")
+	setEapMethod(t, rs, "eap-tls")
+	client.username = "eapuser"
+
+	challenge, state := client.sendIdentity(t)
+	if challenge.Type != eap.TypeTLS {
+		t.Fatalf("expected EAP-TLS challenge, got EAP type %d", challenge.Type)
+	}
+	if len(challenge.Data) < 1 || challenge.Data[0]&0x20 == 0 {
+		t.Fatalf("expected EAP-TLS Start (S) flag set, got data %x", challenge.Data)
+	}
+
+	// Client replies with a (dummy) handshake fragment; the skeleton must reject.
+	tlsResp := &eap.EAPMessage{
+		Code:       eap.CodeResponse,
+		Identifier: challenge.Identifier,
+		Type:       eap.TypeTLS,
+		Data:       []byte{0x00}, // Flags only, no TLS data
+	}
+	packet := client.newAccessRequest()
+	_ = rfc2865.State_Set(packet, state) //nolint:errcheck
+	eap.SetEAPMessageAndAuth(packet, tlsResp.Encode(), client.secret)
+
+	resp, err := client.exchange(t, packet)
+	if err != nil {
+		t.Fatalf("tls response exchange failed: %v", err)
+	}
+	if resp.Code != radius.CodeAccessReject {
+		t.Fatalf("expected Access-Reject from EAP-TLS skeleton, got %v", resp.Code)
 	}
 }
 

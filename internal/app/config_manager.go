@@ -151,7 +151,7 @@ func (cm *ConfigManager) registerHardcodedSchemas() {
 		Key:         "radius.EapMethod",
 		Type:        TypeString,
 		Default:     "eap-md5",
-		Enum:        []string{"eap-md5", "eap-mschapv2"},
+		Enum:        []string{"eap-md5", "eap-mschapv2", "eap-tls"},
 		Description: "EAP authentication method",
 	})
 

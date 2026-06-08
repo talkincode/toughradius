@@ -99,6 +99,8 @@ func (c *Coordinator) handleIdentityResponse(ctx *EAPContext, configuredMethod s
 		handler, _ = c.handlerRegistry.GetHandler(TypeMSCHAPv2)
 	case "eap-otp":
 		handler, _ = c.handlerRegistry.GetHandler(TypeOTP)
+	case "eap-tls":
+		handler, _ = c.handlerRegistry.GetHandler(TypeTLS)
 	default:
 		// Default to MD5
 		handler, _ = c.handlerRegistry.GetHandler(TypeMD5Challenge)
