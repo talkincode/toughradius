@@ -2,6 +2,8 @@
 
 英文版本：[docs/feature-checklist.en.md](feature-checklist.en.md)
 
+开发路线图与里程碑：[docs/roadmap.md](roadmap.md)
+
 本文档是 ToughRADIUS 的功能范围基线。后续需求、Issue、PR 和代码改动必须先对齐本清单中的功能编号；无法映射到现有编号的需求，必须先更新本清单并说明范围变化，再进入实现。
 
 ## 维护规则

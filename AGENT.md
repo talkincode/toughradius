@@ -12,6 +12,16 @@
 - Do not casually expand ToughRADIUS into unrelated product directions. Items listed as non-goals in the checklist are out of scope unless the checklist is explicitly revised first.
 - Bug fixes, refactors, UI changes, and protocol extensions must preserve the acceptance boundaries in the checklist or update the checklist in the same change.
 
+### Roadmap and Skill Library
+
+Agent-driven development is organized around three artifacts:
+
+- [`docs/roadmap.md`](docs/roadmap.md) — long-term roadmap and milestones (`M1`–`M7`), each mapped to `TR-F` feature IDs. This is the task source for agent work.
+- [`.agents/skills/`](.agents/README.md) — reusable skill SOPs, one folder per skill (`.agents/skills/<name>/SKILL.md`): add vendor VSA, add EAP method, add admin API, add React Admin resource, add config schema, add acceptance test, sync upstream radius, reference RFC, align checklist, write Go tests. Pick the matching skill before starting a task type.
+- Agents are run **on your own host** (e.g. Codex CLI headless), not via a CI workflow. See [`.agents/README.md`](.agents/README.md) for the local run reference and guardrails.
+
+Quality gates for every agent change:走 PR（禁止直接推 `main`）, then `go build ./...`, `go test ./...`, `golangci-lint run` (v2.12.2), and `cd web && npm run build` for frontend changes.
+
 ## 🤖 AI Agent Working Guidelines
 
 ### 🔍 Mandatory Requirement: Understand Existing Code Before Editing
