@@ -90,21 +90,21 @@ func _Aruba_SetVendor(p *radius.Packet, typ byte, attr radius.Attribute) (err er
 			continue
 		}
 		for j := 0; len(vsa[j:]) >= 3; {
-			vsaTyp, vsaLen := vsa[0], vsa[1]
+			vsaTyp, vsaLen := vsa[j], vsa[j+1]
 			if int(vsaLen) > len(vsa[j:]) || vsaLen < 3 {
-				i++
 				break
 			}
 			if vsaTyp == typ {
 				vsa = append(vsa[:j], vsa[j+int(vsaLen):]...)
+			} else {
+				j += int(vsaLen)
 			}
-			j += int(vsaLen)
 		}
 		if len(vsa) > 0 {
-			copy(avp.Attribute[4:], vsa)
+			p.Attributes[i].Attribute = append(avp.Attribute[:4:4], vsa...)
 			i++
 		} else {
-			p.Attributes = append(p.Attributes[:i], p.Attributes[i+i:]...)
+			p.Attributes = append(p.Attributes[:i], p.Attributes[i+1:]...)
 		}
 	}
 	return _Aruba_AddVendor(p, typ, attr)
