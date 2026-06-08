@@ -1,6 +1,7 @@
 package radiusd
 
 import (
+	stderrs "errors"
 	"fmt"
 	"net"
 	"strings"
@@ -142,11 +143,9 @@ func (s *AuthService) stageEAPDispatch(ctx *AuthPipelineContext) error {
 	)
 
 	if eapErr != nil {
-		zap.L().Warn("eap handling failed",
-			zap.String("namespace", "radius"),
-			zap.Error(eapErr),
-		)
-		_ = s.eapHelper.SendEAPFailure(ctx.Writer, ctx.Request, ctx.NAS.Secret, eapErr)
+		rejectErr := mapEAPDispatchError(eapErr)
+		s.logEAPFailure(ctx, rejectErr)
+		_ = s.eapHelper.SendEAPFailure(ctx.Writer, ctx.Request, ctx.NAS.Secret, rejectErr)
 		s.eapHelper.CleanupState(ctx.Request)
 		ctx.Stop()
 		return nil
@@ -156,7 +155,9 @@ func (s *AuthService) stageEAPDispatch(ctx *AuthPipelineContext) error {
 		if success {
 			err := s.AuthenticateUserWithPlugins(ctx.Context, ctx.Request, ctx.Response, ctx.User, ctx.NAS, ctx.VendorRequestForPlugin, ctx.IsMacAuth, SkipPasswordValidation())
 			if err != nil {
-				_ = s.eapHelper.SendEAPFailure(ctx.Writer, ctx.Request, ctx.NAS.Secret, err)
+				rejectErr := mapEAPDispatchError(err)
+				s.logEAPFailure(ctx, rejectErr)
+				_ = s.eapHelper.SendEAPFailure(ctx.Writer, ctx.Request, ctx.NAS.Secret, rejectErr)
 				s.eapHelper.CleanupState(ctx.Request)
 				ctx.Stop()
 				return nil
@@ -167,6 +168,82 @@ func (s *AuthService) stageEAPDispatch(ctx *AuthPipelineContext) error {
 	}
 
 	return nil
+}
+
+func mapEAPDispatchError(err error) error {
+	if err == nil {
+		return nil
+	}
+
+	if authErr, ok := radiuserrors.GetAuthError(err); ok {
+		cloned := *authErr
+		if cloned.ErrorStage == "" {
+			cloned.ErrorStage = StageEAPDispatch
+		}
+		return &cloned
+	}
+
+	switch {
+	case stderrs.Is(err, eap.ErrPasswordMismatch):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectPasswdError, "eap password validation failed", err)
+	case stderrs.Is(err, eap.ErrTLSIdentityMismatch):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectUnauthorized, "eap-tls certificate identity mismatch", err)
+	case stderrs.Is(err, eap.ErrTLSNoIdentity):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectUnauthorized, "eap-tls certificate identity missing", err)
+	case stderrs.Is(err, eap.ErrTLSNotConfigured):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-tls trust configuration missing", err)
+	case stderrs.Is(err, eap.ErrTLSHandshakeFailed):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-tls handshake failed", err)
+	case stderrs.Is(err, eap.ErrTLSUnexpectedFragment):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-tls fragmentation exchange failed", err)
+	case stderrs.Is(err, eap.ErrStateNotFound):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap session state not found", err)
+	case stderrs.Is(err, eap.ErrUnsupportedEAPType):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap type not supported", err)
+	case stderrs.Is(err, eap.ErrInvalidEAPMessage):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "invalid eap message", err)
+	default:
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap authentication failed", err)
+	}
+}
+
+func newEAPDispatchAuthError(metricsType, message string, cause error) error {
+	return &radiuserrors.AuthError{
+		MetricsType: metricsType,
+		Message:     message,
+		ErrorStage:  StageEAPDispatch,
+		Cause:       cause,
+	}
+}
+
+func (s *AuthService) logEAPFailure(ctx *AuthPipelineContext, err error) {
+	metricsKey := app.MetricsRadiusRejectOther
+	stage := StageEAPDispatch
+	if radiusErr, ok := radiuserrors.GetRadiusError(err); ok {
+		metricsKey = radiusErr.MetricsKey()
+		if radiusErr.Stage() != "" {
+			stage = radiusErr.Stage()
+		}
+	}
+
+	zap.L().Warn("radius eap auth rejected",
+		zap.String("namespace", "radius"),
+		zap.String("stage", stage),
+		zap.String("username", ctx.Username),
+		zap.String("nasip", ctx.RemoteIP),
+		zap.String("metrics", metricsKey),
+		zap.String("reason", safeEAPFailureReason(err)),
+	)
+}
+
+func safeEAPFailureReason(err error) string {
+	if authErr, ok := radiuserrors.GetAuthError(err); ok {
+		return authErr.Message
+	}
+	if err == nil {
+		return "eap authentication failed"
+	}
+	return "eap authentication failed"
 }
 
 func (s *AuthService) stagePluginAuth(ctx *AuthPipelineContext) error {

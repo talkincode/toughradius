@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -202,6 +203,13 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 
 	// Create RADIUS Reject response
 	response := r.Response(radius.CodeAccessReject)
+	if reason != nil {
+		reply := safeReplyMessage(reason)
+		if len(reply) > 253 {
+			reply = reply[:253]
+		}
+		_ = rfc2865.ReplyMessage_SetString(response, reply) //nolint:errcheck
+	}
 
 	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapFailure, secret)
@@ -212,6 +220,18 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 		zap.Error(reason))
 
 	return w.Write(response)
+}
+
+func safeReplyMessage(reason error) string {
+	if reason == nil {
+		return ""
+	}
+	if authErr, ok := radiuserrors.GetAuthError(reason); ok {
+		if authErr.Message != "" {
+			return authErr.Message
+		}
+	}
+	return reason.Error()
 }
 
 // CleanupState Cleanup EAP Status

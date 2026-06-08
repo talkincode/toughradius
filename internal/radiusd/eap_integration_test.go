@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -375,6 +376,9 @@ func TestEAPMD5IntegrationWrongPassword(t *testing.T) {
 	if eapAttr[0] != eap.CodeFailure {
 		t.Fatalf("expected EAP-Failure (code %d), got code %d", eap.CodeFailure, eapAttr[0])
 	}
+	if reply := rfc2865.ReplyMessage_GetString(resp); reply == "" {
+		t.Fatal("expected Reply-Message to contain EAP failure reason")
+	}
 }
 
 func TestEAPMD5IntegrationNakUnsupportedMethod(t *testing.T) {
@@ -443,6 +447,10 @@ func TestEAPTLSIntegrationStartThenSafeReject(t *testing.T) {
 	}
 	if resp.Code != radius.CodeAccessReject {
 		t.Fatalf("expected Access-Reject from EAP-TLS skeleton, got %v", resp.Code)
+	}
+	reply := strings.ToLower(rfc2865.ReplyMessage_GetString(resp))
+	if !strings.Contains(reply, "eap-tls trust configuration missing") {
+		t.Fatalf("expected explicit EAP-TLS failure reason, got %q", reply)
 	}
 }
 

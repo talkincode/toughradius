@@ -6,7 +6,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
@@ -639,6 +641,9 @@ func TestSendEAPFailure(t *testing.T) {
 	assert.Equal(t, uint8(CodeFailure), eapMsg[0])
 	assert.Equal(t, uint8(7), eapMsg[1]) // Identifier should match
 	assert.Equal(t, uint16(4), uint16(eapMsg[2])<<8|uint16(eapMsg[3]))
+
+	reply := rfc2865.ReplyMessage_GetString(writer.response)
+	assert.Contains(t, reply, "auth failed")
 }
 
 func TestSendEAPFailure_WithNilReason(t *testing.T) {
@@ -653,6 +658,24 @@ func TestSendEAPFailure_WithNilReason(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, writer.response)
 	assert.Equal(t, radius.CodeAccessReject, writer.response.Code)
+	assert.Equal(t, "", rfc2865.ReplyMessage_GetString(writer.response))
+}
+
+func TestSendEAPFailure_SanitizesAuthErrorCauseInReply(t *testing.T) {
+	coordinator := NewCoordinator(newMockStateManager(), &mockPasswordProvider{}, newMockHandlerRegistry(), false)
+	writer := &mockResponseWriter{}
+
+	packet := createEAPIdentityResponse(2, "testuser")
+	req := &radius.Request{Packet: packet}
+
+	reason := radiuserrors.NewAuthErrorWithCause(app.MetricsRadiusRejectOther, "eap-tls handshake failed", errors.New("password=super-secret"))
+	err := coordinator.SendEAPFailure(writer, req, "secret", reason)
+
+	require.NoError(t, err)
+	assert.NotNil(t, writer.response)
+	reply := rfc2865.ReplyMessage_GetString(writer.response)
+	assert.Equal(t, "eap-tls handshake failed", reply)
+	assert.NotContains(t, reply, "super-secret")
 }
 
 // Tests for CleanupState
