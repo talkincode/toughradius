@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
@@ -123,10 +124,11 @@ func TestTLSHandler_buildStartRequest(t *testing.T) {
 	assert.Equal(t, byte(TLSFlagStart), result[5], "Flags should have only the Start bit set")
 }
 
-// TestTLSHandler_HandleResponse_NeverAuthenticates ensures that even after a
-// complete TLS message is reassembled, the handler never grants access before
-// the TLS engine / certificate validation lands (milestone M1.3).
-func TestTLSHandler_HandleResponse_NeverAuthenticates(t *testing.T) {
+// TestTLSHandler_HandleResponse_NeverAuthenticatesWithoutConfig ensures that
+// even after a complete TLS message is reassembled, a handler with no TLS
+// material configured never grants access: it rejects with
+// eap.ErrTLSNotConfigured (RFC 5216 §2.2 requires a verified peer certificate).
+func TestTLSHandler_HandleResponse_NeverAuthenticatesWithoutConfig(t *testing.T) {
 	h := NewTLSHandler()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
@@ -143,8 +145,8 @@ func TestTLSHandler_HandleResponse_NeverAuthenticates(t *testing.T) {
 	}
 
 	success, err := h.HandleResponse(ctx)
-	assert.False(t, success, "the EAP-TLS handler must never authenticate yet")
-	assert.ErrorIs(t, err, eap.ErrTLSHandshakeNotImplemented)
+	assert.False(t, success, "the EAP-TLS handler must never authenticate without configured trust anchors")
+	assert.ErrorIs(t, err, eap.ErrTLSNotConfigured)
 }
 
 // TestTLSHandler_HandleResponse_MalformedFragment ensures a truncated framing
@@ -168,7 +170,44 @@ func TestTLSHandler_HandleResponse_MalformedFragment(t *testing.T) {
 	success, err := h.HandleResponse(ctx)
 	assert.False(t, success)
 	assert.Error(t, err)
-	assert.NotErrorIs(t, err, eap.ErrTLSHandshakeNotImplemented)
+	assert.NotErrorIs(t, err, eap.ErrTLSNotConfigured)
+}
+
+func TestTLSHandler_HandleResponse_PendingSuccessRequiresACK(t *testing.T) {
+	h := NewTLSHandler()
+	sm := statemanager.NewMemoryStateManager()
+	const stateID = "state-tls-pending"
+	require.NoError(t, sm.SetState(stateID, &eap.EAPState{
+		StateID: stateID,
+		Method:  EAPMethodTLS,
+		Data: map[string]interface{}{
+			stateKeyPendingSuccess: true,
+		},
+	}))
+
+	writer := &mockResponseWriter{}
+	ctx := newTLSResponseCtx(t, stateID, writer, sm, 10, []byte{TLSFlagStart})
+	success, err := h.HandleResponse(ctx)
+	assert.False(t, success)
+	assert.ErrorIs(t, err, eap.ErrTLSUnexpectedFragment)
+	assert.Nil(t, writer.response)
+}
+
+func TestTLSHandler_HandleResponse_EmptyInitialTLSRoundRejected(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	const stateID = "state-tls-empty"
+	require.NoError(t, sm.SetState(stateID, &eap.EAPState{StateID: stateID, Method: EAPMethodTLS}))
+
+	writer := &mockResponseWriter{}
+	ctx := newTLSResponseCtx(t, stateID, writer, sm, 10, []byte{0x00})
+	success, err := h.HandleResponse(ctx)
+	assert.False(t, success)
+	assert.ErrorIs(t, err, eap.ErrTLSUnexpectedFragment)
+	assert.Nil(t, writer.response)
 }
 
 // TestTLSHandler_HandleResponse_FragmentReassembly drives a fragmented inbound
@@ -212,12 +251,13 @@ func TestTLSHandler_HandleResponse_FragmentReassembly(t *testing.T) {
 	require.True(t, ok)
 	assert.Equal(t, []byte("abcd"), buf)
 
-	// Fragment 3 (final) -> complete message, rejected safely (M1.3 pending).
+	// Fragment 3 (final) -> complete message; with no TLS material configured
+	// the handler rejects safely with eap.ErrTLSNotConfigured.
 	writer = &mockResponseWriter{}
 	ctx = newTLSResponseCtx(t, stateID, writer, sm, 14, frag3)
 	success, err = h.HandleResponse(ctx)
 	assert.False(t, success)
-	assert.ErrorIs(t, err, eap.ErrTLSHandshakeNotImplemented)
+	assert.ErrorIs(t, err, eap.ErrTLSNotConfigured)
 	assert.Nil(t, writer.response, "no challenge is written once the message is complete")
 }
 
