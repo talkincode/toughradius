@@ -15,7 +15,6 @@ import {
   useListContext,
   SortButton,
   RaRecord,
-  useDelete,
   useRedirect,
 } from 'react-admin';
 import {
@@ -56,12 +55,14 @@ import {
   Speed as SpeedIcon,
   SignalCellularAlt as SignalIcon,
   Print as PrintIcon,
+  Tune as CoaIcon,
   FilterList as FilterIcon,
   Search as SearchIcon,
   Clear as ClearIcon,
 } from '@mui/icons-material';
 import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
 import { ServerPagination, ActiveFilters } from '../components';
+import { apiRequest, ApiError } from '../utils/apiClient';
 
 const LARGE_LIST_PER_PAGE = 50;
 
@@ -84,6 +85,26 @@ interface OnlineSession extends RaRecord {
   acct_output_octets?: number;
   acct_input_packets?: number;
   acct_output_packets?: number;
+}
+
+// CoaActionResult mirrors the backend coaActionResponse payload (snake_case JSON)
+// returned by POST /sessions/:id/disconnect and /sessions/:id/coa. The exchange
+// runs synchronously against the NAS: success=false with timed_out or an
+// error_cause still means the request was delivered, so HTTP status stays 200.
+interface CoaActionResult {
+  action: string;
+  target: string;
+  username: string;
+  acct_session_id: string;
+  identifier?: number;
+  success: boolean;
+  response_code?: string;
+  error_cause?: number;
+  error_cause_text?: string;
+  attempts: number;
+  rtt_ms: number;
+  timed_out: boolean;
+  error?: string;
 }
 
 const formatDuration = (seconds?: number): string => {
@@ -439,8 +460,12 @@ const SessionHeaderCard = () => {
   const notify = useNotify();
   const refresh = useRefresh();
   const redirect = useRedirect();
-  const [deleteOne, { isPending: isDeleting }] = useDelete();
   const [disconnectDialogOpen, setDisconnectDialogOpen] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+  const [coaDialogOpen, setCoaDialogOpen] = useState(false);
+  const [isApplyingCoa, setIsApplyingCoa] = useState(false);
+  const [coaSessionTimeout, setCoaSessionTimeout] = useState('');
+  const [coaFilterId, setCoaFilterId] = useState('');
 
   const handleCopy = useCallback((text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -452,24 +477,125 @@ const SessionHeaderCard = () => {
     notify('数据已刷新', { type: 'info' });
   }, [refresh, notify]);
 
-  const handleDisconnect = useCallback(() => {
+  // notifyActionResult turns a CoaActionResult into a localized toast. An ACK is a
+  // success; a timeout is a warning (request sent, NAS silent); an explicit NAK is
+  // an error carrying the RFC 5176 Error-Cause text when the NAS provided one.
+  const notifyActionResult = useCallback((result: CoaActionResult, actionLabel: string) => {
+    if (result.success) {
+      notify(translate('resources.radius/online.notifications.action_ack', {
+        _: '%{action}已被 NAS 确认（往返 %{rtt}ms）',
+        action: actionLabel,
+        rtt: result.rtt_ms,
+      }), { type: 'success' });
+      return;
+    }
+    if (result.timed_out) {
+      notify(translate('resources.radius/online.notifications.action_timeout', {
+        _: '%{action}超时：NAS 在 %{attempts} 次尝试内未响应',
+        action: actionLabel,
+        attempts: result.attempts,
+      }), { type: 'warning' });
+      return;
+    }
+    const cause = result.error_cause_text
+      || result.response_code
+      || result.error
+      || translate('resources.radius/online.notifications.unknown_cause', { _: '未知原因' });
+    notify(translate('resources.radius/online.notifications.action_nak', {
+      _: '%{action}被 NAS 拒绝：%{cause}',
+      action: actionLabel,
+      cause,
+    }), { type: 'error' });
+  }, [notify, translate]);
+
+  const notifyActionError = useCallback((error: unknown, actionLabel: string) => {
+    const message = error instanceof ApiError || error instanceof Error
+      ? error.message
+      : String(error);
+    notify(translate('resources.radius/online.notifications.action_error', {
+      _: '%{action}请求失败：%{message}',
+      action: actionLabel,
+      message,
+    }), { type: 'error' });
+  }, [notify, translate]);
+
+  const handleDisconnect = useCallback(async () => {
     if (!record?.id) return;
-    deleteOne(
-      'radius/online',
-      { id: record.id },
-      {
-        onSuccess: () => {
-          notify(translate('resources.radius/online.notifications.disconnected', { _: '用户已强制下线' }), { type: 'success' });
-          redirect('list', 'radius/online');
-        },
-        onError: (error) => {
-          const errorMessage = error instanceof Error ? error.message : String(error);
-          notify(translate('resources.radius/online.notifications.disconnect_error', { _: '强制下线失败' }) + `: ${errorMessage}`, { type: 'error' });
-        },
+    const actionLabel = translate('resources.radius/online.actions.disconnect', { _: '强制下线' });
+    setIsDisconnecting(true);
+    try {
+      const result = await apiRequest<CoaActionResult>(
+        `/sessions/${record.id}/disconnect`,
+        { method: 'POST' },
+      );
+      notifyActionResult(result, actionLabel);
+      if (result.success) {
+        setDisconnectDialogOpen(false);
+        // The backend leaves the local session record for the NAS to clear via
+        // Accounting-Stop; return to the list, which reflects that once it lands.
+        redirect('list', 'radius/online');
       }
-    );
-    setDisconnectDialogOpen(false);
-  }, [record, deleteOne, notify, translate, redirect]);
+    } catch (error) {
+      notifyActionError(error, actionLabel);
+    } finally {
+      setIsDisconnecting(false);
+    }
+  }, [record, translate, redirect, notifyActionResult, notifyActionError]);
+
+  const handleCoaSubmit = useCallback(async () => {
+    if (!record?.id) return;
+    const actionLabel = translate('resources.radius/online.actions.coa', { _: '修改授权' });
+    const payload: { session_timeout?: number; filter_id?: string } = {};
+
+    const timeoutInput = coaSessionTimeout.trim();
+    if (timeoutInput !== '') {
+      const parsed = Number(timeoutInput);
+      if (!Number.isFinite(parsed) || parsed < 0 || !Number.isInteger(parsed)) {
+        notify(translate('resources.radius/online.dialog.coa_timeout_invalid', {
+          _: '会话超时必须是非负整数（秒）',
+        }), { type: 'warning' });
+        return;
+      }
+      payload.session_timeout = parsed;
+    }
+
+    const filterInput = coaFilterId.trim();
+    if (filterInput !== '') {
+      if (filterInput.length > 253) {
+        notify(translate('resources.radius/online.dialog.coa_filter_invalid', {
+          _: 'Filter-Id 长度不能超过 253 个字符',
+        }), { type: 'warning' });
+        return;
+      }
+      payload.filter_id = filterInput;
+    }
+
+    if (payload.session_timeout === undefined && payload.filter_id === undefined) {
+      notify(translate('resources.radius/online.dialog.coa_no_changes', {
+        _: '请至少填写一个要变更的字段',
+      }), { type: 'warning' });
+      return;
+    }
+
+    setIsApplyingCoa(true);
+    try {
+      const result = await apiRequest<CoaActionResult>(
+        `/sessions/${record.id}/coa`,
+        { method: 'POST', body: JSON.stringify(payload) },
+      );
+      notifyActionResult(result, actionLabel);
+      if (result.success) {
+        setCoaDialogOpen(false);
+        setCoaSessionTimeout('');
+        setCoaFilterId('');
+        refresh();
+      }
+    } catch (error) {
+      notifyActionError(error, actionLabel);
+    } finally {
+      setIsApplyingCoa(false);
+    }
+  }, [record, translate, notify, coaSessionTimeout, coaFilterId, refresh, notifyActionResult, notifyActionError]);
 
   if (!record) return null;
 
@@ -584,10 +710,25 @@ const SessionHeaderCard = () => {
 
           {/* 右侧：操作按钮 */}
           <Box className="no-print" sx={{ display: 'flex', gap: 1 }}>
+            <Tooltip title={translate('resources.radius/online.actions.coa', { _: '修改授权' })}>
+              <IconButton
+                onClick={() => setCoaDialogOpen(true)}
+                disabled={isApplyingCoa}
+                sx={{
+                  bgcolor: theme => alpha(theme.palette.warning.main, 0.1),
+                  color: 'warning.main',
+                  '&:hover': {
+                    bgcolor: theme => alpha(theme.palette.warning.main, 0.2),
+                  },
+                }}
+              >
+                <CoaIcon />
+              </IconButton>
+            </Tooltip>
             <Tooltip title={translate('resources.radius/online.actions.disconnect', { _: '强制下线' })}>
               <IconButton
                 onClick={() => setDisconnectDialogOpen(true)}
-                disabled={isDeleting}
+                disabled={isDisconnecting}
                 sx={{
                   bgcolor: theme => alpha(theme.palette.error.main, 0.1),
                   color: 'error.main',
@@ -642,7 +783,7 @@ const SessionHeaderCard = () => {
         {/* 强制下线确认对话框 */}
         <Dialog
           open={disconnectDialogOpen}
-          onClose={() => setDisconnectDialogOpen(false)}
+          onClose={() => { if (!isDisconnecting) setDisconnectDialogOpen(false); }}
           maxWidth="xs"
           fullWidth
         >
@@ -660,7 +801,7 @@ const SessionHeaderCard = () => {
           <DialogActions sx={{ px: 3, pb: 2 }}>
             <Button
               onClick={() => setDisconnectDialogOpen(false)}
-              disabled={isDeleting}
+              disabled={isDisconnecting}
             >
               {translate('ra.action.cancel', { _: '取消' })}
             </Button>
@@ -668,12 +809,72 @@ const SessionHeaderCard = () => {
               onClick={handleDisconnect}
               color="error"
               variant="contained"
-              disabled={isDeleting}
+              disabled={isDisconnecting}
               startIcon={<DisconnectIcon />}
             >
-              {isDeleting
+              {isDisconnecting
                 ? translate('resources.radius/online.actions.disconnecting', { _: '正在下线...' })
                 : translate('resources.radius/online.actions.disconnect', { _: '强制下线' })}
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* 修改授权（CoA）对话框 */}
+        <Dialog
+          open={coaDialogOpen}
+          onClose={() => { if (!isApplyingCoa) setCoaDialogOpen(false); }}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogTitle sx={{ color: 'warning.main', fontWeight: 600 }}>
+            {translate('resources.radius/online.dialog.coa_title', { _: '修改在线授权' })}
+          </DialogTitle>
+          <DialogContent>
+            <DialogContentText sx={{ mb: 2 }}>
+              {translate('resources.radius/online.dialog.coa_content', {
+                _: '向 NAS 发送 RFC 5176 CoA 请求以更新用户 "%{username}" 的会话授权，仅填写需要变更的字段。',
+                username: record.username || '未知用户',
+              })}
+            </DialogContentText>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              <MuiTextField
+                label={translate('resources.radius/online.dialog.coa_session_timeout', { _: '会话超时（秒）' })}
+                value={coaSessionTimeout}
+                onChange={e => setCoaSessionTimeout(e.target.value)}
+                type="number"
+                size="small"
+                fullWidth
+                disabled={isApplyingCoa}
+                inputProps={{ min: 0, step: 1 }}
+              />
+              <MuiTextField
+                label={translate('resources.radius/online.dialog.coa_filter_id', { _: '过滤器 ID (Filter-Id)' })}
+                value={coaFilterId}
+                onChange={e => setCoaFilterId(e.target.value)}
+                size="small"
+                fullWidth
+                disabled={isApplyingCoa}
+                inputProps={{ maxLength: 253 }}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <Button
+              onClick={() => setCoaDialogOpen(false)}
+              disabled={isApplyingCoa}
+            >
+              {translate('ra.action.cancel', { _: '取消' })}
+            </Button>
+            <Button
+              onClick={handleCoaSubmit}
+              color="warning"
+              variant="contained"
+              disabled={isApplyingCoa}
+              startIcon={<CoaIcon />}
+            >
+              {isApplyingCoa
+                ? translate('resources.radius/online.actions.applying', { _: '正在应用...' })
+                : translate('resources.radius/online.actions.apply', { _: '应用' })}
             </Button>
           </DialogActions>
         </Dialog>
