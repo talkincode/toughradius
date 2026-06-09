@@ -495,7 +495,7 @@ func updateRadiusUser(c echo.Context) error {
 		updates["ip_addr"] = updateData.IpAddr
 	}
 	if updateData.IpV6Addr != "" {
-		updates["ipv6_addr"] = updateData.IpV6Addr
+		updates["ip_v6_addr"] = updateData.IpV6Addr
 	}
 	if updateData.IPv6PrefixPool != "" {
 		updates["ipv6_prefix_pool"] = updateData.IPv6PrefixPool
@@ -641,6 +641,16 @@ func applyUserFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 	// Handle IP address filter
 	if ipAddr := strings.TrimSpace(c.QueryParam("ip_addr")); ipAddr != "" {
 		db = db.Where("radius_user.ip_addr = ?", ipAddr)
+	}
+
+	// Handle static IPv6 address filter (partial match; RFC 6911 Framed-IPv6-Address)
+	if ipv6Addr := strings.TrimSpace(c.QueryParam("ipv6_addr")); ipv6Addr != "" {
+		db = db.Where("radius_user.ip_v6_addr LIKE ?", "%"+escapeUserLikePattern(ipv6Addr)+"%")
+	}
+
+	// Handle static Delegated-IPv6-Prefix filter (partial match; RFC 4818)
+	if delegatedPrefix := strings.TrimSpace(c.QueryParam("delegated_ipv6_prefix")); delegatedPrefix != "" {
+		db = db.Where("radius_user.delegated_ipv6_prefix LIKE ?", "%"+escapeUserLikePattern(delegatedPrefix)+"%")
 	}
 
 	// Global search across multiple fields (with escaped pattern)
