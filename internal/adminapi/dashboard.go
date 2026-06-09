@@ -11,7 +11,9 @@ import (
 	"gorm.io/gorm"
 )
 
-// DashboardStats represents the dashboard statistics structure
+// DashboardStats is the aggregated snapshot returned by [GetDashboardStats]. It
+// combines real-time counters, today's volumes, and several time series so the
+// admin dashboard can render its entire overview from a single response.
 type DashboardStats struct {
 	TotalUsers          int64                     `json:"total_users"`          // Total number of users
 	OnlineUsers         int64                     `json:"online_users"`         // Currently online users
@@ -43,24 +45,29 @@ type DashboardIPv6Stats struct {
 	AdoptionRate              float64 `json:"adoption_rate"`                // Percentage of online sessions carrying any IPv6 attribute
 }
 
-// DashboardAuthTrendPoint represents authentication count per day
+// DashboardAuthTrendPoint is one day in the dashboard's 7-day authentication
+// trend: the per-day count of accounting sessions started on that date.
 type DashboardAuthTrendPoint struct {
 	Date  string `json:"date"`  // Date label formatted as YYYY-MM-DD
 	Count int64  `json:"count"` // Authentication count for the day
 }
 
-// DashboardTrafficPoint represents hourly upload/download traffic
+// DashboardTrafficPoint is one hour in the dashboard's 24-hour traffic series,
+// holding the upstream and downstream totals (GB) for sessions started in that
+// hour.
 type DashboardTrafficPoint struct {
 	Hour       string  `json:"hour"`        // Hour label formatted as YYYY-MM-DD HH:00
 	UploadGB   float64 `json:"upload_gb"`   // Upload traffic in GB within the hour
 	DownloadGB float64 `json:"download_gb"` // Download traffic in GB within the hour
 }
 
-// DashboardProfileSlice represents online user distribution grouped by profile
+// DashboardProfileSlice is one slice of the online-user-by-profile distribution:
+// the profile identified by ProfileID/ProfileName and the number of currently
+// online users assigned to it.
 type DashboardProfileSlice struct {
-	ProfileID   int64  `json:"profile_id"`
-	ProfileName string `json:"profile_name"`
-	Value       int64  `json:"value"`
+	ProfileID   int64  `json:"profile_id"`   // Profile primary key
+	ProfileName string `json:"profile_name"` // Profile display name
+	Value       int64  `json:"value"`        // Online users assigned to the profile
 }
 
 const (
@@ -69,7 +76,23 @@ const (
 	bytesInGB     = float64(1024 * 1024 * 1024)
 )
 
-// GetDashboardStats retrieves dashboard statistics
+// GetDashboardStats handles GET /api/v1/dashboard/stats, returning a single
+// [DashboardStats] snapshot that the admin dashboard renders in one request. It
+// aggregates real-time counters (total, online, disabled, and expired users, and
+// total profiles), today's volumes (authentication and accounting record counts
+// plus today's upstream/downstream traffic in GB), and three time series — a
+// 7-day daily authentication trend, a 24-hour hourly upload/download traffic
+// series, and the distribution of online users across profiles — together with an
+// IPv6 adoption summary ([DashboardIPv6Stats]).
+//
+// "Today" is measured from the local start of day; the trend and traffic series
+// are zero-filled so every day/hour bucket is present even with no data, and
+// traffic is reported in GB (bytes divided by 1024^3). TodayAuthCount is an
+// estimate derived from sessions that started today, not a dedicated
+// authentication counter. A failure in any individual section is logged and that
+// section falls back to zero/empty rather than failing the whole response. Any
+// authenticated operator may call it.
+//
 // @Summary get dashboard statistics
 // @Tags Dashboard
 // @Accept json
@@ -124,7 +147,8 @@ func GetDashboardStats(c echo.Context) error {
 	return ok(c, stats)
 }
 
-// registerDashboardRoutes registers the dashboard routes
+// registerDashboardRoutes wires the dashboard endpoint, which is open to any
+// authenticated operator.
 func registerDashboardRoutes() {
 	webserver.ApiGET("/dashboard/stats", GetDashboardStats)
 }
