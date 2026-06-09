@@ -13,35 +13,9 @@ import (
 // buildTTLSAVP encodes a single EAP-TTLS AVP in the RFC 5281 §10.1 wire format:
 // AVP Code (4) | Flags (1) | AVP Length (3) | [Vendor-ID (4)] | Data, zero-padded
 // to the next four-octet boundary. It is the test-side counterpart of
-// parseTTLSAVPs and is shared by the AVP and inner-auth tests.
+// parseTTLSAVPs and delegates to the production encoder so the two never drift.
 func buildTTLSAVP(code uint32, mandatory bool, vendorID uint32, value []byte) []byte {
-	headerLen := ttlsAVPHeaderLen
-	var flags byte
-	if mandatory {
-		flags |= ttlsAVPFlagMandatory
-	}
-	if vendorID != 0 {
-		flags |= ttlsAVPFlagVendor
-		headerLen = ttlsAVPVendorHeaderLen
-	}
-
-	length := headerLen + len(value)
-	padded := (length + 3) &^ 3
-	buf := make([]byte, padded)
-
-	binary.BigEndian.PutUint32(buf[0:4], code)
-	buf[4] = flags
-	buf[5] = byte((length >> 16) & 0xFF)
-	buf[6] = byte((length >> 8) & 0xFF)
-	buf[7] = byte(length & 0xFF)
-
-	off := ttlsAVPHeaderLen
-	if vendorID != 0 {
-		binary.BigEndian.PutUint32(buf[8:12], vendorID)
-		off = ttlsAVPVendorHeaderLen
-	}
-	copy(buf[off:], value)
-	return buf
+	return encodeTTLSAVP(code, vendorID, mandatory, value)
 }
 
 // padTTLSPassword NUL-pads a PAP password to a 16-octet multiple, as an EAP-TTLS

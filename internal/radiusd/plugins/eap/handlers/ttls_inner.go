@@ -28,26 +28,35 @@ const ttlsMSKLength = 64
 // the decrypted AVP flight (RFC 5281 §10/§11) and the handler validates it
 // without first emitting an inner request.
 //
-// M9.3 implements inner PAP (RFC 5281 §11.2.5) only:
+// Two inner methods are supported:
 //
-//	peer   -> User-Name AVP + User-Password AVP   (inside the TLS tunnel)
-//	server -> Access-Accept + MS-MPPE keys         (success == true)
+//   - PAP (RFC 5281 §11.2.5), a single round: the peer sends a User-Name and a
+//     User-Password AVP; on a constant-time password match the MS-MPPE keys are
+//     derived and the handler grants.
+//   - MS-CHAP-V2 (RFC 5281 §11.2.4), two rounds: the peer sends User-Name,
+//     MS-CHAP-Challenge and MS-CHAP2-Response AVPs validated against an
+//     implicitly-derived challenge (see ttls_mschapv2.go); the handler tunnels
+//     an MS-CHAP2-Success AVP and grants once the peer acknowledges with an empty
+//     EAP-TTLS frame (inner == nil on that final round).
 //
-// The User-Password AVP carries the cleartext password (the TLS tunnel, not
-// RADIUS obfuscation, protects it), NUL-padded to a 16-octet multiple; the
-// padding is stripped and the value compared in constant time against the
-// configured password. On success the MS-MPPE-Send/Recv keys are derived from
-// the TLS session (RFC 5281 §8 / RFC 5705 / RFC 2548) and added to the outer
-// Access-Accept (ctx.Response), and the handler reports success so the
-// dispatcher grants access.
-//
-// A malformed AVP flight rejects with eap.ErrTTLSInnerProtocol; a well-formed
-// flight that omits the User-Password AVP (an inner CHAP / MS-CHAP / MS-CHAP-V2
-// method, scheduled for M9.4) rejects with eap.ErrTTLSInnerNotImplemented; a
-// password mismatch rejects with eap.ErrPasswordMismatch. The handler never
-// returns success without a User-Password AVP that matches the configured
-// password.
+// On success the MS-MPPE-Send/Recv keys are always derived from the TLS session
+// (RFC 5281 §8 / RFC 5705 / RFC 2548) — not from any inner secret — and added to
+// the outer Access-Accept (ctx.Response). A malformed AVP flight rejects with
+// eap.ErrTTLSInnerProtocol; a well-formed flight carrying neither a User-Password
+// nor an MS-CHAP2-Response AVP (an inner CHAP / MS-CHAP / tunneled-EAP method,
+// not yet supported) rejects with eap.ErrTTLSInnerNotImplemented; a password or
+// response mismatch rejects with eap.ErrPasswordMismatch. The handler never
+// reports success without a verified inner credential.
 func (h *TTLSHandler) handleInnerAVP(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine, inner []byte) ([]byte, bool, error) {
+	if getString(state, stateKeyInnerPhase) == ttlsInnerPhaseMSCHAPv2Ack {
+		return h.handleMSCHAPv2Ack(ctx, state, engine, inner)
+	}
+	return h.handleInnerStart(ctx, state, engine, inner)
+}
+
+// handleInnerStart processes the peer's opening inner AVP flight and dispatches
+// to the matching inner authentication method.
+func (h *TTLSHandler) handleInnerStart(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine, inner []byte) ([]byte, bool, error) {
 	if len(inner) == 0 {
 		return nil, false, fmt.Errorf("%w: empty inner AVP flight", eap.ErrTTLSInnerProtocol)
 	}
@@ -57,23 +66,35 @@ func (h *TTLSHandler) handleInnerAVP(ctx *eap.EAPContext, state *eap.EAPState, e
 		return nil, false, err
 	}
 
-	rawPwd, ok := findTTLSAVP(avps, ttlsAVPCodeUserPassword)
-	if !ok {
-		// Only PAP (a User-Password AVP) is supported in M9.3. An inner
-		// CHAP/MS-CHAP/MS-CHAP-V2 exchange (RFC 5281 §11.2.2-§11.2.4) carries
-		// other AVPs and lands in M9.4; reject it explicitly rather than
-		// granting.
-		return nil, false, fmt.Errorf("%w: no User-Password AVP (only inner PAP is supported)", eap.ErrTTLSInnerNotImplemented)
-	}
-
 	// Record the inner User-Name (the real identity inside the tunnel, which may
-	// differ from an anonymous outer identity) for logging/context. Mapping it
-	// to a distinct user record for the password lookup is deferred (mirroring
-	// PEAP), so the lookup below still uses ctx.User.
+	// differ from an anonymous outer identity) for logging/context and for the
+	// MS-CHAP-V2 username hash. Mapping it to a distinct user record for the
+	// password lookup is deferred (mirroring PEAP), so the lookup still uses
+	// ctx.User.
 	if name, ok := findTTLSAVP(avps, ttlsAVPCodeUserName); ok {
 		setString(state, stateKeyInnerIdentity, string(name))
 	}
 
+	if rawPwd, ok := findTTLSAVP(avps, ttlsAVPCodeUserPassword); ok {
+		return h.handleInnerPAP(ctx, engine, rawPwd)
+	}
+	if _, ok := findTTLSVendorAVP(avps, ttlsVendorMicrosoft, ttlsMSCHAP2ResponseCode); ok {
+		return h.handleInnerMSCHAPv2(ctx, state, engine, avps)
+	}
+
+	// Neither PAP nor MS-CHAP-V2: an inner CHAP / MS-CHAP / tunneled-EAP method
+	// (RFC 5281 §11.2.2-§11.2.3 / §11.3), not yet supported. Reject explicitly
+	// rather than granting.
+	return nil, false, fmt.Errorf("%w: no User-Password or MS-CHAP2-Response AVP (only inner PAP and MS-CHAP-V2 are supported)", eap.ErrTTLSInnerNotImplemented)
+}
+
+// handleInnerPAP validates an inner PAP exchange (RFC 5281 §11.2.5). The
+// User-Password AVP carries the cleartext password (the TLS tunnel, not RADIUS
+// obfuscation, protects it), NUL-padded to a 16-octet multiple; the padding is
+// stripped and the value compared in constant time against the configured
+// password. On a match the MS-MPPE keys are derived and the handler grants in a
+// single round.
+func (h *TTLSHandler) handleInnerPAP(ctx *eap.EAPContext, engine *tlsengine.Engine, rawPwd []byte) ([]byte, bool, error) {
 	password, err := ctx.PwdProvider.GetPassword(ctx.User, ctx.IsMacAuth)
 	if err != nil {
 		return nil, false, err
@@ -88,6 +109,20 @@ func (h *TTLSHandler) handleInnerAVP(ctx *eap.EAPContext, state *eap.EAPState, e
 		return nil, false, err
 	}
 	return nil, true, nil
+}
+
+// innerUsername returns the username used for inner credential checks: the inner
+// User-Name AVP value when present, otherwise the outer User-Name. Mapping an
+// anonymous outer identity to a distinct user record for the password lookup is
+// deferred (mirroring PEAP).
+func (h *TTLSHandler) innerUsername(ctx *eap.EAPContext, state *eap.EAPState) string {
+	if id := getString(state, stateKeyInnerIdentity); id != "" {
+		return id
+	}
+	if ctx.User != nil {
+		return ctx.User.Username
+	}
+	return state.Username
 }
 
 // deriveMPPEKeys exports the EAP-TTLS MSK from the TLS session (RFC 5705 with the
