@@ -30,7 +30,17 @@ var allowedProfileSortFields = map[string]bool{
 	"updated_at":       true,
 }
 
-// ListProfiles retrieves the RADIUS profile list
+// ListProfiles handles GET /api/v1/radius-profiles, returning a paginated page
+// of RADIUS profiles (the rate, address-pool, and binding plans assigned to
+// users). It accepts the page and perPage query parameters (perPage is clamped
+// to 1..100, default 10) and optional name, status, addr_pool, and domain
+// filters; name, addr_pool, and domain match case-insensitively while status
+// matches exactly. The sort and order parameters are validated against
+// allowedProfileSortFields so the ORDER BY clause cannot be used for SQL
+// injection. The response is the paginated [Response] envelope: the page of
+// [domain.RadiusProfile] in Data and the total/page/page-size counters in Meta.
+// Any authenticated operator may call it.
+//
 // @Summary get the RADIUS profile list
 // @Tags RadiusProfile
 // @Param page query int false "Page number"
@@ -98,7 +108,11 @@ func ListProfiles(c echo.Context) error {
 	return paged(c, profiles, total, page, perPage)
 }
 
-// GetProfile retrieves a single RADIUS profile
+// GetProfile handles GET /api/v1/radius-profiles/:id, returning the single
+// RADIUS profile with the given numeric id. It responds 400 with code
+// INVALID_ID when the path parameter is not an integer and 404 with code
+// NOT_FOUND when no such profile exists. Any authenticated operator may call it.
+//
 // @Summary get RADIUS profile detail
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
@@ -118,7 +132,13 @@ func GetProfile(c echo.Context) error {
 	return ok(c, profile)
 }
 
-// ProfileRequest represents the mixed-type JSON sent from the frontend
+// ProfileRequest is the JSON body accepted by CreateProfile. Several fields are
+// typed as interface{} because the frontend may send them as either a string or
+// a boolean/number: Status accepts a string or a boolean (true -> "enabled",
+// false -> "disabled"); BindMac and BindVlan accept a boolean or a number
+// (true -> 1, false -> 0); and NodeId accepts a number or a numeric string.
+// toRadiusProfile normalizes these into a [domain.RadiusProfile]. The struct
+// tags drive request validation.
 type ProfileRequest struct {
 	Name                    string      `json:"name" validate:"required,min=1,max=100"`
 	Status                  interface{} `json:"status"` // Can be string or boolean
@@ -135,7 +155,8 @@ type ProfileRequest struct {
 	NodeId                  interface{} `json:"node_id"` // Can be int64 or string
 }
 
-// toRadiusProfile Convert ProfileRequest Convert to RadiusProfile
+// toRadiusProfile converts the ProfileRequest into a [domain.RadiusProfile],
+// applying the mixed-type coercions described on [ProfileRequest].
 func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
 		Name:                    pr.Name,
@@ -199,7 +220,10 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	return profile
 }
 
-// ProfileUpdateRequest represents the mixed-type JSON sent from the frontend for updates
+// ProfileUpdateRequest is the JSON body accepted by UpdateProfile. It mirrors
+// [ProfileRequest] but treats every field as optional: an empty Name leaves the
+// stored name unchanged, and UpdateProfile applies only the supplied fields. The
+// same mixed-type coercion rules apply, performed by toRadiusProfile.
 type ProfileUpdateRequest struct {
 	Name                    string      `json:"name" validate:"omitempty,min=1,max=100"`
 	Status                  interface{} `json:"status"` // Can be string or boolean
@@ -216,7 +240,9 @@ type ProfileUpdateRequest struct {
 	NodeId                  interface{} `json:"node_id"` // Can be int64 or string
 }
 
-// toRadiusProfile Convert ProfileUpdateRequest Convert to RadiusProfile
+// toRadiusProfile converts the ProfileUpdateRequest into a
+// [domain.RadiusProfile] carrying the candidate update fields; UpdateProfile
+// then writes only the ones that are set.
 func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
 		Name:                    pr.Name,
@@ -280,7 +306,13 @@ func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
 	return profile
 }
 
-// CreateProfile creates a RADIUS profile
+// CreateProfile handles POST /api/v1/radius-profiles, creating a RADIUS profile
+// from the JSON body bound to [ProfileRequest] and validated against its struct
+// tags. The profile name must be unique; a duplicate is rejected 409 with code
+// NAME_EXISTS. An unset status defaults to "enabled". On success it returns the
+// persisted [domain.RadiusProfile]. This endpoint requires an admin or super
+// operator (see requireAdmin).
+//
 // @Summary create a RADIUS profile
 // @Tags RadiusProfile
 // @Param profile body ProfileRequest true "Profile information"
@@ -319,7 +351,16 @@ func CreateProfile(c echo.Context) error {
 	return ok(c, profile)
 }
 
-// UpdateProfile updates a RADIUS profile
+// UpdateProfile handles PUT /api/v1/radius-profiles/:id, applying a partial
+// update to the profile with the given id from the JSON body bound to
+// [ProfileUpdateRequest]. Only the supplied (non-empty, non-negative) fields are
+// written, so omitted fields keep their stored value. A non-integer id responds
+// 400 INVALID_ID and an unknown id 404 NOT_FOUND; changing the name to one
+// already used by another profile is rejected 409 with code NAME_EXISTS. After a
+// successful update it invalidates the profile cache so dynamic users pick up
+// the change, then returns the refreshed [domain.RadiusProfile]. This endpoint
+// requires an admin or super operator (see requireAdmin).
+//
 // @Summary update a RADIUS profile
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
@@ -413,7 +454,13 @@ func UpdateProfile(c echo.Context) error {
 	return ok(c, profile)
 }
 
-// DeleteProfile Delete RADIUS Profile
+// DeleteProfile handles DELETE /api/v1/radius-profiles/:id, removing the profile
+// with the given id. A profile still referenced by one or more users is not
+// deleted; it is rejected 409 with code IN_USE and the offending user_count in
+// the response details. A non-integer id responds 400 INVALID_ID. On success it
+// invalidates the profile cache and returns a confirmation message. This
+// endpoint requires an admin or super operator (see requireAdmin).
+//
 // @Summary Delete RADIUS Profile
 // @Tags RadiusProfile
 // @Param id path int true "Profile ID"
@@ -446,7 +493,9 @@ func DeleteProfile(c echo.Context) error {
 	})
 }
 
-// registerProfileRoutes registers profile routes
+// registerProfileRoutes wires the RADIUS profile endpoints. The read endpoints
+// (list and detail) are open to any authenticated operator; the create, update,
+// and delete endpoints are guarded by requireAdmin.
 func registerProfileRoutes() {
 	webserver.ApiGET("/radius-profiles", ListProfiles)
 	webserver.ApiGET("/radius-profiles/:id", GetProfile)
