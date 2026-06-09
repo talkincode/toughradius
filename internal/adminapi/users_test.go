@@ -183,6 +183,9 @@ func TestListUsersWithFieldFilters(t *testing.T) {
 
 	require.NoError(t, db.Model(alice).Update("ip_addr", "192.168.1.100").Error)
 	require.NoError(t, db.Model(bob).Update("ip_addr", "192.168.1.101").Error)
+	require.NoError(t, db.Model(alice).Update("IpV6Addr", "2001:db8:a::1").Error)
+	require.NoError(t, db.Model(alice).Update("delegated_ipv6_prefix", "2001:db8:a100::/56").Error)
+	require.NoError(t, db.Model(bob).Update("IpV6Addr", "2001:db8:b::1").Error)
 
 	tests := []struct {
 		name           string
@@ -249,6 +252,28 @@ func TestListUsersWithFieldFilters(t *testing.T) {
 				users := resp.Data.([]domain.RadiusUser)
 				assert.Equal(t, "alice", users[0].Username)
 				assert.Equal(t, "192.168.1.100", users[0].IpAddr)
+			},
+		},
+		{
+			name:           "Filter by static IPv6 address - partial match",
+			queryParams:    "?ipv6_addr=2001:db8:a",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				users := resp.Data.([]domain.RadiusUser)
+				assert.Equal(t, "alice", users[0].Username)
+				assert.Equal(t, "2001:db8:a::1", users[0].IpV6Addr)
+			},
+		},
+		{
+			name:           "Filter by Delegated-IPv6-Prefix",
+			queryParams:    "?delegated_ipv6_prefix=2001:db8:a100",
+			expectedStatus: http.StatusOK,
+			expectedCount:  1,
+			checkResponse: func(t *testing.T, resp *Response) {
+				users := resp.Data.([]domain.RadiusUser)
+				assert.Equal(t, "alice", users[0].Username)
+				assert.Equal(t, "2001:db8:a100::/56", users[0].DelegatedIpv6Prefix)
 			},
 		},
 		{
@@ -655,6 +680,17 @@ func TestUpdateUser(t *testing.T) {
 			checkResult: func(t *testing.T, u *domain.RadiusUser) {
 				assert.Equal(t, "2001:db8:abcd::/48", u.DelegatedIpv6Prefix)
 				assert.Equal(t, "pd-pool-x", u.DelegatedIpv6PrefixPool)
+			},
+		},
+		{
+			name:   "Static IPv6 address persists (regression: ip_v6_addr column)",
+			userID: fmt.Sprintf("%d", user.ID),
+			requestBody: `{
+				"ipv6_addr": "2001:db8:face::1"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, u *domain.RadiusUser) {
+				assert.Equal(t, "2001:db8:face::1", u.IpV6Addr)
 			},
 		},
 	}

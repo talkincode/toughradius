@@ -94,6 +94,9 @@ interface RadiusUser extends RaRecord {
   expire_time?: string;
   ip_addr?: string;
   ipv6_addr?: string;
+  ipv6_prefix_pool?: string;
+  delegated_ipv6_prefix?: string;
+  delegated_ipv6_prefix_pool?: string;
   remark?: string;
   created_at?: string;
   updated_at?: string;
@@ -1290,6 +1293,33 @@ export const RadiusUserEdit = () => {
                 size="small"
               />
             </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="ipv6_prefix_pool"
+                label="IPv6前缀池"
+                helperText="Framed-IPv6-Pool 池名（SLAAC 无状态地址自动配置）"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="delegated_ipv6_prefix"
+                label="委派IPv6前缀"
+                helperText="静态 Delegated-IPv6-Prefix，如 2001:db8:1234::/48"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="delegated_ipv6_prefix_pool"
+                label="委派IPv6前缀池"
+                helperText="DHCPv6-PD 前缀委派池名（RFC 6911 §2.4，与 IPv6 前缀池区分）"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
           </FieldGrid>
         </FormSection>
 
@@ -1955,6 +1985,54 @@ const UserDetails = () => {
                   record.ipv6_addr ? (
                     <Chip
                       label={record.ipv6_addr}
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                    />
+                  ) : (
+                    <EmptyValue message="未分配" />
+                  )
+                }
+              />
+              <DetailItem
+                label={translate('resources.radius/users.fields.ipv6_prefix_pool', { _: 'IPv6前缀池' })}
+                value={
+                  record.ipv6_prefix_pool ? (
+                    <Chip
+                      label={record.ipv6_prefix_pool}
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                    />
+                  ) : (
+                    <EmptyValue message="未分配" />
+                  )
+                }
+              />
+              <DetailItem
+                label={translate('resources.radius/users.fields.delegated_ipv6_prefix', { _: '委派IPv6前缀' })}
+                value={
+                  record.delegated_ipv6_prefix ? (
+                    <Chip
+                      label={record.delegated_ipv6_prefix}
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                    />
+                  ) : (
+                    <EmptyValue message="未分配" />
+                  )
+                }
+              />
+              <DetailItem
+                label={translate('resources.radius/users.fields.delegated_ipv6_prefix_pool', { _: '委派IPv6前缀池' })}
+                value={
+                  record.delegated_ipv6_prefix_pool ? (
+                    <Chip
+                      label={record.delegated_ipv6_prefix_pool}
                       size="small"
                       color="info"
                       variant="outlined"
