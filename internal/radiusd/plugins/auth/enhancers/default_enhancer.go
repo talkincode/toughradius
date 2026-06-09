@@ -13,6 +13,7 @@ import (
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3162"
+	"layeh.com/radius/rfc6911"
 )
 
 // DefaultAcceptEnhancer sets standard RADIUS attributes
@@ -75,6 +76,16 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 		if _, ipnet, err := net.ParseCIDR(ipv6Prefix); err == nil {
 			_ = rfc3162.FramedIPv6Prefix_Set(response, ipnet) //nolint:errcheck
 		}
+
+		// Set Framed-IPv6-Address (RFC 6911, Section 2.1) when the user has a
+		// single static host address (bare address or an explicit /128). RFC 6911
+		// defines this attribute to assign a complete IPv6 address, which is more
+		// natural for DHCPv6 than the RFC 3162 Framed-Interface-Id +
+		// Framed-IPv6-Prefix split, and permits it to coexist with
+		// Framed-IPv6-Prefix in the same Access-Accept.
+		if ip, ok := singleIPv6Host(user.IpV6Addr); ok {
+			_ = rfc6911.FramedIPv6Address_Set(response, ip) //nolint:errcheck
+		}
 	}
 
 	// Use getter method for IPv6PrefixPool
@@ -98,4 +109,24 @@ func getIntConfig(authCtx *auth.AuthContext, name string, def int64) int64 {
 		}
 	}
 	return def
+}
+
+// singleIPv6Host reports whether value designates a single IPv6 host address and
+// returns the parsed address. It accepts either a bare IPv6 address
+// ("2001:db8::1") or an explicit /128 prefix ("2001:db8::1/128"). It returns
+// ok=false for IPv4 values, multi-host prefixes (for example /64, which are
+// advertised as Framed-IPv6-Prefix instead), and unparseable input.
+func singleIPv6Host(value string) (net.IP, bool) {
+	addr := value
+	if idx := strings.IndexByte(value, '/'); idx >= 0 {
+		if value[idx+1:] != "128" {
+			return nil, false
+		}
+		addr = value[:idx]
+	}
+	ip := net.ParseIP(addr)
+	if ip == nil || ip.To4() != nil {
+		return nil, false
+	}
+	return ip, true
 }

@@ -28,7 +28,7 @@
 | --- | --- | --- | --- | --- |
 | M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 已交付 |
 | M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 已交付 |
-| M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 计划中 |
+| M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 进行中 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
@@ -110,11 +110,12 @@
 - **协议规范**：`docs/rfcs/rfc3162-radius-ipv6.txt`、`rfc4818-ipv6-prefix-delegation.txt`（Delegated-IPv6-Prefix）、`rfc6911-ipv6-access-networks.txt`。
 
 子任务：
-- [ ] M3.1 协议层解析 / 下发 Delegated-IPv6-Prefix 等属性
+- [x] M3.1 协议层解析 / 下发 IPv6 访问属性（计费侧解析 Framed-IPv6-Address(RFC 6911)、修正 Framed/Delegated-IPv6-Prefix 缺省值落库；Access-Accept 下发 Framed-IPv6-Address）
 - [ ] M3.2 数据库字段与迁移（PostgreSQL + SQLite 双兼容）
 - [ ] M3.3 用户 / 会话 / 计费的 IPv6 过滤与展示
 - [ ] M3.4 Dashboard IPv6 维度统计
 - [ ] M3.5 端到端测试与字段一致性校验（`test/integration/`，CI 自动执行）
+- [ ] M3.6 下发 Delegated-IPv6-Prefix / Delegated-IPv6-Prefix-Pool（依赖 M3.2 新增用户/Profile 配置字段；RFC 4818 / RFC 6911，按 RFC 6911 §2.4 与 Framed-IPv6-Pool 区分用途，禁止混用同一字段）
 
 验收口径：IPv6 全链路可查询、可过滤、可审计，双数据库一致；**验收由 `test/integration/` 的 CI 用例背书**。
 

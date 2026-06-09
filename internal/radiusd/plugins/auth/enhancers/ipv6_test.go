@@ -4,10 +4,13 @@ import (
 	"context"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc3162"
+	"layeh.com/radius/rfc6911"
 )
 
 // TestDefaultAcceptEnhancer_IPv6Prefix tests IPv6 prefix setting
@@ -83,6 +86,69 @@ func TestDefaultAcceptEnhancer_IPv6Prefix(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestDefaultAcceptEnhancer_FramedIPv6Address verifies that a static single-host
+// IPv6 address is advertised as a Framed-IPv6-Address attribute (RFC 6911),
+// while multi-host prefixes, IPv4, empty, and N/A values are not.
+func TestDefaultAcceptEnhancer_FramedIPv6Address(t *testing.T) {
+	tests := []struct {
+		name       string
+		ipv6Addr   string
+		expectSet  bool
+		expectedIP string
+	}{
+		{name: "bare host address", ipv6Addr: "2001:db8::1", expectSet: true, expectedIP: "2001:db8::1"},
+		{name: "explicit /128 host", ipv6Addr: "2001:db8::2/128", expectSet: true, expectedIP: "2001:db8::2"},
+		{name: "network prefix /64 is not a host", ipv6Addr: "2001:db8::1/64", expectSet: false},
+		{name: "empty", ipv6Addr: "", expectSet: false},
+		{name: "NA value", ipv6Addr: "N/A", expectSet: false},
+		{name: "invalid", ipv6Addr: "not-an-ip", expectSet: false},
+		{name: "ipv4 ignored", ipv6Addr: "192.0.2.1", expectSet: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			enhancer := NewDefaultAcceptEnhancer()
+			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
+			user := &domain.RadiusUser{IpV6Addr: tt.ipv6Addr}
+			authCtx := &auth.AuthContext{Response: response, User: user}
+
+			require.NoError(t, enhancer.Enhance(context.Background(), authCtx))
+
+			ip := rfc6911.FramedIPv6Address_Get(response)
+			if tt.expectSet {
+				require.NotNil(t, ip)
+				assert.Equal(t, tt.expectedIP, ip.String())
+			} else {
+				assert.Nil(t, ip)
+			}
+		})
+	}
+}
+
+// TestSingleIPv6Host exercises the host-address classifier directly.
+func TestSingleIPv6Host(t *testing.T) {
+	tests := []struct {
+		value   string
+		wantOK  bool
+		wantStr string
+	}{
+		{"2001:db8::1", true, "2001:db8::1"},
+		{"2001:db8::1/128", true, "2001:db8::1"},
+		{"2001:db8::/64", false, ""},
+		{"192.0.2.1", false, ""},
+		{"192.0.2.1/128", false, ""},
+		{"not-an-ip", false, ""},
+		{"", false, ""},
+	}
+	for _, tt := range tests {
+		ip, ok := singleIPv6Host(tt.value)
+		assert.Equal(t, tt.wantOK, ok, "value=%q", tt.value)
+		if tt.wantOK {
+			assert.Equal(t, tt.wantStr, ip.String(), "value=%q", tt.value)
+		}
 	}
 }
 
