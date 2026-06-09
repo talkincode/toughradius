@@ -211,8 +211,6 @@ const customChineseMessages: TranslationMessages = {
         coa_filter_invalid: 'Filter-Id 长度不能超过 253 个字符',
       },
       notifications: {
-        disconnected: '用户已强制下线',
-        disconnect_error: '强制下线失败',
         action_ack: '%{action}已被 NAS 确认（往返 %{rtt}ms）',
         action_timeout: '%{action}超时：NAS 在 %{attempts} 次尝试内未响应',
         action_nak: '%{action}被 NAS 拒绝：%{cause}',

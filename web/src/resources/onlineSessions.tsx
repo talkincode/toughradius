@@ -783,7 +783,7 @@ const SessionHeaderCard = () => {
         {/* 强制下线确认对话框 */}
         <Dialog
           open={disconnectDialogOpen}
-          onClose={() => setDisconnectDialogOpen(false)}
+          onClose={() => { if (!isDisconnecting) setDisconnectDialogOpen(false); }}
           maxWidth="xs"
           fullWidth
         >

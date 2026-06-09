@@ -211,8 +211,6 @@ const customEnglishMessages: TranslationMessages = {
         coa_filter_invalid: 'Filter-Id must not exceed 253 characters',
       },
       notifications: {
-        disconnected: 'User has been disconnected',
-        disconnect_error: 'Failed to disconnect user',
         action_ack: '%{action} acknowledged by NAS (RTT %{rtt}ms)',
         action_timeout: '%{action} timed out: NAS did not respond after %{attempts} attempts',
         action_nak: '%{action} rejected by NAS: %{cause}',
