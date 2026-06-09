@@ -611,7 +611,7 @@ const customEnglishMessages: TranslationMessages = {
     radius: {
       eap_method: {
         title: 'EAP Method',
-        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and carries legacy inner authentication (PAP / MS-CHAP-V2) for LDAP / legacy / mixed back ends; it is being delivered incrementally (M9) and currently negotiates the tunnel Start only.',
+        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require EapTlsCertFile/EapTlsKeyFile and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.',
       },
       eap_enabled_handlers: {
         title: 'Enabled EAP Handlers',

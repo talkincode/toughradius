@@ -137,11 +137,12 @@ func NewSettingsPEAPConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 // minimum TLS version (radius.EapTlsMinVersion).
 //
 // Security note: the outer tunnel carries cleartext-equivalent inner
-// credentials (PAP sends the password inside the tunnel), so the server-only
-// TLS tunnel must stay strong — this provider keeps ServerOnly authentication
-// with the operator-selected minimum TLS version and never weakens it. Until
-// the server certificate/key are configured it returns a nil config so the
-// handler rejects safely with eap.ErrTLSNotConfigured.
+// credentials — inner PAP sends the password inside the tunnel, and inner
+// MS-CHAP-V2 shares the NTLMv1-like attack surface noted by Microsoft — so the
+// server-only TLS tunnel must stay strong: this provider keeps ServerOnly
+// authentication with the operator-selected minimum TLS version and never
+// weakens it. Until the server certificate/key are configured it returns a nil
+// config so the handler rejects safely with eap.ErrTLSNotConfigured.
 func NewSettingsTTLSConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 	return func() (*tlsengine.Config, error) {
 		if reader == nil {
