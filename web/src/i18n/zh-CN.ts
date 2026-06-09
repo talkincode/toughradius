@@ -599,6 +599,22 @@ const customChineseMessages: TranslationMessages = {
         title: '启用的 EAP 处理器',
         description: '使用逗号分隔的处理器名称，* 表示允许所有已注册的处理器',
       },
+      eap_tls_cert_file: {
+        title: 'EAP-TLS 服务器证书',
+        description: 'EAP-TLS 握手时服务器出示的 PEM 证书路径，留空则不启用 EAP-TLS',
+      },
+      eap_tls_key_file: {
+        title: 'EAP-TLS 服务器私钥',
+        description: '与 EAP-TLS 服务器证书匹配的 PEM 私钥路径，留空则不启用 EAP-TLS',
+      },
+      eap_tls_ca_file: {
+        title: 'EAP-TLS 客户端 CA 证书',
+        description: '用于校验 EAP-TLS 客户端证书链的 PEM CA 证书包路径，留空则不启用 EAP-TLS',
+      },
+      eap_tls_min_version: {
+        title: 'EAP-TLS 最低 TLS 版本',
+        description: 'EAP-TLS 握手允许的最低 TLS 协议版本（1.2 或 1.3）',
+      },
       ignore_password: {
         title: '忽略密码校验',
         description: '启用后认证流程将跳过密码验证，仅用于调试或外部认证场景',
