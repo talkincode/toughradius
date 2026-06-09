@@ -50,6 +50,8 @@
 | TR-F020 | 构建部署 | 构建、Docker 和前端嵌入 | 支持 Go 构建、前端构建、静态资源嵌入、Docker 镜像和 Makefile 工作流。 | `Makefile`, `Dockerfile`, `web/vite.config.ts`, `web/static.go`, `.github` | 已实现 | 构建链路变更必须同时验证后端二进制和前端产物。 |
 | TR-F021 | 协议资料 | RFC 与字典资料维护 | 保留 RADIUS、EAP、RadSec、VSA 相关 RFC 和 FreeRADIUS 字典资料，支撑协议实现和厂商扩展。 | `docs/rfcs`, `share`, `internal/radiusd/vendors` | 已实现 | 协议资料更新不能替代代码测试；新增资料需说明对应实现或待实现功能编号。 |
 | TR-F022 | 安全与质量 | 测试、验证、输入约束和审计习惯 | 通过单元测试、集成测试、白名单排序、输入校验、密码哈希、JWT 和日志指标降低回归风险。 | `*_test.go`, `.golangci.yml`, `internal/adminapi/helpers.go`, `pkg/validator`, `pkg/common` | 核心基线 | 安全边界变更必须有针对性测试；不得为了快速开发移除验证或鉴权。 |
+| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、功能清单、路线图、RFC 索引等），提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs/`, `book.toml`（规划）, `.github/workflows` | 可扩展 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` 不扩展为产品门户；需与现有 GitBook 发布集成协调，避免双发布管线冲突。 |
+| TR-F024 | 代码规范 | Go API 文档与注释规范 | 对齐 Go 标准库风格：导出标识符必须有 godoc 注释，包注释（`doc.go`）、可运行示例（`Example`）、错误与并发语义说明齐备，并可由 lint / CI 度量。 | `.agents/skills/document-go-apis`, 各包 doc 注释, `.golangci.yml` | 可扩展 | 规范优先增量推进，不一次性重写历史注释；以标准库 godoc 习惯为准，禁止无信息量的机械式注释。 |
 
 ## 优先扩展功能方向
 
@@ -60,6 +62,13 @@
 | P1 | TR-F004 | EAP-TLS 支持 | 在现有 EAP handler 体系下新增 EAP-TLS，支持证书校验、TLS 握手状态管理、用户身份映射和明确的失败原因。 | 不重写 EAP 协调器；先交付最小可用认证链路，再扩展证书策略、吊销检查和管理端配置。 |
 | P1 | TR-F010 / TR-F012 / TR-F013 | CoA 动态授权支持 | 在用户管理面板提供授权策略触发能力，支持对在线用户发起 CoA / Disconnect 等动态授权动作，并记录触发结果。 | 后端先抽象 CoA 发送服务和审计结果；前端只暴露可验证的安全动作，避免直接拼装任意 RADIUS 包。 |
 | P1 | TR-F007 / TR-F011 / TR-F015 | IPv6 相关能力增强 | 完善 IPv6 地址、IPv6 前缀、Delegated-IPv6-Prefix 在用户、在线会话、计费记录、审计日志和 Dashboard 中的查询与展示。 | 不只做字段展示；协议解析、数据库字段、过滤条件、前端列表和审计口径必须一起闭环。 |
+| P1 | TR-F004 | PEAPv0 / EAP-MSCHAPv2 | 用服务器证书建立 PEAP TLS 隧道，隧道内运行 EAP-MSCHAPv2，为 Windows / AD / 传统企业网络提供兼容认证，并正确导出 MPPE 会话密钥。 | 兼容性优先，不作为先进安全卖点；文档与配置必须明示 MS-CHAPv2 存在类似 NTLMv1 的攻击面（见 Microsoft 文档），默认不削弱外层 TLS；不重写 EAP 协调器。 |
+| P1 | TR-F004 | EAP-TTLS（隧道 + 内层 PAP/CHAP/MS-CHAP/MS-CHAPv2） | 按 RFC 5281 用服务器证书建立 TLS 隧道，隧道内承载 PAP / CHAP / MS-CHAP / MS-CHAP-V2（及内层 EAP），让 LDAP、老账号库、混合客户端无需立即改造证书体系即可接入。 | 内层方法逐个交付（先 PAP，再 MS-CHAP-V2）；后端用户库适配走现有认证流水线，不在协议入口写库分支；不重写 EAP 协调器。 |
+| P2 | TR-F004 | EAP-TLS 1.3 升级（RFC 9190） | 在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生，遵循 RFC 9427 的 TLS 1.3 派生规则。 | 保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射。 |
+| P3 | TR-F004 | TEAP（隧道，machine + user chaining） | 按 RFC 7170 / RFC 9930（TEAPv1）实现现代隧道 EAP，支持 machine + user chaining、证书 + 密码组合认证；TLS 1.3 下采用 RFC 9427 派生规则。 | 中长期方向，客户端生态弱于 PEAP；仅在客户端环境可控时优先，不与 PEAP / TTLS 抢第一版资源。 |
+| P3 | TR-F004 | EAP-PWD（按需） | 按 RFC 5931 以共享口令完成认证，不为每客户端签发证书，适合 IoT、嵌入式、受控小规模设备。 | 非通用企业 Wi-Fi 首选；按需推进，避免为协议完整性拖入维护沼泽。 |
+| P2 | TR-F023 | 双语文档站点（mdbook） | 用 mdbook 搭建中英文双语文档站点，收编 README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引等散落文档，提供统一导航、本地构建与 CI 产物校验。 | 先规划与骨架，再分批迁移；中英文目录结构对应、同步维护；文档不替代以代码与测试为准的口径。 |
+| P2 | TR-F024 | Go API 文档与注释规范（标准库风格） | 制定并落地 godoc / 标准库风格注释规范：导出标识符注释齐全、包注释、`Example`、错误与并发语义说明；提供配套技能与可度量门禁。 | 增量推进，按模块补齐；以信息量为准，禁止机械式无意义注释。 |
 
 ## 当前非目标方向
 

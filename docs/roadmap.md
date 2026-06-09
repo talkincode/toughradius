@@ -33,6 +33,12 @@
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
+| M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 计划中 |
+| M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 计划中 |
+| M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
+| M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
+| M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
+| M13 | 双语文档站点（mdbook） | TR-F023 | P2 | 计划中 |
 
 ---
 
@@ -114,8 +120,8 @@
 
 ## M4 — Agent 开发体系与质量门禁
 
-- **关联编号**：`TR-F022`
-- **目标**：建立可持续的 agent 驱动开发流程、技能库与质量门禁。
+- **关联编号**：`TR-F022` / `TR-F024`
+- **目标**：建立可持续的 agent 驱动开发流程、技能库与质量门禁，并对齐标准库风格的 Go API 文档规范。
 - **状态**：进行中
 
 子任务：
@@ -125,8 +131,10 @@
 - [x] M4.6 协议规范检索技能与 CI 验收测试技能
 - [x] M4.9 约定本机无头运行 agent 的方式与护栏（不在 CI 执行；见 `.agents/README.md`）
 - [x] M4.10 建立总调度与自我迭代技能（`orchestrate-roadmap` 统筹委托循环 + `groom-roadmap` 路线图自我迭代）
+- [x] M4.11 制定 Go API 文档/注释规范并建立 `document-go-apis` 技能（标准库 godoc 风格，关联 `TR-F024`）
 - [ ] M4.7 为 agent 任务建立 PR 模板与 review checklist
 - [ ] M4.8 收敛 agent 产出质量度量（CI 通过率、回滚率）
+- [ ] M4.12 按模块增量补齐导出标识符 godoc 注释与包注释（顺序建议：`internal/adminapi` → `internal/radiusd` → `pkg`），并探索 lint 度量（`TR-F024`）
 
 ## M5 — 厂商 VSA 覆盖扩展
 
@@ -166,13 +174,119 @@
 
 ---
 
+## M8 — PEAPv0 / EAP-MSCHAPv2 认证支持
+
+- **关联编号**：`TR-F004`
+- **目标**：在现有 EAP handler 体系下，用服务器证书建立 PEAP TLS 隧道，隧道内运行 EAP-MSCHAPv2，为 Windows / AD / 传统企业网络提供兼容认证，并正确导出 MPPE 会话密钥。
+- **定位**：兼容性优先，**不是安全先进性卖点**。MS-CHAPv2 类连接存在类似 NTLMv1 的攻击面（见 Microsoft 文档），适合“必须服务一堆旧设备与 AD 用户”的场景；文档与配置必须明示该风险，默认不削弱外层 TLS 强度。
+- **开发边界**：不重写 EAP 协调器；复用 `internal/radiusd/plugins/eap` 注册与状态管理，PEAP 隧道分片与 EAP-TLS 机制对齐；内层 MS-CHAPv2 复用现有 `mschapv2_handler` 校验逻辑。
+- **技能**：`.agents/skills/add-eap-method/SKILL.md`、`.agents/skills/add-config-schema/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`
+- **协议规范**：`docs/rfcs/rfc3748-eap.txt`（EAP）、`rfc2759-mschapv2.txt`（MS-CHAP-V2）、`rfc2548-microsoft-vsa.txt`（MS-MPPE 密钥）、`rfc3579-radius-eap-support.txt`；PEAPv0 无正式 RFC，参考 Microsoft `[MS-PEAP]` 与 IETF `draft-kamath-pppext-peapv0`（本地缺失，按 `reference-rfc` 登记）。
+
+子任务：
+- [ ] M8.1 注册 PEAP handler 骨架与启用列表配置（`EapMethod`）
+- [ ] M8.2 PEAP 外层 TLS 隧道建立与分片重组（复用 EAP-TLS 状态机）
+- [ ] M8.3 隧道内 EAP-MSCHAPv2 交换（复用 mschapv2 校验）与 MPPE 密钥导出
+- [ ] M8.4 明确失败原因 + AuthError 指标 + 单元测试；配置项与默认值（含安全风险说明）
+- [ ] M8.5 在 `test/integration/` 增加 PEAP-MSCHAPv2 端到端验收用例（CI 自动执行）
+
+验收口径：PEAP-MSCHAPv2 客户端（Windows/AD 典型配置）可完成认证，MPPE 密钥正确下发；失败有明确拒绝原因与指标；**验收由 `test/integration/` 的 CI 用例背书**。
+
+## M9 — EAP-TTLS 隧道认证支持
+
+- **关联编号**：`TR-F004`
+- **目标**：按 RFC 5281 用服务器证书建立 TLS 隧道，隧道内承载 PAP / CHAP / MS-CHAP / MS-CHAP-V2 内层认证，让 LDAP、老账号库、混合客户端无需立即改造证书体系即可接入。
+- **定位**：后端适配优先。现实价值是“后端用户库不用立刻改成证书体系”——先用服务器证书保护隧道，再把用户名口令塞进去；很多企业认证体系是历史债务盘出来的，TTLS 是务实的过渡。
+- **开发边界**：内层方法逐个交付（先 PAP，再 MS-CHAP-V2）；后端用户库适配走现有认证流水线，不在协议入口写库分支；不重写 EAP 协调器。
+- **技能**：`.agents/skills/add-eap-method/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`
+- **协议规范**：`docs/rfcs/rfc5281-eap-ttls.txt`（EAP-TTLS）、`rfc3748-eap.txt`、`rfc2759-mschapv2.txt`（内层 MS-CHAP-V2）、`rfc3579-radius-eap-support.txt`；TLS 1.3 隧道按 `rfc9427`（本地缺失，按 `reference-rfc` 登记）。
+
+子任务：
+- [ ] M9.1 注册 EAP-TTLS handler 骨架与启用列表配置
+- [ ] M9.2 外层 TLS 隧道建立与分片重组（复用 EAP-TLS 状态机）
+- [ ] M9.3 隧道内 AVP 封装与 PAP 内层认证（最小可用闭环）
+- [ ] M9.4 增加 MS-CHAP-V2 内层认证与密钥导出
+- [ ] M9.5 明确失败原因 + 指标 + 单元测试；配置项与默认值
+- [ ] M9.6 在 `test/integration/` 增加 TTLS-PAP / TTLS-MSCHAPv2 端到端验收用例（CI 自动执行）
+
+验收口径：TTLS 客户端可经隧道用 PAP / MS-CHAP-V2 完成认证，内层 AVP 解析正确；失败有明确原因与指标；**验收由 `test/integration/` 的 CI 用例背书**。
+
+## M10 — EAP-TLS 1.3 / RFC 9190 升级
+
+- **关联编号**：`TR-F004`
+- **目标**：在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生。
+- **开发边界**：保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射；遵循 RFC 9427 的 TLS 1.3 派生规则。
+- **技能**：`.agents/skills/add-eap-method/SKILL.md`、`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`
+- **协议规范**：`rfc9190`（EAP-TLS 1.3，本地缺失，按 `reference-rfc` 登记）、`rfc9427`（TLS-Based EAP Types and TLS 1.3，本地缺失）、`docs/rfcs/rfc5216-eap-tls.txt`（1.2 基线）、`rfc3748-eap.txt`。
+
+子任务：
+- [ ] M10.1 TLS 1.3 握手协商与版本回退（兼容 1.2 客户端）
+- [ ] M10.2 按 RFC 9190 / RFC 9427 实现 TLS 1.3 密钥派生（MSK/EMSK）
+- [ ] M10.3 `close_notify` / 身份保护等 TLS 1.3 语义差异处理
+- [ ] M10.4 单元测试 + `test/integration/` TLS 1.3 端到端验收用例（CI 自动执行）
+
+验收口径：TLS 1.3 与 1.2 客户端均可完成 EAP-TLS 认证，密钥派生符合 RFC 9190；**验收由 `test/integration/` 的 CI 用例背书**。
+
+## M11 — TEAP 隧道认证（中长期）
+
+- **关联编号**：`TR-F004`
+- **目标**：按 RFC 7170 / RFC 9930（TEAPv1）实现现代隧道 EAP，支持 machine + user chaining、证书 + 密码组合认证，作为 PEAP / FAST 的长期替代。
+- **定位**：中长期路线。客户端生态弱于 PEAP，不适合第一版当主菜；仅在客户端环境完全可控时优先。
+- **开发边界**：不与 PEAP / TTLS 抢第一版资源；复用既有隧道与状态机抽象；TLS 1.3 下采用 RFC 9427 派生规则。
+- **技能**：`.agents/skills/add-eap-method/SKILL.md`、`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`
+- **协议规范**：`docs/rfcs/rfc7170-teap.txt`（TEAP）、`rfc9930`（TEAPv1，本地缺失，按 `reference-rfc` 登记）、`rfc9427`（TLS 1.3 派生，本地缺失）、`rfc3748-eap.txt`。
+
+子任务：
+- [ ] M11.1 TEAP 外层隧道与 TLV 框架（Crypto-Binding、Result TLV）
+- [ ] M11.2 隧道内 EAP 方法链（machine + user chaining）
+- [ ] M11.3 证书 + 密码组合认证与 Crypto-Binding 校验
+- [ ] M11.4 单元测试 + `test/integration/` TEAP 端到端验收用例（CI 自动执行）
+
+验收口径：TEAP 客户端可完成至少一种 chaining 组合认证，Crypto-Binding 校验正确；**验收由 `test/integration/` 的 CI 用例背书**。
+
+## M12 — EAP-PWD 口令认证（按需）
+
+- **关联编号**：`TR-F004`
+- **目标**：按 RFC 5931 以共享口令完成认证，不为每客户端签发证书，适合 IoT、嵌入式、受控小规模设备。
+- **定位**：按需推进，非通用企业 Wi-Fi 首选；不为“协议完整性”把自己拖进维护沼泽。
+- **开发边界**：仅在有明确 IoT / 受控设备需求时排期；复用现有 EAP 注册与状态管理；口令交换的抗字典 / 主动 / 被动攻击特性必须有测试覆盖。
+- **技能**：`.agents/skills/add-eap-method/SKILL.md`、`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`
+- **协议规范**：`rfc5931`（EAP-PWD，本地缺失，按 `reference-rfc` 登记；注意 `docs/rfcs/rfc7542-eap-pwd.txt` 命名有误，RFC 7542 实为 NAI，应补录真正的 RFC 5931）、`rfc3748-eap.txt`。
+
+子任务：
+- [ ] M12.1 注册 EAP-PWD handler 骨架与启用列表配置
+- [ ] M12.2 PWD 口令元素与 PWE 推导（按 RFC 5931，含群组协商）
+- [ ] M12.3 Commit / Confirm 交换与密钥导出
+- [ ] M12.4 单元测试（含抗字典攻击向量）+ `test/integration/` 验收用例（CI 自动执行）
+
+验收口径：EAP-PWD 客户端可用共享口令完成认证，交换符合 RFC 5931；**验收由 `test/integration/` 的 CI 用例背书**。
+
+## M13 — 双语文档站点（mdbook）
+
+- **关联编号**：`TR-F023`
+- **目标**：用 mdbook 搭建中英文双语文档站点，收编散落文档（README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引），提供统一导航与可发布产物。
+- **开发边界**：先骨架与导航，再分批迁移；中英文目录结构对应、同步维护；文档站点不替代以代码与测试为准的口径（遵守 `TR-N003`，不扩展为产品门户）。**注意**：仓库当前已通过 GitBook 集成发布（`docs.toughradius.net` / `www.toughradius.net`），M13 必须先明确 mdbook 与 GitBook 是替代还是并存，避免两套发布管线产生冲突或内容漂移。
+- **技能**：文档工程为主；复用 `.agents/skills/reference-rfc/SKILL.md` 维护协议资料索引、`.agents/skills/align-feature-checklist/SKILL.md` 保持中英文同步。
+
+子任务：
+- [ ] M13.0 评估与现有 GitBook 发布的关系（替代 / 并存），确定单一事实来源与发布管线边界
+- [ ] M13.1 mdbook 骨架：`book.toml` + `src/`（zh / en 双语目录）+ 本地构建（`mdbook build`）
+- [ ] M13.2 迁移核心文档（README / AGENT / SECURITY）为双语章节，原文件保留指向站点的入口
+- [ ] M13.3 收编功能清单 / 路线图 / RFC 索引为站点章节，建立中英文交叉链接
+- [ ] M13.4 CI 增加 `mdbook build` 产物校验（构建失败或坏链即红）
+- [ ] M13.5 （可选）GitHub Pages 部署工作流
+
+验收口径：`mdbook build` 在 CI 通过且无坏链，中英文章节一一对应，核心散落文档可从站点统一访问；**验收由 CI 构建用例背书**。
+
+---
+
 ## Agent 排期约定
 
 - **入口（自动委托）**：收到"自动委托开发 / 继续推进路线图"类指令时，由 [`.agents/skills/orchestrate-roadmap/SKILL.md`](../.agents/skills/orchestrate-roadmap/SKILL.md) 作为总调度统筹一轮：选题 → 选执行 SOP → 派工 → 质量门禁 → PR → 迭代路线图。
-- 调度优先级：`M1 → M2 → M3`，P2/P3 在 P1 里程碑无可执行子任务时填充。
+- 调度优先级：先 P1（`M2 → M3 → M8 → M9`），再 P2（`M4 / M5 / M7 / M10 / M13`），最后 P3（`M6 / M11 / M12`）；同优先级里程碑按序号取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
 - 单次 agent 任务只认领一个未勾选子任务（最小闭环），完成后在本文件勾选并在 PR 引用里程碑编号。
 - **自我迭代**：每轮交付后由 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选已交付项、更新里程碑状态、回填/拆分/重排子任务，并保持本文件与功能清单状态一致。
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。
 - 每个涉及协议或数据流的子任务，交付时必须带 **CI 可自动执行的验收测试**（单元或 `test/integration/`）。
-- 选任务口径：`docs/roadmap.md` 自上而下第一个未勾选的 `- [ ] M*.*`。agent 在**本机**用你自己的 agent 运行，不在 CI 执行；运行参考与护栏见 [`.agents/README.md`](../.agents/README.md)。
+- 选任务口径：优先取**优先级最高里程碑**中自上而下第一个未勾选的 `- [ ] M*.*`（优先级见里程碑总览的优先级列与上面的调度优先级排期）；同优先级里程碑按序号顺序。agent 在**本机**用你自己的 agent 运行，不在 CI 执行；运行参考与护栏见 [`.agents/README.md`](../.agents/README.md)。
 
