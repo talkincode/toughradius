@@ -42,6 +42,27 @@ func TestMapEAPDispatchError(t *testing.T) {
 			contains:    "eap-tls trust configuration missing",
 		},
 		{
+			name:        "peap inner protocol violation maps to reject-other with clear reason",
+			input:       fmt.Errorf("wrap: %w", eap.ErrPEAPInnerProtocol),
+			metricsType: app.MetricsRadiusRejectOther,
+			stage:       StageEAPDispatch,
+			contains:    "peap inner eap-mschapv2 protocol violation",
+		},
+		{
+			name:        "peap inner not implemented maps to reject-other with clear reason",
+			input:       eap.ErrPEAPInnerNotImplemented,
+			metricsType: app.MetricsRadiusRejectOther,
+			stage:       StageEAPDispatch,
+			contains:    "peap inner eap method unavailable",
+		},
+		{
+			name:        "peap inner password mismatch maps to passwd metric",
+			input:       eap.ErrPasswordMismatch,
+			metricsType: app.MetricsRadiusRejectPasswdError,
+			stage:       StageEAPDispatch,
+			contains:    "eap password validation failed",
+		},
+		{
 			name:        "unknown eap error falls back to reject-other metric",
 			input:       errors.New("boom"),
 			metricsType: app.MetricsRadiusRejectOther,

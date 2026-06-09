@@ -196,6 +196,10 @@ func mapEAPDispatchError(err error) error {
 		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-tls handshake failed", err)
 	case stderrs.Is(err, eap.ErrTLSUnexpectedFragment):
 		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-tls fragmentation exchange failed", err)
+	case stderrs.Is(err, eap.ErrPEAPInnerProtocol):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "peap inner eap-mschapv2 protocol violation", err)
+	case stderrs.Is(err, eap.ErrPEAPInnerNotImplemented):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "peap inner eap method unavailable", err)
 	case stderrs.Is(err, eap.ErrStateNotFound):
 		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap session state not found", err)
 	case stderrs.Is(err, eap.ErrUnsupportedEAPType):
