@@ -54,7 +54,19 @@ func parseSessionTime(s string) (time.Time, error) {
 	return time.Time{}, &time.ParseError{Layout: "multiple", Value: s, Message: "unable to parse time"}
 }
 
-// ListOnlineSessions List online sessions
+// ListOnlineSessions handles GET /api/v1/sessions, returning a paginated page of
+// the currently online RADIUS sessions ([domain.RadiusOnline]). It accepts the
+// page and perPage query parameters (perPage is clamped to 1..100, default 10)
+// and orders by acct_start_time DESC unless overridden by sort and order, which
+// are validated against allowedSessionSortFields so the ORDER BY clause cannot be
+// used for SQL injection. Sessions may be filtered by username, framed_ipv6_address,
+// framed_ipv6_prefix, delegated_ipv6_prefix, mac_addr, and acct_session_id (each a
+// substring match whose LIKE wildcards are escaped), by nas_addr and framed_ipaddr
+// (exact match), and by an acct_start_time_gte / acct_start_time_lte window whose
+// bounds accept RFC 3339, HTML datetime-local, "2006-01-02 15:04:05", or date-only
+// strings (an unparseable bound is ignored rather than erroring). The response is
+// the paginated Response envelope. Any authenticated operator may call it.
+//
 // @Summary List online sessions
 // @Tags OnlineSession
 // @Param page query int false "Page number"
@@ -152,7 +164,11 @@ func ListOnlineSessions(c echo.Context) error {
 	return paged(c, sessions, total, page, perPage)
 }
 
-// GetOnlineSession Get single online session
+// GetOnlineSession handles GET /api/v1/sessions/:id, returning the single online
+// session ([domain.RadiusOnline]) with the given id. A non-integer id responds
+// 400 INVALID_ID and an unknown id 404 NOT_FOUND. Any authenticated operator may
+// call it.
+//
 // @Summary Get online session details
 // @Tags OnlineSession
 // @Param id path int true "Session ID"
@@ -172,7 +188,20 @@ func GetOnlineSession(c echo.Context) error {
 	return ok(c, session)
 }
 
-// DeleteOnlineSession Force user offline
+// DeleteOnlineSession handles DELETE /api/v1/sessions/:id, forcing the user of the
+// online session with the given id offline. It removes the session record and, as
+// a best-effort side effect, sends an RFC 5176 Disconnect-Request to the session's
+// NAS so the device actually tears the connection down. That Disconnect is
+// dispatched asynchronously — it does not block or affect the HTTP response — with
+// a 5s timeout to the NAS CoA port (resolveCoaPort, defaulting to 3799); its
+// ACK/NAK outcome is logged, not returned. When the NAS is not found in the
+// database the record is still deleted and only a warning is logged. A non-integer
+// id responds 400 INVALID_ID, an unknown id 404 NOT_FOUND, and a failed delete
+// 500 DELETE_FAILED. On success it returns a confirmation message. Any
+// authenticated operator may call it; for a Disconnect or CoA re-authorization that
+// does not also delete local session state, see the admin-only POST
+// /sessions/:id/disconnect and /sessions/:id/coa actions.
+//
 // @Summary Force user offline
 // @Tags OnlineSession
 // @Param id path int true "Session ID"
@@ -261,7 +290,9 @@ func resolveCoaPort(coaPort int) int {
 	return coaPort
 }
 
-// registerSessionRoutes Register online session routes
+// registerSessionRoutes wires the online-session endpoints. The list, detail, and
+// delete (force-offline) endpoints are open to any authenticated operator; the
+// RFC 5176 Disconnect and CoA re-authorization actions are guarded by requireAdmin.
 func registerSessionRoutes() {
 	webserver.ApiGET("/sessions", ListOnlineSessions)
 	webserver.ApiGET("/sessions/:id", GetOnlineSession)
