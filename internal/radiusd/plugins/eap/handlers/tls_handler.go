@@ -248,6 +248,15 @@ func resetReassembler(state *eap.EAPState) {
 	clearKey(state, stateKeyRxHasLen)
 }
 
+// reassemblyInProgress reports whether an inbound TLS message is partially
+// reassembled on the state, i.e. earlier fragments are buffered awaiting more.
+// It distinguishes a peer's bare fragment acknowledgement that follows partial
+// inbound data from one that stands alone (an EAP-TTLS empty-frame result
+// acknowledgement, RFC 5281 §11.2.4).
+func reassemblyInProgress(state *eap.EAPState) bool {
+	return len(loadReassembler(state).Buffer()) > 0
+}
+
 // --- small typed helpers over the untyped state.Data map ------------------
 
 func getFragments(state *eap.EAPState) []*tlsfragment.Packet {

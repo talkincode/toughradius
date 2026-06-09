@@ -120,6 +120,51 @@ func findTTLSAVP(avps []ttlsAVP, code uint32) ([]byte, bool) {
 	return nil, false
 }
 
+// findTTLSVendorAVP returns the value of the first AVP carrying the given
+// Vendor-ID and Code (the V flag was set) and whether such an AVP was present.
+// It is used for the Microsoft MS-CHAP AVPs that an inner MS-CHAP-V2 exchange
+// tunnels (RFC 5281 §11.2.4, RFC 2548); use findTTLSAVP for base-protocol AVPs.
+func findTTLSVendorAVP(avps []ttlsAVP, vendorID, code uint32) ([]byte, bool) {
+	for i := range avps {
+		if avps[i].VendorID == vendorID && avps[i].Code == code {
+			return avps[i].Data, true
+		}
+	}
+	return nil, false
+}
+
+// encodeTTLSAVP serializes a single EAP-TTLS AVP (RFC 5281 §10.1) and appends the
+// zero padding to the next four-octet boundary. A non-zero vendorID sets the V
+// flag and emits the 4-octet Vendor-ID; mandatory sets the M flag. It builds the
+// AVPs the TTLS server tunnels back to the peer (for example MS-CHAP2-Success).
+func encodeTTLSAVP(code, vendorID uint32, mandatory bool, data []byte) []byte {
+	headerLen := ttlsAVPHeaderLen
+	var flags byte
+	if mandatory {
+		flags |= ttlsAVPFlagMandatory
+	}
+	if vendorID != 0 {
+		flags |= ttlsAVPFlagVendor
+		headerLen = ttlsAVPVendorHeaderLen
+	}
+
+	length := headerLen + len(data)
+	buf := make([]byte, (length+3)&^3)
+	binary.BigEndian.PutUint32(buf[0:4], code)
+	buf[4] = flags
+	buf[5] = byte((length >> 16) & 0xFF)
+	buf[6] = byte((length >> 8) & 0xFF)
+	buf[7] = byte(length & 0xFF)
+
+	off := ttlsAVPHeaderLen
+	if vendorID != 0 {
+		binary.BigEndian.PutUint32(buf[8:12], vendorID)
+		off = ttlsAVPVendorHeaderLen
+	}
+	copy(buf[off:], data)
+	return buf
+}
+
 // stripTTLSPasswordPadding removes the trailing NUL padding an EAP-TTLS client
 // adds to the PAP password to obfuscate its length (RFC 5281 §11.2.5: the
 // password SHOULD be NUL-padded to a 16-octet multiple). The password is carried

@@ -203,6 +203,17 @@ func (t *tlsTunnel) handleInnerRound(ctx *eap.EAPContext, state *eap.EAPState, f
 		return false, err
 	}
 
+	// A client-speaks-first method (EAP-TTLS) signals a terminal inner result
+	// with an empty EAP-TTLS frame: after an MS-CHAP2-Success is tunneled the
+	// peer acknowledges with a zero-length Data field (RFC 5281 §11.2.4). With no
+	// outbound fragments queued and no inbound reassembly in progress, route that
+	// bare ACK into the inner handler as an empty flight (inner == nil) rather
+	// than blocking ReadApplication on application records the peer will never
+	// send. EAP-TLS/PEAP leave clientSpeaksFirst false and are unaffected.
+	if t.clientSpeaksFirst && frag.IsACK() && !reassemblyInProgress(state) {
+		return t.driveInner(ctx, state, engine, nil)
+	}
+
 	reassembler := loadReassembler(state)
 	complete, err := reassembler.Accept(frag)
 	if err != nil {
