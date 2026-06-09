@@ -115,7 +115,7 @@
 - [x] M3.3 用户 / 会话 / 计费的 IPv6 过滤与展示（会话/计费侧 IPv6 过滤与展示此前已闭环；本轮补齐用户侧：Admin API 用户列表新增 `ipv6_addr`(RFC 6911)/`delegated_ipv6_prefix`(RFC 4818) 过滤，前端用户编辑表单与详情页展示 `ipv6_prefix_pool`/`delegated_ipv6_prefix`/`delegated_ipv6_prefix_pool`（zh/en 双语），并修复用户静态 IPv6 地址更新写入幽灵列 `ipv6_addr` 导致从不落库的历史缺陷（正确列名 `ip_v6_addr`））
 - [x] M3.4 Dashboard IPv6 维度统计（在线会话 IPv6 占比/地址/Framed 前缀/委派前缀此前已闭环但缺测试；本轮新增用户库静态 IPv6 配置维度（已配置静态 IPv6 地址 / 委派前缀用户数），补齐 `TestGetDashboardIPv6Stats` 回归测试覆盖在线与用户两个维度，前端 IPv6 覆盖面板新增用户维度卡片（zh/en 双语））
 - [ ] M3.5 端到端测试与字段一致性校验（`test/integration/`，CI 自动执行）
-- [ ] M3.6 下发 Delegated-IPv6-Prefix / Delegated-IPv6-Prefix-Pool（依赖 M3.2 新增用户/Profile 配置字段；RFC 4818 / RFC 6911，按 RFC 6911 §2.4 与 Framed-IPv6-Pool 区分用途，禁止混用同一字段）
+- [x] M3.6 下发 Delegated-IPv6-Prefix / Delegated-IPv6-Prefix-Pool（先于 M3.5 实现：M3.5 的端到端一致性校验需覆盖下发环节，故按依赖关系前置）：default Access-Accept enhancer 从 `RadiusUser.DelegatedIpv6Prefix` 下发 Delegated-IPv6-Prefix（RFC 4818 #123，裸地址归一为 /128，IPv4/非法值跳过避免畸形 4 字节前缀），并经 `GetDelegatedIPv6PrefixPool` 下发 Delegated-IPv6-Prefix-Pool（RFC 6911 #171，支持 Profile 继承，按 §2.4 与 Framed-IPv6-Pool 区分）；含单元测试覆盖网络前缀/裸地址归一/继承/跳过
 
 验收口径：IPv6 全链路可查询、可过滤、可审计，双数据库一致；**验收由 `test/integration/` 的 CI 用例背书**。
 

@@ -10,6 +10,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc3162"
+	"layeh.com/radius/rfc4818"
 	"layeh.com/radius/rfc6911"
 )
 
@@ -150,6 +151,103 @@ func TestSingleIPv6Host(t *testing.T) {
 			assert.Equal(t, tt.wantStr, ip.String(), "value=%q", tt.value)
 		}
 	}
+}
+
+// stubProfileCache is a minimal domain.ProfileCacheGetter used to exercise
+// profile-inheritance paths in the enhancer without the real cache.
+type stubProfileCache struct {
+	profile *domain.RadiusProfile
+}
+
+func (s stubProfileCache) Get(int64) (*domain.RadiusProfile, error) {
+	return s.profile, nil
+}
+
+// TestDefaultAcceptEnhancer_DelegatedIPv6Prefix verifies that a user's static
+// Delegated-IPv6-Prefix (RFC 4818, attribute 123) is issued in the Access-Accept,
+// that a bare address is normalised to a single-host /128 delegation, and that
+// empty/N/A/IPv4/unparseable values are skipped rather than emitting a malformed
+// attribute.
+func TestDefaultAcceptEnhancer_DelegatedIPv6Prefix(t *testing.T) {
+	tests := []struct {
+		name           string
+		delegated      string
+		expectSet      bool
+		expectedPrefix string
+	}{
+		{name: "network prefix /48", delegated: "2001:db8:1234::/48", expectSet: true, expectedPrefix: "2001:db8:1234::/48"},
+		{name: "network prefix /56", delegated: "2001:db8:abcd:ee00::/56", expectSet: true, expectedPrefix: "2001:db8:abcd:ee00::/56"},
+		{name: "bare address becomes /128", delegated: "2001:db8::1", expectSet: true, expectedPrefix: "2001:db8::1/128"},
+		{name: "empty", delegated: "", expectSet: false},
+		{name: "NA value", delegated: "N/A", expectSet: false},
+		{name: "ipv4 prefix ignored", delegated: "192.0.2.0/24", expectSet: false},
+		{name: "invalid", delegated: "not-a-prefix", expectSet: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			enhancer := NewDefaultAcceptEnhancer()
+			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
+			user := &domain.RadiusUser{DelegatedIpv6Prefix: tt.delegated}
+			authCtx := &auth.AuthContext{Response: response, User: user}
+
+			require.NoError(t, enhancer.Enhance(context.Background(), authCtx))
+
+			ipnet := rfc4818.DelegatedIPv6Prefix_Get(response)
+			if tt.expectSet {
+				require.NotNil(t, ipnet)
+				assert.Equal(t, tt.expectedPrefix, ipnet.String())
+			} else {
+				assert.Nil(t, ipnet)
+			}
+		})
+	}
+}
+
+// TestDefaultAcceptEnhancer_DelegatedIPv6PrefixPool verifies that the
+// Delegated-IPv6-Prefix-Pool (RFC 6911, attribute 171) is issued from a
+// user-specific value, inherited from the linked profile in dynamic link mode,
+// and skipped when unset/N/A. It must remain distinct from Framed-IPv6-Pool.
+func TestDefaultAcceptEnhancer_DelegatedIPv6PrefixPool(t *testing.T) {
+	t.Run("user-specific value", func(t *testing.T) {
+		enhancer := NewDefaultAcceptEnhancer()
+		response := radius.New(radius.CodeAccessAccept, []byte("secret"))
+		user := &domain.RadiusUser{DelegatedIpv6PrefixPool: "pd-pool-user"}
+		authCtx := &auth.AuthContext{Response: response, User: user}
+
+		require.NoError(t, enhancer.Enhance(context.Background(), authCtx))
+		assert.Equal(t, "pd-pool-user", rfc6911.DelegatedIPv6PrefixPool_GetString(response))
+	})
+
+	t.Run("inherited from profile in dynamic mode", func(t *testing.T) {
+		enhancer := NewDefaultAcceptEnhancer()
+		response := radius.New(radius.CodeAccessAccept, []byte("secret"))
+		user := &domain.RadiusUser{
+			ProfileId:       7,
+			ProfileLinkMode: domain.ProfileLinkModeDynamic,
+		}
+		cache := stubProfileCache{profile: &domain.RadiusProfile{DelegatedIpv6PrefixPool: "pd-pool-profile"}}
+		authCtx := &auth.AuthContext{
+			Response: response,
+			User:     user,
+			Metadata: map[string]interface{}{"profile_cache": cache},
+		}
+
+		require.NoError(t, enhancer.Enhance(context.Background(), authCtx))
+		assert.Equal(t, "pd-pool-profile", rfc6911.DelegatedIPv6PrefixPool_GetString(response))
+	})
+
+	t.Run("unset and NA are skipped", func(t *testing.T) {
+		for _, v := range []string{"", "N/A"} {
+			enhancer := NewDefaultAcceptEnhancer()
+			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
+			user := &domain.RadiusUser{DelegatedIpv6PrefixPool: v}
+			authCtx := &auth.AuthContext{Response: response, User: user}
+
+			require.NoError(t, enhancer.Enhance(context.Background(), authCtx))
+			assert.Empty(t, rfc6911.DelegatedIPv6PrefixPool_GetString(response), "value=%q", v)
+		}
+	})
 }
 
 // TestHuaweiAcceptEnhancer_IPv6Address tests Huawei IPv6 address setting

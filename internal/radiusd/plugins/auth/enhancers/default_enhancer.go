@@ -13,6 +13,7 @@ import (
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3162"
+	"layeh.com/radius/rfc4818"
 	"layeh.com/radius/rfc6911"
 )
 
@@ -92,6 +93,31 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 	ipv6Pool := user.GetIPv6PrefixPool(profileCache)
 	if common.IsNotEmptyAndNA(ipv6Pool) {
 		_ = rfc3162.FramedIPv6Pool_SetString(response, ipv6Pool) //nolint:errcheck
+	}
+
+	// Set Delegated-IPv6-Prefix (RFC 4818, attribute 123) when the user has a
+	// statically delegated prefix for DHCPv6-PD. The value is a CIDR prefix such
+	// as "2001:db8:1234::/48"; a bare address without a prefix length is treated
+	// as a single-host /128 delegation. IPv4 and unparseable values are skipped
+	// so a misconfiguration cannot break the Access-Accept or emit a malformed
+	// (4-byte) prefix.
+	if common.IsNotEmptyAndNA(user.DelegatedIpv6Prefix) {
+		delegated := user.DelegatedIpv6Prefix
+		if !strings.Contains(delegated, "/") {
+			delegated += "/128"
+		}
+		if _, ipnet, err := net.ParseCIDR(delegated); err == nil && ipnet.IP.To4() == nil {
+			_ = rfc4818.DelegatedIPv6Prefix_Set(response, ipnet) //nolint:errcheck
+		}
+	}
+
+	// Set Delegated-IPv6-Prefix-Pool (RFC 6911, attribute 171) so the NAS can
+	// allocate a delegated prefix from a named DHCPv6-PD pool. Per RFC 6911 §2.4
+	// this is distinct from the Framed-IPv6-Pool (SLAAC) set above; it uses the
+	// dedicated getter that honors profile inheritance.
+	delegatedPool := user.GetDelegatedIPv6PrefixPool(profileCache)
+	if common.IsNotEmptyAndNA(delegatedPool) {
+		_ = rfc6911.DelegatedIPv6PrefixPool_SetString(response, delegatedPool) //nolint:errcheck
 	}
 
 	return nil
