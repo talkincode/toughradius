@@ -17,12 +17,16 @@ GitBook site. The two pipelines are kept separate and non-conflicting:
   It is the canonical, version-controlled, review-gated home for documentation
   that must evolve together with the code.
 - **GitBook site** — synchronizes from the repository through GitBook's own GitHub
-  integration (an external service). There is **no GitBook configuration committed
-  to this repository** (`.gitbook.yaml`, `book.json`, and a GitBook `SUMMARY.md`
-  are all absent), so adding `docs-site/` does not change how GitBook builds.
+  integration (an external service). It is configured by a committed
+  **`.gitbook.yaml`** at the repository root, which points GitBook at the same
+  `docs-site/src/` sources, uses `introduction.md` as the landing page, and reads
+  the **shared `SUMMARY.md`** as its table of contents. GitBook therefore renders
+  the curated bilingual handbook instead of inferring a tree from the whole repo.
 
-Because the mdBook sources are confined to `docs-site/` and GitBook is configured
-externally, the two systems do not share a build step and cannot break each other.
+Both pipelines build from the **same** `docs-site/src/` sources, but each keeps its
+own independent configuration (`book.toml` for mdBook, `.gitbook.yaml` for GitBook).
+They do not share a build step and cannot break each other, yet they never drift
+because they read the same chapters and the same `SUMMARY.md`.
 
 ## Where each site is served
 
@@ -40,9 +44,22 @@ The two pipelines publish to **separate** domains, so they never shadow each oth
 ## Single source of truth
 
 To avoid content drift between the two pipelines, every document has exactly one
-canonical home. As scattered documents are migrated into the handbook
+canonical home. Because mdBook and GitBook now read the **same** `docs-site/src/`
+chapters and the same `SUMMARY.md`, the handbook sources are the single source for
+both rendered sites. As scattered documents are migrated into the handbook
 (roadmap items M13.2 / M13.3), the original file keeps a short pointer back to the
 corresponding chapter instead of duplicating its content.
+
+## Editing the shared table of contents
+
+`docs-site/src/SUMMARY.md` is read by **both** tools, so keep it to the subset of
+Markdown that they parse the same way: a top `# Summary` title, a non-bulleted
+`[Introduction / 引言](./introduction.md)` landing link, and **nested bullet lists**
+for grouping. The two language sections are expressed as top-level entries
+(`- [English](./en/overview.md)` and `- [中文](./zh/overview.md)`) with their pages
+nested beneath them. Avoid `#` / `##` part headers for grouping: mdBook only groups
+on `#` while GitBook only groups on `##`, so a nested list is the one form that both
+render identically.
 
 ## Build and validation
 

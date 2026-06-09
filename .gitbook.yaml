@@ -1,0 +1,14 @@
+# GitBook configuration.
+#
+# GitBook and mdBook render the SAME bilingual sources under docs-site/src/:
+# mdBook is driven by docs-site/book.toml, GitBook by this file. Both read the
+# shared docs-site/src/SUMMARY.md, so the handbook is a single source of truth
+# and the two published sites cannot drift apart.
+#
+# `root` points GitBook at the handbook sources; `structure` paths below are
+# resolved relative to that root.
+root: ./docs-site/src/
+
+structure:
+  readme: introduction.md
+  summary: SUMMARY.md
