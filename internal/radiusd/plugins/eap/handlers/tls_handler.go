@@ -43,9 +43,9 @@ const (
 	defaultMaxTLSFragment = 1024
 )
 
-// TLSConfigProvider supplies the per-handshake TLS materials (server
-// certificate and client CA pool) for EAP-TLS. It returns a nil config (and nil
-// error) when EAP-TLS is not configured, in which case the handler rejects
+// TLSConfigProvider supplies the per-handshake TLS materials for EAP-TLS and
+// server-only tunneled methods such as PEAP. It returns a nil config (and nil
+// error) when the method is not configured, in which case the handler rejects
 // safely. The provider is consulted at the start of each handshake so that
 // certificate/CA changes take effect without restarting the handler.
 type TLSConfigProvider func() (*tlsengine.Config, error)
@@ -79,6 +79,17 @@ func NewTLSHandler() *TLSHandler {
 // using the TLS material returned by provider.
 func NewTLSHandlerWithConfig(provider TLSConfigProvider) *TLSHandler {
 	return &TLSHandler{configProvider: provider, maxFragment: defaultMaxTLSFragment}
+}
+
+func (h *TLSHandler) newTunnel() *tlsTunnel {
+	return &tlsTunnel{
+		eapType:        eap.TypeTLS,
+		maxFragment:    h.maxFragment,
+		configProvider: h.configProvider,
+		onHandshakeComplete: func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
+			return h.finalizeWithEngine(ctx, state, engine)
+		},
+	}
 }
 
 // Name returns the handler name.
@@ -132,156 +143,10 @@ func (h *TLSHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 // the verified certificate identity to the RADIUS User-Name before granting
 // access. Every failure path returns an explicit error and never authenticates.
 func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
-	stateID := rfc2865.State_GetString(ctx.Request.Packet)
-	if stateID == "" {
-		return false, eap.ErrStateNotFound
-	}
-
-	state, err := ctx.StateManager.GetState(stateID)
-	if err != nil {
-		return false, err
-	}
-
-	frag, err := tlsfragment.Parse(ctx.EAPMessage.Data)
-	if err != nil {
-		return false, err
-	}
-
-	// Phase A: the server has finished sending its final flight and is waiting
-	// for the peer's closing ACK before EAP-Success.
-	if getBool(state, stateKeyPendingSuccess) {
-		if !frag.IsACK() {
-			closeEngine(state)
-			return false, eap.ErrTLSUnexpectedFragment
-		}
-		return h.finalize(ctx, state)
-	}
-
-	// Phase B: the server is in the middle of sending a fragmented flight; the
-	// peer must ACK before the next fragment is sent (RFC 5216 §2.1.5).
-	if h.hasQueuedFragments(state) {
-		return h.sendNextFragment(ctx, state, frag)
-	}
-
-	// Phase C: accumulate the inbound flight, then feed it to the TLS engine.
-	reassembler := loadReassembler(state)
-	complete, err := reassembler.Accept(frag)
-	if err != nil {
-		closeEngine(state)
-		return false, err
-	}
-
-	if !complete {
-		// More fragments to come: persist progress and acknowledge this
-		// fragment so the peer sends the next one (RFC 5216 §2.1.5).
-		saveReassembler(state, reassembler)
-		if err := ctx.StateManager.SetState(stateID, state); err != nil {
-			closeEngine(state)
-			return false, err
-		}
-		ackData := h.buildFragmentACK(ctx.EAPMessage.Identifier + 1)
-		return false, h.writeChallenge(ctx, stateID, ackData)
-	}
-
-	tlsInput := reassembler.Buffer()
-	resetReassembler(state)
-	return h.advanceHandshake(ctx, state, tlsInput)
+	return h.newTunnel().HandleResponse(ctx)
 }
 
-// advanceHandshake feeds the assembled inbound TLS bytes to the engine and
-// dispatches the resulting outbound flight (fragmenting as needed).
-func (h *TLSHandler) advanceHandshake(ctx *eap.EAPContext, state *eap.EAPState, tlsInput []byte) (bool, error) {
-	engine, err := h.engineFor(state)
-	if err != nil {
-		return false, err
-	}
-
-	out, done, hsErr := engine.Process(tlsInput)
-	if hsErr != nil {
-		// A handshake failure (including an untrusted client certificate)
-		// rejects with an explicit, wrapped reason (RFC 5216 §2.2 / §5.3).
-		closeEngine(state)
-		return false, fmt.Errorf("%w: %v", eap.ErrTLSHandshakeFailed, hsErr)
-	}
-
-	if len(out) == 0 {
-		if done {
-			// Nothing left to transmit: authenticate immediately.
-			return h.finalize(ctx, state)
-		}
-		// A complete inbound EAP-TLS message that neither advances the TLS
-		// handshake nor completes it is a protocol violation; do not keep an
-		// unreachable engine alive after state cleanup.
-		closeEngine(state)
-		return false, eap.ErrTLSUnexpectedFragment
-	}
-
-	return h.startFlight(ctx, state, out, done)
-}
-
-// startFlight fragments an outbound TLS flight, sends the first fragment, and
-// queues the remainder for subsequent ACK-driven rounds.
-func (h *TLSHandler) startFlight(ctx *eap.EAPContext, state *eap.EAPState, tlsData []byte, done bool) (bool, error) {
-	packets, err := tlsfragment.Fragment(tlsData, h.maxFragment)
-	if err != nil {
-		return false, err
-	}
-
-	first, rest := packets[0], packets[1:]
-	setBool(state, stateKeyHandshakeDone, done)
-
-	if len(rest) > 0 {
-		setFragments(state, rest)
-	} else if done {
-		// Single-fragment final flight: the peer's next message is the closing
-		// ACK that triggers EAP-Success.
-		setBool(state, stateKeyPendingSuccess, true)
-	}
-
-	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
-		closeEngine(state)
-		return false, err
-	}
-	return false, h.writeChallenge(ctx, state.StateID, h.buildEAPRequest(ctx.EAPMessage.Identifier+1, first))
-}
-
-// sendNextFragment handles a peer ACK while the server is sending a fragmented
-// flight, transmitting the next queued fragment.
-func (h *TLSHandler) sendNextFragment(ctx *eap.EAPContext, state *eap.EAPState, frag *tlsfragment.Packet) (bool, error) {
-	if !frag.IsACK() {
-		closeEngine(state)
-		return false, eap.ErrTLSUnexpectedFragment
-	}
-
-	queue := getFragments(state)
-	next := queue[0]
-	queue = queue[1:]
-
-	if len(queue) > 0 {
-		setFragments(state, queue)
-	} else {
-		clearKey(state, stateKeyOutFrags)
-		if getBool(state, stateKeyHandshakeDone) {
-			// Last fragment of the final flight: the next peer message is the
-			// closing ACK that triggers EAP-Success.
-			setBool(state, stateKeyPendingSuccess, true)
-		}
-	}
-
-	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
-		closeEngine(state)
-		return false, err
-	}
-	return false, h.writeChallenge(ctx, state.StateID, h.buildEAPRequest(ctx.EAPMessage.Identifier+1, next))
-}
-
-// finalize completes a successful handshake by mapping the verified certificate
-// identity to the RADIUS User-Name (RFC 5216 §5.2) and granting access.
-func (h *TLSHandler) finalize(ctx *eap.EAPContext, state *eap.EAPState) (bool, error) {
-	engine, err := h.engineFor(state)
-	if err != nil {
-		return false, err
-	}
+func (h *TLSHandler) finalizeWithEngine(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
 	defer func() { _ = engine.Close() }()
 
 	identity, err := engine.Identity()
@@ -306,37 +171,6 @@ func (h *TLSHandler) finalize(ctx *eap.EAPContext, state *eap.EAPState) (bool, e
 	return true, nil
 }
 
-// engineFor returns the live handshake engine for this state, creating it on the
-// first handshake message from the configured TLS material.
-func (h *TLSHandler) engineFor(state *eap.EAPState) (*tlsengine.Engine, error) {
-	if state.Data != nil {
-		if e, ok := state.Data[stateKeyEngine].(*tlsengine.Engine); ok && e != nil {
-			return e, nil
-		}
-	}
-
-	if h.configProvider == nil {
-		return nil, eap.ErrTLSNotConfigured
-	}
-	cfg, err := h.configProvider()
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", eap.ErrTLSNotConfigured, err)
-	}
-	if cfg == nil {
-		return nil, eap.ErrTLSNotConfigured
-	}
-
-	engine, err := tlsengine.New(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", eap.ErrTLSNotConfigured, err)
-	}
-	if state.Data == nil {
-		state.Data = make(map[string]interface{})
-	}
-	state.Data[stateKeyEngine] = engine
-	return engine, nil
-}
-
 // writeChallenge sends eapData inside a RADIUS Access-Challenge, echoing the
 // handshake State attribute and protecting the response with a
 // Message-Authenticator.
@@ -354,13 +188,6 @@ func (h *TLSHandler) writeChallenge(ctx *eap.EAPContext, stateID string, eapData
 // is clear and the TLS Message Length field is absent.
 func (h *TLSHandler) buildStartRequest(identifier uint8) []byte {
 	return h.buildEAPRequest(identifier, &tlsfragment.Packet{Flags: tlsfragment.FlagStart})
-}
-
-// buildFragmentACK constructs an EAP-Request/EAP-TLS fragment acknowledgement: a
-// payload with a single flags octet (all flags clear) and no TLS data
-// (RFC 5216 §2.1.5).
-func (h *TLSHandler) buildFragmentACK(identifier uint8) []byte {
-	return h.buildEAPRequest(identifier, &tlsfragment.Packet{})
 }
 
 // buildEAPRequest wraps an EAP-TLS payload in an EAP-Request header.
@@ -415,10 +242,6 @@ func resetReassembler(state *eap.EAPState) {
 }
 
 // --- small typed helpers over the untyped state.Data map ------------------
-
-func (h *TLSHandler) hasQueuedFragments(state *eap.EAPState) bool {
-	return len(getFragments(state)) > 0
-}
 
 func getFragments(state *eap.EAPState) []*tlsfragment.Packet {
 	if state.Data == nil {

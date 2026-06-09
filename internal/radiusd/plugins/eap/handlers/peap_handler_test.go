@@ -2,13 +2,16 @@ package handlers
 
 import (
 	"context"
-	"errors"
+	"crypto/tls"
+	"crypto/x509"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -124,25 +127,84 @@ func TestPEAPHandler_buildStartRequest(t *testing.T) {
 	assert.Equal(t, byte(tlsfragment.FlagStart), result[5], "Flags should have only the Start bit set (version 0)")
 }
 
-// TestPEAPHandler_HandleResponse_NeverAuthenticates ensures the M8.1 skeleton
-// can never grant access: every handshake response is rejected with
-// eap.ErrPEAPNotImplemented until the outer TLS tunnel (M8.2) exists.
-func TestPEAPHandler_HandleResponse_NeverAuthenticates(t *testing.T) {
+// TestPEAPHandler_HandleResponse_NeverAuthenticatesWithoutConfig ensures PEAP
+// rejects safely before server certificate/key material is configured.
+func TestPEAPHandler_HandleResponse_NeverAuthenticatesWithoutConfig(t *testing.T) {
 	h := NewPEAPHandler()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
 	require.NoError(t, rfc2865.State_SetString(packet, "peap-state-1"))
+	sm := statemanager.NewMemoryStateManager()
+	require.NoError(t, sm.SetState("peap-state-1", &eap.EAPState{StateID: "peap-state-1", Method: EAPMethodPEAP}))
 
 	ctx := &eap.EAPContext{
 		Context:      context.Background(),
 		Request:      &radius.Request{Packet: packet},
-		EAPMessage:   &eap.EAPMessage{Code: eap.CodeResponse, Identifier: 10, Type: eap.TypePEAP, Data: []byte{tlsfragment.FlagLengthIncluded}},
-		StateManager: statemanager.NewMemoryStateManager(),
+		EAPMessage:   &eap.EAPMessage{Code: eap.CodeResponse, Identifier: 10, Type: eap.TypePEAP, Data: []byte{0x00, 0x16, 0x03, 0x01}},
+		StateManager: sm,
 		Secret:       "secret",
 	}
 
 	success, err := h.HandleResponse(ctx)
-	assert.False(t, success, "skeleton must never authenticate")
+	assert.False(t, success, "PEAP must never authenticate without an outer TLS server certificate")
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, eap.ErrPEAPNotImplemented))
+	assert.ErrorIs(t, err, eap.ErrTLSNotConfigured)
+}
+
+func TestPEAPHandler_FullHandshake_TunnelCompletesThenRejectsInner(t *testing.T) {
+	ca := newHSTestCA(t, "PEAP Root CA")
+	cfg := peapServerEngineConfig(t, ca)
+	h := NewPEAPHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "peapuser", "secret")
+	sup := newSupplicantForType(t, h, eap.TypePEAP, sm, stateID, "secret", peapClientCfg(ca))
+	success, err := sup.run()
+	assert.False(t, success, "PEAP M8.2 must not authenticate before inner EAP is implemented")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrPEAPInnerNotImplemented)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.False(t, state.Success)
+}
+
+func TestPEAPHandler_FullHandshake_FragmentedTunnelCompletesThenRejectsInner(t *testing.T) {
+	ca := newHSTestCA(t, "PEAP Fragment Root CA")
+	cfg := peapServerEngineConfig(t, ca)
+	h := NewPEAPHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+	h.maxFragment = 64
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "peapuser", "secret")
+	sup := newSupplicantForType(t, h, eap.TypePEAP, sm, stateID, "secret", peapClientCfg(ca))
+	success, err := sup.run()
+	assert.False(t, success, "fragmented PEAP M8.2 tunnel must still reject before inner EAP")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrPEAPInnerNotImplemented)
+}
+
+func peapServerEngineConfig(t *testing.T, serverCA *hsTestCA) *tlsengine.Config {
+	t.Helper()
+	serverCert := serverCA.issue(t, "radius.example.com", func(c *x509.Certificate) {
+		c.DNSNames = []string{"radius.example.com"}
+	})
+	return &tlsengine.Config{
+		ServerCertificate: serverCert,
+		ServerOnly:        true,
+		MinVersion:        tls.VersionTLS12,
+		HandshakeTimeout:  5 * time.Second,
+	}
+}
+
+func peapClientCfg(serverCA *hsTestCA) *tls.Config {
+	return &tls.Config{
+		RootCAs:    serverCA.pool,
+		ServerName: "radius.example.com",
+		MinVersion: tls.VersionTLS12,
+	}
 }

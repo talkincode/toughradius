@@ -176,7 +176,8 @@ func (c *hsConn) SetWriteDeadline(time.Time) error { return nil }
 // fragments and acknowledging each one per RFC 5216 §2.1.5.
 type supplicant struct {
 	t          *testing.T
-	h          *TLSHandler
+	h          eap.EAPHandler
+	eapType    uint8
 	sm         eap.EAPStateManager
 	stateID    string
 	secret     string
@@ -189,6 +190,10 @@ type supplicant struct {
 
 // newSupplicant starts a TLS client handshake bound to the handler's state.
 func newSupplicant(t *testing.T, h *TLSHandler, sm eap.EAPStateManager, stateID, secret string, clientCfg *tls.Config) *supplicant {
+	return newSupplicantForType(t, h, eap.TypeTLS, sm, stateID, secret, clientCfg)
+}
+
+func newSupplicantForType(t *testing.T, h eap.EAPHandler, eapType uint8, sm eap.EAPStateManager, stateID, secret string, clientCfg *tls.Config) *supplicant {
 	t.Helper()
 	toClient := newHSStream()
 	fromClient := newHSStream()
@@ -203,7 +208,7 @@ func newSupplicant(t *testing.T, h *TLSHandler, sm eap.EAPStateManager, stateID,
 	}()
 
 	return &supplicant{
-		t: t, h: h, sm: sm, stateID: stateID, secret: secret,
+		t: t, h: h, eapType: eapType, sm: sm, stateID: stateID, secret: secret,
 		toClient: toClient, fromClient: fromClient, clientDone: done, ident: 20,
 	}
 }
@@ -301,7 +306,7 @@ func (s *supplicant) responseCtx(writer *mockResponseWriter, tlsData []byte) *ea
 		ResponseWriter: writer,
 		StateManager:   s.sm,
 		Secret:         s.secret,
-		EAPMessage:     &eap.EAPMessage{Code: eap.CodeResponse, Identifier: s.ident, Type: eap.TypeTLS, Data: data},
+		EAPMessage:     &eap.EAPMessage{Code: eap.CodeResponse, Identifier: s.ident, Type: s.eapType, Data: data},
 	}
 }
 
@@ -309,14 +314,14 @@ func (s *supplicant) parseChallenge(resp *radius.Packet) *tlsfragment.Packet {
 	eapData, err := rfc2869.EAPMessage_Lookup(resp)
 	require.NoError(s.t, err)
 	require.GreaterOrEqual(s.t, len(eapData), 5)
-	require.Equal(s.t, byte(eap.TypeTLS), eapData[4])
+	require.Equal(s.t, s.eapType, eapData[4])
 	frag, err := tlsfragment.Parse(eapData[5:])
 	require.NoError(s.t, err)
 	return frag
 }
 
 // startHandshake runs HandleIdentity and returns the issued state ID.
-func startHandshake(t *testing.T, h *TLSHandler, sm eap.EAPStateManager, username, secret string) string {
+func startHandshake(t *testing.T, h eap.EAPHandler, sm eap.EAPStateManager, username, secret string) string {
 	t.Helper()
 	packet := radius.New(radius.CodeAccessRequest, []byte(secret))
 	if username != "" {
