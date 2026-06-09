@@ -51,6 +51,11 @@ func TestRadiusAccounting_TableName(t *testing.T) {
 	assert.Equal(t, "radius_accounting", model.TableName())
 }
 
+func TestRadiusSessionActionAudit_TableName(t *testing.T) {
+	model := RadiusSessionActionAudit{}
+	assert.Equal(t, "radius_session_action_audit", model.TableName())
+}
+
 // TestAllModelsHaveTableName ensures every model listed in Tables implements TableName
 func TestAllModelsHaveTableName(t *testing.T) {
 	type tableNamer interface {
@@ -83,15 +88,16 @@ func TestTableNameUniqueness(t *testing.T) {
 
 	// Ensure all table names follow snake_case
 	expectedNames := map[string]bool{
-		"sys_config":        true,
-		"sys_opr":           true,
-		"sys_opr_log":       true,
-		"net_node":          true,
-		"net_nas":           true,
-		"radius_profile":    true,
-		"radius_user":       true,
-		"radius_online":     true,
-		"radius_accounting": true,
+		"sys_config":                  true,
+		"sys_opr":                     true,
+		"sys_opr_log":                 true,
+		"net_node":                    true,
+		"net_nas":                     true,
+		"radius_profile":              true,
+		"radius_user":                 true,
+		"radius_online":               true,
+		"radius_session_action_audit": true,
+		"radius_accounting":           true,
 	}
 
 	assert.Equal(t, len(expectedNames), len(tableNames), "Table name count should match")

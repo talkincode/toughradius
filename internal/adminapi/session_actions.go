@@ -160,6 +160,10 @@ func DisconnectOnlineSession(c echo.Context) error {
 	}
 
 	logSessionAction(c, result)
+	if err := persistSessionActionAudit(c, id, identity, result); err != nil {
+		return fail(c, http.StatusInternalServerError, "AUDIT_PERSIST_FAILED",
+			"Disconnect request completed but failed to persist audit record", err.Error())
+	}
 	return ok(c, newCoAActionResponse(result))
 }
 
@@ -210,12 +214,57 @@ func ChangeOnlineSessionAuthorization(c echo.Context) error {
 	}
 
 	logSessionAction(c, result)
+	if err := persistSessionActionAudit(c, id, identity, result); err != nil {
+		return fail(c, http.StatusInternalServerError, "AUDIT_PERSIST_FAILED",
+			"CoA request completed but failed to persist audit record", err.Error())
+	}
 	return ok(c, newCoAActionResponse(result))
+}
+
+// persistSessionActionAudit writes a durable per-action record required by M2.3,
+// capturing who triggered the action, which session was targeted, and the
+// structured CoA/Disconnect outcome.
+func persistSessionActionAudit(c echo.Context, sessionID int64, identity radiusd.SessionIdentity, r *radiusd.CoAResult) error {
+	operatorID := int64(0)
+	operatorName := "unknown"
+	if op, err := resolveOperatorFromContext(c); err == nil && op != nil {
+		operatorID = op.ID
+		operatorName = op.Username
+	}
+
+	triggeredAt := r.SentAt
+	if triggeredAt.IsZero() {
+		triggeredAt = time.Now()
+	}
+
+	record := domain.RadiusSessionActionAudit{
+		SessionID:      sessionID,
+		AcctSessionID:  r.AcctSessionID,
+		Action:         string(r.Action),
+		Username:       r.Username,
+		NasAddr:        identity.NasIP,
+		Target:         r.Target,
+		OperatorID:     operatorID,
+		OperatorName:   operatorName,
+		OperatorIP:     c.RealIP(),
+		Success:        r.Success,
+		ResponseCode:   r.ResponseCode,
+		ErrorCause:     r.ErrorCause,
+		ErrorCauseText: r.ErrorCauseText,
+		Attempts:       r.Attempts,
+		RTTMillis:      r.RTT.Milliseconds(),
+		TimedOut:       r.TimedOut,
+		Error:          r.Err,
+		TriggeredAt:    triggeredAt,
+	}
+
+	return GetDB(c).Create(&record).Error
 }
 
 // logSessionAction emits an audit log line recording which operator triggered a
 // CoA/Disconnect and its outcome. Durable, queryable audit persistence is
-// delivered separately (M2.3); this provides immediate operational traceability.
+// additionally written via persistSessionActionAudit; this log line provides
+// immediate operational traceability.
 func logSessionAction(c echo.Context, r *radiusd.CoAResult) {
 	operator := "unknown"
 	if op, err := resolveOperatorFromContext(c); err == nil && op != nil {
