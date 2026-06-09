@@ -160,6 +160,7 @@ func TestConfigManagerJSON(t *testing.T) {
 	assert.Contains(t, radiusEapSchema.Enum, "eap-md5", "Enum values should include eap-md5")
 	assert.Contains(t, radiusEapSchema.Enum, "eap-mschapv2", "Enum values should include eap-mschapv2")
 	assert.Contains(t, radiusEapSchema.Enum, "eap-peap", "Enum values should include eap-peap")
+	assert.Contains(t, radiusEapSchema.Enum, "eap-ttls", "Enum values should include eap-ttls")
 	assert.Equal(t, "EAP Method", radiusEapSchema.Title)
 	assert.Equal(t, "config.radius.eap_method.title", radiusEapSchema.TitleI18n)
 	assert.Equal(t, "config.radius.eap_method.description", radiusEapSchema.DescI18n)

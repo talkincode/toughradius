@@ -204,7 +204,7 @@
 - **协议规范**：`docs/rfcs/rfc5281-eap-ttls.txt`（EAP-TTLS）、`rfc3748-eap.txt`、`rfc2759-mschapv2.txt`（内层 MS-CHAP-V2）、`rfc3579-radius-eap-support.txt`；TLS 1.3 隧道按 `rfc9427`（本地缺失，按 `reference-rfc` 登记）。
 
 子任务：
-- [ ] M9.1 注册 EAP-TTLS handler 骨架与启用列表配置
+- [x] M9.1 注册 EAP-TTLS handler 骨架与启用列表配置 ✅ 实现 `TTLSHandler`（EAP type 21 / name `eap-ttls`），对 EAP-Response/Identity 回送 EAP-TTLSv0 Start（RFC 5281 §9.2，Flags 复用 EAP-TLS 框架 RFC 5216 §3.1，version 位为 0），并在协调器 `handleIdentityResponse` 增加 `eap-ttls` 分支、`init.go` 无条件注册该 handler；`HandleResponse` 为安全桩，对任何挑战响应一律返回 `ErrTTLSNotImplemented`、永不放行（外层隧道见 M9.2）。`EapMethod` 枚举在 `config_schemas.json` + `config_manager.go` + 前端 `i18n/{en-US,zh-CN}.ts` 三处同步加入 `eap-ttls` 并补充双语说明。单测覆盖 Name/EAPType(21)/CanHandle/HandleIdentity(Start 帧+状态持久化)/buildStartRequest/HandleResponse 永不认证，并在 `coordinator_test.go` 增加 `eap-ttls` 选路用例。门禁：`go build ./...`、`go test ./...`、golangci-lint v2.12.2、`cd web && npm run build` 均通过。
 - [ ] M9.2 外层 TLS 隧道建立与分片重组（复用 EAP-TLS 状态机）
 - [ ] M9.3 隧道内 AVP 封装与 PAP 内层认证（最小可用闭环）
 - [ ] M9.4 增加 MS-CHAP-V2 内层认证与密钥导出

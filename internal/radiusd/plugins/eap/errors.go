@@ -43,4 +43,10 @@ var (
 	// (unexpected EAP code/type/opcode for the current inner sub-state). It
 	// guarantees a malformed inner exchange rejects rather than grants.
 	ErrPEAPInnerProtocol = errors.New("PEAP inner EAP-MSCHAPv2 protocol violation")
+	// ErrTTLSNotImplemented is returned by the EAP-TTLS handler skeleton until
+	// the outer TLS tunnel and inner AVP authentication are implemented
+	// (milestones M9.2 / M9.3). It guarantees the skeleton, which answers the
+	// EAP-Response/Identity with an EAP-TTLS Start (RFC 5281 §9.2), can never
+	// grant access on a challenge response.
+	ErrTTLSNotImplemented = errors.New("EAP-TTLS tunnel is not implemented yet")
 )
