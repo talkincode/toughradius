@@ -327,11 +327,24 @@ func (s *AuthService) ApplyAcceptEnhancers(
 	vendorReq *vendorparsers.VendorRequest,
 	radAccept *radius.Packet,
 ) {
+	// Response enhancers resolve profile-inherited attributes (address pools,
+	// IPv6 prefix/delegated pools, rates, domain) for dynamic-link-mode users and
+	// read tunable defaults such as the accounting interim interval. Both depend
+	// on the profile cache and config manager being available via metadata; an
+	// empty map here would silently drop every dynamically inherited attribute
+	// from the Access-Accept.
+	metadata := map[string]interface{}{}
+	if appCtx := s.AppContext(); appCtx != nil {
+		metadata["profile_cache"] = appCtx.ProfileCache()
+		metadata["config_mgr"] = appCtx.ConfigMgr()
+	}
+
 	authCtx := &auth.AuthContext{
 		User:          user,
 		Nas:           nas,
 		VendorRequest: vendorReq,
 		Response:      radAccept,
+		Metadata:      metadata,
 	}
 
 	ctx := context.Background()

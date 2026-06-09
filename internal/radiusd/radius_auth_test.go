@@ -96,6 +96,69 @@ func TestApplyAcceptEnhancersInvokesRegisteredEnhancers(t *testing.T) {
 	}
 }
 
+// metadataCapturingEnhancer records the AuthContext it receives so a test can
+// assert what metadata ApplyAcceptEnhancers wires into the enhancer pipeline.
+type metadataCapturingEnhancer struct {
+	captured *auth.AuthContext
+}
+
+func (e *metadataCapturingEnhancer) Name() string { return "metadata-capture" }
+
+func (e *metadataCapturingEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthContext) error {
+	e.captured = authCtx
+	return nil
+}
+
+// profileCacheAppContext is a mockAppContext that returns real profile-cache and
+// config-manager handles, so a test can verify they are propagated to enhancers.
+type profileCacheAppContext struct {
+	*mockAppContext
+	cache *app.ProfileCache
+}
+
+func (m *profileCacheAppContext) ProfileCache() *app.ProfileCache { return m.cache }
+
+// TestApplyAcceptEnhancersWiresProfileCacheMetadata is a regression guard for a
+// bug where ApplyAcceptEnhancers built an AuthContext with no Metadata map, so
+// every response enhancer received a nil profile_cache and silently dropped all
+// dynamic-link-mode profile inheritance (address/IPv6 pools, rates, domain) from
+// the Access-Accept. The enhancers read these handles from AuthContext.Metadata,
+// so they must be populated from the application context.
+func TestApplyAcceptEnhancersWiresProfileCacheMetadata(t *testing.T) {
+	registry.ResetForTest()
+	t.Cleanup(registry.ResetForTest)
+
+	enh := &metadataCapturingEnhancer{}
+	registry.RegisterResponseEnhancer(enh)
+
+	cache := app.NewProfileCache(nil, time.Minute)
+	t.Cleanup(cache.Stop)
+	appCtx := &profileCacheAppContext{mockAppContext: &mockAppContext{}, cache: cache}
+	authSvc := &AuthService{RadiusService: &RadiusService{appCtx: appCtx}}
+
+	user := &domain.RadiusUser{
+		Username:        "alice",
+		ProfileLinkMode: domain.ProfileLinkModeDynamic,
+		ExpireTime:      time.Now().Add(time.Hour),
+	}
+	nas := &domain.NetNas{ID: 1, Identifier: "NAS-1"}
+	resp := radius.New(radius.CodeAccessAccept, []byte("secret"))
+	vendorReq := &vendorparsers.VendorRequest{}
+
+	authSvc.ApplyAcceptEnhancers(user, nas, vendorReq, resp)
+
+	if enh.captured == nil {
+		t.Fatal("enhancer was not invoked")
+	}
+	if enh.captured.Metadata == nil {
+		t.Fatal("ApplyAcceptEnhancers must populate AuthContext.Metadata")
+	}
+	got, ok := enh.captured.Metadata["profile_cache"].(*app.ProfileCache)
+	if !ok || got != cache {
+		t.Fatalf("profile_cache metadata = %v (ok=%v); want the application profile cache", got, ok)
+	}
+}
+
 func TestProcessAuthErrorInvokesGuards(t *testing.T) {
 	registry.ResetForTest()
 	t.Cleanup(registry.ResetForTest)
