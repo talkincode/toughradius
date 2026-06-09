@@ -13,10 +13,10 @@ lives in the repository so everything is reachable from a single place.
 | Security policy     | Security advisories and update guidance                | [Security Policy](./security-policy.md) (canonical) · [SECURITY.md](https://github.com/talkincode/toughradius/blob/main/SECURITY.md) (pointer) |
 | Feature checklist   | Feature scope baseline (`TR-F` IDs)                    | [docs/feature-checklist.md](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.md) · [English](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.en.md) |
 | Roadmap             | Long-term roadmap and milestones                       | [docs/roadmap.md](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.md) |
-| RFC index           | Protocol standards index used by the project           | [docs/rfcs/README.md](https://github.com/talkincode/toughradius/blob/main/docs/rfcs/README.md) |
+| RFC index           | Protocol standards index used by the project           | [Protocol & RFC Reference](./rfc-index.md) (canonical) · [docs/rfcs/README.md](https://github.com/talkincode/toughradius/blob/main/docs/rfcs/README.md) (raw catalog) |
 
-> **Migration plan.** The README, agent guide, and security policy are migrated
-> into bilingual chapters first; the feature checklist, roadmap, and RFC index
-> follow with cross-linked English/中文 sections. As each document moves into the
-> handbook, its original file keeps a short pointer back to the corresponding
-> chapter so there is a single source of truth.
+> **Migration plan.** The security policy and the protocol/RFC reference are
+> already bilingual chapters; the README, agent guide, feature checklist, and
+> roadmap are migrated next, with cross-linked English/中文 sections. As each
+> document moves into the handbook, its original file keeps a short pointer back
+> to the corresponding chapter so there is a single source of truth.

@@ -1,5 +1,8 @@
 # RADIUS RFC 协议文档
 
+> 📖 **本目录是 RFC 全文归档。** 精选、面向实现且引用经过校正的协议索引（含里程碑映射）见双语手册章节：
+> [协议与 RFC 索引](../../docs-site/src/zh/rfc-index.md) · [Protocol & RFC Reference](../../docs-site/src/en/rfc-index.md)。
+
 本目录包含 RADIUS 相关的 RFC 协议文档，共 **50 个** RFC 文档，供开发和参考使用。
 
 ## 核心协议
