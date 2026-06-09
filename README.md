@@ -16,7 +16,7 @@ Welcome to the TOUGHRADIUS project!
 [![codecov](https://codecov.io/gh/talkincode/toughradius/graph/badge.svg)](https://codecov.io/gh/talkincode/toughradius)
 [![Docker Pulls](https://img.shields.io/docker/pulls/talkincode/toughradius)](https://hub.docker.com/r/talkincode/toughradius)
 
-A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, RadSec (RADIUS over TLS), and a modern Web management interface.
+A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, a full EAP / 802.1X authentication suite (EAP-TLS, PEAPv0/EAP-MSCHAPv2, EAP-TTLS), RadSec (RADIUS over TLS), and a modern Web management interface.
 
 ## ✨ Core Features
 
@@ -26,6 +26,17 @@ A powerful, open-source RADIUS server designed for ISPs, enterprise networks, an
 - 🔒 **RadSec** - TLS encrypted RADIUS over TCP (RFC 6614)
 - 🌐 **Multi-Vendor Support** - Compatible with major network devices like Cisco, Mikrotik, Huawei, etc.
 - ⚡ **High Performance** - Built with Go, supporting high concurrency processing
+
+### EAP / 802.1X Authentication
+
+A pluggable EAP handler registry covers both challenge and tunneled methods:
+
+- 🪪 **EAP-MD5 / EAP-MSCHAPv2** - Challenge-based password methods (RFC 3748)
+- 🔐 **EAP-TLS** - Certificate-based mutual authentication with TLS handshake, fragmentation reassembly, and certificate-to-identity mapping (RFC 5216)
+- 🪟 **PEAPv0 / EAP-MSCHAPv2** - Server-certificate TLS tunnel carrying inner EAP-MSCHAPv2 with MPPE key derivation, for Windows / AD / legacy enterprise networks
+- 🧩 **EAP-TTLS** - TLS tunnel carrying inner PAP / MS-CHAPv2, onboarding LDAP and legacy credential stores without a per-client certificate rollout (RFC 5281)
+
+> ⚠️ **Compatibility note:** PEAP and EAP-MSCHAPv2 are *compatibility-first* methods. MS-CHAPv2-style exchanges carry an NTLMv1-like attack surface (see Microsoft guidance). Use them to serve legacy devices and AD users; prefer **EAP-TLS** for new deployments where you control the client certificate estate.
 
 ### Management Features
 
@@ -110,12 +121,24 @@ web:
 
 ### EAP Configuration
 
-You can fine-tune authentication behavior via system configuration (`sys_config`):
+ToughRADIUS registers the following EAP handlers out of the box:
 
-- `radius.EapMethod`: Preferred EAP method (default `eap-md5`).
-- `radius.EapEnabledHandlers`: List of allowed EAP handlers, separated by commas, e.g., `eap-md5,eap-mschapv2`. Use `*` to enable all registered handlers.
+| Method | Kind | Notes |
+| --- | --- | --- |
+| `eap-md5` | Challenge | Default; password challenge (RFC 3748) |
+| `eap-mschapv2` | Challenge | MS-CHAPv2 password challenge |
+| `eap-tls` | Tunneled (certificate) | Certificate-based mutual authentication (RFC 5216) |
+| `eap-peap` | Tunneled | PEAPv0 with inner EAP-MSCHAPv2 (Windows / AD) |
+| `eap-ttls` | Tunneled | Inner PAP / MS-CHAPv2 (RFC 5281) |
 
-This allows you to quickly disable unauthorized EAP methods without interrupting the service.
+Fine-tune authentication behavior via system configuration (`sys_config`):
+
+- `radius.EapMethod`: Preferred EAP method offered on EAP-Identity (default `eap-md5`).
+- `radius.EapEnabledHandlers`: Allow-list of enabled handlers, comma-separated, e.g. `eap-md5,eap-mschapv2,eap-tls`. Use `*` to enable all registered handlers.
+
+This lets you disable unauthorized EAP methods without interrupting the service.
+
+> ⚠️ MS-CHAPv2-based methods (`eap-mschapv2`, `eap-peap`, and TTLS inner MS-CHAPv2) are compatibility-oriented and carry an NTLMv1-like attack surface. Prefer `eap-tls` for new deployments where you control client certificates.
 
 ### Running
 
@@ -136,6 +159,8 @@ Default Admin Account:
 
 ## 📖 Documentation
 
+- 📚 **[Bilingual Handbook (mdbook)](docs-site/)** - CN/EN documentation site consolidating the overview, security policy, and more (built and link-checked in CI)
+- [Roadmap](docs/roadmap.md) - Milestones and the EAP suite delivery plan (EAP-TLS / PEAP / TTLS, with TLS 1.3, TEAP, EAP-PWD tracked)
 - [Feature Checklist](docs/feature-checklist.md) / [English](docs/feature-checklist.en.md) - Product scope baseline for aligning future development with feature IDs and avoiding uncontrolled direction changes
 - [Architecture](docs/v9-architecture.md) - v9 version architecture design
 - [React Admin Refactor](docs/react-admin-refactor.md) - Frontend management interface explanation
@@ -205,6 +230,9 @@ The RADIUS dictionary files in the `share/` directory are derived from the [Free
 - [Online Documentation](https://github.com/talkincode/toughradius/wiki)
 - [RadSec RFC 6614](https://tools.ietf.org/html/rfc6614)
 - [RADIUS RFC 2865](https://tools.ietf.org/html/rfc2865)
+- [EAP RFC 3748](https://tools.ietf.org/html/rfc3748)
+- [EAP-TLS RFC 5216](https://tools.ietf.org/html/rfc5216)
+- [EAP-TTLS RFC 5281](https://tools.ietf.org/html/rfc5281)
 - [Mikrotik RADIUS Configuration](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
 
 ## 💎 Sponsors

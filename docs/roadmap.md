@@ -38,7 +38,7 @@
 | M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
-| M13 | 双语文档站点（mdbook） | TR-F023 | P2 | 进行中 |
+| M13 | 双语文档站点（mdbook） | TR-F023 | P2（优先） | 进行中 |
 
 ---
 
@@ -270,6 +270,7 @@
 - **目标**：用 mdbook 搭建中英文双语文档站点，收编散落文档（README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引），提供统一导航与可发布产物。
 - **开发边界**：先骨架与导航，再分批迁移；中英文目录结构对应、同步维护；文档站点不替代以代码与测试为准的口径（遵守 `TR-N003`，不扩展为产品门户）。**注意**：仓库当前已通过 GitBook 集成发布（`docs.toughradius.net` / `www.toughradius.net`），M13 必须先明确 mdbook 与 GitBook 是替代还是并存，避免两套发布管线产生冲突或内容漂移。
 - **技能**：文档工程为主；复用 `.agents/skills/reference-rfc/SKILL.md` 维护协议资料索引、`.agents/skills/align-feature-checklist/SKILL.md` 保持中英文同步。
+- **优先级调整（用户指令）**：mdbook 文档站点列为 P2 **置顶优先实现**——先收编散落文档并对外呈现既有能力。本轮已先行将 `README` 与手册 `overview` 章节补全 **EAP / 802.1X 套件**能力（EAP-MD5 / EAP-MSCHAPv2 / EAP-TLS / PEAP / EAP-TTLS，含 MS-CHAPv2 兼容性优先与类 NTLMv1 攻击面提示，引用 RFC 3748 / 5216 / 5281）；M13.2 中 README「迁入手册 + 留指针」的收敛动作在后续批次进行。
 
 子任务：
 - [x] M13.0 评估与现有 GitBook 发布的关系（替代 / 并存），确定单一事实来源与发布管线边界 —— 决策：**并存**。mdbook 为随仓库维护、CI 校验的双语权威手册（置于独立目录 `docs-site/`）；GitBook 经其 GitHub 集成在外部同步（仓库无 `.gitbook.yaml`/`book.json`/GitBook `SUMMARY.md`），两套管线不共享构建步骤、互不冲突；迁移采用「迁入手册 + 原文件留指针」保证单一事实来源。决策已写入站点章节 `gitbook-coexistence`。
@@ -286,7 +287,7 @@
 ## Agent 排期约定
 
 - **入口（自动委托）**：收到"自动委托开发 / 继续推进路线图"类指令时，由 [`.agents/skills/orchestrate-roadmap/SKILL.md`](../.agents/skills/orchestrate-roadmap/SKILL.md) 作为总调度统筹一轮：选题 → 选执行 SOP → 派工 → 质量门禁 → PR → 迭代路线图。
-- 调度优先级：先 P1（`M2 → M3 → M8 → M9`），再 P2（`M4 / M5 / M7 / M10 / M13`），最后 P3（`M6 / M11 / M12`）；同优先级里程碑按序号取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
+- 调度优先级：先 P1（`M2 → M3 → M8 → M9`），再 P2（**`M13` 双语文档站点置顶优先**，其后 `M4 / M5 / M7 / M10`），最后 P3（`M6 / M11 / M12`）；同优先级里程碑除 M13 置顶外按序号取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。**M13 置顶依据**：用户指令将 mdbook 文档站点列为优先实现，先收编散落文档并对外呈现既有能力（含 EAP 套件）。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
 - 单次 agent 任务只认领一个未勾选子任务（最小闭环），完成后在本文件勾选并在 PR 引用里程碑编号。
 - **自我迭代**：每轮交付后由 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选已交付项、更新里程碑状态、回填/拆分/重排子任务，并保持本文件与功能清单状态一致。
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。

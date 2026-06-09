@@ -13,8 +13,12 @@ Admin web management interface.
   support.
 - **RadSec** — TLS-encrypted RADIUS over TCP (RFC 6614).
 - **Dynamic authorization** — CoA and Disconnect messages (RFC 5176).
-- **EAP suite** — EAP-TLS, PEAPv0/EAP-MSCHAPv2, and EAP-TTLS inner methods, with
-  more methods tracked on the roadmap.
+- **EAP / 802.1X suite** — challenge methods (EAP-MD5, EAP-MSCHAPv2) and tunneled
+  methods: EAP-TLS (RFC 5216, certificate-based), PEAPv0/EAP-MSCHAPv2 (Windows / AD
+  compatibility), and EAP-TTLS (RFC 5281, inner PAP / MS-CHAPv2). MS-CHAPv2-based
+  methods are compatibility-oriented and carry an NTLMv1-like attack surface; prefer
+  EAP-TLS where you control client certificates. TLS 1.3 (RFC 9190), TEAP, and
+  EAP-PWD are tracked on the roadmap.
 - **Multi-vendor support** — compatible with Cisco, MikroTik, Huawei, and other
   major network devices through vendor-specific attributes (VSAs).
 - **Modern management UI** — a React Admin dashboard for users, profiles, online
