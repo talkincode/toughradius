@@ -10,7 +10,7 @@ lives in the repository so everything is reachable from a single place.
 | ------------------- | ----------------------------------------------------- | ---------------- |
 | README              | Project introduction, features, and quick start       | [README.md](https://github.com/talkincode/toughradius/blob/main/README.md) |
 | Agent guide         | AI-agent development guide and working rules           | [AGENT.md](https://github.com/talkincode/toughradius/blob/main/AGENT.md) |
-| Security policy     | Supported versions and vulnerability reporting         | [SECURITY.md](https://github.com/talkincode/toughradius/blob/main/SECURITY.md) |
+| Security policy     | Security advisories and update guidance                | [Security Policy](./security-policy.md) (canonical) · [SECURITY.md](https://github.com/talkincode/toughradius/blob/main/SECURITY.md) (pointer) |
 | Feature checklist   | Feature scope baseline (`TR-F` IDs)                    | [docs/feature-checklist.md](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.md) · [English](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.en.md) |
 | Roadmap             | Long-term roadmap and milestones                       | [docs/roadmap.md](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.md) |
 | RFC index           | Protocol standards index used by the project           | [docs/rfcs/README.md](https://github.com/talkincode/toughradius/blob/main/docs/rfcs/README.md) |

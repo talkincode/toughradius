@@ -5,11 +5,13 @@
 # English
 
 - [Overview](./en/overview.md)
+- [Security Policy](./en/security-policy.md)
 - [Documentation Map](./en/documentation-map.md)
 - [mdbook & GitBook Coexistence](./en/gitbook-coexistence.md)
 
 # 中文
 
 - [概述](./zh/overview.md)
+- [安全策略](./zh/security-policy.md)
 - [文档地图](./zh/documentation-map.md)
 - [mdbook 与 GitBook 并存](./zh/gitbook-coexistence.md)
