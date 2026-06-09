@@ -125,6 +125,48 @@ func NewSettingsPEAPConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 	}
 }
 
+// NewSettingsTTLSConfigProvider returns a TLSConfigProvider for EAP-TTLS's outer
+// server-authenticated tunnel.
+//
+// EAP-TTLS (RFC 5281 §7) reuses the EAP-TLS fragmentation/framing defined by
+// RFC 5216 §2.1.5 and §3.1 but authenticates the peer with legacy inner
+// authentication carried as AVPs inside the tunnel (PAP / CHAP / MS-CHAP /
+// MS-CHAP-V2), so no client CA is required for the outer TLS handshake. Like
+// PEAP it intentionally reuses the existing EAP-TLS server certificate settings
+// (radius.EapTlsCertFile / radius.EapTlsKeyFile) and honors the configured
+// minimum TLS version (radius.EapTlsMinVersion).
+//
+// Security note: the outer tunnel carries cleartext-equivalent inner
+// credentials (PAP sends the password inside the tunnel), so the server-only
+// TLS tunnel must stay strong — this provider keeps ServerOnly authentication
+// with the operator-selected minimum TLS version and never weakens it. Until
+// the server certificate/key are configured it returns a nil config so the
+// handler rejects safely with eap.ErrTLSNotConfigured.
+func NewSettingsTTLSConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
+	return func() (*tlsengine.Config, error) {
+		if reader == nil {
+			return nil, nil
+		}
+
+		certFile := strings.TrimSpace(reader.GetString("radius", SettingEapTlsCertFile))
+		keyFile := strings.TrimSpace(reader.GetString("radius", SettingEapTlsKeyFile))
+		if certFile == "" || keyFile == "" {
+			return nil, nil
+		}
+
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return nil, fmt.Errorf("load EAP-TTLS server certificate: %w", err)
+		}
+
+		return &tlsengine.Config{
+			ServerCertificate: cert,
+			ServerOnly:        true,
+			MinVersion:        parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion)),
+		}, nil
+	}
+}
+
 // parseTLSMinVersion maps a configured minimum TLS version string to the
 // crypto/tls constant. It defaults to TLS 1.2, the interoperability floor for
 // modern EAP-TLS deployments; an unrecognized value falls back to the same

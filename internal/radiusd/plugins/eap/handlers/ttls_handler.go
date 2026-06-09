@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius"
@@ -34,22 +35,48 @@ const (
 // EAP-Message attributes (RFC 3579).
 //
 // Milestone scope:
-//   - M9.1 (current): registers the method (EAP type 21, name "eap-ttls") and
-//     answers EAP-Response/Identity with an EAP-TTLSv0 Start. HandleResponse is
-//     a safe stub that always rejects with eap.ErrTTLSNotImplemented until the
-//     outer tunnel lands, so the skeleton can never grant access.
-//   - M9.2: establishes the outer TLS tunnel and fragmentation reassembly,
-//     reusing the EAP-TLS state machine.
+//   - M9.1: registered the method (EAP type 21, name "eap-ttls") and answered
+//     EAP-Response/Identity with an EAP-TTLSv0 Start.
+//   - M9.2 (current): establishes the outer TLS tunnel and fragmentation
+//     reassembly, reusing the shared EAP-TLS state machine (tlsTunnel). Until
+//     the inner phase lands, a completed handshake rejects safely with
+//     eap.ErrTTLSInnerNotImplemented, so the tunnel can never grant access.
 //   - M9.3: tunneled AVP encapsulation and inner PAP authentication.
 //   - M9.4: inner MS-CHAP-V2 authentication and key derivation.
-type TTLSHandler struct{}
+type TTLSHandler struct {
+	configProvider TLSConfigProvider
+	maxFragment    int
+}
 
-// NewTTLSHandler creates an EAP-TTLSv0 handler skeleton. It accepts the EAP-TTLS
-// Start exchange but rejects challenge responses safely with
-// eap.ErrTTLSNotImplemented until the outer TLS tunnel is implemented (M9.2), so
-// it can never authenticate a client.
+// NewTTLSHandler creates an EAP-TTLSv0 handler without TLS material configured.
+// It accepts the EAP-TTLS Start exchange but rejects handshake attempts safely
+// with eap.ErrTLSNotConfigured until a server-certificate config provider is
+// supplied, so it can never authenticate a client.
 func NewTTLSHandler() *TTLSHandler {
-	return &TTLSHandler{}
+	return &TTLSHandler{maxFragment: defaultMaxTLSFragment}
+}
+
+// NewTTLSHandlerWithConfig creates an EAP-TTLSv0 handler that drives the outer
+// TLS tunnel using the TLS material returned by provider.
+func NewTTLSHandlerWithConfig(provider TLSConfigProvider) *TTLSHandler {
+	return &TTLSHandler{configProvider: provider, maxFragment: defaultMaxTLSFragment}
+}
+
+// newTunnel builds the shared EAP-TLS/PEAP/TTLS tunnel state machine configured
+// for EAP-TTLS (EAP type 21). Once the outer handshake completes, the M9.2
+// milestone rejects with eap.ErrTTLSInnerNotImplemented in place of running the
+// inner AVP exchange (M9.3+), so the tunnel can establish and fragment correctly
+// yet never grant access.
+func (h *TTLSHandler) newTunnel() *tlsTunnel {
+	return &tlsTunnel{
+		eapType:        eap.TypeTTLS,
+		maxFragment:    h.maxFragment,
+		configProvider: h.configProvider,
+		onHandshakeComplete: func(_ *eap.EAPContext, state *eap.EAPState, _ *tlsengine.Engine) (bool, error) {
+			closeEngine(state)
+			return false, eap.ErrTTLSInnerNotImplemented
+		},
+	}
 }
 
 // Name returns the handler name ("eap-ttls").
@@ -74,7 +101,7 @@ func (h *TTLSHandler) CanHandle(ctx *eap.EAPContext) bool {
 // request (an EAP-Request with EAP-Type=TTLS, the Start (S) bit set, version
 // bits 0, and no TLS data; RFC 5281 §9.2, framing per RFC 5216 §3.1). It
 // persists handshake state keyed by the RADIUS State attribute so subsequent
-// rounds (milestone M9.2) can correlate the tunnel.
+// tunnel rounds can correlate the exchange.
 func (h *TTLSHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 	eapData := h.buildStartRequest(ctx.EAPMessage.Identifier)
 
@@ -95,12 +122,14 @@ func (h *TTLSHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 	return true, h.writeChallenge(ctx, stateID, eapData)
 }
 
-// HandleResponse is the M9.1 safe stub for EAP-TTLS challenge responses. The
-// outer TLS tunnel (M9.2) and inner AVP authentication (M9.3+) are not yet
-// implemented, so it always rejects with eap.ErrTTLSNotImplemented and never
-// grants access.
+// HandleResponse drives EAP-TTLS's outer TLS tunnel and fragmentation using the
+// shared EAP-TLS state machine (RFC 5281 §7-§9, framing per RFC 5216
+// §2.1.5/§3.1). The M9.2 milestone establishes the server-only tunnel but does
+// not yet run the inner AVP authentication (M9.3+), so a completed handshake
+// rejects with eap.ErrTTLSInnerNotImplemented and the handler never grants
+// access.
 func (h *TTLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
-	return false, eap.ErrTTLSNotImplemented
+	return h.newTunnel().HandleResponse(ctx)
 }
 
 // buildStartRequest constructs an EAP-TTLSv0 Start request: an EAP-Request with

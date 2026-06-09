@@ -2,12 +2,16 @@ package handlers
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -128,10 +132,11 @@ func TestTTLSHandler_buildStartRequest(t *testing.T) {
 	assert.Equal(t, byte(tlsfragment.FlagStart), result[5], "Flags should have only the Start bit set (version 0)")
 }
 
-// TestTTLSHandler_HandleResponse_NeverAuthenticates ensures the M9.1 skeleton
-// rejects every challenge response with eap.ErrTTLSNotImplemented and never
-// grants access before the outer TLS tunnel (M9.2) is implemented.
-func TestTTLSHandler_HandleResponse_NeverAuthenticates(t *testing.T) {
+// TestTTLSHandler_HandleResponse_NeverAuthenticatesWithoutConfig ensures the
+// EAP-TTLS handler rejects safely before server certificate/key material is
+// configured: without a TLS config provider the outer tunnel cannot be driven,
+// so it can never grant access.
+func TestTTLSHandler_HandleResponse_NeverAuthenticatesWithoutConfig(t *testing.T) {
 	h := NewTTLSHandler()
 
 	packet := radius.New(radius.CodeAccessRequest, []byte("secret"))
@@ -148,7 +153,80 @@ func TestTTLSHandler_HandleResponse_NeverAuthenticates(t *testing.T) {
 	}
 
 	success, err := h.HandleResponse(ctx)
-	assert.False(t, success, "EAP-TTLS skeleton must never authenticate")
+	assert.False(t, success, "EAP-TTLS must never authenticate without an outer TLS server certificate")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, eap.ErrTTLSNotImplemented)
+	assert.ErrorIs(t, err, eap.ErrTLSNotConfigured)
+}
+
+func ttlsServerEngineConfig(t *testing.T, serverCA *hsTestCA) *tlsengine.Config {
+	t.Helper()
+	serverCert := serverCA.issue(t, "radius.example.com", func(c *x509.Certificate) {
+		c.DNSNames = []string{"radius.example.com"}
+	})
+	return &tlsengine.Config{
+		ServerCertificate: serverCert,
+		ServerOnly:        true,
+		MinVersion:        tls.VersionTLS12,
+		HandshakeTimeout:  5 * time.Second,
+	}
+}
+
+// ttlsTunnelClientCfg builds a server-only TLS client config (no client
+// certificate): EAP-TTLS authenticates the peer with inner AVPs, so the outer
+// handshake only verifies the server (RFC 5281 §7).
+func ttlsTunnelClientCfg(serverCA *hsTestCA) *tls.Config {
+	return &tls.Config{
+		RootCAs:    serverCA.pool,
+		ServerName: "radius.example.com",
+		MinVersion: tls.VersionTLS12,
+	}
+}
+
+// TestTTLSHandler_FullHandshake_EstablishesTunnelThenRejects drives a real
+// server-only TLS handshake through the EAP-TTLS outer tunnel. Reaching the
+// handshake-complete callback proves the tunnel and fragmentation framing
+// (RFC 5281 §7-§9, RFC 5216 §2.1.5/§3.1) work end to end; the M9.2 milestone
+// then rejects with eap.ErrTTLSInnerNotImplemented because the inner AVP
+// authentication (M9.3+) is not yet implemented, so the tunnel never grants.
+func TestTTLSHandler_FullHandshake_EstablishesTunnelThenRejects(t *testing.T) {
+	ca := newHSTestCA(t, "TTLS Outer Root CA")
+	cfg := ttlsServerEngineConfig(t, ca)
+	h := NewTTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "ttlsuser", "secret")
+	sup := newSupplicantForType(t, h, eap.TypeTTLS, sm, stateID, "secret", ttlsTunnelClientCfg(ca))
+
+	success, err := sup.run()
+	assert.False(t, success, "EAP-TTLS M9.2 outer tunnel must not grant access on its own")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTTLSInnerNotImplemented)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.False(t, state.Success, "state must not be marked successful")
+}
+
+// TestTTLSHandler_FullHandshake_Fragmented forces a small fragment size so the
+// outer handshake spans multiple EAP-TLS fragments, exercising reassembly and
+// the ACK exchange (RFC 5216 §2.1.5). It must still reach the
+// inner-not-implemented rejection without granting.
+func TestTTLSHandler_FullHandshake_Fragmented(t *testing.T) {
+	ca := newHSTestCA(t, "TTLS Outer Fragment Root CA")
+	cfg := ttlsServerEngineConfig(t, ca)
+	h := NewTTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+	h.maxFragment = 48 // force the handshake records to fragment
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "ttlsuser", "secret")
+	sup := newSupplicantForType(t, h, eap.TypeTTLS, sm, stateID, "secret", ttlsTunnelClientCfg(ca))
+
+	success, err := sup.run()
+	assert.False(t, success)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTTLSInnerNotImplemented)
 }
