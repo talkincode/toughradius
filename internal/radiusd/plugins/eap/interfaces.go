@@ -24,6 +24,7 @@ const (
 	TypeOTP          = 5  // One-Time Password
 	TypeGTC          = 6  // Generic Token Card
 	TypeTLS          = 13 // EAP-TLS
+	TypePEAP         = 25 // Protected EAP (PEAP), IANA EAP method type 25
 	TypeMSCHAPv2     = 26 // EAP-MSCHAPv2
 )
 

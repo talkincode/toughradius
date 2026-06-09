@@ -4,7 +4,7 @@
       "key": "radius.EapMethod",
       "type": "string",
       "default": "eap-md5",
-      "enum": ["eap-md5", "eap-mschapv2", "eap-tls"],
+      "enum": ["eap-md5", "eap-mschapv2", "eap-tls", "eap-peap"],
       "title": "EAP Method",
       "title_i18n": "config.radius.eap_method.title",
       "description": "EAP authentication method",
