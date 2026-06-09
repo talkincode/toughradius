@@ -76,6 +76,24 @@
 - **PR 模板**：agent 任务 PR 默认使用 [`.github/pull_request_template.md`](../.github/pull_request_template.md)，完整填写里程碑子任务、`TR-F`、验收与门禁结果。
 - **审查清单**：review gate 按 [`.github/review-checklists/agent-roadmap.md`](../.github/review-checklists/agent-roadmap.md) 逐项判定，避免凭主观印象放行。
 
+### Agent 质量度量（M4.8 / TR-F022）
+
+为收敛 agent 产出质量，仓库提供脚本 `scripts/agent-roadmap-quality-metrics.sh`，统一统计：
+
+- **CI 通过率**：统计窗口内、已合并 `agent-roadmap` PR 关联的已完成 CI 工作流运行（`success / total`）。
+- **回滚率**：统计窗口内、已合并 `agent-roadmap` PR 中，其合并提交随后被 `main` 上 `This reverts commit <sha>` 回滚的比例。
+
+示例：
+
+```bash
+scripts/agent-roadmap-quality-metrics.sh \
+  --days 30 \
+  --json-output .agents/reports/agent-roadmap-quality.json \
+  --markdown-output .agents/reports/agent-roadmap-quality.md
+```
+
+建议每轮自动委托开发结束后执行一次，并在回滚率或失败 CI 增高时优先做根因修复，不扩展新范围。
+
 ### 上游 radius 库跟踪（手动）
 
 核心库 `layeh.com/radius` 经 `go.mod` `replace` 指向组织 fork `github.com/talkincode/radius`。无自动巡检 workflow，按 `skills/sync-upstream-radius/SKILL.md` 的步骤定期人工核对上游是否有安全 / 协议修复并决定是否同步。
