@@ -113,7 +113,7 @@
 - [x] M3.1 协议层解析 / 下发 IPv6 访问属性（计费侧解析 Framed-IPv6-Address(RFC 6911)、修正 Framed/Delegated-IPv6-Prefix 缺省值落库；Access-Accept 下发 Framed-IPv6-Address）
 - [x] M3.2 数据库字段与迁移（PostgreSQL + SQLite 双兼容）：新增 `RadiusUser.DelegatedIpv6Prefix`（静态 RFC 4818 #123，按用户）、`RadiusUser.DelegatedIpv6PrefixPool` 与 `RadiusProfile.DelegatedIpv6PrefixPool`（RFC 6911 #171 DHCPv6-PD 池，按 §2.4 与 Framed-IPv6-Pool 区分）；GORM AutoMigrate 双库建列，Admin API 用户/套餐增改可持久化并支持 Profile 继承
 - [x] M3.3 用户 / 会话 / 计费的 IPv6 过滤与展示（会话/计费侧 IPv6 过滤与展示此前已闭环；本轮补齐用户侧：Admin API 用户列表新增 `ipv6_addr`(RFC 6911)/`delegated_ipv6_prefix`(RFC 4818) 过滤，前端用户编辑表单与详情页展示 `ipv6_prefix_pool`/`delegated_ipv6_prefix`/`delegated_ipv6_prefix_pool`（zh/en 双语），并修复用户静态 IPv6 地址更新写入幽灵列 `ipv6_addr` 导致从不落库的历史缺陷（正确列名 `ip_v6_addr`））
-- [ ] M3.4 Dashboard IPv6 维度统计
+- [x] M3.4 Dashboard IPv6 维度统计（在线会话 IPv6 占比/地址/Framed 前缀/委派前缀此前已闭环但缺测试；本轮新增用户库静态 IPv6 配置维度（已配置静态 IPv6 地址 / 委派前缀用户数），补齐 `TestGetDashboardIPv6Stats` 回归测试覆盖在线与用户两个维度，前端 IPv6 覆盖面板新增用户维度卡片（zh/en 双语））
 - [ ] M3.5 端到端测试与字段一致性校验（`test/integration/`，CI 自动执行）
 - [ ] M3.6 下发 Delegated-IPv6-Prefix / Delegated-IPv6-Prefix-Pool（依赖 M3.2 新增用户/Profile 配置字段；RFC 4818 / RFC 6911，按 RFC 6911 §2.4 与 Framed-IPv6-Pool 区分用途，禁止混用同一字段）
 

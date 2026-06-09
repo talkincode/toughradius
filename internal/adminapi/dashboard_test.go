@@ -178,3 +178,65 @@ func TestGetDashboardStats(t *testing.T) {
 	assert.Equal(t, int64(1), premiumProfile.Value)
 	assert.Equal(t, int64(1), unassignedCount)
 }
+
+// TestGetDashboardIPv6Stats exercises the IPv6 dimension of the dashboard along
+// both axes: live adoption across online sessions and static provisioning across
+// the user base. It regression-protects the online counters (previously untested)
+// and the user-base counters.
+func TestGetDashboardIPv6Stats(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	now := time.Now()
+
+	// Users: two with a static IPv6 address, two with a static delegated prefix
+	// (one user overlaps with both), and one with no IPv6 provisioning at all.
+	users := []*domain.RadiusUser{
+		{Username: "v6addr1", Status: "enabled", ExpireTime: now.Add(24 * time.Hour), IpV6Addr: "2001:db8:1::1"},
+		{Username: "v6both", Status: "enabled", ExpireTime: now.Add(24 * time.Hour), IpV6Addr: "2001:db8:2::1", DelegatedIpv6Prefix: "2001:db8:2:100::/56"},
+		{Username: "v6pd", Status: "enabled", ExpireTime: now.Add(24 * time.Hour), DelegatedIpv6Prefix: "2001:db8:3::/48"},
+		{Username: "plain", Status: "enabled", ExpireTime: now.Add(24 * time.Hour)},
+	}
+	for _, user := range users {
+		require.NoError(t, db.Create(user).Error)
+	}
+
+	// Online sessions: one per IPv6 attribute, one carrying all three, one with none.
+	sessions := []*domain.RadiusOnline{
+		{Username: "v6addr1", AcctSessionId: "s-addr", AcctStartTime: now.Add(-5 * time.Minute), FramedIpv6Address: "2001:db8:1::1"},
+		{Username: "v6both", AcctSessionId: "s-prefix", AcctStartTime: now.Add(-5 * time.Minute), FramedIpv6Prefix: "2001:db8:2::/64"},
+		{Username: "v6pd", AcctSessionId: "s-pd", AcctStartTime: now.Add(-5 * time.Minute), DelegatedIpv6Prefix: "2001:db8:3::/48"},
+		{Username: "v6both", AcctSessionId: "s-all", AcctStartTime: now.Add(-5 * time.Minute), FramedIpv6Address: "2001:db8:2::1", FramedIpv6Prefix: "2001:db8:2::/64", DelegatedIpv6Prefix: "2001:db8:2:100::/56"},
+		{Username: "plain", AcctSessionId: "s-none", AcctStartTime: now.Add(-5 * time.Minute)},
+	}
+	for _, session := range sessions {
+		require.NoError(t, db.Create(session).Error)
+	}
+
+	e := setupTestEcho()
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/dashboard/stats", nil)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+
+	require.NoError(t, GetDashboardStats(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var response Response
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
+	dataBytes, err := json.Marshal(response.Data)
+	require.NoError(t, err)
+	var stats DashboardStats
+	require.NoError(t, json.Unmarshal(dataBytes, &stats))
+
+	ipv6 := stats.IPv6Stats
+	// Online adoption dimension.
+	assert.Equal(t, int64(2), ipv6.OnlineWithIPv6Address, "framed address: s-addr + s-all")
+	assert.Equal(t, int64(2), ipv6.OnlineWithFramedPrefix, "framed prefix: s-prefix + s-all")
+	assert.Equal(t, int64(2), ipv6.OnlineWithDelegatedPrefix, "delegated prefix: s-pd + s-all")
+	assert.Equal(t, int64(4), ipv6.OnlineWithIPv6, "any IPv6 attr: all sessions except s-none")
+	assert.Equal(t, int64(5), stats.OnlineUsers)
+	assert.InDelta(t, 80.0, ipv6.AdoptionRate, 0.01, "4 of 5 online sessions carry IPv6")
+	// User provisioning dimension.
+	assert.Equal(t, int64(2), ipv6.UsersWithStaticAddress, "static address: v6addr1 + v6both")
+	assert.Equal(t, int64(2), ipv6.UsersWithDelegatedPrefix, "delegated prefix: v6both + v6pd")
+}

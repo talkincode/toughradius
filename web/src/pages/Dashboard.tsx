@@ -39,6 +39,8 @@ interface DashboardIPv6Stats {
   online_with_ipv6_address: number;
   online_with_framed_prefix: number;
   online_with_delegated_prefix: number;
+  users_with_static_address: number;
+  users_with_delegated_prefix: number;
   adoption_rate: number;
 }
 
@@ -77,6 +79,8 @@ const emptyStats: DashboardStats = {
     online_with_ipv6_address: 0,
     online_with_framed_prefix: 0,
     online_with_delegated_prefix: 0,
+    users_with_static_address: 0,
+    users_with_delegated_prefix: 0,
     adoption_rate: 0,
   },
 };
@@ -179,6 +183,8 @@ const Dashboard = () => {
     { label: translate('dashboard.ipv6_address'), value: ipv6.online_with_ipv6_address, accent: '#0ea5e9' },
     { label: translate('dashboard.ipv6_framed_prefix'), value: ipv6.online_with_framed_prefix, accent: '#10b981' },
     { label: translate('dashboard.ipv6_delegated_prefix'), value: ipv6.online_with_delegated_prefix, accent: '#f59e0b' },
+    { label: translate('dashboard.ipv6_users_static_address'), value: ipv6.users_with_static_address, accent: '#8b5cf6' },
+    { label: translate('dashboard.ipv6_users_delegated_prefix'), value: ipv6.users_with_delegated_prefix, accent: '#ec4899' },
   ];
 
   const authTrendOption = useMemo(

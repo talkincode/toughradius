@@ -28,14 +28,18 @@ type DashboardStats struct {
 	IPv6Stats           DashboardIPv6Stats        `json:"ipv6_stats"`           // IPv6 adoption among currently online sessions
 }
 
-// DashboardIPv6Stats summarizes IPv6 usage across currently online sessions so
-// operators can quickly answer "which subscribers are currently using IPv6 or
-// delegated prefixes?" without inspecting the database manually.
+// DashboardIPv6Stats summarizes IPv6 usage along two dimensions: live adoption
+// across currently online sessions, and static provisioning across the user
+// base. Together they let operators answer both "who is using IPv6 right now?"
+// and "how many subscribers are provisioned for IPv6?" without inspecting the
+// database manually.
 type DashboardIPv6Stats struct {
 	OnlineWithIPv6            int64   `json:"online_with_ipv6"`             // Online sessions carrying any IPv6 attribute
 	OnlineWithIPv6Address     int64   `json:"online_with_ipv6_address"`     // Online sessions with a Framed-IPv6-Address
 	OnlineWithFramedPrefix    int64   `json:"online_with_framed_prefix"`    // Online sessions with a Framed-IPv6-Prefix
 	OnlineWithDelegatedPrefix int64   `json:"online_with_delegated_prefix"` // Online sessions with a Delegated-IPv6-Prefix
+	UsersWithStaticAddress    int64   `json:"users_with_static_address"`    // Users provisioned with a static IPv6 address (RadiusUser.IpV6Addr)
+	UsersWithDelegatedPrefix  int64   `json:"users_with_delegated_prefix"`  // Users provisioned with a static Delegated-IPv6-Prefix (RFC 4818)
 	AdoptionRate              float64 `json:"adoption_rate"`                // Percentage of online sessions carrying any IPv6 attribute
 }
 
@@ -228,8 +232,10 @@ func fetchProfileDistribution(db *gorm.DB) []DashboardProfileSlice {
 	return result
 }
 
-// fetchIPv6Stats aggregates IPv6 usage across currently online sessions. A field
-// is considered "present" when it is non-null and not an empty/"NA" placeholder.
+// fetchIPv6Stats aggregates IPv6 usage along two dimensions. The "online"
+// counters reflect live adoption across currently online sessions; the "users"
+// counters reflect static provisioning across the RadiusUser base. A field is
+// considered "present" when it is non-null and not an empty/"NA" placeholder.
 // onlineTotal is the total online session count used to compute the adoption rate.
 func fetchIPv6Stats(db *gorm.DB, onlineTotal int64) DashboardIPv6Stats {
 	stats := DashboardIPv6Stats{}
@@ -252,6 +258,16 @@ func fetchIPv6Stats(db *gorm.DB, onlineTotal int64) DashboardIPv6Stats {
 		notEmpty("framed_ipv6_address"), notEmpty("framed_ipv6_prefix"), notEmpty("delegated_ipv6_prefix"))
 	if err := model().Where(anyCond).Count(&stats.OnlineWithIPv6).Error; err != nil {
 		logDashboardQueryError("fetch ipv6 any count", err)
+	}
+
+	// User-base provisioning dimension: how many subscribers carry a static IPv6
+	// identity (RadiusUser.IpV6Addr -> column ip_v6_addr; RadiusUser.DelegatedIpv6Prefix).
+	userModel := func() *gorm.DB { return db.Model(&domain.RadiusUser{}) }
+	if err := userModel().Where(notEmpty("ip_v6_addr")).Count(&stats.UsersWithStaticAddress).Error; err != nil {
+		logDashboardQueryError("fetch ipv6 user static address count", err)
+	}
+	if err := userModel().Where(notEmpty("delegated_ipv6_prefix")).Count(&stats.UsersWithDelegatedPrefix).Error; err != nil {
+		logDashboardQueryError("fetch ipv6 user delegated prefix count", err)
 	}
 
 	if onlineTotal > 0 {
