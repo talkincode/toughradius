@@ -151,43 +151,6 @@ func TestPEAPHandler_HandleResponse_NeverAuthenticatesWithoutConfig(t *testing.T
 	assert.ErrorIs(t, err, eap.ErrTLSNotConfigured)
 }
 
-func TestPEAPHandler_FullHandshake_TunnelCompletesThenRejectsInner(t *testing.T) {
-	ca := newHSTestCA(t, "PEAP Root CA")
-	cfg := peapServerEngineConfig(t, ca)
-	h := NewPEAPHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
-
-	sm := statemanager.NewMemoryStateManager()
-	defer sm.Close()
-
-	stateID := startHandshake(t, h, sm, "peapuser", "secret")
-	sup := newSupplicantForType(t, h, eap.TypePEAP, sm, stateID, "secret", peapClientCfg(ca))
-	success, err := sup.run()
-	assert.False(t, success, "PEAP M8.2 must not authenticate before inner EAP is implemented")
-	require.Error(t, err)
-	assert.ErrorIs(t, err, eap.ErrPEAPInnerNotImplemented)
-
-	state, err := sm.GetState(stateID)
-	require.NoError(t, err)
-	assert.False(t, state.Success)
-}
-
-func TestPEAPHandler_FullHandshake_FragmentedTunnelCompletesThenRejectsInner(t *testing.T) {
-	ca := newHSTestCA(t, "PEAP Fragment Root CA")
-	cfg := peapServerEngineConfig(t, ca)
-	h := NewPEAPHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
-	h.maxFragment = 64
-
-	sm := statemanager.NewMemoryStateManager()
-	defer sm.Close()
-
-	stateID := startHandshake(t, h, sm, "peapuser", "secret")
-	sup := newSupplicantForType(t, h, eap.TypePEAP, sm, stateID, "secret", peapClientCfg(ca))
-	success, err := sup.run()
-	assert.False(t, success, "fragmented PEAP M8.2 tunnel must still reject before inner EAP")
-	require.Error(t, err)
-	assert.ErrorIs(t, err, eap.ErrPEAPInnerNotImplemented)
-}
-
 func peapServerEngineConfig(t *testing.T, serverCA *hsTestCA) *tlsengine.Config {
 	t.Helper()
 	serverCert := serverCA.issue(t, "radius.example.com", func(c *x509.Certificate) {
@@ -198,13 +161,5 @@ func peapServerEngineConfig(t *testing.T, serverCA *hsTestCA) *tlsengine.Config 
 		ServerOnly:        true,
 		MinVersion:        tls.VersionTLS12,
 		HandshakeTimeout:  5 * time.Second,
-	}
-}
-
-func peapClientCfg(serverCA *hsTestCA) *tls.Config {
-	return &tls.Config{
-		RootCAs:    serverCA.pool,
-		ServerName: "radius.example.com",
-		MinVersion: tls.VersionTLS12,
 	}
 }

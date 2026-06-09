@@ -40,10 +40,13 @@ const (
 // Milestone scope:
 //   - M8.1: registered the method (EAP type 25, name "eap-peap") and answered
 //     EAP-Response/Identity with a PEAPv0 Start.
-//   - M8.2 (current): establishes the outer TLS tunnel and fragmentation
-//     reassembly, reusing the EAP-TLS state machine, then rejects with
-//     eap.ErrPEAPInnerNotImplemented because inner authentication is not present.
-//   - M8.3: inner EAP-MSCHAPv2 exchange and MPPE key derivation.
+//   - M8.2: established the outer TLS tunnel and fragmentation reassembly,
+//     reusing the EAP-TLS state machine.
+//   - M8.3a: post-handshake application-data exchange and RFC 5705 key export
+//     in the tlsengine package.
+//   - M8.3b (current): runs the inner EAP-MSCHAPv2 exchange (RFC 2759) inside
+//     the tunnel, validating the NT-Response and, on success, deriving the
+//     MS-MPPE-Send/Recv keys from the TLS session (RFC 5705 / RFC 2548).
 type PEAPHandler struct {
 	configProvider TLSConfigProvider
 	maxFragment    int
@@ -63,20 +66,20 @@ func NewPEAPHandlerWithConfig(provider TLSConfigProvider) *PEAPHandler {
 }
 
 func (h *PEAPHandler) newTunnel() *tlsTunnel {
-	return &tlsTunnel{
-		eapType:        eap.TypePEAP,
-		maxFragment:    h.maxFragment,
-		configProvider: h.configProvider,
-		onHandshakeComplete: func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
-			defer func() { _ = engine.Close() }()
-			state.Success = false
-			clearKey(state, stateKeyEngine)
-			if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
-				return false, err
-			}
-			return false, eap.ErrPEAPInnerNotImplemented
-		},
+	t := &tlsTunnel{
+		eapType:           eap.TypePEAP,
+		maxFragment:       h.maxFragment,
+		configProvider:    h.configProvider,
+		onApplicationData: h.handleInnerEAP,
 	}
+	// Once the outer tunnel is established, PEAP starts the inner EAP-MSCHAPv2
+	// exchange (RFC 2759) inside the tunnel and derives MPPE keys from the TLS
+	// session (RFC 5705 / RFC 2548) instead of granting directly. The TLS
+	// engine is kept alive across inner rounds.
+	t.onHandshakeComplete = func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
+		return t.startInner(ctx, state, engine)
+	}
+	return t
 }
 
 // Name returns the handler name ("eap-peap").
@@ -123,9 +126,10 @@ func (h *PEAPHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 }
 
 // HandleResponse drives PEAP's outer TLS tunnel and fragmentation using the
-// shared EAP-TLS state machine (RFC 5216 §2.1.5/§3.1; PEAPv0 [MS-PEAP]). M8.2
-// deliberately rejects after the tunnel completes because the inner EAP method
-// is M8.3 scope, so this handler can never authenticate yet.
+// shared EAP-TLS state machine (RFC 5216 §2.1.5/§3.1; PEAPv0 [MS-PEAP]). Once
+// the tunnel is established it carries the inner EAP-MSCHAPv2 exchange (RFC
+// 2759) as TLS application data and, on success, derives the MS-MPPE keys from
+// the TLS session (RFC 5705 / RFC 2548); see handleInnerEAP.
 func (h *PEAPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	return h.newTunnel().HandleResponse(ctx)
 }

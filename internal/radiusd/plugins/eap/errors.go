@@ -38,4 +38,9 @@ var (
 	// been established but before the inner EAP method is implemented (milestone
 	// M8.3). It guarantees M8.2 can never grant access.
 	ErrPEAPInnerNotImplemented = errors.New("PEAP inner EAP method is not implemented yet")
+	// ErrPEAPInnerProtocol is returned when the inner EAP-MSCHAPv2 exchange
+	// carried inside the established PEAP tunnel violates the expected protocol
+	// (unexpected EAP code/type/opcode for the current inner sub-state). It
+	// guarantees a malformed inner exchange rejects rather than grants.
+	ErrPEAPInnerProtocol = errors.New("PEAP inner EAP-MSCHAPv2 protocol violation")
 )
