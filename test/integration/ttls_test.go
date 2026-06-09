@@ -249,12 +249,16 @@ func assertMPPEKeys(t *testing.T, resp *radius.Packet, secret string, reqAuth [1
 }
 
 // assertNoMPPEKeys verifies a rejected handshake leaks no MPPE session keys.
+// Both the Send and Recv keys are checked so a reject can never smuggle either
+// half of the session key material.
 func assertNoMPPEKeys(t *testing.T, resp *radius.Packet, secret string, reqAuth [16]byte) {
 	t.Helper()
 	resp.Secret = []byte(secret)
 	resp.Authenticator = reqAuth
-	_, err := microsoft.MSMPPERecvKey_Lookup(resp)
-	assert.ErrorIs(t, err, radius.ErrNoAttribute, "rejects must not carry MPPE keys")
+	_, recvErr := microsoft.MSMPPERecvKey_Lookup(resp)
+	assert.ErrorIs(t, recvErr, radius.ErrNoAttribute, "rejects must not carry an MS-MPPE-Recv-Key")
+	_, sendErr := microsoft.MSMPPESendKey_Lookup(resp)
+	assert.ErrorIs(t, sendErr, radius.ErrNoAttribute, "rejects must not carry an MS-MPPE-Send-Key")
 }
 
 // --- over-the-wire EAP-TTLS supplicant ------------------------------------
