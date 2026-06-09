@@ -20,7 +20,20 @@ var allowedAcctSortFields = map[string]bool{
 	"nas_addr": true, "framed_ipaddr": true, "acct_input_total": true, "acct_output_total": true,
 }
 
-// ListAccounting retrieves the accounting logs table
+// ListAccounting handles GET /api/v1/accounting and returns a paginated
+// accounting-record page in the standard [Response] envelope. It accepts page
+// and perPage (perPage is clamped to 1..100, default 10), optional sort/order
+// (validated against allowedAcctSortFields to protect ORDER BY from injection),
+// and optional fuzzy filters for username, NAS address, session ID, IPv4/IPv6,
+// MAC, and delegated-prefix fields.
+//
+// Time-window filters are optional: acct_start_time_gte and
+// acct_start_time_lte accept RFC3339, datetime-local ("2006-01-02T15:04"), or
+// date-only ("2006-01-02") values. Unparseable time values are ignored rather
+// than rejected.
+//
+// Any authenticated operator may call this endpoint.
+//
 // @Summary get accounting logs table
 // @Tags Accounting
 // @Param page query int false "Page number"
@@ -120,7 +133,11 @@ func ListAccounting(c echo.Context) error {
 	return paged(c, records, total, page, perPage)
 }
 
-// GetAccounting fetches a single accounting record
+// GetAccounting handles GET /api/v1/accounting/:id and returns one accounting
+// record by numeric id. It responds with INVALID_ID (400) when the path
+// parameter is not an integer and NOT_FOUND (404) when the record does not
+// exist. Any authenticated operator may call this endpoint.
+//
 // @Summary get accounting record detail
 // @Tags Accounting
 // @Param id path int true "Accounting ID"
@@ -140,7 +157,9 @@ func GetAccounting(c echo.Context) error {
 	return ok(c, record)
 }
 
-// parseFlexibleTime parses time string in RFC3339 or datetime-local format
+// parseFlexibleTime parses time filters accepted by ListAccounting. Supported
+// formats are RFC3339, datetime-local ("2006-01-02T15:04", parsed in
+// time.Local), and date-only ("2006-01-02", parsed in time.Local).
 func parseFlexibleTime(s string) (time.Time, error) {
 	// Try RFC3339 first (e.g., "2025-11-01T21:16:00Z")
 	if t, err := time.Parse(time.RFC3339, s); err == nil {
@@ -157,8 +176,9 @@ func parseFlexibleTime(s string) (time.Time, error) {
 	return time.Time{}, &time.ParseError{Layout: "multiple", Value: s, Message: "unable to parse time"}
 }
 
-// escapeLikePattern escapes special characters in LIKE pattern to prevent wildcard injection
-// This escapes %, _, and \ which are SQL LIKE wildcards
+// escapeLikePattern escapes LIKE wildcard metacharacters so user-provided
+// filter strings remain literal substrings instead of turning into broad
+// wildcard expressions.
 func escapeLikePattern(s string) string {
 	s = strings.ReplaceAll(s, "\\", "\\\\") // escape backslash first
 	s = strings.ReplaceAll(s, "%", "\\%")   // escape percent
@@ -166,7 +186,7 @@ func escapeLikePattern(s string) string {
 	return s
 }
 
-// registerAccountingRoutes registers accounting routes
+// registerAccountingRoutes wires accounting query routes under /api/v1.
 func registerAccountingRoutes() {
 	webserver.ApiGET("/accounting", ListAccounting)
 	webserver.ApiGET("/accounting/:id", GetAccounting)
