@@ -31,7 +31,7 @@
 | TR-F001 | RADIUS 协议 | RADIUS 认证服务 | 支持 UDP Access-Request，完成 NAS 识别、共享密钥、用户认证、策略校验、Access-Accept / Access-Reject 响应、认证日志和指标。 | `main.go`, `internal/radiusd/radius_auth.go`, `internal/radiusd/auth_pipeline.go`, `internal/radiusd/plugins/auth` | 核心基线 | 不绕过认证流水线；新增认证逻辑必须注册为 validator、checker、guard 或 enhancer，并补测试。 |
 | TR-F002 | RADIUS 协议 | RADIUS 计费服务 | 支持 UDP Accounting-Request，处理 start、interim/update、stop、accounting on/off，维护在线会话和计费记录。 | `internal/radiusd/radius_acct.go`, `internal/radiusd/plugins/accounting`, `internal/domain/radius.go` | 核心基线 | 不直接在协议入口写业务分支；新增计费行为优先扩展 accounting handler。 |
 | TR-F003 | RADIUS 协议 | RadSec 服务 | 支持 RADIUS over TLS 入口，将认证和计费请求分发到既有服务，使用配置中的证书路径和端口。 | `main.go`, `internal/radiusd/radsec_server.go`, `internal/radiusd/radsec_service.go`, `pkg/certgen` | 核心基线 | 必须保持与普通 RADIUS 认证/计费逻辑复用；证书和 TLS 行为变更需覆盖配置与集成测试。 |
-| TR-F004 | RADIUS 协议 | EAP 认证 | 支持 EAP handler 注册、启用列表配置和 EAP 状态管理；当前生产基线以 EAP-MD5、EAP-MSCHAPv2 为主。 | `internal/radiusd/eap_helper.go`, `internal/radiusd/plugins/eap`, `internal/app/config_schemas.json` | 已实现 | `eap-otp` 当前含示例固定 OTP，扩展前必须接入真实校验服务并更新测试与安全说明。 |
+| TR-F004 | RADIUS 协议 | EAP 认证 | 支持 EAP handler 注册、启用列表配置、EAP 状态管理与 TLS 隧道分片；已交付方法：EAP-MD5、EAP-MSCHAPv2、EAP-TLS、PEAPv0/EAP-MSCHAPv2、EAP-TTLS（内层 PAP 与 MS-CHAP-V2）。 | `internal/radiusd/eap_helper.go`, `internal/radiusd/plugins/eap`, `internal/radiusd/plugins/eap/handlers`, `internal/radiusd/plugins/eap/tlsfragment`, `internal/app/config_schemas.json` | 已实现 | EAP 方法枚举为 `eap-md5/eap-mschapv2/eap-tls/eap-peap/eap-ttls`（默认 `eap-md5`）；PEAP/TTLS 复用 EAP-TLS 证书建立 TLS 1.2 隧道，文档须保留 MS-CHAPv2 类 NTLMv1 攻击面提示，默认不削弱外层 TLS。`eap-otp` 仅存于代码（未纳入枚举）且含示例固定 OTP，启用前须接入真实校验服务并更新测试与安全说明。 |
 | TR-F005 | 厂商兼容 | VSA 解析与响应增强 | 支持标准属性、厂商字典、请求解析和响应增强；重点维护 Huawei、H3C、ZTE、Mikrotik、iKuai 等现有路径。 | `share/dictionary*`, `internal/radiusd/vendors`, `internal/radiusd/plugins/vendorparsers`, `internal/radiusd/plugins/auth/enhancers` | 可扩展 | 新厂商必须按 parser / enhancer / registry 模式接入，并用厂商样例包覆盖解析和响应属性。 |
 | TR-F006 | 认证策略 | 用户状态、过期、在线数、MAC/VLAN 绑定 | 认证时校验用户启停、过期时间、在线数量限制、MAC 绑定、VLAN 绑定，并输出明确拒绝原因和指标。 | `internal/radiusd/plugins/auth/checkers`, `internal/radiusd/errors`, `internal/app/radius_metrics.go` | 核心基线 | 策略变化不得降低默认安全性；新增拒绝场景必须定义错误类型、指标和测试。 |
 | TR-F007 | 用户与资费 | RADIUS 用户管理 | 管理用户基础信息、账号密码、Profile 关联、地址池、IPv4/IPv6、速率、VLAN、MAC、状态和到期时间。 | `internal/adminapi/users.go`, `internal/domain/radius.go`, `web/src/resources/radiusUsers.tsx` | 已实现 | 用户字段新增必须同步后端请求结构、领域模型、前端资源、验证和列表过滤。 |
@@ -50,25 +50,25 @@
 | TR-F020 | 构建部署 | 构建、Docker 和前端嵌入 | 支持 Go 构建、前端构建、静态资源嵌入、Docker 镜像和 Makefile 工作流。 | `Makefile`, `Dockerfile`, `web/vite.config.ts`, `web/static.go`, `.github` | 已实现 | 构建链路变更必须同时验证后端二进制和前端产物。 |
 | TR-F021 | 协议资料 | RFC 与字典资料维护 | 保留 RADIUS、EAP、RadSec、VSA 相关 RFC 和 FreeRADIUS 字典资料，支撑协议实现和厂商扩展。 | `docs/rfcs`, `share`, `internal/radiusd/vendors` | 已实现 | 协议资料更新不能替代代码测试；新增资料需说明对应实现或待实现功能编号。 |
 | TR-F022 | 安全与质量 | 测试、验证、输入约束和审计习惯 | 通过单元测试、集成测试、白名单排序、输入校验、密码哈希、JWT 和日志指标降低回归风险。 | `*_test.go`, `.golangci.yml`, `internal/adminapi/helpers.go`, `pkg/validator`, `pkg/common` | 核心基线 | 安全边界变更必须有针对性测试；不得为了快速开发移除验证或鉴权。 |
-| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、功能清单、路线图、RFC 索引等），提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs/`, `book.toml`（规划）, `.github/workflows` | 可扩展 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` 不扩展为产品门户；需与现有 GitBook 发布集成协调，避免双发布管线冲突。 |
+| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、功能清单、路线图、RFC 索引等），提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs-site/book.toml`, `docs-site/src`（zh / en 双语章节）, `.github/workflows/ci.yml`（docs 任务）, `docs/` | 部分实现 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` 不扩展为产品门户；需与现有 GitBook 发布集成协调，避免双发布管线冲突。 |
 | TR-F024 | 代码规范 | Go API 文档与注释规范 | 对齐 Go 标准库风格：导出标识符必须有 godoc 注释，包注释（`doc.go`）、可运行示例（`Example`）、错误与并发语义说明齐备，并可由 lint / CI 度量。 | `.agents/skills/document-go-apis`, 各包 doc 注释, `.golangci.yml` | 可扩展 | 规范优先增量推进，不一次性重写历史注释；以标准库 godoc 习惯为准，禁止无信息量的机械式注释。 |
 
 ## 优先扩展功能方向
 
-以下方向是当前允许优先推进的产品扩展。实现前仍需拆分 MVP、补充测试，并在 Issue / PR 中引用对应功能编号。
+以下为优先级扩展方向及其交付状态（权威里程碑见 [`docs/roadmap.md`](roadmap.md)）。已交付方向的能力边界已并入上方功能清单表，此处保留以追溯范围与开发边界；未交付方向在实现前仍需拆分 MVP、补充测试，并在 Issue / PR 中引用对应功能编号。
 
-| 优先级 | 关联编号 | 扩展方向 | 目标范围 | 开发边界 |
-| --- | --- | --- | --- | --- |
-| P1 | TR-F004 | EAP-TLS 支持 | 在现有 EAP handler 体系下新增 EAP-TLS，支持证书校验、TLS 握手状态管理、用户身份映射和明确的失败原因。 | 不重写 EAP 协调器；先交付最小可用认证链路，再扩展证书策略、吊销检查和管理端配置。 |
-| P1 | TR-F010 / TR-F012 / TR-F013 | CoA 动态授权支持 | 在用户管理面板提供授权策略触发能力，支持对在线用户发起 CoA / Disconnect 等动态授权动作，并记录触发结果。 | 后端先抽象 CoA 发送服务和审计结果；前端只暴露可验证的安全动作，避免直接拼装任意 RADIUS 包。 |
-| P1 | TR-F007 / TR-F011 / TR-F015 | IPv6 相关能力增强 | 完善 IPv6 地址、IPv6 前缀、Delegated-IPv6-Prefix 在用户、在线会话、计费记录、审计日志和 Dashboard 中的查询与展示。 | 不只做字段展示；协议解析、数据库字段、过滤条件、前端列表和审计口径必须一起闭环。 |
-| P1 | TR-F004 | PEAPv0 / EAP-MSCHAPv2 | 用服务器证书建立 PEAP TLS 隧道，隧道内运行 EAP-MSCHAPv2，为 Windows / AD / 传统企业网络提供兼容认证，并正确导出 MPPE 会话密钥。 | 兼容性优先，不作为先进安全卖点；文档与配置必须明示 MS-CHAPv2 存在类似 NTLMv1 的攻击面（见 Microsoft 文档），默认不削弱外层 TLS；不重写 EAP 协调器。 |
-| P1 | TR-F004 | EAP-TTLS（隧道 + 内层 PAP/CHAP/MS-CHAP/MS-CHAPv2） | 按 RFC 5281 用服务器证书建立 TLS 隧道，隧道内承载 PAP / CHAP / MS-CHAP / MS-CHAP-V2（及内层 EAP），让 LDAP、老账号库、混合客户端无需立即改造证书体系即可接入。 | 内层方法逐个交付（先 PAP，再 MS-CHAP-V2）；后端用户库适配走现有认证流水线，不在协议入口写库分支；不重写 EAP 协调器。 |
-| P2 | TR-F004 | EAP-TLS 1.3 升级（RFC 9190） | 在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生，遵循 RFC 9427 的 TLS 1.3 派生规则。 | 保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射。 |
-| P3 | TR-F004 | TEAP（隧道，machine + user chaining） | 按 RFC 7170 / RFC 9930（TEAPv1）实现现代隧道 EAP，支持 machine + user chaining、证书 + 密码组合认证；TLS 1.3 下采用 RFC 9427 派生规则。 | 中长期方向，客户端生态弱于 PEAP；仅在客户端环境可控时优先，不与 PEAP / TTLS 抢第一版资源。 |
-| P3 | TR-F004 | EAP-PWD（按需） | 按 RFC 5931 以共享口令完成认证，不为每客户端签发证书，适合 IoT、嵌入式、受控小规模设备。 | 非通用企业 Wi-Fi 首选；按需推进，避免为协议完整性拖入维护沼泽。 |
-| P2 | TR-F023 | 双语文档站点（mdbook） | 用 mdbook 搭建中英文双语文档站点，收编 README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引等散落文档，提供统一导航、本地构建与 CI 产物校验。 | 先规划与骨架，再分批迁移；中英文目录结构对应、同步维护；文档不替代以代码与测试为准的口径。 |
-| P2 | TR-F024 | Go API 文档与注释规范（标准库风格） | 制定并落地 godoc / 标准库风格注释规范：导出标识符注释齐全、包注释、`Example`、错误与并发语义说明；提供配套技能与可度量门禁。 | 增量推进，按模块补齐；以信息量为准，禁止机械式无意义注释。 |
+| 优先级 | 关联编号 | 扩展方向 | 状态 | 目标范围 | 开发边界 |
+| --- | --- | --- | --- | --- | --- |
+| P1 | TR-F004 | EAP-TLS 支持 | 已交付（M1） | 在现有 EAP handler 体系下新增 EAP-TLS，支持证书校验、TLS 握手状态管理、用户身份映射和明确的失败原因。 | 不重写 EAP 协调器；先交付最小可用认证链路，再扩展证书策略、吊销检查和管理端配置。 |
+| P1 | TR-F010 / TR-F012 / TR-F013 | CoA 动态授权支持 | 已交付（M2） | 在用户管理面板提供授权策略触发能力，支持对在线用户发起 CoA / Disconnect 等动态授权动作，并记录触发结果。 | 后端先抽象 CoA 发送服务和审计结果；前端只暴露可验证的安全动作，避免直接拼装任意 RADIUS 包。 |
+| P1 | TR-F007 / TR-F011 / TR-F015 | IPv6 相关能力增强 | 已交付（M3） | 完善 IPv6 地址、IPv6 前缀、Delegated-IPv6-Prefix 在用户、在线会话、计费记录、审计日志和 Dashboard 中的查询与展示。 | 不只做字段展示；协议解析、数据库字段、过滤条件、前端列表和审计口径必须一起闭环。 |
+| P1 | TR-F004 | PEAPv0 / EAP-MSCHAPv2 | 已交付（M8） | 用服务器证书建立 PEAP TLS 隧道，隧道内运行 EAP-MSCHAPv2，为 Windows / AD / 传统企业网络提供兼容认证，并正确导出 MPPE 会话密钥。 | 兼容性优先，不作为先进安全卖点；文档与配置必须明示 MS-CHAPv2 存在类似 NTLMv1 的攻击面（见 Microsoft 文档），默认不削弱外层 TLS；不重写 EAP 协调器。 |
+| P1 | TR-F004 | EAP-TTLS（隧道 + 内层 PAP/CHAP/MS-CHAP/MS-CHAPv2） | 已交付（M9，内层 PAP + MS-CHAP-V2；CHAP/MS-CHAP 待续） | 按 RFC 5281 用服务器证书建立 TLS 隧道，隧道内承载 PAP / CHAP / MS-CHAP / MS-CHAP-V2（及内层 EAP），让 LDAP、老账号库、混合客户端无需立即改造证书体系即可接入。 | 内层方法逐个交付（先 PAP，再 MS-CHAP-V2）；后端用户库适配走现有认证流水线，不在协议入口写库分支；不重写 EAP 协调器。 |
+| P2 | TR-F004 | EAP-TLS 1.3 升级（RFC 9190） | 计划中（M10） | 在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生，遵循 RFC 9427 的 TLS 1.3 派生规则。 | 保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射。 |
+| P3 | TR-F004 | TEAP（隧道，machine + user chaining） | 计划中（M11） | 按 RFC 7170 / RFC 9930（TEAPv1）实现现代隧道 EAP，支持 machine + user chaining、证书 + 密码组合认证；TLS 1.3 下采用 RFC 9427 派生规则。 | 中长期方向，客户端生态弱于 PEAP；仅在客户端环境可控时优先，不与 PEAP / TTLS 抢第一版资源。 |
+| P3 | TR-F004 | EAP-PWD（按需） | 计划中（M12） | 按 RFC 5931 以共享口令完成认证，不为每客户端签发证书，适合 IoT、嵌入式、受控小规模设备。 | 非通用企业 Wi-Fi 首选；按需推进，避免为协议完整性拖入维护沼泽。 |
+| P2 | TR-F023 | 双语文档站点（mdbook） | 进行中（M13，置顶优先） | 用 mdbook 搭建中英文双语文档站点，收编 README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引等散落文档，提供统一导航、本地构建与 CI 产物校验。 | 先规划与骨架，再分批迁移；中英文目录结构对应、同步维护；文档不替代以代码与测试为准的口径。 |
+| P2 | TR-F024 | Go API 文档与注释规范（标准库风格） | 进行中（M4） | 制定并落地 godoc / 标准库风格注释规范：导出标识符注释齐全、包注释、`Example`、错误与并发语义说明；提供配套技能与可度量门禁。 | 增量推进，按模块补齐；以信息量为准，禁止机械式无意义注释。 |
 
 ## 当前非目标方向
 
