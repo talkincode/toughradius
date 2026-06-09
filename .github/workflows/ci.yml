@@ -271,3 +271,33 @@ jobs:
           # that runs during "Post job cleanup" on every run.
           skip-save-cache: true
         continue-on-error: ${{ github.event_name == 'pull_request' }}
+
+  docs:
+    name: Docs (mdbook)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Pin the mdBook version to match what contributors run locally so a build
+      # that passes locally also passes here (and vice versa).
+      - name: Install mdBook
+        uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: '0.5.3'
+
+      - name: Build handbook
+        run: mdbook build docs-site
+
+      - name: Install lychee
+        uses: taiki-e/install-action@v2
+        with:
+          tool: lychee
+
+      # Offline link check over the generated HTML: a build failure or a broken
+      # internal link fails the pipeline. --offline skips http(s) links so the
+      # gate never flakes on network conditions; --root-dir lets the generated
+      # 404 page's root-relative links resolve.
+      - name: Check links (offline)
+        run: lychee --offline --no-progress --root-dir "$PWD/docs-site/book" 'docs-site/book/**/*.html'

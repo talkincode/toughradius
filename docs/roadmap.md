@@ -38,7 +38,7 @@
 | M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
-| M13 | 双语文档站点（mdbook） | TR-F023 | P2 | 计划中 |
+| M13 | 双语文档站点（mdbook） | TR-F023 | P2 | 进行中 |
 
 ---
 
@@ -271,11 +271,11 @@
 - **技能**：文档工程为主；复用 `.agents/skills/reference-rfc/SKILL.md` 维护协议资料索引、`.agents/skills/align-feature-checklist/SKILL.md` 保持中英文同步。
 
 子任务：
-- [ ] M13.0 评估与现有 GitBook 发布的关系（替代 / 并存），确定单一事实来源与发布管线边界
-- [ ] M13.1 mdbook 骨架：`book.toml` + `src/`（zh / en 双语目录）+ 本地构建（`mdbook build`）
+- [x] M13.0 评估与现有 GitBook 发布的关系（替代 / 并存），确定单一事实来源与发布管线边界 —— 决策：**并存**。mdbook 为随仓库维护、CI 校验的双语权威手册（置于独立目录 `docs-site/`）；GitBook 经其 GitHub 集成在外部同步（仓库无 `.gitbook.yaml`/`book.json`/GitBook `SUMMARY.md`），两套管线不共享构建步骤、互不冲突；迁移采用「迁入手册 + 原文件留指针」保证单一事实来源。决策已写入站点章节 `gitbook-coexistence`。
+- [x] M13.1 mdbook 骨架：`book.toml` + `src/`（zh / en 双语目录）+ 本地构建（`mdbook build`）—— `docs-site/book.toml`（仅 `[output.html]`，扁平输出 `docs-site/book/`）+ `src/SUMMARY.md`（English 与 中文 两个 part，章节一一对应）+ `src/{en,zh}/{overview,documentation-map,gitbook-coexistence}.md` + 双语 `introduction.md`。本地 `mdbook build docs-site` 通过。**注意**：mdbook 0.5.3 不支持原生 `[language.*]` 多语言（"unknown field language"），故采用「单 book + 两 part」结构实现双语。
 - [ ] M13.2 迁移核心文档（README / AGENT / SECURITY）为双语章节，原文件保留指向站点的入口
 - [ ] M13.3 收编功能清单 / 路线图 / RFC 索引为站点章节，建立中英文交叉链接
-- [ ] M13.4 CI 增加 `mdbook build` 产物校验（构建失败或坏链即红）
+- [x] M13.4 CI 增加 `mdbook build` 产物校验（构建失败或坏链即红）—— `.github/workflows/ci.yml` 新增独立 `docs` 任务：`peaceiris/actions-mdbook`（钉 0.5.3 与本地一致）→ `mdbook build docs-site` → `lychee --offline`（经 `taiki-e/install-action` 安装）对生成 HTML 做离线坏链校验。构建失败或内部坏链均使流水线变红；`--offline` 跳过 http(s) 链接避免网络抖动。**注意**：未用 `mdbook-linkcheck`（0.7.7 与 mdbook 0.5.3 的 RenderContext 不兼容，"missing field sections"），改用 lychee（与渲染协议解耦）。
 - [ ] M13.5 （可选）GitHub Pages 部署工作流
 
 验收口径：`mdbook build` 在 CI 通过且无坏链，中英文章节一一对应，核心散落文档可从站点统一访问；**验收由 CI 构建用例背书**。

@@ -1,0 +1,19 @@
+# 文档地图
+
+> English version: [Documentation Map](../en/documentation-map.md)
+
+本手册采用分批收编的方式构建。在核心文档逐步迁移为双语章节之前，本页先列出它们
+当前在仓库中的位置，使所有文档都能从同一入口访问。
+
+| 文档              | 说明                                       | 当前位置 |
+| ----------------- | ------------------------------------------ | -------- |
+| README            | 项目介绍、特性与快速上手                    | [README.md](https://github.com/talkincode/toughradius/blob/main/README.md) |
+| Agent 指南        | AI Agent 开发指南与协作规则                 | [AGENT.md](https://github.com/talkincode/toughradius/blob/main/AGENT.md) |
+| 安全策略          | 受支持版本与漏洞上报流程                     | [SECURITY.md](https://github.com/talkincode/toughradius/blob/main/SECURITY.md) |
+| 功能清单          | 功能范围基线（`TR-F` 编号）                 | [docs/feature-checklist.md](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.md) · [English](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.en.md) |
+| 路线图            | 长期路线图与里程碑                          | [docs/roadmap.md](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.md) |
+| RFC 索引          | 项目使用的协议标准索引                       | [docs/rfcs/README.md](https://github.com/talkincode/toughradius/blob/main/docs/rfcs/README.md) |
+
+> **迁移计划。** 先迁移 README、Agent 指南与安全策略为双语章节；随后收编功能清单、
+> 路线图与 RFC 索引，并建立中英文交叉链接。每份文档迁入手册后，其原始文件会保留
+> 一个指向对应章节的简短入口，以保证单一事实来源。

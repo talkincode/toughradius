@@ -37,3 +37,5 @@ pkg/tls/ca.crt
 pkg/tls/ca.key
 pkg/tls/my.crt
 pkg/tls/my.key
+# mdBook handbook build output (docs-site)
+docs-site/book/
