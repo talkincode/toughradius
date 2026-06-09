@@ -205,7 +205,7 @@
 
 子任务：
 - [x] M9.1 注册 EAP-TTLS handler 骨架与启用列表配置 ✅ 实现 `TTLSHandler`（EAP type 21 / name `eap-ttls`），对 EAP-Response/Identity 回送 EAP-TTLSv0 Start（RFC 5281 §9.2，Flags 复用 EAP-TLS 框架 RFC 5216 §3.1，version 位为 0），并在协调器 `handleIdentityResponse` 增加 `eap-ttls` 分支、`init.go` 无条件注册该 handler；`HandleResponse` 为安全桩，对任何挑战响应一律返回 `ErrTTLSNotImplemented`、永不放行（外层隧道见 M9.2）。`EapMethod` 枚举在 `config_schemas.json` + `config_manager.go` + 前端 `i18n/{en-US,zh-CN}.ts` 三处同步加入 `eap-ttls` 并补充双语说明。单测覆盖 Name/EAPType(21)/CanHandle/HandleIdentity(Start 帧+状态持久化)/buildStartRequest/HandleResponse 永不认证，并在 `coordinator_test.go` 增加 `eap-ttls` 选路用例。门禁：`go build ./...`、`go test ./...`、golangci-lint v2.12.2、`cd web && npm run build` 均通过。
-- [ ] M9.2 外层 TLS 隧道建立与分片重组（复用 EAP-TLS 状态机）
+- [x] M9.2 外层 TLS 隧道建立与分片重组（复用 EAP-TLS 状态机）✅ `TTLSHandler` 增加 `NewTTLSHandlerWithConfig` 与 `configProvider`/`maxFragment`，`HandleResponse` 复用共享 `tlsTunnel` 状态机（`eapType=TypeTTLS`）驱动 server-only 外层 TLS 握手与 RFC 5216 §2.1.5/§3.1 分片重组；握手完成回调 `onHandshakeComplete` 在内层 AVP 认证（M9.3+）落地前返回 `eap.ErrTTLSInnerNotImplemented`，隧道可建立可分片但**永不放行**。新增 `NewSettingsTTLSConfigProvider`（server-only，复用 `EapTlsCertFile/KeyFile/MinVersion`）；`init.go` 按 `ConfigMgr()` 是否可用分支注册（缺省回落到未配置 handler，按 `ErrTLSNotConfigured` 安全拒绝）。测试：未配置→`ErrTLSNotConfigured`；真实 server-only TLS 握手经隧道跑通后→`ErrTTLSInnerNotImplemented`（含强制 `maxFragment=48` 的分片重组用例）。门禁 `go build/test ./...`、golangci-lint v2.12.2 全过。
 - [ ] M9.3 隧道内 AVP 封装与 PAP 内层认证（最小可用闭环）
 - [ ] M9.4 增加 MS-CHAP-V2 内层认证与密钥导出
 - [ ] M9.5 明确失败原因 + 指标 + 单元测试；配置项与默认值
