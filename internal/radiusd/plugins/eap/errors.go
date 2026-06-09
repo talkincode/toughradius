@@ -43,10 +43,17 @@ var (
 	// (unexpected EAP code/type/opcode for the current inner sub-state). It
 	// guarantees a malformed inner exchange rejects rather than grants.
 	ErrPEAPInnerProtocol = errors.New("PEAP inner EAP-MSCHAPv2 protocol violation")
-	// ErrTTLSInnerNotImplemented is returned after EAP-TTLS's outer TLS tunnel
-	// has been established but before the inner AVP authentication (PAP /
-	// MS-CHAP-V2) is implemented (milestones M9.3 / M9.4). It guarantees the
-	// M9.2 outer tunnel can establish and fragment correctly yet never grant
-	// access (RFC 5281 §10/§11 inner authentication is pending).
-	ErrTTLSInnerNotImplemented = errors.New("EAP-TTLS inner authentication is not implemented yet")
+	// ErrTTLSInnerNotImplemented is returned when an established EAP-TTLS tunnel
+	// carries a well-formed inner method that ToughRADIUS does not yet support.
+	// M9.3 implements inner PAP (a User-Password AVP); a tunnel that omits the
+	// User-Password AVP (e.g. an inner CHAP / MS-CHAP / MS-CHAP-V2 exchange, RFC
+	// 5281 §11.2.2-§11.2.4, scheduled for M9.4) rejects with this error rather
+	// than granting access.
+	ErrTTLSInnerNotImplemented = errors.New("EAP-TTLS inner authentication method is not implemented yet")
+	// ErrTTLSInnerProtocol is returned when the AVP sequence carried inside an
+	// established EAP-TTLS tunnel is malformed: a truncated AVP header, an AVP
+	// Length below its header size, or an AVP Length that overruns the decrypted
+	// payload (RFC 5281 §10). It guarantees a malformed inner flight rejects
+	// rather than grants.
+	ErrTTLSInnerProtocol = errors.New("EAP-TTLS inner AVP protocol violation")
 )

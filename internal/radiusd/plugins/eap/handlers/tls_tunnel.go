@@ -23,6 +23,12 @@ type tlsTunnel struct {
 	maxFragment         int
 	configProvider      TLSConfigProvider
 	onHandshakeComplete func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error)
+	// clientSpeaksFirst marks a tunneled method whose phase 2 is peer-initiated:
+	// after the outer handshake the supplicant sends the first inner flight
+	// (application data) rather than the bare ACK that EAP-TLS/PEAP expect.
+	// EAP-TTLS sets this (RFC 5281 §7.3); EAP-TLS and PEAP (server speaks first)
+	// leave it false, preserving their existing behavior.
+	clientSpeaksFirst bool
 	// onApplicationData drives a tunneled inner EAP method (PEAP phase 2) once
 	// the outer TLS tunnel is established. It is given the decrypted inbound
 	// inner EAP bytes (nil on the very first call, which asks it to produce the
@@ -57,6 +63,16 @@ func (t *tlsTunnel) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	}
 
 	if getBool(state, stateKeyPendingSuccess) {
+		// EAP-TTLS makes phase 2 peer-initiated (RFC 5281 §7.3): the supplicant
+		// sends its inner AVP flight immediately after the outer handshake,
+		// rather than the bare ACK that EAP-TLS/PEAP expect here. Route that
+		// flight into the inner phase instead of rejecting it as an unexpected
+		// fragment. A bare ACK still falls through to onHandshakeComplete below.
+		if t.clientSpeaksFirst && !frag.IsACK() {
+			clearKey(state, stateKeyPendingSuccess)
+			setBool(state, stateKeyInnerActive, true)
+			return t.handleInnerRound(ctx, state, frag)
+		}
 		if !frag.IsACK() {
 			closeEngine(state)
 			return false, eap.ErrTLSUnexpectedFragment

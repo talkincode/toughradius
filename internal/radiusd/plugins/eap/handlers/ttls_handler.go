@@ -37,12 +37,13 @@ const (
 // Milestone scope:
 //   - M9.1: registered the method (EAP type 21, name "eap-ttls") and answered
 //     EAP-Response/Identity with an EAP-TTLSv0 Start.
-//   - M9.2 (current): establishes the outer TLS tunnel and fragmentation
-//     reassembly, reusing the shared EAP-TLS state machine (tlsTunnel). Until
-//     the inner phase lands, a completed handshake rejects safely with
-//     eap.ErrTTLSInnerNotImplemented, so the tunnel can never grant access.
-//   - M9.3: tunneled AVP encapsulation and inner PAP authentication.
-//   - M9.4: inner MS-CHAP-V2 authentication and key derivation.
+//   - M9.2: established the outer TLS tunnel and fragmentation reassembly,
+//     reusing the shared EAP-TLS state machine (tlsTunnel).
+//   - M9.3 (current): tunneled AVP encapsulation (RFC 5281 §10) and inner PAP
+//     authentication (RFC 5281 §11.2.5). On success the MS-MPPE keys are derived
+//     from the TLS session (RFC 5281 §8). The outer tunnel is pinned to TLS 1.2;
+//     a non-PAP inner method rejects with eap.ErrTTLSInnerNotImplemented.
+//   - M9.4: inner MS-CHAP-V2 authentication.
 type TTLSHandler struct {
 	configProvider TLSConfigProvider
 	maxFragment    int
@@ -63,20 +64,35 @@ func NewTTLSHandlerWithConfig(provider TLSConfigProvider) *TTLSHandler {
 }
 
 // newTunnel builds the shared EAP-TLS/PEAP/TTLS tunnel state machine configured
-// for EAP-TTLS (EAP type 21). Once the outer handshake completes, the M9.2
-// milestone rejects with eap.ErrTTLSInnerNotImplemented in place of running the
-// inner AVP exchange (M9.3+), so the tunnel can establish and fragment correctly
-// yet never grant access.
+// for EAP-TTLS (EAP type 21). It marks the tunnel client-speaks-first (EAP-TTLS
+// phase 2 is peer-initiated, RFC 5281 §7.3) and routes the peer's inner AVP
+// flight to handleInnerAVP, which performs inner PAP authentication (M9.3) and,
+// on success, derives the MS-MPPE keys from the TLS session.
 func (h *TTLSHandler) newTunnel() *tlsTunnel {
-	return &tlsTunnel{
-		eapType:        eap.TypeTTLS,
-		maxFragment:    h.maxFragment,
-		configProvider: h.configProvider,
-		onHandshakeComplete: func(_ *eap.EAPContext, state *eap.EAPState, _ *tlsengine.Engine) (bool, error) {
-			closeEngine(state)
-			return false, eap.ErrTTLSInnerNotImplemented
-		},
+	t := &tlsTunnel{
+		eapType:           eap.TypeTTLS,
+		maxFragment:       h.maxFragment,
+		configProvider:    h.configProvider,
+		clientSpeaksFirst: true,
+		onApplicationData: h.handleInnerAVP,
 	}
+	// EAP-TTLS phase 2 is peer-initiated: the supplicant sends its inner AVPs
+	// immediately after the outer handshake, which the shared tunnel routes into
+	// handleInnerAVP via the clientSpeaksFirst path. This handshake-complete
+	// callback is therefore only reached on a bare post-handshake ACK or the
+	// TLS 1.3 "no final flight" framing (which M9.3 does not support — the TTLS
+	// engine is pinned to TLS 1.2; RFC 9427 / TLS 1.3 tunneling is a later
+	// milestone). It transitions to the inner phase and waits for the peer's
+	// AVPs rather than granting.
+	t.onHandshakeComplete = func(ctx *eap.EAPContext, state *eap.EAPState, _ *tlsengine.Engine) (bool, error) {
+		setBool(state, stateKeyInnerActive, true)
+		if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+			closeEngine(state)
+			return false, err
+		}
+		return false, t.writeChallenge(ctx, state.StateID, t.buildFragmentACK(ctx.EAPMessage.Identifier+1))
+	}
+	return t
 }
 
 // Name returns the handler name ("eap-ttls").
@@ -124,10 +140,10 @@ func (h *TTLSHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 
 // HandleResponse drives EAP-TTLS's outer TLS tunnel and fragmentation using the
 // shared EAP-TLS state machine (RFC 5281 §7-§9, framing per RFC 5216
-// §2.1.5/§3.1). The M9.2 milestone establishes the server-only tunnel but does
-// not yet run the inner AVP authentication (M9.3+), so a completed handshake
-// rejects with eap.ErrTTLSInnerNotImplemented and the handler never grants
-// access.
+// §2.1.5/§3.1). Once the outer tunnel is established the peer's inner AVP flight
+// (RFC 5281 §10) is routed to handleInnerAVP, which performs inner PAP
+// authentication (RFC 5281 §11.2.5) and, on success, derives the MS-MPPE keys
+// from the TLS session (RFC 5281 §8) before granting access.
 func (h *TTLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	return h.newTunnel().HandleResponse(ctx)
 }

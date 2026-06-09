@@ -90,13 +90,13 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	}
 
 	// EAP-TTLS (EAP type 21) is a back-end-adaptation tunneled method (RFC 5281)
-	// that protects legacy inner authentication (PAP / MS-CHAP-V2) with a
-	// server-only TLS tunnel. M9.2 establishes the outer TLS tunnel with EAP-TLS
-	// framing, then rejects safely with eap.ErrTTLSInnerNotImplemented until the
-	// inner AVP authentication (M9.3+) is delivered, so it can never grant access
-	// yet. When no config manager is available (e.g. unit tests with a nil
-	// appCtx), fall back to the unconfigured handler which rejects identically
-	// with eap.ErrTLSNotConfigured.
+	// that protects legacy inner authentication with a server-only TLS tunnel.
+	// M9.3 establishes the outer TLS tunnel (EAP-TLS framing, pinned to TLS 1.2)
+	// and performs inner PAP authentication (RFC 5281 §11.2.5), deriving the
+	// MS-MPPE keys from the TLS session on success; a non-PAP inner method
+	// rejects with eap.ErrTTLSInnerNotImplemented until M9.4. When no config
+	// manager is available (e.g. unit tests with a nil appCtx), fall back to the
+	// unconfigured handler which rejects safely with eap.ErrTLSNotConfigured.
 	if appCtx != nil && appCtx.ConfigMgr() != nil {
 		provider := eaphandlers.NewSettingsTTLSConfigProvider(appCtx.ConfigMgr())
 		registry.RegisterEAPHandler(eaphandlers.NewTTLSHandlerWithConfig(provider))
