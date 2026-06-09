@@ -40,26 +40,26 @@ func escapeUserLikePattern(s string) string {
 
 // UserRequest Used to handle user data sent from frontend
 type UserRequest struct {
-	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
-	ProfileID  interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
-	LegacyProfileID interface{} `json:"profileid"`                              // Legacy fallback field from older clients, used when profile_id is missing
-	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // Real name
-	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // Email
-	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
-	Address    string      `json:"address" validate:"omitempty,max=255"`        // addresses
-	Username   string      `json:"username" validate:"required,min=3,max=50"`   // Username
-	Password   string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
-	AddrPool   string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
-	Vlanid1    int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
-	Vlanid2    int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
-	IpAddr     string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
-	Ipv6Addr   string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6addresses
-	MacAddr    string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
-	BindVlan   interface{} `json:"bind_vlan"`                                   // Can be int or boolean
-	BindMac    interface{} `json:"bind_mac"`                                    // Can be int or boolean
-	ExpireTime string      `json:"expire_time" validate:"omitempty"`            // Expiration time
-	Status     interface{} `json:"status"`                                      // Can be string or boolean
-	Remark     string      `json:"remark" validate:"omitempty,max=500"`         // Remark
+	NodeID          interface{} `json:"node_id"`                                     // Can be int64 or string
+	ProfileID       interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
+	LegacyProfileID interface{} `json:"profileid"`                                   // Legacy fallback field from older clients, used when profile_id is missing
+	Realname        string      `json:"realname" validate:"omitempty,max=100"`       // Real name
+	Email           string      `json:"email" validate:"omitempty,email,max=100"`    // Email
+	Mobile          string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
+	Address         string      `json:"address" validate:"omitempty,max=255"`        // addresses
+	Username        string      `json:"username" validate:"required,min=3,max=50"`   // Username
+	Password        string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
+	AddrPool        string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
+	Vlanid1         int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
+	Vlanid2         int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
+	IpAddr          string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
+	Ipv6Addr        string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6addresses
+	MacAddr         string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
+	BindVlan        interface{} `json:"bind_vlan"`                                   // Can be int or boolean
+	BindMac         interface{} `json:"bind_mac"`                                    // Can be int or boolean
+	ExpireTime      string      `json:"expire_time" validate:"omitempty"`            // Expiration time
+	Status          interface{} `json:"status"`                                      // Can be string or boolean
+	Remark          string      `json:"remark" validate:"omitempty,max=500"`         // Remark
 }
 
 // toRadiusUser Convert UserRequest Convert to RadiusUser
@@ -140,48 +140,52 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 
 // UserUpdateRequest Used to handle user update data
 type UserUpdateRequest struct {
-	NodeID          interface{} `json:"node_id"`                                       // Can be int64 or string
-	ProfileID       interface{} `json:"profile_id"`                                    // Can be int64 or string
-	LegacyProfileID interface{} `json:"profileid"`                                     // Legacy fallback field from older clients, used when profile_id is missing
-	Realname        string      `json:"realname" validate:"omitempty,max=100"`         // Real name
-	Email           string      `json:"email" validate:"omitempty,email,max=100"`      // Email
-	Mobile          string      `json:"mobile" validate:"omitempty,max=20"`            // Mobile number (optional, max 20 characters)
-	Address         string      `json:"address" validate:"omitempty,max=255"`          // addresses
-	Username        string      `json:"username" validate:"omitempty,min=3,max=50"`    // Username
-	Password        string      `json:"password" validate:"omitempty,min=6,max=128"`   // Password
-	AddrPool        string      `json:"addr_pool" validate:"omitempty,max=50"`         // Address pool
-	Vlanid1         int         `json:"vlanid1" validate:"gte=0,lte=4096"`             // VLAN ID 1
-	Vlanid2         int         `json:"vlanid2" validate:"gte=0,lte=4096"`             // VLAN ID 2
-	IpAddr          string      `json:"ip_addr" validate:"omitempty,ipv4"`             // IPv4addresses
-	Ipv6Addr        string      `json:"ipv6_addr" validate:"omitempty"`                // IPv6addresses
-	MacAddr         string      `json:"mac_addr" validate:"omitempty,mac"`             // MACaddresses
-	BindVlan        interface{} `json:"bind_vlan"`                                     // Can be int or boolean
-	BindMac         interface{} `json:"bind_mac"`                                      // Can be int or boolean
-	ExpireTime      string      `json:"expire_time" validate:"omitempty"`              // Expiration time
-	Status          interface{} `json:"status"`                                        // Can be string or boolean
-	Remark          string      `json:"remark" validate:"omitempty,max=500"`           // Remark
-	IPv6PrefixPool  string      `json:"ipv6_prefix_pool" validate:"omitempty,max=100"` // IPv6 prefix pool name
-	Domain          string      `json:"domain" validate:"omitempty,max=100"`           // User domain
-	ProfileLinkMode int         `json:"profile_link_mode" validate:"gte=0,lte=1"`      // Profile link mode (0=static, 1=dynamic)
+	NodeID                  interface{} `json:"node_id"`                                                 // Can be int64 or string
+	ProfileID               interface{} `json:"profile_id"`                                              // Can be int64 or string
+	LegacyProfileID         interface{} `json:"profileid"`                                               // Legacy fallback field from older clients, used when profile_id is missing
+	Realname                string      `json:"realname" validate:"omitempty,max=100"`                   // Real name
+	Email                   string      `json:"email" validate:"omitempty,email,max=100"`                // Email
+	Mobile                  string      `json:"mobile" validate:"omitempty,max=20"`                      // Mobile number (optional, max 20 characters)
+	Address                 string      `json:"address" validate:"omitempty,max=255"`                    // addresses
+	Username                string      `json:"username" validate:"omitempty,min=3,max=50"`              // Username
+	Password                string      `json:"password" validate:"omitempty,min=6,max=128"`             // Password
+	AddrPool                string      `json:"addr_pool" validate:"omitempty,max=50"`                   // Address pool
+	Vlanid1                 int         `json:"vlanid1" validate:"gte=0,lte=4096"`                       // VLAN ID 1
+	Vlanid2                 int         `json:"vlanid2" validate:"gte=0,lte=4096"`                       // VLAN ID 2
+	IpAddr                  string      `json:"ip_addr" validate:"omitempty,ipv4"`                       // IPv4addresses
+	Ipv6Addr                string      `json:"ipv6_addr" validate:"omitempty"`                          // IPv6addresses
+	MacAddr                 string      `json:"mac_addr" validate:"omitempty,mac"`                       // MACaddresses
+	BindVlan                interface{} `json:"bind_vlan"`                                               // Can be int or boolean
+	BindMac                 interface{} `json:"bind_mac"`                                                // Can be int or boolean
+	ExpireTime              string      `json:"expire_time" validate:"omitempty"`                        // Expiration time
+	Status                  interface{} `json:"status"`                                                  // Can be string or boolean
+	Remark                  string      `json:"remark" validate:"omitempty,max=500"`                     // Remark
+	IPv6PrefixPool          string      `json:"ipv6_prefix_pool" validate:"omitempty,max=100"`           // IPv6 prefix pool name
+	DelegatedIpv6Prefix     string      `json:"delegated_ipv6_prefix" validate:"omitempty,max=100"`      // Static Delegated-IPv6-Prefix (RFC 4818)
+	DelegatedIpv6PrefixPool string      `json:"delegated_ipv6_prefix_pool" validate:"omitempty,max=100"` // Delegated-IPv6-Prefix-Pool (RFC 6911 §2.4)
+	Domain                  string      `json:"domain" validate:"omitempty,max=100"`                     // User domain
+	ProfileLinkMode         int         `json:"profile_link_mode" validate:"gte=0,lte=1"`                // Profile link mode (0=static, 1=dynamic)
 }
 
 // toRadiusUser Convert UserUpdateRequest Convert to RadiusUser
 func (ur *UserUpdateRequest) toRadiusUser() *domain.RadiusUser {
 	user := &domain.RadiusUser{
-		Realname:        ur.Realname,
-		Mobile:          ur.Mobile,
-		Username:        strings.TrimSpace(ur.Username),
-		Password:        ur.Password,
-		AddrPool:        ur.AddrPool,
-		Vlanid1:         ur.Vlanid1,
-		Vlanid2:         ur.Vlanid2,
-		IpAddr:          ur.IpAddr,
-		IpV6Addr:        ur.Ipv6Addr,
-		IPv6PrefixPool:  ur.IPv6PrefixPool,
-		MacAddr:         ur.MacAddr,
-		Domain:          ur.Domain,
-		ProfileLinkMode: ur.ProfileLinkMode,
-		Remark:          ur.Remark,
+		Realname:                ur.Realname,
+		Mobile:                  ur.Mobile,
+		Username:                strings.TrimSpace(ur.Username),
+		Password:                ur.Password,
+		AddrPool:                ur.AddrPool,
+		Vlanid1:                 ur.Vlanid1,
+		Vlanid2:                 ur.Vlanid2,
+		IpAddr:                  ur.IpAddr,
+		IpV6Addr:                ur.Ipv6Addr,
+		IPv6PrefixPool:          ur.IPv6PrefixPool,
+		DelegatedIpv6Prefix:     ur.DelegatedIpv6Prefix,
+		DelegatedIpv6PrefixPool: ur.DelegatedIpv6PrefixPool,
+		MacAddr:                 ur.MacAddr,
+		Domain:                  ur.Domain,
+		ProfileLinkMode:         ur.ProfileLinkMode,
+		Remark:                  ur.Remark,
 	}
 
 	// Handle profile_id
@@ -375,6 +379,7 @@ func createRadiusUser(c echo.Context) error {
 	user.DownRate = profile.DownRate
 	user.Domain = common.If(user.Domain != "", user.Domain, profile.Domain).(string)
 	user.IPv6PrefixPool = common.If(user.IPv6PrefixPool != "", user.IPv6PrefixPool, profile.IPv6PrefixPool).(string)
+	user.DelegatedIpv6PrefixPool = common.If(user.DelegatedIpv6PrefixPool != "", user.DelegatedIpv6PrefixPool, profile.DelegatedIpv6PrefixPool).(string)
 	user.BindMac = common.If(user.BindMac > 0, user.BindMac, profile.BindMac).(int)
 	user.BindVlan = common.If(user.BindVlan > 0, user.BindVlan, profile.BindVlan).(int)
 	// Default to static mode (snapshot behavior)
@@ -453,6 +458,7 @@ func updateRadiusUser(c echo.Context) error {
 		updates["addr_pool"] = profile.AddrPool
 		updates["domain"] = profile.Domain
 		updates["ipv6_prefix_pool"] = profile.IPv6PrefixPool
+		updates["delegated_ipv6_prefix_pool"] = profile.DelegatedIpv6PrefixPool
 		updates["bind_mac"] = profile.BindMac
 		updates["bind_vlan"] = profile.BindVlan
 
@@ -493,6 +499,12 @@ func updateRadiusUser(c echo.Context) error {
 	}
 	if updateData.IPv6PrefixPool != "" {
 		updates["ipv6_prefix_pool"] = updateData.IPv6PrefixPool
+	}
+	if updateData.DelegatedIpv6Prefix != "" {
+		updates["delegated_ipv6_prefix"] = updateData.DelegatedIpv6Prefix
+	}
+	if updateData.DelegatedIpv6PrefixPool != "" {
+		updates["delegated_ipv6_prefix_pool"] = updateData.DelegatedIpv6PrefixPool
 	}
 	if updateData.MacAddr != "" {
 		updates["mac_addr"] = updateData.MacAddr
@@ -546,6 +558,9 @@ func updateRadiusUser(c echo.Context) error {
 				}
 				if user.IPv6PrefixPool == "" || user.IPv6PrefixPool == "NA" {
 					updates["ipv6_prefix_pool"] = profile.IPv6PrefixPool
+				}
+				if user.DelegatedIpv6PrefixPool == "" || user.DelegatedIpv6PrefixPool == "NA" {
+					updates["delegated_ipv6_prefix_pool"] = profile.DelegatedIpv6PrefixPool
 				}
 				if user.BindMac == 0 && user.MacAddr == "" {
 					updates["bind_mac"] = profile.BindMac

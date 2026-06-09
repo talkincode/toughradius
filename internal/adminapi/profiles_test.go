@@ -270,6 +270,19 @@ func TestCreateProfile(t *testing.T) {
 			},
 		},
 		{
+			name: "Create profile with delegated IPv6 prefix pool",
+			requestBody: `{
+				"name": "pd-profile",
+				"status": "enabled",
+				"delegated_ipv6_prefix_pool": "pd-pool-profile"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, profile *domain.RadiusProfile) {
+				assert.Equal(t, "pd-profile", profile.Name)
+				assert.Equal(t, "pd-pool-profile", profile.DelegatedIpv6PrefixPool)
+			},
+		},
+		{
 			name: "Missing status on create - use default",
 			requestBody: `{
 				"name": "default-status-profile",

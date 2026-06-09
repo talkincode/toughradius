@@ -120,31 +120,33 @@ func GetProfile(c echo.Context) error {
 
 // ProfileRequest represents the mixed-type JSON sent from the frontend
 type ProfileRequest struct {
-	Name           string      `json:"name" validate:"required,min=1,max=100"`
-	Status         interface{} `json:"status"` // Can be string or boolean
-	AddrPool       string      `json:"addr_pool" validate:"omitempty,addrpool"`
-	ActiveNum      int         `json:"active_num" validate:"gte=0,lte=100"`
-	UpRate         int         `json:"up_rate" validate:"gte=0,lte=10000000"`
-	DownRate       int         `json:"down_rate" validate:"gte=0,lte=10000000"`
-	Domain         string      `json:"domain" validate:"omitempty,max=50"`
-	IPv6PrefixPool string      `json:"ipv6_prefix_pool" validate:"omitempty"`
-	BindMac        interface{} `json:"bind_mac"`  // Can be int or boolean
-	BindVlan       interface{} `json:"bind_vlan"` // Can be int or boolean
-	Remark         string      `json:"remark" validate:"omitempty,max=500"`
-	NodeId         interface{} `json:"node_id"` // Can be int64 or string
+	Name                    string      `json:"name" validate:"required,min=1,max=100"`
+	Status                  interface{} `json:"status"` // Can be string or boolean
+	AddrPool                string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	ActiveNum               int         `json:"active_num" validate:"gte=0,lte=100"`
+	UpRate                  int         `json:"up_rate" validate:"gte=0,lte=10000000"`
+	DownRate                int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	Domain                  string      `json:"domain" validate:"omitempty,max=50"`
+	IPv6PrefixPool          string      `json:"ipv6_prefix_pool" validate:"omitempty"`
+	DelegatedIpv6PrefixPool string      `json:"delegated_ipv6_prefix_pool" validate:"omitempty,max=100"` // DHCPv6-PD pool (RFC 6911 §2.4)
+	BindMac                 interface{} `json:"bind_mac"`                                                // Can be int or boolean
+	BindVlan                interface{} `json:"bind_vlan"`                                               // Can be int or boolean
+	Remark                  string      `json:"remark" validate:"omitempty,max=500"`
+	NodeId                  interface{} `json:"node_id"` // Can be int64 or string
 }
 
 // toRadiusProfile Convert ProfileRequest Convert to RadiusProfile
 func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
-		Name:           pr.Name,
-		AddrPool:       pr.AddrPool,
-		ActiveNum:      pr.ActiveNum,
-		UpRate:         pr.UpRate,
-		DownRate:       pr.DownRate,
-		Domain:         pr.Domain,
-		IPv6PrefixPool: pr.IPv6PrefixPool,
-		Remark:         pr.Remark,
+		Name:                    pr.Name,
+		AddrPool:                pr.AddrPool,
+		ActiveNum:               pr.ActiveNum,
+		UpRate:                  pr.UpRate,
+		DownRate:                pr.DownRate,
+		Domain:                  pr.Domain,
+		IPv6PrefixPool:          pr.IPv6PrefixPool,
+		DelegatedIpv6PrefixPool: pr.DelegatedIpv6PrefixPool,
+		Remark:                  pr.Remark,
 	}
 
 	// Handle status field: boolean true -> "enabled", false -> "disabled", string remains unchanged
@@ -199,31 +201,33 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 
 // ProfileUpdateRequest represents the mixed-type JSON sent from the frontend for updates
 type ProfileUpdateRequest struct {
-	Name           string      `json:"name" validate:"omitempty,min=1,max=100"`
-	Status         interface{} `json:"status"` // Can be string or boolean
-	AddrPool       string      `json:"addr_pool" validate:"omitempty,addrpool"`
-	ActiveNum      int         `json:"active_num" validate:"gte=0,lte=100"`
-	UpRate         int         `json:"up_rate" validate:"gte=0,lte=10000000"`
-	DownRate       int         `json:"down_rate" validate:"gte=0,lte=10000000"`
-	Domain         string      `json:"domain" validate:"omitempty,max=50"`
-	IPv6PrefixPool string      `json:"ipv6_prefix_pool" validate:"omitempty"`
-	BindMac        interface{} `json:"bind_mac"`  // Can be int or boolean
-	BindVlan       interface{} `json:"bind_vlan"` // Can be int or boolean
-	Remark         string      `json:"remark" validate:"omitempty,max=500"`
-	NodeId         interface{} `json:"node_id"` // Can be int64 or string
+	Name                    string      `json:"name" validate:"omitempty,min=1,max=100"`
+	Status                  interface{} `json:"status"` // Can be string or boolean
+	AddrPool                string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	ActiveNum               int         `json:"active_num" validate:"gte=0,lte=100"`
+	UpRate                  int         `json:"up_rate" validate:"gte=0,lte=10000000"`
+	DownRate                int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	Domain                  string      `json:"domain" validate:"omitempty,max=50"`
+	IPv6PrefixPool          string      `json:"ipv6_prefix_pool" validate:"omitempty"`
+	DelegatedIpv6PrefixPool string      `json:"delegated_ipv6_prefix_pool" validate:"omitempty,max=100"` // DHCPv6-PD pool (RFC 6911 §2.4)
+	BindMac                 interface{} `json:"bind_mac"`                                                // Can be int or boolean
+	BindVlan                interface{} `json:"bind_vlan"`                                               // Can be int or boolean
+	Remark                  string      `json:"remark" validate:"omitempty,max=500"`
+	NodeId                  interface{} `json:"node_id"` // Can be int64 or string
 }
 
 // toRadiusProfile Convert ProfileUpdateRequest Convert to RadiusProfile
 func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
-		Name:           pr.Name,
-		AddrPool:       pr.AddrPool,
-		ActiveNum:      pr.ActiveNum,
-		UpRate:         pr.UpRate,
-		DownRate:       pr.DownRate,
-		Domain:         pr.Domain,
-		IPv6PrefixPool: pr.IPv6PrefixPool,
-		Remark:         pr.Remark,
+		Name:                    pr.Name,
+		AddrPool:                pr.AddrPool,
+		ActiveNum:               pr.ActiveNum,
+		UpRate:                  pr.UpRate,
+		DownRate:                pr.DownRate,
+		Domain:                  pr.Domain,
+		IPv6PrefixPool:          pr.IPv6PrefixPool,
+		DelegatedIpv6PrefixPool: pr.DelegatedIpv6PrefixPool,
+		Remark:                  pr.Remark,
 	}
 
 	// Handle status field: boolean true -> "enabled", false -> "disabled", string remains unchanged
@@ -379,6 +383,9 @@ func UpdateProfile(c echo.Context) error {
 	}
 	if updateData.IPv6PrefixPool != "" {
 		updates["ipv6_prefix_pool"] = updateData.IPv6PrefixPool
+	}
+	if updateData.DelegatedIpv6PrefixPool != "" {
+		updates["delegated_ipv6_prefix_pool"] = updateData.DelegatedIpv6PrefixPool
 	}
 	if updateData.BindMac >= 0 {
 		updates["bind_mac"] = updateData.BindMac

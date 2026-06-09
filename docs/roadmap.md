@@ -111,7 +111,7 @@
 
 子任务：
 - [x] M3.1 协议层解析 / 下发 IPv6 访问属性（计费侧解析 Framed-IPv6-Address(RFC 6911)、修正 Framed/Delegated-IPv6-Prefix 缺省值落库；Access-Accept 下发 Framed-IPv6-Address）
-- [ ] M3.2 数据库字段与迁移（PostgreSQL + SQLite 双兼容）
+- [x] M3.2 数据库字段与迁移（PostgreSQL + SQLite 双兼容）：新增 `RadiusUser.DelegatedIpv6Prefix`（静态 RFC 4818 #123，按用户）、`RadiusUser.DelegatedIpv6PrefixPool` 与 `RadiusProfile.DelegatedIpv6PrefixPool`（RFC 6911 #171 DHCPv6-PD 池，按 §2.4 与 Framed-IPv6-Pool 区分）；GORM AutoMigrate 双库建列，Admin API 用户/套餐增改可持久化并支持 Profile 继承
 - [ ] M3.3 用户 / 会话 / 计费的 IPv6 过滤与展示
 - [ ] M3.4 Dashboard IPv6 维度统计
 - [ ] M3.5 端到端测试与字段一致性校验（`test/integration/`，CI 自动执行）
