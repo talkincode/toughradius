@@ -265,10 +265,11 @@
 
 - **关联编号**：`TR-F023`
 - **目标**：用 mdbook 搭建中英文双语文档站点，收编散落文档（README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引），提供统一导航与可发布产物。
-- **开发边界**：先骨架与导航，再分批迁移；中英文目录结构对应、同步维护；文档站点不替代以代码与测试为准的口径（遵守 `TR-N003`，不扩展为产品门户）。
+- **开发边界**：先骨架与导航，再分批迁移；中英文目录结构对应、同步维护；文档站点不替代以代码与测试为准的口径（遵守 `TR-N003`，不扩展为产品门户）。**注意**：仓库当前已通过 GitBook 集成发布（`docs.toughradius.net` / `www.toughradius.net`），M13 必须先明确 mdbook 与 GitBook 是替代还是并存，避免两套发布管线产生冲突或内容漂移。
 - **技能**：文档工程为主；复用 `.agents/skills/reference-rfc/SKILL.md` 维护协议资料索引、`.agents/skills/align-feature-checklist/SKILL.md` 保持中英文同步。
 
 子任务：
+- [ ] M13.0 评估与现有 GitBook 发布的关系（替代 / 并存），确定单一事实来源与发布管线边界
 - [ ] M13.1 mdbook 骨架：`book.toml` + `src/`（zh / en 双语目录）+ 本地构建（`mdbook build`）
 - [ ] M13.2 迁移核心文档（README / AGENT / SECURITY）为双语章节，原文件保留指向站点的入口
 - [ ] M13.3 收编功能清单 / 路线图 / RFC 索引为站点章节，建立中英文交叉链接
