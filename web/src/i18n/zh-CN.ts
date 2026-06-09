@@ -611,7 +611,7 @@ const customChineseMessages: TranslationMessages = {
     radius: {
       eap_method: {
         title: 'EAP 认证方式',
-        description: '选择 RADIUS 服务器向 NAS 提供的 EAP 认证算法（如 eap-md5、eap-mschapv2）。eap-peap 复用 EAP-TLS 的服务器证书/私钥建立外层 TLS 隧道，隧道内运行 EAP-MSCHAPv2 以兼容 Windows/AD；内层 MS-CHAPv2 存在类似 NTLMv1 的攻击面，请保持外层 TLS 强度，客户端支持证书时优先使用 eap-tls。',
+        description: '选择 RADIUS 服务器向 NAS 提供的 EAP 认证算法（如 eap-md5、eap-mschapv2）。eap-peap 复用 EAP-TLS 的服务器证书/私钥建立外层 TLS 隧道，隧道内运行 EAP-MSCHAPv2 以兼容 Windows/AD；内层 MS-CHAPv2 存在类似 NTLMv1 的攻击面，请保持外层 TLS 强度，客户端支持证书时优先使用 eap-tls。eap-ttls（RFC 5281）同样建立仅服务器认证的 TLS 隧道，隧道内承载传统内层认证（PAP / MS-CHAP-V2），用于 LDAP / 老账号库 / 混合客户端后端；该方法按 M9 分阶段交付，目前仅协商隧道 Start。',
       },
       eap_enabled_handlers: {
         title: '启用的 EAP 处理器',

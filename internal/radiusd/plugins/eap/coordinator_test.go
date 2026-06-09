@@ -357,6 +357,31 @@ func TestHandleEAPRequest_IdentityResponse_PEAP(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestHandleEAPRequest_IdentityResponse_TTLS(t *testing.T) {
+	registry := newMockHandlerRegistry()
+	registry.Register(&mockEAPHandler{
+		name:             "eap-ttls",
+		eapType:          TypeTTLS,
+		canHandle:        true,
+		handleIdentityOk: true,
+	})
+
+	coordinator := NewCoordinator(newMockStateManager(), &mockPasswordProvider{}, registry, false)
+	writer := &mockResponseWriter{}
+
+	packet := createEAPIdentityResponse(1, "ttlsuser")
+	req := &radius.Request{Packet: packet}
+	response := req.Response(radius.CodeAccessAccept)
+
+	handled, success, err := coordinator.HandleEAPRequest(
+		writer, req, &domain.RadiusUser{}, &domain.NetNas{}, response, "secret", false, "eap-ttls",
+	)
+
+	assert.True(t, handled)
+	assert.False(t, success)
+	assert.NoError(t, err)
+}
+
 func TestHandleEAPRequest_IdentityResponse_DefaultToMD5(t *testing.T) {
 	registry := newMockHandlerRegistry()
 	registry.Register(&mockEAPHandler{

@@ -4,10 +4,10 @@
       "key": "radius.EapMethod",
       "type": "string",
       "default": "eap-md5",
-      "enum": ["eap-md5", "eap-mschapv2", "eap-tls", "eap-peap"],
+      "enum": ["eap-md5", "eap-mschapv2", "eap-tls", "eap-peap", "eap-ttls"],
       "title": "EAP Method",
       "title_i18n": "config.radius.eap_method.title",
-      "description": "EAP authentication method. eap-peap reuses the EAP-TLS server certificate/key (EapTlsCertFile/EapTlsKeyFile) to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 carries an NTLMv1-like attack surface (per Microsoft), so keep the outer TLS strong and prefer eap-tls where clients support certificates.",
+      "description": "EAP authentication method. eap-peap reuses the EAP-TLS server certificate/key (EapTlsCertFile/EapTlsKeyFile) to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 carries an NTLMv1-like attack surface (per Microsoft), so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and carries legacy inner authentication (PAP / MS-CHAP-V2) for LDAP / legacy / mixed back ends; it is being delivered incrementally (M9) and currently negotiates the tunnel Start only.",
       "description_i18n": "config.radius.eap_method.description"
     },
     {
