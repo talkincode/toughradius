@@ -38,7 +38,13 @@ func escapeUserLikePattern(s string) string {
 	return s
 }
 
-// UserRequest Used to handle user data sent from frontend
+// UserRequest represents the request body for creating a RADIUS user via
+// POST /api/v1/users.
+//
+// It preserves compatibility with older clients that still send legacy keys
+// such as profileid, or mixed JSON types for flags (for example bool vs number
+// for bind_mac/bind_vlan and status). The handler normalizes those variants
+// before persisting the user.
 type UserRequest struct {
 	NodeID          interface{} `json:"node_id"`                                     // Can be int64 or string
 	ProfileID       interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
@@ -138,7 +144,12 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 	return user
 }
 
-// UserUpdateRequest Used to handle user update data
+// UserUpdateRequest represents the request body for updating a RADIUS user via
+// PUT /api/v1/users/:id.
+//
+// Most fields are optional and are applied as partial updates. As with
+// UserRequest, legacy and mixed-type frontend payloads are accepted and
+// normalized so older admin clients remain compatible.
 type UserUpdateRequest struct {
 	NodeID                  interface{} `json:"node_id"`                                                 // Can be int64 or string
 	ProfileID               interface{} `json:"profile_id"`                                              // Can be int64 or string
