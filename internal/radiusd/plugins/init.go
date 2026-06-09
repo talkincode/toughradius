@@ -64,11 +64,19 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	registry.RegisterEAPHandler(eaphandlers.NewMSCHAPv2Handler())
 	// EAP-TLS drives a full server-side TLS handshake with CA-chain
 	// certificate validation and certificate-to-User-Name identity mapping
-	// (milestone M1.3). It is registered without TLS material here, so it
-	// safely rejects handshakes with eap.ErrTLSNotConfigured until certificate
-	// configuration is wired in (milestone M1.5); it can never authenticate a
-	// client without configured trust anchors.
-	registry.RegisterEAPHandler(eaphandlers.NewTLSHandler())
+	// (milestone M1.3). Its certificate material is supplied from dynamic
+	// settings (milestone M1.5): the provider returns a nil config — so the
+	// handler rejects safely with eap.ErrTLSNotConfigured — until the
+	// certificate/key/CA paths are configured, and it can never authenticate a
+	// client without configured trust anchors. When no config manager is
+	// available (e.g. unit tests with a nil appCtx), fall back to the
+	// unconfigured handler which rejects identically.
+	if appCtx != nil && appCtx.ConfigMgr() != nil {
+		provider := eaphandlers.NewSettingsTLSConfigProvider(appCtx.ConfigMgr())
+		registry.RegisterEAPHandler(eaphandlers.NewTLSHandlerWithConfig(provider))
+	} else {
+		registry.RegisterEAPHandler(eaphandlers.NewTLSHandler())
+	}
 
 	// Vendor parsers under vendor/parsers register themselves via init()
 }

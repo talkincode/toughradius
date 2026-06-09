@@ -72,8 +72,8 @@
 - [x] M1.1 在 `internal/radiusd/plugins/eap` 注册 EAP-TLS handler 骨架与启用列表配置
 - [x] M1.2 实现 TLS 握手状态管理与分片重组（参照 RFC 5216 §3 / RFC 7499）
 - [x] M1.3 证书校验（CA 链）与用户身份映射
-- [ ] M1.4 明确失败原因 + AuthError 指标 + 单元/集成测试
-- [ ] M1.5 在 `config_schemas.json` 增加 EAP-TLS 配置项与默认值
+- [x] M1.4 明确失败原因 + AuthError 指标 + 单元/集成测试
+- [x] M1.5 在 `config_schemas.json` 增加 EAP-TLS 配置项与默认值
 - [ ] M1.6 在 `test/integration/` 增加 EAP-TLS 端到端验收用例（CI 自动执行）
 
 验收口径：EAP-TLS 客户端可完成认证；失败场景有明确拒绝原因和指标；**验收由 `test/integration/` 的 CI 用例背书**，新增逻辑全部有测试覆盖。

@@ -599,6 +599,22 @@ const customEnglishMessages: TranslationMessages = {
         title: 'Enabled EAP Handlers',
         description: 'Comma-separated list of handler names. Use * to allow every registered handler.',
       },
+      eap_tls_cert_file: {
+        title: 'EAP-TLS Server Certificate',
+        description: 'Path to the PEM server certificate presented during the EAP-TLS handshake. Leave empty to keep EAP-TLS disabled.',
+      },
+      eap_tls_key_file: {
+        title: 'EAP-TLS Server Private Key',
+        description: 'Path to the PEM private key matching the EAP-TLS server certificate. Leave empty to keep EAP-TLS disabled.',
+      },
+      eap_tls_ca_file: {
+        title: 'EAP-TLS Client CA Bundle',
+        description: 'Path to the PEM CA bundle used to verify EAP-TLS client certificate chains. Leave empty to keep EAP-TLS disabled.',
+      },
+      eap_tls_min_version: {
+        title: 'EAP-TLS Minimum TLS Version',
+        description: 'Minimum TLS protocol version accepted for EAP-TLS handshakes (1.2 or 1.3).',
+      },
       ignore_password: {
         title: 'Ignore Password Check',
         description: 'Skips password validation during authentication. Only enable for debugging or external auth flows.',

@@ -20,6 +20,43 @@
       "description_i18n": "config.radius.eap_enabled_handlers.description"
     },
     {
+      "key": "radius.EapTlsCertFile",
+      "type": "string",
+      "default": "",
+      "title": "EAP-TLS Server Certificate",
+      "title_i18n": "config.radius.eap_tls_cert_file.title",
+      "description": "Path to the PEM server certificate the RADIUS server presents during the EAP-TLS handshake (RFC 5216 §2.2). Leave empty to keep EAP-TLS disabled",
+      "description_i18n": "config.radius.eap_tls_cert_file.description"
+    },
+    {
+      "key": "radius.EapTlsKeyFile",
+      "type": "string",
+      "default": "",
+      "title": "EAP-TLS Server Private Key",
+      "title_i18n": "config.radius.eap_tls_key_file.title",
+      "description": "Path to the PEM private key matching the EAP-TLS server certificate. Leave empty to keep EAP-TLS disabled",
+      "description_i18n": "config.radius.eap_tls_key_file.description"
+    },
+    {
+      "key": "radius.EapTlsCaFile",
+      "type": "string",
+      "default": "",
+      "title": "EAP-TLS Client CA Bundle",
+      "title_i18n": "config.radius.eap_tls_ca_file.title",
+      "description": "Path to the PEM CA bundle used to verify EAP-TLS client certificate chains (RFC 5216 §2.2/§5.3). Leave empty to keep EAP-TLS disabled",
+      "description_i18n": "config.radius.eap_tls_ca_file.description"
+    },
+    {
+      "key": "radius.EapTlsMinVersion",
+      "type": "string",
+      "default": "1.2",
+      "enum": ["1.2", "1.3"],
+      "title": "EAP-TLS Minimum TLS Version",
+      "title_i18n": "config.radius.eap_tls_min_version.title",
+      "description": "Minimum TLS protocol version accepted for EAP-TLS handshakes",
+      "description_i18n": "config.radius.eap_tls_min_version.description"
+    },
+    {
       "key": "radius.IgnorePassword",
       "type": "bool",
       "default": "false",

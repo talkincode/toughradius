@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"github.com/talkincode/toughradius/v9/config"
 )
 
@@ -205,6 +206,40 @@ func TestConfigManagerJSON(t *testing.T) {
 	if assert.NotNil(t, windowSchema.Max) {
 		assert.Equal(t, int64(3600), *windowSchema.Max)
 	}
+}
+
+// TestConfigManagerJSON_EapTlsSchemas verifies the EAP-TLS runtime config items
+// (milestone M1.5, TR-F004) are present with the expected defaults so they can
+// be queried/edited/reloaded on the system config page.
+func TestConfigManagerJSON_EapTlsSchemas(t *testing.T) {
+	cm := &ConfigManager{
+		configs: make(map[string]string),
+		schemas: make(map[string]*ConfigSchema),
+	}
+	require.NoError(t, cm.loadSchemasFromJSON())
+
+	// Certificate/key/CA path items: string type, empty default (EAP-TLS
+	// disabled until configured), with i18n keys wired for the UI.
+	for _, key := range []string{"radius.EapTlsCertFile", "radius.EapTlsKeyFile", "radius.EapTlsCaFile"} {
+		schema, exists := cm.schemas[key]
+		require.Truef(t, exists, "%s configuration should exist", key)
+		assert.Equalf(t, TypeString, schema.Type, "%s should be string type", key)
+		assert.Equalf(t, "", schema.Default, "%s default should be empty", key)
+		assert.NotEmptyf(t, schema.TitleI18n, "%s should have a title i18n key", key)
+		assert.NotEmptyf(t, schema.DescI18n, "%s should have a description i18n key", key)
+	}
+
+	// Minimum TLS version: string enum constrained to 1.2 / 1.3, default 1.2.
+	minVerSchema, exists := cm.schemas["radius.EapTlsMinVersion"]
+	require.True(t, exists, "radius.EapTlsMinVersion configuration should exist")
+	assert.Equal(t, TypeString, minVerSchema.Type)
+	assert.Equal(t, "1.2", minVerSchema.Default)
+	assert.Contains(t, minVerSchema.Enum, "1.2")
+	assert.Contains(t, minVerSchema.Enum, "1.3")
+
+	// The value should validate against the enum so it is editable via Set.
+	assert.NoError(t, cm.validate(minVerSchema, "1.3"))
+	assert.Error(t, cm.validate(minVerSchema, "1.1"))
 }
 
 // Test configuration type parsing
