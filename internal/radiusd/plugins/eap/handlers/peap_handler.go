@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius"
@@ -37,20 +38,45 @@ const (
 // selling point.
 //
 // Milestone scope:
-//   - M8.1 (this skeleton): registers the method (EAP type 25, name
-//     "eap-peap"), answers EAP-Response/Identity with a PEAPv0 Start, and
-//     rejects every handshake response with eap.ErrPEAPNotImplemented so it can
-//     never authenticate before the tunnel exists.
-//   - M8.2: outer TLS tunnel establishment and fragmentation reassembly,
-//     reusing the EAP-TLS state machine.
+//   - M8.1: registered the method (EAP type 25, name "eap-peap") and answered
+//     EAP-Response/Identity with a PEAPv0 Start.
+//   - M8.2 (current): establishes the outer TLS tunnel and fragmentation
+//     reassembly, reusing the EAP-TLS state machine, then rejects with
+//     eap.ErrPEAPInnerNotImplemented because inner authentication is not present.
 //   - M8.3: inner EAP-MSCHAPv2 exchange and MPPE key derivation.
-type PEAPHandler struct{}
+type PEAPHandler struct {
+	configProvider TLSConfigProvider
+	maxFragment    int
+}
 
-// NewPEAPHandler creates a PEAPv0 handler skeleton. It accepts the PEAP Start
-// exchange but rejects handshake attempts with eap.ErrPEAPNotImplemented until
-// the outer TLS tunnel is delivered (milestone M8.2).
+// NewPEAPHandler creates a PEAPv0 handler without TLS material configured. It
+// accepts the PEAP Start exchange but rejects handshake attempts safely until a
+// server-certificate config provider is supplied.
 func NewPEAPHandler() *PEAPHandler {
-	return &PEAPHandler{}
+	return &PEAPHandler{maxFragment: defaultMaxTLSFragment}
+}
+
+// NewPEAPHandlerWithConfig creates a PEAPv0 handler that drives the outer TLS
+// tunnel using the TLS material returned by provider.
+func NewPEAPHandlerWithConfig(provider TLSConfigProvider) *PEAPHandler {
+	return &PEAPHandler{configProvider: provider, maxFragment: defaultMaxTLSFragment}
+}
+
+func (h *PEAPHandler) newTunnel() *tlsTunnel {
+	return &tlsTunnel{
+		eapType:        eap.TypePEAP,
+		maxFragment:    h.maxFragment,
+		configProvider: h.configProvider,
+		onHandshakeComplete: func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
+			defer func() { _ = engine.Close() }()
+			state.Success = false
+			clearKey(state, stateKeyEngine)
+			if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+				return false, err
+			}
+			return false, eap.ErrPEAPInnerNotImplemented
+		},
+	}
 }
 
 // Name returns the handler name ("eap-peap").
@@ -96,11 +122,12 @@ func (h *PEAPHandler) HandleIdentity(ctx *eap.EAPContext) (bool, error) {
 	return true, h.writeChallenge(ctx, stateID, eapData)
 }
 
-// HandleResponse rejects every PEAP handshake response with
-// eap.ErrPEAPNotImplemented. The outer TLS tunnel is delivered in milestone
-// M8.2; until then the skeleton must never authenticate a client.
-func (h *PEAPHandler) HandleResponse(_ *eap.EAPContext) (bool, error) {
-	return false, eap.ErrPEAPNotImplemented
+// HandleResponse drives PEAP's outer TLS tunnel and fragmentation using the
+// shared EAP-TLS state machine (RFC 5216 §2.1.5/§3.1; PEAPv0 [MS-PEAP]). M8.2
+// deliberately rejects after the tunnel completes because the inner EAP method
+// is M8.3 scope, so this handler can never authenticate yet.
+func (h *PEAPHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
+	return h.newTunnel().HandleResponse(ctx)
 }
 
 // buildStartRequest constructs a PEAPv0 Start request: an EAP-Request with

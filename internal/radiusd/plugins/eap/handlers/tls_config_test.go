@@ -227,3 +227,54 @@ func TestNewSettingsTLSConfigProvider_LoadErrors(t *testing.T) {
 		}
 	})
 }
+
+func TestNewSettingsPEAPConfigProvider_ValidMaterial(t *testing.T) {
+	certFile, keyFile, _ := writeTestCertFiles(t)
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsCertFile:   certFile,
+		"radius." + SettingEapTlsKeyFile:    keyFile,
+		"radius." + SettingEapTlsMinVersion: "1.3",
+	})
+
+	cfg, err := NewSettingsPEAPConfigProvider(reader)()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected non-nil config for PEAP server material")
+	}
+	if !cfg.ServerOnly {
+		t.Fatal("expected PEAP config to use server-only TLS")
+	}
+	if cfg.ClientCAs != nil {
+		t.Fatal("PEAP outer TLS must not require a client CA")
+	}
+	if cfg.MinVersion != tls.VersionTLS13 {
+		t.Fatalf("expected MinVersion TLS 1.3, got %#x", cfg.MinVersion)
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_NotConfigured(t *testing.T) {
+	cases := map[string]map[string]string{
+		"nil reader": nil,
+		"all empty":  {},
+		"only cert": {
+			"radius." + SettingEapTlsCertFile: "server.crt",
+		},
+	}
+	for name, values := range cases {
+		t.Run(name, func(t *testing.T) {
+			var reader TLSSettingsReader
+			if values != nil {
+				reader = newFakeReader(values)
+			}
+			cfg, err := NewSettingsPEAPConfigProvider(reader)()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if cfg != nil {
+				t.Fatalf("expected nil config when PEAP is not configured, got %#v", cfg)
+			}
+		})
+	}
+}

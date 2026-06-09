@@ -84,6 +84,39 @@ func NewSettingsTLSConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 	}
 }
 
+// NewSettingsPEAPConfigProvider returns a TLSConfigProvider for PEAP's outer
+// server-authenticated tunnel.
+//
+// PEAPv0 ([MS-PEAP]) reuses the EAP-TLS fragmentation/framing defined by
+// RFC 5216 §2.1.5 and §3.1 but authenticates the peer with an inner EAP method,
+// so no client CA is required for the outer TLS handshake. M8.2 intentionally
+// reuses the existing EAP-TLS server certificate settings; PEAP-specific
+// certificate overrides can be added in M8.4 without changing the state machine.
+func NewSettingsPEAPConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
+	return func() (*tlsengine.Config, error) {
+		if reader == nil {
+			return nil, nil
+		}
+
+		certFile := strings.TrimSpace(reader.GetString("radius", SettingEapTlsCertFile))
+		keyFile := strings.TrimSpace(reader.GetString("radius", SettingEapTlsKeyFile))
+		if certFile == "" || keyFile == "" {
+			return nil, nil
+		}
+
+		cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			return nil, fmt.Errorf("load PEAP server certificate: %w", err)
+		}
+
+		return &tlsengine.Config{
+			ServerCertificate: cert,
+			ServerOnly:        true,
+			MinVersion:        parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion)),
+		}, nil
+	}
+}
+
 // parseTLSMinVersion maps a configured minimum TLS version string to the
 // crypto/tls constant. It defaults to TLS 1.2, the interoperability floor for
 // modern EAP-TLS deployments; an unrecognized value falls back to the same

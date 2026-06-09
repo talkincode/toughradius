@@ -247,6 +247,39 @@ func TestEngine_New_RequiresClientCAs(t *testing.T) {
 	}
 }
 
+func TestEngine_ServerOnly_DoesNotRequireClientCAs(t *testing.T) {
+	ca := newTestCA(t, "Server Root CA")
+	serverCert := ca.issue(t, "radius.example.com", func(c *x509.Certificate) {
+		c.DNSNames = []string{"radius.example.com"}
+	})
+
+	eng, err := New(&Config{
+		ServerCertificate: serverCert,
+		ServerOnly:        true,
+		MinVersion:        tls.VersionTLS12,
+		HandshakeTimeout:  5 * time.Second,
+	})
+	if err != nil {
+		t.Fatalf("server-only engine should not require ClientCAs: %v", err)
+	}
+	defer func() { _ = eng.Close() }()
+
+	clientErr, serverErr := driveHandshake(t, eng, &tls.Config{
+		RootCAs:    ca.pool,
+		ServerName: "radius.example.com",
+		MinVersion: tls.VersionTLS12,
+	})
+	if clientErr != nil {
+		t.Fatalf("client handshake error: %v", clientErr)
+	}
+	if serverErr != nil {
+		t.Fatalf("server handshake error: %v", serverErr)
+	}
+	if _, err := eng.Identity(); err != ErrNoPeerCertificate {
+		t.Fatalf("expected ErrNoPeerCertificate for server-only handshake, got %v", err)
+	}
+}
+
 func TestEngine_New_RequiresServerCertificate(t *testing.T) {
 	ca := newTestCA(t, "Root")
 	if _, err := New(&Config{ClientCAs: ca.pool}); err != ErrNoServerCertificate {

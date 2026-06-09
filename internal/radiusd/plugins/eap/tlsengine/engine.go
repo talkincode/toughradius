@@ -9,12 +9,13 @@
 // transmitted in the next EAP-Request. This package bridges Go's blocking
 // crypto/tls handshake to that turn-based model using an in-memory transport.
 //
-// Certificate validation (CA chain) is delegated to crypto/tls: the engine is
-// configured with ClientAuth=RequireAndVerifyClientCert and a ClientCAs pool, so
-// a handshake only completes when the peer presents a certificate that chains to
-// a configured CA (RFC 5216 §2.2, §5.3). After a successful handshake the
-// validated peer identity is extracted from the client certificate per
-// RFC 5216 §5.2.
+// Certificate validation (CA chain) is delegated to crypto/tls for EAP-TLS: the
+// engine is configured with ClientAuth=RequireAndVerifyClientCert and a
+// ClientCAs pool, so a handshake only completes when the peer presents a
+// certificate that chains to a configured CA (RFC 5216 §2.2, §5.3). PEAP/TTLS
+// server-only tunnels set Config.ServerOnly and authenticate the peer inside the
+// protected tunnel instead. After a successful EAP-TLS handshake the validated
+// peer identity is extracted from the client certificate per RFC 5216 §5.2.
 package tlsengine
 
 import (
@@ -61,6 +62,10 @@ type Config struct {
 	// MinVersion optionally pins the minimum TLS version (e.g. tls.VersionTLS12).
 	// Zero lets crypto/tls choose its default.
 	MinVersion uint16
+	// ServerOnly disables client-certificate requests for tunneled EAP methods
+	// such as PEAP/TTLS whose peers authenticate inside the protected tunnel
+	// rather than with an outer TLS client certificate.
+	ServerOnly bool
 	// HandshakeTimeout bounds the total handshake duration. Zero selects
 	// DefaultHandshakeTimeout.
 	HandshakeTimeout time.Duration
@@ -91,7 +96,7 @@ func New(cfg *Config) (*Engine, error) {
 	if cfg == nil {
 		return nil, ErrNoConfig
 	}
-	if cfg.ClientCAs == nil {
+	if !cfg.ServerOnly && cfg.ClientCAs == nil {
 		return nil, fmt.Errorf("%w: ClientCAs is required for EAP-TLS peer authentication", ErrNoConfig)
 	}
 	if len(cfg.ServerCertificate.Certificate) == 0 || cfg.ServerCertificate.PrivateKey == nil {
@@ -100,9 +105,13 @@ func New(cfg *Config) (*Engine, error) {
 
 	tlsCfg := &tls.Config{
 		Certificates: []tls.Certificate{cfg.ServerCertificate},
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		ClientCAs:    cfg.ClientCAs,
 		MinVersion:   cfg.MinVersion,
+	}
+	if cfg.ServerOnly {
+		tlsCfg.ClientAuth = tls.NoClientCert
+	} else {
+		tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
+		tlsCfg.ClientCAs = cfg.ClientCAs
 	}
 
 	trans := newTransport()

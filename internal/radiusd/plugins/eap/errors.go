@@ -34,9 +34,8 @@ var (
 	// EAP-TLS fragmentation exchange (e.g. a non-ACK arrives while the server is
 	// still sending fragments, RFC 5216 §2.1.5).
 	ErrTLSUnexpectedFragment = errors.New("EAP-TLS unexpected fragment in handshake exchange")
-	// ErrPEAPNotImplemented is returned by the PEAPv0 handler skeleton until the
-	// outer TLS tunnel and fragmentation are implemented (milestone M8.2). Like
-	// the EAP-TLS skeleton's guard, it guarantees the skeleton can never grant
-	// access before the tunnel exists.
-	ErrPEAPNotImplemented = errors.New("PEAP outer TLS tunnel is not implemented yet")
+	// ErrPEAPInnerNotImplemented is returned after PEAP's outer TLS tunnel has
+	// been established but before the inner EAP method is implemented (milestone
+	// M8.3). It guarantees M8.2 can never grant access.
+	ErrPEAPInnerNotImplemented = errors.New("PEAP inner EAP method is not implemented yet")
 )
