@@ -1,0 +1,11 @@
+[book]
+title = "ToughRADIUS Handbook"
+description = "Bilingual (English / 中文) handbook for the ToughRADIUS RADIUS server."
+authors = ["ToughRADIUS contributors"]
+language = "en"
+src = "src"
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "ayu"
+git-repository-url = "https://github.com/talkincode/toughradius"
