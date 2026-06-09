@@ -159,7 +159,7 @@ Default Admin Account:
 
 ## 📖 Documentation
 
-- 📚 **[Bilingual Handbook (mdbook)](docs-site/)** - CN/EN documentation site consolidating the overview, security policy, and more (built and link-checked in CI)
+- 📚 **[Bilingual Handbook (mdbook)](https://talkincode.github.io/toughradius/)** - CN/EN documentation site (source in [`docs-site/`](docs-site/)) consolidating the overview, security policy, RFC reference, and more; built, link-checked, and deployed to GitHub Pages by CI
 - [Roadmap](docs/roadmap.md) - Milestones and the EAP suite delivery plan (EAP-TLS / PEAP / TTLS, with TLS 1.3, TEAP, EAP-PWD tracked)
 - [Feature Checklist](docs/feature-checklist.md) / [English](docs/feature-checklist.en.md) - Product scope baseline for aligning future development with feature IDs and avoiding uncontrolled direction changes
 - [Architecture](docs/v9-architecture.md) - v9 version architecture design
