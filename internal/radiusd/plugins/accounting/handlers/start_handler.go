@@ -16,6 +16,7 @@ import (
 	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3162"
 	"layeh.com/radius/rfc4818"
+	"layeh.com/radius/rfc6911"
 ) // StartHandler Accounting Start handler
 type StartHandler struct {
 	sessionRepo    repository.SessionRepository
@@ -122,9 +123,9 @@ func (h *StartHandler) buildRadiusOnline(r *radius.Request, vr *vendorparserspkg
 		SessionTimeout:      int(rfc2865.SessionTimeout_Get(r.Packet)),
 		FramedIpaddr:        common.IfEmptyStr(rfc2865.FramedIPAddress_Get(r.Packet).String(), common.NA),
 		FramedNetmask:       common.IfEmptyStr(rfc2865.FramedIPNetmask_Get(r.Packet).String(), common.NA),
-		FramedIpv6Address:   common.NA, // Set based on vendor-specific logic
-		FramedIpv6Prefix:    common.IfEmptyStr(rfc3162.FramedIPv6Prefix_Get(r.Packet).String(), common.NA),
-		DelegatedIpv6Prefix: common.IfEmptyStr(rfc4818.DelegatedIPv6Prefix_Get(r.Packet).String(), common.NA),
+		FramedIpv6Address:   ipv6AddrOrNA(rfc6911.FramedIPv6Address_Get(r.Packet)),
+		FramedIpv6Prefix:    ipv6PrefixOrNA(rfc3162.FramedIPv6Prefix_Get(r.Packet)),
+		DelegatedIpv6Prefix: ipv6PrefixOrNA(rfc4818.DelegatedIPv6Prefix_Get(r.Packet)),
 		MacAddr:             common.IfEmptyStr(vr.MacAddr, common.NA),
 		NasPort:             0,
 		NasClass:            common.NA,
