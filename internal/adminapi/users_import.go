@@ -13,14 +13,20 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// ImportUserError describes a single row failure during batch import.
+// ImportUserError describes one failed input row during a batch user import.
+//
+// Row is 1-based within the parsed payload and Username may be empty when the
+// failure occurs before a username can be resolved (for example missing column).
 type ImportUserError struct {
 	Row      int    `json:"row"`
 	Username string `json:"username"`
 	Message  string `json:"message"`
 }
 
-// ImportUserResult summarizes the outcome of a batch user import.
+// ImportUserResult summarizes the outcome of a batch user import request.
+//
+// Success and Failed are per-row counts and Errors carries only failed rows so
+// callers can present actionable feedback without re-reading the source file.
 type ImportUserResult struct {
 	Total   int               `json:"total"`
 	Success int               `json:"success"`
