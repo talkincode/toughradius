@@ -49,6 +49,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&domain.NetNas{},
 		&domain.RadiusAccounting{},
 		&domain.RadiusOnline{},
+		&domain.RadiusSessionActionAudit{},
 		&domain.SysOpr{},
 		&domain.SysConfig{},
 	)
@@ -113,6 +114,7 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 		&domain.NetNas{},
 		&domain.RadiusAccounting{},
 		&domain.RadiusOnline{},
+		&domain.RadiusSessionActionAudit{},
 		&domain.SysOpr{},
 		&domain.SysConfig{},
 	)

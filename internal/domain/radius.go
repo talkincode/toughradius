@@ -104,6 +104,36 @@ func (RadiusOnline) TableName() string {
 	return "radius_online"
 }
 
+// RadiusSessionActionAudit records a durable audit trail for operator-triggered
+// dynamic-authorization actions (Disconnect / CoA) on online sessions.
+type RadiusSessionActionAudit struct {
+	ID             int64     `json:"id,string"`
+	SessionID      int64     `gorm:"index" json:"session_id,string"`
+	AcctSessionID  string    `gorm:"index" json:"acct_session_id"`
+	Action         string    `gorm:"index" json:"action"`
+	Username       string    `gorm:"index" json:"username"`
+	NasAddr        string    `gorm:"index" json:"nas_addr"`
+	Target         string    `json:"target"`
+	OperatorID     int64     `gorm:"index" json:"operator_id,string"`
+	OperatorName   string    `gorm:"index" json:"operator_name"`
+	OperatorIP     string    `json:"operator_ip"`
+	Success        bool      `gorm:"index" json:"success"`
+	ResponseCode   string    `json:"response_code"`
+	ErrorCause     int       `json:"error_cause"`
+	ErrorCauseText string    `json:"error_cause_text"`
+	Attempts       int       `json:"attempts"`
+	RTTMillis      int64     `json:"rtt_ms"`
+	TimedOut       bool      `gorm:"index" json:"timed_out"`
+	Error          string    `json:"error"`
+	TriggeredAt    time.Time `gorm:"index" json:"triggered_at"`
+	CreatedAt      time.Time `json:"created_at"`
+}
+
+// TableName specifies the CoA session action audit table name.
+func (RadiusSessionActionAudit) TableName() string {
+	return "radius_session_action_audit"
+}
+
 // RadiusAccounting
 // Radius Accounting Recode
 type RadiusAccounting struct {

@@ -182,6 +182,13 @@ func decodeErr(t *testing.T, rec *httptest.ResponseRecorder) ErrorResponse {
 	return errResp
 }
 
+func listSessionActionAudits(t *testing.T, db *gorm.DB) []domain.RadiusSessionActionAudit {
+	t.Helper()
+	var audits []domain.RadiusSessionActionAudit
+	require.NoError(t, db.Order("id asc").Find(&audits).Error)
+	return audits
+}
+
 func TestDisconnectOnlineSession_ACK(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
@@ -204,6 +211,15 @@ func TestDisconnectOnlineSession_ACK(t *testing.T) {
 	require.Len(t, got, 1)
 	assert.Equal(t, radius.CodeDisconnectRequest, got[0].code)
 	assert.Equal(t, "alice", got[0].username)
+
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, id, audits[0].SessionID)
+	assert.Equal(t, "disconnect", audits[0].Action)
+	assert.Equal(t, "alice", audits[0].Username)
+	assert.Equal(t, "superadmin", audits[0].OperatorName)
+	assert.True(t, audits[0].Success)
+	assert.Equal(t, "Disconnect-ACK", audits[0].ResponseCode)
 }
 
 func TestDisconnectOnlineSession_NAK(t *testing.T) {
@@ -221,6 +237,13 @@ func TestDisconnectOnlineSession_NAK(t *testing.T) {
 	assert.Equal(t, "Disconnect-NAK", action.ResponseCode)
 	assert.Equal(t, int(rfc3576.ErrorCause_Value_SessionContextNotFound), action.ErrorCause)
 	assert.Equal(t, "Session-Context-Not-Found", action.ErrorCauseText)
+
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, "disconnect", audits[0].Action)
+	assert.False(t, audits[0].Success)
+	assert.Equal(t, "Disconnect-NAK", audits[0].ResponseCode)
+	assert.Equal(t, int(rfc3576.ErrorCause_Value_SessionContextNotFound), audits[0].ErrorCause)
 }
 
 func TestChangeOnlineSessionAuthorization_ACK(t *testing.T) {
@@ -244,6 +267,12 @@ func TestChangeOnlineSessionAuthorization_ACK(t *testing.T) {
 	assert.True(t, got[0].hasTimeout)
 	assert.Equal(t, uint32(3600), got[0].sessionTimeout)
 	assert.Equal(t, "throttled", got[0].filterID)
+
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, "coa", audits[0].Action)
+	assert.True(t, audits[0].Success)
+	assert.Equal(t, "CoA-ACK", audits[0].ResponseCode)
 }
 
 func TestChangeOnlineSessionAuthorization_NoChanges(t *testing.T) {
@@ -279,6 +308,13 @@ func TestDisconnectOnlineSession_Timeout(t *testing.T) {
 	assert.False(t, action.Success)
 	assert.True(t, action.TimedOut)
 	assert.Equal(t, 2, action.Attempts) // initial + 1 retry
+
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, "disconnect", audits[0].Action)
+	assert.False(t, audits[0].Success)
+	assert.True(t, audits[0].TimedOut)
+	assert.Equal(t, 2, audits[0].Attempts)
 }
 
 func TestSessionAction_SessionNotFound(t *testing.T) {
