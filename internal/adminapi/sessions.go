@@ -266,4 +266,7 @@ func registerSessionRoutes() {
 	webserver.ApiGET("/sessions", ListOnlineSessions)
 	webserver.ApiGET("/sessions/:id", GetOnlineSession)
 	webserver.ApiDELETE("/sessions/:id", DeleteOnlineSession)
+	// RFC 5176 Dynamic Authorization actions over a live session (admin/super only).
+	webserver.ApiPOST("/sessions/:id/disconnect", DisconnectOnlineSession, requireAdmin())
+	webserver.ApiPOST("/sessions/:id/coa", ChangeOnlineSessionAuthorization, requireAdmin())
 }
