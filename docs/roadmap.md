@@ -28,7 +28,7 @@
 | --- | --- | --- | --- | --- |
 | M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 已交付 |
 | M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 已交付 |
-| M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 进行中 |
+| M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 已完成 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
@@ -114,7 +114,7 @@
 - [x] M3.2 数据库字段与迁移（PostgreSQL + SQLite 双兼容）：新增 `RadiusUser.DelegatedIpv6Prefix`（静态 RFC 4818 #123，按用户）、`RadiusUser.DelegatedIpv6PrefixPool` 与 `RadiusProfile.DelegatedIpv6PrefixPool`（RFC 6911 #171 DHCPv6-PD 池，按 §2.4 与 Framed-IPv6-Pool 区分）；GORM AutoMigrate 双库建列，Admin API 用户/套餐增改可持久化并支持 Profile 继承
 - [x] M3.3 用户 / 会话 / 计费的 IPv6 过滤与展示（会话/计费侧 IPv6 过滤与展示此前已闭环；本轮补齐用户侧：Admin API 用户列表新增 `ipv6_addr`(RFC 6911)/`delegated_ipv6_prefix`(RFC 4818) 过滤，前端用户编辑表单与详情页展示 `ipv6_prefix_pool`/`delegated_ipv6_prefix`/`delegated_ipv6_prefix_pool`（zh/en 双语），并修复用户静态 IPv6 地址更新写入幽灵列 `ipv6_addr` 导致从不落库的历史缺陷（正确列名 `ip_v6_addr`））
 - [x] M3.4 Dashboard IPv6 维度统计（在线会话 IPv6 占比/地址/Framed 前缀/委派前缀此前已闭环但缺测试；本轮新增用户库静态 IPv6 配置维度（已配置静态 IPv6 地址 / 委派前缀用户数），补齐 `TestGetDashboardIPv6Stats` 回归测试覆盖在线与用户两个维度，前端 IPv6 覆盖面板新增用户维度卡片（zh/en 双语））
-- [ ] M3.5 端到端测试与字段一致性校验（`test/integration/`，CI 自动执行）
+- [x] M3.5 端到端测试与字段一致性校验（`test/integration/ipv6_test.go`，CI `integration` job 自动执行）：真实 PostgreSQL + 在线 RADIUS auth/acct 服务驱动 IPv6 全链路——为用户配置静态 IPv6 主机地址、SLAAC 前缀池、静态 Delegated-IPv6-Prefix 与 DHCPv6-PD 委派池后，PAP 认证断言 Access-Accept 同时携带 Framed-IPv6-Prefix(RFC 3162)/Framed-IPv6-Address(RFC 6911 §2.1)/Framed-IPv6-Pool(RFC 3162)/Delegated-IPv6-Prefix(RFC 4818 #123)/Delegated-IPv6-Prefix-Pool(RFC 6911 #171)，再以 NAS 回显的属性发起 Accounting-Start 并断言 RadiusOnline 与 RadiusAccounting 落库的 IPv6 字段与下发值逐一一致（auth→acct→DB 字段一致性）；另含动态 link 模式下从 Profile 继承 Framed/Delegated IPv6 池的端到端用例。**该用例发现并修复了真实缺陷**：`ApplyAcceptEnhancers` 构造的 `AuthContext` 缺失 `Metadata`，导致全部 Accept 增强器拿到 nil `profile_cache`/`config_mgr`，动态 link 模式下 Profile 继承的地址/IPv6 池、速率、domain 等属性被静默丢弃、且计费 interim 间隔退化为硬编码缺省值——现已注入 `profile_cache` 与 `config_mgr`，并补充 `TestApplyAcceptEnhancersWiresProfileCacheMetadata` 单元回归
 - [x] M3.6 下发 Delegated-IPv6-Prefix / Delegated-IPv6-Prefix-Pool（先于 M3.5 实现：M3.5 的端到端一致性校验需覆盖下发环节，故按依赖关系前置）：default Access-Accept enhancer 从 `RadiusUser.DelegatedIpv6Prefix` 下发 Delegated-IPv6-Prefix（RFC 4818 #123，裸地址归一为 /128，IPv4/非法值跳过避免畸形 4 字节前缀），并经 `GetDelegatedIPv6PrefixPool` 下发 Delegated-IPv6-Prefix-Pool（RFC 6911 #171，支持 Profile 继承，按 §2.4 与 Framed-IPv6-Pool 区分）；含单元测试覆盖网络前缀/裸地址归一/继承/跳过
 
 验收口径：IPv6 全链路可查询、可过滤、可审计，双数据库一致；**验收由 `test/integration/` 的 CI 用例背书**。
