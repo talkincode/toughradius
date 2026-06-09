@@ -62,6 +62,11 @@ type Config struct {
 	// MinVersion optionally pins the minimum TLS version (e.g. tls.VersionTLS12).
 	// Zero lets crypto/tls choose its default.
 	MinVersion uint16
+	// MaxVersion optionally pins the maximum TLS version (e.g. tls.VersionTLS12).
+	// Zero lets crypto/tls choose its default. Tunneled methods whose phase-2
+	// completion depends on the TLS 1.2 handshake framing (e.g. EAP-TTLS until
+	// RFC 9427 / TLS 1.3 tunneling is supported) set this to tls.VersionTLS12.
+	MaxVersion uint16
 	// ServerOnly disables client-certificate requests for tunneled EAP methods
 	// such as PEAP/TTLS whose peers authenticate inside the protected tunnel
 	// rather than with an outer TLS client certificate.
@@ -111,6 +116,7 @@ func New(cfg *Config) (*Engine, error) {
 	tlsCfg := &tls.Config{
 		Certificates: []tls.Certificate{cfg.ServerCertificate},
 		MinVersion:   cfg.MinVersion,
+		MaxVersion:   cfg.MaxVersion,
 	}
 	if cfg.ServerOnly {
 		tlsCfg.ClientAuth = tls.NoClientCert

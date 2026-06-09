@@ -163,6 +163,12 @@ func NewSettingsTTLSConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 			ServerCertificate: cert,
 			ServerOnly:        true,
 			MinVersion:        parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion)),
+			// Pin the outer tunnel to TLS 1.2. EAP-TTLS phase 2 is peer-initiated
+			// and ToughRADIUS relies on the TLS 1.2 handshake-completion framing
+			// (the server's final flight) to switch into the inner AVP exchange.
+			// TLS 1.3 tunneling (half-RTT completion, RFC 9427 key derivation) is
+			// a later milestone, so cap the negotiation at TLS 1.2 here.
+			MaxVersion: tls.VersionTLS12,
 		}, nil
 	}
 }
