@@ -133,7 +133,7 @@
 - [x] M4.9 约定本机无头运行 agent 的方式与护栏（不在 CI 执行；见 `.agents/README.md`）
 - [x] M4.10 建立总调度与自我迭代技能（`orchestrate-roadmap` 统筹委托循环 + `groom-roadmap` 路线图自我迭代）
 - [x] M4.11 制定 Go API 文档/注释规范并建立 `document-go-apis` 技能（标准库 godoc 风格，关联 `TR-F024`）
-- [ ] M4.7 为 agent 任务建立 PR 模板与 review checklist
+- [x] M4.7 为 agent 任务建立 PR 模板与 review checklist
 - [ ] M4.8 收敛 agent 产出质量度量（CI 通过率、回滚率）
 - [ ] M4.12 按模块增量补齐导出标识符 godoc 注释与包注释（顺序建议：`internal/adminapi` → `internal/radiusd` → `pkg`），并探索 lint 度量（`TR-F024`）
 
@@ -291,4 +291,3 @@
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。
 - 每个涉及协议或数据流的子任务，交付时必须带 **CI 可自动执行的验收测试**（单元或 `test/integration/`）。
 - 选任务口径：优先取**优先级最高里程碑**中自上而下第一个未勾选的 `- [ ] M*.*`（优先级见里程碑总览的优先级列与上面的调度优先级排期）；同优先级里程碑按序号顺序。agent 在**本机**用你自己的 agent 运行，不在 CI 执行；运行参考与护栏见 [`.agents/README.md`](../.agents/README.md)。
-
