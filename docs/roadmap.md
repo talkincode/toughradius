@@ -26,7 +26,7 @@
 
 | 里程碑 | 主题 | 关联编号 | 优先级 | 状态 |
 | --- | --- | --- | --- | --- |
-| M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 进行中 |
+| M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 已交付 |
 | M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 计划中 |
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 计划中 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
@@ -74,7 +74,7 @@
 - [x] M1.3 证书校验（CA 链）与用户身份映射
 - [x] M1.4 明确失败原因 + AuthError 指标 + 单元/集成测试
 - [x] M1.5 在 `config_schemas.json` 增加 EAP-TLS 配置项与默认值
-- [ ] M1.6 在 `test/integration/` 增加 EAP-TLS 端到端验收用例（CI 自动执行）
+- [x] M1.6 在 `test/integration/` 增加 EAP-TLS 端到端验收用例（CI 自动执行）
 
 验收口径：EAP-TLS 客户端可完成认证；失败场景有明确拒绝原因和指标；**验收由 `test/integration/` 的 CI 用例背书**，新增逻辑全部有测试覆盖。
 
