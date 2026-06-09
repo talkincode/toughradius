@@ -9,6 +9,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app"
 	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
+	"github.com/talkincode/toughradius/v9/pkg/metrics"
 )
 
 func TestMapEAPDispatchError(t *testing.T) {
@@ -86,4 +87,37 @@ func TestSafeEAPFailureReason_DoesNotExposeCause(t *testing.T) {
 	reason := safeEAPFailureReason(err)
 	assert.Equal(t, "eap-tls handshake failed", reason)
 	assert.NotContains(t, reason, "sensitive")
+}
+
+func TestLogEAPFailure_IncrementsMappedMetric(t *testing.T) {
+	assert.NoError(t, metrics.InitMetrics(""))
+
+	s := &AuthService{}
+	ctx := &AuthPipelineContext{
+		Username: "alice",
+		RemoteIP: "10.0.0.1",
+	}
+	err := radiuserrors.NewAuthErrorWithStage(app.MetricsRadiusRejectUnauthorized, "eap-tls certificate identity mismatch", StageEAPDispatch)
+
+	before := app.GetRadiusMetrics(app.MetricsRadiusRejectUnauthorized)
+	s.logEAPFailure(ctx, err)
+	after := app.GetRadiusMetrics(app.MetricsRadiusRejectUnauthorized)
+
+	assert.Equal(t, before+1, after)
+}
+
+func TestLogEAPFailure_UsesRejectOtherForUnknownError(t *testing.T) {
+	assert.NoError(t, metrics.InitMetrics(""))
+
+	s := &AuthService{}
+	ctx := &AuthPipelineContext{
+		Username: "alice",
+		RemoteIP: "10.0.0.1",
+	}
+
+	before := app.GetRadiusMetrics(app.MetricsRadiusRejectOther)
+	s.logEAPFailure(ctx, errors.New("unexpected failure"))
+	after := app.GetRadiusMetrics(app.MetricsRadiusRejectOther)
+
+	assert.Equal(t, before+1, after)
 }

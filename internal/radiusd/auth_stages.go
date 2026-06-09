@@ -225,6 +225,7 @@ func (s *AuthService) logEAPFailure(ctx *AuthPipelineContext, err error) {
 			stage = radiusErr.Stage()
 		}
 	}
+	app.IncRadiusMetric(metricsKey)
 
 	zap.L().Warn("radius eap auth rejected",
 		zap.String("namespace", "radius"),
