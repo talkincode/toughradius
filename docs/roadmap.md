@@ -27,7 +27,7 @@
 | 里程碑 | 主题 | 关联编号 | 优先级 | 状态 |
 | --- | --- | --- | --- | --- |
 | M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 已交付 |
-| M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 计划中 |
+| M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 进行中 |
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 计划中 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
@@ -87,7 +87,7 @@
 - **协议规范**：`docs/rfcs/rfc5176-coa-disconnect.txt`（CoA / Disconnect）、`rfc3576-dynamic-authorization.txt`。
 
 子任务：
-- [ ] M2.1 后端抽象 `CoAService`（发送、超时、重试、结果审计）
+- [x] M2.1 后端抽象 `CoAService`（发送、超时、重试、结果审计）
 - [ ] M2.2 Admin API：对在线会话发起 CoA / Disconnect 端点
 - [ ] M2.3 审计记录：触发动作、目标会话、结果落库
 - [ ] M2.4 前端在线会话页暴露安全动作按钮 + 结果反馈
