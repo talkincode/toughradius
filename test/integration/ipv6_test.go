@@ -125,8 +125,7 @@ func TestRadiusIPv6ProvisioningEndToEnd(t *testing.T) {
 	assert.Equal(t, staticHost, online.FramedIpv6Address, "online Framed-IPv6-Address consistency")
 	assert.Equal(t, wantDelegated, online.DelegatedIpv6Prefix, "online Delegated-IPv6-Prefix consistency")
 
-	var acct domain.RadiusAccounting
-	require.NoError(t, h.appCtx.DB().Where("acct_session_id = ?", sessionID).First(&acct).Error)
+	acct := waitForAccounting(t, sessionID)
 	assert.Equal(t, wantPrefix, acct.FramedIpv6Prefix, "accounting Framed-IPv6-Prefix consistency")
 	assert.Equal(t, staticHost, acct.FramedIpv6Address, "accounting Framed-IPv6-Address consistency")
 	assert.Equal(t, wantDelegated, acct.DelegatedIpv6Prefix, "accounting Delegated-IPv6-Prefix consistency")
@@ -241,4 +240,25 @@ func waitForOnline(t *testing.T, sessionID string) domain.RadiusOnline {
 	}
 	require.FailNowf(t, "online session not persisted", "no RadiusOnline row for acct_session_id=%s", sessionID)
 	return online
+}
+
+// waitForAccounting polls for the RadiusAccounting row written by the
+// asynchronous accounting pipeline. The Accounting-Start handler creates the
+// RadiusOnline row before the RadiusAccounting row, so a test that has only
+// waited for the online session (waitForOnline) may still race the accounting
+// insert; this helper polls until the accounting row appears instead of issuing
+// a single query that can observe the gap.
+func waitForAccounting(t *testing.T, sessionID string) domain.RadiusAccounting {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	var acct domain.RadiusAccounting
+	for time.Now().Before(deadline) {
+		err := h.appCtx.DB().Where("acct_session_id = ?", sessionID).First(&acct).Error
+		if err == nil {
+			return acct
+		}
+		time.Sleep(100 * time.Millisecond)
+	}
+	require.FailNowf(t, "accounting record not persisted", "no RadiusAccounting row for acct_session_id=%s", sessionID)
+	return acct
 }
