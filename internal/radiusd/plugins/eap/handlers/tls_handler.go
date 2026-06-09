@@ -37,6 +37,13 @@ const (
 	stateKeyHandshakeDone  = "tls_handshake_done"  // bool: TLS handshake completed, draining final flight
 	stateKeyPendingSuccess = "tls_pending_success" // bool: awaiting the peer ACK before EAP-Success
 
+	// State keys for the PEAP inner (phase 2) EAP-MSCHAPv2 exchange carried as
+	// TLS application data after the outer tunnel is established.
+	stateKeyInnerActive   = "peap_inner_active"   // bool: outer tunnel done, inner EAP in progress
+	stateKeyInnerPhase    = "peap_inner_phase"    // string: inner sub-state (see peap_inner.go)
+	stateKeyInnerID       = "peap_inner_id"       // uint8: next inner EAP identifier to emit
+	stateKeyInnerIdentity = "peap_inner_identity" // string: username from the inner EAP-Response/Identity
+
 	// defaultMaxTLSFragment bounds the TLS data carried by a single EAP-TLS
 	// fragment so that each EAP-Request comfortably fits within one RADIUS
 	// packet (RFC 5216 §2.1.5 / RFC 7499).
@@ -269,6 +276,36 @@ func getBool(state *eap.EAPState, key string) bool {
 }
 
 func setBool(state *eap.EAPState, key string, val bool) {
+	if state.Data == nil {
+		state.Data = make(map[string]interface{})
+	}
+	state.Data[key] = val
+}
+
+func getString(state *eap.EAPState, key string) string {
+	if state.Data == nil {
+		return ""
+	}
+	v, _ := state.Data[key].(string)
+	return v
+}
+
+func setString(state *eap.EAPState, key, val string) {
+	if state.Data == nil {
+		state.Data = make(map[string]interface{})
+	}
+	state.Data[key] = val
+}
+
+func getUint8(state *eap.EAPState, key string) uint8 {
+	if state.Data == nil {
+		return 0
+	}
+	v, _ := state.Data[key].(uint8)
+	return v
+}
+
+func setUint8(state *eap.EAPState, key string, val uint8) {
 	if state.Data == nil {
 		state.Data = make(map[string]interface{})
 	}

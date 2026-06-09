@@ -23,6 +23,14 @@ type tlsTunnel struct {
 	maxFragment         int
 	configProvider      TLSConfigProvider
 	onHandshakeComplete func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error)
+	// onApplicationData drives a tunneled inner EAP method (PEAP phase 2) once
+	// the outer TLS tunnel is established. It is given the decrypted inbound
+	// inner EAP bytes (nil on the very first call, which asks it to produce the
+	// opening inner request) and returns the next inner EAP bytes to send back
+	// through the tunnel (reply), whether authentication has succeeded, or an
+	// error to reject. It is nil for plain EAP-TLS, which never enters the inner
+	// phase.
+	onApplicationData func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine, inner []byte) (reply []byte, success bool, err error)
 }
 
 // HandleResponse handles EAP-Response messages carrying TLS handshake bytes.
@@ -40,6 +48,12 @@ func (t *tlsTunnel) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	frag, err := tlsfragment.Parse(ctx.EAPMessage.Data)
 	if err != nil {
 		return false, err
+	}
+
+	// Once the outer tunnel is established the conversation switches to the
+	// inner EAP method carried as TLS application data (PEAP phase 2).
+	if getBool(state, stateKeyInnerActive) {
+		return t.handleInnerRound(ctx, state, frag)
 	}
 
 	if getBool(state, stateKeyPendingSuccess) {
@@ -141,6 +155,137 @@ func (t *tlsTunnel) sendNextFragment(ctx *eap.EAPContext, state *eap.EAPState, f
 		if getBool(state, stateKeyHandshakeDone) {
 			setBool(state, stateKeyPendingSuccess, true)
 		}
+	}
+
+	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	return false, t.writeChallenge(ctx, state.StateID, t.buildEAPRequest(ctx.EAPMessage.Identifier+1, next))
+}
+
+// startInner transitions the tunnel from the completed outer handshake into the
+// inner EAP phase (PEAP phase 2). It marks the inner phase active and asks the
+// inner callback to produce the opening inner request (inner == nil), which is
+// then encrypted and sent through the tunnel. It is invoked from a PEAP
+// onHandshakeComplete callback in place of granting/rejecting.
+func (t *tlsTunnel) startInner(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
+	setBool(state, stateKeyInnerActive, true)
+	return t.driveInner(ctx, state, engine, nil)
+}
+
+// handleInnerRound processes one inner-phase EAP-Response: it drains any queued
+// outbound application fragments, reassembles the inbound TLS records, decrypts
+// them into an inner EAP message, and routes it through driveInner.
+func (t *tlsTunnel) handleInnerRound(ctx *eap.EAPContext, state *eap.EAPState, frag *tlsfragment.Packet) (bool, error) {
+	if t.hasQueuedFragments(state) {
+		return t.sendNextAppFragment(ctx, state, frag)
+	}
+
+	engine, err := t.engineFor(state)
+	if err != nil {
+		return false, err
+	}
+
+	reassembler := loadReassembler(state)
+	complete, err := reassembler.Accept(frag)
+	if err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	if !complete {
+		saveReassembler(state, reassembler)
+		if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+			closeEngine(state)
+			return false, err
+		}
+		return false, t.writeChallenge(ctx, state.StateID, t.buildFragmentACK(ctx.EAPMessage.Identifier+1))
+	}
+
+	records := reassembler.Buffer()
+	resetReassembler(state)
+
+	inner, err := engine.ReadApplication(records)
+	if err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	return t.driveInner(ctx, state, engine, inner)
+}
+
+// driveInner invokes the inner EAP callback and acts on its decision: grant on
+// success (the callback has already populated the Access-Accept attributes such
+// as the MS-MPPE keys), reject on error, or encrypt and send the next inner
+// request otherwise. The engine is kept alive across inner rounds and closed
+// only on a terminal outcome.
+func (t *tlsTunnel) driveInner(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine, inner []byte) (bool, error) {
+	if t.onApplicationData == nil {
+		closeEngine(state)
+		return false, eap.ErrPEAPInnerNotImplemented
+	}
+
+	reply, success, err := t.onApplicationData(ctx, state, engine, inner)
+	if err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	if success {
+		closeEngine(state)
+		state.Success = true
+		if serr := ctx.StateManager.SetState(state.StateID, state); serr != nil {
+			return false, serr
+		}
+		return true, nil
+	}
+
+	out, err := engine.WriteApplication(reply)
+	if err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	return t.startAppFlight(ctx, state, out)
+}
+
+// startAppFlight fragments an outbound inner-EAP application record and sends
+// the first fragment. Unlike startFlight it never sets the handshake
+// pending-success terminal: the inner phase ends only when onApplicationData
+// reports success or an error, so after the final fragment the tunnel simply
+// awaits the peer's next inner response.
+func (t *tlsTunnel) startAppFlight(ctx *eap.EAPContext, state *eap.EAPState, tlsData []byte) (bool, error) {
+	packets, err := tlsfragment.Fragment(tlsData, t.maxFragment)
+	if err != nil {
+		closeEngine(state)
+		return false, err
+	}
+
+	first, rest := packets[0], packets[1:]
+	if len(rest) > 0 {
+		setFragments(state, rest)
+	}
+
+	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	return false, t.writeChallenge(ctx, state.StateID, t.buildEAPRequest(ctx.EAPMessage.Identifier+1, first))
+}
+
+// sendNextAppFragment sends the next queued inner-phase application fragment in
+// response to a peer ACK. Like startAppFlight it omits the pending-success
+// terminal used by the handshake path.
+func (t *tlsTunnel) sendNextAppFragment(ctx *eap.EAPContext, state *eap.EAPState, frag *tlsfragment.Packet) (bool, error) {
+	if !frag.IsACK() {
+		closeEngine(state)
+		return false, eap.ErrTLSUnexpectedFragment
+	}
+
+	queue := getFragments(state)
+	next := queue[0]
+	queue = queue[1:]
+	if len(queue) > 0 {
+		setFragments(state, queue)
+	} else {
+		clearKey(state, stateKeyOutFrags)
 	}
 
 	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
