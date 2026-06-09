@@ -73,6 +73,8 @@
 - **协议合规**：协议行为改动引用 `docs/rfcs/` 对应 RFC（见 `skills/reference-rfc/SKILL.md`）。
 - **CI 验收测试**：协议 / 端到端改动带 CI 可自动执行的验收用例（`test/integration/`，见 `skills/add-acceptance-test/SKILL.md`）。
 - **走 PR + 审查门禁**：产出一律 Pull Request，禁止直接推 `main`；PR 打 `agent-roadmap` 标签并交 `skills/review-pr/SKILL.md` 审查，**仅在 `agent-approved` 且 CI 全绿时自动合并**，有阻断问题打 `needs-rework`、超轮次打 `needs-human` 交人。
+- **PR 模板**：agent 任务 PR 默认使用 [`.github/pull_request_template.md`](../.github/pull_request_template.md)，完整填写里程碑子任务、`TR-F`、验收与门禁结果。
+- **审查清单**：review gate 按 [`.github/review-checklists/agent-roadmap.md`](../.github/review-checklists/agent-roadmap.md) 逐项判定，避免凭主观印象放行。
 
 ### 上游 radius 库跟踪（手动）
 
