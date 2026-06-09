@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins"
 	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
@@ -361,6 +362,7 @@ func TestEAPMD5IntegrationWrongPassword(t *testing.T) {
 	client, rs := startEAPTestServer(t)
 	seedEAPUser(t, rs, "eapuser", "eappass")
 	client.username = "eapuser"
+	beforeRejectPassword := app.GetRadiusMetrics(app.MetricsRadiusRejectPasswdError)
 
 	challenge, state := client.sendIdentity(t)
 	resp := client.sendMD5Response(t, challenge, state, "wrong-password")
@@ -378,6 +380,10 @@ func TestEAPMD5IntegrationWrongPassword(t *testing.T) {
 	}
 	if reply := rfc2865.ReplyMessage_GetString(resp); reply == "" {
 		t.Fatal("expected Reply-Message to contain EAP failure reason")
+	}
+	afterRejectPassword := app.GetRadiusMetrics(app.MetricsRadiusRejectPasswdError)
+	if afterRejectPassword != beforeRejectPassword+1 {
+		t.Fatalf("expected password reject metric to increment by 1 (before=%d after=%d)", beforeRejectPassword, afterRejectPassword)
 	}
 }
 
@@ -421,6 +427,7 @@ func TestEAPTLSIntegrationStartThenSafeReject(t *testing.T) {
 	seedEAPUser(t, rs, "eapuser", "eappass")
 	setEapMethod(t, rs, "eap-tls")
 	client.username = "eapuser"
+	beforeRejectOther := app.GetRadiusMetrics(app.MetricsRadiusRejectOther)
 
 	challenge, state := client.sendIdentity(t)
 	if challenge.Type != eap.TypeTLS {
@@ -451,6 +458,10 @@ func TestEAPTLSIntegrationStartThenSafeReject(t *testing.T) {
 	reply := strings.ToLower(rfc2865.ReplyMessage_GetString(resp))
 	if !strings.Contains(reply, "eap-tls trust configuration missing") {
 		t.Fatalf("expected explicit EAP-TLS failure reason, got %q", reply)
+	}
+	afterRejectOther := app.GetRadiusMetrics(app.MetricsRadiusRejectOther)
+	if afterRejectOther != beforeRejectOther+1 {
+		t.Fatalf("expected reject-other metric to increment by 1 (before=%d after=%d)", beforeRejectOther, afterRejectOther)
 	}
 }
 
