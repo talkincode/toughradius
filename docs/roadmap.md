@@ -134,7 +134,7 @@
 - [x] M4.10 建立总调度与自我迭代技能（`orchestrate-roadmap` 统筹委托循环 + `groom-roadmap` 路线图自我迭代）
 - [x] M4.11 制定 Go API 文档/注释规范并建立 `document-go-apis` 技能（标准库 godoc 风格，关联 `TR-F024`）
 - [x] M4.7 为 agent 任务建立 PR 模板与 review checklist
-- [ ] M4.8 收敛 agent 产出质量度量（CI 通过率、回滚率）
+- [x] M4.8 收敛 agent 产出质量度量（CI 通过率、回滚率）<br/>已交付：新增 `scripts/agent-roadmap-quality-metrics.sh`，按时间窗口统计已合并 `agent-roadmap` PR 的 CI 通过率（关联 CI 工作流 completed runs 的 `success/total`、失败 run 数、`attempt>1` 重跑数）与回滚率（合并提交是否被 `main` 上 `This reverts commit <sha>` 回滚），支持输出 JSON/Markdown 报告；`.agents/README.md` 增补统一口径与执行示例（`--days/--json-output/--markdown-output`），用于每轮自动委托后的质量回看与回归优先级决策。
 - [ ] M4.12 按模块增量补齐导出标识符 godoc 注释与包注释（顺序建议：`internal/adminapi` → `internal/radiusd` → `pkg`），并探索 lint 度量（`TR-F024`）<br/>进行中（增量交付）：批次 1 已补齐 `internal/adminapi` 框架层——新增包注释（`adminapi.go` 顶部，标准库风格，说明 /api/v1 管理 API 定位、handler 无状态从 echo context 取依赖、统一 `Response`/`ErrorResponse` 信封与 `RequireLevel` 鉴权模型）、`Init`/`GetAppContext`/`GetDB`/`GetConfig` 契约注释（读取来源、中间件契约、缺失即 panic 的程序性错误语义、按 key 回落），及 `Meta`/`Response`/`ErrorResponse` 信封类型契约；并以 `nas.go`（`ListNAS`/`GetNAS`/`CreateNAS`/`UpdateNAS`/`DeleteNAS`）为资源处理器范本：首段散文化契约（HTTP 方法/路径、鉴权级别、参数与默认值/钳制、错误码与响应体形状、SQL 注入护栏），保留既有 Swagger `@` 注解并以空注释行与散文分段（`go doc` 首段即干净摘要）。门禁：`gofmt`、`go build ./...`、`go vet`、`go test ./internal/adminapi/...`、golangci-lint v2.12.2 对该包 0 问题。余 `internal/adminapi` 其余资源处理器（users/profiles/sessions/accounting/dashboard/operators/nodes/settings/system_backup/system_logs/session_actions/auth/users_import）及 `internal/radiusd`、`pkg` 待后续批次续接；lint 度量（按包 ratchet 开启 ST1000/ST1020/ST1021 或 revive `exported`）待该包补齐后再探索。
 
 ## M5 — 厂商 VSA 覆盖扩展
