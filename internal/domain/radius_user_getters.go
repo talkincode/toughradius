@@ -201,6 +201,7 @@ func (u *RadiusUser) GetDelegatedIPv6PrefixPool(cache interface{}) string {
 	return u.DelegatedIpv6PrefixPool
 }
 
+// GetBindMac returns the MAC binding flag, respecting profile link mode.
 // Note: User-specific binding always applies (e.g., specific MAC address in MacAddr field)
 func (u *RadiusUser) GetBindMac(cache interface{}) int {
 	// User-specific override has priority
