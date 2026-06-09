@@ -1,0 +1,68 @@
+name: Deploy Pages (mdbook handbook)
+
+# Publishes the bilingual mdBook handbook under docs-site/ to GitHub Pages.
+#
+# The repository's Pages source must be set to "GitHub Actions" (the REST API
+# reports this as build_type: workflow). The handbook is served at whatever
+# Pages URL the repository is configured for: its custom domain when one is set
+# in Settings -> Pages, otherwise the default <owner>.github.io/<repo> project
+# URL. This workflow does not manage the custom domain; it only builds and
+# publishes the static site, so the existing Pages domain configuration is
+# preserved.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs-site/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+# Least-privilege scopes required by actions/deploy-pages (OIDC deployment).
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Serialize deployments. Let an in-progress publish finish so a half-built site
+# is never served, while superseded queued runs are skipped.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build handbook
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      # Pin mdBook to the same version as the CI docs gate and local builds so a
+      # build that passes there also passes here.
+      - name: Install mdBook
+        uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: '0.5.3'
+
+      - name: Build handbook
+        run: mdbook build docs-site
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs-site/book
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
