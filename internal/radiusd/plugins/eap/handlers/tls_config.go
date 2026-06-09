@@ -89,9 +89,17 @@ func NewSettingsTLSConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 //
 // PEAPv0 ([MS-PEAP]) reuses the EAP-TLS fragmentation/framing defined by
 // RFC 5216 §2.1.5 and §3.1 but authenticates the peer with an inner EAP method,
-// so no client CA is required for the outer TLS handshake. M8.2 intentionally
-// reuses the existing EAP-TLS server certificate settings; PEAP-specific
-// certificate overrides can be added in M8.4 without changing the state machine.
+// so no client CA is required for the outer TLS handshake. PEAP intentionally
+// reuses the existing EAP-TLS server certificate settings
+// (radius.EapTlsCertFile / radius.EapTlsKeyFile) and honors the configured
+// minimum TLS version (radius.EapTlsMinVersion).
+//
+// Security note: PEAP is a compatibility-oriented method. The inner
+// EAP-MSCHAPv2 exchange carries an NTLMv1-like attack surface (per Microsoft),
+// so the outer TLS tunnel must stay strong — this provider keeps ServerOnly
+// authentication with the operator-selected minimum TLS version and never
+// weakens it. Deployments whose clients support certificates should prefer
+// EAP-TLS.
 func NewSettingsPEAPConfigProvider(reader TLSSettingsReader) TLSConfigProvider {
 	return func() (*tlsengine.Config, error) {
 		if reader == nil {

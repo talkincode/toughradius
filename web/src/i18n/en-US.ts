@@ -611,7 +611,7 @@ const customEnglishMessages: TranslationMessages = {
     radius: {
       eap_method: {
         title: 'EAP Method',
-        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2).',
+        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates.',
       },
       eap_enabled_handlers: {
         title: 'Enabled EAP Handlers',
