@@ -3,12 +3,12 @@ name: Deploy Pages (mdbook handbook)
 # Publishes the bilingual mdBook handbook under docs-site/ to GitHub Pages.
 #
 # The repository's Pages source must be set to "GitHub Actions" (the REST API
-# reports this as build_type: workflow). The handbook is served at whatever
-# Pages URL the repository is configured for: its custom domain when one is set
-# in Settings -> Pages, otherwise the default <owner>.github.io/<repo> project
-# URL. This workflow does not manage the custom domain; it only builds and
-# publishes the static site, so the existing Pages domain configuration is
-# preserved.
+# reports this as build_type: workflow). The build writes a CNAME file into the
+# published artifact, so GitHub Pages serves the handbook at the custom domain
+# https://www.toughradius.net/ (the default talkincode.github.io/toughradius URL
+# keeps working and redirects to it). For that domain to resolve, its DNS must
+# point at GitHub Pages: A records 185.199.108.153-185.199.111.153, or a DNS-only
+# CNAME to talkincode.github.io. See docs-site/src/en/gitbook-coexistence.md.
 
 on:
   push:
@@ -48,6 +48,12 @@ jobs:
 
       - name: Build handbook
         run: mdbook build docs-site
+
+      # Attach the custom domain to the deploy. GitHub Pages reads a CNAME file at
+      # the published site root and sets the repository's Pages custom domain to
+      # it on every release, so the handbook is served at https://www.toughradius.net/.
+      - name: Set custom domain (CNAME)
+        run: echo 'www.toughradius.net' > docs-site/book/CNAME
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

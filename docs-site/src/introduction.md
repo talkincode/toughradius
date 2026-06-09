@@ -15,9 +15,11 @@ begin:
 Each chapter exists in both languages with a matching structure, and the pages
 cross-link to their counterparts so you can switch language at any point.
 
-> **Relationship to the existing GitBook site.** ToughRADIUS also publishes
-> documentation through GitBook (`docs.toughradius.net` / `www.toughradius.net`).
-> This mdBook handbook **coexists** with GitBook rather than replacing it; see
+> **Relationship to the existing GitBook site.** This handbook is published to
+> GitHub Pages at its custom domain <https://www.toughradius.net/>, while GitBook
+> renders the same sources at `docs.toughradius.net`. The mdBook handbook
+> **coexists** with GitBook from a single source of truth rather than replacing it;
+> see
 > [mdbook & GitBook Coexistence](./en/gitbook-coexistence.md) /
 > [mdbook 与 GitBook 并存](./zh/gitbook-coexistence.md) for the single-source-of-truth
 > policy and the boundary between the two pipelines.
@@ -52,9 +54,10 @@ mdbook serve docs-site
 
 每个章节都提供中英文两个版本且结构对应，页面之间相互交叉链接，方便随时切换语言。
 
-> **与现有 GitBook 站点的关系。** ToughRADIUS 目前还通过 GitBook 发布文档
-> （`docs.toughradius.net` / `www.toughradius.net`）。本 mdBook 手册与 GitBook
-> **并存**而非替代；单一事实来源策略与两套管线的边界详见
+> **与现有 GitBook 站点的关系。** 本手册部署到 GitHub Pages，使用自定义域名
+> <https://www.toughradius.net/> 对外服务；GitBook 则在 `docs.toughradius.net`
+> 渲染同一份源文件。本 mdBook 手册基于单一事实来源与 GitBook **并存**而非替代；
+> 单一事实来源策略与两套管线的边界详见
 > [mdbook 与 GitBook 并存](./zh/gitbook-coexistence.md) /
 > [mdbook & GitBook Coexistence](./en/gitbook-coexistence.md)。
 
