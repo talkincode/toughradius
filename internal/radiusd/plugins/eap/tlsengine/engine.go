@@ -87,6 +87,11 @@ type Engine struct {
 	finished  bool // handshake goroutine has returned
 	timer     *time.Timer
 	closeOnce sync.Once
+
+	// appReadTimeout bounds a single ReadApplication call. Zero selects
+	// DefaultAppReadTimeout. It is a field (rather than a constant) so tests can
+	// exercise the timeout path quickly.
+	appReadTimeout time.Duration
 }
 
 // New creates an Engine and starts the server handshake in the background. The
@@ -143,6 +148,12 @@ func (e *Engine) runHandshake() {
 		e.hsErr = err
 	} else {
 		e.done = true
+		// The handshake timer guards only the handshake. Once it completes,
+		// stop the timer so a slow post-handshake application-data exchange
+		// (PEAP/TTLS inner EAP) is not torn down by the handshake deadline.
+		if e.timer != nil {
+			e.timer.Stop()
+		}
 	}
 	e.mu.Unlock()
 	// Wake any Process call waiting for the handshake to progress.
