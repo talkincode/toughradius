@@ -2,8 +2,8 @@
 
 > 中文版本：[mdbook 与 GitBook 并存](../zh/gitbook-coexistence.md)
 
-ToughRADIUS already publishes documentation through **GitBook**
-(`docs.toughradius.net` and `www.toughradius.net`). This section records the
+ToughRADIUS also publishes documentation through **GitBook**
+(`docs.toughradius.net`). This section records the
 decision (roadmap item **M13.0**) for how the new mdBook handbook relates to that
 existing pipeline.
 
@@ -33,13 +33,19 @@ because they read the same chapters and the same `SUMMARY.md`.
 The two pipelines publish to **separate** domains, so they never shadow each other:
 
 - **mdBook handbook** — deployed to **GitHub Pages** by `.github/workflows/pages.yml`
-  (roadmap item **M13.5**) and served at the repository's default project URL,
-  **<https://talkincode.github.io/toughradius/>**. The repository's Pages site has
-  **no custom domain** configured, precisely so it does not collide with the
-  GitBook domains below.
-- **GitBook** — continues to serve the public domains **`www.toughradius.net`** and
-  **`docs.toughradius.net`**, which resolve to GitBook's own hosting (Cloudflare /
-  Fastly), not GitHub Pages.
+  (roadmap item **M13.5**) and served at the custom domain
+  **<https://www.toughradius.net/>**. The deploy workflow writes a `CNAME` file into
+  the published artifact, so GitHub Pages keeps that custom domain on every release.
+  For the domain to resolve, `www.toughradius.net` must point at GitHub Pages — an
+  `A` record set to `185.199.108.153`–`185.199.111.153`, or a DNS-only `CNAME` to
+  `talkincode.github.io`. The default project URL
+  <https://talkincode.github.io/toughradius/> stays available and redirects to the
+  custom domain.
+- **GitBook** — serves **`docs.toughradius.net`**, which resolves to GitBook's own
+  hosting (Cloudflare / Fastly), not GitHub Pages. Because `www.toughradius.net`
+  moves to GitHub Pages, GitBook should be configured to keep only
+  `docs.toughradius.net` and release `www`, so the two services never claim the same
+  host.
 
 ## Single source of truth
 

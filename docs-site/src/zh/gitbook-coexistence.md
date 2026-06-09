@@ -2,9 +2,8 @@
 
 > English version: [mdbook & GitBook Coexistence](../en/gitbook-coexistence.md)
 
-ToughRADIUS 目前已经通过 **GitBook** 发布文档（`docs.toughradius.net` 与
-`www.toughradius.net`）。本节记录路线图条目 **M13.0** 的决策：新的 mdBook 手册
-与既有 GitBook 管线如何相处。
+ToughRADIUS 也通过 **GitBook** 发布文档（`docs.toughradius.net`）。本节记录路线图
+条目 **M13.0** 的决策：新的 mdBook 手册与既有 GitBook 管线如何相处。
 
 ## 决策：并存而非替代
 
@@ -28,12 +27,16 @@ mdBook 手册与 GitBook **并存**，不替代、也不停用 GitBook 站点。
 两套管线发布到**不同**域名，因此不会相互遮蔽：
 
 - **mdBook 手册** —— 由 `.github/workflows/pages.yml`（路线图条目 **M13.5**）部署到
-  **GitHub Pages**，使用仓库默认的项目地址对外服务：
-  **<https://talkincode.github.io/toughradius/>**。仓库 Pages 站点**未配置自定义
-  域名**，正是为了避免与下方 GitBook 域名冲突。
-- **GitBook** —— 继续服务公共域名 **`www.toughradius.net`** 与
-  **`docs.toughradius.net`**，这些域名解析到 GitBook 自有托管（Cloudflare / Fastly），
-  而非 GitHub Pages。
+  **GitHub Pages**，使用自定义域名 **<https://www.toughradius.net/>** 对外服务。部署
+  工作流会在产物中写入 `CNAME` 文件，因此每次发布都会保持该自定义域名。要让该域名
+  解析生效，`www.toughradius.net` 必须指向 GitHub Pages —— 将 `A` 记录设为
+  `185.199.108.153`–`185.199.111.153`，或将 `CNAME` 以「仅 DNS」方式指向
+  `talkincode.github.io`。仓库默认项目地址
+  <https://talkincode.github.io/toughradius/> 仍然可用，并会重定向到该自定义域名。
+- **GitBook** —— 服务 **`docs.toughradius.net`**，解析到 GitBook 自有托管
+  （Cloudflare / Fastly），而非 GitHub Pages。由于 `www.toughradius.net` 迁移到
+  GitHub Pages，GitBook 应当配置为仅保留 `docs.toughradius.net` 并释放 `www`，使两个
+  服务不会争用同一主机名。
 
 ## 单一事实来源
 
