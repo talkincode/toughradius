@@ -9,7 +9,7 @@
 | ----------------- | ------------------------------------------ | -------- |
 | README            | 项目介绍、特性与快速上手                    | [README.md](https://github.com/talkincode/toughradius/blob/main/README.md) |
 | Agent 指南        | AI Agent 开发指南与协作规则                 | [AGENT.md](https://github.com/talkincode/toughradius/blob/main/AGENT.md) |
-| 安全策略          | 受支持版本与漏洞上报流程                     | [SECURITY.md](https://github.com/talkincode/toughradius/blob/main/SECURITY.md) |
+| 安全策略          | 安全公告与升级指引                          | [安全策略](./security-policy.md)（权威） · [SECURITY.md](https://github.com/talkincode/toughradius/blob/main/SECURITY.md)（指针） |
 | 功能清单          | 功能范围基线（`TR-F` 编号）                 | [docs/feature-checklist.md](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.md) · [English](https://github.com/talkincode/toughradius/blob/main/docs/feature-checklist.en.md) |
 | 路线图            | 长期路线图与里程碑                          | [docs/roadmap.md](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.md) |
 | RFC 索引          | 项目使用的协议标准索引                       | [docs/rfcs/README.md](https://github.com/talkincode/toughradius/blob/main/docs/rfcs/README.md) |

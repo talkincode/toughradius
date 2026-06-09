@@ -273,7 +273,7 @@
 子任务：
 - [x] M13.0 评估与现有 GitBook 发布的关系（替代 / 并存），确定单一事实来源与发布管线边界 —— 决策：**并存**。mdbook 为随仓库维护、CI 校验的双语权威手册（置于独立目录 `docs-site/`）；GitBook 经其 GitHub 集成在外部同步（仓库无 `.gitbook.yaml`/`book.json`/GitBook `SUMMARY.md`），两套管线不共享构建步骤、互不冲突；迁移采用「迁入手册 + 原文件留指针」保证单一事实来源。决策已写入站点章节 `gitbook-coexistence`。
 - [x] M13.1 mdbook 骨架：`book.toml` + `src/`（zh / en 双语目录）+ 本地构建（`mdbook build`）—— `docs-site/book.toml`（仅 `[output.html]`，扁平输出 `docs-site/book/`）+ `src/SUMMARY.md`（English 与 中文 两个 part，章节一一对应）+ `src/{en,zh}/{overview,documentation-map,gitbook-coexistence}.md` + 双语 `introduction.md`。本地 `mdbook build docs-site` 通过。**注意**：mdbook 0.5.3 不支持原生 `[language.*]` 多语言（"unknown field language"），故采用「单 book + 两 part」结构实现双语。
-- [ ] M13.2 迁移核心文档（README / AGENT / SECURITY）为双语章节，原文件保留指向站点的入口
+- [ ] M13.2 迁移核心文档（README / AGENT / SECURITY）为双语章节，原文件保留指向站点的入口<br/>进行中（分批迁移）：批次 1 已迁移 `SECURITY.md` —— 新增双语章节 `docs-site/src/{en,zh}/security-policy.md`（忠实呈现 v8.0.8 XSS 公告与升级建议、互为中英文交叉链接），登记进 `SUMMARY.md`（置于 Overview/概述 之后），并更新 `documentation-map` 的安全策略条目指向手册章节（标注「权威/指针」）；按 M13.0「迁入手册 + 原文件留指针」决策，将根目录 `SECURITY.md` 收敛为指向双语章节的简短指针。门禁：`mdbook build docs-site` 通过、lychee `--offline` 离线坏链校验 0 错误。余 `README`（与既有 `overview` 章节有重叠）、`AGENT`（1271 行且被 agent 护栏引用，需谨慎，避免指针化破坏工具链引用）待后续批次。
 - [ ] M13.3 收编功能清单 / 路线图 / RFC 索引为站点章节，建立中英文交叉链接
 - [x] M13.4 CI 增加 `mdbook build` 产物校验（构建失败或坏链即红）—— `.github/workflows/ci.yml` 新增独立 `docs` 任务：`peaceiris/actions-mdbook`（钉 0.5.3 与本地一致）→ `mdbook build docs-site` → `lychee --offline`（经 `taiki-e/install-action` 安装）对生成 HTML 做离线坏链校验。构建失败或内部坏链均使流水线变红；`--offline` 跳过 http(s) 链接避免网络抖动。**注意**：未用 `mdbook-linkcheck`（0.7.7 与 mdbook 0.5.3 的 RenderContext 不兼容，"missing field sections"），改用 lychee（与渲染协议解耦）。
 - [ ] M13.5 （可选）GitHub Pages 部署工作流
