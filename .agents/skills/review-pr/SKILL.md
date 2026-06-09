@@ -31,7 +31,8 @@ The gate has teeth only because it is **anchored to mechanical signals (CI) and 
    - Any job failing for a **real** reason (compile/test/lint/integration) -> this is a blocking issue; go to step 3 (rework) and cite the failing job.
    - Failing only from transient infra (e.g. registry/network timeout in "Initialize containers") -> `gh run rerun <run-id> --failed` once; re-check.
    - Still pending -> do not approve this round; leave the PR untouched. A pending-CI PR still counts as **unreviewed**, so per the in-flight gate below the round does **not** select a new task while it is open - move on to the next PR in the drain list, then wait for CI / stop the round rather than starting new work.
-2. **Independent adversarial read.** Review as a *separate pass* with fresh context - in a multi-agent environment dispatch a `code-review` sub-agent; otherwise consciously switch roles. Feed it only: `gh pr diff <n>`, the PR description, the linked milestone + `TR-F` ID, and the acceptance criteria. Apply a high signal bar - flag only issues that genuinely matter:
+2. **Load and follow the review checklist first.** Read `.github/review-checklists/agent-roadmap.md` and enforce it item-by-item before writing the verdict comment.
+3. **Independent adversarial read.** Review as a *separate pass* with fresh context - in a multi-agent environment dispatch a `code-review` sub-agent; otherwise consciously switch roles. Feed it only: `gh pr diff <n>`, the PR description, the linked milestone + `TR-F` ID, and the acceptance criteria. Apply a high signal bar - flag only issues that genuinely matter:
    - correctness / logic bugs, nil-deref, race, resource leaks;
    - security: leaked secrets, auth bypass, injection, plaintext where hashing is required;
    - scope: any change touching a non-goal `TR-N001`-`TR-N005`, or beyond the claimed `TR-F`;
@@ -39,10 +40,10 @@ The gate has teeth only because it is **anchored to mechanical signals (CI) and 
    - missing/insufficient tests for the changed behavior; for protocol / E2E changes, a missing `test/integration/` acceptance test;
    - pushed to `main` directly, generated artifacts or secrets committed.
    - Do **not** comment on style, formatting, or naming taste.
-3. **Record the verdict.**
+4. **Record the verdict.**
    - **Blocking issues found** -> `gh pr comment`/`gh pr review --comment` enumerating each issue with `file:line` and a concrete fix; `gh pr edit <n> --add-label needs-rework --remove-label agent-approved`. Do not merge.
    - **No blocking issues AND CI green** -> post a COMMENT review that summarizes what was checked **and records the exact reviewed head SHA** (`gh pr view <n> --json headRefOid -q .headRefOid`); `gh pr edit <n> --add-label agent-approved --remove-label needs-rework`. The recorded SHA is what binds the approval to the reviewed code.
-4. **Merge gate.** Merge only when **all** hold: the PR carries `agent-approved`, has **no** `needs-rework`/`needs-human`, `gh pr checks <n>` re-confirms all green, **and the current head SHA equals the SHA recorded in the approval comment**. A label is not bound to a commit, so always re-verify:
+5. **Merge gate.** Merge only when **all** hold: the PR carries `agent-approved`, has **no** `needs-rework`/`needs-human`, `gh pr checks <n>` re-confirms all green, **and the current head SHA equals the SHA recorded in the approval comment**. A label is not bound to a commit, so always re-verify:
    ```
    reviewed=<sha from approval comment>
    current=$(gh pr view <n> --json headRefOid -q .headRefOid)
@@ -57,7 +58,7 @@ Before `orchestrate-roadmap` selects any new task, drain the queue - oldest firs
 gh pr list --state open --label agent-roadmap --json number,labels,headRefName
 ```
 - `needs-rework` -> read the review thread, **address every blocking comment** by re-running the original execution SOP on that branch, push, then re-run "Reviewing one PR" from step 1. This is mandatory work, not optional.
-- `agent-approved` + green -> merge **via the step-4 gate** (re-verify head SHA == approved SHA first; if it moved, the approval is stale -> re-review).
+- `agent-approved` + green -> merge **via the step-5 gate** (re-verify head SHA == approved SHA first; if it moved, the approval is stale -> re-review).
 - `needs-human` -> skip; leave it for a human.
 - pending CI / no verdict yet -> run "Reviewing one PR".
 
