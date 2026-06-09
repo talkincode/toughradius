@@ -61,6 +61,28 @@ func (c *apiClient) get(t *testing.T, path string) (int, []byte) {
 	return resp.StatusCode, data
 }
 
+// post performs an authenticated POST with an optional JSON body (nil for none)
+// and returns the status and raw response body.
+func (c *apiClient) post(t *testing.T, path string, body []byte) (int, []byte) {
+	t.Helper()
+	var reqBody io.Reader
+	if body != nil {
+		reqBody = bytes.NewReader(body)
+	}
+	req, err := http.NewRequest(http.MethodPost, c.base+path, reqBody)
+	require.NoError(t, err)
+	req.Header.Set("Authorization", "Bearer "+c.token)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := c.http.Do(req)
+	require.NoError(t, err)
+	defer func() { _ = resp.Body.Close() }()
+	data, err := io.ReadAll(resp.Body)
+	require.NoError(t, err)
+	return resp.StatusCode, data
+}
+
 // postMultipart uploads a single file field ("upload") and returns the response.
 func (c *apiClient) postMultipart(t *testing.T, path, filename string, content []byte) (int, []byte) {
 	t.Helper()
