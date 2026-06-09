@@ -8,20 +8,29 @@ import (
 	"go.uber.org/zap"
 )
 
-// Meta describes pagination information
+// Meta carries pagination information for a list response: the total number of
+// matching rows across all pages, the 1-based page index, and the page size that
+// were applied to the query.
 type Meta struct {
 	Total    int64 `json:"total"`
 	Page     int   `json:"page"`
 	PageSize int   `json:"pageSize"`
 }
 
-// Response represents the unified response structure
+// Response is the unified success envelope returned by admin API handlers. Data
+// holds the payload (an object or a slice) and is omitted when nil; Meta is
+// present only for paginated list responses. Handlers populate it through the
+// internal ok and paged helpers rather than constructing it directly.
 type Response struct {
 	Data interface{} `json:"data,omitempty"`
 	Meta *Meta       `json:"meta,omitempty"`
 }
 
-// ErrorResponse represents the error response structure
+// ErrorResponse is the unified failure envelope returned by admin API handlers.
+// Error is a stable, machine-readable code (for example "NOT_FOUND" or
+// "VALIDATION_ERROR") that clients may branch on; Message is a human-readable
+// explanation; Details carries optional structured context and is omitted for
+// server-side (5xx) failures so internal information is never leaked to clients.
 type ErrorResponse struct {
 	Error   string      `json:"error"`
 	Message string      `json:"message"`

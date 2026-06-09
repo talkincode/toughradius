@@ -34,7 +34,7 @@
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已完成 |
-| M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 计划中 |
+| M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 已完成 |
 | M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
@@ -135,7 +135,7 @@
 - [x] M4.11 制定 Go API 文档/注释规范并建立 `document-go-apis` 技能（标准库 godoc 风格，关联 `TR-F024`）
 - [x] M4.7 为 agent 任务建立 PR 模板与 review checklist
 - [ ] M4.8 收敛 agent 产出质量度量（CI 通过率、回滚率）
-- [ ] M4.12 按模块增量补齐导出标识符 godoc 注释与包注释（顺序建议：`internal/adminapi` → `internal/radiusd` → `pkg`），并探索 lint 度量（`TR-F024`）
+- [ ] M4.12 按模块增量补齐导出标识符 godoc 注释与包注释（顺序建议：`internal/adminapi` → `internal/radiusd` → `pkg`），并探索 lint 度量（`TR-F024`）<br/>进行中（增量交付）：批次 1 已补齐 `internal/adminapi` 框架层——新增包注释（`adminapi.go` 顶部，标准库风格，说明 /api/v1 管理 API 定位、handler 无状态从 echo context 取依赖、统一 `Response`/`ErrorResponse` 信封与 `RequireLevel` 鉴权模型）、`Init`/`GetAppContext`/`GetDB`/`GetConfig` 契约注释（读取来源、中间件契约、缺失即 panic 的程序性错误语义、按 key 回落），及 `Meta`/`Response`/`ErrorResponse` 信封类型契约；并以 `nas.go`（`ListNAS`/`GetNAS`/`CreateNAS`/`UpdateNAS`/`DeleteNAS`）为资源处理器范本：首段散文化契约（HTTP 方法/路径、鉴权级别、参数与默认值/钳制、错误码与响应体形状、SQL 注入护栏），保留既有 Swagger `@` 注解并以空注释行与散文分段（`go doc` 首段即干净摘要）。门禁：`gofmt`、`go build ./...`、`go vet`、`go test ./internal/adminapi/...`、golangci-lint v2.12.2 对该包 0 问题。余 `internal/adminapi` 其余资源处理器（users/profiles/sessions/accounting/dashboard/operators/nodes/settings/system_backup/system_logs/session_actions/auth/users_import）及 `internal/radiusd`、`pkg` 待后续批次续接；lint 度量（按包 ratchet 开启 ST1000/ST1020/ST1021 或 revive `exported`）待该包补齐后再探索。
 
 ## M5 — 厂商 VSA 覆盖扩展
 
