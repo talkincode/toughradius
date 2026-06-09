@@ -286,6 +286,69 @@ func TestChangeOnlineSessionAuthorization_NoChanges(t *testing.T) {
 	assert.Equal(t, "NO_CHANGES", decodeErr(t, rec).Error)
 }
 
+func TestChangeOnlineSessionAuthorization_NAK(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	nas := newFakeCoANAS(t, coaTestSecret, radius.CodeCoANAK, rfc3576.ErrorCause_Value_UnsupportedAttribute)
+	id := seedCoASession(t, db, nas.port(t))
+
+	c, rec := newSessionActionCtx(db, appCtx, `{"filter_id":"throttled"}`, strconv.FormatInt(id, 10))
+	require.NoError(t, ChangeOnlineSessionAuthorization(c))
+	// A NAK is a completed exchange: HTTP 200 with success=false, not an error status.
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	action := decodeCoAAction(t, rec)
+	assert.False(t, action.Success)
+	assert.Equal(t, "coa", action.Action)
+	assert.Equal(t, "CoA-NAK", action.ResponseCode)
+	assert.Equal(t, int(rfc3576.ErrorCause_Value_UnsupportedAttribute), action.ErrorCause)
+	assert.Equal(t, "Unsupported-Attribute", action.ErrorCauseText)
+	assert.False(t, action.TimedOut)
+
+	got := nas.snapshot()
+	require.Len(t, got, 1)
+	assert.Equal(t, radius.CodeCoARequest, got[0].code)
+
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, "coa", audits[0].Action)
+	assert.False(t, audits[0].Success)
+	assert.Equal(t, "CoA-NAK", audits[0].ResponseCode)
+	assert.Equal(t, int(rfc3576.ErrorCause_Value_UnsupportedAttribute), audits[0].ErrorCause)
+}
+
+func TestChangeOnlineSessionAuthorization_Timeout(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	nas := newFakeCoANAS(t, coaTestSecret, 0, 0) // drop all => timeout
+	id := seedCoASession(t, db, nas.port(t))
+
+	restore := sessionCoAService
+	sessionCoAService = func() *radiusd.CoAService {
+		return radiusd.NewCoAService(nil,
+			radiusd.WithCoATimeout(120*time.Millisecond),
+			radiusd.WithCoARetries(1))
+	}
+	t.Cleanup(func() { sessionCoAService = restore })
+
+	c, rec := newSessionActionCtx(db, appCtx, `{"session_timeout":600}`, strconv.FormatInt(id, 10))
+	require.NoError(t, ChangeOnlineSessionAuthorization(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	action := decodeCoAAction(t, rec)
+	assert.False(t, action.Success)
+	assert.Equal(t, "coa", action.Action)
+	assert.True(t, action.TimedOut)
+	assert.Equal(t, 2, action.Attempts) // initial + 1 retry
+
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, "coa", audits[0].Action)
+	assert.False(t, audits[0].Success)
+	assert.True(t, audits[0].TimedOut)
+	assert.Equal(t, 2, audits[0].Attempts)
+}
+
 func TestDisconnectOnlineSession_Timeout(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)
