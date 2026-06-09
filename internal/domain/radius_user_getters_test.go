@@ -421,6 +421,69 @@ func TestGetIPv6PrefixPool(t *testing.T) {
 	}
 }
 
+func TestGetDelegatedIPv6PrefixPool(t *testing.T) {
+	cache := newMockCache()
+	cache.SetProfile(1, &RadiusProfile{
+		ID:                      1,
+		DelegatedIpv6PrefixPool: "pd-pool-from-profile",
+	})
+
+	tests := []struct {
+		name     string
+		user     *RadiusUser
+		cache    interface{}
+		expected string
+	}{
+		{
+			name: "user override takes priority",
+			user: &RadiusUser{
+				DelegatedIpv6PrefixPool: "user-pd-pool",
+				ProfileId:               1,
+				ProfileLinkMode:         ProfileLinkModeDynamic,
+			},
+			cache:    cache,
+			expected: "user-pd-pool",
+		},
+		{
+			name: "dynamic mode fetches from profile",
+			user: &RadiusUser{
+				DelegatedIpv6PrefixPool: "",
+				ProfileId:               1,
+				ProfileLinkMode:         ProfileLinkModeDynamic,
+			},
+			cache:    cache,
+			expected: "pd-pool-from-profile",
+		},
+		{
+			name: "NA treated as empty",
+			user: &RadiusUser{
+				DelegatedIpv6PrefixPool: "NA",
+				ProfileId:               1,
+				ProfileLinkMode:         ProfileLinkModeDynamic,
+			},
+			cache:    cache,
+			expected: "pd-pool-from-profile",
+		},
+		{
+			name: "static mode keeps user value (no profile lookup)",
+			user: &RadiusUser{
+				DelegatedIpv6PrefixPool: "",
+				ProfileId:               1,
+				ProfileLinkMode:         ProfileLinkModeStatic,
+			},
+			cache:    cache,
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.user.GetDelegatedIPv6PrefixPool(tt.cache)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestGetBindMac(t *testing.T) {
 	cache := newMockCache()
 	cache.SetProfile(1, &RadiusProfile{

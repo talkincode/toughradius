@@ -644,6 +644,19 @@ func TestUpdateUser(t *testing.T) {
 				assert.Equal(t, 1, u.BindVlan)        // true -> 1
 			},
 		},
+		{
+			name:   "Delegated IPv6 prefix and pool persist",
+			userID: fmt.Sprintf("%d", user.ID),
+			requestBody: `{
+				"delegated_ipv6_prefix": "2001:db8:abcd::/48",
+				"delegated_ipv6_prefix_pool": "pd-pool-x"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, u *domain.RadiusUser) {
+				assert.Equal(t, "2001:db8:abcd::/48", u.DelegatedIpv6Prefix)
+				assert.Equal(t, "pd-pool-x", u.DelegatedIpv6PrefixPool)
+			},
+		},
 	}
 
 	for _, tt := range tests {

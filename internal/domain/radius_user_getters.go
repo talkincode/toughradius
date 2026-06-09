@@ -169,7 +169,39 @@ func (u *RadiusUser) GetIPv6PrefixPool(cache interface{}) string {
 	return u.IPv6PrefixPool
 }
 
-// GetBindMac returns the MAC binding flag, respecting profile link mode
+// GetDelegatedIPv6PrefixPool returns the DHCPv6-PD Delegated-IPv6-Prefix-Pool
+// name (RFC 6911 attribute 171), respecting profile link mode. A non-empty
+// user-specific value takes precedence; otherwise, in dynamic link mode, the
+// value is read from the linked profile via cache. It returns the empty string
+// when unset.
+//
+// Per RFC 6911 §2.4 this pool is distinct from the Framed-IPv6-Pool returned by
+// GetIPv6PrefixPool (SLAAC) and must not be conflated with it.
+func (u *RadiusUser) GetDelegatedIPv6PrefixPool(cache interface{}) string {
+	// User-specific override has highest priority
+	if u.DelegatedIpv6PrefixPool != "" && u.DelegatedIpv6PrefixPool != "NA" {
+		return u.DelegatedIpv6PrefixPool
+	}
+
+	// Dynamic mode: fetch from profile
+	if u.ProfileLinkMode == ProfileLinkModeDynamic && cache != nil {
+		if cacheGetter, ok := cache.(ProfileCacheGetter); ok {
+			profile, err := cacheGetter.Get(u.ProfileId)
+			if err != nil {
+				zap.L().Error("failed to get profile from cache",
+					zap.Int64("user_id", u.ID),
+					zap.Int64("profile_id", u.ProfileId),
+					zap.Error(err))
+				return u.DelegatedIpv6PrefixPool
+			}
+			return profile.DelegatedIpv6PrefixPool
+		}
+	}
+
+	return u.DelegatedIpv6PrefixPool
+}
+
+// GetBindMac returns the MAC binding flag, respecting profile link mode.
 // Note: User-specific binding always applies (e.g., specific MAC address in MacAddr field)
 func (u *RadiusUser) GetBindMac(cache interface{}) int {
 	// User-specific override has priority
