@@ -61,7 +61,14 @@ var allowedNasSortFields = map[string]bool{
 	"updated_at":  true,
 }
 
-// ListNAS retrieves the NAS device list
+// ListNAS handles GET /api/v1/network/nas, returning a paginated list of NAS
+// devices. It accepts the page and perPage query parameters (perPage is clamped
+// to 1..100, default 10) and optional name, status, and ipaddr filters; name
+// matches case-insensitively and ipaddr matches by prefix. The sort and order
+// parameters are validated against allowedNasSortFields to keep the ORDER BY
+// clause injection-safe. The response body is {"data": []domain.NetNas,
+// "total": int64}. Any authenticated operator may call it.
+//
 // @Summary get the NAS device list
 // @Tags NAS
 // @Param page query int false "Page number"
@@ -121,7 +128,11 @@ func ListNAS(c echo.Context) error {
 	})
 }
 
-// GetNAS fetches a single NAS device
+// GetNAS handles GET /api/v1/network/nas/:id, returning the single NAS device
+// with the given numeric id. It responds 400 with code INVALID_ID when the path
+// parameter is not an integer and 404 with code NOT_FOUND when no such device
+// exists. Any authenticated operator may call it.
+//
 // @Summary get NAS device detail
 // @Tags NAS
 // @Param id path int true "NAS ID"
@@ -141,7 +152,13 @@ func GetNAS(c echo.Context) error {
 	return ok(c, device)
 }
 
-// CreateNAS creates a NAS device
+// CreateNAS handles POST /api/v1/network/nas, creating a NAS device from the
+// JSON body bound to nasPayload and validated against its struct tags. The IP
+// address must be unique; a duplicate is rejected 409 with code IPADDR_EXISTS.
+// Unset optional fields default to status "enabled" and CoA port 3799. On
+// success it returns the persisted [domain.NetNas]. This endpoint requires an
+// admin or super operator (see requireAdmin).
+//
 // @Summary create a NAS device
 // @Tags NAS
 // @Param nas body nasPayload true "NAS device information"
@@ -196,7 +213,14 @@ func CreateNAS(c echo.Context) error {
 	return ok(c, device)
 }
 
-// UpdateNAS updates a NAS device
+// UpdateNAS handles PUT /api/v1/network/nas/:id, applying a partial update to an
+// existing NAS device from the JSON body bound to nasUpdatePayload. Only
+// non-empty fields are written, so omitted fields keep their stored values. A
+// changed IP address must remain unique across other devices; a collision is
+// rejected 409 with code IPADDR_EXISTS. It responds 404 with code NOT_FOUND when
+// the device does not exist and returns the updated [domain.NetNas] on success.
+// This endpoint requires an admin or super operator (see requireAdmin).
+//
 // @Summary update a NAS device
 // @Tags NAS
 // @Param id path int true "NAS ID"
@@ -276,7 +300,13 @@ func UpdateNAS(c echo.Context) error {
 	return ok(c, device)
 }
 
-// DeleteNAS deletes a NAS device
+// DeleteNAS handles DELETE /api/v1/network/nas/:id, removing the NAS device with
+// the given id. To protect accounting integrity it refuses deletion while the
+// device still has online sessions, responding 409 with code HAS_ONLINE_SESSIONS
+// and the active count in Details. It responds 400 with code INVALID_ID for a
+// non-integer id. This endpoint requires an admin or super operator (see
+// requireAdmin).
+//
 // @Summary delete a NAS device
 // @Tags NAS
 // @Param id path int true "NAS ID"
