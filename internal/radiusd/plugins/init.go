@@ -78,5 +78,13 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 		registry.RegisterEAPHandler(eaphandlers.NewTLSHandler())
 	}
 
+	// PEAPv0 (EAP type 25) is a compatibility-first tunneled method for
+	// Windows / Active Directory estates. Milestone M8.1 registers the handler
+	// skeleton: it answers EAP-Response/Identity with a PEAPv0 Start but rejects
+	// every handshake response with eap.ErrPEAPNotImplemented, so it can never
+	// authenticate a client until the outer TLS tunnel (M8.2) and inner
+	// EAP-MSCHAPv2 exchange (M8.3) are delivered.
+	registry.RegisterEAPHandler(eaphandlers.NewPEAPHandler())
+
 	// Vendor parsers under vendor/parsers register themselves via init()
 }

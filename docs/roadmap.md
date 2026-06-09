@@ -33,7 +33,7 @@
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
-| M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 计划中 |
+| M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 进行中 |
 | M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 计划中 |
 | M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
@@ -185,7 +185,7 @@
 - **协议规范**：`docs/rfcs/rfc3748-eap.txt`（EAP）、`rfc2759-mschapv2.txt`（MS-CHAP-V2）、`rfc2548-microsoft-vsa.txt`（MS-MPPE 密钥）、`rfc3579-radius-eap-support.txt`；PEAPv0 无正式 RFC，参考 Microsoft `[MS-PEAP]` 与 IETF `draft-kamath-pppext-peapv0`（本地缺失，按 `reference-rfc` 登记）。
 
 子任务：
-- [ ] M8.1 注册 PEAP handler 骨架与启用列表配置（`EapMethod`）
+- [x] M8.1 注册 PEAP handler 骨架与启用列表配置（`EapMethod`）<br/>已交付：新增 `eap.TypePEAP=25` 常量与 `ErrPEAPNotImplemented` 安全护栏；`peap_handler.go` 骨架（`Name/EAPType/CanHandle`，`HandleIdentity` 下发 PEAPv0 Start（S 位 + version 0，复用 EAP-TLS Flags/分片帧格式），`HandleResponse` 在外层隧道（M8.2）落地前一律以 `ErrPEAPNotImplemented` 拒绝，永不放行）；coordinator 选择分支与 `plugins/init.go` 注册接入；`config_schemas.json` 与硬编码兜底 `EapMethod` 枚举加入 `eap-peap`。单测覆盖 handler、coordinator 方法选择与枚举。引用 RFC 3748/3579、RFC 5216 §3.1 帧格式与 PEAPv0 [MS-PEAP]/draft-kamath-pppext-peapv0。
 - [ ] M8.2 PEAP 外层 TLS 隧道建立与分片重组（复用 EAP-TLS 状态机）
 - [ ] M8.3 隧道内 EAP-MSCHAPv2 交换（复用 mschapv2 校验）与 MPPE 密钥导出
 - [ ] M8.4 明确失败原因 + AuthError 指标 + 单元测试；配置项与默认值（含安全风险说明）
