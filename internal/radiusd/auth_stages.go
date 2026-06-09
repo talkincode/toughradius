@@ -200,6 +200,10 @@ func mapEAPDispatchError(err error) error {
 		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "peap inner eap-mschapv2 protocol violation", err)
 	case stderrs.Is(err, eap.ErrPEAPInnerNotImplemented):
 		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "peap inner eap method unavailable", err)
+	case stderrs.Is(err, eap.ErrTTLSInnerProtocol):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-ttls inner avp protocol violation", err)
+	case stderrs.Is(err, eap.ErrTTLSInnerNotImplemented):
+		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap-ttls inner method unavailable", err)
 	case stderrs.Is(err, eap.ErrStateNotFound):
 		return newEAPDispatchAuthError(app.MetricsRadiusRejectOther, "eap session state not found", err)
 	case stderrs.Is(err, eap.ErrUnsupportedEAPType):
