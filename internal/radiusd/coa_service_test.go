@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
-	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
@@ -405,65 +404,16 @@ func TestCoATargetFromNas(t *testing.T) {
 	}
 }
 
-func TestCoAServiceDisconnectSession(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping DB-backed CoA test in short mode")
+func TestCoAServiceSessionHelpersRequireRadiusService(t *testing.T) {
+	// The *Session helpers resolve a live session through the repositories, so a
+	// nil embedded RadiusService must be reported rather than panicking. The
+	// end-to-end DB-backed path (session -> NAS -> send) is covered by the M2.2
+	// Admin API tests and the M2.6 integration acceptance case.
+	svc := NewCoAService(nil)
+	if _, err := svc.DisconnectSession(context.Background(), "sess"); err == nil {
+		t.Error("DisconnectSession with nil RadiusService: expected error, got nil")
 	}
-	appCtx, _ := setupTestEnv(t)
-	defer appCtx.Release()
-
-	radiusService := NewRadiusService(appCtx)
-	defer radiusService.Release()
-
-	const secret = "db-secret"
-	nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
-
-	db := appCtx.DB()
-	netNas := &domain.NetNas{
-		ID:         101,
-		Identifier: "db-nas",
-		Ipaddr:     "127.0.0.1",
-		Secret:     secret,
-		CoaPort:    nas.port(t),
-		VendorCode: "0",
-		Status:     common.ENABLED,
-	}
-	if err := db.Create(netNas).Error; err != nil {
-		t.Fatalf("seed nas: %v", err)
-	}
-	online := &domain.RadiusOnline{
-		ID:            201,
-		Username:      "dbuser",
-		NasId:         "db-nas",
-		NasAddr:       "127.0.0.1",
-		AcctSessionId: "db-sess-1",
-		FramedIpaddr:  "100.64.0.20",
-		AcctStartTime: time.Now(),
-		LastUpdate:    time.Now(),
-	}
-	if err := db.Create(online).Error; err != nil {
-		t.Fatalf("seed online session: %v", err)
-	}
-
-	svc := NewCoAService(radiusService, WithCoATimeout(2*time.Second), WithCoARetries(1))
-
-	result, err := svc.DisconnectSession(context.Background(), "db-sess-1")
-	if err != nil {
-		t.Fatalf("DisconnectSession error: %v", err)
-	}
-	if !result.Success || result.ResponseCode != "Disconnect-ACK" {
-		t.Fatalf("expected Disconnect-ACK success, got %+v", result)
-	}
-	if result.Username != "dbuser" || result.AcctSessionID != "db-sess-1" {
-		t.Errorf("result identity mismatch: %+v", result)
-	}
-
-	got := nas.snapshot()
-	if len(got) != 1 || got[0].username != "dbuser" || got[0].acctSessionID != "db-sess-1" {
-		t.Errorf("fake nas did not receive expected disconnect: %+v", got)
-	}
-
-	if _, err := svc.DisconnectSession(context.Background(), "no-such-session"); !errors.Is(err, ErrSessionNotFound) {
-		t.Errorf("missing session err = %v, want ErrSessionNotFound", err)
+	if _, err := svc.CoASession(context.Background(), "sess"); err == nil {
+		t.Error("CoASession with nil RadiusService: expected error, got nil")
 	}
 }

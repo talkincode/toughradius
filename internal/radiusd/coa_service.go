@@ -171,7 +171,8 @@ type CoAService struct {
 	timeout time.Duration
 	retries int
 	// exchange performs the actual UDP round-trip. It is overridable in tests;
-	// it defaults to radius.Exchange (which verifies the response authenticator).
+	// by default it is the Exchange method of a dedicated radius.Client whose
+	// internal Retry is disabled (CoAService manages retransmission itself).
 	exchange func(ctx context.Context, packet *radius.Packet, addr string) (*radius.Packet, error)
 }
 
@@ -202,11 +203,20 @@ func WithCoARetries(n int) CoAOption {
 // explicit Disconnect/CoA methods are used (for example in unit tests or callers
 // that resolve the NAS themselves).
 func NewCoAService(radiusService *RadiusService, opts ...CoAOption) *CoAService {
+	// A dedicated client with Retry disabled: CoAService performs its own
+	// bounded retransmission loop, so the library must not also retransmit on
+	// its 1-second default ticker. This keeps result.Attempts equal to the
+	// number of packets actually put on the wire. InsecureSkipVerify stays
+	// false so the NAS reply's Response Authenticator is verified.
+	client := &radius.Client{
+		Retry:           0,
+		MaxPacketErrors: 10,
+	}
 	s := &CoAService{
 		RadiusService: radiusService,
 		timeout:       defaultCoATimeout,
 		retries:       defaultCoARetries,
-		exchange:      radius.Exchange,
+		exchange:      client.Exchange,
 	}
 	for _, opt := range opts {
 		opt(s)
