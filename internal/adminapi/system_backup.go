@@ -29,16 +29,34 @@ const supportedBackupMajor = "9"
 // bounding the work a single (potentially malicious) payload can trigger.
 const maxRestoreRecords = 100000
 
-// SystemBackup is the serialized snapshot of the core configuration tables.
+// SystemBackup is the on-disk JSON snapshot exchanged by backupSystem and
+// restoreSystem.
+//
+// The payload is versioned by Version and contains the core configuration
+// tables that define runtime behavior (nodes, NAS, profiles, users, configs,
+// and operators). The snapshot intentionally preserves primary keys so restore
+// can upsert records deterministically.
+//
+// Sensitive data notice: the payload includes security-relevant credentials
+// (for example RadiusUser passwords and SysOpr password hashes). Callers must
+// treat serialized backups as secrets at rest and in transit.
 type SystemBackup struct {
-	Version   string                 `json:"version"`
-	CreatedAt time.Time              `json:"created_at"`
-	Nodes     []domain.NetNode       `json:"nodes"`
-	Nas       []domain.NetNas        `json:"nas"`
-	Profiles  []domain.RadiusProfile `json:"profiles"`
-	Users     []domain.RadiusUser    `json:"users"`
-	Configs   []domain.SysConfig     `json:"configs"`
-	Operators []domain.SysOpr        `json:"operators"`
+	// Version is the backup schema version in "major.minor" form.
+	Version string `json:"version"`
+	// CreatedAt is the server timestamp when the backup was generated.
+	CreatedAt time.Time `json:"created_at"`
+	// Nodes stores exported network node definitions.
+	Nodes []domain.NetNode `json:"nodes"`
+	// Nas stores exported NAS device records.
+	Nas []domain.NetNas `json:"nas"`
+	// Profiles stores exported RADIUS profile definitions.
+	Profiles []domain.RadiusProfile `json:"profiles"`
+	// Users stores exported RADIUS user records.
+	Users []domain.RadiusUser `json:"users"`
+	// Configs stores exported dynamic system configuration items.
+	Configs []domain.SysConfig `json:"configs"`
+	// Operators stores exported admin operator accounts.
+	Operators []domain.SysOpr `json:"operators"`
 }
 
 func registerSystemBackupRoutes() {
@@ -100,13 +118,23 @@ func backupSystem(c echo.Context) error {
 	return c.JSONBlob(http.StatusOK, bs)
 }
 
-// SystemRestoreResult summarizes how many records were restored per table.
+// SystemRestoreResult reports how many records restoreSystem upserted into each
+// table during a successful restore transaction.
+//
+// A zero value for a field means either the table was absent from the payload
+// or the payload contained no records for that table.
 type SystemRestoreResult struct {
-	Nodes     int `json:"nodes"`
-	Nas       int `json:"nas"`
-	Profiles  int `json:"profiles"`
-	Users     int `json:"users"`
-	Configs   int `json:"configs"`
+	// Nodes is the number of net_node records restored.
+	Nodes int `json:"nodes"`
+	// Nas is the number of net_nas records restored.
+	Nas int `json:"nas"`
+	// Profiles is the number of radius_profile records restored.
+	Profiles int `json:"profiles"`
+	// Users is the number of radius_user records restored.
+	Users int `json:"users"`
+	// Configs is the number of sys_config records restored.
+	Configs int `json:"configs"`
+	// Operators is the number of sys_opr records restored.
 	Operators int `json:"operators"`
 }
 
