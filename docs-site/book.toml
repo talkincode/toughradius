@@ -9,3 +9,6 @@ src = "src"
 default-theme = "rust"
 preferred-dark-theme = "ayu"
 git-repository-url = "https://github.com/talkincode/toughradius"
+# Menu-bar EN/中文 toggle (mdBook output only; GitBook uses per-chapter links).
+additional-css = ["assets/lang-toggle.css"]
+additional-js = ["assets/lang-toggle.js"]
