@@ -39,6 +39,16 @@ process exits so a supervisor can restart it cleanly.
 
 ## Where to go next
 
+- [Concepts & Terminology](./concepts.md) — AAA vocabulary, the request flow,
+  and how each concept maps to the product.
+- [Quick Start](./quickstart.md) — install, initialize, create a user, and
+  verify with `radtest` in about ten minutes.
+- [Vendor Integration Guide](./vendor-guide.md) — case studies for MikroTik,
+  Huawei, Cisco, H3C, ZTE, iKuai, and standard devices.
+- [Admin UI Manual](./admin-manual.md) — every page of the management console.
+- [Operations Guide](./ops-guide.md) — production configuration, certificates,
+  monitoring, backup, and CLI tools.
+- [FAQ](./faq.md) — answers to the questions everyone asks.
 - [Documentation Map](./documentation-map.md) — find the existing README, agent
   guide, security policy, feature checklist, roadmap, and RFC index.
 - [mdbook & GitBook Coexistence](./gitbook-coexistence.md) — how this handbook
