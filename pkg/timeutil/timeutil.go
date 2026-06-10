@@ -61,32 +61,32 @@ func (t LocalTime) MarshalCSV() (string, error) {
 	return string(b), nil
 }
 
-// yyyy-MM-dd hh:mm:ss (year-month-day hour:minute:second)
+// FmtDatetimeString formats t as "2006-01-02 15:04:05".
 func FmtDatetimeString(t time.Time) string {
 	return t.Format(YYYYMMDDHHMMSS_LAYOUT)
 }
 
-// yyyy-MM-dd hh:mm (year-month-day hour:minute)
+// FmtDatetimeMString formats t as "2006-01-02 15:04".
 func FmtDatetimeMString(t time.Time) string {
 	return t.Format(YYYYMMDDHHMM_LAYOUT)
 }
 
-// yy-MM-dd (year-month-day)
+// FmtDateString formats t as "2006-01-02".
 func FmtDateString(t time.Time) string {
 	return t.Format(YYYYMMDD_LAYOUT)
 }
 
-// yyyyMMddhhmmss (yearmonthdayhourminutesecond)
+// FmtDatetime14String formats t as "20060102150405".
 func FmtDatetime14String(t time.Time) string {
 	return t.Format(Datetime14Layout)
 }
 
-// yyyyMMdd (yearmonthday)
+// FmtDatetime8String formats t as "20060102".
 func FmtDatetime8String(t time.Time) string {
 	return t.Format(Datetime8Layout)
 }
 
-// yyyyMM (yearmonth)
+// FmtDatetime6String formats t as "200601".
 func FmtDatetime6String(t time.Time) string {
 	return t.Format(Datetime6Layout)
 }

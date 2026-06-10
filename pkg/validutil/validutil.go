@@ -87,40 +87,38 @@ func isMatch(exp *regexp.Regexp, val interface{}) bool {
 	}
 }
 
-// Verify phone numbers in mainland China. The following formats are supported.
-// 0578-12345678-1234
-// 057812345678-1234
-// If an extension number exists, the extension number ligature cannot be omitted.
+// IsCnPhone reports whether val matches a mainland China landline number.
+// Supported examples include 0578-12345678-1234 and 057812345678-1234.
 func IsCnPhone(val interface{}) bool {
 	return isMatch(cnPhone, val)
 }
 
-// Verify mobile phone numbers in  China
+// IsCnMobile reports whether val matches a mainland China mobile number.
 func IsCnMobile(val interface{}) bool {
 	return isMatch(cnMobile, val)
 }
 
-// Verify that a value is in a standard URL format. Supports formats such as IP and domain name.
+// IsURL reports whether val matches the accepted URL pattern.
 func IsURL(val interface{}) bool {
 	return isMatch(url, val)
 }
 
-// Verify that a value is an IP, verifies IP4 and IP6
+// IsIP reports whether val matches either IPv4 or IPv6.
 func IsIP(val interface{}) bool {
 	return isMatch(ip, val)
 }
 
-// Verify that a value is IP6
+// IsIP6 reports whether val matches IPv6.
 func IsIP6(val interface{}) bool {
 	return isMatch(ip6, val)
 }
 
-// Verify that a value is IP4.
+// IsIP4 reports whether val matches IPv4.
 func IsIP4(val interface{}) bool {
 	return isMatch(ip4, val)
 }
 
-// Verify that a value matches a mailbox.
+// IsEmail reports whether val matches the email pattern.
 func IsEmail(val interface{}) bool {
 	return isMatch(email, val)
 }

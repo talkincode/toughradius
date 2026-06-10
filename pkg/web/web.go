@@ -38,7 +38,7 @@ func (d DateRange) ParseEnd() (time.Time, error) {
 	return time.Parse("2006-01-02 15:04:05", d.End)
 }
 
-// WEB parameters
+// WebForm stores merged path/query/form parameters and helper accessors.
 type WebForm struct {
 	FormItem interface{}
 	Posts    url.Values        `json:"-" form:"-" query:"-"`
@@ -186,7 +186,7 @@ type JsonOptions struct {
 	Value string `json:"value"`
 }
 
-// Quickly read parameters to avoid repeated error handling
+// ParamReader reads typed values from WebForm and records the first parse error.
 type ParamReader struct {
 	form      *WebForm
 	LastError error

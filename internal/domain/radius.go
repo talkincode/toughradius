@@ -84,8 +84,7 @@ func (RadiusUser) TableName() string {
 	return "radius_user"
 }
 
-// RadiusOnline
-// Radius RadiusOnline Recode
+// RadiusOnline stores active online session state tracked from accounting packets.
 type RadiusOnline struct {
 	ID                  int64     `json:"id,string"` // Primary key ID
 	Username            string    `gorm:"index" json:"username"`
@@ -149,8 +148,7 @@ func (RadiusSessionActionAudit) TableName() string {
 	return "radius_session_action_audit"
 }
 
-// RadiusAccounting
-// Radius Accounting Recode
+// RadiusAccounting stores finalized accounting records for session history.
 type RadiusAccounting struct {
 	ID                  int64     `json:"id,string"` // Primary key ID
 	Username            string    `gorm:"index" json:"username"`
