@@ -13,7 +13,7 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-// Accounting service
+// AcctService handles RADIUS Accounting-Request packets.
 type AcctService struct {
 	*RadiusService
 }

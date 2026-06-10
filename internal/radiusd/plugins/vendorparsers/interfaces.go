@@ -1,3 +1,4 @@
+// Package vendorparsers defines vendor-specific request/response extension points.
 package vendorparsers
 
 import (

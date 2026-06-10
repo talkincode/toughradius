@@ -1,3 +1,4 @@
+// Package accounting defines pluggable accounting handlers and shared request context types.
 package accounting
 
 import (

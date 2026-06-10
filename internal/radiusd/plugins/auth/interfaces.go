@@ -1,3 +1,4 @@
+// Package auth defines authentication pipeline interfaces and shared context types.
 package auth
 
 import (

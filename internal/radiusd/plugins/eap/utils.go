@@ -33,7 +33,7 @@ func ParseEAPMessage(packet *radius.Packet) (*EAPMessage, error) {
 	return eap, nil
 }
 
-// EncodeEAPMessage encodes an EAP message into bytes
+// Encode serializes an EAP message into wire-format bytes.
 func (msg *EAPMessage) Encode() []byte {
 	length := 5 // Code, Identifier, Length, and Type fields occupy 5 bytes
 	var data []byte

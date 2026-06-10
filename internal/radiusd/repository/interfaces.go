@@ -1,3 +1,4 @@
+// Package repository defines storage interfaces used by the RADIUS pipeline.
 package repository
 
 import (

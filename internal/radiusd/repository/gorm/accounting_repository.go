@@ -1,3 +1,4 @@
+// Package gorm provides GORM-backed implementations of repository interfaces.
 package gorm
 
 import (

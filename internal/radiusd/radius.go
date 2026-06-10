@@ -61,11 +61,11 @@ type AuthRateUser struct {
 }
 
 type RadiusService struct {
-	appCtx        app.AppContext // Use interface instead of concrete type
-	authRate      *authRateLimiter
-	TaskPool      *ants.Pool
-	nasCache      *cachepkg.TTLCache[*domain.NetNas]
-	userCache     *cachepkg.TTLCache[*domain.RadiusUser]
+	appCtx    app.AppContext // Use interface instead of concrete type
+	authRate  *authRateLimiter
+	TaskPool  *ants.Pool
+	nasCache  *cachepkg.TTLCache[*domain.NetNas]
+	userCache *cachepkg.TTLCache[*domain.RadiusUser]
 
 	// New Repository Layer (v9 refactoring)
 	UserRepo       repository.UserRepository
@@ -90,11 +90,11 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 	// Initialize all repositories using injected context
 	db := appCtx.DB()
 	s := &RadiusService{
-		appCtx:        appCtx,
-		authRate:      newAuthRateLimiter(defaultAuthRateShards),
-		TaskPool:      pool,
-		nasCache:      cachepkg.NewTTLCache[*domain.NetNas](time.Minute, 512),
-		userCache:     cachepkg.NewTTLCache[*domain.RadiusUser](10*time.Second, 2048),
+		appCtx:    appCtx,
+		authRate:  newAuthRateLimiter(defaultAuthRateShards),
+		TaskPool:  pool,
+		nasCache:  cachepkg.NewTTLCache[*domain.NetNas](time.Minute, 512),
+		userCache: cachepkg.NewTTLCache[*domain.RadiusUser](10*time.Second, 2048),
 		// Initialize repository layer
 		UserRepo:       repogorm.NewGormUserRepository(db),
 		SessionRepo:    repogorm.NewGormSessionRepository(db),
@@ -252,9 +252,9 @@ func GetNetRadiusOnlineFromRequest(r *radius.Request, vr *VendorRequest, nas *do
 
 }
 
-// CheckAuthRateLimit
-// Authentication frequency detection, each user can only authenticate once every few seconds.
-// Backed by a sharded limiter so different users do not contend on a single global lock.
+// CheckAuthRateLimit enforces per-username authentication frequency limits.
+// Each username may authenticate only once every configured interval, backed by
+// a sharded limiter so different users do not contend on a single global lock.
 func (s *RadiusService) CheckAuthRateLimit(username string) error {
 	return s.authRate.check(username, time.Duration(RadiusAuthRateInterval)*time.Second)
 }

@@ -1,6 +1,6 @@
 package web
 
-// Webix table column definitions
+// WebixTableColumn defines a column descriptor for Webix table configuration.
 type WebixTableColumn struct {
 	Id         string      `json:"id,omitempty"`
 	Header     interface{} `json:"header,omitempty"`
