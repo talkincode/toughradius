@@ -2,9 +2,25 @@
 
 > 中文版本：[文档地图](../zh/documentation-map.md)
 
-This handbook is being assembled incrementally. While the core documents are
-migrated into bilingual chapters, this map points to where each one currently
-lives in the repository so everything is reachable from a single place.
+This handbook is being assembled incrementally. The first table lists the
+handbook's own chapters; the second points to documents that still live
+elsewhere in the repository, so everything is reachable from a single place.
+
+## Handbook chapters
+
+| Chapter | Contents |
+| ------- | -------- |
+| [Overview](./overview.md) | Project introduction, core capabilities, service model |
+| [Concepts & Terminology](./concepts.md) | AAA vocabulary, the authentication flow, password protocols |
+| [Quick Start](./quickstart.md) | Install, initialize, first user, debugging |
+| [Vendor Integration Guide](./vendor-guide.md) | Case studies: MikroTik, Huawei, Cisco, H3C, ZTE, iKuai, … |
+| [Admin UI Manual](./admin-manual.md) | The management console, page by page |
+| [Operations Guide](./ops-guide.md) | Configuration reference, certificates, monitoring, backup, CLI tools |
+| [FAQ](./faq.md) | Frequently asked questions by theme |
+| [Protocol & RFC Reference](./rfc-index.md) | Protocol standards mapped to the code |
+| [Security Policy](./security-policy.md) | Security advisories and update guidance |
+
+## Repository documents
 
 | Document            | Description                                            | Current location |
 | ------------------- | ----------------------------------------------------- | ---------------- |
@@ -15,8 +31,9 @@ lives in the repository so everything is reachable from a single place.
 | Roadmap             | Long-term roadmap and milestones                       | [docs/roadmap.md](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.md) |
 | RFC index           | Protocol standards index used by the project           | [Protocol & RFC Reference](./rfc-index.md) (canonical) · [docs/rfcs/README.md](https://github.com/talkincode/toughradius/blob/main/docs/rfcs/README.md) (raw catalog) |
 
-> **Migration plan.** The security policy and the protocol/RFC reference are
-> already bilingual chapters; the README, agent guide, feature checklist, and
-> roadmap are migrated next, with cross-linked English/中文 sections. As each
-> document moves into the handbook, its original file keeps a short pointer back
-> to the corresponding chapter so there is a single source of truth.
+> **Migration plan.** The handbook now covers the README's user-facing content
+> (overview, quick start, vendor integration, admin manual, operations, FAQ);
+> the README remains the GitHub landing page and links here. The feature
+> checklist and roadmap are **living documents** maintained in `docs/` by
+> dedicated workflows and are linked rather than migrated; the agent guide
+> stays in the repository root.
