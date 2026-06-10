@@ -1,0 +1,24 @@
+/* Language toggle links injected into the menu bar by lang-toggle.js.
+   Matches the look of the built-in icon buttons via mdBook theme vars. */
+#mdbook-menu-bar .right-buttons a.lang-toggle {
+    position: relative;
+    z-index: 10;
+    display: inline-block;
+    padding: 0 8px;
+    line-height: var(--menu-bar-height);
+    font-size: 1.6rem;
+    color: var(--icons);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.5s;
+}
+
+#mdbook-menu-bar .right-buttons a.lang-toggle:hover {
+    color: var(--icons-hover);
+}
+
+@media only screen and (max-width: 420px) {
+    #mdbook-menu-bar .right-buttons a.lang-toggle {
+        padding: 0 5px;
+    }
+}

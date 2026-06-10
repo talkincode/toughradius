@@ -67,6 +67,16 @@ nested beneath them. Avoid `#` / `##` part headers for grouping: mdBook only gro
 on `#` while GitBook only groups on `##`, so a nested list is the one form that both
 render identically.
 
+## Language toggle in the menu bar
+
+The mdBook output injects a small EN / 中文 switch into the top menu bar
+(`docs-site/assets/lang-toggle.{js,css}`, wired via `additional-js` /
+`additional-css` in `book.toml`). It rewrites the last `/en/` or `/zh/` path
+segment, which works because the two language trees keep identical file names.
+This toggle exists **only** on the mdBook/Pages pipeline; GitBook ignores
+`book.toml` extras, so GitBook readers switch languages through the sidebar
+sections and per-chapter cross-links instead.
+
 ## Build and validation
 
 - Local: `mdbook build docs-site` produces the static site in `docs-site/book/`,
