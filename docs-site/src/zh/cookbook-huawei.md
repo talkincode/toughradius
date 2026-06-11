@@ -90,7 +90,8 @@ aaa
 
 - **radtest（服务端）**：
   ```bash
-  go run ./cmd/radtest auth -user <用户名> -pwd <密码> -nasip <NAS_IP> -secret <SECRET>
+  go run ./cmd/radtest auth -server <TOUGHRADIUS_IP> -nas-ip <NAS_IP> \
+    -username <用户名> -password <密码> -secret <SECRET>
   ```
   成功时打印 `Access-Accept`，应能看到四个华为限速属性以及（若设置了）
   `Huawei-Domain-Name`。

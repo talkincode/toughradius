@@ -90,7 +90,8 @@ code):
 
 - **radtest (server side)**:
   ```bash
-  go run ./cmd/radtest auth -user <username> -pwd <password> -nasip <NAS_IP> -secret <SECRET>
+  go run ./cmd/radtest auth -server <TOUGHRADIUS_IP> -nas-ip <NAS_IP> \
+    -username <username> -password <password> -secret <SECRET>
   ```
   On success it prints `Access-Accept`; you should see `Mikrotik-Rate-Limit`,
   `Session-Timeout`, and (if a pool is set) `Framed-Pool`.
