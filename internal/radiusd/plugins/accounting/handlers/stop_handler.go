@@ -9,8 +9,11 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-// StopHandler handles Accounting-Stop packets and finalizes session
-// accounting.
+// StopHandler handles Accounting-Stop packets and finalizes session accounting.
+//
+// The handler updates terminal traffic/session counters in the accounting
+// ledger and then removes the online-session row so the session no longer
+// appears active.
 type StopHandler struct {
 	sessionRepo    repository.SessionRepository
 	accountingRepo repository.AccountingRepository
@@ -43,7 +46,8 @@ func (h *StopHandler) CanHandle(ctx *accounting.AccountingContext) bool {
 //
 // When updating the accounting row fails, Handle logs the error and still tries
 // to remove the online-session record so stale sessions do not remain online
-// forever.
+// forever. Handle returns an error only when deleting the online-session row
+// fails.
 func (h *StopHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	vendorReq := acctCtx.VendorReq
 	if vendorReq == nil {

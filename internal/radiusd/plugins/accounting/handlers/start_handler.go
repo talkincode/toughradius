@@ -17,7 +17,8 @@ import (
 	"layeh.com/radius/rfc3162"
 	"layeh.com/radius/rfc4818"
 	"layeh.com/radius/rfc6911"
-) // StartHandler Accounting Start handler
+)
+
 // StartHandler handles Accounting-Start packets and persists both online-session
 // and accounting rows for newly created sessions.
 //
@@ -118,6 +119,12 @@ func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	return nil
 }
 
+// buildRadiusOnline maps an Accounting-Start request into the canonical online
+// session model persisted by SessionRepository.Create.
+//
+// Missing vendor fields and optional RADIUS attributes are normalized to
+// common.NA so later filtering and presentation layers can treat absence
+// consistently across NAS implementations.
 func (h *StartHandler) buildRadiusOnline(r *radius.Request, vr *vendorparserspkg.VendorRequest, nas *domain.NetNas, nasrip string) domain.RadiusOnline {
 	acctInputOctets := int(rfc2866.AcctInputOctets_Get(r.Packet))
 	acctInputGigawords := int(rfc2869.AcctInputGigawords_Get(r.Packet))
@@ -158,6 +165,11 @@ func (h *StartHandler) buildRadiusOnline(r *radius.Request, vr *vendorparserspkg
 	}
 }
 
+// buildRadiusAccounting projects an online-session snapshot into the accounting
+// row model used by the historical ledger.
+//
+// When start is false, buildRadiusAccounting stamps AcctStopTime for the
+// terminal record shape used by stop-event updates.
 func (h *StartHandler) buildRadiusAccounting(online *domain.RadiusOnline, start bool) domain.RadiusAccounting {
 	accounting := domain.RadiusAccounting{
 		ID:                  common.UUIDint64(),
