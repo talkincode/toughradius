@@ -599,6 +599,10 @@ const customEnglishMessages: TranslationMessages = {
           title: 'Security Configuration',
           description: 'Security policy and authentication related configuration',
         },
+        ldap: {
+          title: 'LDAP / AD Authentication',
+          description: 'LDAP / Active Directory bind authentication backend (PAP-family only, disabled by default)',
+        },
       },
       value_range: 'Range',
       min: 'Min',
@@ -660,6 +664,52 @@ const customEnglishMessages: TranslationMessages = {
       reject_delay_window_seconds: {
         title: 'Reject Window (seconds)',
         description: 'Time window used to count consecutive rejects. Counters reset automatically after the window expires.',
+      },
+    },
+    ldap: {
+      enabled: {
+        title: 'LDAP Backend Enabled',
+        description: 'Enable the LDAP / Active Directory bind authentication backend. PAP-family only (bare PAP and EAP-TTLS inner PAP); challenge/response methods (CHAP/MS-CHAP/MS-CHAPv2/EAP-MD5/PEAP-MSCHAPv2) cannot be served because a bind needs the cleartext password. Default off.',
+      },
+      server_url: {
+        title: 'LDAP Server URL',
+        description: 'Directory URL, e.g. ldap://dc.example.com:389 or ldaps://dc.example.com:636. Use ldaps:// for TLS, or ldap:// together with StartTLS.',
+      },
+      bind_mode: {
+        title: 'LDAP Bind Mode',
+        description: 'template: build the user DN by substituting the username into BindDNTemplate. search: bind as a service account, locate the user DN with UserFilter under BaseDN, then re-bind as the user.',
+      },
+      bind_dn_template: {
+        title: 'LDAP Bind DN Template',
+        description: 'Template mode only. DN template with a single %s for the username, e.g. uid=%s,ou=people,dc=example,dc=com or the Active Directory UPN form %s@example.com.',
+      },
+      base_dn: {
+        title: 'LDAP Search Base DN',
+        description: 'Search mode only. Subtree base for the user lookup, e.g. dc=example,dc=com.',
+      },
+      user_filter: {
+        title: 'LDAP User Filter',
+        description: 'Search mode only. LDAP filter with a single %s for the username (escaped before substitution), e.g. (uid=%s) or Active Directory (sAMAccountName=%s).',
+      },
+      search_bind_dn: {
+        title: 'LDAP Service Account DN',
+        description: 'Search mode only. DN of the read-only service account used to search for users, e.g. cn=svc-radius,ou=svc,dc=example,dc=com.',
+      },
+      search_bind_password: {
+        title: 'LDAP Service Account Password',
+        description: 'Search mode only. Password for the service account DN.',
+      },
+      start_tls: {
+        title: 'LDAP StartTLS',
+        description: 'Upgrade an ldap:// connection to TLS with StartTLS before binding (RFC 4513 §3). Leave off when using an ldaps:// URL.',
+      },
+      tls_skip_verify: {
+        title: 'LDAP Skip TLS Verify',
+        description: 'Skip TLS certificate verification. Insecure; use only for lab or self-signed directories.',
+      },
+      timeout: {
+        title: 'LDAP Timeout',
+        description: 'Dial and per-operation timeout in seconds.',
       },
     },
   },

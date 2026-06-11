@@ -128,6 +128,108 @@
       "title_i18n": "config.radius.reject_delay_window_seconds.title",
       "description": "Observation window (seconds) for reject counter reset",
       "description_i18n": "config.radius.reject_delay_window_seconds.description"
+    },
+    {
+      "key": "ldap.Enabled",
+      "type": "bool",
+      "default": "false",
+      "title": "LDAP Backend Enabled",
+      "title_i18n": "config.ldap.enabled.title",
+      "description": "Enable the LDAP / Active Directory bind authentication backend. PAP-family only (bare PAP and EAP-TTLS inner PAP); challenge/response methods (CHAP/MS-CHAP/MS-CHAPv2/EAP-MD5/PEAP-MSCHAPv2) cannot be served because a bind needs the cleartext password. Default off.",
+      "description_i18n": "config.ldap.enabled.description"
+    },
+    {
+      "key": "ldap.ServerURL",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Server URL",
+      "title_i18n": "config.ldap.server_url.title",
+      "description": "Directory URL, e.g. ldap://dc.example.com:389 or ldaps://dc.example.com:636. Use ldaps:// for TLS, or ldap:// together with StartTLS.",
+      "description_i18n": "config.ldap.server_url.description"
+    },
+    {
+      "key": "ldap.BindMode",
+      "type": "string",
+      "default": "template",
+      "enum": ["template", "search"],
+      "title": "LDAP Bind Mode",
+      "title_i18n": "config.ldap.bind_mode.title",
+      "description": "template: build the user DN by substituting the username into BindDNTemplate. search: bind as a service account, locate the user DN with UserFilter under BaseDN, then re-bind as the user.",
+      "description_i18n": "config.ldap.bind_mode.description"
+    },
+    {
+      "key": "ldap.BindDNTemplate",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Bind DN Template",
+      "title_i18n": "config.ldap.bind_dn_template.title",
+      "description": "Template mode only. DN template with a single %s for the username, e.g. uid=%s,ou=people,dc=example,dc=com or the Active Directory UPN form %s@example.com.",
+      "description_i18n": "config.ldap.bind_dn_template.description"
+    },
+    {
+      "key": "ldap.BaseDN",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Search Base DN",
+      "title_i18n": "config.ldap.base_dn.title",
+      "description": "Search mode only. Subtree base for the user lookup, e.g. dc=example,dc=com.",
+      "description_i18n": "config.ldap.base_dn.description"
+    },
+    {
+      "key": "ldap.UserFilter",
+      "type": "string",
+      "default": "(uid=%s)",
+      "title": "LDAP User Filter",
+      "title_i18n": "config.ldap.user_filter.title",
+      "description": "Search mode only. LDAP filter with a single %s for the username (escaped before substitution), e.g. (uid=%s) or Active Directory (sAMAccountName=%s).",
+      "description_i18n": "config.ldap.user_filter.description"
+    },
+    {
+      "key": "ldap.SearchBindDN",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Service Account DN",
+      "title_i18n": "config.ldap.search_bind_dn.title",
+      "description": "Search mode only. DN of the read-only service account used to search for users, e.g. cn=svc-radius,ou=svc,dc=example,dc=com.",
+      "description_i18n": "config.ldap.search_bind_dn.description"
+    },
+    {
+      "key": "ldap.SearchBindPassword",
+      "type": "string",
+      "default": "",
+      "title": "LDAP Service Account Password",
+      "title_i18n": "config.ldap.search_bind_password.title",
+      "description": "Search mode only. Password for the service account DN.",
+      "description_i18n": "config.ldap.search_bind_password.description"
+    },
+    {
+      "key": "ldap.StartTLS",
+      "type": "bool",
+      "default": "false",
+      "title": "LDAP StartTLS",
+      "title_i18n": "config.ldap.start_tls.title",
+      "description": "Upgrade an ldap:// connection to TLS with StartTLS before binding (RFC 4513 §3). Leave off when using an ldaps:// URL.",
+      "description_i18n": "config.ldap.start_tls.description"
+    },
+    {
+      "key": "ldap.TLSSkipVerify",
+      "type": "bool",
+      "default": "false",
+      "title": "LDAP Skip TLS Verify",
+      "title_i18n": "config.ldap.tls_skip_verify.title",
+      "description": "Skip TLS certificate verification. Insecure; use only for lab or self-signed directories.",
+      "description_i18n": "config.ldap.tls_skip_verify.description"
+    },
+    {
+      "key": "ldap.Timeout",
+      "type": "int",
+      "default": "5",
+      "min": 1,
+      "max": 60,
+      "title": "LDAP Timeout",
+      "title_i18n": "config.ldap.timeout.title",
+      "description": "Dial and per-operation timeout in seconds.",
+      "description_i18n": "config.ldap.timeout.description"
     }
   ]
 }

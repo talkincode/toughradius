@@ -244,6 +244,63 @@ func TestConfigManagerJSON_EapTlsSchemas(t *testing.T) {
 	assert.Error(t, cm.validate(minVerSchema, "1.1"))
 }
 
+// TestConfigManagerJSON_LdapSchemas verifies the LDAP/AD bind backend config
+// items (milestone M14.1, TR-F025) are present with the expected defaults so
+// they can be queried/edited/reloaded on the system config page and consumed by
+// ldapauth.LoadConfig. The backend is off by default.
+func TestConfigManagerJSON_LdapSchemas(t *testing.T) {
+	cm := &ConfigManager{
+		configs: make(map[string]string),
+		schemas: make(map[string]*ConfigSchema),
+	}
+	require.NoError(t, cm.loadSchemasFromJSON())
+
+	// Enabled: boolean, default off (the backend must never be active until
+	// the operator explicitly turns it on and configures it).
+	enabled, exists := cm.schemas["ldap.Enabled"]
+	require.True(t, exists, "ldap.Enabled configuration should exist")
+	assert.Equal(t, TypeBool, enabled.Type)
+	assert.Equal(t, "false", enabled.Default, "LDAP backend must default to disabled")
+	assert.False(t, cm.GetBool("ldap", "Enabled"), "default read path returns disabled")
+
+	// Bind mode: string enum constrained to template / search, default template.
+	mode, exists := cm.schemas["ldap.BindMode"]
+	require.True(t, exists, "ldap.BindMode configuration should exist")
+	assert.Equal(t, "template", mode.Default)
+	assert.Contains(t, mode.Enum, "template")
+	assert.Contains(t, mode.Enum, "search")
+	assert.NoError(t, cm.validate(mode, "search"))
+	assert.Error(t, cm.validate(mode, "bogus"))
+
+	// Timeout: integer seconds bounded to 1..60, default 5.
+	timeout, exists := cm.schemas["ldap.Timeout"]
+	require.True(t, exists, "ldap.Timeout configuration should exist")
+	assert.Equal(t, TypeInt, timeout.Type)
+	assert.Equal(t, "5", timeout.Default)
+	if assert.NotNil(t, timeout.Min) {
+		assert.Equal(t, int64(1), *timeout.Min)
+	}
+	if assert.NotNil(t, timeout.Max) {
+		assert.Equal(t, int64(60), *timeout.Max)
+	}
+
+	// UserFilter ships a sensible default; the remaining connection items are
+	// empty until configured. All items must carry i18n keys for the UI.
+	filter, exists := cm.schemas["ldap.UserFilter"]
+	require.True(t, exists, "ldap.UserFilter configuration should exist")
+	assert.Equal(t, "(uid=%s)", filter.Default)
+
+	for _, key := range []string{
+		"ldap.ServerURL", "ldap.BaseDN", "ldap.BindDNTemplate",
+		"ldap.SearchBindDN", "ldap.SearchBindPassword", "ldap.StartTLS", "ldap.TLSSkipVerify",
+	} {
+		schema, ok := cm.schemas[key]
+		require.Truef(t, ok, "%s configuration should exist", key)
+		assert.NotEmptyf(t, schema.TitleI18n, "%s should have a title i18n key", key)
+		assert.NotEmptyf(t, schema.DescI18n, "%s should have a description i18n key", key)
+	}
+}
+
 // Test configuration type parsing
 func TestParseConfigType(t *testing.T) {
 	cm := &ConfigManager{}

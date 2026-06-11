@@ -39,7 +39,7 @@
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
 | M13 | 双语文档站点（mdbook） | TR-F023 | P2（优先） | 已完成 |
-| M14 | 认证后端扩展（LDAP / AD bind，PAP 族） | TR-F025 | P2 | 计划中 |
+| M14 | 认证后端扩展（LDAP / AD bind，PAP 族） | TR-F025 | P2 | 进行中 |
 
 ---
 
@@ -307,10 +307,10 @@
 - **定位**：服务统一身份 / AD / LDAP 老账号库场景；P2，排在 EAP-TTLS（M9）之后作为其后端补全。
 - **开发边界**：作为可插拔校验后端挂在现有 `internal/radiusd/plugins/auth` 流水线之后（围绕 `GetLocalPassword` / `AuthenticateUserWithPlugins` 的口令解析抽象点），**不在协议入口写库分支、不重写认证流水线、不动 EAP 协调器**；默认关闭，凭配置启用；连接 / 超时 / 目录不可达必须有明确拒绝语义与指标（复用 `AuthError` + Prometheus 指标）。
 - **技能**：`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/add-config-schema/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/align-feature-checklist/SKILL.md`
-- **协议规范**：`rfc4511`（LDAPv3 协议，bind 操作）、`rfc4513`（LDAP 认证方法与安全机制，simple / SASL bind 与 StartTLS）——本地缺失，按 `reference-rfc` 登记；并与 `rfc5281`（EAP-TTLS）、`rfc3748`（EAP 内层）衔接。
+- **协议规范**：`rfc4511`（LDAPv3 协议，bind 操作）、`rfc4513`（LDAP 认证方法与安全机制，simple / SASL bind 与 StartTLS）——已按 `reference-rfc` 收录于 `docs/rfcs/`（`rfc4511-ldap-protocol.txt` / `rfc4513-ldap-authentication.txt`，M14.1 登记）；并与 `rfc5281`（EAP-TTLS）、`rfc3748`（EAP 内层）衔接。
 
 子任务：
-- [ ] M14.1 LDAP/AD bind 校验后端骨架 + 配置 schema（连接 URL、Base DN、bind DN 模板 / 搜索后 bind、StartTLS/LDAPS、超时、用户过滤模板），可开关、默认关闭（`add-config-schema`）
+- [x] M14.1 LDAP/AD bind 校验后端骨架 + 配置 schema（连接 URL、Base DN、bind DN 模板 / 搜索后 bind、StartTLS/LDAPS、超时、用户过滤模板），可开关、默认关闭（`add-config-schema`）<br/>**已交付**：①新增 `internal/ldapauth` 独立可测后端骨架——`Verifier.Verify(ctx, username, password)` 支持 `template`（用户名代入 `BindDNTemplate` 直接 bind）与 `search`（服务账号 bind→按 `UserFilter` 在 `BaseDN` 搜索用户 DN→以用户身份重新 bind）两种模式，支持 ldaps:// 与 ldap://+StartTLS、可配超时、`TLSSkipVerify`（仅实验环境）；以 `conn` 接口抽象 `*ldap.Conn`、`dialFunc` 抽象拨号，使 bind/search 流程可用 fake 连接单测，不依赖真实目录。**安全要点**：空用户名/口令在任何网络操作前即拒绝（RFC 4513 §5.1.2「未认证绑定」：带 DN 的空口令 bind 会被多数服务器当作匿名绑定完成→否则会误判通过）；search 模式用户名经 `ldap.EscapeFilter` 转义防过滤器注入（RFC 4515 §3）、template 模式经 `ldap.EscapeDN` 转义防 DN 注入；过滤器命中 >1 条拒绝；bind 失败按 result code 49 映射为 `ErrInvalidCredentials`、其余映射 `ErrUnavailable`。以 `Settings` 接口读取配置（`*app.Application` 结构化满足）保持与 `internal/app` 解耦、避免 M14.2 接线时的导入环。②新增 `ldap.*` 配置 schema（11 项：`Enabled`/`ServerURL`/`BindMode`/`BindDNTemplate`/`BaseDN`/`UserFilter`/`SearchBindDN`/`SearchBindPassword`/`StartTLS`/`TLSSkipVerify`/`Timeout`），默认**关闭**、富描述明示「仅 PAP 族」；系统配置页自动渲染新 `ldap` 分组（`SystemConfigPage.tsx` configGroups + 中英 i18n 分组与逐项标题/描述）。③新增依赖 `github.com/go-ldap/ldap/v3 v3.4.13`（纯 Go，CGO-free，符合 `CGO_ENABLED=0` 与交叉编译矩阵）。④收录 RFC 4511/4513 至 `docs/rfcs/` 并登记 README + FILE-NAMING。⑤单测：`internal/ldapauth/ldapauth_test.go`（配置加载默认/归一、`Validate`、空凭证与禁用短路不拨号、template 成功/错误口令/DN 转义、search 服务bind→搜索→用户bind 成功/未找到/歧义拒绝/过滤器注入转义/用户bind错误口令/服务bind不可达、StartTLS 调用与失败跳过 bind、拨号失败=Unavailable）+ `internal/app/config_manager_test.go::TestConfigManagerJSON_LdapSchemas`（schema 读路径、默认关闭、枚举/范围/i18n 键）。**未接线进入认证流水线**（M14.2 负责）。门禁：`gofmt`、`go build ./...`、`go test ./internal/ldapauth/ ./internal/app/`、golangci-lint v2.12.2、`web` `tsc && vite build` 通过。**用户文档章节按路线图归 M14.4**（后端尚未接入活路径，此时写「如何用 LDAP 认证」会失真；配置项已由 schema 富描述 + i18n 自解释）。
 - [ ] M14.2 接入认证流水线作为 PAP 族校验后端：裸 PAP、`EAP-TTLS/PAP` 复用同一入口；非 PAP 族（CHAP 系 / EAP-MD5 / PEAP-MSCHAPv2）明确拒绝并记录可诊断原因，不在协议入口分叉
 - [ ] M14.3 连接健壮性与可观测：连接池 / 重连、超时、bind 失败与目录不可达的拒绝语义与指标（复用 `AuthError` + metrics）
 - [ ] M14.4 单元测试（mock / 内嵌 LDAP，覆盖 bind 成功 / 失败 / 不可达 / 仅 PAP 族放行）+ `test/integration/` 验收用例（CI 自动执行）+ 双语文档章节（明示「LDAP 仅 PAP 族」）

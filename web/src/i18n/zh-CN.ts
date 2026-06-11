@@ -599,6 +599,10 @@ const customChineseMessages: TranslationMessages = {
           title: '安全配置',
           description: '安全策略和认证相关配置',
         },
+        ldap: {
+          title: 'LDAP / AD 认证',
+          description: 'LDAP / Active Directory 绑定认证后端（仅 PAP 族，默认关闭）',
+        },
       },
       value_range: '范围',
       min: '最小',
@@ -660,6 +664,52 @@ const customChineseMessages: TranslationMessages = {
       reject_delay_window_seconds: {
         title: '拒绝延迟统计窗口',
         description: '统计连续拒绝次数的时间窗口（秒），超出窗口将自动清零计数',
+      },
+    },
+    ldap: {
+      enabled: {
+        title: '启用 LDAP 后端',
+        description: '启用 LDAP / Active Directory 绑定认证后端。仅支持 PAP 族（裸 PAP 与 EAP-TTLS 内层 PAP）；挑战/响应方式（CHAP/MS-CHAP/MS-CHAPv2/EAP-MD5/PEAP-MSCHAPv2）因绑定需要明文口令而无法支持。默认关闭。',
+      },
+      server_url: {
+        title: 'LDAP 服务器地址',
+        description: '目录服务 URL，例如 ldap://dc.example.com:389 或 ldaps://dc.example.com:636。使用 TLS 时选 ldaps://，或使用 ldap:// 配合 StartTLS。',
+      },
+      bind_mode: {
+        title: 'LDAP 绑定模式',
+        description: 'template：将用户名代入绑定 DN 模板直接生成用户 DN。search：先以服务账号绑定，在 BaseDN 下用 UserFilter 搜索用户 DN，再以用户身份重新绑定。',
+      },
+      bind_dn_template: {
+        title: 'LDAP 绑定 DN 模板',
+        description: '仅 template 模式。含单个 %s 占位用户名的 DN 模板，例如 uid=%s,ou=people,dc=example,dc=com，或 Active Directory UPN 形式 %s@example.com。',
+      },
+      base_dn: {
+        title: 'LDAP 搜索基准 DN',
+        description: '仅 search 模式。用户查找的子树基准，例如 dc=example,dc=com。',
+      },
+      user_filter: {
+        title: 'LDAP 用户过滤器',
+        description: '仅 search 模式。含单个 %s 占位用户名（代入前会转义）的 LDAP 过滤器，例如 (uid=%s) 或 Active Directory 的 (sAMAccountName=%s)。',
+      },
+      search_bind_dn: {
+        title: 'LDAP 服务账号 DN',
+        description: '仅 search 模式。用于搜索用户的只读服务账号 DN，例如 cn=svc-radius,ou=svc,dc=example,dc=com。',
+      },
+      search_bind_password: {
+        title: 'LDAP 服务账号口令',
+        description: '仅 search 模式。服务账号 DN 对应的口令。',
+      },
+      start_tls: {
+        title: 'LDAP StartTLS',
+        description: '在绑定前将 ldap:// 连接升级为 TLS（RFC 4513 §3）。使用 ldaps:// URL 时请关闭。',
+      },
+      tls_skip_verify: {
+        title: 'LDAP 跳过 TLS 校验',
+        description: '跳过 TLS 证书校验。不安全，仅用于实验环境或自签名目录。',
+      },
+      timeout: {
+        title: 'LDAP 超时',
+        description: '建立连接与单次操作的超时时间（秒）。',
       },
     },
   },
