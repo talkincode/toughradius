@@ -241,6 +241,19 @@
   - RADIUS 摘要认证扩展（更新版本）
   - 文件：`rfc5090.txt`
 
+## 目录服务认证 (LDAP/AD)
+
+- **RFC 4511** - Lightweight Directory Access Protocol (LDAP): The Protocol
+
+  - LDAP 核心协议，定义 Bind 操作（§4.2），用于以目录账号口令做绑定校验
+  - 关联实现：`TR-F025`（M14 LDAP/AD 认证后端，仅 PAP 族）
+  - 文件：`rfc4511-ldap-protocol.txt`
+
+- **RFC 4513** - LDAP: Authentication Methods and Security Mechanisms
+  - LDAP 认证方法与安全机制：§5.1.2 未认证绑定（空口令风险）、§3 StartTLS
+  - 关联实现：`TR-F025`（M14 LDAP/AD 认证后端）
+  - 文件：`rfc4513-ldap-authentication.txt`
+
 ## 位置信息
 
 - **RFC 5580** - Carrying Location Objects in RADIUS and Diameter

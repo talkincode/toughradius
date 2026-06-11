@@ -110,6 +110,13 @@
 | RFC 4590 | `rfc4590-digest-authentication.txt` | 摘要认证扩展       |
 | RFC 5090 | `rfc5090-digest-auth-updated.txt`   | 摘要认证（更新版） |
 
+## 目录服务认证 (LDAP/AD)
+
+| RFC 编号 | 新文件名                            | 主题                       |
+| -------- | ----------------------------------- | -------------------------- |
+| RFC 4511 | `rfc4511-ldap-protocol.txt`         | LDAP 协议（Bind 操作）     |
+| RFC 4513 | `rfc4513-ldap-authentication.txt`   | LDAP 认证方法与安全机制    |
+
 ## 位置信息
 
 | RFC 编号 | 新文件名                       | 主题     |
