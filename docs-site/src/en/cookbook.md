@@ -42,8 +42,11 @@ structure:
 
 - [MikroTik RouterOS](./cookbook-mikrotik.md) — PPPoE broadband ISP speed tiers,
   Hotspot + MAC authentication, CoA / forced disconnect and FUP.
+- [Huawei BRAS / NetEngine](./cookbook-huawei.md) — broadband speed tiers with
+  peak rate and AAA domain, line anti-fraud (MAC + VLAN binding) with dual-stack
+  IPv6, CoA / forced disconnect and FUP.
 
-> **Planned (roadmap M13.8 later batches)**: Huawei, H3C, ZTE, iKuai (each has a
+> **Planned (roadmap M13.8 later batches)**: H3C, ZTE, iKuai (each has a
 > dedicated vendor enhancer) and Cisco / standard-attribute scenarios. Until
 > those chapters land, use the attribute reference in the
 > [Vendor Integration Guide](./vendor-guide.md).

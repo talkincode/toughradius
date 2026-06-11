@@ -14,7 +14,7 @@ elsewhere in the repository, so everything is reachable from a single place.
 | [Concepts & Terminology](./concepts.md) | AAA vocabulary, the authentication flow, password protocols |
 | [Quick Start](./quickstart.md) | Install, initialize, first user, debugging |
 | [Vendor Integration Guide](./vendor-guide.md) | Case studies: MikroTik, Huawei, Cisco, H3C, ZTE, iKuai, … |
-| [Scenario Cookbook](./cookbook.md) | End-to-end ops scenarios (five-part): MikroTik PPPoE / Hotspot / CoA |
+| [Scenario Cookbook](./cookbook.md) | End-to-end ops scenarios (five-part): MikroTik PPPoE / Hotspot / CoA; Huawei BRAS speed tiers / line binding / CoA |
 | [Admin UI Manual](./admin-manual.md) | The management console, page by page |
 | [Operations Guide](./ops-guide.md) | Configuration reference, certificates, monitoring, backup, CLI tools |
 | [FAQ](./faq.md) | Frequently asked questions by theme |
