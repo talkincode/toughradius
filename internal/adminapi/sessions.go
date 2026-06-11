@@ -2,6 +2,8 @@ package adminapi
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/md5"
 	"net"
 	"net/http"
 	"strconv"
@@ -15,6 +17,7 @@ import (
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
+	"layeh.com/radius/rfc2869"
 )
 
 // allowedSessionSortFields defines the whitelist of sortable fields for online sessions
@@ -234,10 +237,20 @@ func DeleteOnlineSession(c echo.Context) error {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
-			// Build CoA Disconnect-Request packet
+			// Build CoA Disconnect-Request packet. RFC 5176 §3.4 requires a
+			// Message-Authenticator so strict NAS implementations do not silently
+			// drop the request: insert a zeroed placeholder, then HMAC-MD5 the
+			// packet (with the Request Authenticator field zeroed, as the transport
+			// recomputes it for Disconnect-Request) keyed with the NAS secret.
 			pkt := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
 			_ = rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId) //nolint:errcheck
 			_ = rfc2865.UserName_SetString(pkt, session.Username)           //nolint:errcheck
+			pkt.Authenticator = [16]byte{}
+			_ = rfc2869.MessageAuthenticator_Set(pkt, make([]byte, 16)) //nolint:errcheck
+			raw, _ := pkt.MarshalBinary()
+			mac := hmac.New(md5.New, []byte(nas.Secret))
+			mac.Write(raw)
+			_ = rfc2869.MessageAuthenticator_Set(pkt, mac.Sum(nil)) //nolint:errcheck
 
 			// Send to NAS CoA port (default 3799 when not configured)
 			coaAddr := net.JoinHostPort(nas.Ipaddr, strconv.Itoa(resolveCoaPort(nas.CoaPort)))
