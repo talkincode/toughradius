@@ -218,10 +218,10 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapFailure, secret)
 
-	// Log the failure event
+	// Log the failure event (avoid logging raw error to prevent sensitive data leakage)
 	zap.L().Warn("Sending EAP-Failure",
 		zap.Uint8("identifier", identifier),
-		zap.Error(reason))
+		zap.String("reason", safeReplyMessage(reason)))
 
 	return w.Write(response)
 }
