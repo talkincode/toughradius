@@ -169,6 +169,7 @@
 - [ ] M6.1 补充认证/计费失败分类指标
 - [ ] M6.2 Dashboard 趋势维度扩展
 - [ ] M6.3 指标命名兼容性回归
+- [ ] M6.4 修复休眠的数据清理任务：`Application.SchedClearExpireData`（清理 `radius_online` 残留行与按 `AccountingHistoryDays` 清理 `radius_accounting`）已定义但**从未注册到 cron**——当前 `@daily` 任务仅删除一年前的操作日志（`SysOprLog`），计费历史与残留在线记录实际不会自动清理。需将其按 `@daily`（或可配置周期）注册并补单元测试；发现来源：M13.9 FAQ 校准。
 
 ## M7 — 上游 RADIUS 库跟踪与协议合规
 
@@ -292,7 +293,7 @@
 - [x] M13.6 手册内容扩充（用户指令：「文档站点内容过于单薄」）—— 新增 6 个双语章节（`docs-site/src/{en,zh}/`，中英一一对应、互为交叉链接）：`concepts`（核心术语与概念 + 认证请求流转 + 密码协议，链接 RFC 索引）、`quickstart`（二进制 / Docker / 源码三种安装、初始化、默认账号、首个 NAS/用户、`radtest` 验证、调试）、`vendor-guide`（厂商对接案例 ≥7：MikroTik 14988 / 华为 2011 / Cisco 9 / H3C 25506 / 中兴 3902 / 爱快 10055 / 标准 0，含各厂商限速属性与换算公式、VLAN 解析边界、CoA 说明与设备侧参考配置）、`admin-manual`（管理界面逐页手册：仪表盘 / 节点 / NAS / 用户含批量导入 / 计费策略 / 在线会话含 CoA 与强制下线 / 计费记录 / 系统配置 13 项 / 操作员角色）、`ops-guide`（进程模型与 systemd、端口、配置全量参考、环境变量、CLI 参数、数据库、三类 TLS 证书、日志、内存指标口径、备份范围、`cmd/` 工具、加固清单）、`faq`（按主题分组）。全部事实以代码为准（增强器 / 解析器 / config_schemas.json / 前端资源盘点）；`SUMMARY.md`（嵌套列表，双解析器兼容）+ 概述「下一步」+ 文档地图（新增手册章节表）同步更新。门禁：`mdbook build docs-site` 通过、lychee `--offline` 0 错误。
 - [x] M13.7 导航栏中英文切换（用户指令：「中英文切换应该在导航栏提供切换链接」）—— 通过 `book.toml` 的 `additional-js` / `additional-css` 注入 `docs-site/assets/lang-toggle.{js,css}`（不 fork 主题模板，升级安全）：英文页菜单栏显示「中文」、中文页显示「English」，改写路径最后一段 `/en/` ↔ `/zh/`（依赖两语言目录文件名一一对应，适配自定义域名 / github.io 项目路径 / 本地预览）；根级中性页（introduction / print）同时给出两个语言入口；样式复用 mdBook 主题变量（`--icons` / `--icons-hover`），带 `aria-label` / `hreflang`。该切换仅作用于 mdBook/Pages 管线，GitBook 继续使用侧边栏分区与每章交叉链接（已在 gitbook-coexistence 中英章节注明）。门禁：`mdbook build` 通过、lychee `--offline` 0 错误、node 对 7 种路径形态的映射断言全部通过。
 - [ ] M13.8 厂商场景实战手册（Scenario Cookbook，用户指令：「尽量提供靠近实际应用运维场景的范例指导」）—— 在 `vendor-guide`（属性参考卡）之上新增「场景实战」层：每个场景采用统一的「需求 → ToughRADIUS 侧配置 → 设备侧配置 → 验证 → 排障」五段式，ToughRADIUS 侧每条声明锚定真实代码（enhancer 实际下发的属性、checker 实际执行的拒绝逻辑），设备侧配置标注「示例，以实际固件为准」。分批交付：**批次 1 = MikroTik RouterOS 旗舰场景**（PPPoE 宽带 ISP 分级套餐 + 地址池 + 到期断网 + 并发限制；Hotspot + MAC 认证；CoA/强制下线与 FUP——按代码实际能力，CoA 仅 Session-Timeout/Filter-Id，变速走 Disconnect 重连）；后续批次 = 华为 / H3C / 中兴 / 爱快（对应已有 enhancer）+ Cisco/标准属性场景。门禁：`mdbook build` + lychee `--offline` 0 错误，中英双语对称。
-- [ ] M13.9 FAQ 实战化扩充（用户指令：「从网上收集相关需求，作为常见问答方式来提供建议」）—— 将 `faq` 从概念问答升级为「症状 → 定位 → 解决」排障式条目，覆盖网络收集的真实痛点（限速不生效 / 单位与方向、地址池不下发、CoA 不通与防火墙放行 UDP 3799、计费在线数不同步、共享密钥与时钟漂移、多 NAS、MAC 认证格式、连续认证失败后响应变慢=reject-delay 守卫）；每条锚定代码事实（属性名、checker、配置项默认值），破除网络误传（CoA 端口非 1700 而是 3799）。门禁同上。
+- [x] M13.9 FAQ 实战化扩充（用户指令：「从网上收集相关需求，作为常见问答方式来提供建议」）—— 将 `faq` 从概念问答升级为「症状 → 定位 → 解决」排障式条目，覆盖网络收集的真实痛点（限速不生效 / 单位与方向、地址池不下发、CoA 不通与防火墙放行 UDP 3799、计费在线数不同步、共享密钥与时钟漂移、多 NAS、MAC 认证格式、连续认证失败后响应变慢=reject-delay 守卫）；每条锚定代码事实（属性名、checker、配置项默认值），破除网络误传（CoA 端口非 1700 而是 3799）。门禁同上。**已交付**：新增「地址池不下发 / Framed-Pool 名匹配」「多 NAS 各自密钥」「时钟漂移」「在线 FUP 变速（CoA 仅 Session-Timeout/Filter-Id，变速走 Disconnect 重连）」「CoA 找不到会话」5 条 Q&A；并据代码校准既有错误——计费/在线自动清理实为**休眠**（`SchedClearExpireData` 未注册 cron，仅操作日志按 `@daily` 清理 >1 年，已开 M6.4 跟踪代码修复）。中英双语，`mdbook build` + lychee `--offline`（含 `--include-fragments`）0 错误。
 
 验收口径：`mdbook build` 在 CI 通过且无坏链，中英文章节一一对应，核心散落文档可从站点统一访问，场景实战手册每条 ToughRADIUS 侧声明可追溯到代码；**验收由 CI 构建用例背书**。
 
