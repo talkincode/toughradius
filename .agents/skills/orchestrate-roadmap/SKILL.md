@@ -16,7 +16,7 @@ This skill does not write implementation details itself; it selects work from th
 
 ## Orchestration loop (each round)
 1. **Sync context**: first read `AGENT.md`, `.agents/README.md` (shared pre-conditions + guardrails), `docs/roadmap.md`, `docs/feature-checklist.md`; confirm toolchain versions and the non-goals (`TR-N001`-`TR-N005`).
-2. **Clear in-flight PRs first** (per `../review-pr/SKILL.md`, before selecting anything new): drain open `agent-roadmap` PRs oldest-first - address every `needs-rework` review comment by re-running the matching execution SOP and re-review; merge any PR that is `agent-approved` **and** CI-green; skip `needs-human`. Only when no `agent-roadmap` PR is left unreviewed or in `needs-rework` may you select a new task. This prevents re-picking a task whose PR is still open (which would create a conflicting duplicate).
+2. **Clear in-flight PRs first** (per `../review-pr/SKILL.md`, before selecting anything new): drain open **internal** `agent-roadmap` PRs oldest-first - address every `needs-rework` review comment by re-running the matching execution SOP and re-review; merge any PR that is `agent-approved` **and** CI-green; skip `needs-human`. **Skip fork / cross-repository PRs** (`gh pr view <n> --json isCrossRepository` -> `true`): they are a different trust domain, are never auto-handled here, and are left `needs-human` for a maintainer's personal review (see `../review-pr/SKILL.md` "External / fork PRs are out of scope"). Only when no internal `agent-roadmap` PR is left unreviewed or in `needs-rework` may you select a new task. This prevents re-picking a task whose PR is still open (which would create a conflicting duplicate).
 3. **Select task**:
    - Rule: `grep -nE '^- \[ \] M[0-9]+\.[0-9]+' docs/roadmap.md | head -1` to take the first unchecked subtask top-down.
    - Priority: `M1 -> M2 -> M3`; only fall back to P2/P3 when P1 milestones have no actionable subtask (see the priority column in the milestone overview).
@@ -38,6 +38,7 @@ This skill does not write implementation details itself; it selects work from th
 
 ## Boundaries
 - The orchestrator never bypasses any guardrail: the task-selection rule, TR-N non-goals, PR-only, and quality gates are all mandatory.
+- The autonomous domain is **internal** work only: roadmap subtasks delivered on this repo's own `copilot/*` branches. Fork / cross-repository PRs from external contributors are out of scope - never review-to-merge them autonomously; route them to a maintainer (`needs-human`), backed by the `external-pr-gate` required check.
 - One round advances only one minimal closed loop; do not pack multiple subtasks into one PR to "do more".
 - Do not expand scope: any direction beyond the `TR-F` checklist goes through `align-feature-checklist` first.
 - It only coordinates and orchestrates; it does not replace the specifics of each execution SOP (vendor unit conversion, EAP fragmentation, etc. still follow their own SKILL.md).

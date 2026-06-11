@@ -2,6 +2,11 @@
 
 Use this checklist when reviewing PRs labeled `agent-roadmap`.
 
+## 0) Trust Domain (gate before anything else)
+
+- [ ] PR head is an **internal** branch in this repo, not a fork (`gh pr view <n> --json isCrossRepository` -> `false`)
+- [ ] If `isCrossRepository == true` (fork / external contributor): **stop** - do not run the auto-merge flow. Label `needs-human`, comment that a maintainer's personal review is required, and rely on the `external-pr-gate` required check. Fork PRs are never `agent-approved`/auto-merged.
+
 ## 1) Context and Scope
 
 - [ ] PR explicitly maps to one roadmap subtask (`M?.?`) and `TR-F` ID(s)

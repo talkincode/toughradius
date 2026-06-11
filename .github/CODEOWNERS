@@ -1,0 +1,31 @@
+# Code owners for security-critical paths.
+#
+# GitHub auto-requests a review from the listed owner when a pull request changes
+# a matching path. This is defense-in-depth alongside the fork gate in
+# .github/workflows/external-pr-gate.yml (which hard-blocks all fork PRs).
+#
+# Enforcement note: a requested code-owner review only *blocks* merging when the
+# main branch ruleset has "require code owner review" enabled. That toggle is
+# intentionally left OFF so the auto-delegation agent keeps merging its own
+# internal PRs without a second approver. Turn it on if you want protocol/auth
+# changes to require a human owner's approval as well — be aware that, because
+# the agent runs as the repo owner and GitHub forbids approving one's own PR,
+# enabling it means agent-authored PRs touching these paths will need a
+# different maintainer to approve.
+
+# RADIUS / EAP / RadSec protocol core and vendor handling
+/internal/radiusd/        @jamiesun
+
+# Admin API authorization, validation and backup/restore helpers
+/internal/adminapi/       @jamiesun
+
+# Persistent data model / schema
+/internal/domain/         @jamiesun
+
+# Dependency manifests (supply-chain surface)
+/go.mod                   @jamiesun
+/go.sum                   @jamiesun
+
+# CI / release / security workflows and the agent skill library
+/.github/                 @jamiesun
+/.agents/                 @jamiesun
