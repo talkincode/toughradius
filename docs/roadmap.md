@@ -39,6 +39,7 @@
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
 | M13 | 双语文档站点（mdbook） | TR-F023 | P2（优先） | 进行中 |
+| M14 | 认证后端扩展（LDAP / AD bind，PAP 族） | TR-F025 | P2 | 计划中 |
 
 ---
 
@@ -292,6 +293,26 @@
 - [x] M13.7 导航栏中英文切换（用户指令：「中英文切换应该在导航栏提供切换链接」）—— 通过 `book.toml` 的 `additional-js` / `additional-css` 注入 `docs-site/assets/lang-toggle.{js,css}`（不 fork 主题模板，升级安全）：英文页菜单栏显示「中文」、中文页显示「English」，改写路径最后一段 `/en/` ↔ `/zh/`（依赖两语言目录文件名一一对应，适配自定义域名 / github.io 项目路径 / 本地预览）；根级中性页（introduction / print）同时给出两个语言入口；样式复用 mdBook 主题变量（`--icons` / `--icons-hover`），带 `aria-label` / `hreflang`。该切换仅作用于 mdBook/Pages 管线，GitBook 继续使用侧边栏分区与每章交叉链接（已在 gitbook-coexistence 中英章节注明）。门禁：`mdbook build` 通过、lychee `--offline` 0 错误、node 对 7 种路径形态的映射断言全部通过。
 
 验收口径：`mdbook build` 在 CI 通过且无坏链，中英文章节一一对应，核心散落文档可从站点统一访问；**验收由 CI 构建用例背书**。
+
+---
+
+## M14 — 认证后端扩展：LDAP / AD（bind 校验，PAP 族）
+
+- **关联编号**：`TR-F025`
+- **目标**：按 RFC 4511 / RFC 4513 以 LDAP / Active Directory 的 **bind 操作**校验目录账号口令，作为认证流水线中一个**可插拔的 PAP 族校验后端**，让统一身份（LDAP/AD）账号经裸 PAP 与 `EAP-TTLS/PAP`（M9 已交付）接入——补完 EAP-TTLS（M9）「让 LDAP、老账号库无需立即改造证书体系即可接入」所缺的真正后端归宿。来源：issue #199。
+- **关键约束（务必先读）**：LDAP/AD bind 只能校验**服务器能拿到明文口令**的方法，即 PAP 族（裸 PAP、`EAP-TTLS/PAP`；将来若新增 `PEAP-GTC` 内层亦可复用同一后端）。`CHAP / MS-CHAP / MS-CHAPv2 / EAP-MD5 / PEAP-MSCHAPv2` **物理上不可行**——这些方法服务器需用明文口令（或 NT-hash）计算挑战响应，而 LDAP 永不交出口令（AD 暴露可读 NT-hash 属性属特权且非通用，不在本里程碑范围）。此约束必须在文档、配置说明与拒绝日志中明示，**不得伪装成「全方法支持 LDAP」**。
+- **定位**：服务统一身份 / AD / LDAP 老账号库场景；P2，排在 EAP-TTLS（M9）之后作为其后端补全。
+- **开发边界**：作为可插拔校验后端挂在现有 `internal/radiusd/plugins/auth` 流水线之后（围绕 `GetLocalPassword` / `AuthenticateUserWithPlugins` 的口令解析抽象点），**不在协议入口写库分支、不重写认证流水线、不动 EAP 协调器**；默认关闭，凭配置启用；连接 / 超时 / 目录不可达必须有明确拒绝语义与指标（复用 `AuthError` + Prometheus 指标）。
+- **技能**：`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/add-config-schema/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/align-feature-checklist/SKILL.md`
+- **协议规范**：`rfc4511`（LDAPv3 协议，bind 操作）、`rfc4513`（LDAP 认证方法与安全机制，simple / SASL bind 与 StartTLS）——本地缺失，按 `reference-rfc` 登记；并与 `rfc5281`（EAP-TTLS）、`rfc3748`（EAP 内层）衔接。
+
+子任务：
+- [ ] M14.1 LDAP/AD bind 校验后端骨架 + 配置 schema（连接 URL、Base DN、bind DN 模板 / 搜索后 bind、StartTLS/LDAPS、超时、用户过滤模板），可开关、默认关闭（`add-config-schema`）
+- [ ] M14.2 接入认证流水线作为 PAP 族校验后端：裸 PAP、`EAP-TTLS/PAP` 复用同一入口；非 PAP 族（CHAP 系 / EAP-MD5 / PEAP-MSCHAPv2）明确拒绝并记录可诊断原因，不在协议入口分叉
+- [ ] M14.3 连接健壮性与可观测：连接池 / 重连、超时、bind 失败与目录不可达的拒绝语义与指标（复用 `AuthError` + metrics）
+- [ ] M14.4 单元测试（mock / 内嵌 LDAP，覆盖 bind 成功 / 失败 / 不可达 / 仅 PAP 族放行）+ `test/integration/` 验收用例（CI 自动执行）+ 双语文档章节（明示「LDAP 仅 PAP 族」）
+
+验收口径：配置 LDAP / AD 后，PAP 族（含 `EAP-TTLS/PAP`）可用目录账号经 bind 完成认证，且对 `CHAP/MS-CHAP/MS-CHAPv2/EAP-MD5/PEAP-MSCHAPv2` 明确拒绝并给出可诊断原因；**验收由 `test/integration/` 的 CI 用例背书**。
 
 ---
 

@@ -67,6 +67,7 @@
 | P2 | TR-F004 | EAP-TLS 1.3 升级（RFC 9190） | 计划中（M10） | 在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生，遵循 RFC 9427 的 TLS 1.3 派生规则。 | 保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射。 |
 | P3 | TR-F004 | TEAP（隧道，machine + user chaining） | 计划中（M11） | 按 RFC 7170 / RFC 9930（TEAPv1）实现现代隧道 EAP，支持 machine + user chaining、证书 + 密码组合认证；TLS 1.3 下采用 RFC 9427 派生规则。 | 中长期方向，客户端生态弱于 PEAP；仅在客户端环境可控时优先，不与 PEAP / TTLS 抢第一版资源。 |
 | P3 | TR-F004 | EAP-PWD（按需） | 计划中（M12） | 按 RFC 5931 以共享口令完成认证，不为每客户端签发证书，适合 IoT、嵌入式、受控小规模设备。 | 非通用企业 Wi-Fi 首选；按需推进，避免为协议完整性拖入维护沼泽。 |
+| P2 | TR-F025 | 认证后端扩展：LDAP / AD（bind 校验，PAP 族） | 计划中（M14） | 按 RFC 4511 / RFC 4513 以 LDAP / Active Directory 的 bind 操作校验目录账号口令，作为认证流水线中可插拔的 PAP 族校验后端，让统一身份（LDAP/AD）账号经裸 PAP 与 `EAP-TTLS/PAP`（M9 已交付）接入，补完 EAP-TTLS「让 LDAP、老账号库无需立即改造证书体系即可接入」所缺的真正后端（来源：issue #199）。 | 仅支持 PAP 族（服务器可拿到明文口令）：`CHAP / MS-CHAP / MS-CHAPv2 / EAP-MD5 / PEAP-MSCHAPv2` 因服务器需明文或 NT-hash 计算挑战、而 LDAP bind 永不交出口令而**物理不可行**，必须在文档/配置/拒绝日志明示、不得伪装支持；作为可插拔后端挂在现有 `internal/radiusd/plugins/auth` 之后（围绕 `GetLocalPassword` 口令解析抽象点），不在协议入口写库分支、不重写认证流水线、不动 EAP 协调器；默认关闭，凭配置启用。 |
 | P2 | TR-F023 | 双语文档站点（mdbook） | 进行中（M13，置顶优先） | 用 mdbook 搭建中英文双语文档站点，收编 README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引等散落文档，提供统一导航、本地构建与 CI 产物校验。 | 先规划与骨架，再分批迁移；中英文目录结构对应、同步维护；文档不替代以代码与测试为准的口径。 |
 | P2 | TR-F024 | Go API 文档与注释规范（标准库风格） | 进行中（M4） | 制定并落地 godoc / 标准库风格注释规范：导出标识符注释齐全、包注释、`Example`、错误与并发语义说明；提供配套技能与可度量门禁。 | 增量推进，按模块补齐；以信息量为准，禁止机械式无意义注释。 |
 
