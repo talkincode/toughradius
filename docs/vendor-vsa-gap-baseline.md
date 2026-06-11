@@ -54,13 +54,35 @@ rg '^\$INCLUDE\s+dictionary\.' share/dictionary
 
 ## Prioritized Backlog for M5.2
 
-1. Complete parser symmetry for already-enhanced vendors:
-   - `mikrotik`, `ikuai`
-2. Fill high-demand enterprise paths already documented for deployment:
-   - `cisco` first, then `juniper` / `microsoft`
-3. Close full missing coverage on remaining generated vendors:
-   - `f5`, `hillstone`, `pfSense`, `alcatel`, `aruba`, `unix`, `radback`
-4. For each vendor in M5.2, follow the same acceptance set:
+> Prioritization corrected during M5.1 → M5.2 grooming, anchored to the gap
+> matrix above and to the `vendorparsers.VendorRequest` model (it carries only
+> `MacAddr` + two `Vlanid` fields). A vendor **parser** therefore adds value only
+> when the vendor encodes MAC/VLAN with a vendor-specific VSA **on the request
+> side**; otherwise it merely duplicates `DefaultParser` (which already reads the
+> standard `Calling-Station-Id`). The response **enhancer** (rate/VLAN reply
+> attributes) is a separate, demand-driven track and does not depend on a parser.
+
+1. Parsers with genuine request-side value — vendors whose dictionary exposes a
+   vendor-specific MAC/VLAN request attribute (verify request/response semantics
+   per vendor dictionary + spec before implementing):
+   - `radback` (`Mac-Addr` / `Bind-Dot1q-Vlan-Tag-Id`)
+   - `alcatel` (`AAT-User-MAC-Address`)
+   - `aruba` (`Aruba-User-Vlan`)
+   - `juniper` (`Juniper-VoIP-Vlan`)
+2. Enhancers (response attributes) — drive by deployment demand, independently of
+   parser work; `cisco` (`cisco-avpair`), `juniper`, `microsoft` are common asks.
+3. De-prioritized "symmetry-only" parsers — `mikrotik`, `ikuai` use the standard
+   `Calling-Station-Id` on the request side (their VLAN VSAs such as
+   `Mikrotik-Wireless-VLANID` are Access-Accept reply attributes), so a dedicated
+   parser would be behaviorally identical to `DefaultParser`. Add one only if a
+   concrete deployment proves a vendor-specific request encoding. (The original
+   baseline listed these as batch 1 — that was a misjudgment, now corrected.)
+4. Remaining generated vendors with no current request-side parser value:
+   `cisco`, `f5`, `hillstone`, `pfSense`, `unix`, `microsoft` — close as
+   enhancer/registry work or when a deployment surfaces a real attribute need.
+   Note: `alcatel`, `aruba`, `unix` still lack a `vendors.Code*` constant; add it
+   before registering a parser/enhancer.
+5. For each vendor in M5.2, follow the same acceptance set:
    - parser + registration + enhancer (if response VSA required)
    - sample-based parser/enhancer tests
    - `go test ./internal/radiusd/...` and `golangci-lint` green
