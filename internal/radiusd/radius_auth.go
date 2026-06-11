@@ -145,6 +145,13 @@ func (s *AuthService) logAndReject(w radius.ResponseWriter, r *radius.Request, e
 		metricsKey = radiusErr.MetricsKey()
 	}
 
+	// Count the rejection by reason. The EAP path is metered separately in
+	// logEAPFailure (its rejects are handled in-stage and never reach here), so
+	// this covers the bare PAP/CHAP path — including LDAP-backed PAP, whose
+	// radus_reject_ldap_error would otherwise stay invisible when the directory
+	// is unreachable.
+	app.IncRadiusMetric(metricsKey)
+
 	zap.L().Error("radius auth error",
 		zap.Error(err),
 		zap.String("namespace", "radius"),
