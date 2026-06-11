@@ -65,6 +65,23 @@ or `Cisco` receives no proprietary rate attribute — see the
 [Vendor Integration Guide](./vendor-guide.md#rate-limit-units). Also check that
 the user's profile actually sets `up_rate`/`down_rate` (Kbps).
 
+### Dial-up authenticates but gets no IP / the address pool has no effect
+
+`Framed-Pool` is sent only when a pool is **set on the user or its rate
+profile**, and the emitted pool name **must match the pool name on the NAS**
+(e.g. RouterOS `/ip pool`). A name mismatch — or no pool at all — leaves the
+client without a (correct) address. For a fixed IP, set a static IPv4 on the
+user (emits `Framed-IP-Address`, overriding the pool). See the end-to-end
+[Scenario Cookbook · MikroTik](./cookbook-mikrotik.md).
+
+### I have multiple NAS devices — must each be configured separately?
+
+Yes. **Every NAS must be registered individually under NAS Devices**, each with
+its own source IP (or identifier) and **its own shared secret**. ToughRADIUS
+matches the packet's source address (or NAS identifier) to the NAS record and
+its secret; unregistered source addresses are silently dropped. Different NAS
+devices may use different secrets — they need not be uniform.
+
 ### Why was a specific user rejected?
 
 Rejects are categorized (wrong password, user not found, expired, disabled,
@@ -94,6 +111,15 @@ when they are empty the methods are disabled by design. Generate a server
 certificate with `cmd/certgen`, set the paths, and retry. `EapTlsCaFile` is
 needed only to validate client certificates (EAP-TLS).
 
+### What breaks if the server and device clocks drift apart?
+
+Clock skew causes subtle problems: TLS-based EAP (EAP-TLS / PEAP / TTLS)
+validates certificate validity windows (`NotBefore` / `NotAfter`), so a large
+time gap can fail the handshake; accounting start/stop times and durations
+become wrong; and the brute-force reject-delay window (default 10 s) is measured
+on the server clock. Run NTP on both the server and the NAS to keep time in
+sync.
+
 ### Which EAP method should I pick?
 
 - **EAP-TLS** — strongest (mutual certificates), needs client-cert rollout.
@@ -112,21 +138,44 @@ Check, in order: the device has dynamic authorization enabled (e.g.
 device accepts requests from the server address. ToughRADIUS waits 5 s and
 retries twice before reporting failure.
 
+### How do I change a user's speed live (FUP / over-quota throttling)?
+
+ToughRADIUS's Change of Authorization (CoA) carries **only `Session-Timeout` and
+`Filter-Id`** — it does **not** rewrite rate attributes like `Mikrotik-Rate-Limit`
+live. The standard way to change speed in real time is to change the rate on the
+profile / user first, **then force a disconnect**; the client redials and is
+re-authorized at the new speed. Alternatively use `Filter-Id` to apply a
+pre-defined rate rule on the device. See
+[Scenario Cookbook · MikroTik · Live control](./cookbook-mikrotik.md).
+
+### CoA / disconnect says the session was not found
+
+An operator-initiated CoA / Disconnect first locates the session on the Online
+Sessions page, then addresses the device using its NAS record and session
+identity (e.g. `Acct-Session-Id`). If the online row is stale (the NAS never
+sent an accounting stop) or the session already ended, there is nothing to
+match — refresh the online list, confirm accounting works on the device, and
+retry.
+
 ### Online sessions show users that already disconnected
 
 Online entries are created/refreshed by NAS accounting packets. If the NAS
 stops sending (reboot, link loss) the row can linger. Ensure accounting and
 interim updates are enabled on the device (`Acct-Interim-Interval` is sent in
-every Access-Accept, default 300 s). Stale entries can also be cleared manually
+every Access-Accept, default 120 s). Stale entries can also be cleared manually
 from the UI with Disconnect/delete.
 
 ### Accounting table grows forever — what is cleaned automatically?
 
-The operator action log is purged after one year. For `radius_accounting`,
-the `AccountingHistoryDays` setting (default 90) defines the retention window
-used for accounting cleanup; in high-volume deployments monitor growth and
-include database-level archiving in your ops routine. Configuration backups do
-**not** include accounting history — see
+Right now **only the operator action log is purged automatically**: a `@daily`
+job deletes operation logs (`SysOprLog`) older than one year. `radius_accounting`
+(accounting history) and stale `radius_online` rows are **not** cleaned
+automatically — the cleanup routine `SchedClearExpireData` (which would purge
+accounting by `AccountingHistoryDays`, default 90, and remove expired online
+rows) is implemented but **not yet registered with the scheduler** (tracked as
+roadmap M6.4). So in high-volume deployments add **database-level archiving /
+cleanup** to your ops routine, and clear stale online rows manually from the UI.
+Configuration backups do **not** include accounting history — see
 [Backup and restore](./ops-guide.md#backup-and-restore).
 
 ### Concurrent sessions are not limited
