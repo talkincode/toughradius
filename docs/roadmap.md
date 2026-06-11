@@ -30,7 +30,7 @@
 | M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 已交付 |
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 已完成 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
-| M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
+| M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 进行中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已完成 |
@@ -154,10 +154,11 @@
 - **关联编号**：`TR-F005`
 - **目标**：按 parser / enhancer / registry 模式扩展更多厂商 VSA 覆盖，补齐样例包测试。
 - **技能**：`.agents/skills/add-radius-vendor/SKILL.md`
+- **状态**：进行中（M5.1 已交付，M5.2 待按校准后的优先级逐厂商推进）
 
 子任务：
-- [ ] M5.1 梳理待补厂商清单与字典差异
-- [ ] M5.2 逐厂商按现有模式接入 parser / enhancer
+- [x] M5.1 梳理待补厂商清单与字典差异<br/>**已交付**（PR #433）：基线快照 [`docs/vendor-vsa-gap-baseline.md`](vendor-vsa-gap-baseline.md) 记录覆盖矩阵——15 个生成厂商字典；已注册 parser 为 `default + huawei + h3c + zte`，已注册 enhancer 为 `default + huawei + h3c + zte + mikrotik + ikuai`；`alcatel(3041)` / `aruba(14823)` / `unix(4)` 三个字典缺 `vendors.Code*` 常量。核心结论「字典 ≠ parser」：未注册 parser 的厂商一律回落到只解析标准属性的 `DefaultParser`。
+- [ ] M5.2 逐厂商按现有模式接入 parser / enhancer<br/>**优先级校准（基于 M5.1 字典证据，groom 修订）**：`vendorparsers.VendorRequest` 仅承载 `MacAddr` + 双 `Vlanid`，故 **parser 仅对「在请求侧以厂商私有 VSA 编码 MAC/VLAN」的厂商有增量价值**。证据：`mikrotik` / `ikuai` 请求侧用标准 `Calling-Station-Id`（其 VLAN VSA 如 `Mikrotik-Wireless-VLANID` 属 Access-Accept 响应侧），单独加 parser 会与 `DefaultParser` 行为重复、仅补「对称」而无行为差异，故**不再优先**（原基线把它们列为 batch 1 系误判）。优先接入存在请求侧厂商私有 MAC/VLAN 的厂商：`radback`（`Mac-Addr` / `Bind-Dot1q-Vlan-Tag-Id`）、`alcatel`（`AAT-User-MAC-Address`）、`aruba`（`Aruba-User-Vlan`）、`juniper`（`Juniper-VoIP-Vlan`）——具体请求/响应侧语义按各厂商字典与规范逐一核实。enhancer（响应速率 / VLAN）的价值与 parser 解耦，按部署需求独立推进。每厂商按 `add-radius-vendor` SOP 交付：parser + 注册（缺 `Code*` 常量先补）+ enhancer（若需响应 VSA）+ 样例测试，过 `go test ./internal/radiusd/...` 与 golangci-lint 门禁。
 - [ ] M5.3 厂商样例包覆盖解析与响应属性
 
 ## M6 — 可观测性与运维增强
