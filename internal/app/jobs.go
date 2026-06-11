@@ -40,6 +40,14 @@ func (a *Application) initJob() {
 		zap.S().Errorf("init job error %s", err.Error())
 	}
 
+	_, err = a.sched.AddFunc("@daily", func() {
+		a.SchedClearExpireData()
+	})
+
+	if err != nil {
+		zap.S().Errorf("init job error %s", err.Error())
+	}
+
 	a.sched.Start()
 }
 
@@ -90,6 +98,18 @@ func (a *Application) SchedProcessMonitorTask() {
 	}
 }
 
+// SchedClearExpireData purges stale operational data and is registered as a
+// @daily cron job by initJob.
+//
+// It performs two independent cleanups:
+//   - radius_online: deletes rows whose LastUpdate is older than 300 seconds,
+//     reclaiming sessions left dangling by a missed Accounting-Stop.
+//   - radius_accounting: deletes rows whose AcctStopTime predates the
+//     radius.AccountingHistoryDays retention window. The window defaults to 90
+//     days (config seed); a value of 0 disables accounting cleanup entirely.
+//
+// Any panic is recovered and logged so a cleanup failure never crashes the
+// scheduler goroutine.
 func (a *Application) SchedClearExpireData() {
 	defer func() {
 		if err := recover(); err != nil {
@@ -101,12 +121,14 @@ func (a *Application) SchedClearExpireData() {
 		time.Now().Add(time.Second*300*-1)).
 		Delete(&domain.RadiusOnline{})
 
-	// Clean up accounting logs
+	// Clean up accounting history. radius.AccountingHistoryDays is the retention
+	// window in days; 0 disables accounting cleanup (matching the config schema's
+	// "0=disabled" semantics), so a missing or zero value never silently purges
+	// data.
 	idays := a.ConfigMgr().GetInt("radius", "AccountingHistoryDays")
-	if idays == 0 {
-		idays = 90
+	if idays > 0 {
+		a.gormDB.
+			Where("acct_stop_time < ? ", time.Now().
+				Add(-time.Hour*24*time.Duration(idays))).Delete(domain.RadiusAccounting{})
 	}
-	a.gormDB.
-		Where("acct_stop_time < ? ", time.Now().
-			Add(-time.Hour*24*time.Duration(idays))).Delete(domain.RadiusAccounting{})
 }

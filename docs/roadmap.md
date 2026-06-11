@@ -169,7 +169,7 @@
 - [ ] M6.1 补充认证/计费失败分类指标
 - [ ] M6.2 Dashboard 趋势维度扩展
 - [ ] M6.3 指标命名兼容性回归
-- [ ] M6.4 修复休眠的数据清理任务：`Application.SchedClearExpireData`（清理 `radius_online` 残留行与按 `AccountingHistoryDays` 清理 `radius_accounting`）已定义但**从未注册到 cron**——当前 `@daily` 任务仅删除一年前的操作日志（`SysOprLog`），计费历史与残留在线记录实际不会自动清理。需将其按 `@daily`（或可配置周期）注册并补单元测试；发现来源：M13.9 FAQ 校准。
+- [x] M6.4 修复休眠的数据清理任务：`Application.SchedClearExpireData`（清理 `radius_online` 残留行与按 `AccountingHistoryDays` 清理 `radius_accounting`）已定义但**从未注册到 cron**——当前 `@daily` 任务仅删除一年前的操作日志（`SysOprLog`），计费历史与残留在线记录实际不会自动清理。需将其按 `@daily`（或可配置周期）注册并补单元测试；发现来源：M13.9 FAQ 校准。<br/>**已交付**：`initJob` 新增第二个 `@daily` 任务调用 `SchedClearExpireData`（`internal/app/jobs.go`），令计费历史与残留在线行真正按天清理。**并修复一处耦合缺陷**：原逻辑 `if idays==0 { idays=90 }` 与配置 schema「`0=disabled`」语义矛盾——激活清理后，管理员把 `AccountingHistoryDays` 设为 `0`（意为永久保留）反而会按 90 天清理，属数据丢失陷阱；改为 `idays>0` 才清理（`0` 关闭、缺失配置不误删）。补 `internal/app/jobs_test.go`（3 例：30 天保留正例、`0` 关闭计费清理且在线清理仍独立运行、`initJob` 注册 3 个 cron 条目的回归守卫）。同步校正手册：FAQ / 运维指南 / 管理手册（en+zh）原「尚未注册、不会自动清理」措辞改为现实行为并补「`0` 关闭」。门禁：`go build ./...`、`go test ./internal/app/`、`golangci-lint`（v2.12.2，0 问题）、`mdbook build` + lychee `--offline --include-fragments` 0 错误。
 
 ## M7 — 上游 RADIUS 库跟踪与协议合规
 

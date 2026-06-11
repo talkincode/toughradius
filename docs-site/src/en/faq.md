@@ -168,16 +168,14 @@ from the UI with Disconnect/delete.
 
 ### Accounting table grows forever — what is cleaned automatically?
 
-Right now **only the operator action log is purged automatically**: a `@daily`
-job deletes operation logs (`SysOprLog`) older than one year. `radius_accounting`
-(accounting history) and stale `radius_online` rows are **not** cleaned
-automatically — the cleanup routine `SchedClearExpireData` (which would purge
-accounting by `AccountingHistoryDays`, default 90, and remove expired online
-rows) is implemented but **not yet registered with the scheduler** (tracked as
-roadmap M6.4). So in high-volume deployments add **database-level archiving /
-cleanup** to your ops routine, and clear stale online rows manually from the UI.
-Configuration backups do **not** include accounting history — see
-[Backup and restore](./ops-guide.md#backup-and-restore).
+Two `@daily` jobs purge data automatically: one deletes operation logs
+(`SysOprLog`) older than one year; the other, `SchedClearExpireData`, deletes
+`radius_accounting` history older than `AccountingHistoryDays` (default 90 days)
+and removes `radius_online` rows whose `last_update` is older than 300 seconds.
+Set `AccountingHistoryDays` to `0` to **disable** accounting cleanup (keep
+history indefinitely). For very high volumes you may still want **database-level
+archiving** in your ops routine. Configuration backups do **not** include
+accounting history — see [Backup and restore](./ops-guide.md#backup-and-restore).
 
 ### Concurrent sessions are not limited
 

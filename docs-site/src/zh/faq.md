@@ -143,13 +143,12 @@ ToughRADIUS 的「修改授权（CoA）」**只携带 `Session-Timeout` 与 `Fil
 
 ### 计费表一直增长，哪些会自动清理？
 
-目前**只有操作日志会被自动清理**：`@daily` 定时任务删除一年前的操作日志
-（`SysOprLog`）。`radius_accounting`（计费历史）与 `radius_online` 的残留行
-**当前不会自动清理**——清理函数 `SchedClearExpireData`（会按
-`AccountingHistoryDays`，默认 90 清理计费历史、并清理过期在线行）虽已实现，但
-**尚未注册到定时器**（已记入路线图 M6.4）。因此大流量部署请将**数据库级归档 /
-清理**纳入运维流程，并在界面手动清理残留在线记录。配置备份**不包含**计费历史
-——见[备份与恢复](./ops-guide.md#备份与恢复)。
+两个 `@daily` 定时任务会自动清理数据：一个删除一年前的操作日志（`SysOprLog`）；
+另一个 `SchedClearExpireData` 会按 `AccountingHistoryDays`（默认 90 天）删除过期的
+`radius_accounting` 计费历史，并清理 `last_update` 超过 300 秒的 `radius_online`
+残留在线行。将 `AccountingHistoryDays` 设为 `0` 可**关闭**计费历史清理（永久保留）。
+若流量很大、需要更激进的瘦身，仍建议把**数据库级归档**纳入运维流程。配置备份
+**不包含**计费历史——见[备份与恢复](./ops-guide.md#备份与恢复)。
 
 ### 并发会话数没有被限制
 
