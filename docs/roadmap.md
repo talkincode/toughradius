@@ -27,7 +27,7 @@
 | 里程碑 | 主题 | 关联编号 | 优先级 | 状态 |
 | --- | --- | --- | --- | --- |
 | M1 | EAP-TLS 认证支持 | TR-F004 | P1 | 已交付 |
-| M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 已交付 |
+| M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 已交付（含可选跟进 M2.7） |
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 已完成 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 进行中 |
@@ -100,6 +100,8 @@
 - [x] M2.4 前端在线会话页暴露安全动作按钮 + 结果反馈
 - [x] M2.5 单元/集成测试覆盖成功、超时、NAS 拒绝场景
 - [x] M2.6 在 `test/integration/` 增加 CoA/Disconnect 端到端验收用例（CI 自动执行）
+- [x] M2.6a（M2.1 后置加固，PR #440）出站 CoA-Request / Disconnect-Request 按 RFC 5176 §3.4 携带 Message-Authenticator（HMAC-MD5，RFC 3579 §3.2），复用 `internal/radiusd/message_authenticator.go` 的 `computeMessageAuthenticator`；严格 NAS（FreeRADIUS 风格）会静默丢弃未签名请求，故签名对互通性必需。单元用例验证两类请求均携带可校验的 MA，集成用例以「严格 NAS 丢弃未签名请求」背书。
+- [ ] M2.7（可选增强，不阻塞 M2 交付）校验 CoA / Disconnect **应答**（ACK/NAK）携带的 Message-Authenticator：RFC 5176 §3.4 规定应答侧该属性为 OPTIONAL（0-1），收到且校验失败的应答 MUST 静默丢弃、未携带则接受。来源：#440 落地出站请求签名时按最小闭环裁剪掉了应答侧校验（并移除手写 raw-MD5 重建以消除 CodeQL `go/weak-sensitive-data-hashing` 告警）。实现需复用 `message_authenticator.go` 的 HMAC-MD5 helper（应答摘要以请求的 Request Authenticator 替换应答 Authenticator 字段、MA 值清零计算），并补单元 + `test/integration/` 用例（含损坏 MA 被丢弃、未签名应答被接受两种向量）。关联 `TR-F010`。
 
 验收口径：可对在线用户安全发起动态授权；每次触发有可查询的结果记录；**验收由 `test/integration/` 的 CI 用例背书**。
 
