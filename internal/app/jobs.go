@@ -40,6 +40,14 @@ func (a *Application) initJob() {
 		zap.S().Errorf("init job error %s", err.Error())
 	}
 
+	_, err = a.sched.AddFunc("@daily", func() {
+		a.SchedClearExpireData()
+	})
+
+	if err != nil {
+		zap.S().Errorf("init job error %s", err.Error())
+	}
+
 	a.sched.Start()
 }
 
@@ -90,23 +98,53 @@ func (a *Application) SchedProcessMonitorTask() {
 	}
 }
 
+// SchedClearExpireData purges stale operational data and is registered as a
+// @daily cron job by initJob.
+//
+// It performs two independent cleanups:
+//   - radius_online: deletes rows that have not refreshed for at least three
+//     radius.AcctInterimInterval periods, reclaiming sessions left dangling by a
+//     missed Accounting-Stop. A live session updates every interim interval, so
+//     requiring several missed updates avoids dropping active sessions (which
+//     would also under-count the per-user concurrency limit).
+//   - radius_accounting: deletes terminated records whose AcctStopTime predates
+//     the radius.AccountingHistoryDays retention window. The window defaults to
+//     90 days (config seed); a value of 0 disables accounting cleanup entirely.
+//     Active sessions carry a zero AcctStopTime (stamped only at Accounting-Stop)
+//     and are always excluded, so an online session never loses its billing row.
+//
+// Any panic is recovered and logged so a cleanup failure never crashes the
+// scheduler goroutine.
 func (a *Application) SchedClearExpireData() {
 	defer func() {
 		if err := recover(); err != nil {
 			zap.S().Error(err)
 		}
 	}()
-	// Clean expire online
+
+	// Reclaim dangling online sessions. A healthy session refreshes every
+	// AcctInterimInterval, so only delete rows that have missed several updates
+	// to avoid dropping live sessions.
+	interim := a.ConfigMgr().GetInt("radius", "AcctInterimInterval")
+	if interim <= 0 {
+		interim = 300
+	}
+	onlineStaleWindow := time.Duration(interim*3) * time.Second
 	a.gormDB.Where("last_update <= ?",
-		time.Now().Add(time.Second*300*-1)).
+		time.Now().Add(-onlineStaleWindow)).
 		Delete(&domain.RadiusOnline{})
 
-	// Clean up accounting logs
+	// Clean up accounting history. radius.AccountingHistoryDays is the retention
+	// window in days; 0 disables accounting cleanup (matching the config schema's
+	// "0=disabled" semantics), so a missing or zero value never silently purges
+	// data. The acct_stop_time > epoch guard excludes active sessions, whose
+	// AcctStopTime is the zero value (0001-01-01) until Accounting-Stop and would
+	// otherwise sort before every cutoff and be deleted immediately.
 	idays := a.ConfigMgr().GetInt("radius", "AccountingHistoryDays")
-	if idays == 0 {
-		idays = 90
+	if idays > 0 {
+		cutoff := time.Now().Add(-time.Hour * 24 * time.Duration(idays))
+		a.gormDB.
+			Where("acct_stop_time > ? AND acct_stop_time < ?", time.Unix(0, 0), cutoff).
+			Delete(domain.RadiusAccounting{})
 	}
-	a.gormDB.
-		Where("acct_stop_time < ? ", time.Now().
-			Add(-time.Hour*24*time.Duration(idays))).Delete(domain.RadiusAccounting{})
 }

@@ -120,7 +120,7 @@ table — changes apply without restart. The 13 RADIUS settings:
 | `EapTlsCaFile` | empty | CA bundle for client-certificate validation |
 | `EapTlsMinVersion` | `1.2` | Minimum TLS version (`1.2`/`1.3`) |
 | `IgnorePassword` | `false` | Skip password verification (testing only) |
-| `AccountingHistoryDays` | `90` | Accounting retention window used by data cleanup |
+| `AccountingHistoryDays` | `90` | Accounting retention days (`@daily` cleanup; `0` disables) |
 | `AcctInterimInterval` | `300` | Seconds between NAS interim updates |
 | `SessionTimeout` | `3600` | Default session timeout seconds |
 | `LogLevel` | `info` | RADIUS log verbosity (`debug`/`info`/`warn`/`error`) |
