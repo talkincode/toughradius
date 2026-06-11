@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"crypto/tls"
+	"errors"
 	"testing"
 	"time"
 
@@ -36,6 +38,10 @@ type ttlsPapPeer struct {
 	password string
 	user     *domain.RadiusUser
 	pwd      eap.PasswordProvider
+	// verifier, when set, is exposed to the handler as an active external
+	// credential authority (LDAP); inner PAP then binds through it instead of
+	// comparing against pwd.
+	verifier eap.CredentialVerifier
 
 	// avpFlight overrides the inner AVP flight the peer sends; when nil it sends
 	// a standard User-Name + User-Password PAP flight.
@@ -156,6 +162,7 @@ func (p *ttlsPapPeer) responseCtx(writer *mockResponseWriter, tlsData []byte) *e
 		Secret:         p.secret,
 		User:           p.user,
 		PwdProvider:    p.pwd,
+		Verifier:       p.verifier,
 		EAPMessage:     &eap.EAPMessage{Code: eap.CodeResponse, Identifier: p.ident, Type: eap.TypeTTLS, Data: data},
 	}
 }
@@ -287,4 +294,104 @@ func TestTTLSHandler_PAPAuth_NoUserPasswordRejected(t *testing.T) {
 	assert.False(t, success, "a non-PAP inner method must not authenticate in M9.3")
 	require.Error(t, err)
 	assert.ErrorIs(t, err, eap.ErrTTLSInnerNotImplemented)
+}
+
+// fakeTTLSVerifier stands in for the LDAP credential backend (M14.2): when
+// active, inner PAP must bind through it instead of comparing against the local
+// password provider.
+type fakeTTLSVerifier struct {
+	active           bool
+	err              error
+	gotUser, gotPass string
+	calls            int
+}
+
+func (f *fakeTTLSVerifier) Active() bool { return f.active }
+
+func (f *fakeTTLSVerifier) VerifyCleartext(_ context.Context, username, password string) error {
+	f.calls++
+	f.gotUser, f.gotPass = username, password
+	return f.err
+}
+
+func TestTTLSHandler_PAPAuth_LDAPBindSucceeds(t *testing.T) {
+	ca := newHSTestCA(t, "TTLS PAP LDAP OK Root CA")
+	cfg := ttlsServerEngineConfig(t, ca)
+	h := NewTTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "ttlsuser", "secret")
+	peer := newTTLSPapPeer(t, h, ca, sm, stateID, "secret", "ttlsuser", "S3cr3t!")
+	// The local password provider would REJECT (it holds a different password);
+	// an active LDAP verifier must be consulted instead, and it accepts.
+	peer.pwd = &mockPasswordProvider{password: "local-would-be-wrong"}
+	v := &fakeTTLSVerifier{active: true}
+	peer.verifier = v
+
+	success, err := peer.run()
+	require.NoError(t, err)
+	assert.True(t, success, "inner PAP must authenticate via the active LDAP bind")
+
+	// The verifier received the user's identity and the cleartext tunnel password,
+	// proving the local password was bypassed.
+	assert.Equal(t, 1, v.calls)
+	assert.Equal(t, "ttlsuser", v.gotUser)
+	assert.Equal(t, "S3cr3t!", v.gotPass)
+
+	require.NotNil(t, peer.acceptResponse)
+	_, rerr := microsoft.MSMPPERecvKey_Lookup(peer.acceptResponse)
+	assert.NoError(t, rerr, "MS-MPPE keys must still be derived from the TLS session on LDAP success")
+}
+
+func TestTTLSHandler_PAPAuth_LDAPBindRejected(t *testing.T) {
+	ca := newHSTestCA(t, "TTLS PAP LDAP Reject Root CA")
+	cfg := ttlsServerEngineConfig(t, ca)
+	h := NewTTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "ttlsuser", "secret")
+	peer := newTTLSPapPeer(t, h, ca, sm, stateID, "secret", "ttlsuser", "S3cr3t!")
+	// The local password provider WOULD accept (it matches the presented
+	// password); the active LDAP verifier rejects, and its verdict must win.
+	// If the verifier branch were removed this test would falsely succeed.
+	peer.pwd = &mockPasswordProvider{password: "S3cr3t!"}
+	rejectErr := errors.New("ldap rejected")
+	v := &fakeTTLSVerifier{active: true, err: rejectErr}
+	peer.verifier = v
+
+	success, err := peer.run()
+	assert.False(t, success, "an active LDAP rejection must override a matching local password")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, rejectErr)
+	assert.Equal(t, 1, v.calls)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.False(t, state.Success)
+}
+
+// TestTTLSHandler_PAPAuth_InactiveVerifierUsesLocal proves an inactive verifier
+// is ignored and the local password path is preserved unchanged.
+func TestTTLSHandler_PAPAuth_InactiveVerifierUsesLocal(t *testing.T) {
+	ca := newHSTestCA(t, "TTLS PAP LDAP Inactive Root CA")
+	cfg := ttlsServerEngineConfig(t, ca)
+	h := NewTTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "ttlsuser", "secret")
+	peer := newTTLSPapPeer(t, h, ca, sm, stateID, "secret", "ttlsuser", "S3cr3t!")
+	peer.pwd = &mockPasswordProvider{password: "S3cr3t!"}
+	v := &fakeTTLSVerifier{active: false, err: errors.New("must not be called")}
+	peer.verifier = v
+
+	success, err := peer.run()
+	require.NoError(t, err)
+	assert.True(t, success, "inactive verifier must fall back to the local password compare")
+	assert.Equal(t, 0, v.calls, "an inactive verifier must never be consulted")
 }

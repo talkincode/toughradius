@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"crypto/subtle"
 	"fmt"
 
@@ -90,17 +91,36 @@ func (h *TTLSHandler) handleInnerStart(ctx *eap.EAPContext, state *eap.EAPState,
 
 // handleInnerPAP validates an inner PAP exchange (RFC 5281 §11.2.5). The
 // User-Password AVP carries the cleartext password (the TLS tunnel, not RADIUS
-// obfuscation, protects it), NUL-padded to a 16-octet multiple; the padding is
-// stripped and the value compared in constant time against the configured
-// password. On a match the MS-MPPE keys are derived and the handler grants in a
-// single round.
+// obfuscation, protects it), NUL-padded to a 16-octet multiple. The padding is
+// stripped and the password verified: against an external directory by binding
+// when an LDAP-style CredentialVerifier is active, otherwise in constant time
+// against the locally configured password. On success the MS-MPPE keys are
+// derived and the handler grants in a single round.
 func (h *TTLSHandler) handleInnerPAP(ctx *eap.EAPContext, engine *tlsengine.Engine, rawPwd []byte) ([]byte, bool, error) {
+	presented := stripTTLSPasswordPadding(rawPwd)
+
+	if ctx.Verifier != nil && ctx.Verifier.Active() {
+		if ctx.User == nil {
+			return nil, false, fmt.Errorf("%w: missing user record for ldap bind", eap.ErrTTLSInnerProtocol)
+		}
+		bindCtx := ctx.Context
+		if bindCtx == nil {
+			bindCtx = context.Background()
+		}
+		if err := ctx.Verifier.VerifyCleartext(bindCtx, ctx.User.Username, string(presented)); err != nil {
+			return nil, false, err
+		}
+		if err := h.deriveMPPEKeys(ctx.Response, engine); err != nil {
+			return nil, false, err
+		}
+		return nil, true, nil
+	}
+
 	password, err := ctx.PwdProvider.GetPassword(ctx.User, ctx.IsMacAuth)
 	if err != nil {
 		return nil, false, err
 	}
 
-	presented := stripTTLSPasswordPadding(rawPwd)
 	if subtle.ConstantTimeCompare(presented, []byte(password)) != 1 {
 		return nil, false, eap.ErrPasswordMismatch
 	}
