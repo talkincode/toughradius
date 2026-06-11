@@ -16,6 +16,7 @@
 | [场景实战手册](./cookbook.md) | 端到端运维场景（五段式）：MikroTik PPPoE / Hotspot / CoA；华为 BRAS 分级套餐 / 线路绑定 / CoA；H3C / 中兴 / 爱快 / Cisco 差异速查 |
 | [管理系统用户手册](./admin-manual.md) | 管理控制台逐页说明 |
 | [运维指南](./ops-guide.md) | 配置参考、证书、监控、备份与命令行工具 |
+| [LDAP / AD 认证后端](./auth-ldap.md) | 针对 LDAP/AD 目录校验口令（仅 PAP 族）：bind 模式、TLS、安全、指标 |
 | [常见问题解答](./faq.md) | 按主题分组的常见问题 |
 | [协议与 RFC 索引](./rfc-index.md) | 协议标准与代码的对应关系 |
 | [安全策略](./security-policy.md) | 安全公告与升级指引 |
