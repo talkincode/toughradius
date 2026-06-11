@@ -14,6 +14,10 @@ device side.
 > `Standard`, it will authenticate fine but receive **no** `Mikrotik-Rate-Limit`
 > (no bandwidth enforcement). Pick the right vendor first.
 
+> 📖 Want end-to-end operational examples (PPPoE speed tiers, Hotspot + MAC auth,
+> CoA / forced disconnect)? See the [Scenario Cookbook](./cookbook.md). This
+> chapter is the attribute reference card; the cookbook is the playbook.
+
 ## Integration steps for any device
 
 1. **Register the NAS** under **NAS Devices → Create**: source IP address (or
