@@ -79,8 +79,9 @@ user (emits `Framed-IP-Address`, overriding the pool). See the end-to-end
 Yes. **Every NAS must be registered individually under NAS Devices**, each with
 its own source IP (or identifier) and **its own shared secret**. ToughRADIUS
 matches the packet's source address (or NAS identifier) to the NAS record and
-its secret; unregistered source addresses are silently dropped. Different NAS
-devices may use different secrets — they need not be uniform.
+its secret; requests from an unregistered source are logged and rejected as an
+unauthorized NAS. Different NAS devices may use different secrets — they need
+not be uniform.
 
 ### Why was a specific user rejected?
 
@@ -162,7 +163,7 @@ retry.
 Online entries are created/refreshed by NAS accounting packets. If the NAS
 stops sending (reboot, link loss) the row can linger. Ensure accounting and
 interim updates are enabled on the device (`Acct-Interim-Interval` is sent in
-every Access-Accept, default 120 s). Stale entries can also be cleared manually
+every Access-Accept, default 300 s). Stale entries can also be cleared manually
 from the UI with Disconnect/delete.
 
 ### Accounting table grows forever — what is cleaned automatically?
