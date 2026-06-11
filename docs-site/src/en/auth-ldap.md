@@ -155,7 +155,12 @@ the metrics endpoint):
 Keeping these separate means a directory outage shows up as
 `radus_reject_ldap_error`, not as a spike of "wrong password" — so an alert on
 `radus_reject_ldap_error` cleanly signals a directory problem rather than user
-error. Successful authentications increment `radus_accept`.
+error.
+
+> **Note.** A `radus_accept` success counter is defined but is **not yet
+> incremented** in the current release (its wiring is tracked as a follow-up).
+> Until then, base alerting on the two reject counters above rather than on a
+> computed success rate.
 
 ## Troubleshooting
 
