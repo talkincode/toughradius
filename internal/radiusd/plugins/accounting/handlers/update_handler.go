@@ -14,6 +14,9 @@ import (
 
 // UpdateHandler handles Accounting-Interim-Update packets and refreshes
 // counters on the active online-session row.
+//
+// Interim updates mutate only live-session state; they do not append historical
+// accounting rows.
 type UpdateHandler struct {
 	sessionRepo repository.SessionRepository
 }
@@ -37,6 +40,9 @@ func (h *UpdateHandler) CanHandle(ctx *accounting.AccountingContext) bool {
 
 // Handle updates the online-session row with the latest traffic and session
 // counters carried in the interim packet.
+//
+// Handle returns repository errors unchanged so callers can apply the standard
+// accounting pipeline retry and logging policy.
 func (h *UpdateHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	vendorReq := acctCtx.VendorReq
 	if vendorReq == nil {
@@ -60,7 +66,11 @@ func (h *UpdateHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	return nil
 }
 
-// buildOnlineFromRequest Build online session data from request（used for Update）
+// buildOnlineFromRequest maps the interim packet payload to the subset of
+// RadiusOnline fields that are refreshed during update handling.
+//
+// The function intentionally omits immutable identity fields because the update
+// repository path keys by Acct-Session-Id and only patches counters/timestamps.
 func buildOnlineFromRequest(acctCtx *accounting.AccountingContext, vr *vendorparserspkg.VendorRequest) domain.RadiusOnline {
 	r := acctCtx.Request
 	acctInputOctets := int(rfc2866.AcctInputOctets_Get(r.Packet))
