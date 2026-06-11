@@ -45,11 +45,13 @@ structure:
 - [Huawei BRAS / NetEngine](./cookbook-huawei.md) — broadband speed tiers with
   peak rate and AAA domain, line anti-fraud (MAC + VLAN binding) with dual-stack
   IPv6, CoA / forced disconnect and FUP.
+- [H3C, ZTE, iKuai & Cisco](./cookbook-vendors.md) — the per-vendor diff (emitted
+  rate attributes, unit multipliers, MAC / VLAN parsing) for the remaining
+  mainstream vendors; the scenario mechanics follow the two flagship cookbooks.
 
-> **Planned (roadmap M13.8 later batches)**: H3C, ZTE, iKuai (each has a
-> dedicated vendor enhancer) and Cisco / standard-attribute scenarios. Until
-> those chapters land, use the attribute reference in the
-> [Vendor Integration Guide](./vendor-guide.md).
+> **Planned (roadmap M13.8 later batches)**: additional standard-attribute /
+> Wi-Fi-controller scenarios as needed. For attribute-level details of any
+> vendor, see the [Vendor Integration Guide](./vendor-guide.md).
 
 ## Related chapters
 
