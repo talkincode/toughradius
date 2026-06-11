@@ -463,3 +463,93 @@ func TestSessionActionsRequireAdmin(t *testing.T) {
 		})
 	}
 }
+
+// TestDeleteOnlineSessionRequireAdmin verifies that DELETE /sessions/:id
+// (force-offline) is gated by requireAdmin, matching the disconnect/coa actions:
+// operator-level (and unknown) accounts are rejected with 403 before the handler
+// runs, while admin/super accounts are allowed through.
+func TestDeleteOnlineSessionRequireAdmin(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	guard := requireAdmin()
+
+	cases := []struct {
+		name    string
+		level   string
+		allowed bool
+		status  int
+	}{
+		{"operator denied", LevelOperator, false, http.StatusForbidden},
+		{"unknown level denied", "guest", false, http.StatusForbidden},
+		{"admin allowed", LevelAdmin, true, http.StatusOK},
+		{"super allowed", LevelSuper, true, http.StatusOK},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			// A fresh session per case: the handler deletes it on success.
+			id := seedCoASession(t, db, 3799)
+
+			e := setupTestEcho()
+			req := httptest.NewRequest(http.MethodDelete, "/api/v1/sessions/"+strconv.FormatInt(id, 10), nil)
+			rec := httptest.NewRecorder()
+			c := CreateTestContext(e, db, req, rec, appCtx)
+			c.SetParamNames("id")
+			c.SetParamValues(strconv.FormatInt(id, 10))
+			c.Set("current_operator", &domain.SysOpr{ID: 1, Level: tt.level, Status: "enabled"})
+
+			ran := false
+			wrapped := guard(func(c echo.Context) error {
+				ran = true
+				return DeleteOnlineSession(c)
+			})
+			require.NoError(t, wrapped(c))
+
+			assert.Equal(t, tt.allowed, ran)
+			assert.Equal(t, tt.status, rec.Code)
+		})
+	}
+}
+
+// TestDeleteOnlineSessionAudited verifies that the force-offline DELETE route
+// drives the RFC 5176 Disconnect through the shared CoAService (sending the full
+// identity triplet to the NAS) and writes a durable M2.3 audit record, in
+// addition to removing the local online session row.
+func TestDeleteOnlineSessionAudited(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	nas := newFakeCoANAS(t, coaTestSecret, radius.CodeDisconnectACK, 0)
+	id := seedCoASession(t, db, nas.port(t))
+
+	e := setupTestEcho()
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/sessions/"+strconv.FormatInt(id, 10), nil)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+	c.SetParamNames("id")
+	c.SetParamValues(strconv.FormatInt(id, 10))
+
+	require.NoError(t, DeleteOnlineSession(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	// The local online record is removed.
+	var count int64
+	db.Model(&domain.RadiusOnline{}).Where("id = ?", id).Count(&count)
+	assert.Equal(t, int64(0), count, "online session should be deleted")
+
+	// The NAS received a Disconnect-Request carrying the full identity triplet.
+	got := nas.snapshot()
+	require.Len(t, got, 1)
+	assert.Equal(t, radius.CodeDisconnectRequest, got[0].code)
+	assert.Equal(t, "alice", got[0].username)
+	assert.NotEmpty(t, got[0].acctSessionID)
+
+	// A durable audit record is persisted for the force-offline action.
+	audits := listSessionActionAudits(t, db)
+	require.Len(t, audits, 1)
+	assert.Equal(t, id, audits[0].SessionID)
+	assert.Equal(t, "disconnect", audits[0].Action)
+	assert.Equal(t, "alice", audits[0].Username)
+	assert.Equal(t, "superadmin", audits[0].OperatorName)
+	assert.True(t, audits[0].Success)
+	assert.Equal(t, "Disconnect-ACK", audits[0].ResponseCode)
+}
