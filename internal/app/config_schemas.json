@@ -57,6 +57,16 @@
       "description_i18n": "config.radius.eap_tls_min_version.description"
     },
     {
+      "key": "radius.RequireMessageAuthenticator",
+      "type": "string",
+      "default": "warn",
+      "enum": ["disabled", "warn", "enforce"],
+      "title": "Require Message-Authenticator",
+      "title_i18n": "config.radius.require_message_authenticator.title",
+      "description": "RFC 3579 Message-Authenticator handling for non-EAP RADIUS/UDP, the configuration class affected by CVE-2024-3596 (BlastRADIUS). disabled: legacy behavior, no validation and responses are left unsigned. warn (default): always add Message-Authenticator to Access-Accept/Access-Reject responses, validate the attribute when a NAS includes it (a mismatch is silently discarded per RFC 3579 §3.2), and log a warning when it is missing without dropping the request. enforce: same signing and mismatch handling as warn, but Access-Request packets that omit Message-Authenticator are silently discarded (requires every NAS to send it). Full protection requires RadSec or IPsec for the RADIUS/UDP path; this setting hardens deployments that cannot use them.",
+      "description_i18n": "config.radius.require_message_authenticator.description"
+    },
+    {
       "key": "radius.IgnorePassword",
       "type": "bool",
       "default": "false",
