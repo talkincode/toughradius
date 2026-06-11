@@ -17,6 +17,7 @@ elsewhere in the repository, so everything is reachable from a single place.
 | [Scenario Cookbook](./cookbook.md) | End-to-end ops scenarios (five-part): MikroTik PPPoE / Hotspot / CoA; Huawei BRAS speed tiers / line binding / CoA; H3C / ZTE / iKuai / Cisco per-vendor diffs |
 | [Admin UI Manual](./admin-manual.md) | The management console, page by page |
 | [Operations Guide](./ops-guide.md) | Configuration reference, certificates, monitoring, backup, CLI tools |
+| [LDAP / AD Authentication](./auth-ldap.md) | Verify passwords against an LDAP/AD directory (PAP-family only): bind modes, TLS, security, metrics |
 | [FAQ](./faq.md) | Frequently asked questions by theme |
 | [Protocol & RFC Reference](./rfc-index.md) | Protocol standards mapped to the code |
 | [Security Policy](./security-policy.md) | Security advisories and update guidance |
