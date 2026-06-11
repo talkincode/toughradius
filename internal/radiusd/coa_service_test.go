@@ -2,6 +2,8 @@ package radiusd
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/md5"
 	"errors"
 	"net"
 	"strconv"
@@ -13,6 +15,7 @@ import (
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
+	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3576"
 )
 
@@ -29,6 +32,8 @@ type capturedReq struct {
 	filterID       string
 	sessionTimeout uint32
 	hasTimeout     bool
+	hasMessageAuth bool // request carried a Message-Authenticator attribute
+	messageAuthOK  bool // the carried Message-Authenticator verified against the secret
 }
 
 // fakeNAS is an in-process UDP RADIUS responder that emulates a NAS receiving
@@ -36,6 +41,7 @@ type capturedReq struct {
 type fakeNAS struct {
 	addr   string
 	server *radius.PacketServer
+	secret string
 
 	mu        sync.Mutex
 	replyCode radius.Code        // 0 => drop the request (no reply)
@@ -52,12 +58,12 @@ func newFakeNAS(t *testing.T, secret string, replyCode radius.Code) *fakeNAS {
 	}
 	fn := &fakeNAS{
 		addr:      pc.LocalAddr().String(),
+		secret:    secret,
 		replyCode: replyCode,
 	}
 	fn.server = &radius.PacketServer{
-		Handler:            radius.HandlerFunc(fn.handle),
-		SecretSource:       radius.StaticSecretSource([]byte(secret)),
-		InsecureSkipVerify: true,
+		Handler:      radius.HandlerFunc(fn.handle),
+		SecretSource: radius.StaticSecretSource([]byte(secret)),
 	}
 	go func() { _ = fn.server.Serve(pc) }()
 	t.Cleanup(func() {
@@ -86,6 +92,8 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 		cap.hasTimeout = true
 		cap.sessionTimeout = uint32(st)
 	}
+	// Act as a strict NAS (RFC 5176 §3.4): verify the request Message-Authenticator.
+	cap.hasMessageAuth, cap.messageAuthOK = verifyRequestMessageAuth(r.Packet, fn.secret)
 
 	fn.mu.Lock()
 	fn.received = append(fn.received, cap)
@@ -105,6 +113,30 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 		_ = rfc3576.ErrorCause_Add(resp, cause)
 	}
 	_ = w.Write(resp)
+}
+
+// verifyRequestMessageAuth reports whether an inbound CoA/Disconnect request
+// carries a Message-Authenticator and, if so, whether it verifies per RFC 5176
+// §3.4: HMAC-MD5 over the packet with the Request Authenticator field and the
+// Message-Authenticator value treated as sixteen zero octets.
+func verifyRequestMessageAuth(p *radius.Packet, secret string) (present, valid bool) {
+	got, err := rfc2869.MessageAuthenticator_Lookup(p)
+	if err != nil {
+		return false, false
+	}
+	saved := append([]byte(nil), got...)
+	_ = rfc2869.MessageAuthenticator_Set(p, make([]byte, 16))
+	b, mErr := p.MarshalBinary()
+	_ = rfc2869.MessageAuthenticator_Set(p, saved)
+	if mErr != nil {
+		return true, false
+	}
+	for i := 4; i < 20; i++ {
+		b[i] = 0 // zero the Request Authenticator field
+	}
+	mac := hmac.New(md5.New, []byte(secret))
+	mac.Write(b)
+	return true, hmac.Equal(mac.Sum(nil), saved)
 }
 
 func (fn *fakeNAS) port(t *testing.T) int {
@@ -189,6 +221,9 @@ func TestCoAServiceDisconnectACK(t *testing.T) {
 	}
 	if first.nasIP != "10.0.0.1" || first.framedIP != "100.64.0.9" {
 		t.Errorf("address attrs mismatch: nasIP=%q framedIP=%q", first.nasIP, first.framedIP)
+	}
+	if !first.hasMessageAuth || !first.messageAuthOK {
+		t.Errorf("request Message-Authenticator: present=%v valid=%v, want both true", first.hasMessageAuth, first.messageAuthOK)
 	}
 }
 
@@ -416,4 +451,56 @@ func TestCoAServiceSessionHelpersRequireRadiusService(t *testing.T) {
 	if _, err := svc.CoASession(context.Background(), "sess"); err == nil {
 		t.Error("CoASession with nil RadiusService: expected error, got nil")
 	}
+}
+
+// TestCoAServiceRequestMessageAuthenticator asserts that every outbound
+// CoA/Disconnect request carries a correctly computed Message-Authenticator
+// (RFC 5176 §3.4). The fake NAS verifies the attribute and records the result.
+func TestCoAServiceRequestMessageAuthenticator(t *testing.T) {
+	const secret = "testing123"
+
+	t.Run("disconnect", func(t *testing.T) {
+		nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
+		svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(1))
+		target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+		result, err := svc.Disconnect(context.Background(), target, SessionIdentity{Username: "alice", AcctSessionID: "s1"})
+		if err != nil {
+			t.Fatalf("Disconnect returned error: %v", err)
+		}
+		if !result.Success {
+			t.Fatalf("expected success, got %+v", result)
+		}
+		got := nas.snapshot()
+		if len(got) != 1 {
+			t.Fatalf("received %d packets, want 1", len(got))
+		}
+		if !got[0].hasMessageAuth {
+			t.Fatal("Disconnect-Request did not carry a Message-Authenticator")
+		}
+		if !got[0].messageAuthOK {
+			t.Error("Disconnect-Request Message-Authenticator did not verify")
+		}
+	})
+
+	t.Run("coa", func(t *testing.T) {
+		nas := newFakeNAS(t, secret, radius.CodeCoAACK)
+		svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(1))
+		target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+		result, err := svc.CoA(context.Background(), target, SessionIdentity{Username: "carol", AcctSessionID: "s2"}, WithSessionTimeout(60))
+		if err != nil {
+			t.Fatalf("CoA returned error: %v", err)
+		}
+		if !result.Success {
+			t.Fatalf("expected success, got %+v", result)
+		}
+		got := nas.snapshot()
+		if len(got) != 1 {
+			t.Fatalf("received %d packets, want 1", len(got))
+		}
+		if !got[0].hasMessageAuth || !got[0].messageAuthOK {
+			t.Errorf("CoA-Request Message-Authenticator: present=%v valid=%v, want both true", got[0].hasMessageAuth, got[0].messageAuthOK)
+		}
+	})
 }

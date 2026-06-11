@@ -4,6 +4,8 @@ package integration
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/md5"
 	"encoding/json"
 	"net"
 	"strconv"
@@ -14,6 +16,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"layeh.com/radius"
+	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3576"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -44,22 +47,23 @@ type coaActionBody struct {
 type itFakeNAS struct {
 	addr   string
 	server *radius.PacketServer
+	secret string
 
 	mu        sync.Mutex
 	replyCode radius.Code // 0 => drop the request (force a client timeout)
 	errCause  rfc3576.ErrorCause
 	received  []radius.Code
+	badAuth   int // count of requests missing/failing Message-Authenticator
 }
 
 func newITFakeNAS(t *testing.T, secret string, replyCode radius.Code, cause rfc3576.ErrorCause) *itFakeNAS {
 	t.Helper()
 	pc, err := net.ListenPacket("udp", "127.0.0.1:0")
 	require.NoError(t, err)
-	fn := &itFakeNAS{addr: pc.LocalAddr().String(), replyCode: replyCode, errCause: cause}
+	fn := &itFakeNAS{addr: pc.LocalAddr().String(), secret: secret, replyCode: replyCode, errCause: cause}
 	fn.server = &radius.PacketServer{
-		Handler:            radius.HandlerFunc(fn.handle),
-		SecretSource:       radius.StaticSecretSource([]byte(secret)),
-		InsecureSkipVerify: true,
+		Handler:      radius.HandlerFunc(fn.handle),
+		SecretSource: radius.StaticSecretSource([]byte(secret)),
 	}
 	go func() { _ = fn.server.Serve(pc) }()
 	t.Cleanup(func() {
@@ -71,12 +75,24 @@ func newITFakeNAS(t *testing.T, secret string, replyCode radius.Code, cause rfc3
 }
 
 func (fn *itFakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
+	// Strict NAS (RFC 5176 §3.4): require a valid Message-Authenticator on every
+	// CoA/Disconnect request. A request that lacks or fails it is silently
+	// dropped, which surfaces as a client timeout — exactly how a real
+	// FreeRADIUS-style NAS behaves and what makes the omission observable.
+	present, valid := itVerifyRequestMessageAuth(r.Packet, fn.secret)
+
 	fn.mu.Lock()
 	fn.received = append(fn.received, r.Code)
+	if !present || !valid {
+		fn.badAuth++
+	}
 	code := fn.replyCode
 	cause := fn.errCause
 	fn.mu.Unlock()
 
+	if !present || !valid {
+		return
+	}
 	if code == 0 {
 		return // no response => the client times out
 	}
@@ -84,7 +100,39 @@ func (fn *itFakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 	if cause != 0 && (code == radius.CodeDisconnectNAK || code == radius.CodeCoANAK) {
 		_ = rfc3576.ErrorCause_Add(resp, cause)
 	}
+	// Sign the reply (RFC 5176 §3.4) so the Dynamic Authorization Client can
+	// authenticate it. resp.Authenticator is the request authenticator, which is
+	// the value the client recomputes the reply digest with.
+	_ = rfc2869.MessageAuthenticator_Set(resp, make([]byte, 16))
+	if b, err := resp.MarshalBinary(); err == nil {
+		mac := hmac.New(md5.New, resp.Secret)
+		mac.Write(b)
+		_ = rfc2869.MessageAuthenticator_Set(resp, mac.Sum(nil))
+	}
 	_ = w.Write(resp)
+}
+
+// itVerifyRequestMessageAuth verifies the Message-Authenticator on an inbound
+// CoA/Disconnect request per RFC 5176 §3.4 (Request Authenticator field and the
+// attribute value treated as sixteen zero octets during the HMAC-MD5).
+func itVerifyRequestMessageAuth(p *radius.Packet, secret string) (present, valid bool) {
+	got, err := rfc2869.MessageAuthenticator_Lookup(p)
+	if err != nil {
+		return false, false
+	}
+	saved := append([]byte(nil), got...)
+	_ = rfc2869.MessageAuthenticator_Set(p, make([]byte, 16))
+	b, mErr := p.MarshalBinary()
+	_ = rfc2869.MessageAuthenticator_Set(p, saved)
+	if mErr != nil {
+		return true, false
+	}
+	for i := 4; i < 20; i++ {
+		b[i] = 0
+	}
+	mac := hmac.New(md5.New, []byte(secret))
+	mac.Write(b)
+	return true, hmac.Equal(mac.Sum(nil), saved)
 }
 
 func (fn *itFakeNAS) port(t *testing.T) int {
@@ -100,6 +148,14 @@ func (fn *itFakeNAS) requestCount() int {
 	fn.mu.Lock()
 	defer fn.mu.Unlock()
 	return len(fn.received)
+}
+
+// badAuthCount reports how many received requests lacked a valid
+// Message-Authenticator (RFC 5176 §3.4).
+func (fn *itFakeNAS) badAuthCount() int {
+	fn.mu.Lock()
+	defer fn.mu.Unlock()
+	return fn.badAuth
 }
 
 // seedCoAOnlineSession inserts a NAS (reachable at 127.0.0.1:coaPort) and an
@@ -186,6 +242,7 @@ func TestSessionDisconnectEndToEnd_ACK(t *testing.T) {
 	assert.False(t, action.TimedOut)
 	assert.GreaterOrEqual(t, action.Attempts, 1)
 	assert.Equal(t, 1, nas.requestCount(), "NAS should have received exactly one request")
+	assert.Equal(t, 0, nas.badAuthCount(), "Disconnect-Request must carry a valid Message-Authenticator (RFC 5176 §3.4)")
 
 	audit := latestAuditForSession(t, id)
 	assert.Equal(t, "disconnect", audit.Action)

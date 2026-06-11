@@ -237,6 +237,9 @@ func (s *CoAService) Disconnect(ctx context.Context, target CoATarget, id Sessio
 	if err := applyIdentity(packet, id); err != nil {
 		return nil, fmt.Errorf("coa: build disconnect request: %w", err)
 	}
+	if err := setMessageAuthenticator(packet, target.Secret); err != nil {
+		return nil, fmt.Errorf("coa: sign disconnect request: %w", err)
+	}
 	return s.send(ctx, CoAActionDisconnect, target, id, packet), nil
 }
 
@@ -259,6 +262,9 @@ func (s *CoAService) CoA(ctx context.Context, target CoATarget, id SessionIdenti
 		if err := change(packet); err != nil {
 			return nil, fmt.Errorf("coa: apply authorization change: %w", err)
 		}
+	}
+	if err := setMessageAuthenticator(packet, target.Secret); err != nil {
+		return nil, fmt.Errorf("coa: sign coa request: %w", err)
 	}
 	return s.send(ctx, CoAActionCoA, target, id, packet), nil
 }
@@ -429,7 +435,37 @@ func applyIdentity(packet *radius.Packet, id SessionIdentity) error {
 	return nil
 }
 
-// isTimeoutErr reports whether err represents a request timeout (a context
+// setMessageAuthenticator computes and inserts the Message-Authenticator
+// attribute (#80) on an outbound CoA-Request or Disconnect-Request, as mandated
+// by RFC 5176 §3.4 (keyed HMAC-MD5 construction per RFC 3579 §3.2). Strict NAS
+// implementations silently drop a CoA/Disconnect request that lacks a valid
+// Message-Authenticator, so signing every request is required for interoperability.
+//
+// Per RFC 5176 §3.4 the HMAC-MD5 is computed with both the Request Authenticator
+// field and the Message-Authenticator attribute value treated as sixteen octets
+// of zero, and the attribute is inserted before the Request Authenticator is
+// calculated by the transport. The packet's Authenticator field is therefore
+// zeroed here: for these request types the transport recomputes the Request
+// Authenticator over a zeroed field (RFC 5176 §2.3), so zeroing it keeps the
+// signed bytes identical to what is put on the wire. A sixteen-octet placeholder
+// is inserted first so the marshaled length already accounts for the attribute;
+// the shared computeMessageAuthenticator helper (message_authenticator.go) then
+// re-zeroes that value while hashing.
+func setMessageAuthenticator(packet *radius.Packet, secret string) error {
+	packet.Authenticator = [16]byte{}
+	if err := rfc2869.MessageAuthenticator_Set(packet, make([]byte, 16)); err != nil {
+		return fmt.Errorf("set Message-Authenticator placeholder: %w", err)
+	}
+	wire, err := packet.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("marshal request for Message-Authenticator: %w", err)
+	}
+	if err := rfc2869.MessageAuthenticator_Set(packet, computeMessageAuthenticator(wire, []byte(secret))); err != nil {
+		return fmt.Errorf("set Message-Authenticator: %w", err)
+	}
+	return nil
+}
+
 // deadline or a net.Error timeout), which is the condition that warrants a
 // retransmission.
 func isTimeoutErr(err error) bool {
