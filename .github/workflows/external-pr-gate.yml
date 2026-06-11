@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Require maintainer approval for fork PRs
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             // The merge queue re-validates a queued PR on a temporary branch via
@@ -59,20 +59,30 @@ jobs:
               return;
             }
 
-            // Fork PR: require an APPROVED review from a maintainer (write/admin).
+            // Fork PR: require an APPROVED review, from a maintainer (write/admin),
+            // that covers the CURRENT head commit. Binding the approval to
+            // pr.head.sha is essential: `synchronize` re-runs this gate whenever
+            // the fork pushes, so a stale approval of an earlier commit must not
+            // green-light unreviewed code pushed after the maintainer approved.
+            const headSha = pr.head.sha;
             const reviews = await github.paginate(github.rest.pulls.listReviews, {
               owner: context.repo.owner,
               repo: context.repo.repo,
               pull_number: pr.number,
             });
-            const latestState = new Map();
+            // listReviews returns reviews in chronological order, so the last
+            // entry per user is that reviewer's current state.
+            const latest = new Map();
             for (const r of reviews) {
-              if (r.user && r.user.login) latestState.set(r.user.login, r.state);
+              if (r.user && r.user.login) latest.set(r.user.login, r);
             }
 
             let approver = null;
-            for (const [login, state] of latestState) {
-              if (state !== 'APPROVED') continue;
+            for (const [login, r] of latest) {
+              if (r.state !== 'APPROVED') continue;
+              // Reject approvals that do not cover the current head commit
+              // (null commit_id is treated as non-covering — fail-safe).
+              if (!r.commit_id || r.commit_id !== headSha) continue;
               const { data: perm } =
                 await github.rest.repos.getCollaboratorPermissionLevel({
                   owner: context.repo.owner,
@@ -86,11 +96,12 @@ jobs:
             }
 
             if (approver) {
-              core.info(`External (fork) PR approved by maintainer @${approver} — gate passes.`);
+              core.info(`External (fork) PR head ${headSha.slice(0, 7)} approved by maintainer @${approver} — gate passes.`);
             } else {
               core.setFailed(
                 'External (fork) PR is blocked until a maintainer (write/admin) ' +
-                'submits an approving review. This is required for every pull ' +
-                'request opened from a fork.'
+                'submits an approving review of the current head commit. Any new ' +
+                'commit pushed to the fork dismisses a prior approval, so the ' +
+                'maintainer must (re-)approve after the latest push.'
               );
             }
