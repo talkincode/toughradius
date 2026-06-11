@@ -35,7 +35,7 @@ structure:
 - **CoA / Disconnect port is 3799** (RFC 5176). The `1700` you often see online
   is a client-side local port, not the destination port this system uses.
 - Rates are stored in **Kbps** in the rate profile (the UI labels the unit).
-  See [Vendor Integration Guide · Rate units](./vendor-guide.md#rate-units) for
+  See [Vendor Integration Guide · Rate units](./vendor-guide.md#rate-limit-units) for
   the per-vendor conversion.
 
 ## Available cookbooks
