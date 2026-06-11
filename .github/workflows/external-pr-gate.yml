@@ -1,0 +1,96 @@
+name: External PR Gate
+
+# Hard-gates pull requests opened from forks (external contributors): such a PR
+# cannot merge until a maintainer (write/admin) submits an approving review.
+#
+# Pull requests from branches inside this repository (for example the
+# auto-delegation agent's copilot/* branches) are NOT affected — the gate passes
+# automatically for them, so internal roadmap automation keeps merging without
+# manual approval. The gate is therefore fork-scoped: it adds the human approval
+# requirement only where untrusted code enters, and leaves the lazy internal
+# path untouched.
+#
+# Security: this workflow runs in the trusted base-repository context
+# (pull_request_target / pull_request_review). It NEVER checks out or executes
+# pull-request code and requests only read scopes, so an untrusted fork PR
+# cannot exfiltrate secrets or gain write access through it. Do not add
+# actions/checkout of the PR head or any step that runs PR-controlled code here.
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize, labeled, unlabeled]
+  pull_request_review:
+    types: [submitted, dismissed, edited]
+  merge_group:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  external-pr-gate:
+    name: external-pr-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require maintainer approval for fork PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // The merge queue re-validates a queued PR on a temporary branch via
+            // the merge_group event. A PR only reaches the queue after the entry
+            // gate below has already passed, so nothing more to check here.
+            if (context.eventName === 'merge_group') {
+              core.info('merge_group event: entry gate already enforced — pass.');
+              return;
+            }
+
+            const pr = context.payload.pull_request;
+            if (!pr) {
+              core.info('No pull_request in payload — nothing to gate.');
+              return;
+            }
+
+            // A null head repo means the source fork was deleted; treat as fork.
+            const headRepo = pr.head.repo && pr.head.repo.full_name;
+            const baseRepo = pr.base.repo.full_name;
+            const isFork = !headRepo || headRepo !== baseRepo;
+            if (!isFork) {
+              core.info(`Internal branch PR (${headRepo}) — gate passes.`);
+              return;
+            }
+
+            // Fork PR: require an APPROVED review from a maintainer (write/admin).
+            const reviews = await github.paginate(github.rest.pulls.listReviews, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+            });
+            const latestState = new Map();
+            for (const r of reviews) {
+              if (r.user && r.user.login) latestState.set(r.user.login, r.state);
+            }
+
+            let approver = null;
+            for (const [login, state] of latestState) {
+              if (state !== 'APPROVED') continue;
+              const { data: perm } =
+                await github.rest.repos.getCollaboratorPermissionLevel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  username: login,
+                });
+              if (perm.permission === 'admin' || perm.permission === 'write') {
+                approver = login;
+                break;
+              }
+            }
+
+            if (approver) {
+              core.info(`External (fork) PR approved by maintainer @${approver} — gate passes.`);
+            } else {
+              core.setFailed(
+                'External (fork) PR is blocked until a maintainer (write/admin) ' +
+                'submits an approving review. This is required for every pull ' +
+                'request opened from a fork.'
+              );
+            }

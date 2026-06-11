@@ -26,6 +26,18 @@ Therefore this skill encodes its verdict with **labels + a COMMENT review**, not
 
 The gate has teeth only because it is **anchored to mechanical signals (CI) and run as an independent pass**, not because of the label name. Never approve on "looks fine" alone.
 
+## External / fork PRs are out of scope (different trust domain)
+This skill auto-merges only **internal** roadmap PRs - those whose head branch lives in this repository (the agent's `copilot/*` branches). A pull request opened from a **fork** (an external contributor) is untrusted code and is **never** auto-approved or auto-merged here, regardless of how the diff reads.
+
+Before reviewing, classify the PR:
+```
+gh pr view <n> --json isCrossRepository,headRepositoryOwner,headRefName
+```
+- `isCrossRepository == true` (head is a fork) -> **stop**: do not run the adversarial-merge flow, do not add `agent-approved`, do not merge. Add `needs-human`, post a COMMENT noting it is an external/fork PR requiring a maintainer's personal review, and leave it for a human. The repo's `external-pr-gate` check (`.github/workflows/external-pr-gate.yml`) also blocks the merge mechanically until a maintainer (write/admin) submits an approving review - that human approval, not this skill, is the gate for fork PRs.
+- `isCrossRepository == false` (internal branch) -> proceed with the normal flow below.
+
+Rationale: the auto-delegation loop trusts its own `copilot/*` output and gates it on CI; an external fork PR can carry hostile code or CI changes, so it must pass a human's eyes (and the fork gate) and is outside this skill's autonomous mandate.
+
 ## Reviewing one PR
 1. **CI gate - evaluate the checks.** `gh pr checks <n>` (approval later requires this to be fully green):
    - Any job failing for a **real** reason (compile/test/lint/integration) -> this is a blocking issue; go to step 3 (rework) and cite the failing job.
@@ -60,6 +72,7 @@ gh pr list --state open --label agent-roadmap --json number,labels,headRefName
 - `needs-rework` -> read the review thread, **address every blocking comment** by re-running the original execution SOP on that branch, push, then re-run "Reviewing one PR" from step 1. This is mandatory work, not optional.
 - `agent-approved` + green -> merge **via the step-5 gate** (re-verify head SHA == approved SHA first; if it moved, the approval is stale -> re-review).
 - `needs-human` -> skip; leave it for a human.
+- **head is a fork** (`isCrossRepository == true`) -> skip auto-handling entirely; ensure it is labeled `needs-human` and leave it for a maintainer (see "External / fork PRs are out of scope"). Never `agent-approved`/merge a fork PR.
 - pending CI / no verdict yet -> run "Reviewing one PR".
 
 Only when no `agent-roadmap` PR is left in `needs-rework`/unreviewed state may the round proceed to pick a new roadmap subtask. This back-pressure is intentional: a stuck PR pauses new work instead of spawning duplicates.
@@ -78,6 +91,7 @@ gh label create agent-roadmap  -c 1D76DB -d "PR produced by an auto-delegation r
 
 ## Boundaries
 - Auto-merge **only** through this gate: never merge a PR that lacks `agent-approved` or whose CI is not green.
+- Auto-merge **only internal** PRs (head branch in this repo). Fork / cross-repository PRs are never auto-approved or auto-merged - they require a maintainer's personal review and are gated by `external-pr-gate`.
 - The reviewer reads and judges; when it requests rework, the **execution SOP** does the fixing - this skill does not silently rewrite the feature to make its own review pass.
 - Never relax the guardrails to approve: TR-N non-goals, PR-only, quality gates, and RFC citations remain hard requirements.
 - Do not approve your own reasoning blindly - if CI is red or the diff touches a non-goal, the verdict is `needs-rework`/`needs-human`, regardless of how the code reads.
@@ -85,6 +99,7 @@ gh label create agent-roadmap  -c 1D76DB -d "PR produced by an auto-delegation r
 ## Acceptance
 - [ ] Every reviewed PR has a recorded COMMENT review and exactly one state label (`agent-approved` / `needs-rework` / `needs-human`)
 - [ ] No PR is merged unless `agent-approved` **and** `gh pr checks` is fully green
+- [ ] Fork / cross-repository PRs are never auto-approved or auto-merged; they are labeled `needs-human` for a maintainer
 - [ ] Each new round drains in-flight `agent-roadmap` PRs (rework addressed, approved-and-green merged) before selecting a new task
 - [ ] Review rounds are bounded; a PR exceeding the cap is handed to a human via `needs-human`
 - [ ] No `TR-N` was approved; protocol changes carry an RFC citation and an acceptance test
