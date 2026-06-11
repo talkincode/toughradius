@@ -11,10 +11,11 @@ import (
 	"gorm.io/gorm"
 )
 
-// TestSchedClearExpireData verifies the daily cleanup removes only the stale
-// rows: radius_online sessions whose LastUpdate is older than 300 seconds, and
-// radius_accounting rows whose AcctStopTime predates the configured retention
-// window; fresh/recent rows must survive.
+// TestSchedClearExpireData verifies the daily cleanup removes only genuinely
+// stale rows: radius_online sessions that have missed several interim updates,
+// and terminated radius_accounting rows whose AcctStopTime predates the
+// retention window. Live sessions (recent online rows) and active accounting
+// rows (zero AcctStopTime) must always survive.
 func TestSchedClearExpireData(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
@@ -22,20 +23,29 @@ func TestSchedClearExpireData(t *testing.T) {
 
 	now := time.Now()
 
-	// radius_online: one stale (>300s), one fresh (<300s).
+	// radius_online with the default 300s interim -> 900s stale window:
+	//   dangling (20m, missed several interims) is deleted; live sessions kept.
 	require.NoError(t, db.Create(&domain.RadiusOnline{
-		Username: "stale", AcctSessionId: "sess-stale", LastUpdate: now.Add(-600 * time.Second),
+		Username: "dangling", AcctSessionId: "sess-dangling", LastUpdate: now.Add(-20 * time.Minute),
 	}).Error)
 	require.NoError(t, db.Create(&domain.RadiusOnline{
-		Username: "fresh", AcctSessionId: "sess-fresh", LastUpdate: now.Add(-60 * time.Second),
+		Username: "live-recent", AcctSessionId: "sess-recent", LastUpdate: now.Add(-60 * time.Second),
+	}).Error)
+	require.NoError(t, db.Create(&domain.RadiusOnline{
+		Username: "live-quiet", AcctSessionId: "sess-quiet", LastUpdate: now.Add(-10 * time.Minute),
 	}).Error)
 
-	// radius_accounting with a 30-day retention: one old (40d), one recent (5d).
+	// radius_accounting with a 30-day retention.
 	require.NoError(t, db.Create(&domain.RadiusAccounting{
-		Username: "old", AcctStopTime: now.AddDate(0, 0, -40),
+		Username: "old-stopped", AcctStopTime: now.AddDate(0, 0, -40),
 	}).Error)
 	require.NoError(t, db.Create(&domain.RadiusAccounting{
-		Username: "recent", AcctStopTime: now.AddDate(0, 0, -5),
+		Username: "recent-stopped", AcctStopTime: now.AddDate(0, 0, -5),
+	}).Error)
+	// Active session: row created at Accounting-Start with a zero AcctStopTime;
+	// must NOT be purged or its billing history is lost permanently.
+	require.NoError(t, db.Create(&domain.RadiusAccounting{
+		Username: "active", AcctStartTime: now.AddDate(0, 0, -40),
 	}).Error)
 
 	cm := &ConfigManager{
@@ -46,21 +56,16 @@ func TestSchedClearExpireData(t *testing.T) {
 
 	a.SchedClearExpireData()
 
-	var online []domain.RadiusOnline
-	require.NoError(t, db.Find(&online).Error)
-	require.Len(t, online, 1, "only the fresh online session should remain")
-	require.Equal(t, "fresh", online[0].Username)
-
-	var acct []domain.RadiusAccounting
-	require.NoError(t, db.Find(&acct).Error)
-	require.Len(t, acct, 1, "only the recent accounting record should remain")
-	require.Equal(t, "recent", acct[0].Username)
+	require.ElementsMatch(t, []string{"live-recent", "live-quiet"}, onlineUsernames(t, db),
+		"only dangling online sessions should be removed; live sessions must remain")
+	require.ElementsMatch(t, []string{"recent-stopped", "active"}, accountingUsernames(t, db),
+		"only terminated records past retention should be removed; active session must remain")
 }
 
 // TestSchedClearExpireData_DisabledRetention verifies that AccountingHistoryDays=0
 // disables accounting cleanup (matching the config schema's "0=disabled"), so even
-// very old accounting rows are kept — while the independent radius_online cleanup
-// still removes stale sessions.
+// very old terminated rows and active rows are kept — while the independent
+// radius_online cleanup still removes dangling sessions.
 func TestSchedClearExpireData_DisabledRetention(t *testing.T) {
 	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	require.NoError(t, err)
@@ -70,8 +75,11 @@ func TestSchedClearExpireData_DisabledRetention(t *testing.T) {
 	require.NoError(t, db.Create(&domain.RadiusAccounting{
 		Username: "ancient", AcctStopTime: now.AddDate(0, 0, -1000),
 	}).Error)
+	require.NoError(t, db.Create(&domain.RadiusAccounting{
+		Username: "active", AcctStartTime: now.AddDate(0, 0, -1000),
+	}).Error)
 	require.NoError(t, db.Create(&domain.RadiusOnline{
-		Username: "stale", AcctSessionId: "sess-stale", LastUpdate: now.Add(-600 * time.Second),
+		Username: "dangling", AcctSessionId: "sess-dangling", LastUpdate: now.Add(-20 * time.Minute),
 	}).Error)
 
 	cm := &ConfigManager{
@@ -82,13 +90,34 @@ func TestSchedClearExpireData_DisabledRetention(t *testing.T) {
 
 	a.SchedClearExpireData()
 
-	var acctCount int64
-	require.NoError(t, db.Model(&domain.RadiusAccounting{}).Count(&acctCount).Error)
-	require.Equal(t, int64(1), acctCount, "AccountingHistoryDays=0 must disable accounting cleanup")
+	require.ElementsMatch(t, []string{"ancient", "active"}, accountingUsernames(t, db),
+		"AccountingHistoryDays=0 must disable accounting cleanup entirely")
 
 	var onlineCount int64
 	require.NoError(t, db.Model(&domain.RadiusOnline{}).Count(&onlineCount).Error)
 	require.Equal(t, int64(0), onlineCount, "online cleanup runs regardless of AccountingHistoryDays")
+}
+
+func onlineUsernames(t *testing.T, db *gorm.DB) []string {
+	t.Helper()
+	var rows []domain.RadiusOnline
+	require.NoError(t, db.Find(&rows).Error)
+	names := make([]string, 0, len(rows))
+	for _, r := range rows {
+		names = append(names, r.Username)
+	}
+	return names
+}
+
+func accountingUsernames(t *testing.T, db *gorm.DB) []string {
+	t.Helper()
+	var rows []domain.RadiusAccounting
+	require.NoError(t, db.Find(&rows).Error)
+	names := make([]string, 0, len(rows))
+	for _, r := range rows {
+		names = append(names, r.Username)
+	}
+	return names
 }
 
 // TestInitJobRegistersCleanup is the regression guard for M6.4: SchedClearExpireData

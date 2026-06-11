@@ -134,9 +134,10 @@ RADIUS 运行时配置（EAP 方法、证书、间隔、拒绝延迟等）存储
 
 需要关注的大表：`radius_accounting`（随会话持续增长）与 `radius_online`。
 `radius.AccountingHistoryDays` 配置（默认 90，设为 `0` 关闭）定义计费历史的保留
-窗口：`@daily` 定时任务会删除超过该天数的 `radius_accounting` 记录，并清理
-`last_update` 超过 300 秒的 `radius_online` 残留行。操作日志（`sys_opr_log`）一年后
-自动清理。若数据量很大，仍建议把表增长监控与数据库级归档纳入自己的运维流程。
+窗口：`@daily` 定时任务会删除超过该天数的**已结束** `radius_accounting` 记录（在线
+会话不受影响），并清理连续多个计费中间更新周期未刷新的 `radius_online` 残留行。操作
+日志（`sys_opr_log`）一年后自动清理。若数据量很大，仍建议把表增长监控与数据库级归档
+纳入自己的运维流程。
 
 ## TLS 与证书
 

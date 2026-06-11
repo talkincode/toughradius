@@ -138,10 +138,11 @@ installation only — it **destroys all data**.
 Large tables to watch: `radius_accounting` (grows with every session) and
 `radius_online`. The `radius.AccountingHistoryDays` setting (default 90, set to
 `0` to disable) defines the accounting retention window: a `@daily` job deletes
-`radius_accounting` rows older than that many days and clears `radius_online`
-rows whose `last_update` is older than 300 seconds. The operator action log
-(`sys_opr_log`) is purged automatically after one year. For very high volumes,
-still consider database-level archiving as part of your own ops.
+**terminated** `radius_accounting` rows older than that many days (active
+sessions are untouched) and clears dangling `radius_online` rows that have
+missed several interim updates. The operator action log (`sys_opr_log`) is
+purged automatically after one year. For very high volumes, still consider
+database-level archiving as part of your own ops.
 
 ## TLS and certificates
 

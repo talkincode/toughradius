@@ -170,10 +170,11 @@ from the UI with Disconnect/delete.
 
 Two `@daily` jobs purge data automatically: one deletes operation logs
 (`SysOprLog`) older than one year; the other, `SchedClearExpireData`, deletes
-`radius_accounting` history older than `AccountingHistoryDays` (default 90 days)
-and removes `radius_online` rows whose `last_update` is older than 300 seconds.
-Set `AccountingHistoryDays` to `0` to **disable** accounting cleanup (keep
-history indefinitely). For very high volumes you may still want **database-level
+**terminated** `radius_accounting` history older than `AccountingHistoryDays`
+(default 90 days; active sessions are never purged) and removes dangling
+`radius_online` rows that have missed several interim updates. Set
+`AccountingHistoryDays` to `0` to **disable** accounting cleanup (keep history
+indefinitely). For very high volumes you may still want **database-level
 archiving** in your ops routine. Configuration backups do **not** include
 accounting history — see [Backup and restore](./ops-guide.md#backup-and-restore).
 
