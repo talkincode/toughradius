@@ -78,7 +78,8 @@ MikroTik RouterOS（厂商代码 **14988**）是最常见的对接对象。Tough
 
 - **radtest（服务端）**：
   ```bash
-  go run ./cmd/radtest auth -user <用户名> -pwd <密码> -nasip <NAS_IP> -secret <SECRET>
+  go run ./cmd/radtest auth -server <TOUGHRADIUS_IP> -nas-ip <NAS_IP> \
+    -username <用户名> -password <密码> -secret <SECRET>
   ```
   成功时打印 `Access-Accept`，应能看到 `Mikrotik-Rate-Limit`、`Session-Timeout`，
   以及（若设置了池）`Framed-Pool`。
