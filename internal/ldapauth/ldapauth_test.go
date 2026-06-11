@@ -280,6 +280,35 @@ func TestVerify_SearchMode(t *testing.T) {
 		v, _ := newVerifier(searchConfig(), fc, nil)
 		require.ErrorIs(t, v.Verify(context.Background(), "x", "pw"), ErrUnavailable)
 	})
+
+	// A code-49 (invalid credentials) on the SERVICE bind means the configured
+	// service account is wrong: an operator misconfiguration, not an end-user
+	// rejection. It must surface as ErrUnavailable and never as
+	// ErrInvalidCredentials, otherwise a broken service account would be reported
+	// to every client as a wrong password. Note the generic-error case above
+	// cannot catch a refactor that runs mapBindError on the service bind (a
+	// generic error maps to Unavailable either way); only a code-49 distinguishes
+	// the two paths.
+	t.Run("service bind invalid credentials is unavailable, not a user rejection", func(t *testing.T) {
+		serviceDN := "cn=svc,dc=example,dc=com"
+		fc := &fakeConn{
+			bindFunc: func(dn, _ string) error {
+				if dn == serviceDN {
+					return invalidCreds()
+				}
+				return nil
+			},
+			searchFunc: func(*ldap.SearchRequest) (*ldap.SearchResult, error) {
+				return &ldap.SearchResult{Entries: []*ldap.Entry{{DN: "uid=x,dc=example,dc=com"}}}, nil
+			},
+		}
+		v, _ := newVerifier(searchConfig(), fc, nil)
+		err := v.Verify(context.Background(), "x", "pw")
+		require.ErrorIs(t, err, ErrUnavailable)
+		require.NotErrorIs(t, err, ErrInvalidCredentials,
+			"a service-account credential failure must not be reported as a user rejection")
+		require.Len(t, fc.binds, 1, "a failed service bind must not reach the user bind")
+	})
 }
 
 func TestVerify_DialErrorIsUnavailable(t *testing.T) {

@@ -53,6 +53,11 @@ type EAPContext struct {
 	Secret         string // RADIUS Secret
 	StateManager   EAPStateManager
 	PwdProvider    PasswordProvider
+	// Verifier is an optional external password authority (e.g. LDAP). When set
+	// and Active it verifies inner PAP by binding instead of comparing against a
+	// local password; it is nil when no such backend is configured, in which
+	// case handlers fall back to PwdProvider.
+	Verifier CredentialVerifier
 }
 
 // EAPMessage represents the EAP message structure
@@ -100,4 +105,21 @@ type EAPStateManager interface {
 type PasswordProvider interface {
 	// GetPassword retrieves the user's password (plain or encrypted)
 	GetPassword(user *domain.RadiusUser, isMacAuth bool) (string, error)
+}
+
+// CredentialVerifier is an optional capability a PasswordProvider may also
+// implement: an external password authority (for example an LDAP/AD directory)
+// that verifies a presented cleartext password by binding rather than by
+// disclosing the stored password.
+//
+// When Active reports true the directory governs passwords, so only PAP-family
+// inner methods (the inner PAP of EAP-TTLS, RFC 5281 §11.2.5) can be served;
+// challenge/response inner methods must reject because the server holds no
+// secret with which to recompute their response.
+type CredentialVerifier interface {
+	// Active reports whether external verification is enabled.
+	Active() bool
+	// VerifyCleartext authenticates username with the presented cleartext
+	// password, returning nil on success.
+	VerifyCleartext(ctx context.Context, username, password string) error
 }

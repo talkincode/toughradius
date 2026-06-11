@@ -69,6 +69,12 @@ func (c *Coordinator) HandleEAPRequest(
 		StateManager:   c.stateManager,
 		PwdProvider:    c.pwdProvider,
 	}
+	// A password provider that is also an external credential verifier (e.g. the
+	// LDAP backend) drives bind-based inner PAP verification; a plain provider
+	// leaves Verifier nil and inner methods fall back to local comparison.
+	if cv, ok := c.pwdProvider.(CredentialVerifier); ok {
+		ctx.Verifier = cv
+	}
 
 	// Handle EAP-Response/Identity
 	if eapMsg.Code == CodeResponse && eapMsg.Type == TypeIdentity {

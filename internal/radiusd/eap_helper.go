@@ -21,8 +21,11 @@ func NewEAPAuthHelper(radiusService *RadiusService, allowedHandlers []string) *E
 	// Create state manager
 	stateManager := statemanager.NewMemoryStateManager()
 
-	// Create password provider
-	pwdProvider := eap.NewDefaultPasswordProvider()
+	// Create password provider. The LDAP-aware backend behaves like the default
+	// provider when the directory is disabled, but when enabled it drives
+	// bind-based inner PAP verification and refuses to hand out a local password
+	// for challenge-response inner methods (which then reject).
+	pwdProvider := newLDAPCredentialBackend(radiusService.AppContext())
 
 	// get handler registry
 	var handlerRegistry eap.HandlerRegistry = registry.GetGlobalRegistry()
