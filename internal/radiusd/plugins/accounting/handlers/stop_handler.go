@@ -9,13 +9,15 @@ import (
 	"layeh.com/radius/rfc2866"
 )
 
-// StopHandler Accounting Stop handler
+// StopHandler handles Accounting-Stop packets and finalizes session
+// accounting.
 type StopHandler struct {
 	sessionRepo    repository.SessionRepository
 	accountingRepo repository.AccountingRepository
 }
 
-// NewStopHandler CreateAccounting Stop handler
+// NewStopHandler constructs a StopHandler with repositories used to update the
+// final accounting counters and clear online-session state.
 func NewStopHandler(
 	sessionRepo repository.SessionRepository,
 	accountingRepo repository.AccountingRepository,
@@ -26,14 +28,22 @@ func NewStopHandler(
 	}
 }
 
+// Name returns the stable plugin name used by the accounting dispatcher.
 func (h *StopHandler) Name() string {
 	return "StopHandler"
 }
 
+// CanHandle reports whether the context represents an Accounting-Stop packet.
 func (h *StopHandler) CanHandle(ctx *accounting.AccountingContext) bool {
 	return ctx.StatusType == int(rfc2866.AcctStatusType_Value_Stop)
 }
 
+// Handle updates the session's stop-time counters and removes the matching
+// online-session row.
+//
+// When updating the accounting row fails, Handle logs the error and still tries
+// to remove the online-session record so stale sessions do not remain online
+// forever.
 func (h *StopHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	vendorReq := acctCtx.VendorReq
 	if vendorReq == nil {

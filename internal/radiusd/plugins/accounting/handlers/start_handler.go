@@ -18,12 +18,19 @@ import (
 	"layeh.com/radius/rfc4818"
 	"layeh.com/radius/rfc6911"
 ) // StartHandler Accounting Start handler
+// StartHandler handles Accounting-Start packets and persists both online-session
+// and accounting rows for newly created sessions.
+//
+// The handler treats repeated Accounting-Start packets for the same
+// Acct-Session-Id as retransmissions and avoids double-billing by skipping
+// duplicate accounting inserts.
 type StartHandler struct {
 	sessionRepo    repository.SessionRepository
 	accountingRepo repository.AccountingRepository
 }
 
-// NewStartHandler CreateAccounting Start handler
+// NewStartHandler constructs a StartHandler with repositories used to persist
+// online-session and accounting state.
 func NewStartHandler(
 	sessionRepo repository.SessionRepository,
 	accountingRepo repository.AccountingRepository,
@@ -34,14 +41,22 @@ func NewStartHandler(
 	}
 }
 
+// Name returns the stable plugin name used by the accounting dispatcher.
 func (h *StartHandler) Name() string {
 	return "StartHandler"
 }
 
+// CanHandle reports whether the context represents an Accounting-Start packet.
 func (h *StartHandler) CanHandle(ctx *accounting.AccountingContext) bool {
 	return ctx.StatusType == int(rfc2866.AcctStatusType_Value_Start)
 }
 
+// Handle writes a new online-session row and a matching accounting row.
+//
+// Handle is idempotent on Acct-Session-Id: retransmitted starts do not create
+// duplicate records. If accounting-row creation fails after the online row was
+// created, Handle best-effort rolls back the online row so a later
+// retransmission can recreate both rows consistently.
 func (h *StartHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	vendorReq := acctCtx.VendorReq
 	if vendorReq == nil {

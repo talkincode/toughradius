@@ -12,24 +12,31 @@ import (
 	"layeh.com/radius/rfc2869"
 )
 
-// UpdateHandler Accounting Update handler
+// UpdateHandler handles Accounting-Interim-Update packets and refreshes
+// counters on the active online-session row.
 type UpdateHandler struct {
 	sessionRepo repository.SessionRepository
 }
 
-// NewUpdateHandler CreateAccounting Update handler
+// NewUpdateHandler constructs an UpdateHandler with the session repository used
+// for interim counter updates.
 func NewUpdateHandler(sessionRepo repository.SessionRepository) *UpdateHandler {
 	return &UpdateHandler{sessionRepo: sessionRepo}
 }
 
+// Name returns the stable plugin name used by the accounting dispatcher.
 func (h *UpdateHandler) Name() string {
 	return "UpdateHandler"
 }
 
+// CanHandle reports whether the context represents an Accounting-Interim-Update
+// packet.
 func (h *UpdateHandler) CanHandle(ctx *accounting.AccountingContext) bool {
 	return ctx.StatusType == int(rfc2866.AcctStatusType_Value_InterimUpdate)
 }
 
+// Handle updates the online-session row with the latest traffic and session
+// counters carried in the interim packet.
 func (h *UpdateHandler) Handle(acctCtx *accounting.AccountingContext) error {
 	vendorReq := acctCtx.VendorReq
 	if vendorReq == nil {
