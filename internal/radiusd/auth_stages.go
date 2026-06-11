@@ -18,6 +18,7 @@ import (
 const (
 	StageRequestMetadata = "request_metadata"
 	StageNasLookup       = "nas_lookup"
+	StageMsgAuth         = "message_authenticator"
 	StageRateLimit       = "auth_rate_limit"
 	StageVendorParsing   = "vendor_parsing"
 	StageLoadUser        = "load_user"
@@ -29,6 +30,7 @@ func (s *AuthService) registerDefaultStages() {
 	stages := []AuthPipelineStage{
 		newStage(StageRequestMetadata, s.stageRequestMetadata),
 		newStage(StageNasLookup, s.stageNasLookup),
+		newStage(StageMsgAuth, s.stageMessageAuthenticator),
 		newStage(StageRateLimit, s.stageRateLimit),
 		newStage(StageVendorParsing, s.stageVendorParsing),
 		newStage(StageLoadUser, s.stageLoadUser),
@@ -87,6 +89,18 @@ func (s *AuthService) stageNasLookup(ctx *AuthPipelineContext) error {
 		ctx.Response = ctx.Request.Response(radius.CodeAccessAccept)
 	}
 
+	return nil
+}
+
+// stageMessageAuthenticator validates the RFC 3579 Message-Authenticator on the
+// incoming Access-Request according to radius.RequireMessageAuthenticator. When
+// the configured policy requires the packet to be dropped it is silently
+// discarded (the pipeline stops without writing any response), mirroring the
+// behavior mandated by RFC 3579 §3.2 for CVE-2024-3596 hardening.
+func (s *AuthService) stageMessageAuthenticator(ctx *AuthPipelineContext) error {
+	if s.enforceMessageAuthenticator(ctx) {
+		ctx.Stop()
+	}
 	return nil
 }
 
@@ -295,6 +309,7 @@ func (s *AuthService) sendAcceptResponse(ctx *AuthPipelineContext, isEapFlow boo
 		}
 		s.eapHelper.CleanupState(ctx.Request)
 	} else {
+		s.addResponseMessageAuthenticator(ctx.Response, ctx.NAS.Secret)
 		s.SendAccept(ctx.Writer, ctx.Request, ctx.Response)
 	}
 
@@ -307,6 +322,14 @@ func (s *AuthService) sendAcceptResponse(ctx *AuthPipelineContext, isEapFlow boo
 		s.UpdateBind(ctx.User, vendorReq)
 		s.UpdateUserLastOnline(ctx.User.Username)
 	}
+
+	// sendAcceptResponse is the single Access-Accept chokepoint: the EAP-success
+	// caller (stageEAPDispatch) and the bare PAP/CHAP caller (stagePluginAuth) are
+	// mutually exclusive per request and both stop the pipeline afterwards, so this
+	// counts every successful authentication exactly once. It mirrors the reject
+	// side (logEAPFailure / logAndReject) so radus_accept and the radus_reject_*
+	// counters form a complete success/failure pair for rate and SLO dashboards.
+	app.IncRadiusMetric(app.MetricsRadiusAccept)
 
 	zap.L().Info("radius auth success",
 		zap.String("namespace", "radius"),

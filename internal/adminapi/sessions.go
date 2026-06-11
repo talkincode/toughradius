@@ -1,8 +1,6 @@
 package adminapi
 
 import (
-	"context"
-	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,11 +8,9 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/radiusd"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"go.uber.org/zap"
-	"layeh.com/radius"
-	"layeh.com/radius/rfc2865"
-	"layeh.com/radius/rfc2866"
 )
 
 // allowedSessionSortFields defines the whitelist of sortable fields for online sessions
@@ -189,18 +185,21 @@ func GetOnlineSession(c echo.Context) error {
 }
 
 // DeleteOnlineSession handles DELETE /api/v1/sessions/:id, forcing the user of the
-// online session with the given id offline. It removes the session record and, as
-// a best-effort side effect, sends an RFC 5176 Disconnect-Request to the session's
-// NAS so the device actually tears the connection down. That Disconnect is
-// dispatched asynchronously — it does not block or affect the HTTP response — with
-// a 5s timeout to the NAS CoA port (resolveCoaPort, defaulting to 3799); its
-// ACK/NAK outcome is logged, not returned. When the NAS is not found in the
-// database the record is still deleted and only a warning is logged. A non-integer
-// id responds 400 INVALID_ID, an unknown id 404 NOT_FOUND, and a failed delete
-// 500 DELETE_FAILED. On success it returns a confirmation message. Any
-// authenticated operator may call it; for a Disconnect or CoA re-authorization that
-// does not also delete local session state, see the admin-only POST
-// /sessions/:id/disconnect and /sessions/:id/coa actions.
+// online session with the given id offline. It removes the local session record
+// and then tears the connection down on the NAS by sending an RFC 5176
+// Disconnect-Request through the shared, audited CoAService client path — the same
+// path used by POST /sessions/:id/disconnect — so the request carries the full NAS
+// and session identity triplet (NAS-IP-Address, Acct-Session-Id, User-Name, …),
+// honors the NAS CoA port (defaulting to 3799 / DefaultCoAPort), brackets IPv6
+// addresses correctly, and leaves a durable M2.3 audit record. The Disconnect
+// outcome (ACK/NAK/timeout) is logged and audited, not returned in the HTTP body.
+// When the NAS is not found in the database the record is still deleted and only a
+// warning is logged. A non-integer id responds 400 INVALID_ID, an unknown id 404
+// NOT_FOUND, and a failed delete 500 DELETE_FAILED. On success it returns a
+// confirmation message.
+//
+// Authorization: admin/super only (requireAdmin), since forcing a subscriber
+// offline disrupts a live user; this matches the disconnect/coa POST actions.
 //
 // @Summary Force user offline
 // @Tags OnlineSession
@@ -213,64 +212,45 @@ func DeleteOnlineSession(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid Session ID", nil)
 	}
 
-	// Fetch session before deletion for CoA
+	// Fetch session before deletion so we can notify the NAS.
 	var session domain.RadiusOnline
 	if err := GetDB(c).First(&session, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
 	}
 
-	// Fetch NAS info for CoA
+	// Fetch the NAS hosting the session for the Disconnect-Request.
 	var nas domain.NetNas
 	nasErr := GetDB(c).Where("ipaddr = ?", session.NasAddr).First(&nas).Error
 
-	// Delete online session record
+	// Delete online session record.
 	if err := GetDB(c).Delete(&domain.RadiusOnline{}, id).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to terminate session", err.Error())
 	}
 
-	// Send CoA Disconnect-Request to NAS asynchronously (non-blocking)
+	// Tear the connection down on the NAS via the shared, audited RFC 5176 client
+	// path so force-offline uses the same single Disconnect path as the dedicated
+	// endpoint and is recorded in the M2.3 audit trail.
 	if nasErr == nil {
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
-			// Build CoA Disconnect-Request packet
-			pkt := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
-			_ = rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId) //nolint:errcheck
-			_ = rfc2865.UserName_SetString(pkt, session.Username)           //nolint:errcheck
-
-			// Send to NAS CoA port (default 3799 when not configured)
-			coaAddr := net.JoinHostPort(nas.Ipaddr, strconv.Itoa(resolveCoaPort(nas.CoaPort)))
-			client := &radius.Client{
-				Retry: time.Second * 2,
-			}
-
-			response, err := client.Exchange(ctx, pkt, coaAddr)
-			if err != nil {
-				zap.L().Error("Failed to send CoA Disconnect-Request",
-					zap.Error(err),
-					zap.String("nas_addr", coaAddr),
+		identity := radiusd.SessionIdentityFromOnline(&session)
+		result, derr := sessionCoAService().Disconnect(c.Request().Context(), radiusd.CoATargetFromNas(&nas), identity)
+		if derr != nil {
+			zap.L().Error("Failed to build Disconnect-Request for force-offline",
+				zap.Error(derr),
+				zap.String("username", session.Username),
+				zap.String("acct_session_id", session.AcctSessionId),
+				zap.String("namespace", "adminapi"))
+		} else {
+			logSessionAction(c, result)
+			if aerr := persistSessionActionAudit(c, id, identity, result); aerr != nil {
+				zap.L().Error("Failed to persist force-offline audit record",
+					zap.Error(aerr),
 					zap.String("username", session.Username),
 					zap.String("acct_session_id", session.AcctSessionId),
 					zap.String("namespace", "adminapi"))
-				return
 			}
-
-			if response.Code == radius.CodeDisconnectACK {
-				zap.L().Info("CoA Disconnect-Request ACK received",
-					zap.String("nas_addr", coaAddr),
-					zap.String("username", session.Username),
-					zap.String("namespace", "adminapi"))
-			} else {
-				zap.L().Warn("CoA Disconnect-Request NAK received",
-					zap.String("nas_addr", coaAddr),
-					zap.String("username", session.Username),
-					zap.Uint8("response_code", uint8(response.Code)), //nolint:gosec // G115: RADIUS code is always in uint8 range
-					zap.String("namespace", "adminapi"))
-			}
-		}()
+		}
 	} else {
-		zap.L().Warn("NAS not found for CoA, session deleted from database only",
+		zap.L().Warn("NAS not found for Disconnect-Request, session deleted from database only",
 			zap.String("nas_addr", session.NasAddr),
 			zap.String("username", session.Username),
 			zap.String("namespace", "adminapi"))
@@ -281,22 +261,16 @@ func DeleteOnlineSession(c echo.Context) error {
 	})
 }
 
-// resolveCoaPort returns the NAS RADIUS CoA port, falling back to the
-// RFC 5176 default (3799) when no valid port is configured.
-func resolveCoaPort(coaPort int) int {
-	if coaPort <= 0 || coaPort > 65535 {
-		return 3799
-	}
-	return coaPort
-}
-
-// registerSessionRoutes wires the online-session endpoints. The list, detail, and
-// delete (force-offline) endpoints are open to any authenticated operator; the
-// RFC 5176 Disconnect and CoA re-authorization actions are guarded by requireAdmin.
+// registerSessionRoutes wires the online-session endpoints. The list and detail
+// endpoints are open to any authenticated operator; the force-offline delete and
+// the RFC 5176 Disconnect and CoA re-authorization actions all disrupt live users
+// and are therefore guarded by requireAdmin.
 func registerSessionRoutes() {
 	webserver.ApiGET("/sessions", ListOnlineSessions)
 	webserver.ApiGET("/sessions/:id", GetOnlineSession)
-	webserver.ApiDELETE("/sessions/:id", DeleteOnlineSession)
+	// Force-offline deletes the local record and sends a Disconnect-Request to the
+	// NAS, so it is restricted to admin/super like the dynamic-authorization actions.
+	webserver.ApiDELETE("/sessions/:id", DeleteOnlineSession, requireAdmin())
 	// RFC 5176 Dynamic Authorization actions over a live session (admin/super only).
 	webserver.ApiPOST("/sessions/:id/disconnect", DisconnectOnlineSession, requireAdmin())
 	webserver.ApiPOST("/sessions/:id/coa", ChangeOnlineSessionAuthorization, requireAdmin())

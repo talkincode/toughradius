@@ -3,8 +3,6 @@ package enhancers
 import (
 	"context"
 	"math"
-	"net"
-	"strings"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors"
@@ -53,16 +51,13 @@ func (e *HuaweiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCo
 	_ = huawei.HuaweiOutputAverageRate_Set(resp, huawei.HuaweiOutputAverageRate(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
 	_ = huawei.HuaweiOutputPeakRate_Set(resp, huawei.HuaweiOutputPeakRate(downPeak))   //nolint:errcheck,gosec // G115: clamped to MaxInt32
 
-	// Set Huawei FramedIPv6Address if user has a fixed IPv6 address
+	// Set Huawei-Framed-IPv6-Address when the user has a single static IPv6 host
+	// address (a bare address or an explicit /128). singleIPv6Host rejects IPv4
+	// literals (including IPv4-mapped values that net.ParseIP would otherwise
+	// accept) and multi-host prefixes, so a misconfigured IpV6Addr is skipped
+	// instead of advertising a malformed IPv6 address to the Huawei NAS.
 	if common.IsNotEmptyAndNA(user.IpV6Addr) {
-		// Parse IPv6 address (without prefix length)
-		ipv6Str := user.IpV6Addr
-		if strings.Contains(ipv6Str, "/") {
-			// Remove prefix length if present
-			parts := strings.SplitN(ipv6Str, "/", 2)
-			ipv6Str = parts[0]
-		}
-		if ipv6Addr := net.ParseIP(ipv6Str); ipv6Addr != nil {
+		if ipv6Addr, ok := singleIPv6Host(user.IpV6Addr); ok {
 			_ = huawei.HuaweiFramedIPv6Address_Set(resp, ipv6Addr) //nolint:errcheck
 		}
 	}

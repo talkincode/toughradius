@@ -58,17 +58,9 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 		},
 	}
 
-	var password string
-	var err error
-
 	// 1. Perform password validation via plugins
 	if !isMacAuth && !options.skipPasswordValidation {
-		password, err = s.GetLocalPassword(user, isMacAuth)
-		if err != nil {
-			return errors.WrapError("radus_reject_passwd_error", err)
-		}
-
-		if err := s.validatePasswordWithPlugins(ctx, authCtx, password); err != nil {
+		if err := s.validateCredential(ctx, authCtx, user, isMacAuth); err != nil {
 			return err
 		}
 	}
@@ -81,6 +73,28 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 	}
 
 	return nil
+}
+
+// validateCredential verifies the user's password. When the LDAP backend is
+// active it authenticates the request by binding against the directory (PAP
+// only; challenge/response methods are rejected with a diagnostic reason);
+// otherwise it retrieves the locally stored password and runs the registered
+// password validator plugins.
+func (s *AuthService) validateCredential(
+	ctx context.Context,
+	authCtx *auth.AuthContext,
+	user *domain.RadiusUser,
+	isMacAuth bool,
+) error {
+	if backend := s.ldapBackend(); backend.Active() {
+		return backend.verifyRequestPAP(ctx, authCtx)
+	}
+
+	password, err := s.GetLocalPassword(user, isMacAuth)
+	if err != nil {
+		return errors.WrapError("radus_reject_passwd_error", err)
+	}
+	return s.validatePasswordWithPlugins(ctx, authCtx, password)
 }
 
 // validatePasswordWithPlugins uses password validator plugins

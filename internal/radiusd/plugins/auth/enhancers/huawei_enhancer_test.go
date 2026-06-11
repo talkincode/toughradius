@@ -3,6 +3,7 @@ package enhancers
 import (
 	"context"
 	"math"
+	"net"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -215,4 +216,71 @@ func TestHuaweiAcceptEnhancer_Enhance_NoNas(t *testing.T) {
 	// Should not add attributes when no NAS is present
 	upAvg := huawei.HuaweiInputAverageRate_Get(response)
 	assert.Equal(t, huawei.HuaweiInputAverageRate(0), upAvg)
+}
+
+func TestHuaweiAcceptEnhancer_Enhance_FramedIPv6Address(t *testing.T) {
+	enhancer := NewHuaweiAcceptEnhancer()
+	ctx := context.Background()
+
+	tests := []struct {
+		name     string
+		ipv6Addr string
+		wantAddr string // expected Huawei-Framed-IPv6-Address, empty means none
+	}{
+		{
+			name:     "bare ipv6 host",
+			ipv6Addr: "2001:db8::1",
+			wantAddr: "2001:db8::1",
+		},
+		{
+			name:     "ipv6 host with /128",
+			ipv6Addr: "2001:db8::1/128",
+			wantAddr: "2001:db8::1",
+		},
+		{
+			name:     "ipv4 literal is skipped",
+			ipv6Addr: "10.0.0.1",
+			wantAddr: "",
+		},
+		{
+			name:     "multi-host prefix is skipped",
+			ipv6Addr: "2001:db8::/64",
+			wantAddr: "",
+		},
+		{
+			name:     "unparseable value is skipped",
+			ipv6Addr: "not-an-ip",
+			wantAddr: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			response := radius.New(radius.CodeAccessAccept, []byte("secret"))
+			user := &domain.RadiusUser{
+				Username: "testuser",
+				IpV6Addr: tt.ipv6Addr,
+			}
+			nas := &domain.NetNas{
+				VendorCode: vendors.CodeHuawei,
+			}
+
+			authCtx := &auth.AuthContext{
+				Response: response,
+				User:     user,
+				Nas:      nas,
+			}
+
+			err := enhancer.Enhance(ctx, authCtx)
+			require.NoError(t, err)
+
+			got := huawei.HuaweiFramedIPv6Address_Get(response)
+			if tt.wantAddr == "" {
+				assert.Nil(t, got, "expected no Huawei-Framed-IPv6-Address")
+				return
+			}
+			require.NotNil(t, got)
+			assert.True(t, got.Equal(net.ParseIP(tt.wantAddr)), "got %s want %s", got, tt.wantAddr)
+		})
+	}
 }

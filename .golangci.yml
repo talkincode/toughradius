@@ -32,7 +32,6 @@ linters:
     staticcheck:
       checks:
         - all
-        - "-ST1000" # Keep package-comment check deferred; baseline debt is repo-wide.
         - "-ST1003" # Disable naming convention (Id vs ID, etc)
         - "-ST1005" # Disable error string format check
         - "-ST1006" # Disable receiver name style check

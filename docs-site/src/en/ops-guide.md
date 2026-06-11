@@ -136,11 +136,13 @@ upgrades are: stop, replace the binary, start. `-initdb` is for first
 installation only — it **destroys all data**.
 
 Large tables to watch: `radius_accounting` (grows with every session) and
-`radius_online`. The `radius.AccountingHistoryDays` setting (default 90)
-defines the accounting retention window for data cleanup; monitor table growth
-and schedule database-level archiving/cleanup as part of your own ops if your
-volume is high. The operator action log (`sys_opr_log`) is purged automatically
-after one year.
+`radius_online`. The `radius.AccountingHistoryDays` setting (default 90, set to
+`0` to disable) defines the accounting retention window: a `@daily` job deletes
+**terminated** `radius_accounting` rows older than that many days (active
+sessions are untouched) and clears dangling `radius_online` rows that have
+missed several interim updates. The operator action log (`sys_opr_log`) is
+purged automatically after one year. For very high volumes, still consider
+database-level archiving as part of your own ops.
 
 ## TLS and certificates
 

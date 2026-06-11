@@ -35,6 +35,7 @@ import {
   Router as RouterIcon,
   Backup as BackupIcon,
   RestorePage as RestoreIcon,
+  AccountTree as AccountTreeIcon,
 } from '@mui/icons-material';
 import { useDataProvider, useNotify, useTranslate } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
@@ -132,6 +133,12 @@ export const SystemConfigPage: React.FC = () => {
       description: translate('pages.system_config.groups.security.description'),
       icon: <SecurityIcon />,
       color: '#d32f2f',
+    },
+    ldap: {
+      title: translate('pages.system_config.groups.ldap.title'),
+      description: translate('pages.system_config.groups.ldap.description'),
+      icon: <AccountTreeIcon />,
+      color: '#7b1fa2',
     },
   }), [translate]);
 

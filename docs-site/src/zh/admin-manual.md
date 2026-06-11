@@ -107,7 +107,7 @@
 | `EapTlsCaFile` | 空 | 校验客户端证书的 CA 链 |
 | `EapTlsMinVersion` | `1.2` | 最低 TLS 版本（`1.2`/`1.3`） |
 | `IgnorePassword` | `false` | 跳过密码校验（仅测试用） |
-| `AccountingHistoryDays` | `90` | 数据清理使用的计费保留窗口 |
+| `AccountingHistoryDays` | `90` | 计费历史保留天数（`@daily` 清理；`0` 关闭） |
 | `AcctInterimInterval` | `300` | NAS 中间计费更新间隔（秒） |
 | `SessionTimeout` | `3600` | 默认会话超时（秒） |
 | `LogLevel` | `info` | RADIUS 日志级别（`debug`/`info`/`warn`/`error`） |
