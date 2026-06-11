@@ -157,10 +157,11 @@ Keeping these separate means a directory outage shows up as
 `radus_reject_ldap_error` cleanly signals a directory problem rather than user
 error.
 
-> **Note.** A `radus_accept` success counter is defined but is **not yet
-> incremented** in the current release (its wiring is tracked as a follow-up).
-> Until then, base alerting on the two reject counters above rather than on a
-> computed success rate.
+> **Note.** `radus_accept` increments once per successful authentication — both
+> the bare PAP/CHAP and the EAP flows converge on a single accept chokepoint — so
+> it pairs with the reject counters above for a success-rate or SLO view. A
+> directory outage still surfaces only as `radus_reject_ldap_error`, never as a
+> false `radus_accept`, keeping the success and failure signals separate.
 
 ## Troubleshooting
 

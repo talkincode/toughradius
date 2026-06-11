@@ -308,6 +308,14 @@ func (s *AuthService) sendAcceptResponse(ctx *AuthPipelineContext, isEapFlow boo
 		s.UpdateUserLastOnline(ctx.User.Username)
 	}
 
+	// sendAcceptResponse is the single Access-Accept chokepoint: the EAP-success
+	// caller (stageEAPDispatch) and the bare PAP/CHAP caller (stagePluginAuth) are
+	// mutually exclusive per request and both stop the pipeline afterwards, so this
+	// counts every successful authentication exactly once. It mirrors the reject
+	// side (logEAPFailure / logAndReject) so radus_accept and the radus_reject_*
+	// counters form a complete success/failure pair for rate and SLO dashboards.
+	app.IncRadiusMetric(app.MetricsRadiusAccept)
+
 	zap.L().Info("radius auth success",
 		zap.String("namespace", "radius"),
 		zap.String("username", ctx.Username),
