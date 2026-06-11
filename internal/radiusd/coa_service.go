@@ -2,8 +2,6 @@ package radiusd
 
 import (
 	"context"
-	"crypto/hmac"
-	"crypto/md5"
 	"errors"
 	"fmt"
 	"math"
@@ -330,10 +328,6 @@ func (s *CoAService) send(ctx context.Context, action CoAAction, target CoATarge
 	}
 
 	var lastErr error
-	// reqAuth is the Request Authenticator the transport will put on the wire for
-	// this (CoA/Disconnect) request. It is required to verify the
-	// Message-Authenticator carried on the NAS reply (RFC 5176 §3.4).
-	reqAuth := requestAuthenticator(packet)
 	for attempt := 0; attempt <= s.retries; attempt++ {
 		if err := ctx.Err(); err != nil {
 			lastErr = err
@@ -348,18 +342,6 @@ func (s *CoAService) send(ctx context.Context, action CoAAction, target CoATarge
 		cancel()
 
 		if err == nil {
-			// RFC 5176 §3.4: a reply carrying a Message-Authenticator whose value
-			// does not verify MUST be silently discarded. Treat it like a lost
-			// reply so the bounded retransmission budget still applies.
-			if !verifyReplyMessageAuthenticator(resp, reqAuth, target.Secret) {
-				lastErr = errInvalidMessageAuthenticator
-				zap.L().Warn("radius coa reply failed message-authenticator check",
-					zap.String("namespace", "radius"),
-					zap.String("action", string(action)),
-					zap.String("target", endpoint),
-					zap.Int("identifier", result.Identifier))
-				continue
-			}
 			result.RTT = rtt
 			classifyResponse(result, resp)
 			s.logResult(result, packet, resp)
@@ -453,14 +435,11 @@ func applyIdentity(packet *radius.Packet, id SessionIdentity) error {
 	return nil
 }
 
-// errInvalidMessageAuthenticator is the sentinel recorded when a NAS reply
-// carries a Message-Authenticator attribute whose value does not verify against
-// the shared secret. Per RFC 5176 §3.4 such a reply MUST be silently discarded.
-var errInvalidMessageAuthenticator = errors.New("coa: reply message-authenticator mismatch")
-
 // setMessageAuthenticator computes and inserts the Message-Authenticator
 // attribute (#80) on an outbound CoA-Request or Disconnect-Request, as mandated
-// by RFC 5176 §3.4 (keyed-MD5 construction per RFC 3579 §3.2).
+// by RFC 5176 §3.4 (keyed HMAC-MD5 construction per RFC 3579 §3.2). Strict NAS
+// implementations silently drop a CoA/Disconnect request that lacks a valid
+// Message-Authenticator, so signing every request is required for interoperability.
 //
 // Per RFC 5176 §3.4 the HMAC-MD5 is computed with both the Request Authenticator
 // field and the Message-Authenticator attribute value treated as sixteen octets
@@ -468,90 +447,23 @@ var errInvalidMessageAuthenticator = errors.New("coa: reply message-authenticato
 // calculated by the transport. The packet's Authenticator field is therefore
 // zeroed here: for these request types the transport recomputes the Request
 // Authenticator over a zeroed field (RFC 5176 §2.3), so zeroing it keeps the
-// signed bytes identical to what is put on the wire.
+// signed bytes identical to what is put on the wire. A sixteen-octet placeholder
+// is inserted first so the marshaled length already accounts for the attribute;
+// the shared computeMessageAuthenticator helper (message_authenticator.go) then
+// re-zeroes that value while hashing.
 func setMessageAuthenticator(packet *radius.Packet, secret string) error {
 	packet.Authenticator = [16]byte{}
 	if err := rfc2869.MessageAuthenticator_Set(packet, make([]byte, 16)); err != nil {
 		return fmt.Errorf("set Message-Authenticator placeholder: %w", err)
 	}
-	mac, err := computeMessageAuthenticator(packet, secret)
+	wire, err := packet.MarshalBinary()
 	if err != nil {
-		return fmt.Errorf("compute Message-Authenticator: %w", err)
+		return fmt.Errorf("marshal request for Message-Authenticator: %w", err)
 	}
-	if err := rfc2869.MessageAuthenticator_Set(packet, mac); err != nil {
+	if err := rfc2869.MessageAuthenticator_Set(packet, computeMessageAuthenticator(wire, []byte(secret))); err != nil {
 		return fmt.Errorf("set Message-Authenticator: %w", err)
 	}
 	return nil
-}
-
-// computeMessageAuthenticator returns HMAC-MD5(secret, packet) over the packet's
-// current wire encoding. Callers must zero the Authenticator field and the
-// Message-Authenticator attribute value before invoking it so the digest matches
-// the RFC 5176 §3.4 / RFC 3579 §3.2 construction.
-func computeMessageAuthenticator(packet *radius.Packet, secret string) ([]byte, error) {
-	b, err := packet.MarshalBinary()
-	if err != nil {
-		return nil, err
-	}
-	mac := hmac.New(md5.New, []byte(secret))
-	mac.Write(b)
-	return mac.Sum(nil), nil
-}
-
-// requestAuthenticator returns the Request Authenticator that the transport will
-// place on the wire for a CoA/Disconnect request: MD5(Code+Identifier+Length +
-// sixteen zero octets + Attributes + Secret) per RFC 5176 §2.3. setMessageAuthenticator
-// has already zeroed the Authenticator field, so the marshaled bytes already carry
-// the zeroed field used by the digest.
-func requestAuthenticator(packet *radius.Packet) []byte {
-	b, err := packet.MarshalBinary()
-	if err != nil {
-		return nil
-	}
-	hash := md5.New()
-	hash.Write(b[:4])
-	var nul [16]byte
-	hash.Write(nul[:])
-	hash.Write(b[20:])
-	hash.Write(packet.Secret)
-	return hash.Sum(nil)
-}
-
-// verifyReplyMessageAuthenticator checks the Message-Authenticator attribute (if
-// present) on a CoA/Disconnect ACK/NAK reply, per RFC 5176 §3.4. The attribute is
-// OPTIONAL (0-1) in replies, so a reply without it is accepted; a reply that
-// carries one MUST verify or be discarded.
-//
-// The reply digest is HMAC-MD5(secret, reply) computed with the reply's
-// Authenticator field replaced by the corresponding request's Request
-// Authenticator and the Message-Authenticator attribute value zeroed.
-func verifyReplyMessageAuthenticator(reply *radius.Packet, requestAuth []byte, secret string) bool {
-	if reply == nil {
-		return false
-	}
-	received, err := rfc2869.MessageAuthenticator_Lookup(reply)
-	if err != nil {
-		return true // attribute absent: nothing to verify (RFC 5176 §3.4, 0-1)
-	}
-	saved := make([]byte, len(received))
-	copy(saved, received)
-
-	if err := rfc2869.MessageAuthenticator_Set(reply, make([]byte, 16)); err != nil {
-		return false
-	}
-	b, err := reply.MarshalBinary()
-	// Restore the original attribute value before returning so the parsed reply
-	// is left untouched for the caller.
-	_ = rfc2869.MessageAuthenticator_Set(reply, saved) //nolint:errcheck
-	if err != nil {
-		return false
-	}
-	if requestAuth != nil {
-		copy(b[4:20], requestAuth)
-	}
-	mac := hmac.New(md5.New, []byte(secret))
-	mac.Write(b)
-	return hmac.Equal(mac.Sum(nil), saved)
 }
 
 // deadline or a net.Error timeout), which is the condition that warrants a

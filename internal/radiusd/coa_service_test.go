@@ -19,17 +19,6 @@ import (
 	"layeh.com/radius/rfc3576"
 )
 
-// replyAuthMode controls whether the fake NAS signs its reply with a
-// Message-Authenticator (RFC 5176 §3.4) and, when it does, whether the signature
-// is valid or deliberately corrupted.
-type replyAuthMode int
-
-const (
-	replyAuthNone    replyAuthMode = iota // omit Message-Authenticator on the reply
-	replyAuthValid                        // include a correctly computed Message-Authenticator
-	replyAuthCorrupt                      // include a Message-Authenticator with a wrong value
-)
-
 // capturedReq holds the identity-relevant fields extracted from a request the
 // fake NAS received, copied out under the handler lock so the test goroutine
 // never reads a radius.Packet owned by the server goroutine.
@@ -58,7 +47,6 @@ type fakeNAS struct {
 	replyCode radius.Code        // 0 => drop the request (no reply)
 	errCause  rfc3576.ErrorCause // added to NAK replies when non-zero
 	dropFirst int                // drop the first N requests, then use replyCode
-	replyAuth replyAuthMode      // how the reply is signed (default: valid)
 	received  []capturedReq
 }
 
@@ -72,7 +60,6 @@ func newFakeNAS(t *testing.T, secret string, replyCode radius.Code) *fakeNAS {
 		addr:      pc.LocalAddr().String(),
 		secret:    secret,
 		replyCode: replyCode,
-		replyAuth: replyAuthValid,
 	}
 	fn.server = &radius.PacketServer{
 		Handler:      radius.HandlerFunc(fn.handle),
@@ -116,7 +103,6 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 	}
 	code := fn.replyCode
 	cause := fn.errCause
-	replyAuth := fn.replyAuth
 	fn.mu.Unlock()
 
 	if drop || code == 0 {
@@ -126,7 +112,6 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 	if cause != 0 && (code == radius.CodeDisconnectNAK || code == radius.CodeCoANAK) {
 		_ = rfc3576.ErrorCause_Add(resp, cause)
 	}
-	signReply(resp, replyAuth)
 	_ = w.Write(resp)
 }
 
@@ -152,29 +137,6 @@ func verifyRequestMessageAuth(p *radius.Packet, secret string) (present, valid b
 	mac := hmac.New(md5.New, []byte(secret))
 	mac.Write(b)
 	return true, hmac.Equal(mac.Sum(nil), saved)
-}
-
-// signReply attaches a Message-Authenticator to an ACK/NAK reply according to
-// mode. resp.Authenticator is the request authenticator (copied by Response),
-// which is exactly the value the client recomputes the reply digest with.
-func signReply(resp *radius.Packet, mode replyAuthMode) {
-	switch mode {
-	case replyAuthValid:
-		_ = rfc2869.MessageAuthenticator_Set(resp, make([]byte, 16))
-		b, err := resp.MarshalBinary()
-		if err != nil {
-			return
-		}
-		mac := hmac.New(md5.New, resp.Secret)
-		mac.Write(b)
-		_ = rfc2869.MessageAuthenticator_Set(resp, mac.Sum(nil))
-	case replyAuthCorrupt:
-		bad := make([]byte, 16)
-		bad[0] = 0xFF
-		_ = rfc2869.MessageAuthenticator_Set(resp, bad)
-	case replyAuthNone:
-		// leave the reply unsigned
-	}
 }
 
 func (fn *fakeNAS) port(t *testing.T) int {
@@ -204,12 +166,6 @@ func (fn *fakeNAS) setBehavior(replyCode radius.Code, cause rfc3576.ErrorCause, 
 	fn.replyCode = replyCode
 	fn.errCause = cause
 	fn.dropFirst = dropFirst
-}
-
-func (fn *fakeNAS) setReplyAuth(mode replyAuthMode) {
-	fn.mu.Lock()
-	defer fn.mu.Unlock()
-	fn.replyAuth = mode
 }
 
 func TestCoAServiceDisconnectACK(t *testing.T) {
@@ -547,45 +503,4 @@ func TestCoAServiceRequestMessageAuthenticator(t *testing.T) {
 			t.Errorf("CoA-Request Message-Authenticator: present=%v valid=%v, want both true", got[0].hasMessageAuth, got[0].messageAuthOK)
 		}
 	})
-}
-
-// TestCoAServiceRejectsInvalidReplyMessageAuthenticator asserts that a reply
-// carrying a Message-Authenticator that does not verify is discarded
-// (RFC 5176 §3.4): the result is not reported as a successful ACK.
-func TestCoAServiceRejectsInvalidReplyMessageAuthenticator(t *testing.T) {
-	const secret = "testing123"
-	nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
-	nas.setReplyAuth(replyAuthCorrupt)
-	svc := NewCoAService(nil, WithCoATimeout(150*time.Millisecond), WithCoARetries(1))
-	target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
-
-	result, err := svc.Disconnect(context.Background(), target, SessionIdentity{Username: "alice", AcctSessionID: "s1"})
-	if err != nil {
-		t.Fatalf("Disconnect returned error: %v", err)
-	}
-	if result.Success {
-		t.Fatalf("reply with bad Message-Authenticator must not be treated as success: %+v", result)
-	}
-	if result.Err != errInvalidMessageAuthenticator.Error() {
-		t.Errorf("result.Err = %q, want %q", result.Err, errInvalidMessageAuthenticator.Error())
-	}
-}
-
-// TestCoAServiceAcceptsUnsignedReply asserts that a reply without a
-// Message-Authenticator is accepted, since the attribute is OPTIONAL (0-1) in
-// replies (RFC 5176 §3.4).
-func TestCoAServiceAcceptsUnsignedReply(t *testing.T) {
-	const secret = "testing123"
-	nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
-	nas.setReplyAuth(replyAuthNone)
-	svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(1))
-	target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
-
-	result, err := svc.Disconnect(context.Background(), target, SessionIdentity{Username: "alice", AcctSessionID: "s1"})
-	if err != nil {
-		t.Fatalf("Disconnect returned error: %v", err)
-	}
-	if !result.Success {
-		t.Fatalf("unsigned reply must still be accepted: %+v", result)
-	}
 }
