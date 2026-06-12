@@ -138,9 +138,44 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	// Failure recovery middleware
 	s.root.Use(ServerRecover(appconfig.System.Debug))
 	// Logging middleware
-	s.root.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
-		Format: appconfig.System.Appid + " ${time_rfc3339} ${remote_ip} ${method} ${uri} ${protocol} ${status} ${id} ${user_agent} ${latency} ${bytes_in} ${bytes_out} ${error}\n",
-		Output: os.Stdout,
+	s.root.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
+		LogRemoteIP:      true,
+		LogMethod:        true,
+		LogURI:           true,
+		LogProtocol:      true,
+		LogStatus:        true,
+		LogRequestID:     true,
+		LogUserAgent:     true,
+		LogLatency:       true,
+		LogContentLength: true,
+		LogResponseSize:  true,
+		LogError:         true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			bytesIn := v.ContentLength
+			if bytesIn == "" {
+				bytesIn = "0"
+			}
+			var errMsg string
+			if v.Error != nil {
+				errMsg = v.Error.Error()
+			}
+			_, _ = fmt.Fprintf(os.Stdout, "%s %s %s %s %s %s %d %s %s %d %s %d %s\n",
+				appconfig.System.Appid,
+				time.Now().Format(time.RFC3339),
+				v.RemoteIP,
+				v.Method,
+				v.URI,
+				v.Protocol,
+				v.Status,
+				v.RequestID,
+				v.UserAgent,
+				v.Latency.Nanoseconds(),
+				bytesIn,
+				v.ResponseSize,
+				errMsg,
+			)
+			return nil
+		},
 	}))
 	// p := prometheus.NewPrometheus("toughradius", nil)
 	// p.Use(s.root)
