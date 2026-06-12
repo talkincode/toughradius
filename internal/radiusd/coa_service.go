@@ -42,6 +42,14 @@ var ErrSessionNotFound = errors.New("coa: online session not found")
 // destination NAS address.
 var ErrNoTarget = errors.New("coa: target NAS address is required")
 
+// errResponseDiscarded is an internal sentinel marking that a CoA/Disconnect
+// reply was silently discarded because its optional Message-Authenticator was
+// present but did not verify (RFC 5176 §3.4). It drives the retransmission loop
+// to keep waiting for an authentic reply and, when the budget is exhausted, is
+// surfaced in CoAResult.Err. It is not a timeout, so CoAResult.TimedOut stays
+// false.
+var errResponseDiscarded = errors.New("coa: reply discarded: invalid Message-Authenticator (RFC 5176 §3.4)")
+
 // CoAAction identifies the RADIUS Dynamic Authorization operation being sent.
 type CoAAction string
 
@@ -328,6 +336,12 @@ func (s *CoAService) send(ctx context.Context, action CoAAction, target CoATarge
 	}
 
 	var lastErr error
+	// Precompute the Request Authenticator the transport puts on the wire. It is
+	// needed to validate the optional Message-Authenticator a NAS may include on
+	// its reply: RFC 5176 §3.4 computes the reply digest with the request's
+	// Request Authenticator. The packet is not mutated after this point, so the
+	// value is stable across retransmissions.
+	reqAuth := requestAuthenticator(packet)
 	for attempt := 0; attempt <= s.retries; attempt++ {
 		if err := ctx.Err(); err != nil {
 			lastErr = err
@@ -342,6 +356,16 @@ func (s *CoAService) send(ctx context.Context, action CoAAction, target CoATarge
 		cancel()
 
 		if err == nil {
+			// RFC 5176 §3.4: a reply carrying a Message-Authenticator MUST verify,
+			// otherwise it is silently discarded; an absent attribute is accepted
+			// because it is OPTIONAL on responses. Treat a discarded reply as an
+			// unanswered attempt so the retransmission budget keeps trying for an
+			// authentic answer rather than letting a forged packet end the exchange.
+			if verifyResponseMessageAuthenticator(resp, reqAuth, []byte(target.Secret)) == msgAuthInvalid {
+				lastErr = errResponseDiscarded
+				s.logDiscardedResponse(result, resp)
+				continue
+			}
 			result.RTT = rtt
 			classifyResponse(result, resp)
 			s.logResult(result, packet, resp)
@@ -464,6 +488,45 @@ func setMessageAuthenticator(packet *radius.Packet, secret string) error {
 		return fmt.Errorf("set Message-Authenticator: %w", err)
 	}
 	return nil
+}
+
+// requestAuthenticator returns the sixteen-octet Request Authenticator the
+// transport computes for an outbound CoA/Disconnect request (RFC 5176 §2.3),
+// derived from the encoded packet so it matches the bytes radius.Client.Exchange
+// places on the wire. It is needed to validate the optional reply
+// Message-Authenticator (RFC 5176 §3.4), whose digest is keyed on the request's
+// Request Authenticator. Encode does not mutate the packet, so calling it here
+// reproduces the value Exchange sends. A zero value is returned when the packet
+// cannot be encoded; the resulting digest mismatch then fails closed.
+func requestAuthenticator(packet *radius.Packet) [16]byte {
+	var auth [16]byte
+	wire, err := packet.Encode()
+	if err != nil || len(wire) < 20 {
+		return auth
+	}
+	copy(auth[:], wire[4:20])
+	return auth
+}
+
+// logDiscardedResponse records a CoA/Disconnect reply that was silently discarded
+// because its Message-Authenticator was present but did not verify (RFC 5176
+// §3.4). The exchange continues retransmitting; this surfaces the dropped packet
+// for operators without aborting the attempt.
+func (s *CoAService) logDiscardedResponse(result *CoAResult, resp *radius.Packet) {
+	code := ""
+	if resp != nil {
+		code = resp.Code.String()
+	}
+	zap.L().Warn("radius coa reply discarded: invalid message-authenticator",
+		zap.String("namespace", "radius"),
+		zap.String("action", string(result.Action)),
+		zap.String("target", result.Target),
+		zap.String("username", result.Username),
+		zap.String("acct_session_id", result.AcctSessionID),
+		zap.Int("identifier", result.Identifier),
+		zap.String("discarded_response", code),
+		zap.String("rfc", "RFC 5176 §3.4"),
+	)
 }
 
 // deadline or a net.Error timeout), which is the condition that warrants a
