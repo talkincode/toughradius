@@ -1,0 +1,38 @@
+# Path-based labeling rules consumed by the Labeler workflow
+# (.github/workflows/labeler.yml). Uses the actions/labeler v5+ match syntax.
+# Every label referenced here already exists in the repository, so no new
+# labels are created. See: https://github.com/actions/labeler
+
+go:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.go'
+          - 'go.mod'
+          - 'go.sum'
+
+javascript:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'web/**/*.{ts,tsx,js,jsx,mjs,cjs}'
+          - 'web/**/*.css'
+
+github_actions:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.github/workflows/**'
+          - '.github/actions/**'
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - 'go.mod'
+          - 'go.sum'
+          - 'web/package.json'
+          - 'web/package-lock.json'
+
+doc:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/*.md'
+          - 'docs/**'
+          - 'docs-site/**'

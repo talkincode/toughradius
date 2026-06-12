@@ -1,0 +1,41 @@
+# Greets contributors on their first issue or pull request in this repository.
+# Adapted from the official "Greetings" starter workflow with the action pinned
+# to a full commit SHA. Triggers are constrained to the "opened" activity type
+# so the greeting fires once and is not re-evaluated on every edit or label.
+#
+# Note: first-interaction v3 renamed its inputs to use underscores
+# (issue_message / pr_message / repo_token).
+name: Greetings
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: read
+
+jobs:
+  greeting:
+    name: Greet first-time contributors
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+      - uses: actions/first-interaction@1c4688942c71f71d4f5502a26ea67c331730fa4d # v3.1.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          issue_message: >
+            👋 Thanks for opening your first issue in ToughRADIUS! To help us
+            investigate, please include the version, deployment mode (PostgreSQL
+            or SQLite), relevant logs, and clear reproduction steps. See AGENT.md
+            and the docs/ handbook for project context.
+          pr_message: >
+            🎉 Thanks for your first pull request to ToughRADIUS! Please make
+            sure CI is green — `go build ./...`, `go test ./...`,
+            `golangci-lint run`, plus `cd web && npm run build` for frontend
+            changes — and that any protocol change cites the relevant spec under
+            docs/rfcs/. A maintainer will review it soon.
