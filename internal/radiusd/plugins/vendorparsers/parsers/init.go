@@ -41,4 +41,11 @@ func init() {
 		Description: "ZTE RADIUS attributes",
 		Parser:      &ZTEParser{},
 	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeRadback,
+		Name:        "Radback",
+		Description: "Radback RADIUS attributes",
+		Parser:      &RadbackParser{},
+	})
 }
