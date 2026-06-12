@@ -132,6 +132,70 @@ func (s *RadiusService) verifyMessageAuthenticator(r *radius.Packet, secret []by
 	return msgAuthInvalid
 }
 
+// verifyResponseMessageAuthenticator validates the OPTIONAL Message-Authenticator
+// attribute (RFC 3579 §3.2) that a NAS may include on a CoA/Disconnect reply
+// (ACK or NAK), per RFC 5176 §3.4. A Dynamic Authorization Client that receives a
+// reply carrying the attribute MUST recompute it and silently discard the packet
+// on mismatch; an absent attribute is accepted because it is optional on
+// responses.
+//
+// It returns msgAuthAbsent when no attribute is present (accept), msgAuthValid
+// when it verifies, and msgAuthInvalid when the reply must be discarded (wrong
+// value, malformed, duplicated, or unverifiable because no secret is available).
+//
+// Per RFC 5176 §3.4 the reply digest is HMAC-MD5 over the response packet with
+// the Message-Authenticator value treated as sixteen octets of zero and the
+// Authenticator field set to the Request Authenticator of the corresponding
+// request (reqAuth). A parsed reply carries the Response Authenticator in its
+// Authenticator field, so that field is overwritten with reqAuth before hashing.
+//
+// Presence is checked before the secret so an unsigned reply is still accepted
+// even when the shared secret is missing; a signed reply with no secret to verify
+// against fails closed.
+func verifyResponseMessageAuthenticator(resp *radius.Packet, reqAuth [16]byte, secret []byte) messageAuthResult {
+	if resp == nil {
+		return msgAuthAbsent
+	}
+
+	values, err := rfc2869.MessageAuthenticator_Gets(resp)
+	if err != nil {
+		return msgAuthInvalid
+	}
+	switch len(values) {
+	case 0:
+		return msgAuthAbsent
+	case 1:
+		// single attribute, validated below
+	default:
+		// RFC 3579 §3.2 allows at most one Message-Authenticator; reject extras.
+		return msgAuthInvalid
+	}
+
+	if len(secret) == 0 {
+		return msgAuthInvalid
+	}
+
+	received := values[0]
+	if len(received) != md5.Size {
+		return msgAuthInvalid
+	}
+
+	wire, err := resp.MarshalBinary()
+	if err != nil || len(wire) < 20 {
+		return msgAuthInvalid
+	}
+	// RFC 5176 §3.4: the reply digest is computed with the Request Authenticator
+	// of the corresponding request, not the Response Authenticator carried on the
+	// reply, so overwrite the marshaled Authenticator field before hashing.
+	copy(wire[4:20], reqAuth[:])
+
+	expected := computeMessageAuthenticator(wire, secret)
+	if hmac.Equal(received, expected) {
+		return msgAuthValid
+	}
+	return msgAuthInvalid
+}
+
 // addResponseMessageAuthenticator signs a non-EAP Access-Accept/Access-Reject
 // response with a freshly computed Message-Authenticator. It must be called
 // before the response is written so the attribute is covered by the Response
