@@ -48,4 +48,11 @@ func init() {
 		Description: "Radback RADIUS attributes",
 		Parser:      &RadbackParser{},
 	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeAlcatel,
+		Name:        "Alcatel",
+		Description: "Alcatel RADIUS attributes",
+		Parser:      &AlcatelParser{},
+	})
 }
