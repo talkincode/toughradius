@@ -114,14 +114,15 @@ func TestArubaAcceptEnhancer_Enhance_UserVlan(t *testing.T) {
 	tests := []struct {
 		name         string
 		vlanid1      int
-		expectedVlan uint32 // 0 means the attribute must be absent
+		expectVlan   uint32
+		expectAbsent bool // attribute must not be present at all
 	}{
-		{name: "valid access vlan", vlanid1: 200, expectedVlan: 200},
-		{name: "lowest valid vlan", vlanid1: 1, expectedVlan: 1},
-		{name: "highest valid vlan", vlanid1: arubaMaxVLANID, expectedVlan: arubaMaxVLANID},
-		{name: "zero vlan skipped", vlanid1: 0, expectedVlan: 0},
-		{name: "reserved 4095 skipped", vlanid1: 4095, expectedVlan: 0},
-		{name: "negative vlan skipped", vlanid1: -1, expectedVlan: 0},
+		{name: "valid access vlan", vlanid1: 200, expectVlan: 200},
+		{name: "lowest valid vlan", vlanid1: 1, expectVlan: 1},
+		{name: "highest valid vlan", vlanid1: arubaMaxVLANID, expectVlan: arubaMaxVLANID},
+		{name: "zero vlan skipped", vlanid1: 0, expectAbsent: true},
+		{name: "reserved 4095 skipped", vlanid1: 4095, expectAbsent: true},
+		{name: "negative vlan skipped", vlanid1: -1, expectAbsent: true},
 	}
 
 	for _, tt := range tests {
@@ -142,7 +143,15 @@ func TestArubaAcceptEnhancer_Enhance_UserVlan(t *testing.T) {
 			err := enhancer.Enhance(ctx, authCtx)
 			require.NoError(t, err)
 
-			assert.Equal(t, tt.expectedVlan, uint32(aruba.ArubaUserVlan_Get(response)))
+			// Use Lookup so a skipped VLAN asserts true absence, not the zero
+			// value that Get cannot distinguish from a present "0".
+			vlan, lookupErr := aruba.ArubaUserVlan_Lookup(response)
+			if tt.expectAbsent {
+				assert.ErrorIs(t, lookupErr, radius.ErrNoAttribute)
+			} else {
+				require.NoError(t, lookupErr)
+				assert.Equal(t, tt.expectVlan, uint32(vlan))
+			}
 		})
 	}
 }
