@@ -156,11 +156,11 @@
 - **关联编号**：`TR-F005`
 - **目标**：按 parser / enhancer / registry 模式扩展更多厂商 VSA 覆盖，补齐样例包测试。
 - **技能**：`.agents/skills/add-radius-vendor/SKILL.md`
-- **状态**：进行中（M5.1 已交付，M5.2 待按校准后的优先级逐厂商推进）
+- **状态**：进行中（M5.1 / M5.2 已交付，M5.3 待推进）
 
 子任务：
 - [x] M5.1 梳理待补厂商清单与字典差异<br/>**已交付**（PR #433）：基线快照 [`docs/vendor-vsa-gap-baseline.md`](vendor-vsa-gap-baseline.md) 记录覆盖矩阵——15 个生成厂商字典；已注册 parser 为 `default + huawei + h3c + zte`，已注册 enhancer 为 `default + huawei + h3c + zte + mikrotik + ikuai`；`alcatel(3041)` / `aruba(14823)` / `unix(4)` 三个字典缺 `vendors.Code*` 常量。核心结论「字典 ≠ parser」：未注册 parser 的厂商一律回落到只解析标准属性的 `DefaultParser`。
-- [ ] M5.2 逐厂商按现有模式接入 parser / enhancer<br/>**优先级校准（基于 M5.1 字典证据，groom 修订）**：`vendorparsers.VendorRequest` 仅承载 `MacAddr` + 双 `Vlanid`，故 **parser 仅对「在请求侧以厂商私有 VSA 编码 MAC/VLAN」的厂商有增量价值**。证据：`mikrotik` / `ikuai` 请求侧用标准 `Calling-Station-Id`（其 VLAN VSA 如 `Mikrotik-Wireless-VLANID` 属 Access-Accept 响应侧），单独加 parser 会与 `DefaultParser` 行为重复、仅补「对称」而无行为差异，故**不再优先**（原基线把它们列为 batch 1 系误判）。优先接入存在请求侧厂商私有 MAC/VLAN 的厂商：`radback`（`Mac-Addr` / `Bind-Dot1q-Vlan-Tag-Id`）、`alcatel`（`AAT-User-MAC-Address`）、`aruba`（`Aruba-User-Vlan`）、`juniper`（`Juniper-VoIP-Vlan`）——具体请求/响应侧语义按各厂商字典与规范逐一核实。enhancer（响应速率 / VLAN）的价值与 parser 解耦，按部署需求独立推进。每厂商按 `add-radius-vendor` SOP 交付：parser + 注册（缺 `Code*` 常量先补）+ enhancer（若需响应 VSA）+ 样例测试，过 `go test ./internal/radiusd/...` 与 golangci-lint 门禁。<br/>**增量交付（已合并）**：`radback` 请求侧 parser（PR #449）+ `alcatel` 请求侧 parser（PR #450）+ `aruba` 请求侧 parser（PR #451）已完成并入主干；`juniper` 请求侧 `Juniper-VoIP-Vlan` parser 与必要增强器留待后续批次。
+- [x] M5.2 逐厂商按现有模式接入 parser / enhancer<br/>**优先级校准（基于 M5.1 字典证据，groom 修订）**：`vendorparsers.VendorRequest` 仅承载 `MacAddr` + 双 `Vlanid`，故 **parser 仅对「在请求侧以厂商私有 VSA 编码 MAC/VLAN」的厂商有增量价值**。证据：`mikrotik` / `ikuai` 请求侧用标准 `Calling-Station-Id`（其 VLAN VSA 如 `Mikrotik-Wireless-VLANID` 属 Access-Accept 响应侧），单独加 parser 会与 `DefaultParser` 行为重复、仅补「对称」而无行为差异，故**不再优先**（原基线把它们列为 batch 1 系误判）。优先接入存在请求侧厂商私有 MAC/VLAN 的厂商：`radback`（`Mac-Addr` / `Bind-Dot1q-Vlan-Tag-Id`）、`alcatel`（`AAT-User-MAC-Address`）、`aruba`（`Aruba-User-Vlan`）、`juniper`（`Juniper-VoIP-Vlan`）——具体请求/响应侧语义按各厂商字典与规范逐一核实。enhancer（响应速率 / VLAN）的价值与 parser 解耦，按部署需求独立推进。每厂商按 `add-radius-vendor` SOP 交付：parser + 注册（缺 `Code*` 常量先补）+ enhancer（若需响应 VSA）+ 样例测试，过 `go test ./internal/radiusd/...` 与 golangci-lint 门禁。<br/>**增量交付（已合并）**：`radback` 请求侧 parser（PR #449）+ `alcatel` 请求侧 parser（PR #450）+ `aruba` 请求侧 parser（PR #451）+ `juniper` 请求侧 `Juniper-VoIP-Vlan` parser（PR #453）已完成并入主干；响应侧增强器按部署需求在 M5.3 继续推进。
 - [ ] M5.3 厂商样例包覆盖解析与响应属性
 
 ## M6 — 可观测性与运维增强
