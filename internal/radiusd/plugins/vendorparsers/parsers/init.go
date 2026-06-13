@@ -62,4 +62,11 @@ func init() {
 		Description: "Aruba RADIUS attributes",
 		Parser:      &ArubaParser{},
 	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeJuniper,
+		Name:        "Juniper",
+		Description: "Juniper RADIUS attributes",
+		Parser:      &JuniperParser{},
+	})
 }
