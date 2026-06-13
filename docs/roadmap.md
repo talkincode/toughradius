@@ -156,12 +156,12 @@
 - **关联编号**：`TR-F005`
 - **目标**：按 parser / enhancer / registry 模式扩展更多厂商 VSA 覆盖，补齐样例包测试。
 - **技能**：`.agents/skills/add-radius-vendor/SKILL.md`
-- **状态**：进行中（M5.1 / M5.2 已交付，M5.3 待推进）
+- **状态**：进行中（M5.1 / M5.2 / M5.3 已交付；其余厂商响应增强器按部署需求驱动，见 M5.3 说明）
 
 子任务：
 - [x] M5.1 梳理待补厂商清单与字典差异<br/>**已交付**（PR #433）：基线快照 [`docs/vendor-vsa-gap-baseline.md`](vendor-vsa-gap-baseline.md) 记录覆盖矩阵——15 个生成厂商字典；已注册 parser 为 `default + huawei + h3c + zte`，已注册 enhancer 为 `default + huawei + h3c + zte + mikrotik + ikuai`；`alcatel(3041)` / `aruba(14823)` / `unix(4)` 三个字典缺 `vendors.Code*` 常量。核心结论「字典 ≠ parser」：未注册 parser 的厂商一律回落到只解析标准属性的 `DefaultParser`。
 - [x] M5.2 逐厂商按现有模式接入 parser / enhancer<br/>**优先级校准（基于 M5.1 字典证据，groom 修订）**：`vendorparsers.VendorRequest` 仅承载 `MacAddr` + 双 `Vlanid`，故 **parser 仅对「在请求侧以厂商私有 VSA 编码 MAC/VLAN」的厂商有增量价值**。证据：`mikrotik` / `ikuai` 请求侧用标准 `Calling-Station-Id`（其 VLAN VSA 如 `Mikrotik-Wireless-VLANID` 属 Access-Accept 响应侧），单独加 parser 会与 `DefaultParser` 行为重复、仅补「对称」而无行为差异，故**不再优先**（原基线把它们列为 batch 1 系误判）。优先接入存在请求侧厂商私有 MAC/VLAN 的厂商：`radback`（`Mac-Addr` / `Bind-Dot1q-Vlan-Tag-Id`）、`alcatel`（`AAT-User-MAC-Address`）、`aruba`（`Aruba-User-Vlan`）、`juniper`（`Juniper-VoIP-Vlan`）——具体请求/响应侧语义按各厂商字典与规范逐一核实。enhancer（响应速率 / VLAN）的价值与 parser 解耦，按部署需求独立推进。每厂商按 `add-radius-vendor` SOP 交付：parser + 注册（缺 `Code*` 常量先补）+ enhancer（若需响应 VSA）+ 样例测试，过 `go test ./internal/radiusd/...` 与 golangci-lint 门禁。<br/>**增量交付（已合并）**：`radback` 请求侧 parser（PR #449）+ `alcatel` 请求侧 parser（PR #450）+ `aruba` 请求侧 parser（PR #451）+ `juniper` 请求侧 `Juniper-VoIP-Vlan` parser（PR #453）已完成并入主干；响应侧增强器按部署需求在 M5.3 继续推进。
-- [ ] M5.3 厂商样例包覆盖解析与响应属性
+- [x] M5.3 厂商样例包覆盖解析与响应属性<br/>**已交付（PR #455 已合并）**：在 M5.2 请求侧 parser（radback/alcatel/aruba/juniper，均带样例解析测试）基础上，补齐代表性厂商的**响应侧**增强器与样例测试，使「样例包覆盖解析 + 响应属性」端到端成型。新增 `ArubaAcceptEnhancer`（`accept-aruba`，注册于 `internal/radiusd/plugins/init.go`），对 Aruba/HPE NAS（SMI 私有企业码 14823）按厂商私有 VSA 下发 Access-Accept 策略属性：① `Aruba-User-Vlan`（type 2，整型）取自用户 `Vlanid1`，仅在合法 802.1Q 范围 `1..4094` 下发（该上界同时保证 `int→uint32` 转换不溢出），`Vlanid2`（QinQ 外层）无对应属性故不下发；② `Aruba-User-Role`（type 1，字符串）取自通用 `Domain` 厂商策略字段（经 `GetDomain` 尊重 profile 继承），与 Huawei 增强器 `Domain→Huawei-Domain-Name` 同构。非 Aruba NAS 与字段缺省时为 no-op，绝不改写非己方 Access-Accept。样例测试覆盖 vendor 命中/不命中、VLAN 边界（合法/0/保留 4095/负值，缺省经 `ArubaUserVlan_Lookup`+`ErrNoAttribute` 断言真实缺席）、role 取值/空/`N/A`。门禁：`gofmt`、`go build ./...`、`go test ./...`、golangci-lint v2.12.2（0 问题）通过；CI 全绿经合并队列并入 `main`。<br/>**响应属性的语义边界（其余厂商按需求驱动）**：经核对字典，`juniper(2636)` 的 `tx/rx-connect-speed` 为接入线路速率（非整形限速）、`CoS-Traffic-Control-Profile` 为命名 profile 字符串；`radback(2352)` 的 `QOSRateInbound/Outbound` 为字符串、`RateLimitRate` 无方向；`alcatel(3041)` 仅命名 `AATQos`/ATM profile——均无可由 `UpRate/DownRate` 直接映射的「数值方向性速率」属性，缺乏明确单位语义即不臆造下发。这些厂商及 `cisco`/`microsoft` 的响应增强器按 M5.1 基线「enhancer 与 parser 解耦、按部署需求推进」处理：待出现明确某厂商响应 VSA 与单位语义的具体部署时，再按 `add-radius-vendor` SOP 增量交付 enhancer + 样例测试。
 
 ## M6 — 可观测性与运维增强
 
