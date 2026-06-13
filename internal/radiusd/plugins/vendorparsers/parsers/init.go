@@ -55,4 +55,11 @@ func init() {
 		Description: "Alcatel RADIUS attributes",
 		Parser:      &AlcatelParser{},
 	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeAruba,
+		Name:        "Aruba",
+		Description: "Aruba RADIUS attributes",
+		Parser:      &ArubaParser{},
+	})
 }
