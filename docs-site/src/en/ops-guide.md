@@ -179,8 +179,12 @@ no Prometheus `/metrics` HTTP endpoint). RADIUS counters include: `radus_accept`
 `radus_acct_drop`, `radus_radsec_saturated`, and per-cause reject counters —
 `radus_reject_passwd_error`, `radus_reject_not_exists`, `radus_reject_expire`,
 `radus_reject_disabled`, `radus_reject_limit`, `radus_reject_bind_error`,
-`radus_reject_unauthorized`, `radus_reject_other`. System gauges (CPU/memory,
-process CPU/memory) are sampled every 30 s.
+`radus_reject_unauthorized`, `radus_reject_other`. Accounting-Requests dropped
+at ingress are classified by reason — `radus_acct_drop_nas` (unknown or
+unauthorized NAS), `radus_acct_drop_username` (missing username), and
+`radus_acct_drop_secret` (bad Request Authenticator) — while `radus_acct_drop`
+remains the catch-all for back-pressure and response-write drops. System gauges
+(CPU/memory, process CPU/memory) are sampled every 30 s.
 
 For external monitoring, probe the service ports and watch the log file; treat
 process exit as the failure signal (the process model is fail-fast).

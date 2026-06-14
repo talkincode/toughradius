@@ -269,13 +269,13 @@ func NewAcctDropError(message string) error {
 
 // NewAcctNasNotFoundError creates an error when NAS is not found for accounting
 func NewAcctNasNotFoundError(ip, identifier string) error {
-	return NewAcctError(app.MetricsRadiusAcctDrop,
+	return NewAcctError(app.MetricsRadiusAcctDropNas,
 		fmt.Sprintf("NAS not found, Ip=%s, Identifier=%s", ip, identifier))
 }
 
 // NewAcctUsernameEmptyError creates an error for empty username in accounting
 func NewAcctUsernameEmptyError() error {
-	return NewAcctError(app.MetricsRadiusAcctDrop, "username is empty")
+	return NewAcctError(app.MetricsRadiusAcctDropUsername, "username is empty")
 }
 
 // WrapAuthError converts a general error into an AuthError
