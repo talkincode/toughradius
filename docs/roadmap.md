@@ -31,7 +31,7 @@
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 已完成 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 进行中 |
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 进行中 |
-| M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
+| M6 | 可观测性与运维增强 | TR-F015 | P3 | 进行中 |
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已完成 |
 | M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 已完成 |
@@ -170,10 +170,13 @@
 - **边界**：遵守 `TR-N003`，不扩展为通用监控平台。
 
 子任务：
-- [ ] M6.1 补充认证/计费失败分类指标
+- [x] M6.1 补充认证/计费失败分类指标：认证侧 reject 早已按原因分类（`radus_reject_*`），但**计费侧失败此前完全不可见**——`logAcctError` 计算了 metric key 却从未调用 `IncRadiusMetric`，且所有计费丢弃共用唯一的 `radus_acct_drop`（其自身亦从未自增）。这是认证侧 M14.3/M14.7 修复的计费侧对应物。<br/>**已交付**：新增 3 个分类指标常量 `radus_acct_drop_nas` / `radus_acct_drop_username` / `radus_acct_drop_secret`（`internal/app/radius_metrics.go`，并入 `metricsNames`，保留 `radus_acct_drop` 作兜底）；新增 `acctMetricsKeyForStage(stage)` 按入口阶段（`nas_lookup` / `validate_username` / `verify_secret`）映射分类键，并令 `logAcctError` 真正调用 `IncRadiusMetric`；在工作池饱和丢弃（`submitAcctTask`）与响应写错误（`SendResponse`）两处兜底自增 `radus_acct_drop`（`internal/radiusd/radius_acct.go`）。**关键正确性**：计费 `nas_lookup` 复用共享 `GetNas`，其 not-found 返回携带认证侧 `radus_reject_unauthorized` 键的 `AuthError`——故采用**按阶段分类**而非按错误键映射，避免把计费丢弃误计入认证 reject 计数器（单测显式断言该 reject 计数器不被自增）。改动纯增量（不改任何既有指标名→保持 M6.3 命名兼容）。补 `internal/radiusd/radius_acct_metrics_test.go`（4 例：stage→key 映射、按阶段计数含认证指标隔离断言、池饱和兜底、写错误兜底；`-race` 通过、删除生产自增行即失败的有效性）；同步双语运维指南（`docs-site/src/{en,zh}/ops-guide.md`）。门禁：`go build ./...`、`go test ./...`、`golangci-lint`（v2.12.2，0 问题）全绿；PR #463 经独立评审 gate（`agent-approved` + CI 全绿）squash 合并。
 - [ ] M6.2 Dashboard 趋势维度扩展
 - [ ] M6.3 指标命名兼容性回归
 - [x] M6.4 修复休眠的数据清理任务：`Application.SchedClearExpireData`（清理 `radius_online` 残留行与按 `AccountingHistoryDays` 清理 `radius_accounting`）已定义但**从未注册到 cron**——当前 `@daily` 任务仅删除一年前的操作日志（`SysOprLog`），计费历史与残留在线记录实际不会自动清理。需将其按 `@daily`（或可配置周期）注册并补单元测试；发现来源：M13.9 FAQ 校准。<br/>**已交付**：`initJob` 新增第二个 `@daily` 任务调用 `SchedClearExpireData`（`internal/app/jobs.go`），令计费历史与残留在线行真正按天清理。**并修复三处耦合缺陷（含独立评审 gate 追加发现的两处数据丢失）**：①原逻辑 `if idays==0 { idays=90 }` 与配置 schema「`0=disabled`」语义矛盾——管理员把 `AccountingHistoryDays` 设为 `0`（意为永久保留）反而会按 90 天清理；改为 `idays>0` 才清理（`0` 关闭、缺失配置不误删）。②**计费记录在 Accounting-Start 即创建且 `AcctStopTime` 为零值（`0001-01-01`），仅在 Accounting-Stop 时落地**，原 `acct_stop_time < cutoff` 会把所有在线会话的计费行在下一次 `@daily` 立即删除（永久丢失账单/流量）——加 `acct_stop_time > epoch` 守卫，仅清理**已结束**记录。③在线清理阈值原为固定 300 秒，恰等于 `AcctInterimInterval` 默认值，会把仅错过一次中间更新的**存活会话**每天误删（且并发数 `active_num` 据 `radius_online` 计数→并发上限被绕过）——改为按 `AcctInterimInterval×3` 计算陈旧窗口，仅清理连续多个周期未刷新的真正悬挂会话。补 `internal/app/jobs_test.go`（30 天保留正例含零值在线会话存活断言、`0` 关闭计费清理且在线清理仍独立运行、`initJob` 注册 3 个 cron 条目回归守卫；两例均断言零 `AcctStopTime` 的在线会话计费行存活）。同步校正手册：FAQ / 运维指南 / 管理手册（en+zh）原「尚未注册、不会自动清理」措辞改为现实行为并补「`0` 关闭」。门禁：`go build ./...`、`go test ./internal/app/`、`golangci-lint`（v2.12.2，0 问题）、`mdbook build` + lychee `--offline --include-fragments` 0 错误。
+- [ ] M6.5 补全计费成功计数器 `radus_accounting`：常量已在 `internal/app/radius_metrics.go` 定义并纳入 `metricsNames`，但计费成功落地路径从未调用 `IncRadiusMetric(MetricsRadiusAccounting)`——成功计费请求量当前不可见（认证侧 M14.7 `radus_accept` 的计费侧对应物）。需在计费请求成功处理处自增并补单测。发现来源：M6.1 实现。
+- [ ] M6.6 新增异步持久化失败指标 `radus_acct_process_error`：计费响应已发出后，后台落库 / 在线表更新失败目前仅记日志、无指标。需新增该分类指标，区别于入口期丢弃（`radus_acct_drop_*`），覆盖「已应答但持久化失败」这一 post-response 失败面，并补单测。发现来源：M6.1 实现。
+- [ ] M6.7 计费 panic 路径补 `radus_acct_drop` 自增：`ServeRADIUS` 的 recover 块当前仅输出 `metrics: radus_acct_drop` 日志字段却未调用 `IncRadiusMetric`，panic 诱发的丢弃仍不可见。需在 recover 路径补自增，并以可诱发 panic 的测试守卫。发现来源：M6.1 独立评审 gate。
 
 ## M7 — 上游 RADIUS 库跟踪与协议合规
 
