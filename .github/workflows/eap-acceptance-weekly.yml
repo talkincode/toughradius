@@ -66,7 +66,7 @@ jobs:
           TEST_DATABASE_NAME: postgres
           INTEGRATION_REQUIRED: "1"
           EAP_ACCEPTANCE_REQUIRED: "1"
-          EAP_ACCEPTANCE_RESULT_JSON: build/eap-acceptance/eap-acceptance.json
+          EAP_ACCEPTANCE_RESULT_JSON: ${{ github.workspace }}/build/eap-acceptance/eap-acceptance.json
         shell: bash
         run: |
           set -o pipefail
