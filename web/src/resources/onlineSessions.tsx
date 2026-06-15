@@ -63,6 +63,7 @@ import {
 import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
 import { ServerPagination, ActiveFilters } from '../components';
 import { apiRequest, ApiError } from '../utils/apiClient';
+import { formatBytes, sumNumberish, type Numberish } from '../utils/formatters';
 
 const LARGE_LIST_PER_PAGE = 50;
 
@@ -81,8 +82,10 @@ interface OnlineSession extends RaRecord {
   session_timeout?: number;
   acct_start_time?: string | number;
   acct_session_time?: number;
-  acct_input_octets?: number;
-  acct_output_octets?: number;
+  acct_input_total?: Numberish;
+  acct_output_total?: Numberish;
+  acct_input_octets?: Numberish;
+  acct_output_octets?: Numberish;
   acct_input_packets?: number;
   acct_output_packets?: number;
 }
@@ -125,22 +128,11 @@ const formatDuration = (seconds?: number): string => {
   return parts.join(' ');
 };
 
-const formatBytes = (bytes?: number): string => {
-  if (bytes === undefined || bytes === null) {
-    return '-';
-  }
-  if (bytes === 0) {
-    return '0 B';
-  }
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let value = bytes;
-  let index = 0;
-  while (value >= 1024 && index < units.length - 1) {
-    value /= 1024;
-    index += 1;
-  }
-  return `${parseFloat(value.toFixed(2))} ${units[index]}`;
-};
+const getInputTraffic = (record: OnlineSession): Numberish | undefined =>
+  record.acct_input_octets ?? record.acct_input_total;
+
+const getOutputTraffic = (record: OnlineSession): Numberish | undefined =>
+  record.acct_output_octets ?? record.acct_output_total;
 
 const formatTimestamp = (value?: string | number): string => {
   if (!value) {
@@ -599,7 +591,7 @@ const SessionHeaderCard = () => {
 
   if (!record) return null;
 
-  const totalTraffic = (record.acct_input_octets ?? 0) + (record.acct_output_octets ?? 0);
+  const totalTraffic = sumNumberish(getInputTraffic(record), getOutputTraffic(record));
   const sessionTimePercent = record.session_timeout
     ? Math.min(((record.acct_session_time ?? 0) / record.session_timeout) * 100, 100)
     : 0;
@@ -943,7 +935,7 @@ const SessionHeaderCard = () => {
               </Typography>
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'info.main' }}>
-              {formatBytes(record.acct_input_octets)}
+              {formatBytes(getInputTraffic(record))}
             </Typography>
           </Box>
 
@@ -962,7 +954,7 @@ const SessionHeaderCard = () => {
               </Typography>
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'warning.main' }}>
-              {formatBytes(record.acct_output_octets)}
+              {formatBytes(getOutputTraffic(record))}
             </Typography>
           </Box>
 
@@ -1019,8 +1011,7 @@ const OnlineSessionDetails = () => {
     return null;
   }
 
-  const totalTraffic =
-    (record.acct_input_octets ?? 0) + (record.acct_output_octets ?? 0);
+  const totalTraffic = sumNumberish(getInputTraffic(record), getOutputTraffic(record));
 
   return (
     <>
@@ -1210,14 +1201,14 @@ const OnlineSessionDetails = () => {
             >
               <TrafficStat
                 label={translate('resources.radius/online.fields.acct_input_octets')}
-                value={formatBytes(record.acct_input_octets)}
+                value={formatBytes(getInputTraffic(record))}
                 icon={<UploadIcon />}
                 color="info"
                 subValue={`${record.acct_input_packets?.toLocaleString() ?? 0} 包`}
               />
               <TrafficStat
                 label={translate('resources.radius/online.fields.acct_output_octets')}
-                value={formatBytes(record.acct_output_octets)}
+                value={formatBytes(getOutputTraffic(record))}
                 icon={<DownloadIcon />}
                 color="warning"
                 subValue={`${record.acct_output_packets?.toLocaleString() ?? 0} 包`}
@@ -1615,7 +1606,7 @@ const TrafficFieldCompact = ({ type }: { type: 'upload' | 'download' }) => {
   const record = useRecordContext<OnlineSession>();
   if (!record) return null;
 
-  const value = type === 'upload' ? record.acct_input_octets : record.acct_output_octets;
+  const value = type === 'upload' ? getInputTraffic(record) : getOutputTraffic(record);
   const color = type === 'upload' ? 'info.main' : 'warning.main';
   const Icon = type === 'upload' ? UploadIcon : DownloadIcon;
 
@@ -1831,12 +1822,12 @@ const OnlineSessionListContent = () => {
             <SessionDurationField label={translate('resources.radius/online.fields.session_time')} />
             <TimeoutField label={translate('resources.radius/online.fields.session_timeout')} />
             <FunctionField
-              source="acct_input_octets"
+              source="acct_input_total"
               label={translate('resources.radius/online.fields.acct_input_octets')}
               render={() => <TrafficFieldCompact type="upload" />}
             />
             <FunctionField
-              source="acct_output_octets"
+              source="acct_output_total"
               label={translate('resources.radius/online.fields.acct_output_octets')}
               render={() => <TrafficFieldCompact type="download" />}
             />

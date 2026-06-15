@@ -56,6 +56,7 @@ import {
 } from '@mui/icons-material';
 import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react';
 import { ServerPagination, ActiveFilters } from '../components';
+import { formatBytes, sumNumberish, type Numberish } from '../utils/formatters';
 
 const LARGE_LIST_PER_PAGE = 50;
 
@@ -78,8 +79,8 @@ interface AccountingRecord extends RaRecord {
   delegated_ipv6_prefix?: string;
   mac_addr?: string;
   acct_session_time?: number;
-  acct_input_total?: number;
-  acct_output_total?: number;
+  acct_input_total?: Numberish;
+  acct_output_total?: Numberish;
   acct_input_packets?: number;
   acct_output_packets?: number;
   acct_start_time?: string | number;
@@ -105,23 +106,6 @@ const formatDuration = (seconds?: number): string => {
   }
   parts.push(`${secs}s`);
   return parts.join(' ');
-};
-
-const formatBytes = (bytes?: number): string => {
-  if (bytes === undefined || bytes === null) {
-    return '-';
-  }
-  if (bytes === 0) {
-    return '0 B';
-  }
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let value = bytes;
-  let index = 0;
-  while (value >= 1024 && index < units.length - 1) {
-    value /= 1024;
-    index += 1;
-  }
-  return `${parseFloat(value.toFixed(2))} ${units[index]}`;
 };
 
 const formatTimestamp = (value?: string | number): string => {
@@ -454,7 +438,7 @@ const AccountingHeaderCard = () => {
   if (!record) return null;
 
   const isOnline = !record.acct_stop_time;
-  const totalTraffic = (record.acct_input_total ?? 0) + (record.acct_output_total ?? 0);
+  const totalTraffic = sumNumberish(record.acct_input_total, record.acct_output_total);
   const terminateInfo = getTerminateCauseInfo(record.acct_terminate_cause);
 
   return (
@@ -752,8 +736,7 @@ const AccountingDetails = () => {
     return null;
   }
 
-  const totalTraffic =
-    (record.acct_input_total ?? 0) + (record.acct_output_total ?? 0);
+  const totalTraffic = sumNumberish(record.acct_input_total, record.acct_output_total);
   const isOnline = !record.acct_stop_time;
 
   return (
