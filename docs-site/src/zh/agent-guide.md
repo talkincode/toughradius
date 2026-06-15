@@ -28,7 +28,7 @@
 
 agent 驱动开发围绕三份产物组织：
 
-- [`docs/roadmap.md`](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.md)
+- [`docs/roadmap.zh.md`](https://github.com/talkincode/toughradius/blob/main/docs/roadmap.zh.md)
   —— 长期路线图与里程碑，每项映射到 `TR-F` 编号，是 agent 工作的任务来源。
 - [`.agents/skills/`](https://github.com/talkincode/toughradius/tree/main/.agents/skills)
   —— 可复用的技能 SOP，每个技能一个目录（`.agents/skills/<name>/SKILL.md`）。
