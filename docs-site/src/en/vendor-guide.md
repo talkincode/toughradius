@@ -54,15 +54,27 @@ Profile rates are stored in **Kbps**. Each vendor enhancer converts:
 
 ### Request parsing (MAC and VLAN)
 
-All parsers read the MAC address from `Calling-Station-Id`. Only the
-**Huawei, H3C, and ZTE** parsers additionally extract VLAN IDs from
-`NAS-Port-Id`, recognizing both common encodings:
+The default parser reads the MAC address from `Calling-Station-Id`. Vendor
+parsers add request-side VSA or `NAS-Port-Id` handling where the device family
+has a stable encoding:
 
 - `slot/subslot/port:vlan[.vlan2]` — e.g. `3/0/1:2814.727`
 - `vlanid=<n>;vlanid2=<n>;` — e.g. `slot=2;...;vlanid=503;vlanid2=100;`
 
-MAC binding works with every vendor; **VLAN binding requires one of the three
-VLAN-aware parsers** above.
+| Vendor | MAC source | VLAN source | Notes |
+| ------ | ---------- | ----------- | ----- |
+| Huawei (2011) | `Calling-Station-Id` | `NAS-Port-Id` | Supports both encodings above. |
+| H3C (25506) | `Calling-Station-Id` | `NAS-Port-Id` | Supports both encodings above. |
+| ZTE (3902) | `Calling-Station-Id` | `NAS-Port-Id` | Supports both encodings above. |
+| Radback (2352) | `Mac-Addr` VSA, falling back to `Calling-Station-Id` | `Bind-Dot1q-Vlan-Tag-Id` VSA, falling back to `NAS-Port-Id` | Request parser only; no Radback response enhancer is shipped. |
+| Alcatel (3041) | `AAT-User-MAC-Address` VSA, falling back to `Calling-Station-Id` | `NAS-Port-Id` when present | Request parser only; response attributes remain deployment-specific. |
+| Aruba/HPE (14823) | `Calling-Station-Id` | `Aruba-User-Vlan` VSA, falling back to `NAS-Port-Id` | Also has an Access-Accept enhancer; see below. |
+| Juniper (2636) | `Calling-Station-Id` | `Juniper-VoIP-Vlan` VSA, falling back to `NAS-Port-Id` | Request parser only; response attributes remain deployment-specific. |
+| MikroTik, iKuai, Cisco, Standard | `Calling-Station-Id` | — | No vendor-specific VLAN parser; use device-side policy or custom integration. |
+
+MAC binding works with every vendor that sends a recognizable MAC address.
+VLAN binding requires one of the VLAN-aware parsers above and a matching
+request encoding from the NAS.
 
 > Device-side snippets below are **reference examples** — command syntax varies
 > by model and OS version; always consult the vendor documentation.
@@ -171,15 +183,34 @@ clamped). On the iKuai web console: **认证计费 → RADIUS 计费** — set t
 address, ports 1812/1813, and the shared secret; enable RADIUS in the PPPoE
 server settings.
 
+## Aruba/HPE — vendor code 14823
+
+Aruba/HPE devices have both request parsing and Access-Accept enhancement.
+The parser extracts VLAN information from `Aruba-User-Vlan` when the request
+carries it, with the same `NAS-Port-Id` fallback used by other VLAN-aware
+parsers.
+
+On `Access-Accept`, ToughRADIUS sends:
+
+| Attribute | Source | Boundary / no-op rule |
+| --------- | ------ | --------------------- |
+| `Aruba-User-Vlan` | user or profile `Vlanid1` | Sent only for VLAN IDs `1..4094`; missing, `0`, `4095`, or negative values are omitted. `Vlanid2` has no Aruba attribute mapping and is not sent. |
+| `Aruba-User-Role` | user or profile `Domain` | Sent when the inherited domain / role field is non-empty and not `N/A`. |
+
+No Aruba VSAs are added for non-Aruba NAS records, and unset fields are left out
+instead of emitting placeholder values.
+
 ## Standard / other devices — vendor code 0
 
 Any RFC-compliant NAS (pfSense, strongSwan, FreeRADIUS clients, Wi-Fi
 controllers, …) can authenticate against ToughRADIUS with vendor code
 `Standard`: full credential validation, session control, accounting, IPv4/IPv6
 attributes — but no proprietary rate attributes. Attribute **dictionaries** for
-more vendors (Microsoft, Juniper, F5, Alcatel, Aruba, PfSense, Hillstone,
-Radback, …) ship in the codebase for custom development — a dictionary defines
-attributes but does not by itself parse requests or enhance accepts.
+more vendors (Microsoft, F5, PfSense, Hillstone, …) ship in the codebase for
+custom development. For Juniper, Alcatel, Aruba, and Radback, the shipped
+capability is more specific than "dictionary only": see the request parser and
+Aruba enhancer boundaries above. A dictionary alone still does not parse
+requests or enhance accepts unless a parser or enhancer is registered.
 
 ## Troubleshooting an integration
 
@@ -187,7 +218,7 @@ attributes but does not by itself parse requests or enhance accepts.
 | ------- | ------------ |
 | Device gets `Access-Accept` but no bandwidth limit | NAS record vendor is `Standard`, or the device ignores the VSA — check the vendor code first |
 | All requests silently dropped | Source IP not registered as a NAS, or shared secret mismatch |
-| VLAN binding never matches | Vendor parser without VLAN support (only Huawei/H3C/ZTE parse VLANs), or unexpected `NAS-Port-Id` format |
+| VLAN binding never matches | NAS vendor is not one of the VLAN-aware parsers above, or the request uses an unexpected VSA / `NAS-Port-Id` format |
 | CoA/Disconnect times out | Device CoA listener disabled, or non-default port — set *CoA port* on the NAS record |
 
 More in the [FAQ](./faq.md).
