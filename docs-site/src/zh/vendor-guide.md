@@ -13,6 +13,10 @@ ToughRADIUS 下发什么、解析什么，以及设备侧的参考配置。
 > 📖 想要端到端的运维范例（PPPoE 分级套餐、Hotspot + MAC 认证、CoA / 强制下线）？
 > 见[场景实战手册](./cookbook.md)。本章是属性参考卡，实战手册是照着做的剧本。
 
+> **Portal 边界：** ToughRADIUS 是 RADIUS AAA 后端，不托管 Captive Portal
+> 登录页或访客开户注册流程。见
+> [Portal / Hotspot 对接边界](./portal-hotspot-boundary.md)。
+
 ## 任意设备的通用对接步骤
 
 1. **登记 NAS**：在 **NAS 设备 → 新建** 填写源 IP 地址（或 identifier）、

@@ -11,7 +11,7 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 1. Milestones use `M<number>` IDs and map to one or more `TR-F` feature IDs.
 2. Each milestone is split into MVP subtasks that are independently deliverable, reversible, and verifiable.
 3. Status flows as `Planned -> In progress -> Delivered`; delivery means merged to `main` with passing CI.
-4. Do not schedule non-goals from `TR-N001` through `TR-N005`: billing/orders, CRM/tickets, generic monitoring, multi-tenant SaaS, or protocol-stack/framework rewrites.
+4. Do not schedule non-goals from `TR-N001` through `TR-N006`: billing/orders, CRM/tickets, generic monitoring, multi-tenant SaaS, protocol-stack/framework rewrites, or hosted captive portal products.
 5. Agent output must go through pull request, CI, and human review. Direct pushes to `main` are forbidden.
 6. After each delivered subtask, use `.agents/skills/groom-roadmap/SKILL.md` to update status, split or reorder work, and keep the roadmap consistent with the checklist.
 7. Delivered subtasks should keep only outcome, evidence, residual risk, and traceable entry points. Long implementation narratives belong in PRs, commits, or changelogs.
@@ -78,6 +78,7 @@ Agent-facing unchecked tasks:
 - Do not turn the dashboard into a generic monitoring platform.
 - Do not add multi-tenant SaaS semantics without a prior scope decision and migration design.
 - Do not rewrite the RADIUS protocol stack or replace the management framework without a specific defect and migration plan.
+- Do not build, host, or operate captive portal login pages, voucher/SMS/WeChat/payment onboarding, or vendor portal-server state machines. Portal belongs to another product; ToughRADIUS only integrates as the RADIUS auth/accounting backend.
 
 ## Completion Standard
 

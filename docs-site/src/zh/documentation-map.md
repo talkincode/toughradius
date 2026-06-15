@@ -13,6 +13,7 @@
 | [核心术语与概念](./concepts.md) | AAA 术语、认证请求流转与密码协议 |
 | [快速开始](./quickstart.md) | 安装、初始化、首个用户与调试 |
 | [厂商对接指南](./vendor-guide.md) | MikroTik、华为、Cisco、H3C、中兴、爱快等对接案例 |
+| [Portal / Hotspot 对接边界](./portal-hotspot-boundary.md) | 铁律：ToughRADIUS 是 RADIUS AAA 后端，不托管 Captive Portal 登录页 |
 | [场景实战手册](./cookbook.md) | 端到端运维场景（五段式）：MikroTik PPPoE / Hotspot / CoA；华为 BRAS 分级套餐 / 线路绑定 / CoA；H3C / 中兴 / 爱快 / Cisco 差异速查 |
 | [管理系统用户手册](./admin-manual.md) | 管理控制台逐页说明 |
 | [运维指南](./ops-guide.md) | 配置参考、证书、监控、备份与命令行工具 |
