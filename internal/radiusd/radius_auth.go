@@ -53,6 +53,12 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 				zap.String("metrics", app.MetricsRadiusAuthDrop),
 				zap.Stack("stacktrace"),
 			)
+			// Count the recovered panic as an auth drop so a crash storm is
+			// visible on the radus_auth_drop counter, not only in the logs. This
+			// is the panic-path twin of the reject (logAndReject) and accept
+			// (sendAcceptResponse) counters; the request is answered with a
+			// Reject below but never reached the normal reject chokepoint.
+			app.IncRadiusMetric(app.MetricsRadiusAuthDrop)
 			s.SendReject(w, r, err)
 		}
 	}()
