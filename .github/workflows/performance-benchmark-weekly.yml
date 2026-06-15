@@ -87,8 +87,16 @@ jobs:
           fi
 
           if [ -z "${PERFORMANCE_REPORT_SIGNING_KEY:-}" ] || [ -z "${PERFORMANCE_REPORT_SIGNING_EMAIL:-}" ]; then
-            echo "::error::PERFORMANCE_REPORT_SIGNING_KEY secret and PERFORMANCE_REPORT_SIGNING_EMAIL variable are required because main requires signed commits. EAP_REPORT_SIGNING_KEY/EAP_REPORT_SIGNING_EMAIL may be reused as a fallback."
-            exit 1
+            {
+              echo "## Performance benchmark report PR skipped"
+              echo
+              echo "Benchmark report files changed, but signed-commit credentials are not configured."
+              echo "Configure PERFORMANCE_REPORT_SIGNING_KEY and PERFORMANCE_REPORT_SIGNING_EMAIL, or reuse EAP_REPORT_SIGNING_KEY and EAP_REPORT_SIGNING_EMAIL."
+              echo
+              echo "The generated report remains available in the workflow artifact for this run."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::warning::Performance benchmark report PR skipped because signed-commit credentials are not configured."
+            exit 0
           fi
 
           install -m 700 -d "$HOME/.ssh"
