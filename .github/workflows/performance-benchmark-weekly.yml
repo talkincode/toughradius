@@ -1,0 +1,177 @@
+name: Performance Benchmark Weekly
+
+on:
+  schedule:
+    - cron: "37 10 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: performance-benchmark-weekly-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GO_VERSION: "1.25"
+  CGO_ENABLED: 0
+
+jobs:
+  performance-benchmark:
+    name: Go performance benchmarks
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Set up Go
+        id: setup-go
+        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          check-latest: true
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run Go benchmarks
+        id: benchmark
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p build/performance-benchmark
+          echo "BENCHMARK_STARTED_AT=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+          go test -run '^$' -bench . -benchmem ./internal/... ./pkg/... 2>&1 | tee build/performance-benchmark/go-benchmark.log
+
+      - name: Generate Markdown report
+        if: always()
+        shell: bash
+        run: |
+          mkdir -p build/performance-benchmark
+          export GOVERSION="$(go version)"
+          go run ./scripts/performance_benchmark_report.go \
+            -input build/performance-benchmark/go-benchmark.log \
+            -report-dir docs/reports/performance \
+            -docs-site-src docs-site/src \
+            -date "$(date -u +%F)" \
+            -retention 3 \
+            -summary-output build/performance-benchmark/performance-summary.json
+
+      - name: Upload benchmark artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: performance-benchmark-${{ github.run_id }}
+          path: |
+            build/performance-benchmark/
+            docs/reports/performance/latest.md
+          retention-days: 30
+          include-hidden-files: true
+
+      - name: Open report PR
+        if: steps.benchmark.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PERFORMANCE_REPORT_SIGNING_KEY: ${{ secrets.PERFORMANCE_REPORT_SIGNING_KEY || secrets.EAP_REPORT_SIGNING_KEY }}
+          PERFORMANCE_REPORT_SIGNING_NAME: ${{ vars.PERFORMANCE_REPORT_SIGNING_NAME || vars.EAP_REPORT_SIGNING_NAME || 'toughradius-automation' }}
+          PERFORMANCE_REPORT_SIGNING_EMAIL: ${{ vars.PERFORMANCE_REPORT_SIGNING_EMAIL || vars.EAP_REPORT_SIGNING_EMAIL }}
+        shell: bash
+        run: |
+          if git diff --quiet -- docs/reports/performance docs-site/src/en/performance-benchmark-reports.md docs-site/src/zh/performance-benchmark-reports.md; then
+            echo "No performance report changes to publish."
+            exit 0
+          fi
+
+          if [ -z "${PERFORMANCE_REPORT_SIGNING_KEY:-}" ] || [ -z "${PERFORMANCE_REPORT_SIGNING_EMAIL:-}" ]; then
+            echo "::error::PERFORMANCE_REPORT_SIGNING_KEY secret and PERFORMANCE_REPORT_SIGNING_EMAIL variable are required because main requires signed commits. EAP_REPORT_SIGNING_KEY/EAP_REPORT_SIGNING_EMAIL may be reused as a fallback."
+            exit 1
+          fi
+
+          install -m 700 -d "$HOME/.ssh"
+          signing_key="$HOME/.ssh/performance_report_signing_key"
+          printf '%s\n' "$PERFORMANCE_REPORT_SIGNING_KEY" > "$signing_key"
+          chmod 600 "$signing_key"
+
+          branch="automation/performance-benchmark-report-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git config user.name "$PERFORMANCE_REPORT_SIGNING_NAME"
+          git config user.email "$PERFORMANCE_REPORT_SIGNING_EMAIL"
+          git config gpg.format ssh
+          git config user.signingkey "$signing_key"
+          git config commit.gpgsign true
+          git switch -c "$branch"
+          git add docs/reports/performance docs-site/src/en/performance-benchmark-reports.md docs-site/src/zh/performance-benchmark-reports.md
+          git commit -S -m "docs: update performance benchmark report"
+          git push --force-with-lease origin "$branch"
+
+          commit_sha="$(git rev-parse HEAD)"
+          verified=false
+          for _ in 1 2 3 4 5; do
+            verified="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${commit_sha}" --jq '.commit.verification.verified')"
+            if [ "$verified" = "true" ]; then
+              break
+            fi
+            sleep 3
+          done
+          if [ "$verified" != "true" ]; then
+            echo "::error::Generated report commit ${commit_sha} was not verified by GitHub; refusing to open an unmergeable PR."
+            exit 1
+          fi
+
+          summary_json="build/performance-benchmark/performance-summary.json"
+          report_date="$(jq -r '.date' "$summary_json")"
+          verdict="$(jq -r '.verdict' "$summary_json")"
+          benchmark_count="$(jq -r '.benchmark_count' "$summary_json")"
+          package_count="$(jq -r '.package_count' "$summary_json")"
+          slowest="$(jq -r '(.slowest.package // "") + " / " + (.slowest.name // "") + " (" + ((.slowest.ns_per_op // 0) | tostring) + " ns/op)"' "$summary_json")"
+          highest_alloc="$(jq -r '(.highest_alloc.package // "") + " / " + (.highest_alloc.name // "") + " (" + ((.highest_alloc.bytes_per_op // 0) | tostring) + " B/op)"' "$summary_json")"
+          pr_body="$(mktemp)"
+          cat > "$pr_body" <<EOF
+          ## Summary
+
+          Updates the weekly Go performance benchmark report for ${report_date}.
+
+          ## Benchmark Snapshot
+
+          - Verdict: ${verdict}
+          - Benchmarks: ${benchmark_count}
+          - Packages: ${package_count}
+          - Slowest benchmark: ${slowest}
+          - Highest allocation benchmark: ${highest_alloc}
+          - Source ref: ${GITHUB_REF_NAME}
+          - Source commit: ${GITHUB_SHA}
+
+          ## Published Files
+
+          - docs/reports/performance/${report_date}.md
+          - docs/reports/performance/latest.md
+          - docs-site/src/en/performance-benchmark-reports.md
+          - docs-site/src/zh/performance-benchmark-reports.md
+
+          ## Workflow Run
+
+          ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+
+          ## 中文摘要
+
+          更新 ${report_date} 的每周 Go 性能基准测试报告。
+
+          - 结论：${verdict}
+          - Benchmark 数量：${benchmark_count}
+          - 包数量：${package_count}
+          - 最慢项：${slowest}
+          - 最高内存分配项：${highest_alloc}
+          - 工作流链接：${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          EOF
+          gh pr create \
+            --base main \
+            --head "$branch" \
+            --title "docs: update performance benchmark report (${report_date}, ${verdict})" \
+            --body-file "$pr_body"
+
+      - name: Fail if benchmarks failed
+        if: steps.benchmark.outcome != 'success'
+        run: exit 1
