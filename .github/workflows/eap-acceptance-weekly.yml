@@ -116,6 +116,9 @@ jobs:
         if: steps.eap_test.outcome == 'success'
         env:
           GH_TOKEN: ${{ github.token }}
+          EAP_REPORT_SIGNING_KEY: ${{ secrets.EAP_REPORT_SIGNING_KEY }}
+          EAP_REPORT_SIGNING_NAME: ${{ vars.EAP_REPORT_SIGNING_NAME || 'toughradius-automation' }}
+          EAP_REPORT_SIGNING_EMAIL: ${{ vars.EAP_REPORT_SIGNING_EMAIL }}
         shell: bash
         run: |
           if git diff --quiet -- docs/reports/eap docs-site/src/en/eap-acceptance-reports.md docs-site/src/zh/eap-acceptance-reports.md; then
@@ -123,13 +126,41 @@ jobs:
             exit 0
           fi
 
+          if [ -z "${EAP_REPORT_SIGNING_KEY:-}" ] || [ -z "${EAP_REPORT_SIGNING_EMAIL:-}" ]; then
+            echo "::error::EAP_REPORT_SIGNING_KEY secret and EAP_REPORT_SIGNING_EMAIL variable are required because main requires signed commits."
+            exit 1
+          fi
+
+          install -m 700 -d "$HOME/.ssh"
+          signing_key="$HOME/.ssh/eap_report_signing_key"
+          printf '%s\n' "$EAP_REPORT_SIGNING_KEY" > "$signing_key"
+          chmod 600 "$signing_key"
+
           branch="automation/eap-acceptance-report-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.name "$EAP_REPORT_SIGNING_NAME"
+          git config user.email "$EAP_REPORT_SIGNING_EMAIL"
+          git config gpg.format ssh
+          git config user.signingkey "$signing_key"
+          git config commit.gpgsign true
           git switch -c "$branch"
           git add docs/reports/eap docs-site/src/en/eap-acceptance-reports.md docs-site/src/zh/eap-acceptance-reports.md
-          git commit -m "docs: update EAP acceptance report"
+          git commit -S -m "docs: update EAP acceptance report"
           git push --force-with-lease origin "$branch"
+
+          commit_sha="$(git rev-parse HEAD)"
+          verified=false
+          for _ in 1 2 3 4 5; do
+            verified="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${commit_sha}" --jq '.commit.verification.verified')"
+            if [ "$verified" = "true" ]; then
+              break
+            fi
+            sleep 3
+          done
+          if [ "$verified" != "true" ]; then
+            echo "::error::Generated report commit ${commit_sha} was not verified by GitHub; refusing to open an unmergeable PR."
+            exit 1
+          fi
+
           result_json="build/eap-acceptance/eap-acceptance.json"
           report_date="$(date -u +%F)"
           verdict="$(jq -r '.verdict // "unknown"' "$result_json")"
