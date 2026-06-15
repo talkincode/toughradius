@@ -29,6 +29,15 @@ updates:
     schedule:
       interval: "weekly"
     groups:
+      npm-eslint-stack:
+        dependency-type: "development"
+        patterns:
+          - "eslint"
+          - "@typescript-eslint/*"
+          - "eslint-plugin-*"
+        update-types:
+          - "minor"
+          - "patch"
       npm-production:
         dependency-type: "production"
         update-types:
@@ -39,6 +48,23 @@ updates:
         update-types:
           - "minor"
           - "patch"
+    ignore:
+      # The web app still uses ESLint 8 with legacy .eslintrc.cjs. Keep updates
+      # on the compatible stack until an explicit ESLint 9/10 flat-config
+      # migration updates eslint, @typescript-eslint, plugins, and config
+      # together.
+      - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@typescript-eslint/eslint-plugin"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "@typescript-eslint/parser"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "eslint-plugin-react-refresh"
+        versions:
+          - ">=0.5.0"
 
   - package-ecosystem: "github-actions"
     directory: "/"
