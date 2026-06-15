@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Version"
+  short_description: "Review changes and tag releases"
+  default_prompt: "Use $release-version to review PRs since the last tag and decide whether to publish a new version."

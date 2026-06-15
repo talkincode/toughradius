@@ -2,7 +2,7 @@
 
 英文版本：[docs/feature-checklist.en.md](feature-checklist.en.md)
 
-开发路线图与里程碑：[docs/roadmap.md](roadmap.md)
+开发路线图与里程碑：[docs/roadmap.md](roadmap.md)（中文详版：[docs/roadmap.zh.md](roadmap.zh.md)）
 
 本文档是 ToughRADIUS 的功能范围基线。后续需求、Issue、PR 和代码改动必须先对齐本清单中的功能编号；无法映射到现有编号的需求，必须先更新本清单并说明范围变化，再进入实现。
 
@@ -50,8 +50,8 @@
 | TR-F020 | 构建部署 | 构建、Docker 和前端嵌入 | 支持 Go 构建、前端构建、静态资源嵌入、Docker 镜像和 Makefile 工作流。 | `Makefile`, `Dockerfile`, `web/vite.config.ts`, `web/static.go`, `.github` | 已实现 | 构建链路变更必须同时验证后端二进制和前端产物。 |
 | TR-F021 | 协议资料 | RFC 与字典资料维护 | 保留 RADIUS、EAP、RadSec、VSA 相关 RFC 和 FreeRADIUS 字典资料，支撑协议实现和厂商扩展。 | `docs/rfcs`, `share`, `internal/radiusd/vendors` | 已实现 | 协议资料更新不能替代代码测试；新增资料需说明对应实现或待实现功能编号。 |
 | TR-F022 | 安全与质量 | 测试、验证、输入约束和审计习惯 | 通过单元测试、集成测试、白名单排序、输入校验、密码哈希、JWT 和日志指标降低回归风险。 | `*_test.go`, `.golangci.yml`, `internal/adminapi/helpers.go`, `pkg/validator`, `pkg/common` | 核心基线 | 安全边界变更必须有针对性测试；不得为了快速开发移除验证或鉴权。 |
-| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、功能清单、路线图、RFC 索引等），提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs-site/book.toml`, `docs-site/src`（zh / en 双语章节）, `.github/workflows/ci.yml`（docs 任务）, `docs/` | 部分实现 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` 不扩展为产品门户；需与现有 GitBook 发布集成协调，避免双发布管线冲突。 |
-| TR-F024 | 代码规范 | Go API 文档与注释规范 | 对齐 Go 标准库风格：导出标识符必须有 godoc 注释，包注释（`doc.go`）、可运行示例（`Example`）、错误与并发语义说明齐备，并可由 lint / CI 度量。 | `.agents/skills/document-go-apis`, 各包 doc 注释, `.golangci.yml` | 可扩展 | 规范优先增量推进，不一次性重写历史注释；以标准库 godoc 习惯为准，禁止无信息量的机械式注释。 |
+| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、RFC 索引等），并以链接方式暴露仍由专用技能维护的功能清单与路线图，提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs-site/book.toml`, `docs-site/src`（zh / en 双语章节）, `.github/workflows/ci.yml`（docs 任务）, `docs/` | 已实现 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` 不扩展为产品门户；GitHub Pages / GitBook 的发布边界必须保持单一事实来源，避免内容漂移。 |
+| TR-F024 | 代码规范 | Go API 文档与注释规范 | 对齐 Go 标准库风格：导出标识符必须有 godoc 注释，包注释（`doc.go`）、可运行示例（`Example`）、错误与并发语义说明齐备，并可由 lint / CI 度量。 | `.agents/skills/document-go-apis`, 各包 doc 注释, `.golangci.yml` | 已实现 | 规范已通过增量 ratchet 纳入常态门禁；后续新增导出 API 必须保持标准库 godoc 习惯，禁止无信息量的机械式注释。 |
 
 ## 优先扩展功能方向
 
@@ -67,9 +67,9 @@
 | P2 | TR-F004 | EAP-TLS 1.3 升级（RFC 9190） | 计划中（M10） | 在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生，遵循 RFC 9427 的 TLS 1.3 派生规则。 | 保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射。 |
 | P3 | TR-F004 | TEAP（隧道，machine + user chaining） | 计划中（M11） | 按 RFC 7170 / RFC 9930（TEAPv1）实现现代隧道 EAP，支持 machine + user chaining、证书 + 密码组合认证；TLS 1.3 下采用 RFC 9427 派生规则。 | 中长期方向，客户端生态弱于 PEAP；仅在客户端环境可控时优先，不与 PEAP / TTLS 抢第一版资源。 |
 | P3 | TR-F004 | EAP-PWD（按需） | 计划中（M12） | 按 RFC 5931 以共享口令完成认证，不为每客户端签发证书，适合 IoT、嵌入式、受控小规模设备。 | 非通用企业 Wi-Fi 首选；按需推进，避免为协议完整性拖入维护沼泽。 |
-| P2 | TR-F025 | 认证后端扩展：LDAP / AD（bind 校验，PAP 族） | 计划中（M14） | 按 RFC 4511 / RFC 4513 以 LDAP / Active Directory 的 bind 操作校验目录账号口令，作为认证流水线中可插拔的 PAP 族校验后端，让统一身份（LDAP/AD）账号经裸 PAP 与 `EAP-TTLS/PAP`（M9 已交付）接入，补完 EAP-TTLS「让 LDAP、老账号库无需立即改造证书体系即可接入」所缺的真正后端（来源：issue #199）。 | 仅支持 PAP 族（服务器可拿到明文口令）：`CHAP / MS-CHAP / MS-CHAPv2 / EAP-MD5 / PEAP-MSCHAPv2` 因服务器需明文或 NT-hash 计算挑战、而 LDAP bind 永不交出口令而**物理不可行**，必须在文档/配置/拒绝日志明示、不得伪装支持；作为可插拔后端挂在现有 `internal/radiusd/plugins/auth` 之后（围绕 `GetLocalPassword` 口令解析抽象点），不在协议入口写库分支、不重写认证流水线、不动 EAP 协调器；默认关闭，凭配置启用。 |
-| P2 | TR-F023 | 双语文档站点（mdbook） | 进行中（M13，置顶优先） | 用 mdbook 搭建中英文双语文档站点，收编 README / AGENT / SECURITY / 功能清单 / 路线图 / RFC 索引等散落文档，提供统一导航、本地构建与 CI 产物校验。 | 先规划与骨架，再分批迁移；中英文目录结构对应、同步维护；文档不替代以代码与测试为准的口径。 |
-| P2 | TR-F024 | Go API 文档与注释规范（标准库风格） | 进行中（M4） | 制定并落地 godoc / 标准库风格注释规范：导出标识符注释齐全、包注释、`Example`、错误与并发语义说明；提供配套技能与可度量门禁。 | 增量推进，按模块补齐；以信息量为准，禁止机械式无意义注释。 |
+| P2 | TR-F025 | 认证后端扩展：LDAP / AD（bind 校验，PAP 族） | 进行中（M14） | 按 RFC 4511 / RFC 4513 以 LDAP / Active Directory 的 bind 操作校验目录账号口令，作为认证流水线中可插拔的 PAP 族校验后端，让统一身份（LDAP/AD）账号经裸 PAP 与 `EAP-TTLS/PAP`（M9 已交付）接入，补完 EAP-TTLS「让 LDAP、老账号库无需立即改造证书体系即可接入」所缺的真正后端（来源：issue #199）。 | 仅支持 PAP 族（服务器可拿到明文口令）：`CHAP / MS-CHAP / MS-CHAPv2 / EAP-MD5 / PEAP-MSCHAPv2` 因服务器需明文或 NT-hash 计算挑战、而 LDAP bind 永不交出口令而**物理不可行**，必须在文档/配置/拒绝日志明示、不得伪装支持；作为可插拔后端挂在现有 `internal/radiusd/plugins/auth` 之后，不在协议入口写库分支、不重写认证流水线、不动 EAP 协调器；M14.6 集成验收交付前仍不得视为完整生产闭环。 |
+| P2 | TR-F023 | 双语文档站点（mdbook） | 已交付（M13） | 用 mdbook 搭建中英文双语文档站点，收编 README / AGENT / SECURITY / RFC 索引等散落文档，并以交叉链接暴露功能清单与路线图，提供统一导航、本地构建与 CI 产物校验。 | 文档不替代以代码与测试为准的口径；中英文目录结构对应、同步维护；功能清单与路线图作为 living docs 保持在 `docs/`，由专用技能维护。 |
+| P2 | TR-F024 | Go API 文档与注释规范（标准库风格） | 已交付（M4） | 制定并落地 godoc / 标准库风格注释规范：导出标识符注释齐全、包注释、`Example`、错误与并发语义说明；提供配套技能与可度量门禁。 | 规范已纳入 lint / CI ratchet；新增或变更导出 API 必须继续满足标准库 godoc 风格。 |
 
 ## 当前非目标方向
 
