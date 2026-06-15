@@ -36,6 +36,7 @@
 | [orchestrate-roadmap](skills/orchestrate-roadmap/SKILL.md) | **总调度**：接自动委托指令，统筹 选任务→选 SOP→派工→门禁→PR→审查→合并→迭代 | 全部 / TR-F022 |
 | [review-pr](skills/review-pr/SKILL.md) | **审查门禁**：对委托 PR 做对抗式、以 CI 为锚的独立审查；打回用 `needs-rework`，审过且 CI 绿则自动合并 | TR-F022 |
 | [groom-roadmap](skills/groom-roadmap/SKILL.md) | 交付后自我迭代路线图与计划（勾选 / 补子任务 / 重排 / 对齐清单） | TR-F022 |
+| [release-version](skills/release-version/SKILL.md) | **发布审查**：审查上次 tag 后已合并 PR，判断 no-release / patch / minor / major，必要时给 `origin/main` 创建 annotated tag | TR-F022 / release operations |
 | [add-radius-vendor](skills/add-radius-vendor/SKILL.md) | 新增厂商 VSA 解析 / 响应增强 | TR-F005 |
 | [add-eap-method](skills/add-eap-method/SKILL.md) | 新增 EAP 认证方法 | TR-F004 |
 | [add-adminapi-endpoint](skills/add-adminapi-endpoint/SKILL.md) | 新增 Admin REST 接口 | TR-F012 |
@@ -46,6 +47,12 @@
 | [reference-rfc](skills/reference-rfc/SKILL.md) | 检索 / 引用国际标准协议规范 | TR-F021 |
 | [align-feature-checklist](skills/align-feature-checklist/SKILL.md) | 需求对齐 / 更新功能清单 | 全部 |
 | [write-go-tests](skills/write-go-tests/SKILL.md) | 编写 Go 单元 / 集成测试 | TR-F022 |
+
+## 发布审查入口
+
+准备发版、审查未发布变更或决定是否打 tag 时，使用 [`release-version`](skills/release-version/SKILL.md)。该 SOP 先同步 `origin/main` 与 tags，审查上次 tag 后的已合并 PR / commit，再给出 no-release、patch、minor 或 major 的书面判断；只有确认需要发布且门禁满足时，才在 `origin/main` 的目标 SHA 上创建 annotated tag。
+
+`release-version` 不自动创建 GitHub Release，不修改源码、路线图或版本文件；如仓库后续引入 changelog、release notes 或版本文件更新约定，需先通过单独 PR 补齐这些源文件变更，再执行打 tag。
 
 ## 工具链版本（与 CI 对齐）
 
