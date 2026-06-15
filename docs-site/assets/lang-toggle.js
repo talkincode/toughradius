@@ -2,12 +2,14 @@
 //
 // The handbook keeps English and Chinese chapters as 1:1 mirrors under
 // src/en/ and src/zh/ with identical file names. This script adds a
-// language switch link to the menu bar of every rendered page:
+// language switch link to the menu bar of every rendered page and scopes the
+// left sidebar to the active language:
 //
 //   - on /en/<page>.html  -> one link "中文"    pointing to /zh/<page>.html
 //   - on /zh/<page>.html  -> one link "English" pointing to /en/<page>.html
 //   - on root-level pages (introduction, print) -> links to both language
-//     entry pages, since those pages have no single counterpart
+//     entry pages, since those pages have no single counterpart; the sidebar
+//     still defaults to English there
 //
 // Paths are rewritten on the last "/en/" or "/zh/" segment only, so the
 // mapping works for any hosting base path (custom domain, github.io
@@ -69,9 +71,67 @@
     buttons.insertBefore(en, zh);
   }
 
+  function activeLanguage() {
+    return window.location.pathname.match(/\/zh\//) ? "zh" : "en";
+  }
+
+  function isLanguageRoot(item, lang) {
+    var wrapper = item.firstElementChild;
+    if (!wrapper || !wrapper.classList || !wrapper.classList.contains("chapter-link-wrapper")) {
+      return false;
+    }
+    var link = wrapper.querySelector("a");
+    if (!link) {
+      return false;
+    }
+    var href = link.getAttribute("href") || "";
+    return href.indexOf(lang + "/overview.html") !== -1;
+  }
+
+  function scopeSidebar() {
+    var sidebar = document.querySelector("#mdbook-sidebar ol.chapter");
+    if (!sidebar) {
+      return false;
+    }
+    var lang = activeLanguage();
+    sidebar.classList.toggle("lang-sidebar-en", lang === "en");
+    sidebar.classList.toggle("lang-sidebar-zh", lang === "zh");
+    Array.prototype.forEach.call(sidebar.children, function (item) {
+      if (!item.classList || !item.classList.contains("chapter-item")) {
+        return;
+      }
+      if (isLanguageRoot(item, "en")) {
+        item.hidden = lang !== "en";
+      } else if (isLanguageRoot(item, "zh")) {
+        item.hidden = lang !== "zh";
+      }
+    });
+    return true;
+  }
+
+  function observeSidebar() {
+    if (scopeSidebar()) {
+      return;
+    }
+    var sidebar = document.querySelector("#mdbook-sidebar");
+    if (!sidebar || typeof MutationObserver === "undefined") {
+      return;
+    }
+    var observer = new MutationObserver(function () {
+      if (scopeSidebar()) {
+        observer.disconnect();
+      }
+    });
+    observer.observe(sidebar, { childList: true, subtree: true });
+  }
+
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", insertToggle);
+    document.addEventListener("DOMContentLoaded", function () {
+      insertToggle();
+      observeSidebar();
+    });
   } else {
     insertToggle();
+    observeSidebar();
   }
 })();
