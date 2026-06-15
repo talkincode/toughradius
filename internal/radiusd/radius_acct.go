@@ -35,6 +35,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			default:
 				err = radiuserrors.NewError("unknown panic")
 			}
+			app.IncRadiusMetric(app.MetricsRadiusAcctDrop)
 			zap.L().Error("radius accounting unexpected panic",
 				zap.Error(err),
 				zap.String("namespace", "radius"),
@@ -94,12 +95,15 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	vendorReq := s.ParseVendor(r, nas.VendorCode)
 
-	s.SendResponse(w, r)
+	responseSent := s.SendResponse(w, r)
 
-	zap.S().Info("radius accounting",
-		zap.String("namespace", "radius"),
-		zap.String("metrics", app.MetricsRadiusAccounting),
-	)
+	if responseSent {
+		app.IncRadiusMetric(app.MetricsRadiusAccounting)
+		zap.S().Info("radius accounting",
+			zap.String("namespace", "radius"),
+			zap.String("metrics", app.MetricsRadiusAccounting),
+		)
+	}
 
 	// async process accounting with back-pressure aware submit
 	task := func() {
@@ -190,7 +194,7 @@ func (s *AcctService) logAcctError(stage, nasip, username string, err error) {
 	zap.L().Error("radius accounting error", fields...)
 }
 
-func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
+func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) bool {
 	resp := r.Response(radius.CodeAccountingResponse)
 	if err := w.Write(resp); err != nil {
 		app.IncRadiusMetric(app.MetricsRadiusAcctDrop)
@@ -199,10 +203,11 @@ func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
 			zap.String("namespace", "radius"),
 			zap.String("metrics", app.MetricsRadiusAcctDrop),
 		)
-		return
+		return false
 	}
 
 	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtResponse(resp, r.RemoteAddr))
 	}
+	return true
 }
