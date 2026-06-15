@@ -1,4 +1,4 @@
-.PHONY: help build build-backend buildf runs runf dev clean test test-integration test-integration-pg initdb killfs version lint ci setup-hooks
+.PHONY: help build build-backend buildf runs runf dev clean test test-integration test-integration-pg test-eap-acceptance-docker initdb killfs version lint ci setup-hooks
 
 # 版本信息
 VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo "develop")
@@ -23,6 +23,7 @@ help:
 	@echo ""
 	@echo "Quality:"
 	@echo "  make test       - 运行测试"
+	@echo "  make test-eap-acceptance-docker - 在 Linux 容器中运行外部 EAP 验收测试"
 	@echo "  make lint       - 运行代码检查"
 	@echo "  make ci         - 运行完整 CI 检查（本地）"
 	@echo "  make setup-hooks - 安装 Git hooks"
@@ -162,6 +163,51 @@ test-integration-pg:
 	TEST_DATABASE_NAME=postgres \
 	INTEGRATION_REQUIRED=1 \
 	CGO_ENABLED=0 go test -tags=integration -count=1 -v ./test/integration/...
+
+# 在 Linux 容器中运行外部 eapol_test EAP 验收测试，适合 macOS 本地复现 CI 路径。
+# 该目标不会更新 docs/reports；本地 JSON、日志和报告写入 build/eap-acceptance/。
+test-eap-acceptance-docker:
+	@echo "🔐 在 Linux 容器中运行 EAP 外部验收测试..."
+	@set -e; \
+	COMPOSE="docker compose -p toughradius-it -f docker-compose.test.yml"; \
+	NETWORK="toughradius-it_default"; \
+	cleanup() { echo "🧹 清理测试容器..."; $$COMPOSE down -v >/dev/null 2>&1 || true; }; \
+	trap cleanup EXIT; \
+	$$COMPOSE up -d; \
+	echo "⏳ 等待 Postgres 健康检查..."; \
+	for i in $$(seq 1 30); do \
+		status=$$($$COMPOSE ps --format '{{.Health}}' 2>/dev/null || true); \
+		[ "$$status" = "healthy" ] && break; \
+		sleep 2; \
+	done; \
+	mkdir -p build/eap-acceptance; \
+	test_status=0; \
+	docker run --rm \
+		--network "$$NETWORK" \
+		-v "$$(pwd):/workspace" \
+		-w /workspace \
+		-e TEST_DATABASE_HOST=postgres \
+		-e TEST_DATABASE_PORT=5432 \
+		-e TEST_DATABASE_USER=toughradius \
+		-e TEST_DATABASE_PASSWORD=toughradius \
+		-e TEST_DATABASE_NAME=postgres \
+		-e INTEGRATION_REQUIRED=1 \
+		-e EAP_ACCEPTANCE_REQUIRED=1 \
+		-e EAP_ACCEPTANCE_RESULT_JSON=/workspace/build/eap-acceptance/eap-acceptance.json \
+		-e CGO_ENABLED=0 \
+		-e GOCACHE=/tmp/go-build \
+		golang:1.25-bookworm \
+		bash -c 'set -o pipefail; apt-get update && apt-get install -y --no-install-recommends eapoltest ca-certificates && mkdir -p build/eap-acceptance && go test -tags="integration eap_accept" -count=1 -run TestEAPExternalAcceptance -v ./test/integration/... 2>&1 | tee build/eap-acceptance/go-test.log' || test_status=$$?; \
+	if [ -f build/eap-acceptance/eap-acceptance.json ]; then \
+		go run ./scripts/eap_acceptance_report.go \
+			-input build/eap-acceptance/eap-acceptance.json \
+			-report-dir build/eap-acceptance/reports \
+			-docs-site-src build/eap-acceptance/docs-site \
+			-date "$$(date -u +%F)" \
+			-retention 3; \
+	fi; \
+	echo "✅ EAP 验收输出: build/eap-acceptance/"; \
+	exit $$test_status
 
 # 代码检查
 lint:
