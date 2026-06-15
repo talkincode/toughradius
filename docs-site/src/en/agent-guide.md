@@ -105,6 +105,19 @@ conventions.
   `feat`, `fix`, `test`, `docs`, `refactor`, `perf`, `chore`.
 - **Small, atomic changes** over giant PRs.
 
+### Repository issue/PR automation
+
+Several GitHub Actions add lightweight triage around issues and pull requests.
+They help maintainers scan the queue, but they do not replace reading the
+original issue, PR diff, and CI output.
+
+| Workflow | Trigger and result | Maintainer notes |
+| --- | --- | --- |
+| AI issue summary | `.github/workflows/ai-issue-summary.yml` runs when an issue is opened and posts a short GitHub Models summary as an issue comment. | Issue titles and bodies are untrusted input. Treat the generated summary as a convenience only; the issue text remains the source of truth. |
+| Stale | `.github/workflows/stale.yml` runs daily at `04:24 UTC` and by manual dispatch. After 60 days without activity it adds `stale`; after 14 more inactive days it closes the item. | Comment, push a commit, or remove `stale` to keep work open. Issues with `pinned`, `security`, `help wanted`, `agent-roadmap`, or `needs-human` are exempt; PRs with `pinned`, `security`, `agent-roadmap`, or `needs-human` are exempt; all milestones are exempt. |
+| Labeler | `.github/workflows/labeler.yml` runs on `pull_request_target` and applies labels from `.github/labeler.yml` based on changed paths. | It labels `go`, `javascript`, `github_actions`, `dependencies`, and `doc`. The action reads the changed-file list and base-branch config; it does not check out or execute PR code. |
+| Greetings | `.github/workflows/greetings.yml` runs when a contributor opens their first issue or PR and posts onboarding guidance. | The comment is informational. It does not change review requirements or issue priority. |
+
 ### Minimum viable product (MVP)
 
 Each change is delivered as a minimal, independently usable, rollback-safe unit
