@@ -35,6 +35,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			default:
 				err = radiuserrors.NewError("unknown panic")
 			}
+			app.IncRadiusMetric(app.MetricsRadiusAcctDrop)
 			zap.L().Error("radius accounting unexpected panic",
 				zap.Error(err),
 				zap.String("namespace", "radius"),
@@ -94,12 +95,15 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	vendorReq := s.ParseVendor(r, nas.VendorCode)
 
-	s.SendResponse(w, r)
+	responseSent := s.SendResponse(w, r)
 
-	zap.S().Info("radius accounting",
-		zap.String("namespace", "radius"),
-		zap.String("metrics", app.MetricsRadiusAccounting),
-	)
+	if responseSent {
+		app.IncRadiusMetric(app.MetricsRadiusAccounting)
+		zap.S().Info("radius accounting",
+			zap.String("namespace", "radius"),
+			zap.String("metrics", app.MetricsRadiusAccounting),
+		)
+	}
 
 	// async process accounting with back-pressure aware submit
 	task := func() {
@@ -132,6 +136,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 // dropping preserves back-pressure. Returns true if the task was accepted.
 func (s *AcctService) submitAcctTask(task func(), username string) bool {
 	if err := s.TaskPool.Submit(task); err != nil {
+		app.IncRadiusMetric(app.MetricsRadiusAcctDrop)
 		zap.L().Warn("accounting task pool saturated, dropping accounting update",
 			zap.String("namespace", "radius"),
 			zap.String("username", username),
@@ -143,12 +148,35 @@ func (s *AcctService) submitAcctTask(task func(), username string) bool {
 	return true
 }
 
-// logAcctError logs accounting errors with appropriate metrics.
-func (s *AcctService) logAcctError(stage, nasip, username string, err error) {
-	metricsKey := app.MetricsRadiusAcctDrop
-	if radiusErr, ok := radiuserrors.GetRadiusError(err); ok {
-		metricsKey = radiusErr.MetricsKey()
+// acctMetricsKeyForStage maps an accounting ingress stage to its failure metric.
+//
+// Accounting-Requests dropped before processing are classified by the stage that
+// rejected them so operators can distinguish an unknown/unauthorized NAS from a
+// missing username or a failed authenticator check, instead of seeing a single
+// opaque radus_acct_drop counter. Unknown stages fall back to that catch-all.
+func acctMetricsKeyForStage(stage string) string {
+	switch stage {
+	case "nas_lookup":
+		return app.MetricsRadiusAcctDropNas
+	case "validate_username":
+		return app.MetricsRadiusAcctDropUsername
+	case "verify_secret":
+		return app.MetricsRadiusAcctDropSecret
+	default:
+		return app.MetricsRadiusAcctDrop
 	}
+}
+
+// logAcctError records a classified accounting-failure metric and logs the error.
+//
+// The metric is chosen from the ingress stage rather than the error's own key:
+// the NAS lookup reuses the shared GetNas helper, whose not-found error is an
+// AuthError carrying the auth-side radus_reject_unauthorized key, so keying off
+// the error would mis-attribute dropped accounting packets to the auth reject
+// counter. Stage-based classification keeps accounting and auth metrics disjoint.
+func (s *AcctService) logAcctError(stage, nasip, username string, err error) {
+	metricsKey := acctMetricsKeyForStage(stage)
+	app.IncRadiusMetric(metricsKey)
 
 	fields := []zap.Field{
 		zap.Error(err),
@@ -166,18 +194,20 @@ func (s *AcctService) logAcctError(stage, nasip, username string, err error) {
 	zap.L().Error("radius accounting error", fields...)
 }
 
-func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) {
+func (s *AcctService) SendResponse(w radius.ResponseWriter, r *radius.Request) bool {
 	resp := r.Response(radius.CodeAccountingResponse)
 	if err := w.Write(resp); err != nil {
+		app.IncRadiusMetric(app.MetricsRadiusAcctDrop)
 		zap.L().Error("radius accounting response error",
 			zap.Error(err),
 			zap.String("namespace", "radius"),
 			zap.String("metrics", app.MetricsRadiusAcctDrop),
 		)
-		return
+		return false
 	}
 
 	if s.Config().Radiusd.Debug {
 		zap.S().Debug(FmtResponse(resp, r.RemoteAddr))
 	}
+	return true
 }

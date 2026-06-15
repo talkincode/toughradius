@@ -16,11 +16,20 @@ const (
 	MetricsRadiusRejectLdapError    = "radus_reject_ldap_error"
 	MetricsRadiusRejectPasswdError  = "radus_reject_passwd_error" //nolint:gosec // G101: this is a metric name, not a credential
 	MetricsRadiusRejectUnauthorized = "radus_reject_unauthorized"
+	MetricsRadiusRejectMsgAuth      = "radus_reject_msg_auth"
 	MetricsRadiusAuthDrop           = "radus_auth_drop"
 	MetricsRadiusAcctDrop           = "radus_acct_drop"
-	MetricsRadiusRadsecSaturated    = "radus_radsec_saturated"
-	MetricsRadiusAccept             = "radus_accept"
-	MetricsRadiusAccounting         = "radus_accounting"
+	// Accounting ingress drops classified by the stage that rejected the
+	// Accounting-Request. These let operators tell an unknown/unauthorized NAS
+	// apart from a missing username or a failed authenticator check instead of
+	// seeing a single opaque radus_acct_drop counter. radus_acct_drop is retained
+	// as the catch-all for back-pressure and response I/O drops.
+	MetricsRadiusAcctDropNas      = "radus_acct_drop_nas"
+	MetricsRadiusAcctDropUsername = "radus_acct_drop_username"
+	MetricsRadiusAcctDropSecret   = "radus_acct_drop_secret" //nolint:gosec // G101: this is a metric name, not a credential
+	MetricsRadiusRadsecSaturated  = "radus_radsec_saturated"
+	MetricsRadiusAccept           = "radus_accept"
+	MetricsRadiusAccounting       = "radus_accounting"
 )
 
 var metricsNames = []string{
@@ -35,8 +44,12 @@ var metricsNames = []string{
 	MetricsRadiusRejectLdapError,
 	MetricsRadiusRejectPasswdError,
 	MetricsRadiusRejectUnauthorized,
+	MetricsRadiusRejectMsgAuth,
 	MetricsRadiusAuthDrop,
 	MetricsRadiusAcctDrop,
+	MetricsRadiusAcctDropNas,
+	MetricsRadiusAcctDropUsername,
+	MetricsRadiusAcctDropSecret,
 	MetricsRadiusRadsecSaturated,
 	MetricsRadiusAccept,
 	MetricsRadiusAccounting,

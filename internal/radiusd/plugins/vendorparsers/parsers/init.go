@@ -41,4 +41,32 @@ func init() {
 		Description: "ZTE RADIUS attributes",
 		Parser:      &ZTEParser{},
 	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeRadback,
+		Name:        "Radback",
+		Description: "Radback RADIUS attributes",
+		Parser:      &RadbackParser{},
+	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeAlcatel,
+		Name:        "Alcatel",
+		Description: "Alcatel RADIUS attributes",
+		Parser:      &AlcatelParser{},
+	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeAruba,
+		Name:        "Aruba",
+		Description: "Aruba RADIUS attributes",
+		Parser:      &ArubaParser{},
+	})
+
+	_ = vendors.Register(&vendors.VendorInfo{ //nolint:errcheck
+		Code:        vendors.CodeJuniper,
+		Name:        "Juniper",
+		Description: "Juniper RADIUS attributes",
+		Parser:      &JuniperParser{},
+	})
 }

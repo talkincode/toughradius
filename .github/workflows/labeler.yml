@@ -1,0 +1,26 @@
+# Triages pull requests by applying labels based on the files they change. The
+# path-to-label rules live in .github/labeler.yml. Adapted from the official
+# "Labeler" starter workflow with the action pinned to a full commit SHA.
+#
+# Security: pull_request_target runs in the trusted base-repo context so it can
+# label fork PRs, but actions/labeler never checks out or executes PR code — it
+# only reads the changed-file list — and the job is limited to pull-requests: write.
+name: Labeler
+
+on: [pull_request_target]
+
+permissions:
+  contents: read
+
+jobs:
+  label:
+    name: Apply labels
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read # read .github/labeler.yml from the base branch
+      pull-requests: write # add labels to the PR
+    steps:
+      - uses: actions/labeler@f27b608878404679385c85cfa523b85ccb86e213 # v6.1.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}

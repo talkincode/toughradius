@@ -42,6 +42,14 @@ var ErrSessionNotFound = errors.New("coa: online session not found")
 // destination NAS address.
 var ErrNoTarget = errors.New("coa: target NAS address is required")
 
+// errResponseDiscarded is an internal sentinel marking that a CoA/Disconnect
+// reply was silently discarded because its optional Message-Authenticator was
+// present but did not verify (RFC 5176 §3.4). It drives the retransmission loop
+// to keep waiting for an authentic reply and, when the budget is exhausted, is
+// surfaced in CoAResult.Err. It is not a timeout, so CoAResult.TimedOut stays
+// false.
+var errResponseDiscarded = errors.New("coa: reply discarded: invalid Message-Authenticator (RFC 5176 §3.4)")
+
 // CoAAction identifies the RADIUS Dynamic Authorization operation being sent.
 type CoAAction string
 
@@ -237,6 +245,9 @@ func (s *CoAService) Disconnect(ctx context.Context, target CoATarget, id Sessio
 	if err := applyIdentity(packet, id); err != nil {
 		return nil, fmt.Errorf("coa: build disconnect request: %w", err)
 	}
+	if err := setMessageAuthenticator(packet, target.Secret); err != nil {
+		return nil, fmt.Errorf("coa: sign disconnect request: %w", err)
+	}
 	return s.send(ctx, CoAActionDisconnect, target, id, packet), nil
 }
 
@@ -259,6 +270,9 @@ func (s *CoAService) CoA(ctx context.Context, target CoATarget, id SessionIdenti
 		if err := change(packet); err != nil {
 			return nil, fmt.Errorf("coa: apply authorization change: %w", err)
 		}
+	}
+	if err := setMessageAuthenticator(packet, target.Secret); err != nil {
+		return nil, fmt.Errorf("coa: sign coa request: %w", err)
 	}
 	return s.send(ctx, CoAActionCoA, target, id, packet), nil
 }
@@ -322,6 +336,12 @@ func (s *CoAService) send(ctx context.Context, action CoAAction, target CoATarge
 	}
 
 	var lastErr error
+	// Precompute the Request Authenticator the transport puts on the wire. It is
+	// needed to validate the optional Message-Authenticator a NAS may include on
+	// its reply: RFC 5176 §3.4 computes the reply digest with the request's
+	// Request Authenticator. The packet is not mutated after this point, so the
+	// value is stable across retransmissions.
+	reqAuth := requestAuthenticator(packet)
 	for attempt := 0; attempt <= s.retries; attempt++ {
 		if err := ctx.Err(); err != nil {
 			lastErr = err
@@ -336,6 +356,16 @@ func (s *CoAService) send(ctx context.Context, action CoAAction, target CoATarge
 		cancel()
 
 		if err == nil {
+			// RFC 5176 §3.4: a reply carrying a Message-Authenticator MUST verify,
+			// otherwise it is silently discarded; an absent attribute is accepted
+			// because it is OPTIONAL on responses. Treat a discarded reply as an
+			// unanswered attempt so the retransmission budget keeps trying for an
+			// authentic answer rather than letting a forged packet end the exchange.
+			if verifyResponseMessageAuthenticator(resp, reqAuth, []byte(target.Secret)) == msgAuthInvalid {
+				lastErr = errResponseDiscarded
+				s.logDiscardedResponse(result, resp)
+				continue
+			}
 			result.RTT = rtt
 			classifyResponse(result, resp)
 			s.logResult(result, packet, resp)
@@ -429,7 +459,76 @@ func applyIdentity(packet *radius.Packet, id SessionIdentity) error {
 	return nil
 }
 
-// isTimeoutErr reports whether err represents a request timeout (a context
+// setMessageAuthenticator computes and inserts the Message-Authenticator
+// attribute (#80) on an outbound CoA-Request or Disconnect-Request, as mandated
+// by RFC 5176 §3.4 (keyed HMAC-MD5 construction per RFC 3579 §3.2). Strict NAS
+// implementations silently drop a CoA/Disconnect request that lacks a valid
+// Message-Authenticator, so signing every request is required for interoperability.
+//
+// Per RFC 5176 §3.4 the HMAC-MD5 is computed with both the Request Authenticator
+// field and the Message-Authenticator attribute value treated as sixteen octets
+// of zero, and the attribute is inserted before the Request Authenticator is
+// calculated by the transport. The packet's Authenticator field is therefore
+// zeroed here: for these request types the transport recomputes the Request
+// Authenticator over a zeroed field (RFC 5176 §2.3), so zeroing it keeps the
+// signed bytes identical to what is put on the wire. A sixteen-octet placeholder
+// is inserted first so the marshaled length already accounts for the attribute;
+// the shared computeMessageAuthenticator helper (message_authenticator.go) then
+// re-zeroes that value while hashing.
+func setMessageAuthenticator(packet *radius.Packet, secret string) error {
+	packet.Authenticator = [16]byte{}
+	if err := rfc2869.MessageAuthenticator_Set(packet, make([]byte, 16)); err != nil {
+		return fmt.Errorf("set Message-Authenticator placeholder: %w", err)
+	}
+	wire, err := packet.MarshalBinary()
+	if err != nil {
+		return fmt.Errorf("marshal request for Message-Authenticator: %w", err)
+	}
+	if err := rfc2869.MessageAuthenticator_Set(packet, computeMessageAuthenticator(wire, []byte(secret))); err != nil {
+		return fmt.Errorf("set Message-Authenticator: %w", err)
+	}
+	return nil
+}
+
+// requestAuthenticator returns the sixteen-octet Request Authenticator the
+// transport computes for an outbound CoA/Disconnect request (RFC 5176 §2.3),
+// derived from the encoded packet so it matches the bytes radius.Client.Exchange
+// places on the wire. It is needed to validate the optional reply
+// Message-Authenticator (RFC 5176 §3.4), whose digest is keyed on the request's
+// Request Authenticator. Encode does not mutate the packet, so calling it here
+// reproduces the value Exchange sends. A zero value is returned when the packet
+// cannot be encoded; the resulting digest mismatch then fails closed.
+func requestAuthenticator(packet *radius.Packet) [16]byte {
+	var auth [16]byte
+	wire, err := packet.Encode()
+	if err != nil || len(wire) < 20 {
+		return auth
+	}
+	copy(auth[:], wire[4:20])
+	return auth
+}
+
+// logDiscardedResponse records a CoA/Disconnect reply that was silently discarded
+// because its Message-Authenticator was present but did not verify (RFC 5176
+// §3.4). The exchange continues retransmitting; this surfaces the dropped packet
+// for operators without aborting the attempt.
+func (s *CoAService) logDiscardedResponse(result *CoAResult, resp *radius.Packet) {
+	code := ""
+	if resp != nil {
+		code = resp.Code.String()
+	}
+	zap.L().Warn("radius coa reply discarded: invalid message-authenticator",
+		zap.String("namespace", "radius"),
+		zap.String("action", string(result.Action)),
+		zap.String("target", result.Target),
+		zap.String("username", result.Username),
+		zap.String("acct_session_id", result.AcctSessionID),
+		zap.Int("identifier", result.Identifier),
+		zap.String("discarded_response", code),
+		zap.String("rfc", "RFC 5176 §3.4"),
+	)
+}
+
 // deadline or a net.Error timeout), which is the condition that warrants a
 // retransmission.
 func isTimeoutErr(err error) bool {

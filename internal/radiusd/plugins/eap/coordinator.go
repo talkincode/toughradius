@@ -21,6 +21,14 @@ type Coordinator struct {
 	pwdProvider     PasswordProvider
 	handlerRegistry HandlerRegistry
 	debug           bool // Debug mode flag
+
+	// stateLocks serializes processing of requests that carry the same RADIUS
+	// State value. RADIUS requests are dispatched via a worker pool, so a NAS
+	// retransmit of an EAP-Response can be processed concurrently with the
+	// original. The full GetState → handler → SetState sequence must run under a
+	// single goroutine per state because the per-handshake *tlsengine.Engine is
+	// shared by reference and is not safe for concurrent Process calls.
+	stateLocks *keyedMutex
 }
 
 // NewCoordinator creates a new EAP coordinator
@@ -30,6 +38,7 @@ func NewCoordinator(stateManager EAPStateManager, pwdProvider PasswordProvider, 
 		pwdProvider:     pwdProvider,
 		handlerRegistry: handlerRegistry,
 		debug:           debug,
+		stateLocks:      newKeyedMutex(),
 	}
 }
 
@@ -54,6 +63,17 @@ func (c *Coordinator) HandleEAPRequest(
 	if err != nil {
 		// Not an EAP request
 		return false, false, nil
+	}
+
+	// Serialize concurrent processing of the same handshake. A NAS retransmit of
+	// an EAP-Response carries the same RADIUS State value as the in-flight
+	// request; holding a per-state lock across the entire GetState → handler →
+	// SetState sequence keeps the shared *tlsengine.Engine single-goroutine and
+	// prevents the losing SetState write from being silently dropped. The
+	// identity phase has no State yet, so it needs no lock.
+	if stateID := rfc2865.State_GetString(r.Packet); stateID != "" {
+		unlock := c.stateLocks.lock(stateID)
+		defer unlock()
 	}
 
 	// Create the EAP context
@@ -224,10 +244,10 @@ func (c *Coordinator) SendEAPFailure(w radius.ResponseWriter, r *radius.Request,
 	// Set the EAP-Message and Message-Authenticator
 	SetEAPMessageAndAuth(response, eapFailure, secret)
 
-	// Log the failure event
+	// Log the failure event (avoid logging raw error to prevent sensitive data leakage)
 	zap.L().Warn("Sending EAP-Failure",
 		zap.Uint8("identifier", identifier),
-		zap.Error(reason))
+		zap.String("reason", safeReplyMessage(reason)))
 
 	return w.Write(response)
 }

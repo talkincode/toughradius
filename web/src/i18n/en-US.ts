@@ -641,6 +641,10 @@ const customEnglishMessages: TranslationMessages = {
         title: 'Ignore Password Check',
         description: 'Skips password validation during authentication. Only enable for debugging or external auth flows.',
       },
+      require_message_authenticator: {
+        title: 'Require Message-Authenticator',
+        description: 'RFC 3579 Message-Authenticator handling for non-EAP RADIUS/UDP, the configuration class affected by CVE-2024-3596 (BlastRADIUS). disabled: legacy behavior, no validation and responses are left unsigned. warn (default): always sign Access-Accept/Access-Reject responses, validate the attribute when a NAS includes it (a mismatch is silently discarded), and only log a warning when it is missing. enforce: same as warn, but Access-Request packets without a Message-Authenticator are silently discarded (requires every NAS to send it). Full protection still requires RadSec or IPsec for the RADIUS/UDP path.',
+      },
       accounting_history_days: {
         title: 'Accounting History Days',
         description: 'Retention days for accounting (Acct) logs. Use 0 to keep every record indefinitely.',

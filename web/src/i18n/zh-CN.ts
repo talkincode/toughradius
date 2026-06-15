@@ -641,6 +641,10 @@ const customChineseMessages: TranslationMessages = {
         title: '忽略密码校验',
         description: '启用后认证流程将跳过密码验证，仅用于调试或外部认证场景',
       },
+      require_message_authenticator: {
+        title: '强制 Message-Authenticator',
+        description: '非 EAP RADIUS/UDP 的 RFC 3579 Message-Authenticator 处理策略，对应 CVE-2024-3596（BlastRADIUS）受影响的配置类别。disabled：保持旧行为，不做校验且响应不签名。warn（默认）：始终为 Access-Accept/Access-Reject 响应添加 Message-Authenticator，当 NAS 携带该属性时进行校验（不匹配则静默丢弃），缺失时仅记录告警。enforce：与 warn 相同，但缺少 Message-Authenticator 的 Access-Request 将被静默丢弃（要求所有 NAS 都发送该属性）。完整防护仍需为 RADIUS/UDP 链路启用 RadSec 或 IPsec。',
+      },
       accounting_history_days: {
         title: '计费历史保留天数',
         description: 'Acct 计费日志的保留天数，0 表示不清理历史记录',

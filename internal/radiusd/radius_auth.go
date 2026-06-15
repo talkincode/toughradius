@@ -53,6 +53,12 @@ func (s *AuthService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 				zap.String("metrics", app.MetricsRadiusAuthDrop),
 				zap.Stack("stacktrace"),
 			)
+			// Count the recovered panic as an auth drop so a crash storm is
+			// visible on the radus_auth_drop counter, not only in the logs. This
+			// is the panic-path twin of the reject (logAndReject) and accept
+			// (sendAcceptResponse) counters; the request is answered with a
+			// Reject below but never reached the normal reject chokepoint.
+			app.IncRadiusMetric(app.MetricsRadiusAuthDrop)
 			s.SendReject(w, r, err)
 		}
 	}()
@@ -119,6 +125,12 @@ func (s *AuthService) SendReject(w radius.ResponseWriter, r *radius.Request, err
 		}
 		_ = rfc2865.ReplyMessage_SetString(resp, msg)
 	}
+
+	// Sign non-EAP Access-Reject responses with a Message-Authenticator so an
+	// on-path attacker cannot forge replies (CVE-2024-3596). The shared secret is
+	// carried on the request packet (set during nas_lookup); when it is missing
+	// (e.g. an unauthorized NAS) signing is skipped inside the helper.
+	s.addResponseMessageAuthenticator(resp, string(r.Secret))
 
 	if writeErr := w.Write(resp); writeErr != nil {
 		zap.L().Error("radius write reject response error",

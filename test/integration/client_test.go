@@ -5,9 +5,11 @@ package integration
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"net/http"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,29 +24,60 @@ type apiClient struct {
 	http  *http.Client
 }
 
+// adminTokenOnce guards a single admin login shared by the whole test process.
+var (
+	adminTokenOnce sync.Once
+	adminTokenVal  string
+	adminTokenErr  error
+)
+
 func newAPIClient(t *testing.T) *apiClient {
 	t.Helper()
-	c := &apiClient{base: h.webBaseURL, http: &http.Client{}}
-	c.login(t, h.adminUser, h.adminPass)
-	return c
+	return &apiClient{base: h.webBaseURL, http: &http.Client{}, token: sharedAdminToken(t)}
 }
 
-func (c *apiClient) login(t *testing.T, username, password string) {
+// sharedAdminToken logs in once per test process and caches the JWT for reuse by
+// every apiClient. The token's TTL (server-side tokenTTL is 12h) dwarfs any
+// suite run, so reuse is safe and mirrors how a real client behaves. It also
+// keeps the suite within the login endpoint's production rate limit (burst 5,
+// then one token every 3s per client IP): logging in afresh for each test would
+// trip HTTP 429 from 127.0.0.1 once the suite grew past the initial burst.
+func sharedAdminToken(t *testing.T) string {
 	t.Helper()
-	body, _ := json.Marshal(map[string]string{"username": username, "password": password})
-	resp, err := c.http.Post(c.base+"/api/v1/auth/login", "application/json", bytes.NewReader(body))
-	require.NoError(t, err)
-	defer func() { _ = resp.Body.Close() }()
-	require.Equalf(t, http.StatusOK, resp.StatusCode, "login should succeed")
+	adminTokenOnce.Do(func() {
+		adminTokenVal, adminTokenErr = loginToken(h.webBaseURL, h.adminUser, h.adminPass)
+	})
+	require.NoError(t, adminTokenErr, "shared admin login should succeed")
+	require.NotEmpty(t, adminTokenVal, "shared admin login must return a token")
+	return adminTokenVal
+}
 
+// loginToken performs the real /auth/login round-trip and returns the bearer
+// token, so authenticated requests still flow through the production JWT
+// middleware chain.
+func loginToken(base, username, password string) (string, error) {
+	body, _ := json.Marshal(map[string]string{"username": username, "password": password})
+	resp, err := http.Post(base+"/api/v1/auth/login", "application/json", bytes.NewReader(body))
+	if err != nil {
+		return "", err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		msg, _ := io.ReadAll(resp.Body)
+		return "", fmt.Errorf("login status %d: %s", resp.StatusCode, string(msg))
+	}
 	var payload struct {
 		Data struct {
 			Token string `json:"token"`
 		} `json:"data"`
 	}
-	require.NoError(t, json.NewDecoder(resp.Body).Decode(&payload))
-	require.NotEmpty(t, payload.Data.Token, "login must return a token")
-	c.token = payload.Data.Token
+	if err := json.NewDecoder(resp.Body).Decode(&payload); err != nil {
+		return "", err
+	}
+	if payload.Data.Token == "" {
+		return "", fmt.Errorf("login returned an empty token")
+	}
+	return payload.Data.Token, nil
 }
 
 // getJSON performs an authenticated GET and returns the raw response body.

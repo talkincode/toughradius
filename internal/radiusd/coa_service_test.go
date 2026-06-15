@@ -2,6 +2,8 @@ package radiusd
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/md5"
 	"errors"
 	"net"
 	"strconv"
@@ -13,6 +15,7 @@ import (
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
+	"layeh.com/radius/rfc2869"
 	"layeh.com/radius/rfc3576"
 )
 
@@ -29,6 +32,8 @@ type capturedReq struct {
 	filterID       string
 	sessionTimeout uint32
 	hasTimeout     bool
+	hasMessageAuth bool // request carried a Message-Authenticator attribute
+	messageAuthOK  bool // the carried Message-Authenticator verified against the secret
 }
 
 // fakeNAS is an in-process UDP RADIUS responder that emulates a NAS receiving
@@ -36,12 +41,44 @@ type capturedReq struct {
 type fakeNAS struct {
 	addr   string
 	server *radius.PacketServer
+	secret string
 
 	mu        sync.Mutex
 	replyCode radius.Code        // 0 => drop the request (no reply)
 	errCause  rfc3576.ErrorCause // added to NAK replies when non-zero
 	dropFirst int                // drop the first N requests, then use replyCode
+	replyAuth replyAuthMode      // how the reply carries a Message-Authenticator
 	received  []capturedReq
+}
+
+// replyAuthMode controls how the fake NAS signs its CoA/Disconnect reply, so
+// tests can exercise the RFC 5176 §3.4 reply-side Message-Authenticator paths.
+type replyAuthMode int
+
+const (
+	// replyAuthNone leaves the reply unsigned (no Message-Authenticator). It is
+	// the zero value and the default behavior.
+	replyAuthNone replyAuthMode = iota
+	// replyAuthSigned attaches a valid Message-Authenticator (RFC 5176 §3.4).
+	replyAuthSigned
+	// replyAuthCorrupt attaches a present but invalid Message-Authenticator by
+	// signing with the wrong secret, so the attribute is structurally valid
+	// (sixteen octets) yet fails the client's check.
+	replyAuthCorrupt
+)
+
+// signCoAReply signs a CoA/Disconnect reply with a Message-Authenticator the way
+// a NAS does per RFC 5176 §3.4: the request authenticator (carried into
+// resp.Authenticator by r.Response) sits in the Authenticator field, the
+// attribute value is treated as sixteen zero octets for the HMAC-MD5, and the
+// result is stored before the transport computes the Response Authenticator.
+func signCoAReply(resp *radius.Packet, secret string) {
+	_ = rfc2869.MessageAuthenticator_Set(resp, make([]byte, 16))
+	if b, err := resp.MarshalBinary(); err == nil {
+		mac := hmac.New(md5.New, []byte(secret))
+		mac.Write(b)
+		_ = rfc2869.MessageAuthenticator_Set(resp, mac.Sum(nil))
+	}
 }
 
 func newFakeNAS(t *testing.T, secret string, replyCode radius.Code) *fakeNAS {
@@ -52,12 +89,12 @@ func newFakeNAS(t *testing.T, secret string, replyCode radius.Code) *fakeNAS {
 	}
 	fn := &fakeNAS{
 		addr:      pc.LocalAddr().String(),
+		secret:    secret,
 		replyCode: replyCode,
 	}
 	fn.server = &radius.PacketServer{
-		Handler:            radius.HandlerFunc(fn.handle),
-		SecretSource:       radius.StaticSecretSource([]byte(secret)),
-		InsecureSkipVerify: true,
+		Handler:      radius.HandlerFunc(fn.handle),
+		SecretSource: radius.StaticSecretSource([]byte(secret)),
 	}
 	go func() { _ = fn.server.Serve(pc) }()
 	t.Cleanup(func() {
@@ -86,6 +123,8 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 		cap.hasTimeout = true
 		cap.sessionTimeout = uint32(st)
 	}
+	// Act as a strict NAS (RFC 5176 §3.4): verify the request Message-Authenticator.
+	cap.hasMessageAuth, cap.messageAuthOK = verifyRequestMessageAuth(r.Packet, fn.secret)
 
 	fn.mu.Lock()
 	fn.received = append(fn.received, cap)
@@ -95,6 +134,7 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 	}
 	code := fn.replyCode
 	cause := fn.errCause
+	authMode := fn.replyAuth
 	fn.mu.Unlock()
 
 	if drop || code == 0 {
@@ -104,7 +144,37 @@ func (fn *fakeNAS) handle(w radius.ResponseWriter, r *radius.Request) {
 	if cause != 0 && (code == radius.CodeDisconnectNAK || code == radius.CodeCoANAK) {
 		_ = rfc3576.ErrorCause_Add(resp, cause)
 	}
+	switch authMode {
+	case replyAuthSigned:
+		signCoAReply(resp, fn.secret)
+	case replyAuthCorrupt:
+		signCoAReply(resp, fn.secret+"-wrong")
+	}
 	_ = w.Write(resp)
+}
+
+// verifyRequestMessageAuth reports whether an inbound CoA/Disconnect request
+// carries a Message-Authenticator and, if so, whether it verifies per RFC 5176
+// §3.4: HMAC-MD5 over the packet with the Request Authenticator field and the
+// Message-Authenticator value treated as sixteen zero octets.
+func verifyRequestMessageAuth(p *radius.Packet, secret string) (present, valid bool) {
+	got, err := rfc2869.MessageAuthenticator_Lookup(p)
+	if err != nil {
+		return false, false
+	}
+	saved := append([]byte(nil), got...)
+	_ = rfc2869.MessageAuthenticator_Set(p, make([]byte, 16))
+	b, mErr := p.MarshalBinary()
+	_ = rfc2869.MessageAuthenticator_Set(p, saved)
+	if mErr != nil {
+		return true, false
+	}
+	for i := 4; i < 20; i++ {
+		b[i] = 0 // zero the Request Authenticator field
+	}
+	mac := hmac.New(md5.New, []byte(secret))
+	mac.Write(b)
+	return true, hmac.Equal(mac.Sum(nil), saved)
 }
 
 func (fn *fakeNAS) port(t *testing.T) int {
@@ -134,6 +204,14 @@ func (fn *fakeNAS) setBehavior(replyCode radius.Code, cause rfc3576.ErrorCause, 
 	fn.replyCode = replyCode
 	fn.errCause = cause
 	fn.dropFirst = dropFirst
+}
+
+// setReplyAuth selects how the fake NAS signs its CoA/Disconnect reply so tests
+// can drive the RFC 5176 §3.4 reply-side validation paths.
+func (fn *fakeNAS) setReplyAuth(mode replyAuthMode) {
+	fn.mu.Lock()
+	defer fn.mu.Unlock()
+	fn.replyAuth = mode
 }
 
 func TestCoAServiceDisconnectACK(t *testing.T) {
@@ -189,6 +267,9 @@ func TestCoAServiceDisconnectACK(t *testing.T) {
 	}
 	if first.nasIP != "10.0.0.1" || first.framedIP != "100.64.0.9" {
 		t.Errorf("address attrs mismatch: nasIP=%q framedIP=%q", first.nasIP, first.framedIP)
+	}
+	if !first.hasMessageAuth || !first.messageAuthOK {
+		t.Errorf("request Message-Authenticator: present=%v valid=%v, want both true", first.hasMessageAuth, first.messageAuthOK)
 	}
 }
 
@@ -416,4 +497,249 @@ func TestCoAServiceSessionHelpersRequireRadiusService(t *testing.T) {
 	if _, err := svc.CoASession(context.Background(), "sess"); err == nil {
 		t.Error("CoASession with nil RadiusService: expected error, got nil")
 	}
+}
+
+// TestCoAServiceRequestMessageAuthenticator asserts that every outbound
+// CoA/Disconnect request carries a correctly computed Message-Authenticator
+// (RFC 5176 §3.4). The fake NAS verifies the attribute and records the result.
+func TestCoAServiceRequestMessageAuthenticator(t *testing.T) {
+	const secret = "testing123"
+
+	t.Run("disconnect", func(t *testing.T) {
+		nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
+		svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(1))
+		target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+		result, err := svc.Disconnect(context.Background(), target, SessionIdentity{Username: "alice", AcctSessionID: "s1"})
+		if err != nil {
+			t.Fatalf("Disconnect returned error: %v", err)
+		}
+		if !result.Success {
+			t.Fatalf("expected success, got %+v", result)
+		}
+		got := nas.snapshot()
+		if len(got) != 1 {
+			t.Fatalf("received %d packets, want 1", len(got))
+		}
+		if !got[0].hasMessageAuth {
+			t.Fatal("Disconnect-Request did not carry a Message-Authenticator")
+		}
+		if !got[0].messageAuthOK {
+			t.Error("Disconnect-Request Message-Authenticator did not verify")
+		}
+	})
+
+	t.Run("coa", func(t *testing.T) {
+		nas := newFakeNAS(t, secret, radius.CodeCoAACK)
+		svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(1))
+		target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+		result, err := svc.CoA(context.Background(), target, SessionIdentity{Username: "carol", AcctSessionID: "s2"}, WithSessionTimeout(60))
+		if err != nil {
+			t.Fatalf("CoA returned error: %v", err)
+		}
+		if !result.Success {
+			t.Fatalf("expected success, got %+v", result)
+		}
+		got := nas.snapshot()
+		if len(got) != 1 {
+			t.Fatalf("received %d packets, want 1", len(got))
+		}
+		if !got[0].hasMessageAuth || !got[0].messageAuthOK {
+			t.Errorf("CoA-Request Message-Authenticator: present=%v valid=%v, want both true", got[0].hasMessageAuth, got[0].messageAuthOK)
+		}
+	})
+}
+
+// TestCoAServiceResponseMessageAuthenticator drives the RFC 5176 §3.4 reply-side
+// validation through the full send path: a correctly signed reply is accepted, an
+// unsigned reply is accepted (the attribute is OPTIONAL on responses), and a reply
+// whose Message-Authenticator does not verify is silently discarded.
+func TestCoAServiceResponseMessageAuthenticator(t *testing.T) {
+const secret = "testing123"
+
+t.Run("signed reply accepted", func(t *testing.T) {
+nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
+nas.setReplyAuth(replyAuthSigned)
+svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(2))
+target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+result, err := svc.Disconnect(context.Background(), target, SessionIdentity{Username: "alice", AcctSessionID: "s1"})
+if err != nil {
+t.Fatalf("Disconnect returned error: %v", err)
+}
+if !result.Success {
+t.Fatalf("expected success with a valid reply Message-Authenticator, got %+v", result)
+}
+if result.ResponseCode != "Disconnect-ACK" {
+t.Errorf("response code = %q, want Disconnect-ACK", result.ResponseCode)
+}
+if result.Attempts != 1 {
+t.Errorf("attempts = %d, want 1", result.Attempts)
+}
+})
+
+t.Run("unsigned reply accepted", func(t *testing.T) {
+nas := newFakeNAS(t, secret, radius.CodeCoAACK)
+nas.setReplyAuth(replyAuthNone) // reply carries no Message-Authenticator
+svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(2))
+target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+result, err := svc.CoA(context.Background(), target, SessionIdentity{Username: "bob", AcctSessionID: "s2"}, WithSessionTimeout(60))
+if err != nil {
+t.Fatalf("CoA returned error: %v", err)
+}
+if !result.Success {
+t.Fatalf("expected success with an unsigned reply (reply MA is OPTIONAL), got %+v", result)
+}
+if result.Attempts != 1 {
+t.Errorf("attempts = %d, want 1", result.Attempts)
+}
+})
+
+t.Run("invalid reply discarded", func(t *testing.T) {
+nas := newFakeNAS(t, secret, radius.CodeDisconnectACK)
+nas.setReplyAuth(replyAuthCorrupt)
+svc := NewCoAService(nil, WithCoATimeout(2*time.Second), WithCoARetries(2))
+target := CoATarget{Addr: "127.0.0.1", Secret: secret, Port: nas.port(t)}
+
+result, err := svc.Disconnect(context.Background(), target, SessionIdentity{Username: "carol", AcctSessionID: "s3"})
+if err != nil {
+t.Fatalf("Disconnect returned error: %v", err)
+}
+if result.Success {
+t.Fatalf("expected the forged reply to be discarded, got success: %+v", result)
+}
+if result.TimedOut {
+t.Error("a discarded reply must not be reported as a timeout")
+}
+if result.ResponseCode != "" {
+t.Errorf("response code = %q, want empty (no reply accepted)", result.ResponseCode)
+}
+if result.Err == "" {
+t.Error("expected Err to describe the discard")
+}
+// Every discarded reply is treated as unanswered, so the full budget is
+// spent: initial transmission + 2 retransmissions.
+if result.Attempts != 3 {
+t.Errorf("attempts = %d, want 3 (initial + 2 retransmissions)", result.Attempts)
+}
+if got := len(nas.snapshot()); got != 3 {
+t.Errorf("nas received %d packets, want 3", got)
+}
+})
+}
+
+// TestVerifyResponseMessageAuthenticator exercises the pure RFC 5176 §3.4 reply
+// validator against signed, unsigned, malformed, and forged vectors.
+func TestVerifyResponseMessageAuthenticator(t *testing.T) {
+const secret = "respsecret"
+var reqAuth [16]byte
+for i := range reqAuth {
+reqAuth[i] = byte(i + 1)
+}
+
+// build returns a Disconnect-ACK signed the way a NAS does (RFC 5176 §3.4):
+// keyed on reqAuth with the Message-Authenticator value zeroed during HMAC.
+build := func() *radius.Packet {
+p := radius.New(radius.CodeDisconnectACK, []byte(secret))
+p.Identifier = 7
+p.Authenticator = reqAuth
+if err := rfc2869.MessageAuthenticator_Set(p, make([]byte, 16)); err != nil {
+t.Fatalf("set placeholder MA: %v", err)
+}
+b, err := p.MarshalBinary()
+if err != nil {
+t.Fatalf("marshal: %v", err)
+}
+mac := hmac.New(md5.New, []byte(secret))
+mac.Write(b)
+if err := rfc2869.MessageAuthenticator_Set(p, mac.Sum(nil)); err != nil {
+t.Fatalf("set MA: %v", err)
+}
+return p
+}
+
+t.Run("valid", func(t *testing.T) {
+if got := verifyResponseMessageAuthenticator(build(), reqAuth, []byte(secret)); got != msgAuthValid {
+t.Errorf("got %v, want msgAuthValid", got)
+}
+})
+
+t.Run("keyed on request authenticator not the carried one", func(t *testing.T) {
+p := build()
+// Simulate the parsed reply carrying a Response Authenticator that differs
+// from the request authenticator; verification must still key on reqAuth.
+for i := range p.Authenticator {
+p.Authenticator[i] = 0xAA
+}
+if got := verifyResponseMessageAuthenticator(p, reqAuth, []byte(secret)); got != msgAuthValid {
+t.Errorf("got %v, want msgAuthValid", got)
+}
+})
+
+t.Run("absent accepted", func(t *testing.T) {
+p := radius.New(radius.CodeDisconnectACK, []byte(secret))
+if got := verifyResponseMessageAuthenticator(p, reqAuth, []byte(secret)); got != msgAuthAbsent {
+t.Errorf("got %v, want msgAuthAbsent", got)
+}
+})
+
+t.Run("nil accepted", func(t *testing.T) {
+if got := verifyResponseMessageAuthenticator(nil, reqAuth, []byte(secret)); got != msgAuthAbsent {
+t.Errorf("got %v, want msgAuthAbsent", got)
+}
+})
+
+t.Run("tampered value discarded", func(t *testing.T) {
+p := build()
+v, err := rfc2869.MessageAuthenticator_Lookup(p)
+if err != nil {
+t.Fatalf("lookup MA: %v", err)
+}
+tampered := append([]byte(nil), v...)
+tampered[0] ^= 0xFF
+if err := rfc2869.MessageAuthenticator_Set(p, tampered); err != nil {
+t.Fatalf("set tampered MA: %v", err)
+}
+if got := verifyResponseMessageAuthenticator(p, reqAuth, []byte(secret)); got != msgAuthInvalid {
+t.Errorf("got %v, want msgAuthInvalid", got)
+}
+})
+
+t.Run("wrong request authenticator discarded", func(t *testing.T) {
+var other [16]byte
+for i := range other {
+other[i] = 0x99
+}
+if got := verifyResponseMessageAuthenticator(build(), other, []byte(secret)); got != msgAuthInvalid {
+t.Errorf("got %v, want msgAuthInvalid", got)
+}
+})
+
+t.Run("wrong length discarded", func(t *testing.T) {
+p := build()
+if err := rfc2869.MessageAuthenticator_Set(p, make([]byte, 8)); err != nil {
+t.Fatalf("set short MA: %v", err)
+}
+if got := verifyResponseMessageAuthenticator(p, reqAuth, []byte(secret)); got != msgAuthInvalid {
+t.Errorf("got %v, want msgAuthInvalid", got)
+}
+})
+
+t.Run("duplicate attribute discarded", func(t *testing.T) {
+p := build()
+if err := rfc2869.MessageAuthenticator_Add(p, make([]byte, 16)); err != nil {
+t.Fatalf("add duplicate MA: %v", err)
+}
+if got := verifyResponseMessageAuthenticator(p, reqAuth, []byte(secret)); got != msgAuthInvalid {
+t.Errorf("got %v, want msgAuthInvalid", got)
+}
+})
+
+t.Run("present but no secret discarded", func(t *testing.T) {
+if got := verifyResponseMessageAuthenticator(build(), reqAuth, nil); got != msgAuthInvalid {
+t.Errorf("got %v, want msgAuthInvalid", got)
+}
+})
 }

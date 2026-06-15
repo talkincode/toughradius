@@ -3,6 +3,8 @@ package vendors
 // Standard RADIUS Vendor Codes
 const (
 	CodeStandard  = "0"
+	CodeAlcatel   = "3041"
+	CodeAruba     = "14823"
 	CodeCisco     = "9"
 	CodeMicrosoft = "311"
 	CodeHuawei    = "2011"
