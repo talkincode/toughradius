@@ -50,7 +50,7 @@
 | TR-F020 | 构建部署 | 构建、Docker 和前端嵌入 | 支持 Go 构建、前端构建、静态资源嵌入、Docker 镜像和 Makefile 工作流。 | `Makefile`, `Dockerfile`, `web/vite.config.ts`, `web/static.go`, `.github` | 已实现 | 构建链路变更必须同时验证后端二进制和前端产物。 |
 | TR-F021 | 协议资料 | RFC 与字典资料维护 | 保留 RADIUS、EAP、RadSec、VSA 相关 RFC 和 FreeRADIUS 字典资料，支撑协议实现和厂商扩展。 | `docs/rfcs`, `share`, `internal/radiusd/vendors` | 已实现 | 协议资料更新不能替代代码测试；新增资料需说明对应实现或待实现功能编号。 |
 | TR-F022 | 安全与质量 | 测试、验证、输入约束和审计习惯 | 通过单元测试、集成测试、白名单排序、输入校验、密码哈希、JWT 和日志指标降低回归风险。 | `*_test.go`, `.golangci.yml`, `internal/adminapi/helpers.go`, `pkg/validator`, `pkg/common` | 核心基线 | 安全边界变更必须有针对性测试；不得为了快速开发移除验证或鉴权。 |
-| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、RFC 索引等），并以链接方式暴露仍由专用技能维护的功能清单与路线图，提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs-site/book.toml`, `docs-site/src`（zh / en 双语章节）, `.github/workflows/ci.yml`（docs 任务）, `docs/` | 已实现 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` 不扩展为产品门户；GitHub Pages / GitBook 的发布边界必须保持单一事实来源，避免内容漂移。 |
+| TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、RFC 索引等），并以链接方式暴露仍由专用技能维护的功能清单与路线图，提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs-site/book.toml`, `docs-site/src`（zh / en 双语章节）, `.github/workflows/ci.yml`（docs 任务）, `docs/` | 已实现 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` / `TR-N006`，不扩展为产品门户或托管 Portal；GitHub Pages / GitBook 的发布边界必须保持单一事实来源，避免内容漂移。 |
 | TR-F024 | 代码规范 | Go API 文档与注释规范 | 对齐 Go 标准库风格：导出标识符必须有 godoc 注释，包注释（`doc.go`）、可运行示例（`Example`）、错误与并发语义说明齐备，并可由 lint / CI 度量。 | `.agents/skills/document-go-apis`, 各包 doc 注释, `.golangci.yml` | 已实现 | 规范已通过增量 ratchet 纳入常态门禁；后续新增导出 API 必须保持标准库 godoc 习惯，禁止无信息量的机械式注释。 |
 
 ## 优先扩展功能方向
@@ -80,3 +80,4 @@
 | TR-N003 | 通用可视化监控平台 | 当前 Dashboard 只服务 RADIUS 运维视图，不替代 Prometheus、Grafana 等通用监控系统。 |
 | TR-N004 | 多租户 SaaS 平台 | 当前模型以单实例管理为基线；多租户需要先完成权限、数据隔离和迁移设计。 |
 | TR-N005 | 重写协议栈或替换管理框架 | 除非有明确缺陷和迁移方案，否则不以重写为开发方向。 |
+| TR-N006 | 托管式 Captive Portal / 访客门户产品 | ToughRADIUS 只作为 RADIUS auth/accounting 后端，不提供、不托管、不运营 Portal 登录页、访客开户、券码、短信/微信/支付 onboarding 或厂商 Portal Server 状态机；这些属于其他产品。 |

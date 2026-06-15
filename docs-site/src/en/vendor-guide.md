@@ -18,6 +18,10 @@ device side.
 > CoA / forced disconnect)? See the [Scenario Cookbook](./cookbook.md). This
 > chapter is the attribute reference card; the cookbook is the playbook.
 
+> **Portal boundary:** ToughRADIUS is the RADIUS AAA backend. It does not host
+> captive portal login pages or guest onboarding flows. See
+> [Portal / Hotspot Integration Boundary](./portal-hotspot-boundary.md).
+
 ## Integration steps for any device
 
 1. **Register the NAS** under **NAS Devices → Create**: source IP address (or
