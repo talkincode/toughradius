@@ -236,4 +236,3 @@ func TestSettingsRequireAdmin_NegativeCases(t *testing.T) {
 		})
 	}
 }
-
