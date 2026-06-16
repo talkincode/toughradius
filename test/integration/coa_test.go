@@ -332,28 +332,28 @@ func TestSessionCoAEndToEnd_NAK(t *testing.T) {
 // without a Message-Authenticator is accepted: the attribute is OPTIONAL on
 // CoA/Disconnect responses (RFC 5176 §3.4), so the exchange still succeeds.
 func TestSessionDisconnectEndToEnd_UnsignedReplyAccepted(t *testing.T) {
-const secret = "it-coa-secret-unsigned"
-nas := newITFakeNAS(t, secret, radius.CodeDisconnectACK, 0)
-nas.setReplyAuth(itReplyAuthNone)
-id, username, acctSessionID := seedCoAOnlineSession(t, secret, nas.port(t))
+	const secret = "it-coa-secret-unsigned"
+	nas := newITFakeNAS(t, secret, radius.CodeDisconnectACK, 0)
+	nas.setReplyAuth(itReplyAuthNone)
+	id, username, acctSessionID := seedCoAOnlineSession(t, secret, nas.port(t))
 
-c := newAPIClient(t)
-status, body := c.post(t, "/api/v1/sessions/"+strconv.FormatInt(id, 10)+"/disconnect", nil)
-require.Equalf(t, 200, status, "disconnect body: %s", string(body))
+	c := newAPIClient(t)
+	status, body := c.post(t, "/api/v1/sessions/"+strconv.FormatInt(id, 10)+"/disconnect", nil)
+	require.Equalf(t, 200, status, "disconnect body: %s", string(body))
 
-var action coaActionBody
-unwrapData(t, body, &action)
-assert.True(t, action.Success, "an unsigned reply must be accepted (RFC 5176 §3.4 reply MA is OPTIONAL)")
-assert.Equal(t, "Disconnect-ACK", action.ResponseCode)
-assert.Equal(t, username, action.Username)
-assert.Equal(t, acctSessionID, action.AcctSessionID)
-assert.False(t, action.TimedOut)
-assert.Equal(t, 1, nas.requestCount(), "an accepted reply ends the exchange on the first attempt")
+	var action coaActionBody
+	unwrapData(t, body, &action)
+	assert.True(t, action.Success, "an unsigned reply must be accepted (RFC 5176 §3.4 reply MA is OPTIONAL)")
+	assert.Equal(t, "Disconnect-ACK", action.ResponseCode)
+	assert.Equal(t, username, action.Username)
+	assert.Equal(t, acctSessionID, action.AcctSessionID)
+	assert.False(t, action.TimedOut)
+	assert.Equal(t, 1, nas.requestCount(), "an accepted reply ends the exchange on the first attempt")
 
-audit := latestAuditForSession(t, id)
-assert.Equal(t, "disconnect", audit.Action)
-assert.True(t, audit.Success)
-assert.Equal(t, "Disconnect-ACK", audit.ResponseCode)
+	audit := latestAuditForSession(t, id)
+	assert.Equal(t, "disconnect", audit.Action)
+	assert.True(t, audit.Success)
+	assert.Equal(t, "Disconnect-ACK", audit.ResponseCode)
 }
 
 // TestSessionDisconnectEndToEnd_ForgedReplyDiscarded proves that a NAS reply
@@ -361,24 +361,24 @@ assert.Equal(t, "Disconnect-ACK", audit.ResponseCode)
 // §3.4). With every reply discarded the exchange reports success=false without
 // accepting a response code, and the discard is not a timeout.
 func TestSessionDisconnectEndToEnd_ForgedReplyDiscarded(t *testing.T) {
-const secret = "it-coa-secret-forged"
-nas := newITFakeNAS(t, secret, radius.CodeDisconnectACK, 0)
-nas.setReplyAuth(itReplyAuthCorrupt)
-id, _, _ := seedCoAOnlineSession(t, secret, nas.port(t))
+	const secret = "it-coa-secret-forged"
+	nas := newITFakeNAS(t, secret, radius.CodeDisconnectACK, 0)
+	nas.setReplyAuth(itReplyAuthCorrupt)
+	id, _, _ := seedCoAOnlineSession(t, secret, nas.port(t))
 
-c := newAPIClient(t)
-status, body := c.post(t, "/api/v1/sessions/"+strconv.FormatInt(id, 10)+"/disconnect", nil)
-require.Equalf(t, 200, status, "disconnect body: %s", string(body))
+	c := newAPIClient(t)
+	status, body := c.post(t, "/api/v1/sessions/"+strconv.FormatInt(id, 10)+"/disconnect", nil)
+	require.Equalf(t, 200, status, "disconnect body: %s", string(body))
 
-var action coaActionBody
-unwrapData(t, body, &action)
-assert.False(t, action.Success, "a reply with an invalid Message-Authenticator must be discarded")
-assert.Empty(t, action.ResponseCode, "no reply should be accepted")
-assert.False(t, action.TimedOut, "a discarded reply is not a timeout")
-assert.GreaterOrEqual(t, nas.requestCount(), 1, "the NAS received at least the initial request")
-assert.Equal(t, 0, nas.badAuthCount(), "the request itself carried a valid Message-Authenticator")
+	var action coaActionBody
+	unwrapData(t, body, &action)
+	assert.False(t, action.Success, "a reply with an invalid Message-Authenticator must be discarded")
+	assert.Empty(t, action.ResponseCode, "no reply should be accepted")
+	assert.False(t, action.TimedOut, "a discarded reply is not a timeout")
+	assert.GreaterOrEqual(t, nas.requestCount(), 1, "the NAS received at least the initial request")
+	assert.Equal(t, 0, nas.badAuthCount(), "the request itself carried a valid Message-Authenticator")
 
-audit := latestAuditForSession(t, id)
-assert.Equal(t, "disconnect", audit.Action)
-assert.False(t, audit.Success, "a discarded-reply exchange is audited as a failure")
+	audit := latestAuditForSession(t, id)
+	assert.Equal(t, "disconnect", audit.Action)
+	assert.False(t, audit.Success, "a discarded-reply exchange is audited as a failure")
 }

@@ -262,42 +262,42 @@ func TestMemoryStateManager_ImplementsInterface(t *testing.T) {
 }
 
 func TestMemoryStateManager_ExpiresAfterTTL(t *testing.T) {
-mgr := NewMemoryStateManagerWithTTL(20*time.Millisecond, 0)
-defer mgr.Close()
+	mgr := NewMemoryStateManagerWithTTL(20*time.Millisecond, 0)
+	defer mgr.Close()
 
-require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1", Username: "u"}))
+	require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1", Username: "u"}))
 
-// Before expiry the state is retrievable.
-got, err := mgr.GetState("s1")
-require.NoError(t, err)
-assert.Equal(t, "u", got.Username)
+	// Before expiry the state is retrievable.
+	got, err := mgr.GetState("s1")
+	require.NoError(t, err)
+	assert.Equal(t, "u", got.Username)
 
-// After the TTL elapses the state is treated as absent and removed lazily.
-time.Sleep(40 * time.Millisecond)
-_, err = mgr.GetState("s1")
-require.Error(t, err)
-assert.Contains(t, err.Error(), "not found")
+	// After the TTL elapses the state is treated as absent and removed lazily.
+	time.Sleep(40 * time.Millisecond)
+	_, err = mgr.GetState("s1")
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "not found")
 
-mgr.mu.RLock()
-_, exists := mgr.states["s1"]
-mgr.mu.RUnlock()
-assert.False(t, exists, "expired state should be removed on read")
+	mgr.mu.RLock()
+	_, exists := mgr.states["s1"]
+	mgr.mu.RUnlock()
+	assert.False(t, exists, "expired state should be removed on read")
 }
 
 func TestMemoryStateManager_JanitorSweepsExpired(t *testing.T) {
-mgr := NewMemoryStateManagerWithTTL(15*time.Millisecond, 10*time.Millisecond)
-defer mgr.Close()
+	mgr := NewMemoryStateManagerWithTTL(15*time.Millisecond, 10*time.Millisecond)
+	defer mgr.Close()
 
-require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1"}))
-require.NoError(t, mgr.SetState("s2", &eap.EAPState{StateID: "s2"}))
+	require.NoError(t, mgr.SetState("s1", &eap.EAPState{StateID: "s1"}))
+	require.NoError(t, mgr.SetState("s2", &eap.EAPState{StateID: "s2"}))
 
-// Wait long enough for the janitor to run at least once after expiry.
-assert.Eventually(t, func() bool {
-mgr.mu.RLock()
-n := len(mgr.states)
-mgr.mu.RUnlock()
-return n == 0
-}, time.Second, 5*time.Millisecond, "janitor should reclaim expired states")
+	// Wait long enough for the janitor to run at least once after expiry.
+	assert.Eventually(t, func() bool {
+		mgr.mu.RLock()
+		n := len(mgr.states)
+		mgr.mu.RUnlock()
+		return n == 0
+	}, time.Second, 5*time.Millisecond, "janitor should reclaim expired states")
 }
 
 // TestMemoryStateManager_DeleteIfExpired_ReCheck verifies the re-check inside
