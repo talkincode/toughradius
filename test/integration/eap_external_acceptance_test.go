@@ -25,6 +25,7 @@ import (
 )
 
 const eapAcceptanceSecret = "it-eap-acceptance-secret"
+const peapExternalCoverageIssue = "https://github.com/talkincode/toughradius/issues/495"
 
 type eapAcceptanceRun struct {
 	StartedAt   string                  `json:"started_at"`
@@ -145,7 +146,8 @@ func TestEAPExternalAcceptance(t *testing.T) {
 			expected: "Access-Accept",
 			skipDetail: "Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap " +
 				"(server rejects the decrypted phase-2 payload as an invalid inner EAP message). " +
-				"The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage.",
+				"The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. " +
+				"Tracking issue: " + peapExternalCoverageIssue + ".",
 			setup: func(t *testing.T, dir, suffix string) string {
 				ca := newEAPTLSTestCA(t, "IT External PEAP Root CA "+suffix)
 				serverCert := ca.issueServer(t, "radius.example.com")
@@ -163,7 +165,8 @@ func TestEAPExternalAcceptance(t *testing.T) {
 			expected: "Access-Reject",
 			skipDetail: "Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap " +
 				"(server rejects the decrypted phase-2 payload as an invalid inner EAP message). " +
-				"The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage.",
+				"The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. " +
+				"Tracking issue: " + peapExternalCoverageIssue + ".",
 			setup: func(t *testing.T, dir, suffix string) string {
 				ca := newEAPTLSTestCA(t, "IT External PEAP Reject Root CA "+suffix)
 				serverCert := ca.issueServer(t, "radius.example.com")
@@ -234,7 +237,7 @@ func TestEAPExternalAcceptance(t *testing.T) {
 	})
 	run.FinishedAt = time.Now().UTC().Format(time.RFC3339)
 	run.Verdict = verdictFromScenarios(run.Scenarios)
-	if run.Verdict != "accepted" {
+	if run.Verdict == "failed" || run.Verdict == "incomplete" {
 		t.Fatalf("EAP external acceptance verdict: %s", run.Verdict)
 	}
 }
@@ -418,18 +421,30 @@ func missingToolStatus() string {
 
 func verdictFromScenarios(scenarios []eapAcceptanceScenario) string {
 	passed := 0
+	partial := false
 	for _, scenario := range scenarios {
 		switch scenario.Status {
 		case "failed":
 			return "failed"
 		case "passed":
 			passed++
+		case "skipped":
+			if isPEAPMSCHAPv2Scenario(scenario.ID) {
+				partial = true
+			}
 		}
 	}
 	if passed == 0 {
 		return "incomplete"
 	}
+	if partial {
+		return "partial"
+	}
 	return "accepted"
+}
+
+func isPEAPMSCHAPv2Scenario(id string) bool {
+	return strings.HasPrefix(id, "peap-mschapv2-")
 }
 
 func writeEAPAcceptanceResult(t *testing.T, path string, run *eapAcceptanceRun) {
