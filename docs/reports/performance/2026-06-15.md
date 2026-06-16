@@ -10,15 +10,15 @@ This report is informational. GitHub hosted runners can vary, so this workflow r
 
 | Field | Value |
 | --- | --- |
-| Started | 2026-06-15T09:36:23Z |
-| Finished | 2026-06-15T09:37:04Z |
-| Commit | 66bda4d0cf58 |
+| Started | 2026-06-15T16:09:19Z |
+| Finished | 2026-06-15T16:09:53Z |
+| Commit | 48cae220d4b1 |
 | Ref | main |
-| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/27537313130) |
+| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/27559638220) |
 | Runner OS | Linux |
 | Go | go version go1.25.11 linux/amd64 |
 | GOOS/GOARCH | linux/amd64 |
-| CPU | AMD EPYC 9V74 80-Core Processor |
+| CPU | INTEL(R) XEON(R) PLATINUM 8573C |
 
 ### Summary
 
@@ -33,51 +33,51 @@ This report is informational. GitHub hosted runners can vary, so this workflow r
 
 | Package | Benchmark | Iterations | ns/op | B/op | allocs/op | Delta ns/op |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 360 | 3307955 | 1484354 | 15437 | +26.9% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 186146 | 6337 | 1465 | 7.00 | +29.5% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 189478 | 6180 | 1360 | 24.00 | +28.6% |
-| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 232948 | 5414 | 3502 | 52.00 | +28.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 231930 | 5042 | 4065 | 60.00 | +27.3% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 728718 | 1432 | 424.00 | 4.00 | +27.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1535384 | 904.10 | 736.00 | 25.00 | +41.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 2691984 | 439.00 | 128.00 | 1.00 | +28.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Global | 3369394 | 359.10 | 23.00 | 1.00 | +30.3% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Sharded | 10317824 | 119.40 | 23.00 | 2.00 | +18.5% |
+| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 398 | 2994473 | 1543207 | 15438 | -9.5% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 239148 | 5124 | 1465 | 7.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 246180 | 4655 | 1360 | 24.00 | -24.7% |
+| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 268670 | 4549 | 3501 | 52.00 | -16.0% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 292104 | 4045 | 4065 | 60.00 | -19.8% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 886989 | 1178 | 424.00 | 4.00 | -17.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1657244 | 731.30 | 736.00 | 25.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 3382060 | 356.30 | 128.00 | 1.00 | -18.8% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Global | 3521974 | 346.00 | 23.00 | 1.00 | -3.6% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Sharded | 9676465 | 125.80 | 23.00 | 2.00 | +5.4% |
 
 ### Highest Allocation Benchmarks
 
 | Package | Benchmark | Iterations | ns/op | B/op | allocs/op | Delta ns/op |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 360 | 3307955 | 1484354 | 15437 | +26.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 231930 | 5042 | 4065 | 60.00 | +27.3% |
-| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 232948 | 5414 | 3502 | 52.00 | +28.1% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 186146 | 6337 | 1465 | 7.00 | +29.5% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 189478 | 6180 | 1360 | 24.00 | +28.6% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1535384 | 904.10 | 736.00 | 25.00 | +41.9% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 728718 | 1432 | 424.00 | 4.00 | +27.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 2691984 | 439.00 | 128.00 | 1.00 | +28.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager | BenchmarkMemoryStateManager_GetStateParallel | 17156950 | 68.84 | 96.00 | 1.00 | +14.5% |
-| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Set | 10317580 | 117.30 | 32.00 | 1.00 | +26.7% |
+| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 398 | 2994473 | 1543207 | 15438 | -9.5% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 292104 | 4045 | 4065 | 60.00 | -19.8% |
+| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 268670 | 4549 | 3501 | 52.00 | -16.0% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 239148 | 5124 | 1465 | 7.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 246180 | 4655 | 1360 | 24.00 | -24.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1657244 | 731.30 | 736.00 | 25.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 886989 | 1178 | 424.00 | 4.00 | -17.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 3382060 | 356.30 | 128.00 | 1.00 | -18.8% |
+| github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager | BenchmarkMemoryStateManager_GetStateParallel | 14829061 | 81.41 | 96.00 | 1.00 | +18.3% |
+| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Set | 10958541 | 107.30 | 32.00 | 1.00 | -8.5% |
 
 ### All Benchmark Results
 
 | Package | Benchmark | Iterations | ns/op | B/op | allocs/op | Delta ns/op |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 232948 | 5414 | 3502 | 52.00 | +28.1% |
-| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Get | 16783470 | 71.35 | 0.00 | 0.00 | +29.0% |
-| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Set | 10317580 | 117.30 | 32.00 | 1.00 | +26.7% |
-| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_ConcurrentGet | 24856970 | 45.32 | 0.00 | 0.00 | +29.6% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 186146 | 6337 | 1465 | 7.00 | +29.5% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 189478 | 6180 | 1360 | 24.00 | +28.6% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 728718 | 1432 | 424.00 | 4.00 | +27.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Sharded | 10317824 | 119.40 | 23.00 | 2.00 | +18.5% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Global | 3369394 | 359.10 | 23.00 | 1.00 | +30.3% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 2691984 | 439.00 | 128.00 | 1.00 | +28.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1535384 | 904.10 | 736.00 | 25.00 | +41.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkPacketLength | 286870846 | 4.18 | 0.00 | 0.00 | +29.3% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 231930 | 5042 | 4065 | 60.00 | +27.3% |
-| github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager | BenchmarkMemoryStateManager_GetStateParallel | 17156950 | 68.84 | 96.00 | 1.00 | +14.5% |
-| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 360 | 3307955 | 1484354 | 15437 | +26.9% |
+| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 268670 | 4549 | 3501 | 52.00 | -16.0% |
+| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Get | 21686259 | 57.08 | 0.00 | 0.00 | -20.0% |
+| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Set | 10958541 | 107.30 | 32.00 | 1.00 | -8.5% |
+| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_ConcurrentGet | 18651390 | 63.60 | 0.00 | 0.00 | +40.3% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 239148 | 5124 | 1465 | 7.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 246180 | 4655 | 1360 | 24.00 | -24.7% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 886989 | 1178 | 424.00 | 4.00 | -17.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Sharded | 9676465 | 125.80 | 23.00 | 2.00 | +5.4% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Global | 3521974 | 346.00 | 23.00 | 1.00 | -3.6% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 3382060 | 356.30 | 128.00 | 1.00 | -18.8% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1657244 | 731.30 | 736.00 | 25.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkPacketLength | 240783642 | 4.93 | 0.00 | 0.00 | +18.0% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 292104 | 4045 | 4065 | 60.00 | -19.8% |
+| github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager | BenchmarkMemoryStateManager_GetStateParallel | 14829061 | 81.41 | 96.00 | 1.00 | +18.3% |
+| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 398 | 2994473 | 1543207 | 15438 | -9.5% |
 
 ## 中文
 
@@ -89,15 +89,15 @@ This report is informational. GitHub hosted runners can vary, so this workflow r
 
 | Field | Value |
 | --- | --- |
-| Started | 2026-06-15T09:36:23Z |
-| Finished | 2026-06-15T09:37:04Z |
-| Commit | 66bda4d0cf58 |
+| Started | 2026-06-15T16:09:19Z |
+| Finished | 2026-06-15T16:09:53Z |
+| Commit | 48cae220d4b1 |
 | Ref | main |
-| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/27537313130) |
+| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/27559638220) |
 | Runner OS | Linux |
 | Go | go version go1.25.11 linux/amd64 |
 | GOOS/GOARCH | linux/amd64 |
-| CPU | AMD EPYC 9V74 80-Core Processor |
+| CPU | INTEL(R) XEON(R) PLATINUM 8573C |
 
 ### 摘要
 
@@ -112,28 +112,28 @@ This report is informational. GitHub hosted runners can vary, so this workflow r
 
 | Package | Benchmark | Iterations | ns/op | B/op | allocs/op | Delta ns/op |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 360 | 3307955 | 1484354 | 15437 | +26.9% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 186146 | 6337 | 1465 | 7.00 | +29.5% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 189478 | 6180 | 1360 | 24.00 | +28.6% |
-| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 232948 | 5414 | 3502 | 52.00 | +28.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 231930 | 5042 | 4065 | 60.00 | +27.3% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 728718 | 1432 | 424.00 | 4.00 | +27.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1535384 | 904.10 | 736.00 | 25.00 | +41.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 2691984 | 439.00 | 128.00 | 1.00 | +28.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Global | 3369394 | 359.10 | 23.00 | 1.00 | +30.3% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Sharded | 10317824 | 119.40 | 23.00 | 2.00 | +18.5% |
+| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 398 | 2994473 | 1543207 | 15438 | -9.5% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 239148 | 5124 | 1465 | 7.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 246180 | 4655 | 1360 | 24.00 | -24.7% |
+| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 268670 | 4549 | 3501 | 52.00 | -16.0% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 292104 | 4045 | 4065 | 60.00 | -19.8% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 886989 | 1178 | 424.00 | 4.00 | -17.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1657244 | 731.30 | 736.00 | 25.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 3382060 | 356.30 | 128.00 | 1.00 | -18.8% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Global | 3521974 | 346.00 | 23.00 | 1.00 | -3.6% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkAuthRateLimiter_Sharded | 9676465 | 125.80 | 23.00 | 2.00 | +5.4% |
 
 ### 最高内存分配 Benchmark
 
 | Package | Benchmark | Iterations | ns/op | B/op | allocs/op | Delta ns/op |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 360 | 3307955 | 1484354 | 15437 | +26.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 231930 | 5042 | 4065 | 60.00 | +27.3% |
-| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 232948 | 5414 | 3502 | 52.00 | +28.1% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 186146 | 6337 | 1465 | 7.00 | +29.5% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 189478 | 6180 | 1360 | 24.00 | +28.6% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1535384 | 904.10 | 736.00 | 25.00 | +41.9% |
-| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 728718 | 1432 | 424.00 | 4.00 | +27.1% |
-| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 2691984 | 439.00 | 128.00 | 1.00 | +28.9% |
-| github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager | BenchmarkMemoryStateManager_GetStateParallel | 17156950 | 68.84 | 96.00 | 1.00 | +14.5% |
-| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Set | 10317580 | 117.30 | 32.00 | 1.00 | +26.7% |
+| github.com/talkincode/toughradius/v9/pkg/excel | BenchmarkWriteToFile | 398 | 2994473 | 1543207 | 15438 | -9.5% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkServeRADIUSAccessAccept | 292104 | 4045 | 4065 | 60.00 | -19.8% |
+| github.com/talkincode/toughradius/v9/internal/adminapi | BenchmarkIssueToken | 268670 | 4549 | 3501 | 52.00 | -16.0% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_MarshalJSON | 239148 | 5124 | 1465 | 7.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkRadiusUser_UnmarshalJSON | 246180 | 4655 | 1360 | 24.00 | -24.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkParseTcpPacket | 1657244 | 731.30 | 736.00 | 25.00 | -19.1% |
+| github.com/talkincode/toughradius/v9/internal/domain | BenchmarkSysOprLog_MarshalJSON | 886989 | 1178 | 424.00 | 4.00 | -17.7% |
+| github.com/talkincode/toughradius/v9/internal/radiusd | BenchmarkCheckRequestSecret | 3382060 | 356.30 | 128.00 | 1.00 | -18.8% |
+| github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager | BenchmarkMemoryStateManager_GetStateParallel | 14829061 | 81.41 | 96.00 | 1.00 | +18.3% |
+| github.com/talkincode/toughradius/v9/internal/app | BenchmarkProfileCache_Set | 10958541 | 107.30 | 32.00 | 1.00 | -8.5% |
