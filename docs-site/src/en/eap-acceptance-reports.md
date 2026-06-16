@@ -2,6 +2,8 @@
 
 Weekly EAP acceptance runs validate ToughRADIUS with an external `eapol_test` supplicant and publish the latest retained reports here.
 
+Maintainers: report PR signing requirements, artifact fallback, and verification steps are documented in the [Agent Development Guide](./agent-guide.md#report-pr-automation).
+
 **Latest verdict:** ACCEPTED
 
 ## Latest Scenario Summary

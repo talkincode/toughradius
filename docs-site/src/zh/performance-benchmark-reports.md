@@ -2,6 +2,8 @@
 
 每周 benchmark 任务基于现有 Go `Benchmark*` 函数记录 ToughRADIUS 性能信号。报告仅用于观察趋势，不会因为 GitHub 托管 runner 的耗时波动直接失败。
 
+维护者：报告 PR 的签名前置条件、artifact fallback 与验证步骤见[Agent 开发指南](./agent-guide.md#report-pr-automation)。
+
 **最近结论：** 已记录
 
 ## 最近摘要

@@ -2,6 +2,8 @@
 
 Weekly benchmark runs record ToughRADIUS performance signals from existing Go `Benchmark*` functions. Reports are informational and do not fail on timing drift from GitHub hosted runners.
 
+Maintainers: report PR signing requirements, artifact fallback, and verification steps are documented in the [Agent Development Guide](./agent-guide.md#report-pr-automation).
+
 **Latest verdict:** RECORDED
 
 ## Latest Summary
