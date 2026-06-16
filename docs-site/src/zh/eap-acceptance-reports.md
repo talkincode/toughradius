@@ -2,6 +2,8 @@
 
 每周 EAP 验收任务使用外部 `eapol_test` supplicant 验证 ToughRADIUS，并在这里展示最近保留的报告。
 
+维护者：报告 PR 的签名前置条件、artifact fallback 与验证步骤见[Agent 开发指南](./agent-guide.md#report-pr-automation)。
+
 **最近结论：** 通过
 
 ## 最近场景摘要

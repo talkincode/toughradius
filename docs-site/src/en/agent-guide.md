@@ -118,6 +118,35 @@ original issue, PR diff, and CI output.
 | Labeler | `.github/workflows/labeler.yml` runs on `pull_request_target` and applies labels from `.github/labeler.yml` based on changed paths. | It labels `go`, `javascript`, `github_actions`, `dependencies`, and `doc`. The action reads the changed-file list and base-branch config; it does not check out or execute PR code. |
 | Greetings | `.github/workflows/greetings.yml` runs when a contributor opens their first issue or PR and posts onboarding guidance. | The comment is informational. It does not change review requirements or issue priority. |
 
+<a id="report-pr-automation"></a>
+
+### Report PR automation
+
+Weekly report workflows publish generated reports through signed commits on
+short-lived automation branches. The workflows always upload their generated
+artifact before the report PR step, so maintainers can inspect the report even
+when PR creation is skipped or blocked.
+
+| Workflow | Trigger and published files | PR requirements and fallback |
+| --- | --- | --- |
+| EAP acceptance weekly | `.github/workflows/eap-acceptance-weekly.yml` runs every Monday at `09:17 UTC` and by manual dispatch. It publishes `docs/reports/eap/<date>.md`, `docs/reports/eap/latest.md`, and the EAP report index pages. | When the external EAP acceptance step succeeds and report files changed, the PR step requires the repository secret `EAP_REPORT_SIGNING_KEY` and repository variables `EAP_REPORT_SIGNING_EMAIL` and optional `EAP_REPORT_SIGNING_NAME`. Missing key or email configuration blocks the PR step because protected `main` requires verified signed commits; use the uploaded `eap-acceptance-<run_id>` artifact for the generated report. |
+| Performance benchmark weekly | `.github/workflows/performance-benchmark-weekly.yml` runs every Monday at `10:37 UTC` and by manual dispatch. It publishes `docs/reports/performance/<date>.md`, `docs/reports/performance/latest.md`, and the performance report index pages. | When benchmarks complete and report files changed, the PR step uses `PERFORMANCE_REPORT_SIGNING_KEY`, `PERFORMANCE_REPORT_SIGNING_EMAIL`, and optional `PERFORMANCE_REPORT_SIGNING_NAME`. If these are absent, it reuses `EAP_REPORT_SIGNING_KEY`, `EAP_REPORT_SIGNING_EMAIL`, and optional `EAP_REPORT_SIGNING_NAME`. If no signing key/email pair is configured, the workflow keeps the generated report in the `performance-benchmark-<run_id>` artifact, writes a workflow step summary explaining that PR creation was skipped, and exits the PR step successfully. |
+
+The signing key values are never documented here or in issue/PR comments. Only
+record the secret and variable names, their purpose, and whether they are
+configured.
+
+When reviewing a generated report run:
+
+- Check the workflow summary first for skip or credential messages.
+- Download the run artifact if no report PR was opened.
+- If a report PR exists, verify that its head commit is shown as verified by
+  GitHub before merging.
+- Check the published file list in the PR body against the workflow's expected
+  report paths.
+- Treat report PR CI job state and `mergeStateStatus=UNSTABLE` behavior as the
+  separate implementation boundary tracked by issue #494.
+
 ### Minimum viable product (MVP)
 
 Each change is delivered as a minimal, independently usable, rollback-safe unit
