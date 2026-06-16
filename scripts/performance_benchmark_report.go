@@ -57,6 +57,19 @@ type comparison struct {
 	DeltaPct   float64
 }
 
+type previousReport struct {
+	Context    benchmarkContext
+	Benchmarks map[string]benchmarkResult
+}
+
+type benchmarkContext struct {
+	RunnerOS  string
+	GoVersion string
+	GOOS      string
+	GOARCH    string
+	CPU       string
+}
+
 func main() {
 	input := flag.String("input", "benchmark.txt", "raw go test benchmark output")
 	reportDir := flag.String("report-dir", "docs/reports/performance", "directory for Markdown reports")
@@ -88,7 +101,7 @@ func main() {
 		fail("create report dir: %v", err)
 	}
 
-	previous := readPreviousBenchmarks(filepath.Join(*reportDir, "latest.md"))
+	previous := readPreviousReport(filepath.Join(*reportDir, "latest.md"))
 	reportName := *reportDate + ".md"
 	reportBody := renderReport(*reportDate, run, previous)
 	if err := os.WriteFile(filepath.Join(*reportDir, reportName), []byte(reportBody), 0o644); err != nil {
@@ -195,8 +208,9 @@ func parseBenchmarkFields(pkg string, fields []string) (benchmarkResult, bool) {
 	return result, true
 }
 
-func renderReport(date string, run benchmarkRun, previous map[string]benchmarkResult) string {
-	comparisons := compareBenchmarks(run.Benchmarks, previous)
+func renderReport(date string, run benchmarkRun, previous previousReport) string {
+	contextComparable := isComparableContext(previous.Context, contextFromRun(run))
+	comparisons := compareBenchmarks(run.Benchmarks, previous.Benchmarks, contextComparable)
 	var b strings.Builder
 	fmt.Fprintf(&b, "# Performance Benchmark Report - %s\n\n", date)
 	fmt.Fprintln(&b, "## English")
@@ -204,6 +218,10 @@ func renderReport(date string, run benchmarkRun, previous map[string]benchmarkRe
 	fmt.Fprintln(&b, "**Verdict:** RECORDED")
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "This report is informational. GitHub hosted runners can vary, so this workflow records benchmark visibility and trend signals without failing on timing changes.")
+	if !contextComparable {
+		fmt.Fprintln(&b)
+		fmt.Fprintln(&b, "The previous report used a different runner context, so `Delta ns/op` is marked `n/a (context changed)` instead of presenting cross-runner timing as a direct trend.")
+	}
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "### Run Context")
 	fmt.Fprintln(&b)
@@ -230,6 +248,10 @@ func renderReport(date string, run benchmarkRun, previous map[string]benchmarkRe
 	fmt.Fprintln(&b, "**结论：** 已记录")
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "本报告只提供性能可见性。GitHub 托管 runner 存在波动，因此当前工作流记录趋势信号，但不会因为耗时变化直接失败。")
+	if !contextComparable {
+		fmt.Fprintln(&b)
+		fmt.Fprintln(&b, "上一份报告的 runner 上下文不同，因此 `Delta ns/op` 标记为 `n/a (context changed)`，避免把跨 runner 耗时差异呈现为直接趋势。")
+	}
 	fmt.Fprintln(&b)
 	fmt.Fprintln(&b, "### 运行上下文")
 	fmt.Fprintln(&b)
@@ -294,11 +316,15 @@ func writeSummaryTableCN(b *strings.Builder, run benchmarkRun) {
 
 func writeBenchmarkTable(b *strings.Builder, benchmarks []benchmarkResult, comparisons map[string]comparison) {
 	fmt.Fprintln(b, "| Package | Benchmark | Iterations | ns/op | B/op | allocs/op | Delta ns/op |")
-	fmt.Fprintln(b, "| --- | --- | ---: | ---: | ---: | ---: | ---: |")
+	fmt.Fprintln(b, "| --- | --- | ---: | ---: | ---: | ---: | --- |")
 	for _, bench := range benchmarks {
 		delta := "baseline"
 		if cmp, ok := comparisons[benchmarkKey(bench)]; ok {
-			delta = formatPercent(cmp.DeltaPct)
+			if cmp.PreviousNs == 0 {
+				delta = "n/a (context changed)"
+			} else {
+				delta = formatPercent(cmp.DeltaPct)
+			}
 		}
 		fmt.Fprintf(b, "| %s | %s | %d | %s | %s | %s | %s |\n",
 			escapeTable(bench.Package),
@@ -312,10 +338,10 @@ func writeBenchmarkTable(b *strings.Builder, benchmarks []benchmarkResult, compa
 	}
 }
 
-func readPreviousBenchmarks(path string) map[string]benchmarkResult {
+func readPreviousReport(path string) previousReport {
 	data, err := os.ReadFile(path)
 	if err != nil {
-		return nil
+		return previousReport{}
 	}
 	previous := make(map[string]benchmarkResult)
 	for _, line := range strings.Split(string(data), "\n") {
@@ -342,7 +368,10 @@ func readPreviousBenchmarks(path string) map[string]benchmarkResult {
 		}
 		previous[benchmarkKey(bench)] = bench
 	}
-	return previous
+	return previousReport{
+		Context:    readPreviousContext(string(data)),
+		Benchmarks: previous,
+	}
 }
 
 func splitMarkdownRow(line string) []string {
@@ -357,11 +386,68 @@ func splitMarkdownRow(line string) []string {
 	return cells
 }
 
-func compareBenchmarks(current []benchmarkResult, previous map[string]benchmarkResult) map[string]comparison {
+func readPreviousContext(markdown string) benchmarkContext {
+	var ctx benchmarkContext
+	for _, line := range strings.Split(markdown, "\n") {
+		if !strings.HasPrefix(line, "| ") || strings.Contains(line, "---") {
+			continue
+		}
+		cells := splitMarkdownRow(line)
+		if len(cells) < 2 {
+			continue
+		}
+		switch cells[0] {
+		case "Runner OS":
+			ctx.RunnerOS = unescapeTable(cells[1])
+		case "Go":
+			ctx.GoVersion = unescapeTable(cells[1])
+		case "GOOS/GOARCH":
+			ctx.GOOS, ctx.GOARCH = splitGOOSARCH(unescapeTable(cells[1]))
+		case "CPU":
+			ctx.CPU = unescapeTable(cells[1])
+		}
+	}
+	return ctx
+}
+
+func splitGOOSARCH(value string) (string, string) {
+	parts := strings.SplitN(value, "/", 2)
+	if len(parts) != 2 {
+		return strings.TrimSpace(value), ""
+	}
+	return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
+}
+
+func contextFromRun(run benchmarkRun) benchmarkContext {
+	return benchmarkContext{
+		RunnerOS:  run.RunnerOS,
+		GoVersion: run.GoVersion,
+		GOOS:      run.GOOS,
+		GOARCH:    run.GOARCH,
+		CPU:       run.CPU,
+	}
+}
+
+func isComparableContext(previous, current benchmarkContext) bool {
+	if previous == (benchmarkContext{}) {
+		return true
+	}
+	return previous.RunnerOS == current.RunnerOS &&
+		previous.GoVersion == current.GoVersion &&
+		previous.GOOS == current.GOOS &&
+		previous.GOARCH == current.GOARCH &&
+		previous.CPU == current.CPU
+}
+
+func compareBenchmarks(current []benchmarkResult, previous map[string]benchmarkResult, contextComparable bool) map[string]comparison {
 	comparisons := make(map[string]comparison)
 	for _, bench := range current {
 		prev, ok := previous[benchmarkKey(bench)]
 		if !ok || prev.NsPerOp == 0 {
+			continue
+		}
+		if !contextComparable {
+			comparisons[benchmarkKey(bench)] = comparison{}
 			continue
 		}
 		comparisons[benchmarkKey(bench)] = comparison{
