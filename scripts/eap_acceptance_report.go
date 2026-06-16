@@ -51,9 +51,7 @@ func main() {
 	if err != nil {
 		fail("read input: %v", err)
 	}
-	if run.Verdict == "" {
-		run.Verdict = verdictFromScenarios(run.Scenarios)
-	}
+	run.Verdict = verdictFromScenarios(run.Scenarios)
 	if run.FinishedAt == "" {
 		run.FinishedAt = time.Now().UTC().Format(time.RFC3339)
 	}
@@ -104,6 +102,7 @@ func renderReport(date string, run acceptanceRun) string {
 	fmt.Fprintln(&b, "## English")
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "**Verdict:** %s\n\n", strings.ToUpper(run.Verdict))
+	writeCoverageNote(&b, run.Scenarios)
 	fmt.Fprintln(&b, "### Run Context")
 	fmt.Fprintln(&b)
 	writeContextTable(&b, run)
@@ -116,6 +115,7 @@ func renderReport(date string, run acceptanceRun) string {
 	fmt.Fprintln(&b, "## 中文")
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "**结论：** %s\n\n", chineseVerdict(run.Verdict))
+	writeCoverageNoteCN(&b, run.Scenarios)
 	fmt.Fprintln(&b, "### 运行上下文")
 	fmt.Fprintln(&b)
 	writeContextTable(&b, run)
@@ -191,6 +191,22 @@ func writeFailureDetailsCN(b *strings.Builder, scenarios []scenario) {
 	}
 }
 
+func writeCoverageNote(b *strings.Builder, scenarios []scenario) {
+	if !hasPEAPExternalCoverageGap(scenarios) {
+		return
+	}
+	fmt.Fprintln(b, "Coverage note: PEAP/MSCHAPv2 external `eapol_test` scenarios are still skipped and tracked by [#495](https://github.com/talkincode/toughradius/issues/495), so this report is partial external coverage rather than complete PEAP acceptance.")
+	fmt.Fprintln(b)
+}
+
+func writeCoverageNoteCN(b *strings.Builder, scenarios []scenario) {
+	if !hasPEAPExternalCoverageGap(scenarios) {
+		return
+	}
+	fmt.Fprintln(b, "覆盖说明：PEAP/MSCHAPv2 外部 `eapol_test` 场景仍为 skipped，并由 [#495](https://github.com/talkincode/toughradius/issues/495) 跟踪，因此本报告代表部分外部覆盖，不宣称完整 PEAP 外部验收。")
+	fmt.Fprintln(b)
+}
+
 func pruneReports(dir string, retention int) ([]string, error) {
 	if retention < 1 {
 		retention = 1
@@ -241,6 +257,7 @@ func renderDocsEN(reports []string, run acceptanceRun) string {
 	fmt.Fprintln(&b, "Weekly EAP acceptance runs validate ToughRADIUS with an external `eapol_test` supplicant and publish the latest retained reports here.")
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "**Latest verdict:** %s\n\n", strings.ToUpper(run.Verdict))
+	writeCoverageNote(&b, run.Scenarios)
 	fmt.Fprintln(&b, "## Latest Scenario Summary")
 	fmt.Fprintln(&b)
 	writeScenarioTable(&b, run.Scenarios)
@@ -258,6 +275,7 @@ func renderDocsZH(reports []string, run acceptanceRun) string {
 	fmt.Fprintln(&b, "每周 EAP 验收任务使用外部 `eapol_test` supplicant 验证 ToughRADIUS，并在这里展示最近保留的报告。")
 	fmt.Fprintln(&b)
 	fmt.Fprintf(&b, "**最近结论：** %s\n\n", chineseVerdict(run.Verdict))
+	writeCoverageNoteCN(&b, run.Scenarios)
 	fmt.Fprintln(&b, "## 最近场景摘要")
 	fmt.Fprintln(&b)
 	writeScenarioTableCN(&b, run.Scenarios)
@@ -281,24 +299,47 @@ func writeReportLinks(b *strings.Builder, reports []string) {
 
 func verdictFromScenarios(scenarios []scenario) string {
 	passed := 0
+	partial := false
 	for _, s := range scenarios {
 		switch s.Status {
 		case "failed":
 			return "failed"
 		case "passed":
 			passed++
+		case "skipped":
+			if isPEAPMSCHAPv2Scenario(s.ID) {
+				partial = true
+			}
 		}
 	}
 	if passed == 0 {
 		return "incomplete"
 	}
+	if partial {
+		return "partial"
+	}
 	return "accepted"
+}
+
+func hasPEAPExternalCoverageGap(scenarios []scenario) bool {
+	for _, s := range scenarios {
+		if s.Status == "skipped" && isPEAPMSCHAPv2Scenario(s.ID) {
+			return true
+		}
+	}
+	return false
+}
+
+func isPEAPMSCHAPv2Scenario(id string) bool {
+	return strings.HasPrefix(id, "peap-mschapv2-")
 }
 
 func chineseVerdict(verdict string) string {
 	switch verdict {
 	case "accepted":
 		return "通过"
+	case "partial":
+		return "部分通过"
 	case "failed":
 		return "失败"
 	case "incomplete":
