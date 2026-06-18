@@ -170,7 +170,7 @@ jobs:
         continue-on-error: true
 
   integration:
-    name: Integration (PostgreSQL)
+    name: Integration (PostgreSQL/OpenLDAP)
     runs-on: ubuntu-latest
     needs: [changes, frontend]
     if: needs.changes.outputs.docs_only != 'true'
@@ -186,6 +186,21 @@ jobs:
           - 15432:5432
         options: >-
           --health-cmd "pg_isready -U toughradius -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      openldap:
+        image: bitnamilegacy/openldap:2.6
+        env:
+          LDAP_ROOT: dc=example,dc=org
+          LDAP_ADMIN_USERNAME: admin
+          LDAP_ADMIN_PASSWORD: adminpassword
+          LDAP_USERS: alice,bob
+          LDAP_PASSWORDS: alice-password,bob-password
+        ports:
+          - 1389:1389
+        options: >-
+          --health-cmd "ldapsearch -x -H ldap://127.0.0.1:1389 -b dc=example,dc=org -D cn=admin,dc=example,dc=org -w adminpassword >/dev/null"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 10
@@ -209,13 +224,21 @@ jobs:
       - name: Download dependencies
         run: go mod download
 
-      - name: Run PostgreSQL integration tests
+      - name: Run PostgreSQL/OpenLDAP integration tests
         env:
           TEST_DATABASE_HOST: 127.0.0.1
           TEST_DATABASE_PORT: '15432'
           TEST_DATABASE_USER: toughradius
           TEST_DATABASE_PASSWORD: toughradius
           TEST_DATABASE_NAME: postgres
+          TEST_LDAP_URL: ldap://127.0.0.1:1389
+          TEST_LDAP_BASE_DN: dc=example,dc=org
+          TEST_LDAP_USER_FILTER: (cn=%s)
+          TEST_LDAP_BIND_DN_TEMPLATE: cn=%s,ou=users,dc=example,dc=org
+          TEST_LDAP_ADMIN_DN: cn=admin,dc=example,dc=org
+          TEST_LDAP_ADMIN_PASSWORD: adminpassword
+          TEST_LDAP_USER: alice
+          TEST_LDAP_PASSWORD: alice-password
           INTEGRATION_REQUIRED: '1'
         run: go test -tags=integration -count=1 -v ./test/integration/...
 
