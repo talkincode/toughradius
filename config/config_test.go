@@ -40,6 +40,10 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Errorf("Expected Web.TlsPort 1817, got %d", cfg.Web.TlsPort)
 	}
 
+	if cfg.Web.Secret != DefaultWebSecret {
+		t.Errorf("Expected Web.Secret to use DefaultWebSecret, got '%s'", cfg.Web.Secret)
+	}
+
 	// TestDatabase configuration
 	if cfg.Database.Type != "sqlite" {
 		t.Errorf("Expected Database.Type 'sqlite', got '%s'", cfg.Database.Type)

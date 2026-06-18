@@ -114,6 +114,8 @@ func (a *Application) Init(cfg *config.AppConfig) {
 
 	zap.ReplaceGlobals(logger)
 
+	warnInsecureRuntimeDefaults(cfg)
+
 	// Initialize metrics with workdir convention
 	err = metrics.InitMetrics(cfg.System.Workdir)
 	if err != nil {
@@ -147,6 +149,40 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	a.profileCache = NewProfileCache(a.gormDB, DefaultProfileCacheTTL)
 
 	a.initJob()
+}
+
+func warnInsecureRuntimeDefaults(cfg *config.AppConfig) {
+	if cfg == nil {
+		return
+	}
+
+	secret := strings.TrimSpace(cfg.Web.Secret)
+	fields := []zap.Field{
+		zap.String("config", "web.secret"),
+		zap.String("env", "TOUGHRADIUS_WEB_SECRET"),
+		zap.String("action", "set a long random secret before exposing the admin API"),
+	}
+	switch secret {
+	case "":
+		logInsecureRuntimeDefault(cfg, "web jwt signing secret is empty", fields...)
+	case config.DefaultWebSecret:
+		logInsecureRuntimeDefault(cfg, "web jwt signing secret uses the built-in development placeholder", fields...)
+	}
+}
+
+func logInsecureRuntimeDefault(cfg *config.AppConfig, msg string, fields ...zap.Field) {
+	if isProductionRuntime(cfg) {
+		zap.L().Fatal(msg, fields...)
+		return
+	}
+	zap.L().Warn(msg, fields...)
+}
+
+func isProductionRuntime(cfg *config.AppConfig) bool {
+	if cfg == nil {
+		return false
+	}
+	return !cfg.System.Debug || strings.EqualFold(cfg.Logger.Mode, "production")
 }
 
 func (a *Application) MigrateDB(track bool) (err error) {

@@ -12,18 +12,20 @@ import (
 	"gorm.io/gorm"
 )
 
-func (a *Application) checkSuper() {
-	const superUsername = "admin"
-	const defaultPassword = "toughradius"
+const (
+	defaultSuperUsername = "admin"
+	defaultSuperPassword = "toughradius"
+)
 
-	hashedPassword, err := common.HashPassword(defaultPassword)
+func (a *Application) checkSuper() {
+	hashedPassword, err := common.HashPassword(defaultSuperPassword)
 	if err != nil {
 		zap.L().Error("failed to hash default super admin password", zap.Error(err))
 		return
 	}
 
 	var operator domain.SysOpr
-	err = a.gormDB.Where("username = ?", superUsername).First(&operator).Error
+	err = a.gormDB.Where("username = ?", defaultSuperUsername).First(&operator).Error
 	switch {
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		if err := a.gormDB.Create(&domain.SysOpr{
@@ -31,7 +33,7 @@ func (a *Application) checkSuper() {
 			Realname:  "administrator",
 			Mobile:    "0000",
 			Email:     "N/A",
-			Username:  superUsername,
+			Username:  defaultSuperUsername,
 			Password:  hashedPassword,
 			Level:     "super",
 			Status:    common.ENABLED,
@@ -40,7 +42,8 @@ func (a *Application) checkSuper() {
 		}).Error; err != nil {
 			zap.L().Error("failed to create default super admin", zap.Error(err))
 		} else {
-			zap.L().Info("initialized default super admin account", zap.String("username", superUsername))
+			zap.L().Info("initialized default super admin account", zap.String("username", defaultSuperUsername))
+			warnDefaultSuperPassword("created")
 		}
 		return
 	case err != nil:
@@ -53,6 +56,9 @@ func (a *Application) checkSuper() {
 	resetStatus := !strings.EqualFold(operator.Status, common.ENABLED)
 
 	if !resetPassword && !resetLevel && !resetStatus {
+		if common.VerifyPassword(defaultSuperPassword, operator.Password) {
+			warnDefaultSuperPassword("existing")
+		}
 		return
 	}
 
@@ -75,10 +81,20 @@ func (a *Application) checkSuper() {
 	}
 
 	zap.L().Warn("repaired default super admin account",
-		zap.String("username", superUsername),
+		zap.String("username", defaultSuperUsername),
 		zap.Bool("passwordReset", resetPassword),
 		zap.Bool("levelReset", resetLevel),
 		zap.Bool("statusEnabled", resetStatus))
+	if resetPassword {
+		warnDefaultSuperPassword("repaired")
+	}
+}
+
+func warnDefaultSuperPassword(source string) {
+	zap.L().Warn("default super admin account uses the built-in password",
+		zap.String("username", defaultSuperUsername),
+		zap.String("source", source),
+		zap.String("action", "change the admin password before exposing the admin API"))
 }
 
 func (a *Application) checkSettings() {

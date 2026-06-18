@@ -28,6 +28,10 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+// DefaultWebSecret is the development placeholder used when web.secret is not
+// overridden by a config file or TOUGHRADIUS_WEB_SECRET.
+const DefaultWebSecret = "9b6de5cc-0731-1203-xxtt-0f568ac9da37" //nolint:gosec // Development placeholder; production must override it.
+
 // DBConfig holds database connection settings for ToughRADIUS.
 //
 // Supports two database backends:
@@ -441,7 +445,7 @@ var DefaultAppConfig = &AppConfig{
 		Host:    "0.0.0.0",
 		Port:    1816,
 		TlsPort: 1817,
-		Secret:  "9b6de5cc-0731-1203-xxtt-0f568ac9da37",
+		Secret:  DefaultWebSecret,
 	},
 	Database: DBConfig{
 		Type:     "sqlite",    // Default to SQLite for development and testing
