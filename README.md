@@ -155,7 +155,10 @@ Access Web Management Interface: <http://localhost:1816>
 Default Admin Account:
 
 - Username: admin
-- Password: Please check the initialization log output
+- Password: toughradius
+
+Change the default admin password immediately after first login. For any deployment exposed beyond a local development host, also set `web.secret` / `TOUGHRADIUS_WEB_SECRET` to a long random value before starting the service; it signs management API JWTs.
+Production mode (`system.debug=false` or `logger.mode=production`) refuses to start when the built-in placeholder or an empty JWT secret is still configured.
 
 ## 📖 Documentation
 
