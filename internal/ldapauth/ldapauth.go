@@ -12,10 +12,11 @@
 // NT hash) to compute the challenge response. Callers must reject those
 // methods explicitly rather than pretend to support them.
 //
-// This package is the standalone, unit-testable backend skeleton plus its
-// configuration loader. Wiring the verifier into the RADIUS authentication
-// pipeline as a pluggable PAP-family backend is performed in a later
-// milestone (M14.2); nothing in the live request path imports it yet.
+// This package is the standalone, unit-testable directory verifier plus its
+// configuration loader. The live RADIUS authentication path adapts Verifier
+// through internal/radiusd so bare PAP and EAP-TTLS inner PAP can share the
+// same LDAP Bind authority while authorization still comes from the local
+// RadiusUser record.
 //
 // Feature: TR-F025. Specs: RFC 4511 (LDAP protocol, Bind) and RFC 4513
 // (LDAP authentication methods and security, in particular section 5.1.2 on

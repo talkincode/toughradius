@@ -53,19 +53,18 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 
 ## Current Execution Queue
 
-The next executable milestone is **M14**. M14.5 is intentionally blocked until load evidence exists, so it must not prevent delegation from taking M14.6.
+The next executable milestone is **M5 vendor VSA expansion**. M14.6 now has CI-backed OpenLDAP acceptance coverage; M14.5 remains blocked until load evidence justifies connection pooling / reconnect work.
 
 | Order | Task | Status | Acceptance focus |
 | --- | --- | --- | --- |
-| 1 | M14.6 LDAP integration acceptance tests | Planned | Run real OpenLDAP in CI and verify PAP plus `EAP-TTLS/PAP` success, wrong-password rejection, directory-unavailable metrics, and non-PAP rejection |
-| 2 | M14.5 LDAP connection robustness | Blocked: waiting for load evidence | Revisit pooling/reconnect design only when connection cost or cancellation evidence justifies the complexity |
-| 3 | M5 vendor VSA expansion | Planned | Add parser/enhancer coverage with vendor packet samples |
-| 4 | M7 upstream and RFC compliance tracking | In progress | Evaluate upstream fixes and add RFC-backed regression tests when behavior changes |
-| 5 | M10 EAP-TLS 1.3 / RFC 9190 | Planned | Keep TLS 1.2 compatibility while adding TLS 1.3 key derivation and close-notify semantics |
+| 1 | M5 vendor VSA expansion | Planned | Add parser/enhancer coverage with vendor packet samples |
+| 2 | M7 upstream and RFC compliance tracking | In progress | Evaluate upstream fixes and add RFC-backed regression tests when behavior changes |
+| 3 | M10 EAP-TLS 1.3 / RFC 9190 | Planned | Keep TLS 1.2 compatibility while adding TLS 1.3 key derivation and close-notify semantics |
+| 4 | M14.5 LDAP connection robustness | Blocked: waiting for load evidence | Revisit pooling/reconnect design only when connection cost or cancellation evidence justifies the complexity |
 
 Agent-facing unchecked tasks:
 
-- [ ] M14.6 LDAP integration acceptance tests: add CI-executable `test/integration/` coverage with a real OpenLDAP service container and seed LDIF. Verify plain PAP and `EAP-TTLS/PAP` success, wrong-password rejection, directory-unavailable rejection counted as `radus_reject_ldap_error`, and explicit non-PAP rejection.
+- [x] M14.6 LDAP integration acceptance tests: add CI-executable `test/integration/` coverage with a real OpenLDAP service container and seed LDIF. Delivered via `test/integration/ldap_test.go` plus CI / local compose OpenLDAP service wiring: plain PAP and `EAP-TTLS/PAP` authenticate through real LDAP bind while local `RadiusUser.Password` is deliberately wrong; wrong password rejects as `radus_reject_passwd_error`; directory unavailable and non-PAP CHAP reject as `radus_reject_ldap_error` with diagnostic reply text.
 - [ ] M14.5 (Blocked: waiting for load evidence) LDAP connection robustness: revisit pooling, reconnect, and request-context propagation only when load evidence shows connection setup cost or cancellation behavior justifies the added complexity.
 - [ ] M5.1 Inventory pending vendor VSA gaps and dictionary differences.
 - [ ] M7.1 Manually evaluate important upstream `layeh.com/radius` fixes and decide whether to sync the `talkincode/radius` fork and update the `go.mod` replacement.
