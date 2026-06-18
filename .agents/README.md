@@ -54,6 +54,15 @@
 
 `release-version` 不自动创建 GitHub Release，不修改源码、路线图或版本文件；如仓库后续引入 changelog、release notes 或版本文件更新约定，需先通过单独 PR 补齐这些源文件变更，再执行打 tag。
 
+推送 `v*` tag 会同时触发 `.github/workflows/release-publish.yml` 和
+`.github/workflows/docker-publish.yml`。发版前确认 Docker Hub 的
+`DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` 可写；GHCR 需要 package repository
+access / inherited access 允许本仓库 `GITHUB_TOKEN` 写入，或配置具备
+`write:packages` 的 `PKG_GITHUB_TOKEN`（若 token 所属账号不同于 tag 触发者，可选配
+`PKG_GITHUB_USERNAME`）。Docker Hub 发布是必选门禁；GHCR 发布在 workflow 中独立
+执行，若因 `permission_denied: write_package` 失败，按 run summary 修复 package
+access 或 token 后重跑 tag workflow，避免重复创建同一源码的错误版本 tag。
+
 ## 工具链版本（与 CI 对齐）
 
 - Go `1.25`，`CGO_ENABLED=0`

@@ -28,7 +28,7 @@ jobs:
         run: |
           # Extract version from tag (e.g., v1.2.3 -> 1.2.3)
           VERSION=${GITHUB_REF#refs/tags/v}
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Building version: ${VERSION}"
 
       - name: Set up QEMU
@@ -44,15 +44,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to Github Packages
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build image and push to Docker Hub and GitHub Container Registry
-        id: docker_build
+      - name: Build image and push to Docker Hub
+        id: dockerhub_build
         uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
         with:
           context: ./
@@ -60,11 +53,55 @@ jobs:
           tags: |
             talkincode/toughradius:latest
             talkincode/toughradius:${{ steps.version.outputs.version }}
+          push: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Login to GitHub Container Registry
+        id: ghcr_login
+        continue-on-error: true
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.PKG_GITHUB_USERNAME || secrets.GHCR_USERNAME || github.actor }}
+          password: ${{ secrets.PKG_GITHUB_TOKEN || secrets.GHCR_TOKEN || github.token }}
+
+      - name: Build image and push to GitHub Container Registry
+        id: ghcr_build
+        if: steps.ghcr_login.outcome == 'success'
+        continue-on-error: true
+        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7
+        with:
+          context: ./
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          tags: |
             ghcr.io/${{ github.repository_owner }}/toughradius:latest
             ghcr.io/${{ github.repository_owner }}/toughradius:${{ steps.version.outputs.version }}
           push: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Image digest
-        run: echo ${{ steps.docker_build.outputs.digest }}
+      - name: Summarize image publish result
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Docker image publish"
+            echo ""
+            echo "- Version: \`${{ steps.version.outputs.version }}\`"
+            echo "- Docker Hub: \`${{ steps.dockerhub_build.outcome }}\`"
+            echo "- Docker Hub digest: \`${{ steps.dockerhub_build.outputs.digest }}\`"
+            echo "- GHCR login: \`${{ steps.ghcr_login.outcome }}\`"
+            echo "- GHCR: \`${{ steps.ghcr_build.outcome }}\`"
+            if [ -n "${{ steps.ghcr_build.outputs.digest }}" ]; then
+              echo "- GHCR digest: \`${{ steps.ghcr_build.outputs.digest }}\`"
+            fi
+            echo ""
+            echo "Docker Hub publishing is required. GHCR publishing depends on the"
+            echo "package repository access / inherited access settings, or on optional"
+            echo "\`PKG_GITHUB_TOKEN\` and optional \`PKG_GITHUB_USERNAME\` secrets with package write access."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "${{ steps.ghcr_login.outcome }}" != "success" ] || [ "${{ steps.ghcr_build.outcome }}" != "success" ]; then
+            echo "::warning title=GHCR publish did not complete::Docker Hub publish completed, but GHCR publish needs package repository access or a PKG_GITHUB_TOKEN with write:packages. See issue #503 runbook notes before rerunning the tag workflow."
+          fi
