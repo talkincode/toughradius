@@ -16,6 +16,8 @@ Welcome to the TOUGHRADIUS project!
 [![codecov](https://codecov.io/gh/talkincode/toughradius/graph/badge.svg)](https://codecov.io/gh/talkincode/toughradius)
 [![Docker Pulls](https://img.shields.io/docker/pulls/talkincode/toughradius)](https://hub.docker.com/r/talkincode/toughradius)
 
+![ToughRADIUS philosophy cover](docs-site/src/assets/toughradius-philosophy-cover.png)
+
 A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, a full EAP / 802.1X authentication suite (EAP-TLS, PEAPv0/EAP-MSCHAPv2, EAP-TTLS), RadSec (RADIUS over TLS), and a modern Web management interface.
 
 ## ✨ Core Features
