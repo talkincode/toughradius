@@ -31,7 +31,7 @@ WantedBy=multi-user.target
 | 端口 | 协议 | 服务 | 配置键 |
 | ---- | ---- | ---- | ------ |
 | 1816 | TCP HTTP | 管理界面 + REST API | `web.port` |
-| 1817 | TCP HTTPS | 管理界面 TLS（可选；启动失败不影响整体） | `web.tls_port` |
+| 1817 | TCP HTTPS | 管理界面 TLS（可选；启动失败不影响整体） | `web.tls_enabled` / `web.tls_port` |
 | 1812 | UDP | RADIUS 认证 | `radiusd.auth_port` |
 | 1813 | UDP | RADIUS 计费 | `radiusd.acct_port` |
 | 2083 | TCP TLS | RadSec（RFC 6614） | `radiusd.radsec_port` |
@@ -51,6 +51,7 @@ system:
 web:
   host: 0.0.0.0
   port: 1816
+  tls_enabled: true              # 兼容旧版本默认启用；设为 false 可关闭内置 HTTPS 监听
   tls_port: 1817
   secret: <随机字符串>            # JWT 签名密钥——务必修改
 database:
@@ -101,7 +102,7 @@ logger:
 | ---- | ------ |
 | `TOUGHRADIUS_SYSTEM_WORKER_DIR` | `system.workdir` |
 | `TOUGHRADIUS_SYSTEM_DEBUG` | `system.debug` |
-| `TOUGHRADIUS_WEB_HOST` / `_WEB_PORT` / `_WEB_TLS_PORT` / `_WEB_SECRET` | `web.*` |
+| `TOUGHRADIUS_WEB_HOST` / `_WEB_PORT` / `_WEB_TLS_ENABLED` / `_WEB_TLS_PORT` / `_WEB_SECRET` | `web.*` |
 | `TOUGHRADIUS_DB_TYPE` / `_DB_HOST` / `_DB_PORT` / `_DB_NAME` / `_DB_USER` / `_DB_PWD` / `_DB_DEBUG` | `database.*` |
 | `TOUGHRADIUS_RADIUS_ENABLED` / `_RADIUS_HOST` / `_RADIUS_AUTHPORT` / `_RADIUS_ACCTPORT` / `_RADIUS_DEBUG` | `radiusd.*` |
 | `TOUGHRADIUS_RADIUS_RADSEC_PORT` / `_RADIUS_RADSEC_WORKER` / `_RADIUS_RADSEC_CA_CERT` / `_RADIUS_RADSEC_CERT` / `_RADIUS_RADSEC_KEY` | RadSec 配置 |
@@ -146,7 +147,7 @@ RADIUS 运行时配置（EAP 方法、证书、间隔、拒绝延迟等）存储
 | 使用方 | 文件 | 说明 |
 | ------ | ---- | ---- |
 | **RadSec** | `radiusd.radsec_ca_cert` / `radsec_cert` / `radsec_key` | TLS 1.2+；客户端证书**提供则校验**（`VerifyClientCertIfGiven`） |
-| **Web HTTPS** | `{workdir}/private/toughradius.tls.crt` + `.key`（固定路径） | 监听 `web.tls_port`；加载失败仅记日志，HTTP 继续运行 |
+| **Web HTTPS** | `{workdir}/private/toughradius.tls.crt` + `.key`（固定路径） | `web.tls_enabled` 为 true 时监听 `web.tls_port`；加载失败仅记日志，HTTP 继续运行 |
 | **EAP（TLS/PEAP/TTLS）** | 系统配置 → `EapTlsCertFile`、`EapTlsKeyFile`、`EapTlsCaFile`、`EapTlsMinVersion` | 证书/私钥留空即禁用基于 TLS 的 EAP 方法 |
 
 用内置工具一次生成 CA/服务器/客户端全套证书：

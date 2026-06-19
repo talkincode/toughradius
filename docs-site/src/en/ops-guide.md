@@ -33,7 +33,7 @@ WantedBy=multi-user.target
 | Port | Protocol | Service | Config key |
 | ---- | -------- | ------- | ---------- |
 | 1816 | TCP HTTP | Admin UI + REST API | `web.port` |
-| 1817 | TCP HTTPS | Admin UI over TLS (optional; start failure is non-fatal) | `web.tls_port` |
+| 1817 | TCP HTTPS | Admin UI over TLS (optional; start failure is non-fatal) | `web.tls_enabled` / `web.tls_port` |
 | 1812 | UDP | RADIUS authentication | `radiusd.auth_port` |
 | 1813 | UDP | RADIUS accounting | `radiusd.acct_port` |
 | 2083 | TCP TLS | RadSec (RFC 6614) | `radiusd.radsec_port` |
@@ -53,6 +53,7 @@ system:
 web:
   host: 0.0.0.0
   port: 1816
+  tls_enabled: true              # Enabled by default for compatibility; set false to disable the built-in HTTPS listener
   tls_port: 1817
   secret: <random-string>        # JWT signing secret — change it
 database:
@@ -103,7 +104,7 @@ Environment variables override the YAML file:
 | -------- | --------- |
 | `TOUGHRADIUS_SYSTEM_WORKER_DIR` | `system.workdir` |
 | `TOUGHRADIUS_SYSTEM_DEBUG` | `system.debug` |
-| `TOUGHRADIUS_WEB_HOST` / `_WEB_PORT` / `_WEB_TLS_PORT` / `_WEB_SECRET` | `web.*` |
+| `TOUGHRADIUS_WEB_HOST` / `_WEB_PORT` / `_WEB_TLS_ENABLED` / `_WEB_TLS_PORT` / `_WEB_SECRET` | `web.*` |
 | `TOUGHRADIUS_DB_TYPE` / `_DB_HOST` / `_DB_PORT` / `_DB_NAME` / `_DB_USER` / `_DB_PWD` / `_DB_DEBUG` | `database.*` |
 | `TOUGHRADIUS_RADIUS_ENABLED` / `_RADIUS_HOST` / `_RADIUS_AUTHPORT` / `_RADIUS_ACCTPORT` / `_RADIUS_DEBUG` | `radiusd.*` |
 | `TOUGHRADIUS_RADIUS_RADSEC_PORT` / `_RADIUS_RADSEC_WORKER` / `_RADIUS_RADSEC_CA_CERT` / `_RADIUS_RADSEC_CERT` / `_RADIUS_RADSEC_KEY` | RadSec settings |
@@ -151,7 +152,7 @@ Three independent certificate consumers:
 | Consumer | Files | Notes |
 | -------- | ----- | ----- |
 | **RadSec** | `radiusd.radsec_ca_cert` / `radsec_cert` / `radsec_key` | TLS 1.2+; client certificates are verified **if presented** (`VerifyClientCertIfGiven`) |
-| **Web HTTPS** | `{workdir}/private/toughradius.tls.crt` + `.key` (fixed paths) | Listens on `web.tls_port`; failure to load is logged, HTTP keeps running |
+| **Web HTTPS** | `{workdir}/private/toughradius.tls.crt` + `.key` (fixed paths) | Listens on `web.tls_port` when `web.tls_enabled` is true; failure to load is logged, HTTP keeps running |
 | **EAP (TLS/PEAP/TTLS)** | System Config → `EapTlsCertFile`, `EapTlsKeyFile`, `EapTlsCaFile`, `EapTlsMinVersion` | Empty cert/key disables TLS-based EAP methods |
 
 Generate a complete CA/server/client set with the bundled tool:

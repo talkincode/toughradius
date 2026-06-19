@@ -36,7 +36,8 @@ Yes — every port is configurable (`radiusd.auth_port`, `radiusd.acct_port`,
 The web TLS listener needs `{workdir}/private/toughradius.tls.crt` and `.key`.
 If they are missing or invalid the failure is logged and **only** the HTTPS
 listener stops — plain HTTP on 1816 keeps serving. Generate certificates with
-`cmd/certgen` or provide your own.
+`cmd/certgen` or provide your own. If you do not need the built-in HTTPS
+listener, set `web.tls_enabled: false` or `TOUGHRADIUS_WEB_TLS_ENABLED=false`.
 
 ### Is `-initdb` safe to run again?
 

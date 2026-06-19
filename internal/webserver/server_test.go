@@ -35,3 +35,12 @@ func TestJwtSkipFuncDoesNotBypassWithDevmode(t *testing.T) {
 	t.Setenv("TOUGHRADIUS_DEVMODE", "true")
 	assert.False(t, skip(newCtx(apiBasePath+"/users")))
 }
+
+func TestShouldStartTLSManagementPort(t *testing.T) {
+	enabled := true
+	disabled := false
+
+	assert.True(t, shouldStartTLSManagementPort(nil), "nil preserves legacy enabled behavior")
+	assert.True(t, shouldStartTLSManagementPort(&enabled))
+	assert.False(t, shouldStartTLSManagementPort(&disabled))
+}
