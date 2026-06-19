@@ -6,6 +6,8 @@ RADIUS server. It is built with [mdBook](https://rust-lang.github.io/mdBook/) an
 lives in the repository under `docs-site/`, so the documentation is versioned,
 reviewed, and validated by CI together with the code it describes.
 
+![ToughRADIUS philosophy cover](./assets/toughradius-philosophy-cover.png)
+
 The handbook is organized into two mirrored language sections. Pick a language to
 begin:
 
