@@ -179,7 +179,12 @@ no Prometheus `/metrics` HTTP endpoint). RADIUS counters include: `radus_accept`
 `radus_acct_drop`, `radus_radsec_saturated`, and per-cause reject counters —
 `radus_reject_passwd_error`, `radus_reject_not_exists`, `radus_reject_expire`,
 `radus_reject_disabled`, `radus_reject_limit`, `radus_reject_bind_error`,
-`radus_reject_unauthorized`, `radus_reject_other`. Accounting-Requests dropped
+`radus_reject_ldap_error`, `radus_reject_unauthorized`, `radus_reject_other`.
+`radus_reject_ldap_error` means the LDAP/AD backend could not give an
+authentication answer — for example the directory is unreachable, TLS/StartTLS
+failed, the service account bind failed, or the LDAP configuration is wrong;
+wrong passwords are still counted under `radus_reject_passwd_error`.
+Accounting-Requests dropped
 at ingress are classified by reason — `radus_acct_drop_nas` (unknown or
 unauthorized NAS), `radus_acct_drop_username` (missing username), and
 `radus_acct_drop_secret` (bad Request Authenticator) — while `radus_acct_drop`
