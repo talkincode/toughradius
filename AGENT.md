@@ -862,7 +862,7 @@ Each PR automatically triggers:
 - ✅ `go build` - Ensure code compiles
 - ✅ Docker image build
 - ✅ Code style checks
-- ✅ `Workflow Lint` for `.github/workflows/**` or `.github/actionlint.y*ml` changes - runs `actionlint -shellcheck=` for GitHub Actions syntax, expression, and action input validation only.
+- ✅ `Workflow Lint` for `.github/workflows/**` or `.github/actionlint.yml` / `.github/actionlint.yaml` changes - runs `actionlint -shellcheck=` for GitHub Actions syntax, expression, and action input validation only.
 
 #### Release Process
 
