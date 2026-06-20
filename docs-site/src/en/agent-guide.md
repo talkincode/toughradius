@@ -201,7 +201,7 @@ Every agent change must pass these gates before merging:
 - `golangci-lint run` — clean (pinned to **v2.12.2**, matching CI).
 - `cd web && npm run build` — for any frontend change.
 - `Workflow Lint` — required when `.github/workflows/**` or
-  `.github/actionlint.y*ml` changes; it runs `actionlint -shellcheck=` for
+  `.github/actionlint.yml` / `.github/actionlint.yaml` changes; it runs `actionlint -shellcheck=` for
   GitHub Actions YAML, expression, and action input validation.
 - **Protocol / end-to-end changes** ship a CI-executable acceptance test under
   [`test/integration/`](https://github.com/talkincode/toughradius/tree/main/test/integration)
