@@ -115,6 +115,7 @@ original issue, PR diff, and CI output.
 | --- | --- | --- |
 | Stale | `.github/workflows/stale.yml` runs daily at `04:24 UTC` and by manual dispatch. After 60 days without activity it adds `stale`; after 14 more inactive days it closes the item. | Comment, push a commit, or remove `stale` to keep work open. Issues with `pinned`, `security`, `help wanted`, `agent-roadmap`, or `needs-human` are exempt; PRs with `pinned`, `security`, `agent-roadmap`, or `needs-human` are exempt; all milestones are exempt. |
 | Labeler | `.github/workflows/labeler.yml` runs on `pull_request_target` and applies labels from `.github/labeler.yml` based on changed paths. | It labels `go`, `javascript`, `github_actions`, `dependencies`, and `doc`. The action reads the changed-file list and base-branch config; it does not check out or execute PR code. |
+| Workflow Lint | `.github/workflows/workflow-lint.yml` runs on PRs that change `.github/workflows/**` or `.github/actionlint.y*ml`, on pushes to `main` touching those paths, and by manual dispatch. | It runs `actionlint -shellcheck=` so the gate covers GitHub Actions YAML, expressions, and action inputs without turning existing shell-style warnings into this gate's scope. It is static validation only; it does not exercise release tags, Docker publishing, Pages deployment, or secrets. |
 | Greetings | `.github/workflows/greetings.yml` runs when a contributor opens their first issue or PR and posts onboarding guidance. | The comment is informational. It does not change review requirements or issue priority. |
 
 <a id="release-docker-publish"></a>
@@ -199,6 +200,9 @@ Every agent change must pass these gates before merging:
 - `go test ./...` — all unit tests pass.
 - `golangci-lint run` — clean (pinned to **v2.12.2**, matching CI).
 - `cd web && npm run build` — for any frontend change.
+- `Workflow Lint` — required when `.github/workflows/**` or
+  `.github/actionlint.y*ml` changes; it runs `actionlint -shellcheck=` for
+  GitHub Actions YAML, expression, and action input validation.
 - **Protocol / end-to-end changes** ship a CI-executable acceptance test under
   [`test/integration/`](https://github.com/talkincode/toughradius/tree/main/test/integration)
   and cite the relevant spec under
