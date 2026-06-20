@@ -27,7 +27,7 @@ Agent-driven development is organized around three artifacts:
 - To delegate a whole development round, point the agent at [`orchestrate-roadmap`](.agents/skills/orchestrate-roadmap/SKILL.md); it coordinates select → dispatch → quality gates → PR → roadmap self-iteration.
 - Agents are run **on your own host** with your own agent/CLI, not via a CI workflow. See [`.agents/README.md`](.agents/README.md) for the delegation reference and guardrails.
 
-Quality gates for every agent change: open a PR (never push directly to `main`), then `go build ./...`, `go test ./...`, `golangci-lint run` (v2.12.2), and `cd web && npm run build` for frontend changes.
+Quality gates for every agent change: open a PR (never push directly to `main`), then `go build ./...`, `go test ./...`, `golangci-lint run` (v2.12.2), and `cd web && npm run build` for frontend changes. PRs that change `.github/workflows/**` or `.github/actionlint.y*ml` must also check the `Workflow Lint` result; that gate runs `actionlint -shellcheck=` to validate GitHub Actions YAML, expressions, and action inputs without mixing in existing shell-style warnings.
 
 ## 🤖 AI Agent Working Guidelines
 
@@ -862,6 +862,7 @@ Each PR automatically triggers:
 - ✅ `go build` - Ensure code compiles
 - ✅ Docker image build
 - ✅ Code style checks
+- ✅ `Workflow Lint` for `.github/workflows/**` or `.github/actionlint.yml` / `.github/actionlint.yaml` changes - runs `actionlint -shellcheck=` for GitHub Actions syntax, expression, and action input validation only.
 
 #### Release Process
 
@@ -1090,6 +1091,7 @@ All code must pass before merging:
 - [ ] No compilation errors (`go build`)
 - [ ] Docker image builds successfully
 - [ ] Frontend tests pass (`npm run test`)
+- [ ] `Workflow Lint` passes when `.github/workflows/**` or `.github/actionlint.yml` / `.github/actionlint.yaml` changed; it runs `actionlint -shellcheck=` and does not require exercising release tags, Docker publishing, Pages deployment, or secrets.
 
 ### ✅ Code Review
 
