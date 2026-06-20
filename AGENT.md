@@ -1091,7 +1091,7 @@ All code must pass before merging:
 - [ ] No compilation errors (`go build`)
 - [ ] Docker image builds successfully
 - [ ] Frontend tests pass (`npm run test`)
-- [ ] `Workflow Lint` passes when `.github/workflows/**` or `.github/actionlint.y*ml` changed; it runs `actionlint -shellcheck=` and does not require exercising release tags, Docker publishing, Pages deployment, or secrets.
+- [ ] `Workflow Lint` passes when `.github/workflows/**` or `.github/actionlint.yml` / `.github/actionlint.yaml` changed; it runs `actionlint -shellcheck=` and does not require exercising release tags, Docker publishing, Pages deployment, or secrets.
 
 ### ✅ Code Review
 
