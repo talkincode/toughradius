@@ -319,20 +319,28 @@ func chromeDevtoolsManifest(c echo.Context) error {
 // Start Admin Server
 func (s *AdminServer) Start() error {
 	appconfig := s.appCtx.Config()
-	go func() {
-		zap.S().Infof("Prepare to start the TLS management port %s:%d", appconfig.Web.Host, appconfig.Web.TlsPort)
-		err := s.root.StartTLS(fmt.Sprintf("%s:%d", appconfig.Web.Host, appconfig.Web.TlsPort),
-			path.Join(appconfig.GetPrivateDir(), "toughradius.tls.crt"), path.Join(appconfig.GetPrivateDir(), "toughradius.tls.key"))
-		if err != nil {
-			zap.S().Errorf("Error starting TLS management port %s", err.Error())
-		}
-	}()
+	if shouldStartTLSManagementPort(appconfig.Web.TlsEnabled) {
+		go func() {
+			zap.S().Infof("Prepare to start the TLS management port %s:%d", appconfig.Web.Host, appconfig.Web.TlsPort)
+			err := s.root.StartTLS(fmt.Sprintf("%s:%d", appconfig.Web.Host, appconfig.Web.TlsPort),
+				path.Join(appconfig.GetPrivateDir(), "toughradius.tls.crt"), path.Join(appconfig.GetPrivateDir(), "toughradius.tls.key"))
+			if err != nil {
+				zap.S().Errorf("Error starting TLS management port %s", err.Error())
+			}
+		}()
+	} else {
+		zap.S().Info("TLS management port disabled by configuration")
+	}
 	zap.S().Infof("Start the management server %s:%d", appconfig.Web.Host, appconfig.Web.Port)
 	err := s.root.Start(fmt.Sprintf("%s:%d", appconfig.Web.Host, appconfig.Web.Port))
 	if err != nil {
 		zap.S().Errorf("Error starting management server %s", err.Error())
 	}
 	return err
+}
+
+func shouldStartTLSManagementPort(enabled *bool) bool {
+	return enabled == nil || *enabled
 }
 
 // ParseJwtToken Parse Jwt Token

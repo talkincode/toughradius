@@ -36,6 +36,10 @@ func TestDefaultAppConfig(t *testing.T) {
 		t.Errorf("Expected Web.Port 1816, got %d", cfg.Web.Port)
 	}
 
+	if cfg.Web.TlsEnabled == nil || !*cfg.Web.TlsEnabled {
+		t.Error("Expected Web.TlsEnabled to default to true")
+	}
+
 	if cfg.Web.TlsPort != 1817 {
 		t.Errorf("Expected Web.TlsPort 1817, got %d", cfg.Web.TlsPort)
 	}
@@ -154,6 +158,8 @@ func TestAppConfigGetters(t *testing.T) {
 }
 
 func TestLoadConfigFromFile(t *testing.T) {
+	t.Setenv("TOUGHRADIUS_WEB_TLS_ENABLED", "")
+
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "test-config.yml")
 
@@ -168,6 +174,7 @@ system:
 web:
   host: 127.0.0.1
   port: 8080
+  tls_enabled: false
   tls_port: 8443
   secret: test-secret
 
@@ -227,6 +234,14 @@ logger:
 		t.Errorf("Expected Web.Port 8080, got %d", cfg.Web.Port)
 	}
 
+	if cfg.Web.TlsEnabled == nil || *cfg.Web.TlsEnabled {
+		t.Error("Expected Web.TlsEnabled false from config file")
+	}
+
+	if cfg.Web.TlsPort != 8443 {
+		t.Errorf("Expected Web.TlsPort 8443, got %d", cfg.Web.TlsPort)
+	}
+
 	if cfg.Web.Secret != "test-secret" {
 		t.Errorf("Expected Web.Secret 'test-secret', got '%s'", cfg.Web.Secret)
 	}
@@ -276,6 +291,8 @@ logger:
 }
 
 func TestLoadConfigNonExistent(t *testing.T) {
+	t.Setenv("TOUGHRADIUS_WEB_TLS_ENABLED", "")
+
 	// Loading a nonexistent config file should return the default configuration
 	cfg := LoadConfig("/nonexistent/path/config.yml")
 
@@ -286,6 +303,38 @@ func TestLoadConfigNonExistent(t *testing.T) {
 
 	if cfg.Web.Port != DefaultAppConfig.Web.Port {
 		t.Errorf("Expected default Web.Port %d, got %d", DefaultAppConfig.Web.Port, cfg.Web.Port)
+	}
+
+	if cfg.Web.TlsEnabled == nil || !*cfg.Web.TlsEnabled {
+		t.Error("Expected default Web.TlsEnabled to be true")
+	}
+}
+
+func TestLoadConfigDefaultsWebTLSEnabledWhenOmitted(t *testing.T) {
+	t.Setenv("TOUGHRADIUS_WEB_TLS_ENABLED", "")
+
+	tmpDir := t.TempDir()
+	configFile := filepath.Join(tmpDir, "web-tls-compat.yml")
+
+	configContent := `
+system:
+  workdir: ` + tmpDir + `
+
+web:
+  host: 127.0.0.1
+  port: 8080
+  tls_port: 8443
+  secret: test-secret
+`
+
+	err := os.WriteFile(configFile, []byte(configContent), 0600) //nolint:gosec // G306: test file permissions
+	if err != nil {
+		t.Fatalf("Failed to write config file: %v", err)
+	}
+
+	cfg := LoadConfig(configFile)
+	if cfg.Web.TlsEnabled == nil || !*cfg.Web.TlsEnabled {
+		t.Error("Expected omitted web.tls_enabled to preserve the legacy enabled default")
 	}
 }
 
@@ -336,6 +385,7 @@ logger:
 		"TOUGHRADIUS_SYSTEM_DEBUG":         "true",
 		"TOUGHRADIUS_WEB_HOST":             "192.168.1.1",
 		"TOUGHRADIUS_WEB_PORT":             "9090",
+		"TOUGHRADIUS_WEB_TLS_ENABLED":      "false",
 		"TOUGHRADIUS_WEB_SECRET":           "env-secret",
 		"TOUGHRADIUS_DB_TYPE":              "postgres",
 		"TOUGHRADIUS_DB_HOST":              "db.server.com",
@@ -387,6 +437,10 @@ logger:
 
 	if cfg.Web.Port != 9090 {
 		t.Errorf("Expected Web.Port 9090 (from env), got %d", cfg.Web.Port)
+	}
+
+	if cfg.Web.TlsEnabled == nil || *cfg.Web.TlsEnabled {
+		t.Error("Expected Web.TlsEnabled false (from env)")
 	}
 
 	if cfg.Web.Secret != "env-secret" {

@@ -85,6 +85,7 @@ system:
 web:
   host: 0.0.0.0
   port: 1816
+  tls_enabled: true
   tls_port: 1817
   secret: 9b6de5cc-0731-1203-xxtt-0f568ac9da37
 
@@ -191,6 +192,7 @@ system:
 web:
   host: 0.0.0.0
   port: 1816
+  tls_enabled: true
   tls_port: 1817
   secret: 9b6de5cc-0731-1203-xxtt-0f568ac9da37
 

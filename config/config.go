@@ -93,18 +93,24 @@ type SysConfig struct {
 // Secret is used for JWT token signing and session management. It should
 // be a cryptographically secure random string in production environments.
 //
-// TlsPort enables HTTPS access when configured with valid certificates.
+// TlsEnabled controls whether the built-in HTTPS listener is started. A nil
+// value preserves the legacy default and enables the listener.
+//
+// TlsPort is the built-in HTTPS listener port when TlsEnabled is true and valid
+// certificates are present.
 //
 // Environment variable overrides:
 //   - TOUGHRADIUS_WEB_HOST
 //   - TOUGHRADIUS_WEB_PORT
+//   - TOUGHRADIUS_WEB_TLS_ENABLED
 //   - TOUGHRADIUS_WEB_TLS_PORT
 //   - TOUGHRADIUS_WEB_SECRET
 type WebConfig struct {
-	Host    string `yaml:"host"`
-	Port    int    `yaml:"port"`
-	TlsPort int    `yaml:"tls_port"`
-	Secret  string `yaml:"secret"`
+	Host       string `yaml:"host"`
+	Port       int    `yaml:"port"`
+	TlsEnabled *bool  `yaml:"tls_enabled"`
+	TlsPort    int    `yaml:"tls_port"`
+	Secret     string `yaml:"secret"`
 }
 
 // RadiusdConfig holds RADIUS protocol service settings.
@@ -355,8 +361,8 @@ func setEnvValue(name string, val *string) {
 
 // setEnvBoolValue sets a boolean configuration value from an environment variable.
 //
-// Recognizes the following truthy values (case-sensitive): "true", "1", "on"
-// All other values (including empty string) are treated as false.
+// Recognizes the following truthy values (case-sensitive): "true", "1", "on".
+// All other non-empty values are treated as false.
 //
 // Parameters:
 //   - name: Environment variable name (e.g., "TOUGHRADIUS_RADIUS_DEBUG")
@@ -369,6 +375,28 @@ func setEnvBoolValue(name string, val *bool) {
 	if evalue != "" {
 		*val = evalue == "true" || evalue == "1" || evalue == "on"
 	}
+}
+
+// setEnvOptionalBoolValue sets an optional boolean configuration value from an
+// environment variable.
+//
+// Recognizes the following truthy values (case-sensitive): "true", "1", "on".
+// All other non-empty values are treated as false.
+//
+// Parameters:
+//   - name: Environment variable name (e.g., "TOUGHRADIUS_WEB_TLS_ENABLED")
+//   - val: Pointer to an optional configuration field to update
+//
+// Side effects:
+//   - Modifies *val if environment variable is set and non-empty
+func setEnvOptionalBoolValue(name string, val **bool) {
+	var evalue = os.Getenv(name)
+	if evalue == "" {
+		return
+	}
+
+	parsed := evalue == "true" || evalue == "1" || evalue == "on"
+	*val = &parsed
 }
 
 // setEnvInt64Value sets an int64 configuration value from an environment variable.
@@ -442,10 +470,11 @@ var DefaultAppConfig = &AppConfig{
 		Debug:    true,
 	},
 	Web: WebConfig{ //nolint:gosec // Default secret is a placeholder for development/testing only
-		Host:    "0.0.0.0",
-		Port:    1816,
-		TlsPort: 1817,
-		Secret:  DefaultWebSecret,
+		Host:       "0.0.0.0",
+		Port:       1816,
+		TlsEnabled: boolPtr(true),
+		TlsPort:    1817,
+		Secret:     DefaultWebSecret,
 	},
 	Database: DBConfig{
 		Type:     "sqlite",    // Default to SQLite for development and testing
@@ -475,6 +504,10 @@ var DefaultAppConfig = &AppConfig{
 		FileEnable: true,
 		Filename:   "/var/toughradius/toughradius.log",
 	},
+}
+
+func boolPtr(v bool) *bool {
+	return &v
 }
 
 // LoadConfig loads application configuration from YAML file and environment variables.
@@ -539,6 +572,10 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvValue("TOUGHRADIUS_WEB_HOST", &cfg.Web.Host)
 	setEnvValue("TOUGHRADIUS_WEB_SECRET", &cfg.Web.Secret)
 	setEnvIntValue("TOUGHRADIUS_WEB_PORT", &cfg.Web.Port)
+	setEnvOptionalBoolValue("TOUGHRADIUS_WEB_TLS_ENABLED", &cfg.Web.TlsEnabled)
+	if cfg.Web.TlsEnabled == nil {
+		cfg.Web.TlsEnabled = boolPtr(true)
+	}
 	setEnvIntValue("TOUGHRADIUS_WEB_TLS_PORT", &cfg.Web.TlsPort)
 
 	// DB

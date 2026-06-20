@@ -32,7 +32,8 @@ SQLite（默认）零依赖——纯 Go 驱动、单文件存于 `{workdir}/data
 
 Web TLS 监听需要 `{workdir}/private/toughradius.tls.crt` 与 `.key`。文件缺失
 或无效时只记录日志并**仅**停掉 HTTPS 监听——1816 上的 HTTP 继续服务。可用
-`cmd/certgen` 生成证书或提供自己的证书。
+`cmd/certgen` 生成证书或提供自己的证书。若不需要内置 HTTPS 监听，设置
+`web.tls_enabled: false` 或 `TOUGHRADIUS_WEB_TLS_ENABLED=false`。
 
 ### `-initdb` 可以再跑一次吗？
 
