@@ -52,6 +52,7 @@
 | TR-F022 | 安全与质量 | 测试、验证、输入约束和审计习惯 | 通过单元测试、集成测试、白名单排序、输入校验、密码哈希、JWT 和日志指标降低回归风险。 | `*_test.go`, `.golangci.yml`, `internal/adminapi/helpers.go`, `pkg/validator`, `pkg/common` | 核心基线 | 安全边界变更必须有针对性测试；不得为了快速开发移除验证或鉴权。 |
 | TR-F023 | 文档工程 | 双语文档站点（mdbook） | 用 mdbook 构建中英文双语文档站点，收编散落文档（README、AGENT、SECURITY、RFC 索引等），并以链接方式暴露仍由专用技能维护的功能清单与路线图，提供统一导航、本地 `mdbook build` 构建与 CI 产物校验。 | `docs-site/book.toml`, `docs-site/src`（zh / en 双语章节）, `.github/workflows/ci.yml`（docs 任务）, `docs/` | 已实现 | 文档站点只做现有文档的结构化与双语化，不替代以代码与测试为准的口径；中英文章节必须一一对应、同步维护，且遵守 `TR-N003` / `TR-N006`，不扩展为产品门户或托管 Portal；GitHub Pages / GitBook 的发布边界必须保持单一事实来源，避免内容漂移。 |
 | TR-F024 | 代码规范 | Go API 文档与注释规范 | 对齐 Go 标准库风格：导出标识符必须有 godoc 注释，包注释（`doc.go`）、可运行示例（`Example`）、错误与并发语义说明齐备，并可由 lint / CI 度量。 | `.agents/skills/document-go-apis`, 各包 doc 注释, `.golangci.yml` | 已实现 | 规范已通过增量 ratchet 纳入常态门禁；后续新增导出 API 必须保持标准库 godoc 习惯，禁止无信息量的机械式注释。 |
+| TR-F026 | 证书管理 | EAP/RadSec 证书集中管理 | 集中管理 EAP-TLS / PEAP / TTLS 与 RadSec 所需的服务器证书与客户端 CA：支持 PEM 导入（解析主题、签发者、序列号、指纹、有效期等元数据并校验私钥与证书匹配）、本地名称编辑、安全导出（默认仅证书，私钥需显式授权并审计）、删除；EAP 配置以证书名称引用（下拉选择）替代手填文件路径，旧 `*File` 路径保留为回退。 | `internal/adminapi/certificates.go`, `internal/domain/system.go`（SysCert）, `internal/app/certstore.go`, `internal/radiusd/plugins/eap/handlers/tls_config.go`, `internal/app/config_schemas.json`, `web/src/resources/certificates.tsx`, `web/src/pages/SystemConfigPage.tsx` | 已实现 | 私钥永不随列表/详情接口返回（`json:"-"`）；导出私钥须显式 `include_key` 且记录操作员审计日志；证书选择优先于旧版文件路径并保持向后兼容（集成测试仍走 `*File` 路径）；不在前端拼装协议包，仅暴露后端可验证的安全操作。 |
 
 ## 优先扩展功能方向
 

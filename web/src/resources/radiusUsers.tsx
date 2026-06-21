@@ -1159,6 +1159,7 @@ export const RadiusUserEdit = () => {
                 validate={[required(), minLength(3), maxLength(50)]}
                 helperText="3-50个字符，只能包含字母、数字、下划线"
                 autoComplete="username"
+                readOnly
                 fullWidth
                 size="small"
               />

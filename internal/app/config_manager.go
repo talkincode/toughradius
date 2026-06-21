@@ -37,6 +37,7 @@ type ConfigSchemaJSON struct {
 	Title       string   `json:"title"`
 	TitleI18n   string   `json:"title_i18n"`
 	DescI18n    string   `json:"description_i18n"`
+	Group       string   `json:"group"` // UI grouping key (defaults to the key category)
 }
 
 // ConfigSchemasJSON groups configuration definitions
@@ -56,6 +57,7 @@ type ConfigSchema struct {
 	Title       string
 	TitleI18n   string
 	DescI18n    string
+	Group       string             // UI grouping key (defaults to the key category)
 	Validator   func(string) error // Custom validator
 }
 
@@ -115,6 +117,7 @@ func (cm *ConfigManager) loadSchemasFromJSON() error {
 			Title:       schemaJSON.Title,
 			TitleI18n:   schemaJSON.TitleI18n,
 			DescI18n:    schemaJSON.DescI18n,
+			Group:       schemaJSON.Group,
 		}
 		cm.register(schema)
 	}

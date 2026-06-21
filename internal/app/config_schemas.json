@@ -7,8 +7,9 @@
       "enum": ["eap-md5", "eap-mschapv2", "eap-tls", "eap-peap", "eap-ttls"],
       "title": "EAP Method",
       "title_i18n": "config.radius.eap_method.title",
-      "description": "EAP authentication method. eap-peap reuses the EAP-TLS server certificate/key (EapTlsCertFile/EapTlsKeyFile) to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 carries an NTLMv1-like attack surface (per Microsoft), so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require EapTlsCertFile/EapTlsKeyFile and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.",
-      "description_i18n": "config.radius.eap_method.description"
+      "description": "EAP authentication method. eap-peap reuses the EAP-TLS server certificate/key (EapTlsServerCert) to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 carries an NTLMv1-like attack surface (per Microsoft), so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require a server certificate (EapTlsServerCert) and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.",
+      "description_i18n": "config.radius.eap_method.description",
+      "group": "eap"
     },
     {
       "key": "radius.EapEnabledHandlers",
@@ -17,34 +18,58 @@
       "title": "Enabled EAP Handlers",
       "title_i18n": "config.radius.eap_enabled_handlers.title",
       "description": "Comma-separated list of enabled EAP handler names (e.g., eap-md5,eap-mschapv2). Use * to allow all registered handlers",
-      "description_i18n": "config.radius.eap_enabled_handlers.description"
+      "description_i18n": "config.radius.eap_enabled_handlers.description",
+      "group": "eap"
+    },
+    {
+      "key": "radius.EapTlsServerCert",
+      "type": "string",
+      "default": "",
+      "title": "EAP-TLS Server Certificate",
+      "title_i18n": "config.radius.eap_tls_server_cert.title",
+      "description": "Name of a managed server certificate (Certificates page) the RADIUS server presents during EAP-TLS/PEAP/TTLS handshakes (RFC 5216 §2.2). Selecting a certificate here takes precedence over the legacy EapTlsCertFile/EapTlsKeyFile paths. Leave empty to keep certificate-based EAP disabled",
+      "description_i18n": "config.radius.eap_tls_server_cert.description",
+      "group": "eap"
+    },
+    {
+      "key": "radius.EapTlsClientCa",
+      "type": "string",
+      "default": "",
+      "title": "EAP-TLS Client CA",
+      "title_i18n": "config.radius.eap_tls_client_ca.title",
+      "description": "Name of a managed CA certificate (Certificates page) used to verify EAP-TLS client certificate chains (RFC 5216 §2.2/§5.3). Selecting a certificate here takes precedence over the legacy EapTlsCaFile path. Required only for eap-tls; peap/ttls tunnels are server-only",
+      "description_i18n": "config.radius.eap_tls_client_ca.description",
+      "group": "eap"
     },
     {
       "key": "radius.EapTlsCertFile",
       "type": "string",
       "default": "",
-      "title": "EAP-TLS Server Certificate",
+      "title": "EAP-TLS Server Certificate File (legacy)",
       "title_i18n": "config.radius.eap_tls_cert_file.title",
-      "description": "Path to the PEM server certificate the RADIUS server presents during the EAP-TLS handshake (RFC 5216 §2.2). Leave empty to keep EAP-TLS disabled",
-      "description_i18n": "config.radius.eap_tls_cert_file.description"
+      "description": "Legacy on-disk path to the PEM server certificate the RADIUS server presents during the EAP-TLS handshake (RFC 5216 §2.2). Prefer selecting a managed certificate via EapTlsServerCert; this path is only used as a fallback when no managed certificate is selected",
+      "description_i18n": "config.radius.eap_tls_cert_file.description",
+      "group": "eap_advanced"
     },
     {
       "key": "radius.EapTlsKeyFile",
       "type": "string",
       "default": "",
-      "title": "EAP-TLS Server Private Key",
+      "title": "EAP-TLS Server Private Key File (legacy)",
       "title_i18n": "config.radius.eap_tls_key_file.title",
-      "description": "Path to the PEM private key matching the EAP-TLS server certificate. Leave empty to keep EAP-TLS disabled",
-      "description_i18n": "config.radius.eap_tls_key_file.description"
+      "description": "Legacy on-disk path to the PEM private key matching the EAP-TLS server certificate. Prefer selecting a managed certificate via EapTlsServerCert; this path is only used as a fallback when no managed certificate is selected",
+      "description_i18n": "config.radius.eap_tls_key_file.description",
+      "group": "eap_advanced"
     },
     {
       "key": "radius.EapTlsCaFile",
       "type": "string",
       "default": "",
-      "title": "EAP-TLS Client CA Bundle",
+      "title": "EAP-TLS Client CA Bundle File (legacy)",
       "title_i18n": "config.radius.eap_tls_ca_file.title",
-      "description": "Path to the PEM CA bundle used to verify EAP-TLS client certificate chains (RFC 5216 §2.2/§5.3). Leave empty to keep EAP-TLS disabled",
-      "description_i18n": "config.radius.eap_tls_ca_file.description"
+      "description": "Legacy on-disk path to the PEM CA bundle used to verify EAP-TLS client certificate chains (RFC 5216 §2.2/§5.3). Prefer selecting a managed certificate via EapTlsClientCa; this path is only used as a fallback when no managed certificate is selected",
+      "description_i18n": "config.radius.eap_tls_ca_file.description",
+      "group": "eap_advanced"
     },
     {
       "key": "radius.EapTlsMinVersion",
@@ -54,7 +79,8 @@
       "title": "EAP-TLS Minimum TLS Version",
       "title_i18n": "config.radius.eap_tls_min_version.title",
       "description": "Minimum TLS protocol version accepted for EAP-TLS handshakes",
-      "description_i18n": "config.radius.eap_tls_min_version.description"
+      "description_i18n": "config.radius.eap_tls_min_version.description",
+      "group": "eap"
     },
     {
       "key": "radius.RequireMessageAuthenticator",

@@ -28,6 +28,7 @@ const customChineseMessages: TranslationMessages = {
     network_nodes: '网络节点',
     system: '系统管理',
     operators: '操作员管理',
+    certificates: '证书管理',
     system_config: '系统配置',
     account_settings: '账户设置',
   },
@@ -423,6 +424,81 @@ const customChineseMessages: TranslationMessages = {
         remark: '可选的备注信息，最多500个字符',
       },
     },
+    'system/certificate': {
+      name: '证书 |||| 证书',
+      fields: {
+        id: 'ID',
+        name: '证书名称',
+        cert_type: '证书类型',
+        cert: '证书（PEM）',
+        private_key: '私钥（PEM）',
+        subject: '主题',
+        issuer: '签发者',
+        serial: '序列号',
+        fingerprint: 'SHA-256 指纹',
+        not_before: '生效时间',
+        not_after: '过期时间',
+        has_key: '已存储私钥',
+        remark: '备注',
+        created_at: '创建时间',
+        updated_at: '更新时间',
+      },
+      cert_types: {
+        server: '服务器证书',
+        ca: 'CA 证书',
+      },
+      actions: {
+        export: '导出',
+      },
+      filter: {
+        title: '筛选条件',
+      },
+      list: {
+        total: '共 %{total} 张证书',
+      },
+      empty: {
+        title: '暂无证书',
+        description: '点击新建导入第一张证书',
+      },
+      sections: {
+        import: {
+          title: '导入证书',
+          description: '粘贴证书和可选私钥的 PEM 内容',
+        },
+        basic: {
+          title: '基本信息',
+          description: '可编辑的本地证书信息',
+        },
+        metadata: {
+          title: '证书元数据',
+          description: '服务器解析出的证书详情',
+        },
+        replace: {
+          title: '替换证书材料',
+          description: '留空则保留当前证书/私钥',
+        },
+        validity: {
+          title: '有效期',
+          description: '证书生效和过期时间窗口',
+        },
+        remark: {
+          title: '备注信息',
+        },
+        pem: {
+          title: '证书 PEM',
+          description: '仅公钥证书内容',
+        },
+      },
+      helpers: {
+        name: '唯一的本地证书名称',
+        private_key: '服务器证书必须提供私钥；CA 证书可选',
+        replace_material: '留空则保留当前证书/私钥',
+      },
+      notifications: {
+        export_success: '证书已导出',
+        export_error: '导出失败',
+      },
+    },
     'system/operators': {
       name: '操作员 |||| 操作员',
       fields: {
@@ -603,12 +679,21 @@ const customChineseMessages: TranslationMessages = {
           title: 'LDAP / AD 认证',
           description: 'LDAP / Active Directory 绑定认证后端（仅 PAP 族，默认关闭）',
         },
+        eap: {
+          title: 'EAP 认证配置',
+          description: 'EAP（可扩展认证协议）方式、处理器与服务器/客户端证书选择',
+        },
+        eap_advanced: {
+          title: 'EAP 高级（证书文件路径）',
+          description: '兼容旧版的本地证书文件路径，建议改用上方“证书管理”选择托管证书',
+        },
       },
       value_range: '范围',
       min: '最小',
       max: '最大',
       available_values: '可选值',
       config_items: '项配置',
+      cert_select_none: '（未选择）',
     },
   },
   config: {
@@ -620,6 +705,14 @@ const customChineseMessages: TranslationMessages = {
       eap_enabled_handlers: {
         title: '启用的 EAP 处理器',
         description: '使用逗号分隔的处理器名称，* 表示允许所有已注册的处理器',
+      },
+      eap_tls_server_cert: {
+        title: 'EAP-TLS 服务器证书',
+        description: '选择“证书管理”中的托管服务器证书，用于 EAP-TLS/PEAP/TTLS 握手时出示。选择后优先于旧版证书文件路径，留空则不启用基于证书的 EAP',
+      },
+      eap_tls_client_ca: {
+        title: 'EAP-TLS 客户端 CA',
+        description: '选择“证书管理”中的托管 CA 证书，用于校验 EAP-TLS 客户端证书链。选择后优先于旧版 CA 文件路径，仅 eap-tls 需要；peap/ttls 隧道仅认证服务器',
       },
       eap_tls_cert_file: {
         title: 'EAP-TLS 服务器证书',

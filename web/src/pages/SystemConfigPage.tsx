@@ -37,7 +37,7 @@ import {
   RestorePage as RestoreIcon,
   AccountTree as AccountTreeIcon,
 } from '@mui/icons-material';
-import { useDataProvider, useNotify, useTranslate } from 'react-admin';
+import { useDataProvider, useNotify, useTranslate, useGetList } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
 import { API_BASE } from '../utils/apiClient';
 
@@ -53,6 +53,7 @@ interface ConfigSchema {
   title?: string;
   title_i18n?: string;
   description_i18n?: string;
+  group?: string;
 }
 
 interface ConfigValue {
@@ -68,9 +69,14 @@ interface ConfigValue {
 const SCHEMA_QUERY_KEY = ['system', 'config', 'schemas'] as const;
 const SETTINGS_QUERY_KEY = ['system', 'settings'] as const;
 
+// Deterministic display order for config groups. Groups not listed here render
+// afterwards in their first-appearance order. Keeps RADIUS general config first
+// and the EAP block (plus its collapsed advanced paths) grouped right after it.
+const GROUP_ORDER = ['radius', 'eap', 'eap_advanced', 'ldap', 'security', 'system'];
+
 export const SystemConfigPage: React.FC = () => {
   const [configs, setConfigs] = useState<Record<string, ConfigValue>>({});
-  const [expandedGroups, setExpandedGroups] = useState<string[]>(['radius']);
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['radius', 'eap']);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [backupLoading, setBackupLoading] = useState(false);
   const [restoreLoading, setRestoreLoading] = useState(false);
@@ -82,6 +88,22 @@ export const SystemConfigPage: React.FC = () => {
   const notify = useNotify();
   const translate = useTranslate();
   const queryClient = useQueryClient();
+
+  // Load managed certificates so the EAP block can offer them as a dropdown
+  // selection (radius.EapTlsServerCert / radius.EapTlsClientCa) instead of
+  // free-text file paths.
+  const { data: certificateList } = useGetList('system/certificate', {
+    pagination: { page: 1, perPage: 1000 },
+    sort: { field: 'name', order: 'ASC' },
+  });
+  const serverCertOptions = useMemo(
+    () => (certificateList ?? []).filter((c) => c.cert_type === 'server').map((c) => String(c.name)),
+    [certificateList],
+  );
+  const caCertOptions = useMemo(
+    () => (certificateList ?? []).filter((c) => c.cert_type === 'ca').map((c) => String(c.name)),
+    [certificateList],
+  );
 
   const schemaQuery = useApiQuery<ConfigSchema[]>({
     path: '/system/config/schemas',
@@ -140,6 +162,18 @@ export const SystemConfigPage: React.FC = () => {
       icon: <AccountTreeIcon />,
       color: '#7b1fa2',
     },
+    eap: {
+      title: translate('pages.system_config.groups.eap.title'),
+      description: translate('pages.system_config.groups.eap.description'),
+      icon: <SecurityIcon />,
+      color: '#0288d1',
+    },
+    eap_advanced: {
+      title: translate('pages.system_config.groups.eap_advanced.title'),
+      description: translate('pages.system_config.groups.eap_advanced.description'),
+      icon: <SecurityIcon />,
+      color: '#607d8b',
+    },
   }), [translate]);
 
   const groupedSchemas = useMemo(() => {
@@ -147,7 +181,7 @@ export const SystemConfigPage: React.FC = () => {
       return {} as Record<string, ConfigSchema[]>;
     }
     return schemaQuery.data.reduce<Record<string, ConfigSchema[]>>((groups, schema) => {
-      const group = schema.key.split('.')[0];
+      const group = schema.group ?? schema.key.split('.')[0];
       if (!groups[group]) {
         groups[group] = [];
       }
@@ -155,6 +189,17 @@ export const SystemConfigPage: React.FC = () => {
       return groups;
     }, {});
   }, [schemaQuery.data]);
+
+  const orderedGroupEntries = useMemo(() => {
+    const entries = Object.entries(groupedSchemas);
+    return entries.sort(([a], [b]) => {
+      const ia = GROUP_ORDER.indexOf(a);
+      const ib = GROUP_ORDER.indexOf(b);
+      const ra = ia === -1 ? GROUP_ORDER.length : ia;
+      const rb = ib === -1 ? GROUP_ORDER.length : ib;
+      return ra - rb;
+    });
+  }, [groupedSchemas]);
 
   const resolveSchemaTitle = React.useCallback((schema: ConfigSchema) => {
     const fallback = schema.title || schema.key.split('.')[1];
@@ -190,6 +235,34 @@ export const SystemConfigPage: React.FC = () => {
 
   const renderConfigInput = (schema: ConfigSchema, label: string, description: string) => {
     const value = getConfigValue(schema);
+
+    // EAP certificate references are selected from the managed certificate store
+    // (Certificates page) rather than typed as file paths, satisfying the
+    // "select a certificate, don't write a path" requirement.
+    if (schema.key === 'radius.EapTlsServerCert' || schema.key === 'radius.EapTlsClientCa') {
+      const options = schema.key === 'radius.EapTlsServerCert' ? serverCertOptions : caCertOptions;
+      const allOptions = value && !options.includes(value) ? [value, ...options] : options;
+      return (
+        <FormControl fullWidth>
+          <InputLabel>{label}</InputLabel>
+          <Select
+            value={value}
+            label={label}
+            onChange={(e) => updateConfigValue(schema.key, e.target.value)}
+          >
+            <MenuItem value="">
+              <em>{translate('pages.system_config.cert_select_none', { _: '未选择 (None)' })}</em>
+            </MenuItem>
+            {allOptions.map((name) => (
+              <MenuItem key={name} value={name}>
+                {name}
+              </MenuItem>
+            ))}
+          </Select>
+          {description && <FormHelperText>{description}</FormHelperText>}
+        </FormControl>
+      );
+    }
 
     switch (schema.type) {
       case 'bool':
@@ -516,7 +589,7 @@ export const SystemConfigPage: React.FC = () => {
             {translate('pages.system_config.info_message')}
           </Alert>
 
-          {Object.entries(groupedSchemas).map(([groupKey, groupSchemas]) => {
+          {orderedGroupEntries.map(([groupKey, groupSchemas]) => {
           const groupConfig = configGroups[groupKey as keyof typeof configGroups] || {
             title: groupKey,
             description: `${groupKey} 相关配置`,

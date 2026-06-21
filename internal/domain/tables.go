@@ -5,6 +5,7 @@ var Tables = []interface{}{
 	&SysConfig{},
 	&SysOpr{},
 	&SysOprLog{},
+	&SysCert{},
 	// Network
 	&NetNode{},
 	&NetNas{},

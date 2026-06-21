@@ -49,6 +49,16 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	}
 	registry.RegisterAuthGuard(guards.NewRejectDelayGuard(cfgGetter))
 
+	// Resolve the optional managed-certificate store so EAP-TLS/PEAP/TTLS can use
+	// operator-selected certificates (radius.EapTlsServerCert / EapTlsClientCa) in
+	// preference to on-disk file paths. It is available whenever the app context
+	// also exposes the database; when absent (e.g. unit tests with a nil appCtx)
+	// the providers fall back to the legacy file paths.
+	var certResolver eaphandlers.CertResolver
+	if dbp, ok := appCtx.(app.DBProvider); ok && dbp != nil && dbp.DB() != nil {
+		certResolver = app.NewCertStore(dbp.DB())
+	}
+
 	// Register accounting handlers (dependency injection required)
 	if sessionRepo != nil && accountingRepo != nil {
 		registry.RegisterAccountingHandler(handlers.NewStartHandler(sessionRepo, accountingRepo))
@@ -73,7 +83,7 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	// available (e.g. unit tests with a nil appCtx), fall back to the
 	// unconfigured handler which rejects identically.
 	if appCtx != nil && appCtx.ConfigMgr() != nil {
-		provider := eaphandlers.NewSettingsTLSConfigProvider(appCtx.ConfigMgr())
+		provider := eaphandlers.NewSettingsTLSConfigProvider(appCtx.ConfigMgr(), certResolver)
 		registry.RegisterEAPHandler(eaphandlers.NewTLSHandlerWithConfig(provider))
 	} else {
 		registry.RegisterEAPHandler(eaphandlers.NewTLSHandler())
@@ -84,7 +94,7 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	// TLS tunnel with EAP-TLS framing, then rejects safely until the inner
 	// EAP-MSCHAPv2 exchange (M8.3) is delivered.
 	if appCtx != nil && appCtx.ConfigMgr() != nil {
-		provider := eaphandlers.NewSettingsPEAPConfigProvider(appCtx.ConfigMgr())
+		provider := eaphandlers.NewSettingsPEAPConfigProvider(appCtx.ConfigMgr(), certResolver)
 		registry.RegisterEAPHandler(eaphandlers.NewPEAPHandlerWithConfig(provider))
 	} else {
 		registry.RegisterEAPHandler(eaphandlers.NewPEAPHandler())
@@ -99,7 +109,7 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	// manager is available (e.g. unit tests with a nil appCtx), fall back to the
 	// unconfigured handler which rejects safely with eap.ErrTLSNotConfigured.
 	if appCtx != nil && appCtx.ConfigMgr() != nil {
-		provider := eaphandlers.NewSettingsTTLSConfigProvider(appCtx.ConfigMgr())
+		provider := eaphandlers.NewSettingsTTLSConfigProvider(appCtx.ConfigMgr(), certResolver)
 		registry.RegisterEAPHandler(eaphandlers.NewTTLSHandlerWithConfig(provider))
 	} else {
 		registry.RegisterEAPHandler(eaphandlers.NewTTLSHandler())

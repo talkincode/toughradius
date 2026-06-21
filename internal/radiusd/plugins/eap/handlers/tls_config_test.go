@@ -278,3 +278,135 @@ func TestNewSettingsPEAPConfigProvider_NotConfigured(t *testing.T) {
 		})
 	}
 }
+
+// fakeCertResolver is an in-memory CertResolver for testing managed-certificate
+// resolution precedence over the legacy file paths.
+type fakeCertResolver struct {
+	certPEM []byte
+	keyPEM  []byte
+	caPEM   []byte
+	err     error
+}
+
+func (f *fakeCertResolver) ServerKeyPair(string) ([]byte, []byte, error) {
+	if f.err != nil {
+		return nil, nil, f.err
+	}
+	return f.certPEM, f.keyPEM, nil
+}
+
+func (f *fakeCertResolver) CABundle(string) ([]byte, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.caPEM, nil
+}
+
+// genTestCertPEM generates a self-signed certificate and returns the certificate
+// and private key as in-memory PEM bytes.
+func genTestCertPEM(t *testing.T) (certPEM, keyPEM []byte) {
+	t.Helper()
+	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		t.Fatalf("generate key: %v", err)
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber:          big.NewInt(2),
+		Subject:               pkix.Name{CommonName: "toughradius-managed-cert"},
+		NotBefore:             time.Now().Add(-time.Hour),
+		NotAfter:              time.Now().Add(time.Hour),
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
+		IsCA:                  true,
+		BasicConstraintsValid: true,
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	if err != nil {
+		t.Fatalf("create certificate: %v", err)
+	}
+	keyDER, err := x509.MarshalECPrivateKey(key)
+	if err != nil {
+		t.Fatalf("marshal key: %v", err)
+	}
+	certPEM = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	keyPEM = pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER})
+	return certPEM, keyPEM
+}
+
+func TestNewSettingsTLSConfigProvider_ManagedCertPrecedence(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM, caPEM: certPEM}
+
+	// Managed refs are set and a resolver is provided; the (bogus) legacy file
+	// paths must be ignored in favor of the resolver material.
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert: "srv",
+		"radius." + SettingEapTlsClientCa:   "ca",
+		"radius." + SettingEapTlsCertFile:   "/does/not/exist.crt",
+		"radius." + SettingEapTlsKeyFile:    "/does/not/exist.key",
+	})
+
+	cfg, err := NewSettingsTLSConfigProvider(reader, resolver)()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected non-nil config from managed certificate")
+	}
+	if len(cfg.ServerCertificate.Certificate) == 0 || cfg.ServerCertificate.PrivateKey == nil {
+		t.Fatal("expected a usable server certificate from the resolver")
+	}
+	if cfg.ClientCAs == nil {
+		t.Fatal("expected a non-nil client CA pool from the resolver")
+	}
+}
+
+func TestNewSettingsTLSConfigProvider_ResolverErrorSurfaces(t *testing.T) {
+	resolver := &fakeCertResolver{err: errResolver}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert: "srv",
+		"radius." + SettingEapTlsClientCa:   "ca",
+	})
+	if _, err := NewSettingsTLSConfigProvider(reader, resolver)(); err == nil {
+		t.Fatal("expected resolver error to surface")
+	}
+}
+
+func TestNewSettingsTLSConfigProvider_FallsBackToFilesWhenNoRefs(t *testing.T) {
+	certFile, keyFile, caFile := writeTestCertFiles(t)
+	// A resolver is present but no managed refs are selected, so the provider
+	// must fall back to the legacy file paths.
+	resolver := &fakeCertResolver{err: errResolver}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsCertFile: certFile,
+		"radius." + SettingEapTlsKeyFile:  keyFile,
+		"radius." + SettingEapTlsCaFile:   caFile,
+	})
+	cfg, err := NewSettingsTLSConfigProvider(reader, resolver)()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected non-nil config from file fallback")
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_ManagedCert(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert: "srv",
+	})
+	cfg, err := NewSettingsPEAPConfigProvider(reader, resolver)()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil || !cfg.ServerOnly {
+		t.Fatal("expected non-nil server-only PEAP config from managed certificate")
+	}
+}
+
+var errResolver = errTest("resolver failure")
+
+type errTest string
+
+func (e errTest) Error() string { return string(e) }
