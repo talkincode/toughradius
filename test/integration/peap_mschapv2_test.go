@@ -7,8 +7,6 @@ import (
 	"crypto/tls"
 	"encoding/binary"
 	"net"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -152,23 +150,18 @@ func TestPEAPMSCHAPv2EndToEnd(t *testing.T) {
 	})
 }
 
-// configurePEAP writes the server certificate/key to disk and points the dynamic
-// EAP settings at them, switching the server's EAP method to eap-peap. PEAP is a
-// server-only TLS method, so no client-CA bundle is required (unlike EAP-TLS).
-// The settings provider reads these on every handshake, so the live server picks
-// up the change without a restart.
+// configurePEAP stores the server certificate/key as a managed certificate and
+// points the dynamic EAP settings at it by name, switching the server's EAP
+// method to eap-peap. PEAP is a server-only TLS method, so no client-CA bundle
+// is required (unlike EAP-TLS). The settings provider resolves the managed
+// certificate on every handshake, so the live server picks up the change without
+// a restart.
 func configurePEAP(t *testing.T, serverCert tls.Certificate) {
 	t.Helper()
-	dir := t.TempDir()
-	certPath := filepath.Join(dir, "server-cert.pem")
-	keyPath := filepath.Join(dir, "server-key.pem")
-
-	require.NoError(t, os.WriteFile(certPath, certificatePEM(t, serverCert), 0o600))
-	require.NoError(t, os.WriteFile(keyPath, privateKeyPEM(t, serverCert.PrivateKey), 0o600))
+	serverName := seedManagedServerCert(t, serverCert)
 
 	cm := h.appCtx.ConfigMgr()
-	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsCertFile, certPath))
-	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsKeyFile, keyPath))
+	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsServerCert, serverName))
 	require.NoError(t, cm.Set("radius", "EapMethod", "eap-peap"))
 }
 

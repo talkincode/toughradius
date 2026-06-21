@@ -72,7 +72,7 @@ const SETTINGS_QUERY_KEY = ['system', 'settings'] as const;
 // Deterministic display order for config groups. Groups not listed here render
 // afterwards in their first-appearance order. Keeps RADIUS general config first
 // and the EAP block (plus its collapsed advanced paths) grouped right after it.
-const GROUP_ORDER = ['radius', 'eap', 'eap_advanced', 'ldap', 'security', 'system'];
+const GROUP_ORDER = ['radius', 'eap', 'ldap', 'security', 'system'];
 
 export const SystemConfigPage: React.FC = () => {
   const [configs, setConfigs] = useState<Record<string, ConfigValue>>({});
@@ -167,12 +167,6 @@ export const SystemConfigPage: React.FC = () => {
       description: translate('pages.system_config.groups.eap.description'),
       icon: <SecurityIcon />,
       color: '#0288d1',
-    },
-    eap_advanced: {
-      title: translate('pages.system_config.groups.eap_advanced.title'),
-      description: translate('pages.system_config.groups.eap_advanced.description'),
-      icon: <SecurityIcon />,
-      color: '#607d8b',
     },
   }), [translate]);
 

@@ -49,11 +49,11 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	}
 	registry.RegisterAuthGuard(guards.NewRejectDelayGuard(cfgGetter))
 
-	// Resolve the optional managed-certificate store so EAP-TLS/PEAP/TTLS can use
-	// operator-selected certificates (radius.EapTlsServerCert / EapTlsClientCa) in
-	// preference to on-disk file paths. It is available whenever the app context
-	// also exposes the database; when absent (e.g. unit tests with a nil appCtx)
-	// the providers fall back to the legacy file paths.
+	// Resolve the managed-certificate store so EAP-TLS/PEAP/TTLS load the
+	// operator-selected certificates (radius.EapTlsServerCert / EapTlsClientCa)
+	// from the database. It is available whenever the app context also exposes
+	// the database; when absent (e.g. unit tests with a nil appCtx) certificate-
+	// based EAP stays disabled and the providers reject safely.
 	var certResolver eaphandlers.CertResolver
 	if dbp, ok := appCtx.(app.DBProvider); ok && dbp != nil && dbp.DB() != nil {
 		certResolver = app.NewCertStore(dbp.DB())
@@ -75,12 +75,12 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	registry.RegisterEAPHandler(eaphandlers.NewMSCHAPv2Handler())
 	// EAP-TLS drives a full server-side TLS handshake with CA-chain
 	// certificate validation and certificate-to-User-Name identity mapping
-	// (milestone M1.3). Its certificate material is supplied from dynamic
-	// settings (milestone M1.5): the provider returns a nil config — so the
-	// handler rejects safely with eap.ErrTLSNotConfigured — until the
-	// certificate/key/CA paths are configured, and it can never authenticate a
-	// client without configured trust anchors. When no config manager is
-	// available (e.g. unit tests with a nil appCtx), fall back to the
+	// (milestone M1.3). Its certificate material is supplied from the managed
+	// certificate store (milestone M1.5): the provider returns a nil config — so
+	// the handler rejects safely with eap.ErrTLSNotConfigured — until a managed
+	// server certificate and client CA are selected, and it can never
+	// authenticate a client without configured trust anchors. When no config
+	// manager is available (e.g. unit tests with a nil appCtx), fall back to the
 	// unconfigured handler which rejects identically.
 	if appCtx != nil && appCtx.ConfigMgr() != nil {
 		provider := eaphandlers.NewSettingsTLSConfigProvider(appCtx.ConfigMgr(), certResolver)

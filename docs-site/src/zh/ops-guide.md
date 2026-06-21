@@ -148,7 +148,7 @@ RADIUS 运行时配置（EAP 方法、证书、间隔、拒绝延迟等）存储
 | ------ | ---- | ---- |
 | **RadSec** | `radiusd.radsec_ca_cert` / `radsec_cert` / `radsec_key` | TLS 1.2+；客户端证书**提供则校验**（`VerifyClientCertIfGiven`） |
 | **Web HTTPS** | `{workdir}/private/toughradius.tls.crt` + `.key`（固定路径） | `web.tls_enabled` 为 true 时监听 `web.tls_port`；加载失败仅记日志，HTTP 继续运行 |
-| **EAP（TLS/PEAP/TTLS）** | 系统配置 → `EapTlsCertFile`、`EapTlsKeyFile`、`EapTlsCaFile`、`EapTlsMinVersion` | 证书/私钥留空即禁用基于 TLS 的 EAP 方法 |
+| **EAP（TLS/PEAP/TTLS）** | 系统配置 → `EapTlsServerCert`、`EapTlsClientCa`、`EapTlsMinVersion`（证书在「证书管理」中导入并按名称选择） | 未选择服务器证书即禁用基于证书的 EAP 方法 |
 
 用内置工具一次生成 CA/服务器/客户端全套证书：
 

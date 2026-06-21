@@ -683,10 +683,6 @@ const customChineseMessages: TranslationMessages = {
           title: 'EAP 认证配置',
           description: 'EAP（可扩展认证协议）方式、处理器与服务器/客户端证书选择',
         },
-        eap_advanced: {
-          title: 'EAP 高级（证书文件路径）',
-          description: '兼容旧版的本地证书文件路径，建议改用上方“证书管理”选择托管证书',
-        },
       },
       value_range: '范围',
       min: '最小',
@@ -700,7 +696,7 @@ const customChineseMessages: TranslationMessages = {
     radius: {
       eap_method: {
         title: 'EAP 认证方式',
-        description: '选择 RADIUS 服务器向 NAS 提供的 EAP 认证算法（如 eap-md5、eap-mschapv2）。eap-peap 复用 EAP-TLS 的服务器证书/私钥建立外层 TLS 隧道，隧道内运行 EAP-MSCHAPv2 以兼容 Windows/AD；内层 MS-CHAPv2 存在类似 NTLMv1 的攻击面，请保持外层 TLS 强度，客户端支持证书时优先使用 eap-tls。eap-ttls（RFC 5281）同样建立仅服务器认证的 TLS 隧道，为 LDAP / 老账号库 / 混合客户端后端认证传统内层凭证：内层 PAP（明文口令仅由 TLS 隧道保护）与内层 MS-CHAP-V2（与上述同样存在类似 NTLMv1 的攻击面）。eap-peap 与 eap-ttls 均需配置 EapTlsCertFile/EapTlsKeyFile 并将隧道钉死在 TLS 1.2；当所有客户端都能提供证书时应优先选择 eap-tls。',
+        description: '选择 RADIUS 服务器向 NAS 提供的 EAP 认证算法（如 eap-md5、eap-mschapv2）。eap-peap 复用 EAP-TLS 的服务器证书/私钥建立外层 TLS 隧道，隧道内运行 EAP-MSCHAPv2 以兼容 Windows/AD；内层 MS-CHAPv2 存在类似 NTLMv1 的攻击面，请保持外层 TLS 强度，客户端支持证书时优先使用 eap-tls。eap-ttls（RFC 5281）同样建立仅服务器认证的 TLS 隧道，为 LDAP / 老账号库 / 混合客户端后端认证传统内层凭证：内层 PAP（明文口令仅由 TLS 隧道保护）与内层 MS-CHAP-V2（与上述同样存在类似 NTLMv1 的攻击面）。eap-peap 与 eap-ttls 均需配置服务器证书（EapTlsServerCert）并将隧道钉死在 TLS 1.2；当所有客户端都能提供证书时应优先选择 eap-tls。',
       },
       eap_enabled_handlers: {
         title: '启用的 EAP 处理器',
@@ -708,23 +704,11 @@ const customChineseMessages: TranslationMessages = {
       },
       eap_tls_server_cert: {
         title: 'EAP-TLS 服务器证书',
-        description: '选择“证书管理”中的托管服务器证书，用于 EAP-TLS/PEAP/TTLS 握手时出示。选择后优先于旧版证书文件路径，留空则不启用基于证书的 EAP',
+        description: '选择“证书管理”中的托管服务器证书，用于 EAP-TLS/PEAP/TTLS 握手时出示。留空则不启用基于证书的 EAP',
       },
       eap_tls_client_ca: {
         title: 'EAP-TLS 客户端 CA',
-        description: '选择“证书管理”中的托管 CA 证书，用于校验 EAP-TLS 客户端证书链。选择后优先于旧版 CA 文件路径，仅 eap-tls 需要；peap/ttls 隧道仅认证服务器',
-      },
-      eap_tls_cert_file: {
-        title: 'EAP-TLS 服务器证书',
-        description: 'EAP-TLS 握手时服务器出示的 PEM 证书路径，留空则不启用 EAP-TLS',
-      },
-      eap_tls_key_file: {
-        title: 'EAP-TLS 服务器私钥',
-        description: '与 EAP-TLS 服务器证书匹配的 PEM 私钥路径，留空则不启用 EAP-TLS',
-      },
-      eap_tls_ca_file: {
-        title: 'EAP-TLS 客户端 CA 证书',
-        description: '用于校验 EAP-TLS 客户端证书链的 PEM CA 证书包路径，留空则不启用 EAP-TLS',
+        description: '选择“证书管理”中的托管 CA 证书，用于校验 EAP-TLS 客户端证书链。仅 eap-tls 需要；peap/ttls 隧道仅认证服务器',
       },
       eap_tls_min_version: {
         title: 'EAP-TLS 最低 TLS 版本',

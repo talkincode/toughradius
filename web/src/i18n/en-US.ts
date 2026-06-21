@@ -683,10 +683,6 @@ const customEnglishMessages: TranslationMessages = {
           title: 'EAP Configuration',
           description: 'EAP (Extensible Authentication Protocol) methods, handlers and server/client certificate selection',
         },
-        eap_advanced: {
-          title: 'EAP Advanced (Certificate File Paths)',
-          description: 'Legacy on-disk certificate file paths for backward compatibility. Prefer selecting a managed certificate above via Certificate Management.',
-        },
       },
       value_range: 'Range',
       min: 'Min',
@@ -700,7 +696,7 @@ const customEnglishMessages: TranslationMessages = {
     radius: {
       eap_method: {
         title: 'EAP Method',
-        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require EapTlsCertFile/EapTlsKeyFile and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.',
+        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require a server certificate (EapTlsServerCert) and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.',
       },
       eap_enabled_handlers: {
         title: 'Enabled EAP Handlers',
@@ -708,23 +704,11 @@ const customEnglishMessages: TranslationMessages = {
       },
       eap_tls_server_cert: {
         title: 'EAP-TLS Server Certificate',
-        description: 'Select a managed server certificate (Certificate Management) presented during EAP-TLS/PEAP/TTLS handshakes. Takes precedence over the legacy certificate file paths; leave empty to keep certificate-based EAP disabled.',
+        description: 'Select a managed server certificate (Certificate Management) presented during EAP-TLS/PEAP/TTLS handshakes. Leave empty to keep certificate-based EAP disabled.',
       },
       eap_tls_client_ca: {
         title: 'EAP-TLS Client CA',
-        description: 'Select a managed CA certificate (Certificate Management) used to verify EAP-TLS client certificate chains. Takes precedence over the legacy CA file path; required only for eap-tls (peap/ttls tunnels are server-only).',
-      },
-      eap_tls_cert_file: {
-        title: 'EAP-TLS Server Certificate',
-        description: 'Path to the PEM server certificate presented during the EAP-TLS handshake. Leave empty to keep EAP-TLS disabled.',
-      },
-      eap_tls_key_file: {
-        title: 'EAP-TLS Server Private Key',
-        description: 'Path to the PEM private key matching the EAP-TLS server certificate. Leave empty to keep EAP-TLS disabled.',
-      },
-      eap_tls_ca_file: {
-        title: 'EAP-TLS Client CA Bundle',
-        description: 'Path to the PEM CA bundle used to verify EAP-TLS client certificate chains. Leave empty to keep EAP-TLS disabled.',
+        description: 'Select a managed CA certificate (Certificate Management) used to verify EAP-TLS client certificate chains. Required only for eap-tls (peap/ttls tunnels are server-only).',
       },
       eap_tls_min_version: {
         title: 'EAP-TLS Minimum TLS Version',

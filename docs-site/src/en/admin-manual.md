@@ -116,8 +116,8 @@ table — changes apply without restart. The 13 RADIUS settings:
 | --- | ------- | ------- |
 | `EapMethod` | `eap-md5` | Active EAP method: `eap-md5`, `eap-mschapv2`, `eap-tls`, `eap-peap`, `eap-ttls` |
 | `EapEnabledHandlers` | `*` | Comma allow-list of permitted EAP handlers |
-| `EapTlsCertFile` / `EapTlsKeyFile` | empty | Server certificate/key for EAP-TLS/PEAP/TTLS; **empty disables TLS-based EAP** |
-| `EapTlsCaFile` | empty | CA bundle for client-certificate validation |
+| `EapTlsServerCert` | empty | Name of the managed server certificate (import and select it on the Certificates page) presented for EAP-TLS/PEAP/TTLS; **empty disables certificate-based EAP** |
+| `EapTlsClientCa` | empty | Name of the managed CA certificate used to validate client certificate chains (EAP-TLS only) |
 | `EapTlsMinVersion` | `1.2` | Minimum TLS version (`1.2`/`1.3`) |
 | `IgnorePassword` | `false` | Skip password verification (testing only) |
 | `AccountingHistoryDays` | `90` | Accounting retention days (`@daily` cleanup; `0` disables) |

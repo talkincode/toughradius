@@ -108,10 +108,10 @@ EapMethod**.
 
 ### EAP-TLS / PEAP / EAP-TTLS doesn't start
 
-TLS-based EAP requires `EapTlsCertFile` + `EapTlsKeyFile` in System Config —
-when they are empty the methods are disabled by design. Generate a server
-certificate with `cmd/certgen`, set the paths, and retry. `EapTlsCaFile` is
-needed only to validate client certificates (EAP-TLS).
+TLS-based EAP requires selecting `EapTlsServerCert` in System Config —
+when it is empty the methods are disabled by design. Generate a server
+certificate with `cmd/certgen`, import it on the Certificates page, and select
+it by name. `EapTlsClientCa` is needed only to validate client certificates (EAP-TLS).
 
 ### What breaks if the server and device clocks drift apart?
 
