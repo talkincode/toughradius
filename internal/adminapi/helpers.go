@@ -27,17 +27,31 @@ func parsePagination(c echo.Context) (int, int) {
 // defaultField/defaultOrder. Centralizing this guard ensures every list
 // endpoint applies the same SQL-injection-safe column allowlist instead of
 // re-implementing (and potentially forgetting) it.
+//
+// The returned field is re-derived from the matching allowlist key (a
+// compile-time constant) and the returned order is one of two string literals,
+// so neither value carries the raw query string into the SQL ORDER BY clause.
 func parseSort(c echo.Context, allowed map[string]bool, defaultField, defaultOrder string) (field, order string) {
-	field = c.QueryParam("sort")
-	if field == "" || !allowed[field] {
-		field = defaultField
+	field = defaultField
+	if requested := c.QueryParam("sort"); requested != "" {
+		for col := range allowed {
+			if col == requested {
+				field = col
+				break
+			}
+		}
 	}
-	order = strings.ToUpper(strings.TrimSpace(c.QueryParam("order")))
-	if order != "ASC" && order != "DESC" {
-		order = strings.ToUpper(strings.TrimSpace(defaultOrder))
-	}
-	if order != "ASC" && order != "DESC" {
+
+	order = "ASC"
+	switch strings.ToUpper(strings.TrimSpace(c.QueryParam("order"))) {
+	case "DESC":
+		order = "DESC"
+	case "ASC":
 		order = "ASC"
+	default:
+		if strings.ToUpper(strings.TrimSpace(defaultOrder)) == "DESC" {
+			order = "DESC"
+		}
 	}
 	return field, order
 }
