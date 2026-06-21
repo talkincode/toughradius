@@ -245,6 +245,242 @@ retry, targeting the **CoA port (default 3799)** on the NAS record.
 
 ---
 
+## Scenario D: WPA2/WPA3-Enterprise Wi-Fi — 802.1X EAP passthrough to ToughRADIUS
+
+### Need / scenario
+
+You run enterprise Wi-Fi (`WPA2-EAP` / `WPA3-EAP`, i.e. 802.1X) on MikroTik APs
+and want **one central place** for accounts, certificates and policy: ToughRADIUS.
+Staff authenticate either with a **client certificate** (EAP-TLS, password-less),
+or with **username + password** (PEAP-MSCHAPv2 for Windows/AD-style clients, or
+EAP-TTLS for legacy / LDAP back ends).
+
+> **How this differs from
+> [`multiduplikator/mikrotik_EAP`](https://github.com/multiduplikator/mikrotik_EAP).**
+> That well-known guide makes RouterOS itself the EAP server (ROS6 against the
+> certificate store, or ROS7 via **User Manager v5**). Here MikroTik is **only the
+> authenticator**: its `eap-methods=passthrough` relays the 802.1X/EAP conversation
+> to ToughRADIUS, and **ToughRADIUS terminates EAP**. Two consequences follow that
+> you must plan for:
+>
+> 1. **The trust anchor moves to ToughRADIUS.** Clients no longer trust `RouterCA`;
+>    they must trust the **CA that signed ToughRADIUS's server certificate**
+>    (`EapTlsCertFile`). You distribute *that* CA to client devices.
+> 2. **The router holds no user/cert material for auth.** All identities live on
+>    ToughRADIUS, so you get its account lifecycle, rate profiles, online-session
+>    view and accounting for free.
+
+### On the ToughRADIUS side
+
+#### 0. Prepare the certificates (PEM on disk)
+
+ToughRADIUS loads PEM files from disk (paths set in the config items below). A
+minimal in-house CA with `openssl` — EC keys keep the TLS records small, which
+matters for EAP fragmentation:
+
+```bash
+# Root CA (distribute ca.pem to every client device)
+openssl ecparam -name prime256v1 -genkey -noout -out ca.key
+openssl req -x509 -new -key ca.key -sha256 -days 3650 -out ca.pem \
+  -subj "/CN=ToughRADIUS EAP Root CA"
+
+# RADIUS server certificate (CN/SAN is what clients pin as the server identity)
+openssl ecparam -name prime256v1 -genkey -noout -out server.key
+openssl req -new -key server.key -out server.csr -subj "/CN=radius.example.com"
+openssl x509 -req -in server.csr -CA ca.pem -CAkey ca.key -CAcreateserial \
+  -days 825 -sha256 -out server.pem \
+  -extfile <(printf "subjectAltName=DNS:radius.example.com\nextendedKeyUsage=serverAuth\nkeyUsage=digitalSignature,keyEncipherment")
+
+# EAP-TLS client certificate (only for EAP-TLS users). The SAN email becomes the
+# RADIUS identity — see the identity-binding rule below.
+openssl ecparam -name prime256v1 -genkey -noout -out alice.key
+openssl req -new -key alice.key -out alice.csr -subj "/CN=alice"
+openssl x509 -req -in alice.csr -CA ca.pem -CAkey ca.key -CAcreateserial \
+  -days 825 -sha256 -out alice.pem \
+  -extfile <(printf "subjectAltName=email:alice@example.com\nextendedKeyUsage=clientAuth\nkeyUsage=digitalSignature")
+
+# Bundle the client key+cert+CA as PKCS#12 for Windows/Android/iOS enrolment
+openssl pkcs12 -export -inkey alice.key -in alice.pem -certfile ca.pem \
+  -out alice.p12 -passout pass:'<long-passphrase>'
+```
+
+> **EAP-TLS identity binding (anchored to `tlsengine/identity.go`, RFC 5216 §5.2).**
+> After the client certificate passes chain validation, ToughRADIUS derives the
+> **Peer-Id** in this order: **SAN `rfc822Name` (email) → SAN `dnsName` → subject
+> `CN`**, and it must equal the RADIUS `User-Name` (case-insensitive). When a SAN
+> is present the `CN` is **not** accepted as an alternate. So with the cert above
+> the matching ToughRADIUS username is **`alice@example.com`**, not `alice`.
+
+#### 1. Upload the material and set the config items
+
+Copy `server.pem`, `server.key`, and `ca.pem` onto the ToughRADIUS host (e.g.
+`/var/toughradius/eap/`), then set these on **System config → RADIUS**
+(anchored to `internal/app/config_schemas.json` /
+`eap/handlers/tls_config.go`):
+
+| Config item (`radius.*`) | EAP-TLS | PEAP / TTLS | Notes |
+| --- | --- | --- | --- |
+| **EAP Method** (`EapMethod`) | `eap-tls` | `eap-peap` / `eap-ttls` | The method **offered first** on EAP-Identity. |
+| **Enabled EAP Handlers** (`EapEnabledHandlers`) | `eap-tls,eap-peap,eap-ttls` | same | Allow-list; `*` = all. A client may **NAK** to another method, honoured only if it is enabled here. |
+| **EAP-TLS Server Certificate** (`EapTlsCertFile`) | `/var/toughradius/eap/server.pem` | same | Presented for **all three** tunnelled methods. |
+| **EAP-TLS Server Private Key** (`EapTlsKeyFile`) | `/var/toughradius/eap/server.key` | same | — |
+| **EAP-TLS Client CA Bundle** (`EapTlsCaFile`) | `/var/toughradius/eap/ca.pem` | *(unused)* | **Required for EAP-TLS** (verifies client certs); PEAP/TTLS are server-only and ignore it. |
+| **EAP-TLS Minimum TLS Version** (`EapTlsMinVersion`) | `1.2` | `1.2` | PEAP/TTLS are pinned to **TLS 1.2** regardless. |
+
+> Certificate/key/CA are re-read **between handshakes**, so you can rotate them
+> without restarting the RADIUS service. Until the required files are all set,
+> EAP **safe-rejects** (`ErrTLSNotConfigured`) rather than authenticating without
+> trust anchors — so a half-configured server never lets anyone in.
+
+#### 2. Create the users
+
+| Method | Username to create | Password field | Comes from |
+| --- | --- | --- | --- |
+| **EAP-TLS** | the cert **Peer-Id**, e.g. `alice@example.com` | **unused** (any placeholder) | cert identity matched in `tlsengine/identity.go` |
+| **PEAP-MSCHAPv2** | the login name, e.g. `bob` | the user's real password | inner MSCHAPv2 vs `GetPassword` in `peap_inner.go` |
+| **EAP-TTLS** (PAP or MS-CHAP-V2) | the login name, e.g. `carol` | the user's real password | inner PAP/MSCHAPv2 vs `GetPassword` in `ttls_inner.go` |
+
+Each user still needs **status = enabled**, a **future expiry**, and a **rate
+profile** (rate / pool / concurrency apply exactly as in Scenario A).
+
+> **The single biggest passthrough trap — the outer (anonymous) identity.**
+> ToughRADIUS loads the user record from the **outer `User-Name`** and looks up
+> the password from *that* record; mapping a separate *anonymous* outer identity
+> to the real account is not yet implemented (deferred to M8.4). So for
+> **PEAP / TTLS the outer identity must equal the real username** — on the
+> supplicant, **leave “anonymous identity” blank** (it then sends the real
+> username in the clear outer identity) **or set it equal to the username**. An
+> outer identity of `anonymous` is rejected as *user not found*. EAP-TLS is
+> unaffected (its identity comes from the certificate).
+
+### On the device side (RouterOS, reference example, verify on your firmware)
+
+First register this router under **NAS devices** in ToughRADIUS (its source IP +
+shared secret; vendor *MikroTik* if you also want `Mikrotik-Rate-Limit`, otherwise
+*Standard* — EAP itself needs no VSA). Then point the AP at ToughRADIUS and make
+the security profile **pass EAP through**:
+
+```routeros
+# 1) RADIUS server for the wireless service (same secret as the NAS record)
+/radius add service=wireless address=<TOUGHRADIUS_IP> secret=<SECRET> timeout=3s
+
+# 2a) CLASSIC /interface wireless — passthrough is the key word
+/interface wireless security-profiles add name=eap-passthrough \
+    authentication-types=wpa2-eap eap-methods=passthrough \
+    radius-eap-accounting=yes \
+    unicast-ciphers=aes-ccm group-ciphers=aes-ccm
+/interface wireless set wlan1 security-profile=eap-passthrough \
+    ssid="ToughRADIUS-EAP" mode=ap-bridge disabled=no
+
+# 2b) …or CAPsMAN (matches the reference repo's topology)
+/caps-man security add name=eap-passthrough authentication-types=wpa2-eap \
+    encryption=aes-ccm group-encryption=aes-ccm eap-methods=passthrough \
+    eap-radius-accounting=yes
+# attach security=eap-passthrough to your /caps-man configuration, then provision
+
+# 2c) …or the new /interface wifi (wifiwave2, ROS 7.13+): passthrough is IMPLICIT
+/interface wifi security add name=eap-sec authentication-types=wpa2-eap,wpa3-eap
+/interface wifi set wifi1 security=eap-sec \
+    configuration.ssid="ToughRADIUS-EAP" disabled=no
+```
+
+> `eap-methods=passthrough` (classic / CAPsMAN) is exactly what makes the router a
+> relay instead of an EAP terminator. The new `/interface wifi` stack has no
+> `eap-methods` knob — selecting a `wpa2-eap`/`wpa3-eap` security profile makes it
+> relay to the configured `service=wireless` RADIUS automatically.
+
+### Verification
+
+`radtest` **cannot** drive EAP. Use `eapol_test` (from `wpa_supplicant` /
+hostap) — the same tool the project's
+[EAP acceptance reports](./eap-acceptance-reports.md) run (v2.10). It talks
+RADIUS straight to ToughRADIUS, so you can validate the server **before**
+touching a real radio. Save one of these and run
+`eapol_test -c <file>.conf -a <TOUGHRADIUS_IP> -p 1812 -s <SECRET>` — a pass
+prints `SUCCESS`:
+
+```ini
+# eap-tls.conf  — certificate, password-less
+network={
+    key_mgmt=WPA-EAP
+    eap=TLS
+    identity="alice@example.com"      # == the cert SAN email == the TR username
+    ca_cert="/etc/eap/ca.pem"         # trust ToughRADIUS's server cert
+    client_cert="/etc/eap/alice.pem"
+    private_key="/etc/eap/alice.key"
+}
+```
+
+```ini
+# peap-mschapv2.conf
+network={
+    key_mgmt=WPA-EAP
+    eap=PEAP
+    identity="bob"                    # outer == real username (no anonymous id)
+    password="<bob-password>"
+    ca_cert="/etc/eap/ca.pem"
+    phase2="auth=MSCHAPV2"
+}
+```
+
+```ini
+# ttls-pap.conf
+network={
+    key_mgmt=WPA-EAP
+    eap=TTLS
+    identity="carol"
+    anonymous_identity="carol"        # must equal identity (see the trap above)
+    password="<carol-password>"
+    ca_cert="/etc/eap/ca.pem"
+    phase2="auth=PAP"                 # or auth=MSCHAPV2; CHAP/MS-CHAP unsupported
+}
+```
+
+- **ToughRADIUS log**: a successful run logs
+  `radius auth success … is_eap=true result=success`; the session appears on the
+  **Online sessions** page (with accounting once the radio is live).
+- **Router side**: `/log print where topics~"radius,wireless"`; for an associated
+  client `/interface wireless registration-table print` (classic) or
+  `/interface wifi registration-table print` (wifi).
+- **EAP-TLS and EAP-TTLS (PAP & MS-CHAP-V2)** verify cleanly end-to-end with
+  `eapol_test`. For **PEAP-MSCHAPv2**, `eapol_test` currently hits a documented
+  inner-framing interop gap, so the acceptance harness validates PEAP with the
+  in-process integration test instead (see
+  [EAP Acceptance Reports](./eap-acceptance-reports.md)); real Windows / Android /
+  iOS PEAP supplicants interoperate, so test PEAP with an actual client.
+
+### Troubleshooting (symptom → locate → fix)
+
+- **EAP-TLS reject, reply `… handshake failed`** → the client certificate does not
+  chain to the **`EapTlsCaFile`** CA (or the wrong CA bundle is configured).
+  Re-issue the client cert from the same `ca.pem`, or fix the CA path.
+- **EAP-TLS reject, reply `… identity … does not match`** → the user's
+  **username ≠ the cert Peer-Id**. Remember the order **SAN email → SAN DNS → CN**
+  and that a SAN cert's `CN` is ignored: for the sample cert the username must be
+  `alice@example.com`. Either rename the user or issue a CN-only cert and set the
+  username to the CN.
+- **Client refuses to connect / “can’t verify server”** → the device does not
+  trust **ToughRADIUS's** CA. Install `ca.pem` on the client; on **Android 11+**
+  also set the **Domain** field to the server cert CN/SAN (`radius.example.com`),
+  which Android now enforces.
+- **PEAP / TTLS reject as “user not found” although the password is right** → an
+  **anonymous outer identity** was used. Clear it (or set it to the real username)
+  so the outer `User-Name` equals the account — see the trap above.
+- **No EAP challenge at all / immediate reject** → `EapTlsCertFile` + `EapTlsKeyFile`
+  (and `EapTlsCaFile` for EAP-TLS) are not **all** set, so EAP safe-rejects. Set the
+  paths; no restart needed.
+- **The method you want is never offered** → the default `EapMethod` is `eap-md5`,
+  which is invalid for WPA-Enterprise. Set `EapMethod` to your tunnelled method and
+  include it (and any you accept via client NAK) in **Enabled EAP Handlers**.
+- **EAP-TTLS inner auth rejected** → only **inner PAP and MS-CHAP-V2** are
+  implemented; inner CHAP / MS-CHAP / tunnelled-EAP are not. Also the TTLS tunnel is
+  pinned to **TLS 1.2** — a TLS-1.3-only supplicant won't complete phase 2.
+- **Auth works but no accounting / no online session** → enable
+  `radius-eap-accounting=yes` (classic) / `eap-radius-accounting=yes` (CAPsMAN) and
+  make sure UDP **1813** reaches ToughRADIUS.
+
+---
+
 ## Related chapters
 
 - [Vendor Integration Guide · MikroTik](./vendor-guide.md) — attribute reference
