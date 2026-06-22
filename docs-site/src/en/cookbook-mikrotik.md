@@ -265,18 +265,18 @@ EAP-TTLS for legacy / LDAP back ends).
 >
 > 1. **The trust anchor moves to ToughRADIUS.** Clients no longer trust `RouterCA`;
 >    they must trust the **CA that signed ToughRADIUS's server certificate**
->    (`EapTlsCertFile`). You distribute *that* CA to client devices.
+>    selected in `EapTlsServerCert`. You distribute *that* CA to client devices.
 > 2. **The router holds no user/cert material for auth.** All identities live on
 >    ToughRADIUS, so you get its account lifecycle, rate profiles, online-session
 >    view and accounting for free.
 
 ### On the ToughRADIUS side
 
-#### 0. Prepare the certificates (PEM on disk)
+#### 0. Prepare the certificates to import
 
-ToughRADIUS loads PEM files from disk (paths set in the config items below). A
-minimal in-house CA with `openssl` — EC keys keep the TLS records small, which
-matters for EAP fragmentation:
+Generate PEM material first, then import it into ToughRADIUS's managed
+certificate store. A minimal in-house CA with `openssl` — EC keys keep the TLS
+records small, which matters for EAP fragmentation:
 
 ```bash
 # Root CA (distribute ca.pem to every client device)
@@ -311,10 +311,16 @@ openssl pkcs12 -export -inkey alice.key -in alice.pem -certfile ca.pem \
 > is present the `CN` is **not** accepted as an alternate. So with the cert above
 > the matching ToughRADIUS username is **`alice@example.com`**, not `alice`.
 
-#### 1. Upload the material and set the config items
+#### 1. Import the material and select managed certificates
 
-Copy `server.pem`, `server.key`, and `ca.pem` onto the ToughRADIUS host (e.g.
-`/var/toughradius/eap/`), then set these on **System config → RADIUS**
+Open **Certificates** and import:
+
+- `server.pem` with its matching `server.key` as a server certificate, for
+  example local name `eap-server`.
+- `ca.pem` as the client-CA certificate, for example local name
+  `eap-client-ca`.
+
+Then open **System config → RADIUS** and select those names on the EAP settings
 (anchored to `internal/app/config_schemas.json` /
 `eap/handlers/tls_config.go`):
 
@@ -322,15 +328,15 @@ Copy `server.pem`, `server.key`, and `ca.pem` onto the ToughRADIUS host (e.g.
 | --- | --- | --- | --- |
 | **EAP Method** (`EapMethod`) | `eap-tls` | `eap-peap` / `eap-ttls` | The method **offered first** on EAP-Identity. |
 | **Enabled EAP Handlers** (`EapEnabledHandlers`) | `eap-tls,eap-peap,eap-ttls` | same | Allow-list; `*` = all. A client may **NAK** to another method, honoured only if it is enabled here. |
-| **EAP-TLS Server Certificate** (`EapTlsCertFile`) | `/var/toughradius/eap/server.pem` | same | Presented for **all three** tunnelled methods. |
-| **EAP-TLS Server Private Key** (`EapTlsKeyFile`) | `/var/toughradius/eap/server.key` | same | — |
-| **EAP-TLS Client CA Bundle** (`EapTlsCaFile`) | `/var/toughradius/eap/ca.pem` | *(unused)* | **Required for EAP-TLS** (verifies client certs); PEAP/TTLS are server-only and ignore it. |
+| **EAP-TLS Server Certificate** (`EapTlsServerCert`) | `eap-server` | same | Managed certificate presented for **all three** tunnelled methods; it must include the matching private key. |
+| **EAP-TLS Client CA** (`EapTlsClientCa`) | `eap-client-ca` | *(unused)* | **Required for EAP-TLS** (verifies client certs); PEAP/TTLS are server-only and ignore it. |
 | **EAP-TLS Minimum TLS Version** (`EapTlsMinVersion`) | `1.2` | `1.2` | PEAP/TTLS are pinned to **TLS 1.2** regardless. |
 
-> Certificate/key/CA are re-read **between handshakes**, so you can rotate them
-> without restarting the RADIUS service. Until the required files are all set,
-> EAP **safe-rejects** (`ErrTLSNotConfigured`) rather than authenticating without
-> trust anchors — so a half-configured server never lets anyone in.
+> Managed certificate selections are resolved **between handshakes**, so you can
+> rotate imported certificates without restarting the RADIUS service. Until the
+> required managed certificates are selected, EAP **safe-rejects**
+> (`ErrTLSNotConfigured`) rather than authenticating without trust anchors — so a
+> half-configured server never lets anyone in.
 
 #### 2. Create the users
 
@@ -452,8 +458,9 @@ network={
 ### Troubleshooting (symptom → locate → fix)
 
 - **EAP-TLS reject, reply `… handshake failed`** → the client certificate does not
-  chain to the **`EapTlsCaFile`** CA (or the wrong CA bundle is configured).
-  Re-issue the client cert from the same `ca.pem`, or fix the CA path.
+  chain to the managed **`EapTlsClientCa`** CA (or the wrong CA was selected).
+  Re-issue the client cert from the same `ca.pem`, or select the correct imported
+  client CA.
 - **EAP-TLS reject, reply `… identity … does not match`** → the user's
   **username ≠ the cert Peer-Id**. Remember the order **SAN email → SAN DNS → CN**
   and that a SAN cert's `CN` is ignored: for the sample cert the username must be
@@ -466,9 +473,10 @@ network={
 - **PEAP / TTLS reject as “user not found” although the password is right** → an
   **anonymous outer identity** was used. Clear it (or set it to the real username)
   so the outer `User-Name` equals the account — see the trap above.
-- **No EAP challenge at all / immediate reject** → `EapTlsCertFile` + `EapTlsKeyFile`
-  (and `EapTlsCaFile` for EAP-TLS) are not **all** set, so EAP safe-rejects. Set the
-  paths; no restart needed.
+- **No EAP challenge at all / immediate reject** → `EapTlsServerCert` (and
+  `EapTlsClientCa` for EAP-TLS) is not selected, or the selected server
+  certificate has no private key, so EAP safe-rejects. Import the certificate
+  material and select the managed names; no restart needed.
 - **The method you want is never offered** → the default `EapMethod` is `eap-md5`,
   which is invalid for WPA-Enterprise. Set `EapMethod` to your tunnelled method and
   include it (and any you accept via client NAK) in **Enabled EAP Handlers**.
