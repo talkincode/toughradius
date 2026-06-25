@@ -14,8 +14,6 @@ import (
 	"fmt"
 	"math/big"
 	"net"
-	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -174,30 +172,66 @@ func seedEAPTLSUser(t *testing.T, profileID int64, username string) {
 	require.NoError(t, h.appCtx.DB().Create(user).Error)
 }
 
-// configureEAPTLS writes the server certificate/key and CA bundle to disk and
-// points the dynamic EAP-TLS settings at them, switching the server's EAP method
-// to eap-tls. The settings provider reads these on every handshake, so the live
+// configureEAPTLS stores the server certificate/key and client CA bundle as
+// managed certificates (domain.SysCert) and points the dynamic EAP-TLS settings
+// at them by name, switching the server's EAP method to eap-tls. This mirrors an
+// operator selecting certificates on the Certificates page; the settings
+// provider resolves the managed certificates on every handshake, so the live
 // server picks up the change without a restart (milestone M1.5).
 func configureEAPTLS(t *testing.T, serverCert tls.Certificate, caPEMs ...[]byte) {
 	t.Helper()
-	dir := t.TempDir()
-	certPath := filepath.Join(dir, "server-cert.pem")
-	keyPath := filepath.Join(dir, "server-key.pem")
-	caPath := filepath.Join(dir, "client-ca.pem")
+	serverName := seedManagedServerCert(t, serverCert)
+	caName := seedManagedCA(t, caPEMs...)
 
-	require.NoError(t, os.WriteFile(certPath, certificatePEM(t, serverCert), 0o600))
-	require.NoError(t, os.WriteFile(keyPath, privateKeyPEM(t, serverCert.PrivateKey), 0o600))
+	cm := h.appCtx.ConfigMgr()
+	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsServerCert, serverName))
+	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsClientCa, caName))
+	require.NoError(t, cm.Set("radius", "EapMethod", "eap-tls"))
+}
+
+// seedManagedServerCert stores the EAP server certificate/key as a managed
+// SysCert row and returns its unique local name. The CertStore resolver loads it
+// by name on every handshake, so EAP-TLS/PEAP/TTLS material comes solely from the
+// managed certificate store (no on-disk file paths).
+func seedManagedServerCert(t *testing.T, serverCert tls.Certificate) string {
+	t.Helper()
+	name := fmt.Sprintf("it-eap-server-%d", common.UUIDint64())
+	rec := &domain.SysCert{
+		ID:         common.UUIDint64(),
+		Name:       name,
+		CertType:   "server",
+		Cert:       string(certificatePEM(t, serverCert)),
+		PrivateKey: string(privateKeyPEM(t, serverCert.PrivateKey)),
+		NotBefore:  time.Now().Add(-time.Hour),
+		NotAfter:   time.Now().Add(24 * time.Hour),
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	require.NoError(t, h.appCtx.DB().Create(rec).Error)
+	return name
+}
+
+// seedManagedCA stores a CA bundle as a managed SysCert row and returns its
+// unique local name.
+func seedManagedCA(t *testing.T, caPEMs ...[]byte) string {
+	t.Helper()
 	bundle := make([]byte, 0)
 	for _, p := range caPEMs {
 		bundle = append(bundle, p...)
 	}
-	require.NoError(t, os.WriteFile(caPath, bundle, 0o600))
-
-	cm := h.appCtx.ConfigMgr()
-	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsCertFile, certPath))
-	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsKeyFile, keyPath))
-	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsCaFile, caPath))
-	require.NoError(t, cm.Set("radius", "EapMethod", "eap-tls"))
+	name := fmt.Sprintf("it-eap-ca-%d", common.UUIDint64())
+	rec := &domain.SysCert{
+		ID:        common.UUIDint64(),
+		Name:      name,
+		CertType:  "ca",
+		Cert:      string(bundle),
+		NotBefore: time.Now().Add(-time.Hour),
+		NotAfter:  time.Now().Add(24 * time.Hour),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	require.NoError(t, h.appCtx.DB().Create(rec).Error)
+	return name
 }
 
 // restoreEapMethod captures the current EAP method and restores it when the test

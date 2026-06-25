@@ -52,6 +52,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&domain.RadiusSessionActionAudit{},
 		&domain.SysOpr{},
 		&domain.SysConfig{},
+		&domain.SysCert{},
 	)
 	require.NoError(t, err)
 
@@ -117,6 +118,7 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 		&domain.RadiusSessionActionAudit{},
 		&domain.SysOpr{},
 		&domain.SysConfig{},
+		&domain.SysCert{},
 	)
 	require.NoError(t, err)
 

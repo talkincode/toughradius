@@ -94,9 +94,9 @@ NAS 可用不同密钥，无需统一。
 
 ### EAP-TLS / PEAP / EAP-TTLS 启动不了
 
-基于 TLS 的 EAP 需要在系统配置中设置 `EapTlsCertFile` + `EapTlsKeyFile`——
-留空时这些方法按设计处于禁用状态。用 `cmd/certgen` 生成服务器证书、填好
-路径后重试。`EapTlsCaFile` 仅在需要校验客户端证书（EAP-TLS）时配置。
+基于 TLS 的 EAP 需要在系统配置中选择 `EapTlsServerCert`——
+留空时这些方法按设计处于禁用状态。先用 `cmd/certgen` 生成服务器证书，在
+「证书管理」中导入后，于系统配置选择该证书名称即可。`EapTlsClientCa` 仅在需要校验客户端证书（EAP-TLS）时选择。
 
 ### 服务器与设备时钟不同步会有什么影响？
 

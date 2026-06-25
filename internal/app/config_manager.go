@@ -37,6 +37,7 @@ type ConfigSchemaJSON struct {
 	Title       string   `json:"title"`
 	TitleI18n   string   `json:"title_i18n"`
 	DescI18n    string   `json:"description_i18n"`
+	Group       string   `json:"group"` // UI grouping key (defaults to the key category)
 }
 
 // ConfigSchemasJSON groups configuration definitions
@@ -56,6 +57,7 @@ type ConfigSchema struct {
 	Title       string
 	TitleI18n   string
 	DescI18n    string
+	Group       string             // UI grouping key (defaults to the key category)
 	Validator   func(string) error // Custom validator
 }
 
@@ -115,6 +117,7 @@ func (cm *ConfigManager) loadSchemasFromJSON() error {
 			Title:       schemaJSON.Title,
 			TitleI18n:   schemaJSON.TitleI18n,
 			DescI18n:    schemaJSON.DescI18n,
+			Group:       schemaJSON.Group,
 		}
 		cm.register(schema)
 	}
@@ -152,7 +155,7 @@ func (cm *ConfigManager) registerHardcodedSchemas() {
 		Type:        TypeString,
 		Default:     "eap-md5",
 		Enum:        []string{"eap-md5", "eap-mschapv2", "eap-tls", "eap-peap", "eap-ttls"},
-		Description: "EAP authentication method. eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 carries an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require EapTlsCertFile/EapTlsKeyFile and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.",
+		Description: "EAP authentication method. eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 carries an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require a server certificate (EapTlsServerCert) and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.",
 	})
 
 	cm.register(&ConfigSchema{

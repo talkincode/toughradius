@@ -103,8 +103,8 @@
 | -- | ------ | ---- |
 | `EapMethod` | `eap-md5` | 当前 EAP 方法：`eap-md5`、`eap-mschapv2`、`eap-tls`、`eap-peap`、`eap-ttls` |
 | `EapEnabledHandlers` | `*` | 允许的 EAP 处理器逗号白名单 |
-| `EapTlsCertFile` / `EapTlsKeyFile` | 空 | EAP-TLS/PEAP/TTLS 的服务器证书/私钥；**留空即禁用基于 TLS 的 EAP** |
-| `EapTlsCaFile` | 空 | 校验客户端证书的 CA 链 |
+| `EapTlsServerCert` | 空 | EAP-TLS/PEAP/TTLS 出示的托管服务器证书名称（在「证书管理」中导入并选择）；**留空即禁用基于证书的 EAP** |
+| `EapTlsClientCa` | 空 | 校验客户端证书链的托管 CA 证书名称（仅 EAP-TLS 需要） |
 | `EapTlsMinVersion` | `1.2` | 最低 TLS 版本（`1.2`/`1.3`） |
 | `IgnorePassword` | `false` | 跳过密码校验（仅测试用） |
 | `AccountingHistoryDays` | `90` | 计费历史保留天数（`@daily` 清理；`0` 关闭） |

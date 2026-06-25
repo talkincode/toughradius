@@ -220,9 +220,9 @@ func TestConfigManagerJSON_EapTlsSchemas(t *testing.T) {
 	}
 	require.NoError(t, cm.loadSchemasFromJSON())
 
-	// Certificate/key/CA path items: string type, empty default (EAP-TLS
-	// disabled until configured), with i18n keys wired for the UI.
-	for _, key := range []string{"radius.EapTlsCertFile", "radius.EapTlsKeyFile", "radius.EapTlsCaFile"} {
+	// Managed certificate reference items: string type, empty default (EAP-TLS
+	// disabled until a certificate is selected), with i18n keys wired for the UI.
+	for _, key := range []string{"radius.EapTlsServerCert", "radius.EapTlsClientCa"} {
 		schema, exists := cm.schemas[key]
 		require.Truef(t, exists, "%s configuration should exist", key)
 		assert.Equalf(t, TypeString, schema.Type, "%s should be string type", key)

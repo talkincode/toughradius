@@ -91,6 +91,7 @@ func TestTableNameUniqueness(t *testing.T) {
 		"sys_config":                  true,
 		"sys_opr":                     true,
 		"sys_opr_log":                 true,
+		"sys_cert":                    true,
 		"net_node":                    true,
 		"net_nas":                     true,
 		"radius_profile":              true,

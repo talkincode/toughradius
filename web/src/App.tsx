@@ -64,6 +64,13 @@ import {
   OperatorCreate,
   OperatorShow,
 } from './resources/operators';
+import {
+  CertificateList,
+  CertificateEdit,
+  CertificateCreate,
+  CertificateShow,
+  CertificateIcon,
+} from './resources/certificates';
 
 const App = () => (
   <Admin
@@ -138,6 +145,16 @@ const App = () => (
       edit={OperatorEdit}
       create={OperatorCreate}
       show={OperatorShow}
+    />
+
+    {/* 证书管理 */}
+    <Resource
+      name="system/certificate"
+      list={CertificateList}
+      edit={CertificateEdit}
+      create={CertificateCreate}
+      show={CertificateShow}
+      icon={CertificateIcon}
     />
 
     {/* 自定义路由 */}

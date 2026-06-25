@@ -262,17 +262,15 @@ func seedLoopbackAcceptanceNAS(t *testing.T) {
 func configurePEAPWithCA(t *testing.T, serverCert tls.Certificate, caPEM []byte) {
 	t.Helper()
 	configurePEAP(t, serverCert)
-	caPath := filepath.Join(t.TempDir(), "peap-ca.pem")
-	require.NoError(t, os.WriteFile(caPath, caPEM, 0o600))
-	require.NoError(t, h.appCtx.ConfigMgr().Set("radius", eaphandlers.SettingEapTlsCaFile, caPath))
+	caName := seedManagedCA(t, caPEM)
+	require.NoError(t, h.appCtx.ConfigMgr().Set("radius", eaphandlers.SettingEapTlsClientCa, caName))
 }
 
 func configureTTLSWithCA(t *testing.T, serverCert tls.Certificate, caPEM []byte) {
 	t.Helper()
 	configureTTLS(t, serverCert)
-	caPath := filepath.Join(t.TempDir(), "ttls-ca.pem")
-	require.NoError(t, os.WriteFile(caPath, caPEM, 0o600))
-	require.NoError(t, h.appCtx.ConfigMgr().Set("radius", eaphandlers.SettingEapTlsCaFile, caPath))
+	caName := seedManagedCA(t, caPEM)
+	require.NoError(t, h.appCtx.ConfigMgr().Set("radius", eaphandlers.SettingEapTlsClientCa, caName))
 }
 
 func writeEAPTLSConfig(t *testing.T, dir, name, identity string, ca *eapTLSTestCA, clientCert tls.Certificate) string {

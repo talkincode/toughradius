@@ -153,7 +153,7 @@ Three independent certificate consumers:
 | -------- | ----- | ----- |
 | **RadSec** | `radiusd.radsec_ca_cert` / `radsec_cert` / `radsec_key` | TLS 1.2+; client certificates are verified **if presented** (`VerifyClientCertIfGiven`) |
 | **Web HTTPS** | `{workdir}/private/toughradius.tls.crt` + `.key` (fixed paths) | Listens on `web.tls_port` when `web.tls_enabled` is true; failure to load is logged, HTTP keeps running |
-| **EAP (TLS/PEAP/TTLS)** | System Config → `EapTlsCertFile`, `EapTlsKeyFile`, `EapTlsCaFile`, `EapTlsMinVersion` | Empty cert/key disables TLS-based EAP methods |
+| **EAP (TLS/PEAP/TTLS)** | System Config → `EapTlsServerCert`, `EapTlsClientCa`, `EapTlsMinVersion` (import certificates on the Certificates page and select them by name) | No server certificate selected disables certificate-based EAP methods |
 
 Generate a complete CA/server/client set with the bundled tool:
 

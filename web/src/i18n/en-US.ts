@@ -28,6 +28,7 @@ const customEnglishMessages: TranslationMessages = {
     network_nodes: 'Network Nodes',
     system: 'System Management',
     operators: 'Operators Management',
+    certificates: 'Certificates',
     system_config: 'System Configuration',
     account_settings: 'Account Settings',
   },
@@ -423,6 +424,81 @@ const customEnglishMessages: TranslationMessages = {
         remark: 'Optional remark, max 500 characters',
       },
     },
+    'system/certificate': {
+      name: 'Certificate |||| Certificates',
+      fields: {
+        id: 'ID',
+        name: 'Name',
+        cert_type: 'Certificate Type',
+        cert: 'Certificate (PEM)',
+        private_key: 'Private Key (PEM)',
+        subject: 'Subject',
+        issuer: 'Issuer',
+        serial: 'Serial Number',
+        fingerprint: 'SHA-256 Fingerprint',
+        not_before: 'Not Before',
+        not_after: 'Not After',
+        has_key: 'Private Key Stored',
+        remark: 'Remark',
+        created_at: 'Created At',
+        updated_at: 'Updated At',
+      },
+      cert_types: {
+        server: 'Server',
+        ca: 'CA',
+      },
+      actions: {
+        export: 'Export',
+      },
+      filter: {
+        title: 'Filters',
+      },
+      list: {
+        total: 'Total %{total} certificates',
+      },
+      empty: {
+        title: 'No certificates',
+        description: 'Click Create to import the first certificate',
+      },
+      sections: {
+        import: {
+          title: 'Import Certificate',
+          description: 'Paste certificate and optional private key PEM content',
+        },
+        basic: {
+          title: 'Basic Information',
+          description: 'Editable local certificate information',
+        },
+        metadata: {
+          title: 'Certificate Metadata',
+          description: 'Parsed certificate details',
+        },
+        replace: {
+          title: 'Replace Certificate Material',
+          description: 'Leave blank to keep the current certificate/key',
+        },
+        validity: {
+          title: 'Validity',
+          description: 'Certificate validity window',
+        },
+        remark: {
+          title: 'Remark',
+        },
+        pem: {
+          title: 'Certificate PEM',
+          description: 'Public certificate material only',
+        },
+      },
+      helpers: {
+        name: 'Unique local certificate name',
+        private_key: 'Required for server certificates; optional for CA certificates',
+        replace_material: 'Leave blank to keep the current certificate/key',
+      },
+      notifications: {
+        export_success: 'Certificate exported',
+        export_error: 'Export failed',
+      },
+    },
     'system/operators': {
       name: 'Operator |||| Operators',
       fields: {
@@ -603,35 +679,36 @@ const customEnglishMessages: TranslationMessages = {
           title: 'LDAP / AD Authentication',
           description: 'LDAP / Active Directory bind authentication backend (PAP-family only, disabled by default)',
         },
+        eap: {
+          title: 'EAP Configuration',
+          description: 'EAP (Extensible Authentication Protocol) methods, handlers and server/client certificate selection',
+        },
       },
       value_range: 'Range',
       min: 'Min',
       max: 'Max',
       available_values: 'Available values',
       config_items: 'configuration items',
+      cert_select_none: '(none)',
     },
   },
   config: {
     radius: {
       eap_method: {
         title: 'EAP Method',
-        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require EapTlsCertFile/EapTlsKeyFile and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.',
+        description: 'Select the EAP authentication algorithm exposed to NAS clients (e.g., eap-md5, eap-mschapv2). eap-peap reuses the EAP-TLS server certificate/key to build the outer TLS tunnel and runs EAP-MSCHAPv2 inside it for Windows/AD compatibility; the inner MS-CHAPv2 has an NTLMv1-like attack surface, so keep the outer TLS strong and prefer eap-tls where clients support certificates. eap-ttls (RFC 5281) likewise builds a server-only TLS tunnel and authenticates legacy inner credentials for LDAP / legacy / mixed back ends: inner PAP (the cleartext password is protected only by the TLS tunnel) and inner MS-CHAP-V2 (which shares the same NTLMv1-like attack surface). Both eap-peap and eap-ttls require a server certificate (EapTlsServerCert) and pin the tunnel to TLS 1.2; choose eap-tls when every client can present a certificate.',
       },
       eap_enabled_handlers: {
         title: 'Enabled EAP Handlers',
         description: 'Comma-separated list of handler names. Use * to allow every registered handler.',
       },
-      eap_tls_cert_file: {
+      eap_tls_server_cert: {
         title: 'EAP-TLS Server Certificate',
-        description: 'Path to the PEM server certificate presented during the EAP-TLS handshake. Leave empty to keep EAP-TLS disabled.',
+        description: 'Select a managed server certificate (Certificate Management) presented during EAP-TLS/PEAP/TTLS handshakes. Leave empty to keep certificate-based EAP disabled.',
       },
-      eap_tls_key_file: {
-        title: 'EAP-TLS Server Private Key',
-        description: 'Path to the PEM private key matching the EAP-TLS server certificate. Leave empty to keep EAP-TLS disabled.',
-      },
-      eap_tls_ca_file: {
-        title: 'EAP-TLS Client CA Bundle',
-        description: 'Path to the PEM CA bundle used to verify EAP-TLS client certificate chains. Leave empty to keep EAP-TLS disabled.',
+      eap_tls_client_ca: {
+        title: 'EAP-TLS Client CA',
+        description: 'Select a managed CA certificate (Certificate Management) used to verify EAP-TLS client certificate chains. Required only for eap-tls (peap/ttls tunnels are server-only).',
       },
       eap_tls_min_version: {
         title: 'EAP-TLS Minimum TLS Version',

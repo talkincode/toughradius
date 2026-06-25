@@ -110,6 +110,9 @@ func getConfigSchemas(c echo.Context) error {
 		if schema.DescI18n != "" {
 			schemaData["description_i18n"] = schema.DescI18n
 		}
+		if schema.Group != "" {
+			schemaData["group"] = schema.Group
+		}
 
 		if len(schema.Enum) > 0 {
 			schemaData["enum"] = schema.Enum

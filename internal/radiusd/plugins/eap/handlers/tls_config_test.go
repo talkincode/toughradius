@@ -9,8 +9,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"math/big"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 	"time"
@@ -30,19 +28,40 @@ func newFakeReader(values map[string]string) *fakeSettingsReader {
 	return &fakeSettingsReader{values: values}
 }
 
-// writeTestCertFiles generates a self-signed certificate and writes the
-// certificate, its private key, and a CA bundle (the same self-signed cert) to
-// PEM files in a temp dir, returning their paths.
-func writeTestCertFiles(t *testing.T) (certFile, keyFile, caFile string) {
-	t.Helper()
+// fakeCertResolver is an in-memory CertResolver for testing managed-certificate
+// resolution. It is the sole source of EAP-TLS/PEAP/TTLS material.
+type fakeCertResolver struct {
+	certPEM []byte
+	keyPEM  []byte
+	caPEM   []byte
+	err     error
+}
 
+func (f *fakeCertResolver) ServerKeyPair(string) ([]byte, []byte, error) {
+	if f.err != nil {
+		return nil, nil, f.err
+	}
+	return f.certPEM, f.keyPEM, nil
+}
+
+func (f *fakeCertResolver) CABundle(string) ([]byte, error) {
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.caPEM, nil
+}
+
+// genTestCertPEM generates a self-signed certificate and returns the certificate
+// and private key as in-memory PEM bytes.
+func genTestCertPEM(t *testing.T) (certPEM, keyPEM []byte) {
+	t.Helper()
 	key, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
 		t.Fatalf("generate key: %v", err)
 	}
 	tmpl := &x509.Certificate{
-		SerialNumber:          big.NewInt(1),
-		Subject:               pkix.Name{CommonName: "toughradius-eap-tls-test"},
+		SerialNumber:          big.NewInt(2),
+		Subject:               pkix.Name{CommonName: "toughradius-managed-cert"},
 		NotBefore:             time.Now().Add(-time.Hour),
 		NotAfter:              time.Now().Add(time.Hour),
 		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign,
@@ -57,26 +76,9 @@ func writeTestCertFiles(t *testing.T) (certFile, keyFile, caFile string) {
 	if err != nil {
 		t.Fatalf("marshal key: %v", err)
 	}
-
-	dir := t.TempDir()
-	certFile = filepath.Join(dir, "server.crt")
-	keyFile = filepath.Join(dir, "server.key")
-	caFile = filepath.Join(dir, "ca.crt")
-
-	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
-	keyPEM := pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER})
-
-	mustWrite(t, certFile, certPEM)
-	mustWrite(t, keyFile, keyPEM)
-	mustWrite(t, caFile, certPEM)
-	return certFile, keyFile, caFile
-}
-
-func mustWrite(t *testing.T, path string, data []byte) {
-	t.Helper()
-	if err := os.WriteFile(path, data, 0o600); err != nil {
-		t.Fatalf("write %s: %v", path, err)
-	}
+	certPEM = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	keyPEM = pem.EncodeToMemory(&pem.Block{Type: "EC PRIVATE KEY", Bytes: keyDER})
+	return certPEM, keyPEM
 }
 
 func TestNewSettingsTLSConfigProvider_NilReader(t *testing.T) {
@@ -91,24 +93,38 @@ func TestNewSettingsTLSConfigProvider_NilReader(t *testing.T) {
 }
 
 func TestNewSettingsTLSConfigProvider_NotConfigured(t *testing.T) {
-	cases := map[string]map[string]string{
-		"all empty": {},
-		"only cert": {
-			"radius." + SettingEapTlsCertFile: "/tmp/server.crt",
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM, caPEM: certPEM}
+
+	cases := []struct {
+		name     string
+		values   map[string]string
+		resolver CertResolver
+	}{
+		{
+			name:     "no resolver even with refs",
+			values:   map[string]string{"radius." + SettingEapTlsServerCert: "srv", "radius." + SettingEapTlsClientCa: "ca"},
+			resolver: nil,
 		},
-		"cert and key but no CA": {
-			"radius." + SettingEapTlsCertFile: "/tmp/server.crt",
-			"radius." + SettingEapTlsKeyFile:  "/tmp/server.key",
+		{
+			name:     "resolver but no refs",
+			values:   map[string]string{},
+			resolver: resolver,
 		},
-		"whitespace-only values": {
-			"radius." + SettingEapTlsCertFile: "   ",
-			"radius." + SettingEapTlsKeyFile:  "\t",
-			"radius." + SettingEapTlsCaFile:   " ",
+		{
+			name:     "resolver with server ref but no client CA ref",
+			values:   map[string]string{"radius." + SettingEapTlsServerCert: "srv"},
+			resolver: resolver,
+		},
+		{
+			name:     "whitespace-only refs",
+			values:   map[string]string{"radius." + SettingEapTlsServerCert: "  ", "radius." + SettingEapTlsClientCa: "\t"},
+			resolver: resolver,
 		},
 	}
-	for name, values := range cases {
-		t.Run(name, func(t *testing.T) {
-			provider := NewSettingsTLSConfigProvider(newFakeReader(values))
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			provider := NewSettingsTLSConfigProvider(newFakeReader(tc.values), tc.resolver)
 			cfg, err := provider()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
@@ -121,14 +137,14 @@ func TestNewSettingsTLSConfigProvider_NotConfigured(t *testing.T) {
 }
 
 func TestNewSettingsTLSConfigProvider_ValidMaterial(t *testing.T) {
-	certFile, keyFile, caFile := writeTestCertFiles(t)
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM, caPEM: certPEM}
 	reader := newFakeReader(map[string]string{
-		"radius." + SettingEapTlsCertFile: certFile,
-		"radius." + SettingEapTlsKeyFile:  keyFile,
-		"radius." + SettingEapTlsCaFile:   caFile,
+		"radius." + SettingEapTlsServerCert: "srv",
+		"radius." + SettingEapTlsClientCa:   "ca",
 	})
 
-	cfg, err := NewSettingsTLSConfigProvider(reader)()
+	cfg, err := NewSettingsTLSConfigProvider(reader, resolver)()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -147,11 +163,11 @@ func TestNewSettingsTLSConfigProvider_ValidMaterial(t *testing.T) {
 }
 
 func TestNewSettingsTLSConfigProvider_MinVersion(t *testing.T) {
-	certFile, keyFile, caFile := writeTestCertFiles(t)
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM, caPEM: certPEM}
 	base := map[string]string{
-		"radius." + SettingEapTlsCertFile: certFile,
-		"radius." + SettingEapTlsKeyFile:  keyFile,
-		"radius." + SettingEapTlsCaFile:   caFile,
+		"radius." + SettingEapTlsServerCert: "srv",
+		"radius." + SettingEapTlsClientCa:   "ca",
 	}
 
 	tests := []struct {
@@ -171,7 +187,7 @@ func TestNewSettingsTLSConfigProvider_MinVersion(t *testing.T) {
 			}
 			values["radius."+SettingEapTlsMinVersion] = tc.configured
 
-			cfg, err := NewSettingsTLSConfigProvider(newFakeReader(values))()
+			cfg, err := NewSettingsTLSConfigProvider(newFakeReader(values), resolver)()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
@@ -185,63 +201,75 @@ func TestNewSettingsTLSConfigProvider_MinVersion(t *testing.T) {
 	}
 }
 
-func TestNewSettingsTLSConfigProvider_LoadErrors(t *testing.T) {
-	certFile, keyFile, caFile := writeTestCertFiles(t)
-
-	t.Run("missing cert file", func(t *testing.T) {
-		reader := newFakeReader(map[string]string{
-			"radius." + SettingEapTlsCertFile: filepath.Join(t.TempDir(), "nope.crt"),
-			"radius." + SettingEapTlsKeyFile:  keyFile,
-			"radius." + SettingEapTlsCaFile:   caFile,
-		})
-		if _, err := NewSettingsTLSConfigProvider(reader)(); err == nil {
-			t.Fatal("expected error for missing server certificate")
-		}
+func TestNewSettingsTLSConfigProvider_ResolverErrorSurfaces(t *testing.T) {
+	resolver := &fakeCertResolver{err: errResolver}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert: "srv",
+		"radius." + SettingEapTlsClientCa:   "ca",
 	})
-
-	t.Run("missing CA file", func(t *testing.T) {
-		reader := newFakeReader(map[string]string{
-			"radius." + SettingEapTlsCertFile: certFile,
-			"radius." + SettingEapTlsKeyFile:  keyFile,
-			"radius." + SettingEapTlsCaFile:   filepath.Join(t.TempDir(), "nope-ca.crt"),
-		})
-		if _, err := NewSettingsTLSConfigProvider(reader)(); err == nil {
-			t.Fatal("expected error for missing CA bundle")
-		}
-	})
-
-	t.Run("CA file without certificates", func(t *testing.T) {
-		emptyCA := filepath.Join(t.TempDir(), "empty-ca.crt")
-		mustWrite(t, emptyCA, []byte("not a pem certificate"))
-		reader := newFakeReader(map[string]string{
-			"radius." + SettingEapTlsCertFile: certFile,
-			"radius." + SettingEapTlsKeyFile:  keyFile,
-			"radius." + SettingEapTlsCaFile:   emptyCA,
-		})
-		_, err := NewSettingsTLSConfigProvider(reader)()
-		if err == nil {
-			t.Fatal("expected error for CA bundle with no certificates")
-		}
-		if !strings.Contains(err.Error(), "no PEM certificates") {
-			t.Fatalf("expected 'no PEM certificates' error, got %v", err)
-		}
-	})
+	if _, err := NewSettingsTLSConfigProvider(reader, resolver)(); err == nil {
+		t.Fatal("expected resolver error to surface")
+	}
 }
 
-func TestNewSettingsPEAPConfigProvider_ValidMaterial(t *testing.T) {
-	certFile, keyFile, _ := writeTestCertFiles(t)
+func TestNewSettingsTLSConfigProvider_ClientCANoPEM(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	// The CA bundle returned by the resolver contains no PEM certificates, so the
+	// provider must surface an explicit parse error rather than build an empty
+	// trust pool.
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM, caPEM: []byte("not a pem certificate")}
 	reader := newFakeReader(map[string]string{
-		"radius." + SettingEapTlsCertFile:   certFile,
-		"radius." + SettingEapTlsKeyFile:    keyFile,
+		"radius." + SettingEapTlsServerCert: "srv",
+		"radius." + SettingEapTlsClientCa:   "ca",
+	})
+	_, err := NewSettingsTLSConfigProvider(reader, resolver)()
+	if err == nil {
+		t.Fatal("expected error for CA bundle with no certificates")
+	}
+	if !strings.Contains(err.Error(), "no PEM certificates") {
+		t.Fatalf("expected 'no PEM certificates' error, got %v", err)
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_NotConfigured(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+
+	cases := []struct {
+		name     string
+		reader   TLSSettingsReader
+		resolver CertResolver
+	}{
+		{name: "nil reader", reader: nil, resolver: resolver},
+		{name: "resolver but no ref", reader: newFakeReader(map[string]string{}), resolver: resolver},
+		{name: "ref but no resolver", reader: newFakeReader(map[string]string{"radius." + SettingEapTlsServerCert: "srv"}), resolver: nil},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, err := NewSettingsPEAPConfigProvider(tc.reader, tc.resolver)()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if cfg != nil {
+				t.Fatalf("expected nil config when PEAP is not configured, got %#v", cfg)
+			}
+		})
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_ManagedCert(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert: "srv",
 		"radius." + SettingEapTlsMinVersion: "1.3",
 	})
-
-	cfg, err := NewSettingsPEAPConfigProvider(reader)()
+	cfg, err := NewSettingsPEAPConfigProvider(reader, resolver)()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if cfg == nil {
-		t.Fatal("expected non-nil config for PEAP server material")
+		t.Fatal("expected non-nil PEAP config from managed certificate")
 	}
 	if !cfg.ServerOnly {
 		t.Fatal("expected PEAP config to use server-only TLS")
@@ -254,27 +282,59 @@ func TestNewSettingsPEAPConfigProvider_ValidMaterial(t *testing.T) {
 	}
 }
 
-func TestNewSettingsPEAPConfigProvider_NotConfigured(t *testing.T) {
-	cases := map[string]map[string]string{
-		"nil reader": nil,
-		"all empty":  {},
-		"only cert": {
-			"radius." + SettingEapTlsCertFile: "server.crt",
-		},
+func TestNewSettingsTTLSConfigProvider_NotConfigured(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+
+	cases := []struct {
+		name     string
+		reader   TLSSettingsReader
+		resolver CertResolver
+	}{
+		{name: "nil reader", reader: nil, resolver: resolver},
+		{name: "resolver but no ref", reader: newFakeReader(map[string]string{}), resolver: resolver},
+		{name: "ref but no resolver", reader: newFakeReader(map[string]string{"radius." + SettingEapTlsServerCert: "srv"}), resolver: nil},
 	}
-	for name, values := range cases {
-		t.Run(name, func(t *testing.T) {
-			var reader TLSSettingsReader
-			if values != nil {
-				reader = newFakeReader(values)
-			}
-			cfg, err := NewSettingsPEAPConfigProvider(reader)()
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cfg, err := NewSettingsTTLSConfigProvider(tc.reader, tc.resolver)()
 			if err != nil {
 				t.Fatalf("unexpected error: %v", err)
 			}
 			if cfg != nil {
-				t.Fatalf("expected nil config when PEAP is not configured, got %#v", cfg)
+				t.Fatalf("expected nil config when TTLS is not configured, got %#v", cfg)
 			}
 		})
 	}
 }
+
+func TestNewSettingsTTLSConfigProvider_ManagedCert(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert: "srv",
+	})
+	cfg, err := NewSettingsTTLSConfigProvider(reader, resolver)()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected non-nil TTLS config from managed certificate")
+	}
+	if !cfg.ServerOnly {
+		t.Fatal("expected TTLS config to use server-only TLS")
+	}
+	if cfg.ClientCAs != nil {
+		t.Fatal("TTLS outer TLS must not require a client CA")
+	}
+	// EAP-TTLS pins the outer tunnel to TLS 1.2 (see provider docs).
+	if cfg.MaxVersion != tls.VersionTLS12 {
+		t.Fatalf("expected MaxVersion TLS 1.2, got %#x", cfg.MaxVersion)
+	}
+}
+
+var errResolver = errTest("resolver failure")
+
+type errTest string
+
+func (e errTest) Error() string { return string(e) }
