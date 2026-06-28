@@ -41,7 +41,8 @@ structure:
 ## Available cookbooks
 
 - [MikroTik RouterOS](./cookbook-mikrotik.md) — PPPoE broadband ISP speed tiers,
-  Hotspot + MAC authentication, CoA / forced disconnect and FUP.
+  Hotspot + MAC authentication, CoA / forced disconnect and FUP, and
+  WPA2/WPA3-Enterprise 802.1X EAP passthrough (EAP-TLS / PEAP / TTLS).
 - [Huawei BRAS / NetEngine](./cookbook-huawei.md) — broadband speed tiers with
   peak rate and AAA domain, line anti-fraud (MAC + VLAN binding) with dual-stack
   IPv6, CoA / forced disconnect and FUP.
