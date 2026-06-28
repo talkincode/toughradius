@@ -34,7 +34,7 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 | M2 | CoA dynamic authorization | TR-F010 / TR-F012 / TR-F013 | P1 | Delivered |
 | M3 | IPv6 capability closure | TR-F007 / TR-F011 / TR-F015 | P1 | Delivered |
 | M4 | Agent development system and quality gates | TR-F022 / TR-F024 | P2 | Delivered |
-| M5 | Vendor VSA coverage expansion | TR-F005 | P2 | Planned |
+| M5 | Vendor VSA coverage expansion | TR-F005 | P2 | In progress |
 | M6 | Observability and operations improvements | TR-F015 | P3 | Planned |
 | M7 | Upstream RADIUS library tracking and protocol compliance | TR-F021 / TR-F022 | P2 | In progress |
 | M8 | PEAPv0 / EAP-MSCHAPv2 authentication | TR-F004 | P1 | Delivered |
@@ -53,11 +53,11 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 
 ## Current Execution Queue
 
-The next executable milestone is **M5 vendor VSA expansion**. M14.6 now has CI-backed OpenLDAP acceptance coverage; M14.5 remains blocked until load evidence justifies connection pooling / reconnect work.
+The next executable milestone is **M5 vendor VSA expansion**: the M5.1 inventory and the M5.2/M5.3 parser + enhancer batch are delivered, and **M5.4** (Cisco `cisco-avpair` Access-Accept enhancer) is the next pickable subtask. M14.6 now has CI-backed OpenLDAP acceptance coverage; M14.5 remains blocked until load evidence justifies connection pooling / reconnect work.
 
 | Order | Task | Status | Acceptance focus |
 | --- | --- | --- | --- |
-| 1 | M5 vendor VSA expansion | Planned | Add parser/enhancer coverage with vendor packet samples |
+| 1 | M5 vendor VSA expansion | In progress | M5.1 inventory + M5.2/M5.3 parsers/enhancer delivered; M5.4 Cisco `cisco-avpair` enhancer next, with vendor packet samples |
 | 2 | M7 upstream and RFC compliance tracking | In progress | Evaluate upstream fixes and add RFC-backed regression tests when behavior changes |
 | 3 | M10 EAP-TLS 1.3 / RFC 9190 | Planned | Keep TLS 1.2 compatibility while adding TLS 1.3 key derivation and close-notify semantics |
 | 4 | M14.5 LDAP connection robustness | Blocked: waiting for load evidence | Revisit pooling/reconnect design only when connection cost or cancellation evidence justifies the complexity |
@@ -66,7 +66,10 @@ Agent-facing unchecked tasks:
 
 - [x] M14.6 LDAP integration acceptance tests: add CI-executable `test/integration/` coverage with a real OpenLDAP service container and seed LDIF. Delivered via `test/integration/ldap_test.go` plus CI / local compose OpenLDAP service wiring: plain PAP and `EAP-TTLS/PAP` authenticate through real LDAP bind while local `RadiusUser.Password` is deliberately wrong; wrong password rejects as `radus_reject_passwd_error`; directory unavailable and non-PAP CHAP reject as `radus_reject_ldap_error` with diagnostic reply text.
 - [ ] M14.5 (Blocked: waiting for load evidence) LDAP connection robustness: revisit pooling, reconnect, and request-context propagation only when load evidence shows connection setup cost or cancellation behavior justifies the added complexity.
-- [ ] M5.1 Inventory pending vendor VSA gaps and dictionary differences.
+- [x] M5.1 Inventory pending vendor VSA gaps and dictionary differences. Delivered: `docs/vendor-vsa-gap-baseline.md` refreshed to HEAD `9882f79e` — registered parsers `default + huawei + h3c + zte + radback + alcatel + aruba + juniper`, response enhancers `default + huawei + h3c + zte + mikrotik + ikuai + aruba`, a corrected gap matrix, a delta-since-#433 section, and the next-batch backlog. (The first baseline #433 was superseded once M5.2/M5.3 landed; `#470` had re-opened this checkbox.)
+- [x] M5.2 Add request-side vendor parsers for genuine MAC/VLAN request VSAs. Delivered: `radback` (#449), `alcatel` (#450), `aruba` (#451), and `juniper` (#453) request parsers, plus the `vendors.CodeAlcatel` / `CodeAruba` constants.
+- [x] M5.3 Add the first vendor Access-Accept response enhancer. Delivered: `aruba` response enhancer registered in `plugins/init.go` (#456) with sample-based tests.
+- [ ] M5.4 Add a Cisco `cisco-avpair` Access-Accept response enhancer (the most common vendor reply attribute; `cisco` already has its `Code*` constant and dictionary package, only the enhancer is missing). Follow the enhancer + `plugins/init.go` registration + sample-test pattern. Remaining enhancers (`alcatel` / `juniper` / `radback` / `microsoft` / `f5` / `hillstone` / `pfSense`) stay demand-driven.
 - [ ] M7.1 Manually evaluate important upstream `layeh.com/radius` fixes and decide whether to sync the `talkincode/radius` fork and update the `go.mod` replacement.
 - [ ] M10.1 Add TLS 1.3 handshake negotiation and TLS 1.2 fallback for EAP-TLS.
 

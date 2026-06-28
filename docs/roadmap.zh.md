@@ -34,7 +34,7 @@
 | M2 | CoA 动态授权支持 | TR-F010 / TR-F012 / TR-F013 | P1 | 已交付 |
 | M3 | IPv6 能力增强闭环 | TR-F007 / TR-F011 / TR-F015 | P1 | 已交付 |
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 已交付 |
-| M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 计划中 |
+| M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 进行中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已交付 |
@@ -160,9 +160,10 @@
 - **技能**：`.agents/skills/add-radius-vendor/SKILL.md`
 
 子任务：
-- [ ] M5.1 梳理待补厂商清单与字典差异
-- [ ] M5.2 逐厂商按现有模式接入 parser / enhancer
-- [ ] M5.3 厂商样例包覆盖解析与响应属性
+- [x] M5.1 梳理待补厂商清单与字典差异<br/>**已交付**：`docs/vendor-vsa-gap-baseline.md` 刷新至 HEAD `9882f79e` 的当前真实状态——已注册 parser `default + huawei + h3c + zte + radback + alcatel + aruba + juniper`、响应 enhancer `default + huawei + h3c + zte + mikrotik + ikuai + aruba`；修正差距矩阵、补「自 #433 首版以来的增量」小节与下一批 backlog。首版基线 #433 在 M5.2/M5.3 落地后已过时，且 `#470`（路线图英文优先化）一度把本勾选项重新打开，本轮据实重勾并刷新。仅文档、无运行逻辑变更。
+- [x] M5.2 逐厂商按现有模式接入 request parser（针对真正的厂商私有 MAC/VLAN 请求 VSA）<br/>**已交付**：`radback`（#449，MAC + VLAN）、`alcatel`（#450，MAC）、`aruba`（#451，VLAN）、`juniper`（#453，VoIP VLAN）request parser，并补 `vendors.CodeAlcatel` / `CodeAruba` 常量；各带样例解析测试。`mikrotik` / `ikuai` 请求侧用标准 `Calling-Station-Id`，其 VLAN VSA 属 Access-Accept 回执属性，dedicated parser 与 `DefaultParser` 行为一致，故不补。
+- [x] M5.3 首个厂商 Access-Accept 响应 enhancer<br/>**已交付**：`aruba` 响应 enhancer 注册进 `plugins/init.go`（#456），带样例响应属性测试。（原子任务标题「样例包覆盖解析与响应属性」已并入每厂商验收集——parser/enhancer 均随样例测试交付。）
+- [ ] M5.4 新增 Cisco `cisco-avpair` Access-Accept 响应 enhancer（最常见的厂商回执属性；`cisco` 已有 `Code*` 常量与字典包，仅缺 enhancer）。按 enhancer + `plugins/init.go` 注册 + 样例测试模式实现。其余 enhancer（`alcatel` / `juniper` / `radback` / `microsoft` / `f5` / `hillstone` / `pfSense`）按部署需求驱动。
 
 ## M6 — 可观测性与运维增强
 
