@@ -15,5 +15,6 @@ Weekly benchmark runs record ToughRADIUS performance signals from existing Go `B
 
 ## Retained Reports
 
+- [2026-06-29](https://github.com/talkincode/toughradius/blob/main/docs/reports/performance/2026-06-29.md)
 - [2026-06-22](https://github.com/talkincode/toughradius/blob/main/docs/reports/performance/2026-06-22.md)
 - [2026-06-15](https://github.com/talkincode/toughradius/blob/main/docs/reports/performance/2026-06-15.md)
