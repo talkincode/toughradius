@@ -121,11 +121,12 @@ domain default enable system
 
 ## Cisco —— 厂商代码 9
 
-**限速属性**：**无**。ToughRADIUS **没有 Cisco 增强器**，所以 Cisco NAS 只会收到
-`default_enhancer.go` 下发的标准属性（`Session-Timeout`、`Acct-Interim-Interval`、
-`Framed-Pool`、`Framed-IP-Address` 等）。认证（PAP / CHAP / MS-CHAPv2 / EAP）、会话
-控制、计费与 CoA 都正常工作——**限速请在设备侧做**，或用随仓库附带的 `Cisco-AVPair`
-字典做自定义集成。
+**限速属性**：**无**——Cisco 无可移植的数值限速 VSA，带宽仍在设备侧。`accept-cisco`
+enhancer 会在套餐配置了地址池时下发一个非限速属性 `Cisco-AVPair="ip:addr-pool=<pool>"`，
+与标准 `Framed-Pool` 互补；否则 Cisco NAS 只会收到 `default_enhancer.go` 下发的标准属性
+（`Session-Timeout`、`Acct-Interim-Interval`、`Framed-Pool`、`Framed-IP-Address` 等）。认证
+（PAP / CHAP / MS-CHAPv2 / EAP）、会话控制、计费与 CoA 都正常工作——**限速请在设备侧做**，
+或用随仓库附带的 `Cisco-AVPair` 字典做自定义集成。
 
 **请求解析**：默认解析器——MAC 来自 `Calling-Station-Id`，不解析 VLAN。故 **MAC 绑定
 可用，VLAN 绑定不可用**。

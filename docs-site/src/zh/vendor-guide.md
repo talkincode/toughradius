@@ -47,7 +47,7 @@ IPv4）、`Framed-IPv6-Prefix` / `Framed-IPv6-Address`（RFC 6911）、
 | H3C（25506） | `H3C-Input/Output-Average-Rate` 及峰值 | 与华为相同的 ×1024 / ×4 规则 |
 | 中兴（3902） | `ZTE-Rate-Ctrl-SCR-Up/Down` | `速率_kbps × 1024` |
 | 爱快（10055） | `RP-Upstream/Downstream-Speed-Limit` | `速率_kbps × 1024 × 8`，上限 Int32 |
-| Cisco（9）、标准（0） | —— | 仅标准属性；限速依赖设备侧策略，或基于内置 `Cisco-AVPair` 字典自行扩展 |
+| Cisco（9）、标准（0） | —— | 无限速 VSA——带宽在设备侧；`accept-cisco` enhancer 会下发非限速的 `Cisco-AVPair="ip:addr-pool=<pool>"` |
 
 ### 请求解析（MAC 与 VLAN）
 
@@ -125,7 +125,9 @@ aaa
 ## Cisco —— 厂商代码 9
 
 Cisco 设备使用标准属性认证（PAP / CHAP / MS-CHAPv2 / EAP 均可；会话、计费、
-CoA 同样可用）。默认不下发 Cisco 私有属性——带宽策略请在设备侧实施，或基于
+CoA 同样可用）。当用户套餐配置了地址池时，`accept-cisco` enhancer 会在标准
+`Framed-Pool` 之外下发 `Cisco-AVPair="ip:addr-pool=<pool>"`；除此之外不下发其它
+Cisco 私有属性。带宽策略请在设备侧实施（Cisco 无可移植的数值限速 VSA），或基于
 内置的 `Cisco-AVPair` 字典自行扩展。
 
 ```text
