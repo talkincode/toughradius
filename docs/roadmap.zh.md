@@ -163,7 +163,7 @@
 - [x] M5.1 梳理待补厂商清单与字典差异<br/>**已交付**：`docs/vendor-vsa-gap-baseline.md` 刷新至 HEAD `9882f79e` 的当前真实状态——已注册 parser `default + huawei + h3c + zte + radback + alcatel + aruba + juniper`、响应 enhancer `default + huawei + h3c + zte + mikrotik + ikuai + aruba`；修正差距矩阵、补「自 #433 首版以来的增量」小节与下一批 backlog。首版基线 #433 在 M5.2/M5.3 落地后已过时，且 `#470`（路线图英文优先化）一度把本勾选项重新打开，本轮据实重勾并刷新。仅文档、无运行逻辑变更。
 - [x] M5.2 逐厂商按现有模式接入 request parser（针对真正的厂商私有 MAC/VLAN 请求 VSA）<br/>**已交付**：`radback`（#449，MAC + VLAN）、`alcatel`（#450，MAC）、`aruba`（#451，VLAN）、`juniper`（#453，VoIP VLAN）request parser，并补 `vendors.CodeAlcatel` / `CodeAruba` 常量；各带样例解析测试。`mikrotik` / `ikuai` 请求侧用标准 `Calling-Station-Id`，其 VLAN VSA 属 Access-Accept 回执属性，dedicated parser 与 `DefaultParser` 行为一致，故不补。
 - [x] M5.3 首个厂商 Access-Accept 响应 enhancer<br/>**已交付**：`aruba` 响应 enhancer 注册进 `plugins/init.go`（#456），带样例响应属性测试。（原子任务标题「样例包覆盖解析与响应属性」已并入每厂商验收集——parser/enhancer 均随样例测试交付。）
-- [ ] M5.4 新增 Cisco `cisco-avpair` Access-Accept 响应 enhancer（最常见的厂商回执属性；`cisco` 已有 `Code*` 常量与字典包，仅缺 enhancer）。按 enhancer + `plugins/init.go` 注册 + 样例测试模式实现。其余 enhancer（`alcatel` / `juniper` / `radback` / `microsoft` / `f5` / `hillstone` / `pfSense`）按部署需求驱动。
+- [x] M5.4 新增 Cisco `cisco-avpair` Access-Accept 响应 enhancer<br/>**已交付**（#543）：`CiscoAcceptEnhancer`（`accept-cisco`）从 `GetAddrPool` 下发 `Cisco-AVPair="ip:addr-pool=<pool>"`（Cisco 最常见的地址池回执属性；多值属性用 `AddString` 追加，不覆盖同包其它 AVPair），注册进 `plugins/init.go`，带样例测试（named / empty / `N/A` / 厂商不匹配 / nil 安全）。限速仍在设备侧（Cisco 无可移植的数值限速 VSA），本 enhancer 只做地址池；标准 `Framed-Pool` 由 `default_enhancer` 继续下发，二者同源（`GetAddrPool`）同守卫（`IsNotEmptyAndNA`）互补。其余 enhancer（`alcatel` / `juniper` / `radback` / `microsoft` / `f5` / `hillstone` / `pfSense`）按部署需求驱动。
 
 ## M6 — 可观测性与运维增强
 
@@ -332,7 +332,7 @@
 ## Agent 排期约定
 
 - **入口（自动委托）**：收到"自动委托开发 / 继续推进路线图"类指令时，由 [`.agents/skills/orchestrate-roadmap/SKILL.md`](../.agents/skills/orchestrate-roadmap/SKILL.md) 作为总调度统筹一轮：选题 → 选执行 SOP → 派工 → 质量门禁 → PR → 迭代路线图。
-- 调度优先级：先 P1（`M2 → M3 → M8 → M9`，均已交付），再 P2（已置顶交付 `M13` 文档站点与 `M4` agent 质量门禁；当前优先收尾 `M14`，其后 `M5 / M7 / M10`），最后 P3（`M6 / M11 / M12`）；同优先级里程碑按依赖与可执行性取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。**M13 置顶依据**：用户指令将 mdbook 文档站点列为优先实现，先收编散落文档并对外呈现既有能力（含 EAP 套件）。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
+- 调度优先级：先 P1（`M2 → M3 → M8 → M9`，均已交付），再 P2（已置顶交付 `M13` 文档站点与 `M4` agent 质量门禁；当前优先收尾 `M14`，其后 `M7 / M10`（`M5` 计划批次 M5.1–M5.4 已交付，余量按需驱动）），最后 P3（`M6 / M11 / M12`）；同优先级里程碑按依赖与可执行性取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。**M13 置顶依据**：用户指令将 mdbook 文档站点列为优先实现，先收编散落文档并对外呈现既有能力（含 EAP 套件）。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
 - 单次 agent 任务只认领一个未勾选子任务（最小闭环），完成后在本文件勾选并在 PR 引用里程碑编号。
 - **自我迭代**：每轮交付后由 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选已交付项、更新里程碑状态、回填/拆分/重排子任务，并保持本文件与功能清单状态一致。
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。

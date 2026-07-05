@@ -54,7 +54,7 @@ Profile rates are stored in **Kbps**. Each vendor enhancer converts:
 | H3C (25506) | `H3C-Input/Output-Average-Rate`, peak variants | same ×1024 / ×4 scheme as Huawei |
 | ZTE (3902) | `ZTE-Rate-Ctrl-SCR-Up/Down` | `rate_kbps × 1024` |
 | iKuai (10055) | `RP-Upstream/Downstream-Speed-Limit` | `rate_kbps × 1024 × 8`, clamped to Int32 max |
-| Cisco (9), Standard (0) | — | standard attributes only; use device-side policy or `Cisco-AVPair` via custom integration |
+| Cisco (9), Standard (0) | — | no rate VSA — bandwidth is device-side; the `accept-cisco` enhancer emits a non-rate `Cisco-AVPair="ip:addr-pool=<pool>"` |
 
 ### Request parsing (MAC and VLAN)
 
@@ -136,10 +136,12 @@ For CoA/Disconnect, enable the RADIUS dynamic authorization extension
 ## Cisco — vendor code 9
 
 ToughRADIUS authenticates Cisco devices with standard attributes (PAP / CHAP /
-MS-CHAPv2 / EAP all work; sessions, accounting, CoA likewise). No
-Cisco-specific attributes are emitted by default — apply bandwidth policy on
-the device, or extend via the bundled `Cisco-AVPair` dictionary if you build a
-custom integration.
+MS-CHAPv2 / EAP all work; sessions, accounting, CoA likewise). When the user's
+plan has an address pool, the `accept-cisco` enhancer emits
+`Cisco-AVPair="ip:addr-pool=<pool>"` alongside the standard `Framed-Pool`; no
+other Cisco-specific attributes are sent. Apply bandwidth policy on the device
+(Cisco has no portable numeric rate VSA), or extend via the bundled
+`Cisco-AVPair` dictionary if you build a custom integration.
 
 ```text
 aaa new-model

@@ -138,13 +138,15 @@ in the PPPoE server settings.
 
 ## Cisco — vendor code 9
 
-**Rate attributes**: **none**. ToughRADIUS has **no Cisco enhancer**, so a Cisco
-NAS receives only the standard attributes (`Session-Timeout`,
-`Acct-Interim-Interval`, `Framed-Pool`, `Framed-IP-Address`, …) from
-`default_enhancer.go`. Authentication (PAP / CHAP / MS-CHAPv2 / EAP), session
-control, accounting and CoA all work normally — **apply bandwidth policy on the
-device**, or build a custom integration using the bundled `Cisco-AVPair`
-dictionary.
+**Rate attributes**: **none** — Cisco has no portable numeric rate VSA, so
+bandwidth stays device-side. The `accept-cisco` enhancer emits one non-rate
+attribute — `Cisco-AVPair="ip:addr-pool=<pool>"` — when the plan has an address
+pool, complementing the standard `Framed-Pool`; otherwise a Cisco NAS receives
+only the standard attributes (`Session-Timeout`, `Acct-Interim-Interval`,
+`Framed-Pool`, `Framed-IP-Address`, …) from `default_enhancer.go`. Authentication
+(PAP / CHAP / MS-CHAPv2 / EAP), session control, accounting and CoA all work
+normally — **apply bandwidth policy on the device**, or build a custom
+integration using the bundled `Cisco-AVPair` dictionary.
 
 **Request parsing**: default parser — MAC from `Calling-Station-Id`, no VLAN. So
 **MAC binding works, VLAN binding does not**.

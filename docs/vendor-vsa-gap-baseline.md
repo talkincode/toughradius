@@ -4,9 +4,10 @@ This document is the M5.1 inventory for "vendor backlog and dictionary gaps"
 under TR-F005. It is intentionally snapshot-style so the next M5 batch can
 execute without re-discovering the same scope.
 
-> Refreshed after the M5.2 request-parser batch (#449–#454) and the M5.3 Aruba
-> response enhancer (#456) landed. The first baseline (#433) predated that work
-> and is superseded by the matrix below; see "Delta since the first baseline".
+> Refreshed after the M5.2 request-parser batch (#449–#454), the M5.3 Aruba
+> response enhancer (#456), and the M5.4 Cisco `cisco-avpair` response enhancer
+> (#543) landed. The first baseline (#433) predated that work and is superseded by
+> the matrix below; see "Delta since the first baseline".
 
 ## Scope and Method
 
@@ -38,7 +39,7 @@ grep -c '^\$INCLUDE' share/dictionary                       # 213
 - Registered vendor parsers (`parsers/init.go`): `default + huawei + h3c + zte +
   radback + alcatel + aruba + juniper` (7 vendors + default)
 - Registered response enhancers (`plugins/init.go`): `default + huawei + h3c +
-  zte + mikrotik + ikuai + aruba` (6 vendors + default)
+  zte + mikrotik + ikuai + aruba + cisco` (7 vendors + default)
 - `share/dictionary` includes `213` `$INCLUDE dictionary.*` entries; the repo
   ships generated packages for `15` of those vendors.
 
@@ -57,7 +58,7 @@ does not depend on a parser.
 | --- | ---: | --- | --- | --- | --- |
 | `alcatel` | 3041 | present | present | missing | `share/dictionary.alcatel` |
 | `aruba` | 14823 | present | present | present | `share/dictionary.aruba` |
-| `cisco` | 9 | present | missing | missing | `share/dictionary.cisco` |
+| `cisco` | 9 | present | missing | present | `share/dictionary.cisco` |
 | `f5` | 3375 | present | missing | missing | `share/dictionary.f5` |
 | `h3c` | 25506 | present | present | present | `share/dictionary.h3c` |
 | `hillstone` | 28557 | present | missing | missing | `share/dictionary.hillstone` |
@@ -81,6 +82,8 @@ first response enhancer that the first baseline listed as pending:
 - `aruba` request parser — VLAN, plus the `vendors.CodeAruba` constant (#451)
 - `juniper` request parser — VoIP VLAN (#453)
 - `aruba` Access-Accept response enhancer (#456, M5.3)
+- `cisco` Access-Accept response enhancer — emits `Cisco-AVPair="ip:addr-pool=<pool>"`
+  from `GetAddrPool` (#543, M5.4)
 
 The first baseline also reported `alcatel` / `aruba` as missing their `Code*`
 constant; both now exist in `codes.go`. Only `unix` still lacks a `Code*`
@@ -93,9 +96,10 @@ remaining TR-F005 work is response-enhancer and hygiene work:
 
 1. **Response enhancers (demand-driven), no parser dependency.** Highest value
    first:
-   - `cisco` `cisco-avpair` — the most common vendor reply attribute; `cisco`
-     already has its `Code*` constant and dictionary package, only the enhancer
-     is missing. Tracked as **M5.4**.
+   - `cisco` `cisco-avpair` — **delivered as M5.4** (#543): the `accept-cisco`
+     enhancer emits `Cisco-AVPair="ip:addr-pool=<pool>"` from `GetAddrPool`
+     (address pool only; rate stays device-side, Cisco has no portable numeric
+     rate VSA).
    - `alcatel`, `juniper`, `radback` — already have a request parser but no
      response enhancer; add when a deployment needs their reply attributes.
    - `microsoft`, `f5`, `hillstone`, `pfSense` — neither parser nor enhancer;
