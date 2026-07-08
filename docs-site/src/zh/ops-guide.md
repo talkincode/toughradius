@@ -133,6 +133,15 @@ RADIUS 运行时配置（EAP 方法、证书、间隔、拒绝延迟等）存储
 结构迁移（GORM `AutoMigrate`）在每次启动时自动执行，升级流程即：停止、
 替换二进制、启动。`-initdb` 仅用于首次安装——它**销毁全部数据**。
 
+> **升级提示 —— EAP 证书文件路径配置项已移除。** 旧的文件路径配置项
+> `EapTlsCertFile` / `EapTlsKeyFile` / `EapTlsCaFile` 已**移除**：托管证书库
+> （`sys_cert`）现在是 EAP-TLS/PEAP/TTLS 证书材料的唯一来源。如果你此前通过
+> 磁盘文件路径配置了证书型 EAP，升级后必须在 **证书管理** 页重新导入 PEM
+> （服务器证书需包含私钥），并在 **系统配置 → `EapTlsServerCert` /
+> `EapTlsClientCa`** 中按名称选择。在选择托管服务器证书之前，证书型 EAP
+> 方法会安全拒绝所有请求（`ErrTLSNotConfigured`）——请在升级前规划好重新
+> 导入，避免 EAP 接入中断。纯 PAP/CHAP/MSCHAPv2（非 EAP）部署不受影响。
+
 需要关注的大表：`radius_accounting`（随会话持续增长）与 `radius_online`。
 `radius.AccountingHistoryDays` 配置（默认 90，设为 `0` 关闭）定义计费历史的保留
 窗口：`@daily` 定时任务会删除超过该天数的**已结束** `radius_accounting` 记录（在线

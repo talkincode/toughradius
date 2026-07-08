@@ -136,6 +136,19 @@ Schema migration (GORM `AutoMigrate`) runs automatically at every startup, so
 upgrades are: stop, replace the binary, start. `-initdb` is for first
 installation only — it **destroys all data**.
 
+> **Upgrade note — EAP certificate file paths removed.** The legacy file-path
+> settings `EapTlsCertFile` / `EapTlsKeyFile` / `EapTlsCaFile` have been
+> **removed**: the managed certificate store (`sys_cert`) is now the only
+> source of EAP-TLS/PEAP/TTLS certificate material. If your deployment
+> configured certificate-based EAP via disk file paths, after upgrading you
+> must import the PEM files on the **Certificates** page (the server
+> certificate must include its private key) and select them by name in
+> **System Config → `EapTlsServerCert` / `EapTlsClientCa`**. Until a managed
+> server certificate is selected, certificate-based EAP methods safely reject
+> all requests (`ErrTLSNotConfigured`) — plan the re-import before upgrading
+> to avoid an EAP outage. PAP/CHAP/MSCHAPv2 (non-EAP) deployments are
+> unaffected.
+
 Large tables to watch: `radius_accounting` (grows with every session) and
 `radius_online`. The `radius.AccountingHistoryDays` setting (default 90, set to
 `0` to disable) defines the accounting retention window: a `@daily` job deletes
