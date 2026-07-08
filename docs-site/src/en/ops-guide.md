@@ -211,12 +211,18 @@ process exit as the failure signal (the process model is fail-fast).
 ## Backup and restore
 
 **System Config → Backup** downloads a JSON snapshot (schema version 9.0) of:
-nodes, NAS devices, profiles, users, system settings, operators. A copy is also
-written to `{workdir}/backup/`. **Restore** re-imports such a file.
+nodes, NAS devices, profiles, users, system settings, operators, and managed
+certificates (including their private keys, so certificate-based EAP keeps
+working after a restore). A copy is also written to `{workdir}/backup/`.
+**Restore** re-imports such a file.
 
 > The snapshot does **not** include accounting history or online sessions. For
 > a full disaster-recovery story, also back up the database itself (copy the
 > SQLite file or use `pg_dump`).
+
+> **Security**: the snapshot contains secrets — RADIUS user passwords,
+> operator password hashes, and the PEM private keys of managed EAP
+> certificates. Store and transfer backup files as you would any credential.
 
 ## Command-line tools
 

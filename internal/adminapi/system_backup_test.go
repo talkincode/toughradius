@@ -91,6 +91,83 @@ func TestRestoreSystem(t *testing.T) {
 	assert.Equal(t, int64(1), count)
 }
 
+// TestBackupRestoreSystem_CertRoundTrip verifies that managed certificates —
+// including their API-hidden private keys — survive a backup/restore cycle so
+// certificate-based EAP (EAP-TLS/PEAP/TTLS) keeps working on the restored
+// instance.
+func TestBackupRestoreSystem_CertRoundTrip(t *testing.T) {
+	srcDB := setupTestDB(t)
+	srcAppCtx := setupTestApp(t, srcDB)
+
+	certPEM, keyPEM := genSelfSignedPEM(t, "backup-eap-server")
+	caPEM, _ := genSelfSignedPEM(t, "backup-eap-ca")
+	seeded := seedCertificate(t, srcDB, "backup-server-cert", "server", certPEM, keyPEM)
+	seedCertificate(t, srcDB, "backup-ca-cert", "ca", caPEM, "")
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/system/backup", nil)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(setupTestEcho(), srcDB, req, rec, srcAppCtx)
+	require.NoError(t, backupSystem(c))
+	payload := rec.Body.Bytes()
+
+	// The protected backup payload must carry the private key material.
+	var backup SystemBackup
+	require.NoError(t, json.Unmarshal(payload, &backup))
+	require.Len(t, backup.Certs, 2)
+	var serverCert *SystemBackupCert
+	for i := range backup.Certs {
+		if backup.Certs[i].Name == "backup-server-cert" {
+			serverCert = &backup.Certs[i]
+		}
+	}
+	require.NotNil(t, serverCert)
+	assert.Equal(t, keyPEM, serverCert.PrivateKey)
+
+	// The list API must still never disclose the private key.
+	lreq := httptest.NewRequest(http.MethodGet, "/api/v1/certificates", nil)
+	lrec := httptest.NewRecorder()
+	lc := CreateTestContext(setupTestEcho(), srcDB, lreq, lrec, srcAppCtx)
+	require.NoError(t, ListCertificates(lc))
+	assert.NotContains(t, lrec.Body.String(), "PRIVATE KEY")
+
+	// Restore into a fresh, empty database and verify the key round-trips.
+	dstDB := setupTestDB(t)
+	dstAppCtx := setupTestApp(t, dstDB)
+	rreq, rrec := restoreRequest(t, payload)
+	rc := CreateTestContext(setupTestEcho(), dstDB, rreq, rrec, dstAppCtx)
+	require.NoError(t, restoreSystem(rc))
+	assert.Equal(t, http.StatusOK, rrec.Code)
+
+	var restored domain.SysCert
+	require.NoError(t, dstDB.Where("id = ?", seeded.ID).First(&restored).Error)
+	assert.Equal(t, "server", restored.CertType)
+	assert.Equal(t, certPEM, restored.Cert)
+	assert.Equal(t, keyPEM, restored.PrivateKey)
+
+	var count int64
+	dstDB.Model(&domain.SysCert{}).Count(&count)
+	assert.Equal(t, int64(2), count)
+}
+
+func TestRestoreSystem_InvalidCertType(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+
+	backup := SystemBackup{
+		Version: backupVersion,
+		Certs: []SystemBackupCert{
+			{SysCert: domain.SysCert{ID: 1, Name: "bad-cert", CertType: "bogus"}},
+		},
+	}
+	payload, err := json.Marshal(backup)
+	require.NoError(t, err)
+
+	req, rec := restoreRequest(t, payload)
+	c := CreateTestContext(setupTestEcho(), db, req, rec, appCtx)
+	require.NoError(t, restoreSystem(c))
+	assert.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
 func TestRestoreSystem_InvalidFile(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)

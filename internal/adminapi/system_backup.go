@@ -34,12 +34,13 @@ const maxRestoreRecords = 100000
 //
 // The payload is versioned by Version and contains the core configuration
 // tables that define runtime behavior (nodes, NAS, profiles, users, configs,
-// and operators). The snapshot intentionally preserves primary keys so restore
-// can upsert records deterministically.
+// operators, and managed certificates). The snapshot intentionally preserves
+// primary keys so restore can upsert records deterministically.
 //
 // Sensitive data notice: the payload includes security-relevant credentials
-// (for example RadiusUser passwords and SysOpr password hashes). Callers must
-// treat serialized backups as secrets at rest and in transit.
+// (for example RadiusUser passwords, SysOpr password hashes, and SysCert
+// private keys). Callers must treat serialized backups as secrets at rest and
+// in transit.
 type SystemBackup struct {
 	// Version is the backup schema version in "major.minor" form.
 	Version string `json:"version"`
@@ -57,6 +58,41 @@ type SystemBackup struct {
 	Configs []domain.SysConfig `json:"configs"`
 	// Operators stores exported admin operator accounts.
 	Operators []domain.SysOpr `json:"operators"`
+	// Certs stores exported managed certificates (sys_cert), including their
+	// PEM private keys, so certificate-based EAP (EAP-TLS/PEAP/TTLS) keeps
+	// working after a restore. Restores older backups without this field
+	// simply skip the table.
+	Certs []SystemBackupCert `json:"certs,omitempty"`
+}
+
+// SystemBackupCert is the backup serialization of a domain.SysCert record.
+//
+// domain.SysCert deliberately hides PrivateKey from the REST API via json:"-",
+// so marshaling SysCert directly would silently drop key material and a
+// restored server certificate would be unusable for EAP-TLS/PEAP/TTLS. This
+// wrapper re-exposes the private key for the access-controlled backup payload,
+// which is already treated as a secret (it carries user passwords and operator
+// hashes). The list/detail certificate APIs remain unaffected and never
+// disclose the key.
+type SystemBackupCert struct {
+	domain.SysCert
+	// PrivateKey is the PEM-encoded private key of the certificate, exported
+	// only inside backups.
+	PrivateKey string `json:"private_key,omitempty"`
+}
+
+// newSystemBackupCert wraps a SysCert for backup export, copying the private
+// key into the serializable field.
+func newSystemBackupCert(cert domain.SysCert) SystemBackupCert {
+	return SystemBackupCert{SysCert: cert, PrivateKey: cert.PrivateKey}
+}
+
+// toSysCert converts a backup record back into the domain model for restore,
+// moving the private key into the persisted (API-hidden) field.
+func (b SystemBackupCert) toSysCert() domain.SysCert {
+	cert := b.SysCert
+	cert.PrivateKey = b.PrivateKey
+	return cert
 }
 
 func registerSystemBackupRoutes() {
@@ -68,9 +104,10 @@ func registerSystemBackupRoutes() {
 // A copy is also written to the configured backup directory when available.
 //
 // SECURITY: the exported payload contains sensitive credentials in clear form —
-// RADIUS user passwords are stored in plaintext (required for PAP/CHAP) and the
-// operators table includes admin password hashes. Both the downloaded file and
-// the on-disk copy in the backup directory must be handled and stored securely.
+// RADIUS user passwords are stored in plaintext (required for PAP/CHAP), the
+// operators table includes admin password hashes, and managed certificates
+// include their PEM private keys. Both the downloaded file and the on-disk
+// copy in the backup directory must be handled and stored securely.
 func backupSystem(c echo.Context) error {
 	db := GetDB(c)
 
@@ -96,6 +133,13 @@ func backupSystem(c echo.Context) error {
 	}
 	if err := db.Find(&backup.Operators).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to export operators", err.Error())
+	}
+	var certs []domain.SysCert
+	if err := db.Find(&certs).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to export certificates", err.Error())
+	}
+	for _, cert := range certs {
+		backup.Certs = append(backup.Certs, newSystemBackupCert(cert))
 	}
 
 	bs, err := json.MarshalIndent(backup, "", "  ")
@@ -136,6 +180,8 @@ type SystemRestoreResult struct {
 	Configs int `json:"configs"`
 	// Operators is the number of sys_opr records restored.
 	Operators int `json:"operators"`
+	// Certs is the number of sys_cert records restored.
+	Certs int `json:"certs"`
 }
 
 // restoreSystem imports a previously exported backup file, upserting records
@@ -224,6 +270,16 @@ func restoreSystem(c echo.Context) error {
 			}
 			result.Operators = len(backup.Operators)
 		}
+		if len(backup.Certs) > 0 {
+			certs := make([]domain.SysCert, 0, len(backup.Certs))
+			for _, bc := range backup.Certs {
+				certs = append(certs, bc.toSysCert())
+			}
+			if err := tx.Clauses(upsert).Create(&certs).Error; err != nil {
+				return err
+			}
+			result.Certs = len(certs)
+		}
 		return nil
 	})
 	if err != nil {
@@ -253,6 +309,7 @@ func validateBackup(b *SystemBackup) error {
 		"users":     len(b.Users),
 		"configs":   len(b.Configs),
 		"operators": len(b.Operators),
+		"certs":     len(b.Certs),
 	} {
 		if n > maxRestoreRecords {
 			return fmt.Errorf("table %q has %d records, exceeding the limit of %d", name, n, maxRestoreRecords)
@@ -301,7 +358,26 @@ func validateBackup(b *SystemBackup) error {
 			return fmt.Errorf("operators[%d]: invalid status %q", i, b.Operators[i].Status)
 		}
 	}
+	for i := range b.Certs {
+		if b.Certs[i].ID == 0 || strings.TrimSpace(b.Certs[i].Name) == "" {
+			return fmt.Errorf("certs[%d]: id and name are required", i)
+		}
+		if !isValidCertType(b.Certs[i].CertType) {
+			return fmt.Errorf("certs[%d]: invalid cert_type %q", i, b.Certs[i].CertType)
+		}
+	}
 	return nil
+}
+
+// isValidCertType reports whether t is a recognized managed certificate type,
+// matching the values accepted by the certificate admin API.
+func isValidCertType(t string) bool {
+	switch t {
+	case "server", "ca":
+		return true
+	default:
+		return false
+	}
 }
 
 // isValidStatus reports whether s is an accepted account/device status. An empty
