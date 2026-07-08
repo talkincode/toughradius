@@ -60,7 +60,7 @@
 access / inherited access 允许本仓库 `GITHUB_TOKEN` 写入，或配置具备
 `write:packages` 的 `PKG_GITHUB_TOKEN`（若 token 所属账号不同于 tag 触发者，可选配
 `PKG_GITHUB_USERNAME`）。Docker Hub 发布是必选门禁；GHCR 发布在 workflow 中独立
-执行，若因 `permission_denied: write_package` 失败，按 run summary 修复 package
+执行，且会先做写权限预检，凭据不可写时直接跳过 GHCR push；按 run summary 修复 package
 access 或 token 后重跑 tag workflow，避免重复创建同一源码的错误版本 tag。
 
 ## 工具链版本（与 CI 对齐）

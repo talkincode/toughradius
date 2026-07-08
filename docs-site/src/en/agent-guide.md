@@ -132,9 +132,11 @@ understand both outputs and their credential boundaries before tagging.
 
 Docker Hub publishing is the required gate. GHCR publishing depends on external
 GitHub Packages access settings, so the workflow isolates the GHCR push in its
-own step: when Docker Hub succeeds but GHCR fails with
-`permission_denied: write_package`, the run summary reports a warning and
-recovery guidance without making maintainers guess whether Docker Hub published.
+own step and runs a non-destructive write-access preflight probe first: when
+the credentials cannot write the package (the `permission_denied:
+write_package` signature), the GHCR build is skipped instead of failing
+mid-push, and the run summary reports a warning and recovery guidance without
+making maintainers guess whether Docker Hub published.
 
 Before tagging:
 
