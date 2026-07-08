@@ -11,16 +11,26 @@ name: External PR Gate
 # path untouched.
 #
 # Security: this workflow runs in the trusted base-repository context
-# (pull_request_target / pull_request_review). It NEVER checks out or executes
-# pull-request code and requests only read scopes, so an untrusted fork PR
-# cannot exfiltrate secrets or gain write access through it. Do not add
-# actions/checkout of the PR head or any step that runs PR-controlled code here.
+# (pull_request_target). It NEVER checks out or executes pull-request code and
+# requests only read scopes, so an untrusted fork PR cannot exfiltrate secrets
+# or gain write access through it. Do not add actions/checkout of the PR head
+# or any step that runs PR-controlled code here.
+#
+# Trigger model: pull_request_review is deliberately NOT a trigger. Review
+# events submitted by bot reviewers (for example Copilot code review) create
+# workflow runs whose triggering actor requires run approval, producing
+# zero-jobs `action_required` runs that stay pending on the PR head commit and
+# keep even internal PRs at mergeStateStatus=UNSTABLE (see issue #524).
+# Instead, after a maintainer approves a fork PR's current head commit, the
+# gate is re-evaluated by toggling any label on the PR (add or remove — for
+# example `human-approval`): the trusted `labeled`/`unlabeled`
+# pull_request_target events re-run this workflow, which still verifies the
+# actual APPROVED review bound to the current head SHA. The label itself
+# grants nothing; it is only a re-trigger.
 
 on:
   pull_request_target:
     types: [opened, reopened, synchronize, labeled, unlabeled]
-  pull_request_review:
-    types: [submitted, dismissed, edited]
   merge_group:
 
 permissions:
@@ -102,6 +112,8 @@ jobs:
                 'External (fork) PR is blocked until a maintainer (write/admin) ' +
                 'submits an approving review of the current head commit. Any new ' +
                 'commit pushed to the fork dismisses a prior approval, so the ' +
-                'maintainer must (re-)approve after the latest push.'
+                'maintainer must (re-)approve after the latest push. After ' +
+                'approving, add or remove a label (for example `human-approval`) ' +
+                'to re-run this gate against the approval.'
               );
             }
