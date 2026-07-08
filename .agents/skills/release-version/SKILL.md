@@ -53,7 +53,8 @@ Use this skill to turn merged PR history into a release decision and, when warra
      package inherits this repository's Actions access, or that
      `PKG_GITHUB_TOKEN` has `write:packages` (`PKG_GITHUB_USERNAME` is optional
      when the token owner differs from the tag actor). The Docker workflow treats
-     Docker Hub as required and reports GHCR permission failures in the run
+     Docker Hub as required, probes GHCR write access before building, skips the
+     GHCR push when the probe is denied, and reports the result in the run
      summary; fix package access and rerun the tag workflow rather than creating
      a duplicate tag for the same source.
    - If the repository has release notes, changelog, packaging, or version-file conventions, update them in a PR first. This skill only creates a tag directly when no source-file change is required.

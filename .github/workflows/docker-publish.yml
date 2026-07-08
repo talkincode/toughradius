@@ -66,9 +66,54 @@ jobs:
           username: ${{ secrets.PKG_GITHUB_USERNAME || secrets.GHCR_USERNAME || github.actor }}
           password: ${{ secrets.PKG_GITHUB_TOKEN || secrets.GHCR_TOKEN || github.token }}
 
+      - name: Check GHCR write access
+        id: ghcr_write_check
+        if: steps.ghcr_login.outcome == 'success'
+        continue-on-error: true
+        shell: bash
+        env:
+          GHCR_PROBE_USERNAME: ${{ secrets.PKG_GITHUB_USERNAME || secrets.GHCR_USERNAME || github.actor }}
+          GHCR_PROBE_PASSWORD: ${{ secrets.PKG_GITHUB_TOKEN || secrets.GHCR_TOKEN || github.token }}
+          GHCR_IMAGE: ${{ github.repository_owner }}/toughradius
+        run: |
+          # Non-destructive push-access probe (issue #503): initiating a blob
+          # upload returns HTTP 202 only when the credentials can write the
+          # package; a write-denied GITHUB_TOKEN still logs in successfully,
+          # so login success alone does not prove push access.
+          image="${GHCR_IMAGE,,}"
+          writable=false
+          token=$(curl -fsSL -u "${GHCR_PROBE_USERNAME}:${GHCR_PROBE_PASSWORD}" \
+            "https://ghcr.io/token?service=ghcr.io&scope=repository:${image}:pull,push" \
+            | jq -r '.token // empty' || true)
+          if [ -n "$token" ]; then
+            response_headers=$(mktemp)
+            status=$(curl -sS -o /dev/null -D "$response_headers" -w '%{http_code}' \
+              -X POST -H "Authorization: Bearer ${token}" \
+              "https://ghcr.io/v2/${image}/blobs/uploads/" || echo "000")
+            if [ "$status" = "202" ]; then
+              writable=true
+              # Cancel the probe upload session; best effort only.
+              upload_url=$(awk 'tolower($1) == "location:" {print $2}' "$response_headers" | tr -d '\r')
+              case "$upload_url" in
+                /*) upload_url="https://ghcr.io${upload_url}" ;;
+              esac
+              if [ -n "$upload_url" ]; then
+                curl -sS -o /dev/null -X DELETE \
+                  -H "Authorization: Bearer ${token}" "$upload_url" || true
+              fi
+            else
+              echo "GHCR write probe for ghcr.io/${image} returned HTTP ${status}"
+            fi
+            rm -f "$response_headers"
+          else
+            echo "Failed to obtain a GHCR registry token for ghcr.io/${image}"
+          fi
+          echo "writable=${writable}" >> "$GITHUB_OUTPUT"
+          echo "GHCR writable: ${writable}"
+
       - name: Build image and push to GitHub Container Registry
         id: ghcr_build
-        if: steps.ghcr_login.outcome == 'success'
+        if: steps.ghcr_login.outcome == 'success' && steps.ghcr_write_check.outputs.writable == 'true'
         continue-on-error: true
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
         with:
@@ -92,6 +137,7 @@ jobs:
             echo "- Docker Hub: \`${{ steps.dockerhub_build.outcome }}\`"
             echo "- Docker Hub digest: \`${{ steps.dockerhub_build.outputs.digest }}\`"
             echo "- GHCR login: \`${{ steps.ghcr_login.outcome }}\`"
+            echo "- GHCR write check: \`${{ steps.ghcr_write_check.outputs.writable || 'skipped' }}\`"
             echo "- GHCR: \`${{ steps.ghcr_build.outcome }}\`"
             if [ -n "${{ steps.ghcr_build.outputs.digest }}" ]; then
               echo "- GHCR digest: \`${{ steps.ghcr_build.outputs.digest }}\`"
@@ -100,8 +146,10 @@ jobs:
             echo "Docker Hub publishing is required. GHCR publishing depends on the"
             echo "package repository access / inherited access settings, or on optional"
             echo "\`PKG_GITHUB_TOKEN\` and optional \`PKG_GITHUB_USERNAME\` secrets with package write access."
+            echo "The GHCR push only runs when the write-access preflight probe succeeds,"
+            echo "so a write-denied token skips the GHCR build instead of failing mid-push."
           } >> "$GITHUB_STEP_SUMMARY"
 
-          if [ "${{ steps.ghcr_login.outcome }}" != "success" ] || [ "${{ steps.ghcr_build.outcome }}" != "success" ]; then
-            echo "::warning title=GHCR publish did not complete::Docker Hub publish completed, but GHCR publish needs package repository access or a PKG_GITHUB_TOKEN with write:packages. See issue #503 runbook notes before rerunning the tag workflow."
+          if [ "${{ steps.ghcr_login.outcome }}" != "success" ] || [ "${{ steps.ghcr_write_check.outputs.writable }}" != "true" ] || [ "${{ steps.ghcr_build.outcome }}" != "success" ]; then
+            echo "::warning title=GHCR publish did not complete::Docker Hub publish completed, but the GHCR push was skipped or failed because the credentials lack package write access. Fix package repository access or provide a PKG_GITHUB_TOKEN with write:packages, then rerun the tag workflow. See issue #503 runbook notes."
           fi
