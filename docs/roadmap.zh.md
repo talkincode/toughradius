@@ -39,7 +39,7 @@
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 已交付 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已交付 |
 | M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 已交付 |
-| M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
+| M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 进行中（M10.1 已交付 #562，下一个 M10.2 密钥派生） |
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
 | M13 | 双语文档站点（mdbook） | TR-F023 | P2（优先） | 已交付 |
@@ -237,10 +237,10 @@
 - **目标**：在 M1 已交付的 TLS 1.2 EAP-TLS 基线上，按 RFC 9190 支持 TLS 1.3 握手与会话密钥派生。
 - **开发边界**：保持与 TLS 1.2 客户端向后兼容；先协商再切换，不破坏既有 CA 链校验与身份映射；遵循 RFC 9427 的 TLS 1.3 派生规则。
 - **技能**：`.agents/skills/add-eap-method/SKILL.md`、`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`、`.agents/skills/write-go-tests/SKILL.md`
-- **协议规范**：`rfc9190`（EAP-TLS 1.3，本地缺失，按 `reference-rfc` 登记）、`rfc9427`（TLS-Based EAP Types and TLS 1.3，本地缺失）、`docs/rfcs/rfc5216-eap-tls.txt`（1.2 基线）、`rfc3748-eap.txt`。
+- **协议规范**：`docs/rfcs/rfc9190-eap-tls13.txt`（EAP-TLS 1.3，M10.1 已补录）、`rfc9427`（TLS-Based EAP Types and TLS 1.3，本地缺失）、`docs/rfcs/rfc5216-eap-tls.txt`（1.2 基线）、`rfc3748-eap.txt`。
 
 子任务：
-- [ ] M10.1 TLS 1.3 握手协商与版本回退（兼容 1.2 客户端）
+- [x] M10.1 TLS 1.3 握手协商与版本回退（兼容 1.2 客户端）——已交付（#562）：共享 `tlsengine` 默认协商 TLS 1.3 并自动回退 1.2；纯 EAP-TLS 实现 RFC 9190 §2.1.1 受保护成功指示（0x00 应用数据承诺消息，EAP-Success 以对端 ACK 为门），证书身份绑定（RFC 5216 §5.2）通过 `onCommit` 钩子在承诺**之前**执行；按 §2.1.3 禁用会话票据；新增 `NegotiatedVersion()`；PEAP/TTLS 不受影响。单测（1.3 指示解密、1.2 无指示回退、身份不匹配先拒绝不承诺）+ `test/integration/` 端到端子用例；RFC 文本登记于 `docs/rfcs/rfc9190-eap-tls13.txt`。密钥导出（MSK/EMSK → MPPE）延后至 M10.2。
 - [ ] M10.2 按 RFC 9190 / RFC 9427 实现 TLS 1.3 密钥派生（MSK/EMSK）
 - [ ] M10.3 `close_notify` / 身份保护等 TLS 1.3 语义差异处理
 - [ ] M10.4 单元测试 + `test/integration/` TLS 1.3 端到端验收用例（CI 自动执行）

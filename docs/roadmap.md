@@ -39,7 +39,7 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 | M7 | Upstream RADIUS library tracking and protocol compliance | TR-F021 / TR-F022 | P2 | Delivered |
 | M8 | PEAPv0 / EAP-MSCHAPv2 authentication | TR-F004 | P1 | Delivered |
 | M9 | EAP-TTLS tunneled authentication | TR-F004 | P1 | Delivered |
-| M10 | EAP-TLS 1.3 / RFC 9190 upgrade | TR-F004 | P2 | Planned |
+| M10 | EAP-TLS 1.3 / RFC 9190 upgrade | TR-F004 | P2 | In progress (M10.1 delivered #562; next M10.2 key derivation) |
 | M11 | TEAP tunneled authentication | TR-F004 | P3 | Planned |
 | M12 | EAP-PWD password authentication | TR-F004 | P3 | Planned |
 | M13 | Bilingual documentation site with mdbook | TR-F023 | P2 | Delivered |
@@ -53,13 +53,13 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 
 ## Current Execution Queue
 
-The scheduled **M5 vendor VSA expansion** batch (M5.1 inventory + M5.2/M5.3/M5.4 parsers/enhancers) is delivered — M5.4 shipped the Cisco `cisco-avpair` Access-Accept enhancer (#543) — and the remaining vendor enhancers stay demand-driven. **M7.1** (evaluate upstream `layeh.com/radius` fixes) is delivered with a documented no-sync decision, so the next pickable subtask is **M10.1** (TLS 1.3 negotiation with TLS 1.2 fallback for EAP-TLS). M14.6 now has CI-backed OpenLDAP acceptance coverage; M14.5 remains blocked until load evidence justifies connection pooling / reconnect work.
+The scheduled **M5 vendor VSA expansion** batch (M5.1 inventory + M5.2/M5.3/M5.4 parsers/enhancers) is delivered — M5.4 shipped the Cisco `cisco-avpair` Access-Accept enhancer (#543) — and the remaining vendor enhancers stay demand-driven. **M10.1** (TLS 1.3 negotiation + RFC 9190 protected success indication for EAP-TLS, #562) is delivered, so the next pickable subtask is **M10.2** (TLS 1.3 key derivation per RFC 9190 — TLS-Exporter MSK/EMSK and MS-MPPE key population). M14.6 now has CI-backed OpenLDAP acceptance coverage; M14.5 remains blocked until load evidence justifies connection pooling / reconnect work.
 
 | Order | Task | Status | Acceptance focus |
 | --- | --- | --- | --- |
 | 1 | M5 vendor VSA expansion | In progress | M5.1 inventory + M5.2/M5.3/M5.4 parsers/enhancers delivered (M5.4 Cisco `cisco-avpair` enhancer, #543); remaining vendor enhancers demand-driven |
 | 2 | M7 upstream and RFC compliance tracking | Delivered | M7.1 evaluation closed with a no-sync decision; recurring upstream checks continue via `.agents/skills/sync-upstream-radius/SKILL.md` and the cross-cutting baseline |
-| 3 | M10 EAP-TLS 1.3 / RFC 9190 | Planned (next pickable) | Keep TLS 1.2 compatibility while adding TLS 1.3 key derivation and close-notify semantics |
+| 3 | M10 EAP-TLS 1.3 / RFC 9190 | In progress | M10.1 delivered (#562): TLS 1.3 negotiation + §2.1.1 protected success indication with 1.2 fallback; next M10.2 key derivation (TLS-Exporter MSK/EMSK → MS-MPPE), then M10.3 close-notify semantics |
 | 4 | M14.5 LDAP connection robustness | Blocked: waiting for load evidence | Revisit pooling/reconnect design only when connection cost or cancellation evidence justifies the complexity |
 
 Agent-facing unchecked tasks:
@@ -71,7 +71,7 @@ Agent-facing unchecked tasks:
 - [x] M5.3 Add the first vendor Access-Accept response enhancer. Delivered: `aruba` response enhancer registered in `plugins/init.go` (#456) with sample-based tests.
 - [x] M5.4 Add a Cisco `cisco-avpair` Access-Accept response enhancer. Delivered (#543): `CiscoAcceptEnhancer` (`accept-cisco`) emits `Cisco-AVPair="ip:addr-pool=<pool>"` from `GetAddrPool` (appended, since Cisco-AVPair is multi-valued), registered in `plugins/init.go`, with sample-based tests (named / empty / `N/A` / vendor-mismatch / nil-safety). Rate limiting stays device-side (Cisco has no portable numeric-rate VSA); the standard `Framed-Pool` from `default_enhancer` is complemented, not replaced. Remaining enhancers (`alcatel` / `juniper` / `radback` / `microsoft` / `f5` / `hillstone` / `pfSense`) stay demand-driven.
 - [x] M7.1 Manually evaluate important upstream `layeh.com/radius` fixes and decide whether to sync the `talkincode/radius` fork and update the `go.mod` replacement. Delivered (2026-07-15 evaluation, no code change required): upstream `layeh/radius` has been dormant since `1006025d` (2023-12-13, "fix IPv6Prefix bug"); `talkincode/radius` `master` already contains every upstream commit plus two fork-only fixes (IPv6Prefix non-zero-bit tolerance, generated `_SetVendor` delete-index panic), leaving upstream 2 commits **behind** the fork with nothing to sync; `go.mod` pins `replace layeh.com/radius => github.com/talkincode/radius v0.1.0`, which tags the exact fork `master` tip. Decision: no fork sync or `go.mod` change needed. Future upstream activity is handled by the recurring `.agents/skills/sync-upstream-radius/SKILL.md` check rather than a scheduled subtask.
-- [ ] M10.1 Add TLS 1.3 handshake negotiation and TLS 1.2 fallback for EAP-TLS.
+- [x] M10.1 Add TLS 1.3 handshake negotiation and TLS 1.2 fallback for EAP-TLS. Delivered (#562): the shared `tlsengine` (Go `crypto/tls`) negotiates TLS 1.3 by default with automatic 1.2 fallback; pure EAP-TLS now sends the RFC 9190 §2.1.1 protected success indication (one octet `0x00` as protected app data, EAP-Success gated on the peer's ACK) with the certificate identity binding (RFC 5216 §5.2) enforced *before* commitment via an `onCommit` hook; `SessionTicketsDisabled` per §2.1.3; `NegotiatedVersion()` accessor added; PEAP/TTLS unchanged. Unit tests (1.3 indication decrypt, 1.2 no-indication fallback, mismatch-rejected-before-commit) plus `test/integration/` end-to-end subtests over RADIUS UDP; RFC filed at `docs/rfcs/rfc9190-eap-tls13.txt`. Key material export (TLS-Exporter MSK/EMSK → MPPE) deferred to M10.2.
 
 ## Non-Goals
 
