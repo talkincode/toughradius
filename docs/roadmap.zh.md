@@ -36,7 +36,7 @@
 | M4 | Agent 开发体系与质量门禁 | TR-F022 | P2 | 已交付 |
 | M5 | 厂商 VSA 覆盖扩展 | TR-F005 | P2 | 进行中 |
 | M6 | 可观测性与运维增强 | TR-F015 | P3 | 计划中 |
-| M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 进行中 |
+| M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 已交付 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已交付 |
 | M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 已交付 |
 | M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 计划中 |
@@ -184,10 +184,10 @@
 - **技能**：`.agents/skills/sync-upstream-radius/SKILL.md`、`.agents/skills/reference-rfc/SKILL.md`、`.agents/skills/add-acceptance-test/SKILL.md`
 
 子任务：
-- [ ] M7.1 人工核对上游发现新提交后，评估安全/协议修复并决定是否同步 fork（更新 `go.mod` replace 版本）
-- [ ] M7.2 同步后跑全量 + 集成测试，必要时补充回归用例
-- [ ] M7.3 定期核对协议行为与 `docs/rfcs/` 规范，缺失规范按技能补录
-- [ ] M7.4 关键协议路径（认证、计费、CoA、EAP）补齐 CI 自动化验收用例
+- [x] M7.1 人工核对上游发现新提交后，评估安全/协议修复并决定是否同步 fork（更新 `go.mod` replace 版本）——**已交付**（2026-07-15 评估，无需代码变更）：上游 `layeh/radius` 自 `1006025d`（2023-12-13，"fix IPv6Prefix bug"）起休眠；`talkincode/radius` `master` 已包含全部上游提交并**额外领先 2 个 fork 独有修复**（IPv6Prefix 前缀外非零位容忍、generated `_SetVendor` 删除索引 panic），上游反而落后 fork 2 个提交，无可同步内容；`go.mod` 的 `replace layeh.com/radius => github.com/talkincode/radius v0.1.0` 恰好钉在 fork `master` tip。**决策：不同步、不改 `go.mod`**。未来上游若恢复活跃，由 `.agents/skills/sync-upstream-radius/SKILL.md` 例行核对承接，不再保留排期子任务。
+- [x] M7.2 同步后跑全量 + 集成测试，必要时补充回归用例——随 M7.1「无需同步」决策本轮无同步动作可验；该门禁已固化进 `sync-upstream-radius` skill：任何未来 fork 同步必须跑全量 + 集成测试并按需补回归用例，不再作为独立排期项。
+- [x] M7.3 定期核对协议行为与 `docs/rfcs/` 规范，缺失规范按技能补录——已由横切基线吸收为常态守则：协议行为改动必须引用 `docs/rfcs/` 对应条款（缺失规范经 `reference-rfc` skill 补录），在 M1/M2/M3/M8/M9/M14 各协议交付中持续执行，无独立交付物。
+- [x] M7.4 关键协议路径（认证、计费、CoA、EAP）补齐 CI 自动化验收用例——**已交付**（随各里程碑累积完成）：`test/integration/` 现有认证（`radius_test.go` PAP）、计费（`ipv6_test.go` 真实 Accounting-Start 达 1813 端口）、CoA/DM（`coa_test.go` 4 个端到端用例含签名伪造丢弃）、EAP（`eap_tls_test.go` / `peap_mschapv2_test.go` / `ttls_test.go` / `eap_external_acceptance_test.go`）及 `message_authenticator_test.go` / `ldap_test.go` 全链路 CI 用例，四大协议路径验收覆盖闭环。
 
 验收口径：上游重要修复有评估记录与同步决策；协议改动均引用 RFC 并有 CI 验收用例背书。
 
@@ -332,7 +332,7 @@
 ## Agent 排期约定
 
 - **入口（自动委托）**：收到"自动委托开发 / 继续推进路线图"类指令时，由 [`.agents/skills/orchestrate-roadmap/SKILL.md`](../.agents/skills/orchestrate-roadmap/SKILL.md) 作为总调度统筹一轮：选题 → 选执行 SOP → 派工 → 质量门禁 → PR → 迭代路线图。
-- 调度优先级：先 P1（`M2 → M3 → M8 → M9`，均已交付），再 P2（已置顶交付 `M13` 文档站点与 `M4` agent 质量门禁；当前优先收尾 `M14`，其后 `M7 / M10`（`M5` 计划批次 M5.1–M5.4 已交付，余量按需驱动）），最后 P3（`M6 / M11 / M12`）；同优先级里程碑按依赖与可执行性取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。**M13 置顶依据**：用户指令将 mdbook 文档站点列为优先实现，先收编散落文档并对外呈现既有能力（含 EAP 套件）。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
+- 调度优先级：先 P1（`M2 → M3 → M8 → M9`，均已交付），再 P2（已置顶交付 `M13` 文档站点与 `M4` agent 质量门禁；`M7` 已交付（上游评估收口、协议路径 CI 验收闭环）；当前优先收尾 `M14`，其后 `M10`（`M5` 计划批次 M5.1–M5.4 已交付，余量按需驱动）），最后 P3（`M6 / M11 / M12`）；同优先级里程碑按依赖与可执行性取，P2/P3 仅在更高优先级里程碑无可执行子任务时填充。**M13 置顶依据**：用户指令将 mdbook 文档站点列为优先实现，先收编散落文档并对外呈现既有能力（含 EAP 套件）。EAP 套件优先续接 M1（EAP-TLS）：先 PEAP-MSCHAPv2（兼容）、再 EAP-TTLS（后端适配），TLS 1.3 / TEAP / EAP-PWD 列为中长期 / 按需。
 - 单次 agent 任务只认领一个未勾选子任务（最小闭环），完成后在本文件勾选并在 PR 引用里程碑编号。
 - **自我迭代**：每轮交付后由 [`.agents/skills/groom-roadmap/SKILL.md`](../.agents/skills/groom-roadmap/SKILL.md) 勾选已交付项、更新里程碑状态、回填/拆分/重排子任务，并保持本文件与功能清单状态一致。
 - 任何超出 `TR-F` 清单的需求，必须先提交清单更新 PR，再排入本路线图。
