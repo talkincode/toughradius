@@ -7,6 +7,8 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"fmt"
+	"io"
 	"math/big"
 	"net"
 	"sync"
@@ -186,6 +188,27 @@ type supplicant struct {
 	clientDone chan error
 	ident      uint8
 	finished   bool
+	// clientErr is the TLS client goroutine's result, captured when it exits.
+	clientErr error
+	// postFinishedFlights counts server flights that arrived after the TLS
+	// client exited. A TLS 1.3 protected success indication (RFC 9190 §2.1.1)
+	// lands here when the client does not read application data; a TLS 1.2
+	// exchange must never produce one.
+	postFinishedFlights int
+}
+
+// clientRunFunc drives the test TLS client. The default runs the handshake
+// only; tests assert protected-success behavior by also reading application
+// data before returning.
+type clientRunFunc func(client *tls.Conn) error
+
+// defaultClientRun performs the TLS handshake and exits. It deliberately does
+// not Close the conn: a close_notify alert would surface as an extra non-ACK
+// EAP-TLS round after the server's pending-success point and break the
+// exchange (most visibly with a TLS 1.2 pinned client, where the client is the
+// last to finish).
+func defaultClientRun(client *tls.Conn) error {
+	return client.Handshake()
 }
 
 // newSupplicant starts a TLS client handshake bound to the handler's state.
@@ -194,6 +217,10 @@ func newSupplicant(t *testing.T, h *TLSHandler, sm eap.EAPStateManager, stateID,
 }
 
 func newSupplicantForType(t *testing.T, h eap.EAPHandler, eapType uint8, sm eap.EAPStateManager, stateID, secret string, clientCfg *tls.Config) *supplicant {
+	return newSupplicantWithClient(t, h, eapType, sm, stateID, secret, clientCfg, defaultClientRun)
+}
+
+func newSupplicantWithClient(t *testing.T, h eap.EAPHandler, eapType uint8, sm eap.EAPStateManager, stateID, secret string, clientCfg *tls.Config, run clientRunFunc) *supplicant {
 	t.Helper()
 	toClient := newHSStream()
 	fromClient := newHSStream()
@@ -201,11 +228,7 @@ func newSupplicantForType(t *testing.T, h eap.EAPHandler, eapType uint8, sm eap.
 	client := tls.Client(conn, clientCfg)
 
 	done := make(chan error, 1)
-	go func() {
-		err := client.Handshake()
-		_ = client.Close()
-		done <- err
-	}()
+	go func() { done <- run(client) }()
 
 	return &supplicant{
 		t: t, h: h, eapType: eapType, sm: sm, stateID: stateID, secret: secret,
@@ -214,13 +237,20 @@ func newSupplicantForType(t *testing.T, h eap.EAPHandler, eapType uint8, sm eap.
 }
 
 // waitSettled blocks until the TLS client is blocked waiting for more server
-// bytes (its current flight is fully written) or until it has finished.
+// bytes (its current flight is fully written) or until it has finished. Once
+// the client goroutine has exited it returns immediately: later rounds (such
+// as the server's TLS 1.3 protected success indication) produce no client
+// bytes and are answered with a bare ACK.
 func (s *supplicant) waitSettled() {
+	if s.finished {
+		return
+	}
 	deadline := time.After(5 * time.Second)
 	for {
 		select {
-		case <-s.clientDone:
+		case err := <-s.clientDone:
 			s.finished = true
+			s.clientErr = err
 			return
 		case <-deadline:
 			s.t.Fatal("timed out waiting for TLS client to settle")
@@ -235,7 +265,7 @@ func (s *supplicant) waitSettled() {
 		select {
 		case err := <-s.clientDone:
 			s.finished = true
-			_ = err
+			s.clientErr = err
 			return
 		case <-time.After(2 * time.Millisecond):
 		}
@@ -280,6 +310,12 @@ func (s *supplicant) run() (success bool, err error) {
 		// A full server flight has been reassembled.
 		flight := serverBuf
 		serverBuf = nil
+		if s.finished && len(flight) > 0 {
+			// The client has exited; this flight can only be post-handshake
+			// data such as the TLS 1.3 protected success indication. Count it
+			// and answer with a bare ACK.
+			s.postFinishedFlights++
+		}
 		if !s.finished && len(flight) > 0 {
 			_, werr := s.toClient.Write(flight)
 			require.NoError(s.t, werr)
@@ -459,4 +495,133 @@ func TestTLSHandler_FullHandshake_OutboundFragmentation(t *testing.T) {
 	success, err := sup.run()
 	require.NoError(t, err)
 	assert.True(t, success, "fragmented EAP-TLS handshake must still authenticate")
+}
+
+// TestTLSHandler_FullHandshake_TLS13ProtectedSuccess pins the client to TLS 1.3
+// and verifies the RFC 9190 §2.1.1 protected success indication: after its
+// final handshake message the server sends one octet of 0x00 as TLS application
+// data, and EAP-Success follows only after the peer's ACK. The client decrypts
+// and checks the indication itself.
+func TestTLSHandler_FullHandshake_TLS13ProtectedSuccess(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice@example.com", "secret")
+
+	tlsCfg := clientCfg(ca, clientCert)
+	tlsCfg.MinVersion = tls.VersionTLS13
+	tlsCfg.MaxVersion = tls.VersionTLS13
+
+	// After the handshake, read and verify the protected success indication.
+	readIndication := func(client *tls.Conn) error {
+		if err := client.Handshake(); err != nil {
+			return err
+		}
+		if v := client.ConnectionState().Version; v != tls.VersionTLS13 {
+			return fmt.Errorf("negotiated version %#x, want TLS 1.3", v)
+		}
+		buf := make([]byte, 1)
+		if _, err := io.ReadFull(client, buf); err != nil {
+			return fmt.Errorf("read protected success indication: %w", err)
+		}
+		if buf[0] != 0x00 {
+			return fmt.Errorf("protected success indication byte %#x, want 0x00", buf[0])
+		}
+		return nil
+	}
+
+	sup := newSupplicantWithClient(t, h, eap.TypeTLS, sm, stateID, "secret", tlsCfg, readIndication)
+	success, err := sup.run()
+	require.NoError(t, err)
+	assert.True(t, success, "TLS 1.3 EAP-TLS handshake must authenticate")
+	require.NoError(t, sup.clientErr, "client must decrypt the 0x00 protected success indication")
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.True(t, state.Success)
+}
+
+// TestTLSHandler_FullHandshake_TLS12FallbackNoIndication pins the client to TLS
+// 1.2 and verifies the negotiated fallback stays byte-identical to the legacy
+// flow: the handshake authenticates and the server never sends a protected
+// success indication (RFC 5216 defines none; the 0x00 commitment is TLS
+// 1.3-only per RFC 9190 §2.1.1).
+func TestTLSHandler_FullHandshake_TLS12FallbackNoIndication(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice@example.com", "secret")
+
+	tlsCfg := clientCfg(ca, clientCert)
+	tlsCfg.MaxVersion = tls.VersionTLS12
+
+	verify12 := func(client *tls.Conn) error {
+		if err := client.Handshake(); err != nil {
+			return err
+		}
+		if v := client.ConnectionState().Version; v != tls.VersionTLS12 {
+			return fmt.Errorf("negotiated version %#x, want TLS 1.2", v)
+		}
+		return nil
+	}
+
+	sup := newSupplicantWithClient(t, h, eap.TypeTLS, sm, stateID, "secret", tlsCfg, verify12)
+	success, err := sup.run()
+	require.NoError(t, err)
+	assert.True(t, success, "TLS 1.2 EAP-TLS fallback must authenticate")
+	require.NoError(t, sup.clientErr)
+	assert.Zero(t, sup.postFinishedFlights,
+		"TLS 1.2 exchange must not carry a protected success indication round")
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.True(t, state.Success)
+}
+
+// TestTLSHandler_TLS13_IdentityMismatchRejectedBeforeIndication pins the client
+// to TLS 1.3 with a certificate identity that does not match the EAP identity.
+// The server must reject without ever sending the 0x00 protected success
+// indication: RFC 9190 §2.1.1 defines that octet as a success commitment, so
+// the identity binding (RFC 5216 §5.2) has to fail the exchange first.
+func TestTLSHandler_TLS13_IdentityMismatchRejectedBeforeIndication(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "bob@example.com", "secret")
+
+	tlsCfg := clientCfg(ca, clientCert)
+	tlsCfg.MinVersion = tls.VersionTLS13
+	tlsCfg.MaxVersion = tls.VersionTLS13
+
+	sup := newSupplicantWithClient(t, h, eap.TypeTLS, sm, stateID, "secret", tlsCfg, defaultClientRun)
+	success, err := sup.run()
+	assert.False(t, success)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTLSIdentityMismatch)
+	assert.Zero(t, sup.postFinishedFlights,
+		"server must not commit success (0x00 indication) before rejecting the identity")
 }

@@ -117,6 +117,13 @@ func New(cfg *Config) (*Engine, error) {
 		Certificates: []tls.Certificate{cfg.ServerCertificate},
 		MinVersion:   cfg.MinVersion,
 		MaxVersion:   cfg.MaxVersion,
+		// EAP-TLS does not implement TLS session resumption, which RFC 9190
+		// §2.1.3 makes optional. Disabling tickets keeps the server's final
+		// TLS 1.3 flight free of NewSessionTicket messages, so the protected
+		// success indication (RFC 9190 §2.1.1) is the only post-handshake
+		// record the tunnel sends and no EAP round is wasted on tickets the
+		// peer can never use.
+		SessionTicketsDisabled: true,
 	}
 	if cfg.ServerOnly {
 		tlsCfg.ClientAuth = tls.NoClientCert

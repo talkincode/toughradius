@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
@@ -29,6 +30,24 @@ type tlsTunnel struct {
 	// EAP-TTLS sets this (RFC 5281 §7.3); EAP-TLS and PEAP (server speaks first)
 	// leave it false, preserving their existing behavior.
 	clientSpeaksFirst bool
+	// protectedSuccess enables the RFC 9190 §2.1.1 protected success indication
+	// for TLS 1.3 handshakes: after its final handshake flight the server sends
+	// one octet of 0x00 as encrypted TLS application data and only then, on the
+	// peer's acknowledgement, an EAP-Success. This authenticates the success
+	// result inside the tunnel (a plain EAP-Success is unprotected and a
+	// compliant TLS 1.3 peer would reject it, §2.5). Only plain EAP-TLS sets
+	// this; PEAP/TTLS follow their own tunneled success semantics and are
+	// unaffected. TLS 1.2 handshakes never send the indication (RFC 5216 has no
+	// such message), preserving the existing byte-identical 1.2 flow.
+	protectedSuccess bool
+	// onCommit validates the authentication decision before the protected
+	// success indication is emitted. RFC 9190 §2.1.1 defines the 0x00 octet as
+	// a success commitment, so any policy that could still reject the peer
+	// (e.g. EAP-TLS certificate identity binding, RFC 5216 §5.2) must run
+	// first: a server must never commit success and then send EAP-Failure.
+	// A non-nil error rejects the handshake without sending the indication.
+	// Nil onCommit skips the pre-commit check.
+	onCommit func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) error
 	// onApplicationData drives a tunneled inner EAP method (PEAP phase 2) once
 	// the outer TLS tunnel is established. It is given the decrypted inbound
 	// inner EAP bytes (nil on the very first call, which asks it to produce the
@@ -119,6 +138,31 @@ func (t *tlsTunnel) advanceHandshake(ctx *eap.EAPContext, state *eap.EAPState, t
 	if hsErr != nil {
 		closeEngine(state)
 		return false, fmt.Errorf("%w: %v", eap.ErrTLSHandshakeFailed, hsErr)
+	}
+
+	// RFC 9190 §2.1.1: with TLS 1.3 the server commits to the handshake result
+	// by sending one octet of 0x00 as protected application data after its
+	// final handshake message; EAP-Success may only follow the peer's
+	// acknowledgement of that record. Session tickets are disabled in the
+	// engine, so this commitment record is appended to whatever handshake bytes
+	// remain (typically none: the TLS 1.3 server finishes on the peer's flight)
+	// and rides the normal flight -> pending-success -> ACK state machine.
+	if done && t.protectedSuccess && engine.NegotiatedVersion() == tls.VersionTLS13 {
+		// The 0x00 octet is a success commitment, so run the remaining
+		// authentication policy (certificate identity binding) first and
+		// reject without the indication if it fails.
+		if t.onCommit != nil {
+			if cerr := t.onCommit(ctx, state, engine); cerr != nil {
+				closeEngine(state)
+				return false, cerr
+			}
+		}
+		commit, werr := engine.WriteApplication([]byte{0x00})
+		if werr != nil {
+			closeEngine(state)
+			return false, fmt.Errorf("%w: %v", eap.ErrTLSHandshakeFailed, werr)
+		}
+		out = append(out, commit...)
 	}
 
 	if len(out) == 0 {
