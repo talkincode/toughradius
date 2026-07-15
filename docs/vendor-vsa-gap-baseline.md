@@ -8,6 +8,13 @@ execute without re-discovering the same scope.
 > response enhancer (#456), and the M5.4 Cisco `cisco-avpair` response enhancer
 > (#543) landed. The first baseline (#433) predated that work and is superseded by
 > the matrix below; see "Delta since the first baseline".
+>
+> A dictionary-pruning pass then removed the zero-reference generated packages
+> (`f5`, `hillstone`, `pfSense`, `unix`) and replaced the `radback` generated
+> dictionary with a hand-maintained minimal one; see "Delta: dictionary
+> pruning". CI now enforces that every package under
+> `internal/radiusd/vendors/` keeps at least one external reference
+> (`scripts/check-vendor-dict-usage.sh`).
 
 ## Scope and Method
 
@@ -33,15 +40,20 @@ grep RegisterResponseEnhancer internal/radiusd/plugins/init.go
 grep -c '^\$INCLUDE' share/dictionary                       # 213
 ```
 
-## Coverage Snapshot (HEAD 9882f79e)
+## Coverage Snapshot (current)
 
-- Generated vendor dictionary packages: `15`
+- Generated vendor dictionary packages: `11` (after the pruning pass removed
+  `f5`, `hillstone`, `pfSense`, `unix`)
 - Registered vendor parsers (`parsers/init.go`): `default + huawei + h3c + zte +
   radback + alcatel + aruba + juniper` (7 vendors + default)
 - Registered response enhancers (`plugins/init.go`): `default + huawei + h3c +
   zte + mikrotik + ikuai + aruba + cisco` (7 vendors + default)
 - `share/dictionary` includes `213` `$INCLUDE dictionary.*` entries; the repo
-  ships generated packages for `15` of those vendors.
+  ships in-tree packages for `11` of those vendors. Removed dictionaries can be
+  regenerated from `share/dictionary.*` with radius-dict-gen when a parser or
+  enhancer actually needs them.
+- CI gate: `scripts/check-vendor-dict-usage.sh` fails the Lint job if any
+  vendor dictionary package has zero external references.
 
 ## Why a parser is not always worth adding
 
@@ -59,18 +71,18 @@ does not depend on a parser.
 | `alcatel` | 3041 | present | present | missing | `share/dictionary.alcatel` |
 | `aruba` | 14823 | present | present | present | `share/dictionary.aruba` |
 | `cisco` | 9 | present | missing | present | `share/dictionary.cisco` |
-| `f5` | 3375 | present | missing | missing | `share/dictionary.f5` |
 | `h3c` | 25506 | present | present | present | `share/dictionary.h3c` |
-| `hillstone` | 28557 | present | missing | missing | `share/dictionary.hillstone` |
 | `huawei` | 2011 | present | present | present | `share/dictionary.huawei` |
 | `ikuai` | 10055 | present | missing | present | no `share/dictionary.ikuai` in tree |
 | `juniper` | 2636 | present | present | missing | `share/dictionary.juniper` |
-| `microsoft` | 311 | present | missing | missing | `share/dictionary.microsoft` |
+| `microsoft` | 311 | present | missing | missing | `share/dictionary.microsoft` (used by EAP MS-CHAPv2) |
 | `mikrotik` | 14988 | present | missing | present | `share/dictionary.mikrotik` |
-| `pfSense` | 13644 | present | missing | missing | `share/dictionary.pfsense` (case mapping) |
-| `radback` | 2352 | present | present | missing | no `share/dictionary.radback`/`.redback` in tree |
-| `unix` | 4 | missing (`CodeUnix`) | missing | missing | `share/dictionary.unix` |
+| `radback` | 2352 | present | present | missing | hand-maintained minimal package (Mac-Addr 145, Bind-Dot1q-Vlan-Tag-Id 54); no `share/dictionary.radback`/`.redback` in tree |
 | `zte` | 3902 | present | present | present | `share/dictionary.zte` |
+
+Removed in the pruning pass (regenerate on demand from `share/dictionary.*`):
+`f5` (3375), `hillstone` (28557), `pfSense` (13644), `unix` (4). Their `Code*`
+constants remain in `codes.go` where they already existed.
 
 ## Delta since the first baseline (#433)
 
@@ -86,8 +98,27 @@ first response enhancer that the first baseline listed as pending:
   from `GetAddrPool` (#543, M5.4)
 
 The first baseline also reported `alcatel` / `aruba` as missing their `Code*`
-constant; both now exist in `codes.go`. Only `unix` still lacks a `Code*`
-constant.
+constant; both now exist in `codes.go`.
+
+## Delta: dictionary pruning
+
+A repository audit found that 4 of the 15 generated dictionary packages had
+zero external references, and that `radback` (15k generated lines, 1,708
+accessors) was consumed through exactly two accessors. The pruning pass:
+
+- removed `internal/radiusd/vendors/{f5,hillstone,pfSense,unix}` (zero
+  references outside their own package; roadmap M5.4 lists their enhancers as
+  demand-driven with no scheduled milestone)
+- replaced `radback/generated.go` with a hand-maintained minimal package
+  keeping the exact accessor names and wire behavior used by
+  `radback_parser.go` (`MacAddr_GetString`, `BindDot1qVlanTagID_Get`) and its
+  tests; round-trip tests pin the RFC 2865 §5.26 wire contract
+- added the `scripts/check-vendor-dict-usage.sh` CI gate so a new dictionary
+  cannot merge without a parser/enhancer (or other consumer) wiring it in
+
+Regenerating a removed vendor: run radius-dict-gen against the corresponding
+`share/dictionary.*` source and add the package back together with the consumer
+that needs it.
 
 ## Remaining gaps / backlog for the next M5 batch
 
@@ -102,8 +133,11 @@ remaining TR-F005 work is response-enhancer and hygiene work:
      rate VSA).
    - `alcatel`, `juniper`, `radback` — already have a request parser but no
      response enhancer; add when a deployment needs their reply attributes.
-   - `microsoft`, `f5`, `hillstone`, `pfSense` — neither parser nor enhancer;
-     close as enhancer / registry work when demand surfaces.
+   - `microsoft` — no parser/enhancer, but its dictionary stays: the EAP
+     MS-CHAPv2 handlers consume it.
+   - `f5`, `hillstone`, `pfSense` — packages removed in the pruning pass;
+     regenerate the dictionary and wire the enhancer together when demand
+     surfaces.
 2. **Parsers — high-value request-side MAC/VLAN vendors are done.** Add a new
    parser only when a vendor dictionary proves a vendor-specific MAC/VLAN
    **request** encoding (otherwise it duplicates `DefaultParser`).
@@ -112,9 +146,10 @@ remaining TR-F005 work is response-enhancer and hygiene work:
    Access-Accept reply attributes and their request side uses the standard
    `Calling-Station-Id`, so a dedicated parser would behave identically to
    `DefaultParser`.
-4. **Hygiene.** `unix` (VendorID 4) has a generated package and a
-   `share/dictionary.unix` source but no `vendors.CodeUnix` constant; add the
-   constant only if/when a `unix` parser or enhancer is actually wired.
+4. **Hygiene — resolved.** The `unix` package (VendorID 4) was removed in the
+   pruning pass; it never had a `Code*` constant or any consumer. Recreate the
+   constant, package, and consumer together if a `unix` parser or enhancer is
+   ever actually wired.
 5. **Per-vendor acceptance set (unchanged).**
    - parser + registration in `parsers/init.go`, and/or enhancer + registration
      in `plugins/init.go`
