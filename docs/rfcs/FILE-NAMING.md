@@ -59,6 +59,7 @@
 | -------- | --------------------------------- | -------------------- |
 | RFC 3851 | `rfc3851-eap-md5.txt`             | EAP-MD5              |
 | RFC 5216 | `rfc5216-eap-tls.txt`             | EAP-TLS              |
+| RFC 9190 | `rfc9190-eap-tls13.txt`           | EAP-TLS 1.3          |
 | RFC 5281 | `rfc5281-eap-ttls.txt`            | EAP-TTLS             |
 | RFC 4186 | `rfc4186-eap-sim.txt`             | EAP-SIM (GSM)        |
 | RFC 4187 | `rfc4187-eap-aka.txt`             | EAP-AKA (3G)         |

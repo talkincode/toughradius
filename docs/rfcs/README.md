@@ -136,6 +136,11 @@
   - EAP-TLS 认证协议（基于 TLS 的 EAP 方法）
   - 文件：`rfc5216.txt`
 
+- **RFC 9190** - EAP-TLS 1.3: Using EAP-TLS with TLS 1.3
+
+  - EAP-TLS 使用 TLS 1.3 的更新（受保护成功指示、密钥导出、票据处理）
+  - 文件：`rfc9190-eap-tls13.txt`
+
 - **RFC 5281** - Extensible Authentication Protocol Tunneled Transport Layer Security Authenticated Protocol Version 0 (EAP-TTLSv0)
 
   - EAP-TTLS 隧道 TLS 认证协议
@@ -313,6 +318,7 @@ ToughRADIUS 主要实现了以下 RFC 规范：
 - ✅ RFC 3748 - EAP 核心协议
 - ✅ RFC 3579 - RADIUS EAP 支持
 - ✅ RFC 5216 - EAP-TLS
+- ✅ RFC 9190 - EAP-TLS 1.3（TLS 1.3 协商 + 受保护成功指示，TLS 1.2 回退兼容）
 - ✅ RFC 2759 - MS-CHAP-V2 (用于 EAP-MSCHAPv2)
 
 #### 已实现 - 高级功能
@@ -346,7 +352,7 @@ ToughRADIUS 主要实现了以下 RFC 规范：
 | IPv6 支持       | 7      | RFC 3162, 4818, 5997, 6519, 6911, 6930, 5969             |
 | EAP 核心        | 3      | RFC 2284, 3748, 5247                                     |
 | RADIUS-EAP 集成 | 2      | RFC 3579, 3580                                           |
-| EAP 认证方法    | 9      | RFC 3851, 5216, 5281, 4186, 4187, 4764, 5448, 7170, 7542 |
+| EAP 认证方法    | 10     | RFC 3851, 5216, 5281, 4186, 4187, 4764, 5448, 7170, 7542, 9190 |
 | EAP 扩展        | 1      | RFC 6124                                                 |
 | 厂商特定        | 3      | RFC 2548, 2759, 4679                                     |
 | IEEE 802 网络   | 2      | RFC 5904, 7268                                           |

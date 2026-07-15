@@ -131,6 +131,19 @@ func (e *Engine) HandshakeComplete() bool {
 	return e.done
 }
 
+// NegotiatedVersion returns the TLS protocol version negotiated by the
+// completed handshake (e.g. tls.VersionTLS12 or tls.VersionTLS13). It returns 0
+// if the handshake has not completed, so callers can branch on the negotiated
+// version only after Process reports done=true. EAP-TLS uses it to apply the
+// TLS 1.3-only protected success indication (RFC 9190 §2.1.1) while keeping the
+// TLS 1.2 flow byte-identical.
+func (e *Engine) NegotiatedVersion() uint16 {
+	if !e.HandshakeComplete() {
+		return 0
+	}
+	return e.conn.ConnectionState().Version
+}
+
 // readTimeout returns the configured ReadApplication timeout, defaulting to
 // DefaultAppReadTimeout when unset.
 func (e *Engine) readTimeout() time.Duration {

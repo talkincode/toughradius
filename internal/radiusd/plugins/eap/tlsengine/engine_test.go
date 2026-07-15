@@ -287,6 +287,50 @@ func TestEngine_New_RequiresServerCertificate(t *testing.T) {
 	}
 }
 
+// TestEngine_NegotiatedVersion verifies the negotiated-version accessor: zero
+// before the handshake completes, then the actual protocol version (TLS 1.3 by
+// default with Go clients, TLS 1.2 when the client pins it). EAP-TLS branches
+// on this to apply the RFC 9190 §2.1.1 protected success indication only to
+// TLS 1.3 sessions.
+func TestEngine_NegotiatedVersion(t *testing.T) {
+	ca := newTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cases := []struct {
+		name        string
+		pinMax      uint16
+		wantVersion uint16
+	}{
+		{name: "tls13 negotiated by default", pinMax: 0, wantVersion: tls.VersionTLS13},
+		{name: "tls12 when client pins it", pinMax: tls.VersionTLS12, wantVersion: tls.VersionTLS12},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			eng, err := New(serverConfig(t, ca, ca))
+			if err != nil {
+				t.Fatalf("new engine: %v", err)
+			}
+			defer func() { _ = eng.Close() }()
+
+			if v := eng.NegotiatedVersion(); v != 0 {
+				t.Fatalf("NegotiatedVersion before handshake = %#x, want 0", v)
+			}
+
+			cfg := clientTLSConfig(ca, clientCert)
+			cfg.MaxVersion = tc.pinMax
+			clientErr, serverErr := driveHandshake(t, eng, cfg)
+			if clientErr != nil || serverErr != nil {
+				t.Fatalf("handshake errors: client=%v server=%v", clientErr, serverErr)
+			}
+			if v := eng.NegotiatedVersion(); v != tc.wantVersion {
+				t.Fatalf("NegotiatedVersion = %#x, want %#x", v, tc.wantVersion)
+			}
+		})
+	}
+}
+
 func TestEngine_TrustedClientHandshakeSucceeds(t *testing.T) {
 	ca := newTestCA(t, "Test Root CA")
 	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {

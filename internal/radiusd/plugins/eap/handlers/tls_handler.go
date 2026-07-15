@@ -93,6 +93,15 @@ func (h *TLSHandler) newTunnel() *tlsTunnel {
 		eapType:        eap.TypeTLS,
 		maxFragment:    h.maxFragment,
 		configProvider: h.configProvider,
+		// RFC 9190 §2.1.1: plain EAP-TLS over TLS 1.3 must send the protected
+		// success indication before EAP-Success. PEAP/TTLS tunnels keep this
+		// off and signal success through their inner methods instead.
+		protectedSuccess: true,
+		// The indication commits to success, so the certificate identity
+		// binding (RFC 5216 §5.2) must pass before it is sent.
+		onCommit: func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) error {
+			return h.validateIdentity(state, engine)
+		},
 		onHandshakeComplete: func(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
 			return h.finalizeWithEngine(ctx, state, engine)
 		},
@@ -153,21 +162,33 @@ func (h *TLSHandler) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 	return h.newTunnel().HandleResponse(ctx)
 }
 
-func (h *TLSHandler) finalizeWithEngine(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
-	defer func() { _ = engine.Close() }()
-
+// validateIdentity checks the TLS-authenticated certificate identity against
+// the EAP identity (RFC 5216 §5.2) without granting access. It backs both the
+// pre-commit check that gates the TLS 1.3 protected success indication (RFC
+// 9190 §2.1.1: the 0x00 octet commits to success, so any rejectable policy
+// must run first) and the final grant in finalizeWithEngine.
+func (h *TLSHandler) validateIdentity(state *eap.EAPState, engine *tlsengine.Engine) error {
 	identity, err := engine.Identity()
 	if err != nil {
-		return false, fmt.Errorf("%w: %v", eap.ErrTLSNoIdentity, err)
+		return fmt.Errorf("%w: %v", eap.ErrTLSNoIdentity, err)
 	}
 	if identity.Name == "" {
-		return false, eap.ErrTLSNoIdentity
+		return eap.ErrTLSNoIdentity
 	}
 
 	// Bind the TLS-authenticated certificate identity to the RADIUS User-Name.
 	if state.Username != "" && !identity.Matches(state.Username) {
-		return false, fmt.Errorf("%w: certificate identity %q does not match user %q",
+		return fmt.Errorf("%w: certificate identity %q does not match user %q",
 			eap.ErrTLSIdentityMismatch, identity.Name, state.Username)
+	}
+	return nil
+}
+
+func (h *TLSHandler) finalizeWithEngine(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine) (bool, error) {
+	defer func() { _ = engine.Close() }()
+
+	if err := h.validateIdentity(state, engine); err != nil {
+		return false, err
 	}
 
 	state.Success = true

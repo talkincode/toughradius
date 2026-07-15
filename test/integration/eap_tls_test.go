@@ -12,6 +12,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
+	"io"
 	"math/big"
 	"net"
 	"strings"
@@ -41,6 +42,11 @@ import (
 //   - an untrusted client certificate is rejected with an explicit reason;
 //   - a trusted certificate whose identity does not match the User-Name is
 //     rejected with an explicit reason.
+//
+// Milestone M10.1 (TR-F004 / RFC 9190) adds the TLS 1.3 cases: a pinned TLS 1.3
+// client must receive and decrypt the §2.1.1 protected success indication
+// (application data 0x00) before EAP-Success, and a pinned TLS 1.2 client must
+// still authenticate through the legacy RFC 5216 flow without one.
 //
 // It is intentionally serial (no t.Parallel) because the RADIUS plugin registry,
 // dynamic settings, and rate limiter are process-global shared state.
@@ -146,6 +152,93 @@ func TestEAPTLSEndToEnd(t *testing.T) {
 		assertEAPCode(t, resp, eap.CodeFailure)
 		assert.Containsf(t, strings.ToLower(rfc2865.ReplyMessage_GetString(resp)), "identity mismatch",
 			"reject must carry an explicit identity-mismatch reason")
+	})
+
+	t.Run("tls 1.3 sends protected success indication", func(t *testing.T) {
+		// RFC 9190 §2.1.1: with TLS 1.3 the server commits to success by
+		// sending one octet of 0x00 as protected application data after its
+		// final handshake message; EAP-Success follows the peer's ACK. The
+		// pinned TLS 1.3 client decrypts and verifies the indication itself.
+		ca := newEAPTLSTestCA(t, "IT EAP-TLS 13 CA "+suffix)
+		serverCert := ca.issueServer(t, "radius.example.com")
+		username := "it-eaptls-t13-" + suffix + "@example.com"
+		clientCert := ca.issueClient(t, "t13", username)
+		seedEAPTLSUser(t, profileID, username)
+
+		configureEAPTLS(t, serverCert, ca.certPEM())
+
+		cfg := clientTLSConfig(ca, clientCert)
+		cfg.MinVersion = tls.VersionTLS13
+		cfg.MaxVersion = tls.VersionTLS13
+
+		sup := &eapTLSSupplicant{
+			serverAddr: serverAddr,
+			secret:     secret,
+			username:   username,
+			nasID:      nasID,
+			nasIP:      nasIP,
+			clientCfg:  cfg,
+			clientRun: func(client *tls.Conn) error {
+				if err := client.Handshake(); err != nil {
+					return err
+				}
+				if v := client.ConnectionState().Version; v != tls.VersionTLS13 {
+					return fmt.Errorf("negotiated version %#x, want TLS 1.3", v)
+				}
+				buf := make([]byte, 1)
+				if _, err := io.ReadFull(client, buf); err != nil {
+					return fmt.Errorf("read protected success indication: %w", err)
+				}
+				if buf[0] != 0x00 {
+					return fmt.Errorf("protected success indication byte %#x, want 0x00", buf[0])
+				}
+				return nil
+			},
+		}
+		resp := sup.authenticate(t)
+		assert.Equalf(t, radius.CodeAccessAccept, resp.Code,
+			"TLS 1.3 EAP-TLS client must authenticate, got %v (%q)", resp.Code, rfc2865.ReplyMessage_GetString(resp))
+		assertEAPCode(t, resp, eap.CodeSuccess)
+		require.NoError(t, sup.clientErr,
+			"client must decrypt the 0x00 protected success indication before EAP-Success")
+	})
+
+	t.Run("tls 1.2 pinned client falls back", func(t *testing.T) {
+		// A peer that cannot speak TLS 1.3 negotiates 1.2 and follows the
+		// legacy RFC 5216 flow with no protected success indication.
+		ca := newEAPTLSTestCA(t, "IT EAP-TLS 12 CA "+suffix)
+		serverCert := ca.issueServer(t, "radius.example.com")
+		username := "it-eaptls-t12-" + suffix + "@example.com"
+		clientCert := ca.issueClient(t, "t12", username)
+		seedEAPTLSUser(t, profileID, username)
+
+		configureEAPTLS(t, serverCert, ca.certPEM())
+
+		cfg := clientTLSConfig(ca, clientCert)
+		cfg.MaxVersion = tls.VersionTLS12
+
+		sup := &eapTLSSupplicant{
+			serverAddr: serverAddr,
+			secret:     secret,
+			username:   username,
+			nasID:      nasID,
+			nasIP:      nasIP,
+			clientCfg:  cfg,
+			clientRun: func(client *tls.Conn) error {
+				if err := client.Handshake(); err != nil {
+					return err
+				}
+				if v := client.ConnectionState().Version; v != tls.VersionTLS12 {
+					return fmt.Errorf("negotiated version %#x, want TLS 1.2", v)
+				}
+				return nil
+			},
+		}
+		resp := sup.authenticate(t)
+		assert.Equalf(t, radius.CodeAccessAccept, resp.Code,
+			"TLS 1.2 pinned EAP-TLS client must authenticate, got %v (%q)", resp.Code, rfc2865.ReplyMessage_GetString(resp))
+		assertEAPCode(t, resp, eap.CodeSuccess)
+		require.NoError(t, sup.clientErr)
 	})
 }
 
@@ -381,6 +474,12 @@ type eapTLSSupplicant struct {
 	fromClient *eapStream // client -> server TLS bytes
 	clientDone chan error
 	finished   bool
+	// clientErr is the TLS client goroutine's result, captured when it exits.
+	clientErr error
+	// clientRun overrides the TLS client behavior (default: handshake only).
+	// The TLS 1.3 test uses it to decrypt and verify the RFC 9190 §2.1.1
+	// protected success indication.
+	clientRun func(client *tls.Conn) error
 }
 
 // authenticate runs the whole EAP-TLS exchange and returns the final RADIUS
@@ -496,19 +595,24 @@ func (s *eapTLSSupplicant) exchange(packet *radius.Packet) (*radius.Packet, erro
 	return radius.Exchange(ctx, packet, s.serverAddr)
 }
 
-// startClient launches the crypto/tls client handshake bound to in-memory duplex
-// streams that the supplicant bridges to the RADIUS transport.
+// startClient launches the crypto/tls client bound to in-memory duplex streams
+// that the supplicant bridges to the RADIUS transport. The default behavior
+// runs the handshake only and deliberately does not Close the conn: a
+// close_notify alert would surface as an extra non-ACK EAP-TLS round after the
+// server's pending-success point (most visibly with a TLS 1.2 pinned client,
+// where the client finishes last). Tests may override clientRun to also read
+// application data, e.g. the TLS 1.3 protected success indication.
 func (s *eapTLSSupplicant) startClient() {
 	s.toClient = newEAPStream()
 	s.fromClient = newEAPStream()
 	conn := &eapConn{rd: s.toClient, wr: s.fromClient}
 	client := tls.Client(conn, s.clientCfg)
 	s.clientDone = make(chan error, 1)
-	go func() {
-		err := client.Handshake()
-		_ = client.Close()
-		s.clientDone <- err
-	}()
+	run := s.clientRun
+	if run == nil {
+		run = func(c *tls.Conn) error { return c.Handshake() }
+	}
+	go func() { s.clientDone <- run(client) }()
 }
 
 func (s *eapTLSSupplicant) close() {
@@ -521,14 +625,21 @@ func (s *eapTLSSupplicant) close() {
 }
 
 // waitSettled blocks until the TLS client is parked waiting for more server bytes
-// (its current flight fully written) or until the handshake has finished.
+// (its current flight fully written) or until the handshake has finished. Once
+// the client goroutine has exited it returns immediately: later rounds (such as
+// the server's TLS 1.3 protected success indication) produce no client bytes
+// and are answered with a bare ACK.
 func (s *eapTLSSupplicant) waitSettled(t *testing.T) {
 	t.Helper()
+	if s.finished {
+		return
+	}
 	deadline := time.After(5 * time.Second)
 	for {
 		select {
-		case <-s.clientDone:
+		case err := <-s.clientDone:
 			s.finished = true
+			s.clientErr = err
 			return
 		case <-deadline:
 			t.Fatal("timed out waiting for TLS client to settle")
@@ -541,8 +652,9 @@ func (s *eapTLSSupplicant) waitSettled(t *testing.T) {
 			return
 		}
 		select {
-		case <-s.clientDone:
+		case err := <-s.clientDone:
 			s.finished = true
+			s.clientErr = err
 			return
 		case <-time.After(2 * time.Millisecond):
 		}
