@@ -39,7 +39,7 @@
 | M7 | 上游 RADIUS 库跟踪与协议合规 | TR-F021 / TR-F022 | P2 | 已交付 |
 | M8 | PEAPv0 / EAP-MSCHAPv2 认证支持 | TR-F004 | P1 | 已交付 |
 | M9 | EAP-TTLS 隧道认证支持 | TR-F004 | P1 | 已交付 |
-| M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 进行中（M10.1 已交付 #562，下一个 M10.2 密钥派生） |
+| M10 | EAP-TLS 1.3 / RFC 9190 升级 | TR-F004 | P2 | 进行中（M10.1 #562、M10.2 #564 已交付，下一个 M10.3 close_notify 语义） |
 | M11 | TEAP 隧道认证（中长期） | TR-F004 | P3 | 计划中 |
 | M12 | EAP-PWD 口令认证（按需） | TR-F004 | P3 | 计划中 |
 | M13 | 双语文档站点（mdbook） | TR-F023 | P2（优先） | 已交付 |
@@ -241,7 +241,7 @@
 
 子任务：
 - [x] M10.1 TLS 1.3 握手协商与版本回退（兼容 1.2 客户端）——已交付（#562）：共享 `tlsengine` 默认协商 TLS 1.3 并自动回退 1.2；纯 EAP-TLS 实现 RFC 9190 §2.1.1 受保护成功指示（0x00 应用数据承诺消息，EAP-Success 以对端 ACK 为门），证书身份绑定（RFC 5216 §5.2）通过 `onCommit` 钩子在承诺**之前**执行；按 §2.1.3 禁用会话票据；新增 `NegotiatedVersion()`；PEAP/TTLS 不受影响。单测（1.3 指示解密、1.2 无指示回退、身份不匹配先拒绝不承诺）+ `test/integration/` 端到端子用例；RFC 文本登记于 `docs/rfcs/rfc9190-eap-tls13.txt`。密钥导出（MSK/EMSK → MPPE）延后至 M10.2。
-- [ ] M10.2 按 RFC 9190 / RFC 9427 实现 TLS 1.3 密钥派生（MSK/EMSK）
+- [x] M10.2 按 RFC 9190 实现 TLS 1.3 密钥派生（MSK → MS-MPPE）——已交付（#564）：纯 EAP-TLS `finalizeWithEngine` 在身份校验通过后从已完成的 TLS 会话派生 MSK,并向 Access-Accept 填充 MS-MPPE-Recv-Key / MS-MPPE-Send-Key + 加密策略/类型（RFC 2548 §2.4）,补齐 WPA2/WPA3-Enterprise 场景 AP 无法获得 PMK 的缺口（PEAP/TTLS 早已具备,纯 EAP-TLS 是缺口）。按协商版本分支:TLS 1.3 用 `TLS-Exporter("EXPORTER_EAP_TLS_Key_Material", 0x0D, 128)` **必须取满 128 字节再切片**（`MSK = Key_Material(0,63)`,RFC 9190 §2.3;RFC 9427 适用于*其他* TLS 型 EAP 方法,纯 EAP-TLS 无需）;TLS 1.2 保持 `"client EAP encryption"` / 64 字节（RFC 5216 §2.3）。`MSK(0,31)` → Recv-Key、`MSK(32,63)` → Send-Key,与 PEAP/TTLS 布局一致;EMSK 不导出（无消费者;RECV-IV/SEND-IV 已被 RFC 5247 废弃）。导出失败即拒绝（fail-closed）——注意行为变化:TLS 1.2 客户端若未协商 EMS（RFC 7627）将被拒绝而非拿到无密钥的 Accept。单测对 1.3/1.2 双版本做客户端侧 `ExportKeyingMaterial` 与解密后 MPPE 键逐字节对比（server MSK == client MSK);`test/integration/` 三个成功子用例以请求 Authenticator 重绑解密断言双钥各 32 字节。
 - [ ] M10.3 `close_notify` / 身份保护等 TLS 1.3 语义差异处理
 - [ ] M10.4 单元测试 + `test/integration/` TLS 1.3 端到端验收用例（CI 自动执行）
 
