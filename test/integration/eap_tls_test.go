@@ -30,6 +30,7 @@ import (
 	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	eaphandlers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/handlers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/microsoft"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
@@ -94,6 +95,7 @@ func TestEAPTLSEndToEnd(t *testing.T) {
 		assert.Equalf(t, radius.CodeAccessAccept, resp.Code,
 			"trusted EAP-TLS client must authenticate, got %v (%q)", resp.Code, rfc2865.ReplyMessage_GetString(resp))
 		assertEAPCode(t, resp, eap.CodeSuccess)
+		assertEAPTLSMPPEKeys(t, resp, sup, secret)
 	})
 
 	t.Run("untrusted client certificate is rejected", func(t *testing.T) {
@@ -201,6 +203,8 @@ func TestEAPTLSEndToEnd(t *testing.T) {
 		assertEAPCode(t, resp, eap.CodeSuccess)
 		require.NoError(t, sup.clientErr,
 			"client must decrypt the 0x00 protected success indication before EAP-Success")
+		// RFC 9190 §2.3: the TLS 1.3 MSK feeds the MS-MPPE keys on the Accept.
+		assertEAPTLSMPPEKeys(t, resp, sup, secret)
 	})
 
 	t.Run("tls 1.2 pinned client falls back", func(t *testing.T) {
@@ -239,7 +243,28 @@ func TestEAPTLSEndToEnd(t *testing.T) {
 			"TLS 1.2 pinned EAP-TLS client must authenticate, got %v (%q)", resp.Code, rfc2865.ReplyMessage_GetString(resp))
 		assertEAPCode(t, resp, eap.CodeSuccess)
 		require.NoError(t, sup.clientErr)
+		// RFC 5216 §2.3: the TLS 1.2 fallback also derives MS-MPPE keys.
+		assertEAPTLSMPPEKeys(t, resp, sup, secret)
 	})
+}
+
+// assertEAPTLSMPPEKeys verifies the Access-Accept carries the MS-MPPE session
+// keys derived from the EAP-TLS MSK (RFC 5216 §2.3 for TLS 1.2, RFC 9190 §2.3
+// for TLS 1.3). The keys are salt-encrypted (RFC 2548 §2.4) with the Request
+// Authenticator of the Access-Request that triggered the Accept, so both the
+// secret and authenticator are rebound before decrypting.
+func assertEAPTLSMPPEKeys(t *testing.T, resp *radius.Packet, sup *eapTLSSupplicant, secret string) {
+	t.Helper()
+	resp.Secret = []byte(secret)
+	resp.Authenticator = sup.lastReqAuth
+
+	recvKey, err := microsoft.MSMPPERecvKey_Lookup(resp)
+	require.NoError(t, err, "Access-Accept must carry an MS-MPPE-Recv-Key")
+	assert.Lenf(t, recvKey, 32, "MS-MPPE-Recv-Key must be a 32-byte session key, got %d bytes", len(recvKey))
+
+	sendKey, err := microsoft.MSMPPESendKey_Lookup(resp)
+	require.NoError(t, err, "Access-Accept must carry an MS-MPPE-Send-Key")
+	assert.Lenf(t, sendKey, 32, "MS-MPPE-Send-Key must be a 32-byte session key, got %d bytes", len(sendKey))
 }
 
 // radiusServerAddr returns the auth server's UDP address.
@@ -480,6 +505,10 @@ type eapTLSSupplicant struct {
 	// The TLS 1.3 test uses it to decrypt and verify the RFC 9190 §2.1.1
 	// protected success indication.
 	clientRun func(client *tls.Conn) error
+	// lastReqAuth is the Request Authenticator of the most recent
+	// Access-Request, needed to decrypt the salt-encrypted MS-MPPE keys on the
+	// final Access-Accept (RFC 2548 §2.4).
+	lastReqAuth [16]byte
 }
 
 // authenticate runs the whole EAP-TLS exchange and returns the final RADIUS
@@ -590,6 +619,7 @@ func (s *eapTLSSupplicant) newAccessRequest() *radius.Packet {
 }
 
 func (s *eapTLSSupplicant) exchange(packet *radius.Packet) (*radius.Packet, error) {
+	s.lastReqAuth = packet.Authenticator
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	return radius.Exchange(ctx, packet, s.serverAddr)

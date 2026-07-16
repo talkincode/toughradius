@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"crypto/tls"
 	"fmt"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/microsoft"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -48,6 +50,22 @@ const (
 	// fragment so that each EAP-Request comfortably fits within one RADIUS
 	// packet (RFC 5216 §2.1.5 / RFC 7499).
 	defaultMaxTLSFragment = 1024
+
+	// eapTLS12KeyLabel is the RFC 5705 exporter label for EAP-TLS with TLS 1.2
+	// (RFC 5216 §2.3): Key_Material = TLS-PRF-128("client EAP encryption").
+	// Only the first 64 octets (the MSK) are needed for the MS-MPPE keys, so a
+	// 64-octet export suffices — with TLS 1.2 the PRF stream can be truncated.
+	eapTLS12KeyLabel  = "client EAP encryption"
+	eapTLS12KeyLength = 64
+
+	// eapTLS13KeyLabel is the TLS 1.3 exporter label for EAP-TLS (RFC 9190
+	// §2.3): Key_Material = TLS-Exporter("EXPORTER_EAP_TLS_Key_Material",
+	// Type-Code, 128) where Type-Code is the single octet 0x0D (EAP-TLS).
+	// Unlike TLS 1.2, a TLS 1.3 exporter output MUST be requested at its full
+	// 128-octet length and then sliced: truncating the requested length yields
+	// different bytes, not a prefix. MSK = Key_Material(0,63).
+	eapTLS13KeyLabel  = "EXPORTER_EAP_TLS_Key_Material"
+	eapTLS13KeyLength = 128
 )
 
 // TLSConfigProvider supplies the per-handshake TLS materials for EAP-TLS and
@@ -191,12 +209,60 @@ func (h *TLSHandler) finalizeWithEngine(ctx *eap.EAPContext, state *eap.EAPState
 		return false, err
 	}
 
+	if err := h.deriveMPPEKeys(ctx.Response, engine); err != nil {
+		return false, err
+	}
+
 	state.Success = true
 	clearKey(state, stateKeyEngine)
 	if err := ctx.StateManager.SetState(state.StateID, state); err != nil {
 		return false, err
 	}
 	return true, nil
+}
+
+// deriveMPPEKeys exports the EAP-TLS MSK from the completed TLS session and
+// adds the MS-MPPE-Recv-Key / MS-MPPE-Send-Key plus encryption policy to the
+// Access-Accept (RFC 2548). Without these keys a WPA2/WPA3-Enterprise
+// authenticator cannot derive the PMK, so export failure rejects the request
+// rather than granting keyless access.
+//
+// The exporter parameters depend on the negotiated TLS version:
+//   - TLS 1.3 (RFC 9190 §2.3): label "EXPORTER_EAP_TLS_Key_Material" with the
+//     EAP-TLS Type-Code 0x0D as context, exported at the full 128 octets and
+//     then sliced — MSK = Key_Material(0,63). RECV-IV/SEND-IV are obsolete
+//     (RFC 5247) and are not derived.
+//   - TLS 1.2 (RFC 5216 §2.3): label "client EAP encryption" with no context;
+//     the first 64 octets form the MSK. crypto/tls additionally requires the
+//     Extended Master Secret extension (RFC 7627) to export keying material.
+//
+// In both cases MSK(0,31) is the MS-MPPE-Recv-Key and MSK(32,63) the
+// MS-MPPE-Send-Key, matching the PEAP/TTLS derivation.
+func (h *TLSHandler) deriveMPPEKeys(response *radius.Packet, engine *tlsengine.Engine) error {
+	label, context, length := eapTLS12KeyLabel, []byte(nil), eapTLS12KeyLength
+	if engine.NegotiatedVersion() == tls.VersionTLS13 {
+		label, context, length = eapTLS13KeyLabel, []byte{eap.TypeTLS}, eapTLS13KeyLength
+	}
+
+	keyMaterial, err := engine.ExportKey(label, context, length)
+	if err != nil {
+		return fmt.Errorf("failed to export EAP-TLS MPPE keys: %w", err)
+	}
+	if len(keyMaterial) != length {
+		return fmt.Errorf("unexpected EAP-TLS key material length: %d", len(keyMaterial))
+	}
+	msk := keyMaterial[:64]
+
+	recvKey := msk[:32]
+	sendKey := msk[32:64]
+
+	_ = microsoft.MSMPPERecvKey_Add(response, recvKey) //nolint:errcheck
+	_ = microsoft.MSMPPESendKey_Add(response, sendKey) //nolint:errcheck
+	_ = microsoft.MSMPPEEncryptionPolicy_Add(response, //nolint:errcheck
+		microsoft.MSMPPEEncryptionPolicy_Value_EncryptionAllowed)
+	_ = microsoft.MSMPPEEncryptionTypes_Add(response, //nolint:errcheck
+		microsoft.MSMPPEEncryptionTypes_Value_RC440or128BitAllowed)
+	return nil
 }
 
 // writeChallenge sends eapData inside a RADIUS Access-Challenge, echoing the

@@ -21,6 +21,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/statemanager"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/microsoft"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2869"
@@ -195,6 +196,10 @@ type supplicant struct {
 	// lands here when the client does not read application data; a TLS 1.2
 	// exchange must never produce one.
 	postFinishedFlights int
+	// acceptResponse is the ctx.Response captured on the round where the
+	// handler reported success, i.e. the would-be Access-Accept carrying the
+	// MS-MPPE keys.
+	acceptResponse *radius.Packet
 }
 
 // clientRunFunc drives the test TLS client. The default runs the handshake
@@ -294,6 +299,7 @@ func (s *supplicant) run() (success bool, err error) {
 			return false, herr
 		}
 		if ok {
+			s.acceptResponse = ctx.Response
 			return true, nil
 		}
 		require.NotNil(s.t, writer.response, "handler must answer with a challenge")
@@ -340,6 +346,7 @@ func (s *supplicant) responseCtx(writer *mockResponseWriter, tlsData []byte) *ea
 	return &eap.EAPContext{
 		Request:        &radius.Request{Packet: packet},
 		ResponseWriter: writer,
+		Response:       packet.Response(radius.CodeAccessAccept),
 		StateManager:   s.sm,
 		Secret:         s.secret,
 		EAPMessage:     &eap.EAPMessage{Code: eap.CodeResponse, Identifier: s.ident, Type: s.eapType, Data: data},
@@ -520,7 +527,10 @@ func TestTLSHandler_FullHandshake_TLS13ProtectedSuccess(t *testing.T) {
 	tlsCfg.MinVersion = tls.VersionTLS13
 	tlsCfg.MaxVersion = tls.VersionTLS13
 
-	// After the handshake, read and verify the protected success indication.
+	// After the handshake, export the client-side MSK (RFC 9190 §2.3: full
+	// 128-octet exporter output, MSK = first 64) and then read and verify the
+	// protected success indication.
+	var clientMSK []byte
 	readIndication := func(client *tls.Conn) error {
 		if err := client.Handshake(); err != nil {
 			return err
@@ -528,6 +538,13 @@ func TestTLSHandler_FullHandshake_TLS13ProtectedSuccess(t *testing.T) {
 		if v := client.ConnectionState().Version; v != tls.VersionTLS13 {
 			return fmt.Errorf("negotiated version %#x, want TLS 1.3", v)
 		}
+		cs := client.ConnectionState()
+		km, err := cs.ExportKeyingMaterial(
+			"EXPORTER_EAP_TLS_Key_Material", []byte{eap.TypeTLS}, 128)
+		if err != nil {
+			return fmt.Errorf("client-side key export: %w", err)
+		}
+		clientMSK = km[:64]
 		buf := make([]byte, 1)
 		if _, err := io.ReadFull(client, buf); err != nil {
 			return fmt.Errorf("read protected success indication: %w", err)
@@ -547,6 +564,8 @@ func TestTLSHandler_FullHandshake_TLS13ProtectedSuccess(t *testing.T) {
 	state, err := sm.GetState(stateID)
 	require.NoError(t, err)
 	assert.True(t, state.Success)
+
+	assertMPPEKeysMatchMSK(t, sup.acceptResponse, clientMSK)
 }
 
 // TestTLSHandler_FullHandshake_TLS12FallbackNoIndication pins the client to TLS
@@ -571,6 +590,10 @@ func TestTLSHandler_FullHandshake_TLS12FallbackNoIndication(t *testing.T) {
 	tlsCfg := clientCfg(ca, clientCert)
 	tlsCfg.MaxVersion = tls.VersionTLS12
 
+	// Export the client-side MSK per RFC 5216 §2.3 ("client EAP encryption",
+	// 64 octets). crypto/tls requires EMS (RFC 7627) for TLS 1.2 export, which
+	// Go negotiates by default.
+	var clientMSK []byte
 	verify12 := func(client *tls.Conn) error {
 		if err := client.Handshake(); err != nil {
 			return err
@@ -578,6 +601,12 @@ func TestTLSHandler_FullHandshake_TLS12FallbackNoIndication(t *testing.T) {
 		if v := client.ConnectionState().Version; v != tls.VersionTLS12 {
 			return fmt.Errorf("negotiated version %#x, want TLS 1.2", v)
 		}
+		cs := client.ConnectionState()
+		km, err := cs.ExportKeyingMaterial("client EAP encryption", nil, 64)
+		if err != nil {
+			return fmt.Errorf("client-side key export: %w", err)
+		}
+		clientMSK = km
 		return nil
 	}
 
@@ -592,6 +621,26 @@ func TestTLSHandler_FullHandshake_TLS12FallbackNoIndication(t *testing.T) {
 	state, err := sm.GetState(stateID)
 	require.NoError(t, err)
 	assert.True(t, state.Success)
+
+	assertMPPEKeysMatchMSK(t, sup.acceptResponse, clientMSK)
+}
+
+// assertMPPEKeysMatchMSK decrypts the MS-MPPE-Recv-Key / MS-MPPE-Send-Key from
+// the captured Access-Accept and verifies they equal the client-side exported
+// MSK halves (RFC 5216 §2.3 / RFC 9190 §2.3: recv = MSK(0,31), send =
+// MSK(32,63)). Matching both proves server and client derived the same MSK.
+func assertMPPEKeysMatchMSK(t *testing.T, accept *radius.Packet, clientMSK []byte) {
+	t.Helper()
+	require.NotNil(t, accept, "success round must capture the Access-Accept")
+	require.Len(t, clientMSK, 64, "client must have exported the 64-octet MSK")
+
+	recvKey, err := microsoft.MSMPPERecvKey_Lookup(accept)
+	require.NoError(t, err, "MS-MPPE-Recv-Key must be present on the Access-Accept")
+	sendKey, err := microsoft.MSMPPESendKey_Lookup(accept)
+	require.NoError(t, err, "MS-MPPE-Send-Key must be present on the Access-Accept")
+
+	assert.Equal(t, clientMSK[:32], recvKey, "MS-MPPE-Recv-Key must be MSK(0,31)")
+	assert.Equal(t, clientMSK[32:64], sendKey, "MS-MPPE-Send-Key must be MSK(32,63)")
 }
 
 // TestTLSHandler_TLS13_IdentityMismatchRejectedBeforeIndication pins the client
