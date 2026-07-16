@@ -106,10 +106,13 @@ func (e *Engine) ReadApplication(records []byte) ([]byte, error) {
 }
 
 // ExportKey returns exported keying material derived from the completed TLS
-// session per RFC 5705, used by tunneled EAP methods to derive the MSK and the
-// MS-MPPE-Send-Key / MS-MPPE-Recv-Key (RFC 2548). For PEAP/TTLS the label is
-// "client EAP encryption" with a 64-octet length (RFC 5216 §2.3): octets 0..31
-// form the MS-MPPE-Recv-Key and octets 32..63 the MS-MPPE-Send-Key.
+// session per RFC 5705, used by EAP methods to derive the MSK and the
+// MS-MPPE-Send-Key / MS-MPPE-Recv-Key (RFC 2548). For PEAP/TTLS and EAP-TLS
+// with TLS 1.2 the label is "client EAP encryption" with a 64-octet length
+// (RFC 5216 §2.3); EAP-TLS with TLS 1.3 uses "EXPORTER_EAP_TLS_Key_Material"
+// with the EAP type octet as context and the full 128-octet length (RFC 9190
+// §2.3). In both layouts octets 0..31 of the MSK form the MS-MPPE-Recv-Key
+// and octets 32..63 the MS-MPPE-Send-Key.
 //
 // The handshake must have completed. crypto/tls requires TLS 1.3 or the
 // Extended Master Secret extension (RFC 7627) to export keying material; both
