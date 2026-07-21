@@ -1,4 +1,4 @@
-# EAP Acceptance Test Report - 2026-07-13
+# EAP Acceptance Test Report - 2026-07-20
 
 ## English
 
@@ -10,11 +10,11 @@ Coverage note: PEAP/MSCHAPv2 external `eapol_test` scenarios are still skipped a
 
 | Field | Value |
 | --- | --- |
-| Started | 2026-07-13T12:18:00Z |
-| Finished | 2026-07-13T12:18:01Z |
-| Commit | 9bcb277023cc |
+| Started | 2026-07-20T11:59:12Z |
+| Finished | 2026-07-20T11:59:13Z |
+| Commit | a8d5b6354f2b |
 | Ref | main |
-| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/29249286305) |
+| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/29740446380) |
 | Runner OS | Linux |
 | Go | go version go1.25.12 linux/amd64 |
 | Tool | eapol_test eapol_test v2.10 |
@@ -23,12 +23,12 @@ Coverage note: PEAP/MSCHAPv2 external `eapol_test` scenarios are still skipped a
 
 | Scenario | Method | Expected | Status | Duration | Detail |
 | --- | --- | --- | --- | ---: | --- |
-| EAP-TLS valid client certificate | EAP-TLS | Access-Accept | passed | 188 ms | external supplicant received the expected Access-Accept |
-| EAP-TLS untrusted client certificate | EAP-TLS | Access-Reject | passed | 33 ms | external supplicant was rejected as expected |
+| EAP-TLS valid client certificate | EAP-TLS | Access-Accept | passed | 196 ms | external supplicant received the expected Access-Accept |
+| EAP-TLS untrusted client certificate | EAP-TLS | Access-Reject | passed | 38 ms | external supplicant was rejected as expected |
 | PEAP/MSCHAPv2 valid credentials | PEAP/MSCHAPv2 | Access-Accept | skipped | 0 ms | Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap (server rejects the decrypted phase-2 payload as an invalid inner EAP message). The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. Tracking issue: https://github.com/talkincode/toughradius/issues/495. |
 | PEAP/MSCHAPv2 wrong password | PEAP/MSCHAPv2 | Access-Reject | skipped | 0 ms | Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap (server rejects the decrypted phase-2 payload as an invalid inner EAP message). The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. Tracking issue: https://github.com/talkincode/toughradius/issues/495. |
-| EAP-TTLS/PAP valid credentials | EAP-TTLS/PAP | Access-Accept | passed | 135 ms | external supplicant received the expected Access-Accept |
-| EAP-TTLS/MSCHAPv2 valid credentials | EAP-TTLS/MSCHAPv2 | Access-Accept | passed | 137 ms | external supplicant received the expected Access-Accept |
+| EAP-TTLS/PAP valid credentials | EAP-TTLS/PAP | Access-Accept | passed | 140 ms | external supplicant received the expected Access-Accept |
+| EAP-TTLS/MSCHAPv2 valid credentials | EAP-TTLS/MSCHAPv2 | Access-Accept | passed | 141 ms | external supplicant received the expected Access-Accept |
 | Malformed external EAP client config | tooling | documented skip | skipped | 0 ms | Skipped intentionally: eapol_test parser failures do not exercise ToughRADIUS over RADIUS/EAP. Negative server behavior is covered by untrusted certificate and wrong password scenarios. |
 
 ## 中文
@@ -41,11 +41,11 @@ Coverage note: PEAP/MSCHAPv2 external `eapol_test` scenarios are still skipped a
 
 | Field | Value |
 | --- | --- |
-| Started | 2026-07-13T12:18:00Z |
-| Finished | 2026-07-13T12:18:01Z |
-| Commit | 9bcb277023cc |
+| Started | 2026-07-20T11:59:12Z |
+| Finished | 2026-07-20T11:59:13Z |
+| Commit | a8d5b6354f2b |
 | Ref | main |
-| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/29249286305) |
+| Workflow | [workflow run](https://github.com/talkincode/toughradius/actions/runs/29740446380) |
 | Runner OS | Linux |
 | Go | go version go1.25.12 linux/amd64 |
 | Tool | eapol_test eapol_test v2.10 |
@@ -54,10 +54,10 @@ Coverage note: PEAP/MSCHAPv2 external `eapol_test` scenarios are still skipped a
 
 | 场景 | 方法 | 预期 | 状态 | 耗时 | 说明 |
 | --- | --- | --- | --- | ---: | --- |
-| EAP-TLS valid client certificate | EAP-TLS | Access-Accept | 通过 | 188 ms | external supplicant received the expected Access-Accept |
-| EAP-TLS untrusted client certificate | EAP-TLS | Access-Reject | 通过 | 33 ms | external supplicant was rejected as expected |
+| EAP-TLS valid client certificate | EAP-TLS | Access-Accept | 通过 | 196 ms | external supplicant received the expected Access-Accept |
+| EAP-TLS untrusted client certificate | EAP-TLS | Access-Reject | 通过 | 38 ms | external supplicant was rejected as expected |
 | PEAP/MSCHAPv2 valid credentials | PEAP/MSCHAPv2 | Access-Accept | 跳过 | 0 ms | Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap (server rejects the decrypted phase-2 payload as an invalid inner EAP message). The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. Tracking issue: https://github.com/talkincode/toughradius/issues/495. |
 | PEAP/MSCHAPv2 wrong password | PEAP/MSCHAPv2 | Access-Reject | 跳过 | 0 ms | Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap (server rejects the decrypted phase-2 payload as an invalid inner EAP message). The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. Tracking issue: https://github.com/talkincode/toughradius/issues/495. |
-| EAP-TTLS/PAP valid credentials | EAP-TTLS/PAP | Access-Accept | 通过 | 135 ms | external supplicant received the expected Access-Accept |
-| EAP-TTLS/MSCHAPv2 valid credentials | EAP-TTLS/MSCHAPv2 | Access-Accept | 通过 | 137 ms | external supplicant received the expected Access-Accept |
+| EAP-TTLS/PAP valid credentials | EAP-TTLS/PAP | Access-Accept | 通过 | 140 ms | external supplicant received the expected Access-Accept |
+| EAP-TTLS/MSCHAPv2 valid credentials | EAP-TTLS/MSCHAPv2 | Access-Accept | 通过 | 141 ms | external supplicant received the expected Access-Accept |
 | Malformed external EAP client config | tooling | documented skip | 跳过 | 0 ms | Skipped intentionally: eapol_test parser failures do not exercise ToughRADIUS over RADIUS/EAP. Negative server behavior is covered by untrusted certificate and wrong password scenarios. |
