@@ -9,14 +9,34 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// parsePagination reads page/pageSize from the query string.
+// The React Admin dataProvider sends `perPage`; some older clients send
+// `pageSize`. Accept both. Values above maxPageSize are clamped (not reset),
+// so a client asking for 1000 items still gets the full first page up to the cap
+// instead of silently falling back to 20 (which truncated system settings and
+// broke bulk save on the system config page — see #583).
 func parsePagination(c echo.Context) (int, int) {
+	const (
+		defaultPage     = 1
+		defaultPageSize = 20
+		maxPageSize     = 1000
+	)
+
 	page, err := strconv.Atoi(c.QueryParam("page"))
 	if err != nil || page < 1 {
-		page = 1
+		page = defaultPage
 	}
-	pageSize, err := strconv.Atoi(c.QueryParam("pageSize"))
-	if err != nil || pageSize < 1 || pageSize > 200 {
-		pageSize = 20
+
+	rawSize := c.QueryParam("pageSize")
+	if rawSize == "" {
+		// Frontend dataProvider uses React Admin's `perPage` query key.
+		rawSize = c.QueryParam("perPage")
+	}
+	pageSize, err := strconv.Atoi(rawSize)
+	if err != nil || pageSize < 1 {
+		pageSize = defaultPageSize
+	} else if pageSize > maxPageSize {
+		pageSize = maxPageSize
 	}
 	return page, pageSize
 }

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -107,7 +108,9 @@ func TestCreateSettings(t *testing.T) {
 		expectedStatus int
 	}{
 		{"success", `{"type":"radius","name":"NewKey","value":"v1"}`, false, http.StatusOK},
-		{"missing value", `{"type":"radius","name":"NoVal","value":""}`, false, http.StatusBadRequest},
+		// Empty string is a valid config value (optional EAP cert / LDAP password).
+		{"empty value allowed", `{"type":"radius","name":"EmptyVal","value":""}`, false, http.StatusOK},
+		{"missing value field", `{"type":"radius","name":"NoVal"}`, false, http.StatusBadRequest},
 		{"missing type", `{"type":"","name":"NoType","value":"v"}`, false, http.StatusBadRequest},
 		{"invalid json", `{not-json`, false, http.StatusBadRequest},
 		{"duplicate", `{"type":"radius","name":"DupKey","value":"v"}`, true, http.StatusConflict},
@@ -131,16 +134,23 @@ func TestUpdateSettings(t *testing.T) {
 		seed           bool
 		body           string
 		expectedStatus int
+		expectValue    string
+		checkValue     bool
 	}{
-		{"success", "401", true, `{"value":"updated","remark":"r"}`, http.StatusOK},
-		{"invalid id", "bad", false, `{"value":"x"}`, http.StatusBadRequest},
-		{"not found", "888888", false, `{"value":"x"}`, http.StatusNotFound},
+		{"success", "401", true, `{"value":"updated","remark":"r"}`, http.StatusOK, "updated", true},
+		{"clear value to empty", "402", true, `{"value":""}`, http.StatusOK, "", true},
+		{"invalid id", "bad", false, `{"value":"x"}`, http.StatusBadRequest, "", false},
+		{"not found", "888888", false, `{"value":"x"}`, http.StatusNotFound, "", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, rec := newSettingsTestCtx(t, http.MethodPut, "/api/v1/system/settings/"+tt.id, tt.body)
+			seedID := int64(401)
+			if tt.id == "402" {
+				seedID = 402
+			}
 			if tt.seed {
-				createSettingRow(t, c, 401, "radius", "UpdKey", "old")
+				createSettingRow(t, c, seedID, "radius", "UpdKey", "old")
 			}
 			c.SetParamNames("id")
 			c.SetParamValues(tt.id)
@@ -148,13 +158,35 @@ func TestUpdateSettings(t *testing.T) {
 			_ = updateSettings(c)
 			assert.Equal(t, tt.expectedStatus, rec.Code)
 
-			if tt.expectedStatus == http.StatusOK {
+			if tt.checkValue {
 				var got domain.SysConfig
-				require.NoError(t, GetDB(c).Where("id = ?", 401).First(&got).Error)
-				assert.Equal(t, "updated", got.Value)
+				require.NoError(t, GetDB(c).Where("id = ?", seedID).First(&got).Error)
+				assert.Equal(t, tt.expectValue, got.Value)
 			}
 		})
 	}
+}
+
+// TestListSettings_PerPageAlias ensures the system config page can load every
+// setting in one request via React Admin's `perPage` query key (#583).
+func TestListSettings_PerPageAlias(t *testing.T) {
+	c, rec := newSettingsTestCtx(t, http.MethodGet, "/api/v1/system/settings?page=1&perPage=1000", "")
+	for i := 0; i < 24; i++ {
+		createSettingRow(t, c, int64(1000+i), "radius", "key"+strconv.Itoa(i), "v")
+	}
+
+	require.NoError(t, listSettings(c))
+	require.Equal(t, http.StatusOK, rec.Code)
+
+	var resp Response
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+	require.NotNil(t, resp.Meta)
+	assert.Equal(t, int64(24), resp.Meta.Total)
+	assert.Equal(t, 1000, resp.Meta.PageSize, "perPage=1000 must be accepted (not fall back to default 20)")
+
+	items, ok := resp.Data.([]interface{})
+	require.True(t, ok)
+	assert.Len(t, items, 24, "all seeded settings must be returned so the UI has ids for update")
 }
 
 func TestDeleteSettings(t *testing.T) {
