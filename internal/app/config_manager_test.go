@@ -114,6 +114,29 @@ func TestConfigManager_Validation(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid integer")
 }
 
+func TestConfigManager_ValidateValue(t *testing.T) {
+	cm := &ConfigManager{
+		configs: make(map[string]string),
+		schemas: make(map[string]*ConfigSchema),
+	}
+	cm.register(&ConfigSchema{
+		Key:     "radius.AccountingHistoryDays",
+		Type:    TypeInt,
+		Default: "90",
+		Min:     func() *int64 { v := int64(0); return &v }(),
+	})
+	cm.register(&ConfigSchema{
+		Key:     "radius.EapTlsServerCert",
+		Type:    TypeString,
+		Default: "",
+	})
+
+	require.NoError(t, cm.ValidateValue("radius", "EapTlsServerCert", ""))
+	require.Error(t, cm.ValidateValue("radius", "AccountingHistoryDays", ""))
+	require.NoError(t, cm.ValidateValue("radius", "AccountingHistoryDays", "30"))
+	require.NoError(t, cm.ValidateValue("custom", "freeform", ""), "unregistered keys are not schema-validated")
+}
+
 // Test boolean validation
 func TestConfigManager_BoolValidation(t *testing.T) {
 	cm := &ConfigManager{

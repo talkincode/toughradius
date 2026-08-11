@@ -330,6 +330,24 @@ func (cm *ConfigManager) GetAllSchemas() map[string]*ConfigSchema {
 	return result
 }
 
+// ValidateValue checks a setting value against its registered schema.
+// Unregistered keys are accepted (free-form sys_config rows). Registered keys
+// must pass type/enum/min/max validation, so empty strings are allowed for
+// optional string settings but rejected for int/bool/duration/json schemas.
+func (cm *ConfigManager) ValidateValue(category, name, value string) error {
+	if cm == nil {
+		return nil
+	}
+	key := category + "." + name
+	cm.mu.RLock()
+	schema, exists := cm.schemas[key]
+	cm.mu.RUnlock()
+	if !exists {
+		return nil
+	}
+	return cm.validate(schema, value)
+}
+
 // validate validates configuration values
 func (cm *ConfigManager) validate(schema *ConfigSchema, value string) error {
 	// Check enum values

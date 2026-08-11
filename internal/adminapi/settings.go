@@ -16,13 +16,16 @@ import (
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
 
-// settingsPayload defines the system setting request structure
+// settingsPayload defines the system setting request structure.
+// Value/Remark/Sort use pointers so clients can intentionally clear a field
+// (empty string is a valid config value for optional settings such as
+// radius.EapTlsServerCert or ldap.SearchBindPassword).
 type settingsPayload struct {
-	Type   string `json:"type"`
-	Name   string `json:"name"`
-	Value  string `json:"value"`
-	Sort   int    `json:"sort"`
-	Remark string `json:"remark"`
+	Type   string  `json:"type"`
+	Name   string  `json:"name"`
+	Value  *string `json:"value"`
+	Sort   *int    `json:"sort"`
+	Remark *string `json:"remark"`
 }
 
 // registerSettingsRoutes registers system setting routes
@@ -158,8 +161,13 @@ func createSettings(c echo.Context) error {
 	payload.Type = strings.TrimSpace(payload.Type)
 	payload.Name = strings.TrimSpace(payload.Name)
 
-	if payload.Type == "" || payload.Name == "" || payload.Value == "" {
-		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "type, name, and value cannot be empty", nil)
+	// value may be an empty string for optional string configs; only the field itself is required.
+	if payload.Type == "" || payload.Name == "" || payload.Value == nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "type, name, and value are required", nil)
+	}
+
+	if err := validateSettingValue(c, payload.Type, payload.Name, *payload.Value); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_VALUE", err.Error(), nil)
 	}
 
 	// Check whether a setting with the same type and name already exists (unique constraint)
@@ -171,13 +179,22 @@ func createSettings(c echo.Context) error {
 		return fail(c, http.StatusConflict, "SETTING_EXISTS", "A setting with the same name already exists under this type", nil)
 	}
 
+	sortVal := 0
+	if payload.Sort != nil {
+		sortVal = *payload.Sort
+	}
+	remark := ""
+	if payload.Remark != nil {
+		remark = *payload.Remark
+	}
+
 	setting := domain.SysConfig{
 		ID:        common.UUIDint64(),
 		Type:      payload.Type,
 		Name:      payload.Name,
-		Value:     payload.Value,
-		Sort:      payload.Sort,
-		Remark:    payload.Remark,
+		Value:     *payload.Value,
+		Sort:      sortVal,
+		Remark:    remark,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}
@@ -213,21 +230,24 @@ func updateSettings(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query system settings", err.Error())
 	}
 
-	// Update fields
+	// Update fields (pointers distinguish "omitted" from "set to empty/zero")
 	if payload.Type != "" {
 		setting.Type = strings.TrimSpace(payload.Type)
 	}
 	if payload.Name != "" {
 		setting.Name = strings.TrimSpace(payload.Name)
 	}
-	if payload.Value != "" {
-		setting.Value = payload.Value
+	if payload.Value != nil {
+		if err := validateSettingValue(c, setting.Type, setting.Name, *payload.Value); err != nil {
+			return fail(c, http.StatusBadRequest, "INVALID_VALUE", err.Error(), nil)
+		}
+		setting.Value = *payload.Value
 	}
-	if payload.Sort != 0 {
-		setting.Sort = payload.Sort
+	if payload.Sort != nil {
+		setting.Sort = *payload.Sort
 	}
-	if payload.Remark != "" {
-		setting.Remark = payload.Remark
+	if payload.Remark != nil {
+		setting.Remark = *payload.Remark
 	}
 	setting.UpdatedAt = time.Now()
 
@@ -262,6 +282,17 @@ func deleteSettings(c echo.Context) error {
 	return ok(c, map[string]interface{}{
 		"id": id,
 	})
+}
+
+// validateSettingValue rejects values that fail the registered ConfigManager
+// schema (e.g. empty string for an int setting). Unregistered free-form keys
+// are left unchecked so custom rows still work.
+func validateSettingValue(c echo.Context, typ, name, value string) error {
+	cm := GetAppContext(c).ConfigMgr()
+	if cm == nil {
+		return nil
+	}
+	return cm.ValidateValue(typ, name, value)
 }
 
 // Filter conditions
