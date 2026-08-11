@@ -108,8 +108,11 @@ func TestCreateSettings(t *testing.T) {
 		expectedStatus int
 	}{
 		{"success", `{"type":"radius","name":"NewKey","value":"v1"}`, false, http.StatusOK},
-		// Empty string is a valid config value (optional EAP cert / LDAP password).
-		{"empty value allowed", `{"type":"radius","name":"EmptyVal","value":""}`, false, http.StatusOK},
+		// Empty string is valid for optional registered string schemas and free-form keys.
+		{"empty optional string schema", `{"type":"radius","name":"EapTlsServerCert","value":""}`, false, http.StatusOK},
+		{"empty free-form value allowed", `{"type":"radius","name":"EmptyVal","value":""}`, false, http.StatusOK},
+		// Empty int schema values must be rejected (Codex review on #591).
+		{"empty int schema rejected", `{"type":"radius","name":"AccountingHistoryDays","value":""}`, false, http.StatusBadRequest},
 		{"missing value field", `{"type":"radius","name":"NoVal"}`, false, http.StatusBadRequest},
 		{"missing type", `{"type":"","name":"NoType","value":"v"}`, false, http.StatusBadRequest},
 		{"invalid json", `{not-json`, false, http.StatusBadRequest},
@@ -132,25 +135,31 @@ func TestUpdateSettings(t *testing.T) {
 		name           string
 		id             string
 		seed           bool
+		seedName       string
+		seedValue      string
 		body           string
 		expectedStatus int
 		expectValue    string
 		checkValue     bool
 	}{
-		{"success", "401", true, `{"value":"updated","remark":"r"}`, http.StatusOK, "updated", true},
-		{"clear value to empty", "402", true, `{"value":""}`, http.StatusOK, "", true},
-		{"invalid id", "bad", false, `{"value":"x"}`, http.StatusBadRequest, "", false},
-		{"not found", "888888", false, `{"value":"x"}`, http.StatusNotFound, "", false},
+		{"success", "401", true, "UpdKey", "old", `{"value":"updated","remark":"r"}`, http.StatusOK, "updated", true},
+		{"clear optional string schema", "402", true, "EapTlsServerCert", "cert.pem", `{"value":""}`, http.StatusOK, "", true},
+		{"clear int schema rejected", "403", true, "AccountingHistoryDays", "90", `{"value":""}`, http.StatusBadRequest, "90", true},
+		{"invalid id", "bad", false, "", "", `{"value":"x"}`, http.StatusBadRequest, "", false},
+		{"not found", "888888", false, "", "", `{"value":"x"}`, http.StatusNotFound, "", false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c, rec := newSettingsTestCtx(t, http.MethodPut, "/api/v1/system/settings/"+tt.id, tt.body)
 			seedID := int64(401)
-			if tt.id == "402" {
+			switch tt.id {
+			case "402":
 				seedID = 402
+			case "403":
+				seedID = 403
 			}
 			if tt.seed {
-				createSettingRow(t, c, seedID, "radius", "UpdKey", "old")
+				createSettingRow(t, c, seedID, "radius", tt.seedName, tt.seedValue)
 			}
 			c.SetParamNames("id")
 			c.SetParamValues(tt.id)

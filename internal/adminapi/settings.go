@@ -161,9 +161,13 @@ func createSettings(c echo.Context) error {
 	payload.Type = strings.TrimSpace(payload.Type)
 	payload.Name = strings.TrimSpace(payload.Name)
 
-	// value may be an empty string (optional configs); only the field itself is required.
+	// value may be an empty string for optional string configs; only the field itself is required.
 	if payload.Type == "" || payload.Name == "" || payload.Value == nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "type, name, and value are required", nil)
+	}
+
+	if err := validateSettingValue(c, payload.Type, payload.Name, *payload.Value); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_VALUE", err.Error(), nil)
 	}
 
 	// Check whether a setting with the same type and name already exists (unique constraint)
@@ -234,6 +238,9 @@ func updateSettings(c echo.Context) error {
 		setting.Name = strings.TrimSpace(payload.Name)
 	}
 	if payload.Value != nil {
+		if err := validateSettingValue(c, setting.Type, setting.Name, *payload.Value); err != nil {
+			return fail(c, http.StatusBadRequest, "INVALID_VALUE", err.Error(), nil)
+		}
 		setting.Value = *payload.Value
 	}
 	if payload.Sort != nil {
@@ -275,6 +282,17 @@ func deleteSettings(c echo.Context) error {
 	return ok(c, map[string]interface{}{
 		"id": id,
 	})
+}
+
+// validateSettingValue rejects values that fail the registered ConfigManager
+// schema (e.g. empty string for an int setting). Unregistered free-form keys
+// are left unchecked so custom rows still work.
+func validateSettingValue(c echo.Context, typ, name, value string) error {
+	cm := GetAppContext(c).ConfigMgr()
+	if cm == nil {
+		return nil
+	}
+	return cm.ValidateValue(typ, name, value)
 }
 
 // Filter conditions
