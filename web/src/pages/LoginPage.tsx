@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLogin, useNotify, useTranslate } from 'react-admin';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Box,
   Card,
@@ -21,6 +22,7 @@ export const LoginPage = () => {
   const login = useLogin();
   const notify = useNotify();
   const translate = useTranslate();
+  const queryClient = useQueryClient();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +35,9 @@ export const LoginPage = () => {
     setLoading(true);
     try {
       await login({ username, password });
+      // Ensure AppBar UserMenu picks up the newly stored identity.
+      await queryClient.invalidateQueries({ queryKey: ['auth', 'getIdentity'] });
+      await queryClient.invalidateQueries({ queryKey: ['auth', 'getPermissions'] });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : translate('auth.login_error');
       notify(errorMessage, { type: 'error' });

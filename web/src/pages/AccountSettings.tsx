@@ -131,8 +131,13 @@ export default function AccountSettings() {
         status: data.status ?? '',
       });
       localStorage.setItem('user', JSON.stringify(data));
+      if (data.username) {
+        localStorage.setItem('username', data.username);
+      }
+      // Refresh AppBar UserMenu identity after profile cache is hydrated.
+      queryClient.invalidateQueries({ queryKey: ['auth', 'getIdentity'] });
     }
-  }, [profileQuery.data]);
+  }, [profileQuery.data, queryClient]);
 
   useEffect(() => {
     if (profileQuery.error) {
@@ -162,7 +167,11 @@ export default function AccountSettings() {
         status: data.status ?? '',
       });
       localStorage.setItem('user', JSON.stringify(data));
+      if (data.username) {
+        localStorage.setItem('username', data.username);
+      }
       queryClient.setQueryData(ACCOUNT_QUERY_KEY, data);
+      queryClient.invalidateQueries({ queryKey: ['auth', 'getIdentity'] });
       notify('用户信息更新成功');
     },
     onError: error => {
