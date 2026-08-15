@@ -9,10 +9,11 @@ supports light/dark themes. This chapter walks through every page.
 ## Logging in and accounts
 
 Sign in at `http://<server>:1816` with an operator account. The initial
-administrator is `admin` plus a one-time password from the startup log (or
-`TOUGHRADIUS_ADMIN_PASSWORD`). Change it immediately under **Account Settings**
-(top-right avatar), which also edits your profile info. Passwords must be at
-least 6 characters and must not be the historical default.
+administrator is `admin` plus a one-time password in
+`{workdir}/private/admin-bootstrap-password` (or `TOUGHRADIUS_ADMIN_PASSWORD`).
+Change it immediately under **Account Settings** (top-right avatar), which also
+edits your profile info. Passwords must be at least 6 characters and must not
+be the historical default.
 
 Operator roles (set under **Operators**):
 

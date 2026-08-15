@@ -13,7 +13,8 @@ keeps a short pointer back to this chapter so there is a single source of truth.
 
 ToughRADIUS no longer creates or accepts the historical first-start password.
 A fresh install generates a one-time bootstrap password (or uses
-`TOUGHRADIUS_ADMIN_PASSWORD`) and prints it once. Upgrades that still store the
+`TOUGHRADIUS_ADMIN_PASSWORD`) and writes it to
+`{workdir}/private/admin-bootstrap-password`. Upgrades that still store the
 historical default rotate it on startup. Login and operator-password APIs reject
 that credential.
 
@@ -27,7 +28,7 @@ that credential.
 #### Recommended actions
 
 Upgrade, then confirm every operator uses a unique password. If you cannot read
-the one-time startup password, reset it with `cmd/reset-password`.
+`{workdir}/private/admin-bootstrap-password`, reset it with `cmd/reset-password`.
 
 ### XSS vulnerability fix (v8.0.8)
 

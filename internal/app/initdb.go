@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,10 +26,11 @@ const (
 	// admin. It is read only when creating or rotating the initial account.
 	AdminPasswordEnv = "TOUGHRADIUS_ADMIN_PASSWORD"
 
-	bootstrapPasswordLen = 20
-	bootstrapLetters     = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
-	bootstrapDigits      = "23456789"
-	bootstrapAlphabet    = bootstrapLetters + bootstrapDigits
+	bootstrapPasswordLen      = 20
+	bootstrapLetters          = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ"
+	bootstrapDigits           = "23456789"
+	bootstrapAlphabet         = bootstrapLetters + bootstrapDigits
+	bootstrapPasswordFileName = "admin-bootstrap-password"
 )
 
 // IsWellKnownBootstrapPassword reports whether password is the historical
@@ -90,13 +92,13 @@ func (a *Application) createBootstrapSuper() {
 		return
 	}
 
+	credFile := a.writeBootstrapPasswordFile(password, source)
 	fields := []zap.Field{
 		zap.String("username", defaultSuperUsername),
 		zap.String("source", source),
-		zap.String("action", "store this password now; it will not be shown again"),
 	}
-	if source == "generated" {
-		fields = append(fields, zap.String("password", password))
+	if credFile != "" {
+		fields = append(fields, zap.String("credential_file", credFile))
 	}
 	zap.L().Info("initialized bootstrap super admin account", fields...)
 }
@@ -129,13 +131,14 @@ func (a *Application) rotateInsecureSuperPassword(operator *domain.SysOpr) {
 		return
 	}
 
+	credFile := a.writeBootstrapPasswordFile(password, source)
 	fields := []zap.Field{
 		zap.String("username", operator.Username),
 		zap.String("source", source),
 		zap.String("action", "the historical default password is no longer valid"),
 	}
-	if source == "generated" {
-		fields = append(fields, zap.String("password", password))
+	if credFile != "" {
+		fields = append(fields, zap.String("credential_file", credFile))
 	}
 	zap.L().Warn("rotated insecure super admin password", fields...)
 }
@@ -146,6 +149,36 @@ func (a *Application) failInsecureBootstrap(msg string, fields ...zap.Field) {
 		return
 	}
 	zap.L().Error(msg, fields...)
+}
+
+func (a *Application) bootstrapPasswordFile() string {
+	if a == nil || a.appConfig == nil || strings.TrimSpace(a.appConfig.System.Workdir) == "" {
+		return ""
+	}
+	return filepath.Join(a.appConfig.GetPrivateDir(), bootstrapPasswordFileName)
+}
+
+// writeBootstrapPasswordFile stores a generated bootstrap password in a 0600
+// file under {workdir}/private and returns that path. The plaintext is never
+// passed to the logger (CWE-532 / go/clear-text-logging).
+func (a *Application) writeBootstrapPasswordFile(password, source string) string {
+	if source != "generated" {
+		return ""
+	}
+	path := a.bootstrapPasswordFile()
+	if path == "" {
+		zap.L().Warn("generated bootstrap password was not written; set TOUGHRADIUS_ADMIN_PASSWORD or use cmd/reset-password")
+		return ""
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		zap.L().Error("failed to create private directory for bootstrap password", zap.Error(err))
+		return ""
+	}
+	if err := os.WriteFile(path, []byte(password+"\n"), 0o600); err != nil {
+		zap.L().Error("failed to write bootstrap password file", zap.Error(err))
+		return ""
+	}
+	return path
 }
 
 func resolveBootstrapAdminPassword() (password, source string, err error) {

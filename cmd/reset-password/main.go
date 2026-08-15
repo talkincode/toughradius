@@ -100,10 +100,6 @@ func main() {
 	} else {
 		fmt.Printf("Success: Password updated for user '%s'\n", username)
 	}
-
-	fmt.Println("\nNew credentials:")
-	fmt.Printf("  Username: %s\n", username)
-	fmt.Printf("  Password: %s\n", password)
 }
 
 func openDatabase(cfg *config.AppConfig) (*gorm.DB, error) {

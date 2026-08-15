@@ -157,7 +157,7 @@ Access Web Management Interface: <http://localhost:1816>
 Bootstrap Admin Account:
 
 - Username: `admin`
-- Password: generated on first start and printed once in the server log (`initialized bootstrap super admin account`). It is never `toughradius`.
+- Password: generated on first start and written to `{workdir}/private/admin-bootstrap-password` (mode 0600). It is never `toughradius`.
 
 Set `TOUGHRADIUS_ADMIN_PASSWORD` before the first start if you want to choose the initial password yourself. Lost passwords can be reset with `cmd/reset-password`. Upgrades that still have the historical default password rotate it automatically and log the replacement once.
 

@@ -3,9 +3,13 @@ package app
 import (
 	"testing"
 
+	"os"
+	"strings"
+
 	"github.com/glebarez/sqlite"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
@@ -22,7 +26,12 @@ func newTestApplication(t *testing.T) *Application {
 
 	require.NoError(t, db.AutoMigrate(domain.Tables...))
 
-	return &Application{gormDB: db}
+	return &Application{
+		gormDB: db,
+		appConfig: &config.AppConfig{
+			System: config.SysConfig{Workdir: t.TempDir(), Debug: true},
+		},
+	}
 }
 
 func TestIsWellKnownBootstrapPassword(t *testing.T) {
@@ -153,7 +162,7 @@ func TestCheckSuperDoesNotCreateWhenOtherSuperExists(t *testing.T) {
 	assert.Zero(t, count)
 }
 
-func TestCheckSuperLogsGeneratedPasswordOnce(t *testing.T) {
+func TestCheckSuperWritesGeneratedPasswordFile(t *testing.T) {
 	app := newTestApplication(t)
 	core, logs := observer.New(zapcore.InfoLevel)
 	undo := zap.ReplaceGlobals(zap.New(core))
@@ -162,8 +171,30 @@ func TestCheckSuperLogsGeneratedPasswordOnce(t *testing.T) {
 	app.checkSuper()
 
 	entries := logs.FilterMessage("initialized bootstrap super admin account")
-	assert.Equal(t, 1, entries.Len())
-	assert.NotEmpty(t, entries.All()[0].ContextMap()["password"])
+	require.Equal(t, 1, entries.Len())
+	ctx := entries.All()[0].ContextMap()
+	assert.Empty(t, ctx["password"])
+	credFile, _ := ctx["credential_file"].(string)
+	require.NotEmpty(t, credFile)
+
+	plain, err := os.ReadFile(credFile) //nolint:gosec // G304: path is the test workdir helper output
+	require.NoError(t, err)
+	password := strings.TrimSpace(string(plain))
+	assert.False(t, IsWellKnownBootstrapPassword(password))
+
+	var admin domain.SysOpr
+	require.NoError(t, app.gormDB.Where("username = ?", "admin").First(&admin).Error)
+	assert.True(t, common.VerifyPassword(password, admin.Password))
+}
+
+func TestCheckSuperEnvPasswordDoesNotWriteFile(t *testing.T) {
+	t.Setenv(AdminPasswordEnv, "EnvPass123")
+	app := newTestApplication(t)
+
+	app.checkSuper()
+
+	_, err := os.Stat(app.bootstrapPasswordFile())
+	assert.True(t, os.IsNotExist(err))
 }
 
 func TestGenerateBootstrapAdminPassword(t *testing.T) {

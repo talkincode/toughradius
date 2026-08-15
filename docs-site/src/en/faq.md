@@ -16,10 +16,10 @@ Use the bundled tool against the same configuration file the server runs with:
 go run ./cmd/reset-password -c /etc/toughradius.yml -u admin -p <new-password>
 ```
 
-The first-start account is `admin` with a one-time generated password printed
-in the server log (or `TOUGHRADIUS_ADMIN_PASSWORD` if you set it before the
-first start). The historical `toughradius` password is no longer created or
-accepted.
+The first-start account is `admin` with a one-time generated password written
+to `{workdir}/private/admin-bootstrap-password` (or `TOUGHRADIUS_ADMIN_PASSWORD`
+if you set it before the first start). The historical `toughradius` password is
+no longer created or accepted.
 
 ### Which database should I choose, SQLite or PostgreSQL?
 

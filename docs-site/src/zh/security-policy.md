@@ -11,8 +11,9 @@
 ### 默认超级管理员口令（GHSA-2gwm-6gf5-8699）
 
 ToughRADIUS 不再创建或接受历史首次启动口令。全新安装会生成一次性引导口令
-（或使用 `TOUGHRADIUS_ADMIN_PASSWORD`）并只打印一次。仍保存历史默认口令的升级
-会在启动时轮换。登录与操作员改密接口会拒绝该口令。
+（或使用 `TOUGHRADIUS_ADMIN_PASSWORD`）并写入
+`{workdir}/private/admin-bootstrap-password`。仍保存历史默认口令的升级会在启动时
+轮换。登录与操作员改密接口会拒绝该口令。
 
 | 项目       | 详情                                           |
 | ---------- | ---------------------------------------------- |
@@ -23,8 +24,8 @@ ToughRADIUS 不再创建或接受历史首次启动口令。全新安装会生�
 
 #### 建议措施
 
-升级后确认每个操作员都使用独立口令。如果无法从启动日志读取一次性口令，请用
-`cmd/reset-password` 重置。
+升级后确认每个操作员都使用独立口令。如果无法读取
+`{workdir}/private/admin-bootstrap-password`，请用 `cmd/reset-password` 重置。
 
 ### XSS 漏洞修复（v8.0.8）
 

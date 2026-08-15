@@ -240,7 +240,7 @@ All live under `cmd/` and run with `go run ./cmd/<tool>`:
 
 ## Production hardening checklist
 
-- [ ] Change `web.secret`. Confirm the bootstrap `admin` password is unique (startup log or `TOUGHRADIUS_ADMIN_PASSWORD`); never reuse the historical default.
+- [ ] Change `web.secret`. Confirm the bootstrap `admin` password is unique (`{workdir}/private/admin-bootstrap-password` or `TOUGHRADIUS_ADMIN_PASSWORD`); never reuse the historical default.
 - [ ] `radiusd.debug: false`, `logger.mode: production`.
 - [ ] Restrict UDP 1812/1813 and TCP 1816 to trusted networks (firewall).
 - [ ] Use RadSec (2083) or a trusted L2/VPN path for RADIUS across untrusted networks.

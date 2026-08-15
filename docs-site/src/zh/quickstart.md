@@ -92,8 +92,8 @@ logger:
 ```
 
 > **务必修改 `web.secret`**，它用于签发管理端登录令牌。首次启动的管理员口令是
-> 随机生成的（或由 `TOUGHRADIUS_ADMIN_PASSWORD` 指定）；请从启动日志抄下，并在
-> 首次登录后立即修改。
+> 随机生成的（或由 `TOUGHRADIUS_ADMIN_PASSWORD` 指定）；请从
+> `{workdir}/private/admin-bootstrap-password` 读取，并在首次登录后立即修改。
 
 ## 3. 初始化数据库并启动
 
@@ -113,7 +113,7 @@ toughradius -c /etc/toughradius.yml
 打开 `http://<服务器>:1816`。引导管理员：
 
 - 用户名：`admin`
-- 密码：仅在启动日志打印一次；若在首次启动前设置了
+- 密码：写入 `{workdir}/private/admin-bootstrap-password`；若在首次启动前设置了
   `TOUGHRADIUS_ADMIN_PASSWORD`，则使用该值
 
 没有公开的默认口令。请在 **账户设置** 中修改引导口令；忘记密码可用

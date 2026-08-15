@@ -463,7 +463,7 @@ func setEnvIntValue(name string, val *int) {
 //   - System.Debug to false
 //   - Logger.Mode to "production"
 //   - TOUGHRADIUS_ADMIN_PASSWORD for a chosen first-start admin password
-//     (otherwise a random password is generated and logged once)
+//     (otherwise a random password is written to {workdir}/private/admin-bootstrap-password)
 var DefaultAppConfig = &AppConfig{
 	System: SysConfig{
 		Appid:    "ToughRADIUS",

@@ -224,7 +224,7 @@ CPU/内存）每 30 秒采样一次。
 
 ## 生产加固清单
 
-- [ ] 修改 `web.secret`。确认引导 `admin` 口令是唯一的（启动日志或 `TOUGHRADIUS_ADMIN_PASSWORD`），不要使用历史默认口令。
+- [ ] 修改 `web.secret`。确认引导 `admin` 口令是唯一的（`{workdir}/private/admin-bootstrap-password` 或 `TOUGHRADIUS_ADMIN_PASSWORD`），不要使用历史默认口令。
 - [ ] `radiusd.debug: false`、`logger.mode: production`。
 - [ ] 用防火墙将 UDP 1812/1813 与 TCP 1816 限制在可信网络内。
 - [ ] 跨不可信网络传输 RADIUS 时使用 RadSec（2083）或可信二层/VPN 通道。
