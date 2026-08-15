@@ -164,6 +164,38 @@ func TestLoginHandler(t *testing.T) {
 	}
 }
 
+func TestLoginHandler_RejectsWellKnownDefaultPassword(t *testing.T) {
+	db, e, appCtx, _, cleanup := setupAuthTest(t)
+	defer cleanup()
+
+	hashedPassword, err := common.HashPassword(app.WellKnownBootstrapPassword)
+	require.NoError(t, err)
+	legacy := &domain.SysOpr{
+		ID:       common.UUIDint64(),
+		Username: "legacyadmin",
+		Password: hashedPassword,
+		Level:    "super",
+		Status:   common.ENABLED,
+	}
+	require.NoError(t, db.Create(legacy).Error)
+	t.Cleanup(func() {
+		db.Where("id = ?", legacy.ID).Delete(&domain.SysOpr{})
+	})
+
+	requestBody := `{"username":"legacyadmin","password":"` + app.WellKnownBootstrapPassword + `"}`
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(requestBody))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+
+	require.NoError(t, loginHandler(c))
+	assert.Equal(t, http.StatusUnauthorized, rec.Code)
+
+	var errorResp ErrorResponse
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &errorResp))
+	assert.Equal(t, "INSECURE_DEFAULT_PASSWORD", errorResp.Error)
+}
+
 // TestLoginHandler_DisabledAccount tests login for a disabled account
 func TestLoginHandler_DisabledAccount(t *testing.T) {
 	db, e, appCtx, testOpr, cleanup := setupAuthTest(t)

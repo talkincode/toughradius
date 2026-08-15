@@ -108,6 +108,7 @@ logger:
 | `TOUGHRADIUS_RADIUS_RADSEC_PORT` / `_RADIUS_RADSEC_WORKER` / `_RADIUS_RADSEC_CA_CERT` / `_RADIUS_RADSEC_CERT` / `_RADIUS_RADSEC_KEY` | RadSec 配置 |
 | `TOUGHRADIUS_LOGGER_MODE` / `_LOGGER_FILE_ENABLE` | `logger.*` |
 | `TOUGHRADIUS_RADIUS_POOL` | RADIUS 工作池大小（默认 1024） |
+| `TOUGHRADIUS_ADMIN_PASSWORD` | 可选。首次启动或轮换引导 `admin` 账号时使用的口令；若等于历史默认口令则被忽略。 |
 
 ### 命令行参数
 
@@ -223,7 +224,7 @@ CPU/内存）每 30 秒采样一次。
 
 ## 生产加固清单
 
-- [ ] 修改 `web.secret` 与默认 `admin` 密码。
+- [ ] 修改 `web.secret`。确认引导 `admin` 口令是唯一的（`{workdir}/private/admin-bootstrap-password` 或 `TOUGHRADIUS_ADMIN_PASSWORD`），不要使用历史默认口令。
 - [ ] `radiusd.debug: false`、`logger.mode: production`。
 - [ ] 用防火墙将 UDP 1812/1813 与 TCP 1816 限制在可信网络内。
 - [ ] 跨不可信网络传输 RADIUS 时使用 RadSec（2083）或可信二层/VPN 通道。

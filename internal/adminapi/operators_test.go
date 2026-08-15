@@ -12,6 +12,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"gorm.io/gorm"
@@ -343,6 +344,16 @@ func TestCreateOperator(t *testing.T) {
 			}`,
 			expectedStatus: http.StatusBadRequest,
 			expectedError:  "WEAK_PASSWORD",
+		},
+		{
+			name: "Historical default password is rejected",
+			requestBody: `{
+				"username": "testuser",
+				"password": "` + app.WellKnownBootstrapPassword + `",
+				"realname": "Test"
+			}`,
+			expectedStatus: http.StatusBadRequest,
+			expectedError:  "INSECURE_DEFAULT_PASSWORD",
 		},
 		{
 			name: "Invalid email format",

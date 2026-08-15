@@ -14,6 +14,7 @@ import (
 	"golang.org/x/time/rate"
 	"gorm.io/gorm"
 
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -77,6 +78,10 @@ func loginHandler(c echo.Context) error {
 
 	if !common.VerifyPassword(req.Password, operator.Password) {
 		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Incorrect username or password", nil)
+	}
+	if common.VerifyPassword(app.WellKnownBootstrapPassword, operator.Password) {
+		return fail(c, http.StatusUnauthorized, "INSECURE_DEFAULT_PASSWORD",
+			"The historical default password is disabled; set a unique password with cmd/reset-password or TOUGHRADIUS_ADMIN_PASSWORD", nil)
 	}
 	if strings.EqualFold(operator.Status, common.DISABLED) {
 		return fail(c, http.StatusForbidden, "ACCOUNT_DISABLED", "Account has been disabled", nil)

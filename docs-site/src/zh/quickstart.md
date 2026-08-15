@@ -91,8 +91,9 @@ logger:
   filename: /var/toughradius/toughradius.log
 ```
 
-> **务必修改 `web.secret`**，它用于签发管理端登录令牌。首次登录后请立即修改
-> 默认管理员密码。
+> **务必修改 `web.secret`**，它用于签发管理端登录令牌。首次启动的管理员口令是
+> 随机生成的（或由 `TOUGHRADIUS_ADMIN_PASSWORD` 指定）；请从
+> `{workdir}/private/admin-bootstrap-password` 读取，并在首次登录后立即修改。
 
 ## 3. 初始化数据库并启动
 
@@ -109,13 +110,14 @@ toughradius -c /etc/toughradius.yml
 
 ## 4. 登录管理界面
 
-打开 `http://<服务器>:1816`。默认管理员：
+打开 `http://<服务器>:1816`。引导管理员：
 
 - 用户名：`admin`
-- 密码：`toughradius`
+- 密码：写入 `{workdir}/private/admin-bootstrap-password`；若在首次启动前设置了
+  `TOUGHRADIUS_ADMIN_PASSWORD`，则使用该值
 
-请立即在 **账户设置** 中修改密码；忘记密码可用 `cmd/reset-password` 重置
-（见[常见问题](./faq.md)）。
+没有公开的默认口令。请在 **账户设置** 中修改引导口令；忘记密码可用
+`cmd/reset-password` 重置（见[常见问题](./faq.md)）。
 
 ## 5. 登记 NAS 并创建用户
 

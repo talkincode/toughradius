@@ -154,12 +154,14 @@ This lets you disable unauthorized EAP methods without interrupting the service.
 
 Access Web Management Interface: <http://localhost:1816>
 
-Default Admin Account:
+Bootstrap Admin Account:
 
-- Username: admin
-- Password: toughradius
+- Username: `admin`
+- Password: generated on first start and written to `{workdir}/private/admin-bootstrap-password` (mode 0600). It is never `toughradius`.
 
-Change the default admin password immediately after first login. For any deployment exposed beyond a local development host, also set `web.secret` / `TOUGHRADIUS_WEB_SECRET` to a long random value before starting the service; it signs management API JWTs.
+Set `TOUGHRADIUS_ADMIN_PASSWORD` before the first start if you want to choose the initial password yourself. Lost passwords can be reset with `cmd/reset-password`. Upgrades that still have the historical default password rotate it automatically and log the replacement once.
+
+For any deployment exposed beyond a local development host, also set `web.secret` / `TOUGHRADIUS_WEB_SECRET` to a long random value before starting the service; it signs management API JWTs.
 Production mode (`system.debug=false` or `logger.mode=production`) refuses to start when the built-in placeholder or an empty JWT secret is still configured.
 
 ## 📖 Documentation

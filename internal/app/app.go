@@ -134,10 +134,13 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		zap.S().Errorf("database migration failed: %v", err)
 	}
 
+	// Create or rotate the bootstrap super-admin before the admin API listens
+	// so a well-known password is never reachable on a fresh or upgraded node.
+	a.checkSuper()
+
 	// wait for database initialization to complete
 	go func() {
 		time.Sleep(3 * time.Second)
-		a.checkSuper()
 		a.checkSettings()
 		a.checkDefaultPNode()
 	}()

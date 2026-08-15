@@ -15,7 +15,10 @@
 go run ./cmd/reset-password -c /etc/toughradius.yml -u admin -p <新密码>
 ```
 
-`-initdb` 之后的默认账号为 `admin` / `toughradius`。
+首次启动账号为 `admin`，口令是一次性随机值并写入
+`{workdir}/private/admin-bootstrap-password`（若在首次启动前设置了
+`TOUGHRADIUS_ADMIN_PASSWORD` 则使用该值）。历史默认口令 `toughradius`
+不再创建，也不会被登录接受。
 
 ### SQLite 和 PostgreSQL 怎么选？
 
