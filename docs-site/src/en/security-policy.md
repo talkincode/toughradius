@@ -9,6 +9,26 @@ keeps a short pointer back to this chapter so there is a single source of truth.
 
 ## Security advisories
 
+### Default super-admin credentials (GHSA-2gwm-6gf5-8699)
+
+ToughRADIUS no longer creates or accepts the historical first-start password.
+A fresh install generates a one-time bootstrap password (or uses
+`TOUGHRADIUS_ADMIN_PASSWORD`) and prints it once. Upgrades that still store the
+historical default rotate it on startup. Login and operator-password APIs reject
+that credential.
+
+| Item               | Details                                      |
+| ------------------ | -------------------------------------------- |
+| Vulnerability type | Use of Default Credentials (CWE-1392)        |
+| Severity           | Critical                                     |
+| Advisory           | GHSA-2gwm-6gf5-8699                          |
+| Affected component | Super-admin bootstrap and `/api/v1/auth/login` |
+
+#### Recommended actions
+
+Upgrade, then confirm every operator uses a unique password. If you cannot read
+the one-time startup password, reset it with `cmd/reset-password`.
+
 ### XSS vulnerability fix (v8.0.8)
 
 Version **v8.0.8** addresses a critical cross-site scripting (XSS) vulnerability.

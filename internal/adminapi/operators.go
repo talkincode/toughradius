@@ -9,11 +9,17 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
+	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"github.com/talkincode/toughradius/v9/pkg/validutil"
 )
+
+func wellKnownPasswordError(c echo.Context) error {
+	return fail(c, http.StatusBadRequest, "INSECURE_DEFAULT_PASSWORD",
+		"The historical default password cannot be used; choose a unique password", nil)
+}
 
 // Operator request structure
 type operatorPayload struct {
@@ -90,6 +96,9 @@ func updateCurrentOperator(c echo.Context) error {
 		password := strings.TrimSpace(payload.Password)
 		if len(password) < 6 || len(password) > 50 {
 			return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "Password length must be between 6 and 50 characters", nil)
+		}
+		if app.IsWellKnownBootstrapPassword(password) {
+			return wellKnownPasswordError(c)
 		}
 		if !validutil.CheckPassword(password) {
 			return fail(c, http.StatusBadRequest, "WEAK_PASSWORD", "Password must contain letters and numbers", nil)
@@ -236,6 +245,9 @@ func createOperator(c echo.Context) error {
 	if len(payload.Password) < 6 || len(payload.Password) > 50 {
 		return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "Password length must be between 6 and 50 characters", nil)
 	}
+	if app.IsWellKnownBootstrapPassword(payload.Password) {
+		return wellKnownPasswordError(c)
+	}
 
 	// Validate password strength (at least contains letters and digits)
 	if !validutil.CheckPassword(payload.Password) {
@@ -365,6 +377,9 @@ func updateOperator(c echo.Context) error {
 		// ValidatePasswordlength
 		if len(password) < 6 || len(password) > 50 {
 			return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "Password length must be between 6 and 50 characters", nil)
+		}
+		if app.IsWellKnownBootstrapPassword(password) {
+			return wellKnownPasswordError(c)
 		}
 		// ValidatePasswordstrength
 		if !validutil.CheckPassword(password) {

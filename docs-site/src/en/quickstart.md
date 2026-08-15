@@ -95,8 +95,9 @@ logger:
   filename: /var/toughradius/toughradius.log
 ```
 
-> **Change `web.secret`.** It signs admin login tokens. Likewise change the
-> default admin password immediately after the first login.
+> **Change `web.secret`.** It signs admin login tokens. The first-start admin
+> password is random (or `TOUGHRADIUS_ADMIN_PASSWORD`); copy it from the startup
+> log and change it after the first login.
 
 ## 3. Initialize the database and run
 
@@ -114,13 +115,15 @@ migration runs automatically at startup. Other flags: `-v` prints the version,
 
 ## 4. Log in to the admin UI
 
-Open `http://<server>:1816`. The default administrator is:
+Open `http://<server>:1816`. The bootstrap administrator is:
 
 - Username: `admin`
-- Password: `toughradius`
+- Password: printed once in the startup log, or the value of
+  `TOUGHRADIUS_ADMIN_PASSWORD` if you set it before first start
 
-Change the password right away under **Account Settings**, or reset a lost one
-with `cmd/reset-password` (see the [FAQ](./faq.md)).
+There is no well-known default password. Change the bootstrap password under
+**Account Settings**, or reset a lost one with `cmd/reset-password` (see the
+[FAQ](./faq.md)).
 
 ## 5. Register a NAS and create a user
 
