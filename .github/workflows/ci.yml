@@ -370,7 +370,7 @@ jobs:
         run: mdbook build docs-site
 
       - name: Install lychee
-        uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2
+        uses: taiki-e/install-action@b6b84cf49ebfe0176417bdce007c624f0db37f20 # v2
         with:
           tool: lychee
 
