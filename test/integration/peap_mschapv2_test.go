@@ -19,6 +19,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	eap "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	eaphandlers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/handlers"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsfragment"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/vendors/microsoft"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -150,6 +151,104 @@ func TestPEAPMSCHAPv2EndToEnd(t *testing.T) {
 	})
 }
 
+// TestPEAPMSCHAPv2LegacyCBCClientHello is the RADIUS-level acceptance case for
+// issue #598 (TR-F004 / TR-F022): a PEAP supplicant that only offers the
+// RSA+AES-CBC suites of hostapd internal TLS / eapol_test.
+//
+//   - EapTlsCipherProfile=modern (the default) must Access-Reject on the
+//     ClientHello — this is the reported failure mode.
+//   - EapTlsCipherProfile=legacy-rsa-cbc plus an RSA server certificate must
+//     complete PEAPv0/MSCHAPv2 and emit MS-MPPE keys.
+//
+// Serial: shares the process-global EAP method and cipher-profile settings.
+func TestPEAPMSCHAPv2LegacyCBCClientHello(t *testing.T) {
+	const secret = "it-peap-cbc-secret"
+	suffix := uniqueSuffix()
+	nasIP := net.ParseIP("10.202.0.2")
+	nasID := "it-peap-cbc-nas-" + suffix
+
+	nas := &domain.NetNas{
+		ID:         common.UUIDint64(),
+		Identifier: nasID,
+		Ipaddr:     nasIP.String(),
+		Secret:     secret,
+		VendorCode: "0",
+		Status:     common.ENABLED,
+	}
+	require.NoError(t, h.appCtx.DB().Create(nas).Error)
+
+	profileID := seedProfile(t, "it-peap-cbc-profile-"+suffix)
+	serverAddr := h.radiusServerAddr()
+	restoreEapMethod(t)
+
+	ca := newEAPTLSTestCA(t, "IT PEAP CBC Root CA "+suffix)
+	rsaServer := ca.issueRSAServer(t, "radius.example.com")
+
+	cbcClient := func() *tls.Config {
+		return &tls.Config{ //nolint:gosec // G402: TLS 1.2 + CBC pin reproduces issue #598
+			RootCAs:      ca.pool(),
+			ServerName:   "radius.example.com",
+			MinVersion:   tls.VersionTLS12,
+			MaxVersion:   tls.VersionTLS12,
+			CipherSuites: tlsengine.LegacyRSACBCSuites,
+		}
+	}
+
+	t.Run("modern profile rejects CBC-only ClientHello", func(t *testing.T) {
+		configurePEAPWithCipherProfile(t, rsaServer, tlsengine.CipherProfileModern)
+		username := "it-peap-cbc-modern-" + suffix
+		password := "it-peap-cbc-pass-" + suffix
+		seedPEAPUser(t, profileID, username, password)
+
+		sup := &peapSupplicant{
+			serverAddr: serverAddr,
+			secret:     secret,
+			username:   username,
+			password:   password,
+			nasID:      nasID,
+			nasIP:      nasIP,
+			clientCfg:  cbcClient(),
+		}
+		resp := sup.authenticate(t)
+		require.Equalf(t, radius.CodeAccessReject, resp.Code,
+			"modern profile must reject a CBC-only ClientHello, got %v (%q)",
+			resp.Code, rfc2865.ReplyMessage_GetString(resp))
+		assertEAPCode(t, resp, eap.CodeFailure)
+		assert.Contains(t, rfc2865.ReplyMessage_GetString(resp), "handshake failed")
+	})
+
+	t.Run("legacy-rsa-cbc authenticates CBC-only client", func(t *testing.T) {
+		configurePEAPWithCipherProfile(t, rsaServer, tlsengine.CipherProfileLegacyRSACBC)
+		username := "it-peap-cbc-legacy-" + suffix
+		password := "it-peap-cbc-pass-" + suffix
+		seedPEAPUser(t, profileID, username, password)
+
+		sup := &peapSupplicant{
+			serverAddr: serverAddr,
+			secret:     secret,
+			username:   username,
+			password:   password,
+			nasID:      nasID,
+			nasIP:      nasIP,
+			clientCfg:  cbcClient(),
+		}
+		resp := sup.authenticate(t)
+		require.Equalf(t, radius.CodeAccessAccept, resp.Code,
+			"legacy-rsa-cbc must authenticate a CBC-only PEAP client, got %v (%q)",
+			resp.Code, rfc2865.ReplyMessage_GetString(resp))
+		assertEAPCode(t, resp, eap.CodeSuccess)
+
+		resp.Secret = []byte(secret)
+		resp.Authenticator = sup.lastReqAuth
+		recvKey, err := microsoft.MSMPPERecvKey_Lookup(resp)
+		require.NoError(t, err, "Access-Accept must carry an MS-MPPE-Recv-Key")
+		assert.Len(t, recvKey, 32)
+		sendKey, err := microsoft.MSMPPESendKey_Lookup(resp)
+		require.NoError(t, err, "Access-Accept must carry an MS-MPPE-Send-Key")
+		assert.Len(t, sendKey, 32)
+	})
+}
+
 // configurePEAP stores the server certificate/key as a managed certificate and
 // points the dynamic EAP settings at it by name, switching the server's EAP
 // method to eap-peap. PEAP is a server-only TLS method, so no client-CA bundle
@@ -163,6 +262,23 @@ func configurePEAP(t *testing.T, serverCert tls.Certificate) {
 	cm := h.appCtx.ConfigMgr()
 	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsServerCert, serverName))
 	require.NoError(t, cm.Set("radius", "EapMethod", "eap-peap"))
+}
+
+// configurePEAPWithCipherProfile is configurePEAP plus an explicit
+// EapTlsCipherProfile, restored when the test ends so later cases keep the
+// default modern list.
+func configurePEAPWithCipherProfile(t *testing.T, serverCert tls.Certificate, profile string) {
+	t.Helper()
+	configurePEAP(t, serverCert)
+	cm := h.appCtx.ConfigMgr()
+	prev := cm.GetString("radius", eaphandlers.SettingEapTlsCipherProfile)
+	require.NoError(t, cm.Set("radius", eaphandlers.SettingEapTlsCipherProfile, profile))
+	t.Cleanup(func() {
+		if prev == "" {
+			prev = tlsengine.CipherProfileModern
+		}
+		_ = cm.Set("radius", eaphandlers.SettingEapTlsCipherProfile, prev)
+	})
 }
 
 // seedPEAPUser creates an enabled RADIUS user whose plaintext password is used to
@@ -515,14 +631,19 @@ func (s *peapSupplicant) buildClientChallengeResponse(t *testing.T, challenge *e
 // byte (Identity or MSCHAPv2), so a 5-octet minimum is enforced.
 func decodeInnerEAP(t *testing.T, data []byte) *eap.EAPMessage {
 	t.Helper()
-	require.GreaterOrEqualf(t, len(data), 5, "inner EAP packet too short: %d bytes", len(data))
-	declared := binary.BigEndian.Uint16(data[2:4])
-	require.Equalf(t, len(data), int(declared), "inner EAP length %d != actual %d", declared, len(data))
-	return &eap.EAPMessage{
-		Code:       data[0],
-		Identifier: data[1],
-		Length:     declared,
-		Type:       data[4],
-		Data:       append([]byte(nil), data[5:]...),
+	require.NotEmpty(t, data, "inner EAP packet empty")
+	if len(data) >= 5 && data[0] >= eap.CodeRequest && data[0] <= eap.CodeFailure {
+		declared := binary.BigEndian.Uint16(data[2:4])
+		if int(declared) == len(data) {
+			return &eap.EAPMessage{
+				Code:       data[0],
+				Identifier: data[1],
+				Length:     declared,
+				Type:       data[4],
+				Data:       append([]byte(nil), data[5:]...),
+			}
+		}
 	}
+	// PEAPv0 method frames are Type+Data (no EAP header).
+	return &eap.EAPMessage{Code: eap.CodeRequest, Type: data[0], Data: append([]byte(nil), data[1:]...)}
 }

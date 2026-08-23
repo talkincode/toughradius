@@ -27,6 +27,9 @@ const (
 	TypeTTLS         = 21 // EAP-TTLS (Tunneled TLS), IANA EAP method type 21
 	TypePEAP         = 25 // Protected EAP (PEAP), IANA EAP method type 25
 	TypeMSCHAPv2     = 26 // EAP-MSCHAPv2
+	// TypeTLV is EAP-TLV (IANA type 33). PEAPv0 uses it for the Result /
+	// Cryptobinding TLVs after the inner method (Microsoft [MS-PEAP] §2.2.8).
+	TypeTLV = 33
 )
 
 // EAPState holds EAP status data

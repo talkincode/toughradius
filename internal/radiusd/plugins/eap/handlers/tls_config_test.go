@@ -4,14 +4,18 @@ import (
 	"crypto/ecdsa"
 	"crypto/elliptic"
 	"crypto/rand"
+	"crypto/rsa"
 	"crypto/tls"
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"errors"
 	"math/big"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
 )
 
 // fakeSettingsReader is an in-memory TLSSettingsReader for testing the
@@ -280,6 +284,80 @@ func TestNewSettingsPEAPConfigProvider_ManagedCert(t *testing.T) {
 	if cfg.MinVersion != tls.VersionTLS13 {
 		t.Fatalf("expected MinVersion TLS 1.3, got %#x", cfg.MinVersion)
 	}
+	if cfg.CipherSuites != nil {
+		t.Fatalf("modern PEAP profile must leave CipherSuites unset, got %v", cfg.CipherSuites)
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_LegacyRSACipherProfile(t *testing.T) {
+	certPEM, keyPEM := genRSATestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert:    "srv",
+		"radius." + SettingEapTlsCipherProfile: "legacy-rsa-cbc",
+	})
+	cfg, err := NewSettingsPEAPConfigProvider(reader, resolver)()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg == nil {
+		t.Fatal("expected non-nil PEAP config")
+	}
+	if len(cfg.CipherSuites) != len(tlsengine.LegacyRSACBCSuites) {
+		t.Fatalf("legacy profile suites = %v", cfg.CipherSuites)
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_LegacyNeedsRSACertificate(t *testing.T) {
+	certPEM, keyPEM := genTestCertPEM(t) // ECDSA
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert:    "srv",
+		"radius." + SettingEapTlsCipherProfile: "legacy-rsa-cbc",
+	})
+	_, err := NewSettingsPEAPConfigProvider(reader, resolver)()
+	if !errors.Is(err, tlsengine.ErrLegacyNeedsRSACertificate) {
+		t.Fatalf("got %v, want %v", err, tlsengine.ErrLegacyNeedsRSACertificate)
+	}
+}
+
+func TestNewSettingsPEAPConfigProvider_LegacyIncompatibleWithTLS13(t *testing.T) {
+	certPEM, keyPEM := genRSATestCertPEM(t)
+	resolver := &fakeCertResolver{certPEM: certPEM, keyPEM: keyPEM}
+	reader := newFakeReader(map[string]string{
+		"radius." + SettingEapTlsServerCert:    "srv",
+		"radius." + SettingEapTlsMinVersion:    "1.3",
+		"radius." + SettingEapTlsCipherProfile: "legacy-rsa-cbc",
+	})
+	_, err := NewSettingsPEAPConfigProvider(reader, resolver)()
+	if !errors.Is(err, tlsengine.ErrLegacyIncompatibleTLS13) {
+		t.Fatalf("got %v, want %v", err, tlsengine.ErrLegacyIncompatibleTLS13)
+	}
+}
+
+func genRSATestCertPEM(t *testing.T) (certPEM, keyPEM []byte) {
+	t.Helper()
+	key, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		t.Fatalf("generate RSA key: %v", err)
+	}
+	tmpl := &x509.Certificate{
+		SerialNumber:          big.NewInt(3),
+		Subject:               pkix.Name{CommonName: "toughradius-rsa-managed-cert"},
+		NotBefore:             time.Now().Add(-time.Hour),
+		NotAfter:              time.Now().Add(time.Hour),
+		KeyUsage:              x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment | x509.KeyUsageCertSign,
+		IsCA:                  true,
+		BasicConstraintsValid: true,
+	}
+	der, err := x509.CreateCertificate(rand.Reader, tmpl, tmpl, &key.PublicKey, key)
+	if err != nil {
+		t.Fatalf("create RSA certificate: %v", err)
+	}
+	keyDER := x509.MarshalPKCS1PrivateKey(key)
+	certPEM = pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: der})
+	keyPEM = pem.EncodeToMemory(&pem.Block{Type: "RSA PRIVATE KEY", Bytes: keyDER})
+	return certPEM, keyPEM
 }
 
 func TestNewSettingsTTLSConfigProvider_NotConfigured(t *testing.T) {

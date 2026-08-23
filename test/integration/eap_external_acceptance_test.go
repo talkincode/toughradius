@@ -25,7 +25,6 @@ import (
 )
 
 const eapAcceptanceSecret = "it-eap-acceptance-secret"
-const peapExternalCoverageIssue = "https://github.com/talkincode/toughradius/issues/495"
 
 type eapAcceptanceRun struct {
 	StartedAt   string                  `json:"started_at"`
@@ -144,10 +143,6 @@ func TestEAPExternalAcceptance(t *testing.T) {
 			name:     "PEAP/MSCHAPv2 valid credentials",
 			method:   "PEAP/MSCHAPv2",
 			expected: "Access-Accept",
-			skipDetail: "Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap " +
-				"(server rejects the decrypted phase-2 payload as an invalid inner EAP message). " +
-				"The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. " +
-				"Tracking issue: " + peapExternalCoverageIssue + ".",
 			setup: func(t *testing.T, dir, suffix string) string {
 				ca := newEAPTLSTestCA(t, "IT External PEAP Root CA "+suffix)
 				serverCert := ca.issueServer(t, "radius.example.com")
@@ -163,10 +158,6 @@ func TestEAPExternalAcceptance(t *testing.T) {
 			name:     "PEAP/MSCHAPv2 wrong password",
 			method:   "PEAP/MSCHAPv2",
 			expected: "Access-Reject",
-			skipDetail: "Skipped intentionally: eapol_test currently exposes a PEAP inner-framing interop gap " +
-				"(server rejects the decrypted phase-2 payload as an invalid inner EAP message). " +
-				"The in-process PEAP/MSCHAPv2 integration test remains the current acceptance coverage. " +
-				"Tracking issue: " + peapExternalCoverageIssue + ".",
 			setup: func(t *testing.T, dir, suffix string) string {
 				ca := newEAPTLSTestCA(t, "IT External PEAP Reject Root CA "+suffix)
 				serverCert := ca.issueServer(t, "radius.example.com")

@@ -71,6 +71,11 @@ type Config struct {
 	// such as PEAP/TTLS whose peers authenticate inside the protected tunnel
 	// rather than with an outer TLS client certificate.
 	ServerOnly bool
+	// CipherSuites optionally pins the TLS 1.2 cipher list presented by the
+	// server. Nil keeps crypto/tls defaults (ECDHE + AEAD). A non-nil list is
+	// the opt-in compatibility path for CBC-only peers such as hostapd
+	// internal TLS; see ResolveCipherSuites. TLS 1.3 ignores this field.
+	CipherSuites []uint16
 	// HandshakeTimeout bounds the total handshake duration. Zero selects
 	// DefaultHandshakeTimeout.
 	HandshakeTimeout time.Duration
@@ -117,6 +122,7 @@ func New(cfg *Config) (*Engine, error) {
 		Certificates: []tls.Certificate{cfg.ServerCertificate},
 		MinVersion:   cfg.MinVersion,
 		MaxVersion:   cfg.MaxVersion,
+		CipherSuites: cfg.CipherSuites,
 		// EAP-TLS does not implement TLS session resumption, which RFC 9190
 		// §2.1.3 makes optional. Disabling tickets keeps the server's final
 		// TLS 1.3 flight free of NewSessionTicket messages, so the protected

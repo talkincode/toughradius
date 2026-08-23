@@ -265,6 +265,21 @@ func TestConfigManagerJSON_EapTlsSchemas(t *testing.T) {
 	// The value should validate against the enum so it is editable via Set.
 	assert.NoError(t, cm.validate(minVerSchema, "1.3"))
 	assert.Error(t, cm.validate(minVerSchema, "1.1"))
+
+	profile, exists := cm.schemas["radius.EapTlsCipherProfile"]
+	require.True(t, exists, "radius.EapTlsCipherProfile configuration should exist")
+	assert.Equal(t, TypeString, profile.Type)
+	assert.Equal(t, "modern", profile.Default)
+	assert.Equal(t, []string{"modern", "legacy-rsa-cbc", "custom"}, profile.Enum)
+	assert.NoError(t, cm.validate(profile, "legacy-rsa-cbc"))
+	assert.Error(t, cm.validate(profile, "insecure"))
+
+	suites, exists := cm.schemas["radius.EapTlsCipherSuites"]
+	require.True(t, exists, "radius.EapTlsCipherSuites configuration should exist")
+	assert.Equal(t, TypeString, suites.Type)
+	assert.Equal(t, "", suites.Default)
+	assert.NotEmpty(t, suites.TitleI18n)
+	assert.NotEmpty(t, suites.DescI18n)
 }
 
 // TestConfigManagerJSON_LdapSchemas verifies the LDAP/AD bind backend config

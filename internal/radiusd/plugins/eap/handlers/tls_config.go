@@ -27,6 +27,12 @@ const (
 	SettingEapTlsClientCa = "EapTlsClientCa"
 	// SettingEapTlsMinVersion pins the minimum negotiated TLS version.
 	SettingEapTlsMinVersion = "EapTlsMinVersion"
+	// SettingEapTlsCipherProfile selects the TLS 1.2 cipher policy
+	// (modern / legacy-rsa-cbc / custom). See tlsengine.ResolveCipherSuites.
+	SettingEapTlsCipherProfile = "EapTlsCipherProfile"
+	// SettingEapTlsCipherSuites is the custom suite list used when the profile
+	// is "custom": comma-separated IANA names or 0xNNNN ids.
+	SettingEapTlsCipherSuites = "EapTlsCipherSuites"
 )
 
 // TLSSettingsReader reads EAP-TLS runtime configuration values. It is satisfied
@@ -152,11 +158,14 @@ func NewSettingsTLSConfigProvider(reader TLSSettingsReader, resolvers ...CertRes
 			return nil, err
 		}
 
-		return &tlsengine.Config{
+		cfg := &tlsengine.Config{
 			ServerCertificate: cert,
 			ClientCAs:         pool,
-			MinVersion:        parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion)),
-		}, nil
+		}
+		if err := applyTLSPolicy(cfg, reader); err != nil {
+			return nil, err
+		}
+		return cfg, nil
 	}
 }
 
@@ -192,11 +201,14 @@ func NewSettingsPEAPConfigProvider(reader TLSSettingsReader, resolvers ...CertRe
 			return nil, err
 		}
 
-		return &tlsengine.Config{
+		cfg := &tlsengine.Config{
 			ServerCertificate: cert,
 			ServerOnly:        true,
-			MinVersion:        parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion)),
-		}, nil
+		}
+		if err := applyTLSPolicy(cfg, reader); err != nil {
+			return nil, err
+		}
+		return cfg, nil
 	}
 }
 
@@ -234,17 +246,20 @@ func NewSettingsTTLSConfigProvider(reader TLSSettingsReader, resolvers ...CertRe
 			return nil, err
 		}
 
-		return &tlsengine.Config{
+		cfg := &tlsengine.Config{
 			ServerCertificate: cert,
 			ServerOnly:        true,
-			MinVersion:        parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion)),
 			// Pin the outer tunnel to TLS 1.2. EAP-TTLS phase 2 is peer-initiated
 			// and ToughRADIUS relies on the TLS 1.2 handshake-completion framing
 			// (the server's final flight) to switch into the inner AVP exchange.
 			// TLS 1.3 tunneling (half-RTT completion, RFC 9427 key derivation) is
 			// a later milestone, so cap the negotiation at TLS 1.2 here.
 			MaxVersion: tls.VersionTLS12,
-		}, nil
+		}
+		if err := applyTLSPolicy(cfg, reader); err != nil {
+			return nil, err
+		}
+		return cfg, nil
 	}
 }
 
@@ -259,4 +274,24 @@ func parseTLSMinVersion(v string) uint16 {
 	default:
 		return tls.VersionTLS12
 	}
+}
+
+// applyTLSPolicy copies the operator-selected minimum TLS version and cipher
+// profile onto cfg. It fails closed when a compatibility profile cannot be
+// negotiated (TLS 1.3-only + CBC list, or RSA key exchange without an RSA
+// server certificate) so the handshake never starts with a silent mismatch.
+func applyTLSPolicy(cfg *tlsengine.Config, reader TLSSettingsReader) error {
+	cfg.MinVersion = parseTLSMinVersion(reader.GetString("radius", SettingEapTlsMinVersion))
+	suites, err := tlsengine.ResolveCipherSuites(
+		reader.GetString("radius", SettingEapTlsCipherProfile),
+		reader.GetString("radius", SettingEapTlsCipherSuites),
+	)
+	if err != nil {
+		return err
+	}
+	if err := tlsengine.ValidateCipherPolicy(cfg.ServerCertificate, cfg.MinVersion, suites); err != nil {
+		return err
+	}
+	cfg.CipherSuites = suites
+	return nil
 }

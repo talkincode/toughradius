@@ -232,7 +232,9 @@ func (p *peapPeer) encrypt(inner []byte) []byte {
 func (p *peapPeer) respondInner(req []byte) ([]byte, error) {
 	msg, err := parseInnerEAP(req)
 	require.NoError(p.t, err)
-	require.Equal(p.t, uint8(eap.CodeRequest), msg.Code)
+	// PEAPv0 Type+Data frames are reconstructed as a Response by
+	// parseInnerEAP; the method type still identifies the request.
+	require.Contains(p.t, []uint8{eap.CodeRequest, eap.CodeResponse}, msg.Code)
 
 	switch msg.Type {
 	case eap.TypeIdentity:
@@ -371,4 +373,94 @@ func TestPEAPHandler_InnerAuth_WrongPasswordRejected(t *testing.T) {
 	assert.False(t, success, "wrong inner password must not authenticate")
 	require.Error(t, err)
 	assert.ErrorIs(t, err, eap.ErrPasswordMismatch)
+}
+
+func TestPEAPv0WirePayload(t *testing.T) {
+	ident := (&eap.EAPMessage{Code: eap.CodeRequest, Identifier: 1, Type: eap.TypeIdentity}).Encode()
+	if got := peapv0WirePayload(ident); string(got) != string(ident) {
+		t.Fatalf("identity request must keep its EAP header")
+	}
+	chal := (&eap.EAPMessage{Code: eap.CodeRequest, Identifier: 2, Type: eap.TypeMSCHAPv2, Data: []byte{1, 2, 3}}).Encode()
+	got := peapv0WirePayload(chal)
+	want := append([]byte{eap.TypeMSCHAPv2}, 1, 2, 3)
+	if string(got) != string(want) {
+		t.Fatalf("MSCHAPv2 must be Type+Data, got %x want %x", got, want)
+	}
+}
+
+func TestParseInnerEAP_InteropFraming(t *testing.T) {
+	full := (&eap.EAPMessage{
+		Code:       eap.CodeResponse,
+		Identifier: 7,
+		Type:       eap.TypeIdentity,
+		Data:       []byte("123"),
+	}).Encode()
+
+	prefixed := make([]byte, 4+len(full))
+	binary.BigEndian.PutUint32(prefixed[:4], uint32(len(full))) //nolint:gosec // G115: test EAP payload is tiny
+	copy(prefixed[4:], full)
+
+	padded := append(append([]byte{}, full...), 0x00, 0x00, 0x00)
+
+	compressed := append([]byte{eap.TypeIdentity}, []byte("123")...)
+
+	successHdr := eap.EncodeEAPHeader(eap.CodeSuccess, 9)
+
+	tests := []struct {
+		name string
+		in   []byte
+		code uint8
+		typ  uint8
+		data string
+	}{
+		{name: "full header", in: full, code: eap.CodeResponse, typ: eap.TypeIdentity, data: "123"},
+		{name: "4-octet length prefix", in: prefixed, code: eap.CodeResponse, typ: eap.TypeIdentity, data: "123"},
+		{name: "trailing padding", in: padded, code: eap.CodeResponse, typ: eap.TypeIdentity, data: "123"},
+		{name: "compressed type+data", in: compressed, code: eap.CodeResponse, typ: eap.TypeIdentity, data: "123"},
+		{name: "tunneled EAP-Success", in: successHdr, code: eap.CodeSuccess},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			msg, err := parseInnerEAP(tc.in)
+			require.NoError(t, err)
+			assert.Equal(t, tc.code, msg.Code)
+			assert.Equal(t, tc.typ, msg.Type)
+			assert.Equal(t, tc.data, string(msg.Data))
+		})
+	}
+
+	_, err := parseInnerEAP([]byte{0xff, 0x00})
+	assert.ErrorIs(t, err, eap.ErrInvalidEAPMessage)
+}
+
+func TestInnerSuccessAcknowledged(t *testing.T) {
+	msSuccess := (&eap.EAPMessage{
+		Code:       eap.CodeResponse,
+		Identifier: 3,
+		Type:       eap.TypeMSCHAPv2,
+		Data:       []byte{MSCHAPv2Success},
+	}).Encode()
+
+	tlv := (&eap.EAPMessage{
+		Code:       eap.CodeResponse,
+		Identifier: 4,
+		Type:       eap.TypeTLV,
+		Data:       []byte{0x80, 0x03, 0x00, 0x02, 0x00, 0x01},
+	}).Encode()
+
+	tlvFail := (&eap.EAPMessage{
+		Code:       eap.CodeResponse,
+		Identifier: 5,
+		Type:       eap.TypeTLV,
+		Data:       []byte{0x80, 0x03, 0x00, 0x02, 0x00, 0x02},
+	}).Encode()
+
+	assert.True(t, innerSuccessAcknowledged(nil))
+	assert.True(t, innerSuccessAcknowledged(msSuccess))
+	assert.True(t, innerSuccessAcknowledged(tlv))
+	assert.True(t, innerSuccessAcknowledged(eap.EncodeEAPHeader(eap.CodeSuccess, 1)))
+	assert.False(t, innerSuccessAcknowledged(tlvFail))
+	assert.False(t, innerSuccessAcknowledged((&eap.EAPMessage{
+		Code: eap.CodeResponse, Identifier: 1, Type: eap.TypeIdentity, Data: []byte("x"),
+	}).Encode()))
 }
