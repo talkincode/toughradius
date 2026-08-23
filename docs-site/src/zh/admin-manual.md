@@ -56,8 +56,9 @@
 列排序。
 
 主要表单字段：用户名/密码、状态（启用/停用）、**计费策略**（必选——速率、
-并发、地址池由其继承）、**过期时间**（决定 `Session-Timeout`）、静态
-`ip_addr` / `ipv6_addr`、IPv6 前缀池与委派前缀（编辑视图）、联系方式、备注。
+并发、地址池、Class 由其继承）、**过期时间**（决定 `Session-Timeout`）、静态
+`ip_addr` / `ipv6_addr`、IPv6 前缀池与委派前缀（编辑视图）、`radius_class`
+（RFC 2865 Class，原样下发）、联系方式、备注。
 
 **批量导入**：列表工具栏的导入按钮接受 `.xlsx`、`.csv`、`.json` 文件，并
 报告成功/失败数量。可先导出现有列表作为模板参考。
@@ -73,6 +74,7 @@
 | `active_num` | 单用户最大并发会话数（0 = 不限） |
 | `up_rate` / `down_rate` | 带宽，单位 **Kbps**；按厂商换算（列表对 ≥1024 的值以 Mbps 展示） |
 | `addr_pool` | NAS 用于分配地址的 `Framed-Pool` 池名 |
+| `radius_class` | RFC 2865 Class（Type 25），原样写入 Access-Accept；ocserv 群组填 `OU=group1;group2` |
 | `ipv6_prefix` / 域 | IPv6 与华为域授权 |
 | `bind_mac` / `bind_vlan` | 将用户锁定到首次出现的 MAC / VLAN |
 
@@ -107,6 +109,8 @@
 | `EapTlsServerCert` | 空 | EAP-TLS/PEAP/TTLS 出示的托管服务器证书名称（在「证书管理」中导入并选择）；**留空即禁用基于证书的 EAP** |
 | `EapTlsClientCa` | 空 | 校验客户端证书链的托管 CA 证书名称（仅 EAP-TLS 需要） |
 | `EapTlsMinVersion` | `1.2` | 最低 TLS 版本（`1.2`/`1.3`） |
+| `EapTlsCipherProfile` | `modern` | TLS 1.2 套件策略：`modern`（ECDHE+AEAD）、`legacy-rsa-cbc`（为 hostapd internal TLS 选择加入 RSA+AES-CBC，需 RSA 服务器证书）或 `custom` |
+| `EapTlsCipherSuites` | 空 | `custom` 档使用的 TLS 1.2 套件列表 |
 | `IgnorePassword` | `false` | 跳过密码校验（仅测试用） |
 | `AccountingHistoryDays` | `90` | 计费历史保留天数（`@daily` 清理；`0` 关闭） |
 | `AcctInterimInterval` | `300` | NAS 中间计费更新间隔（秒） |

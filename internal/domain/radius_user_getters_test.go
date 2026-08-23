@@ -368,6 +368,89 @@ func TestGetDomain(t *testing.T) {
 	}
 }
 
+func TestGetClass(t *testing.T) {
+	cache := newMockCache()
+	cache.SetProfile(1, &RadiusProfile{
+		ID:          1,
+		RadiusClass: "OU=profile-group",
+	})
+
+	tests := []struct {
+		name     string
+		user     *RadiusUser
+		cache    interface{}
+		expected string
+	}{
+		{
+			name: "user override takes priority",
+			user: &RadiusUser{
+				RadiusClass:     "OU=user-group",
+				ProfileId:       1,
+				ProfileLinkMode: ProfileLinkModeDynamic,
+			},
+			cache:    cache,
+			expected: "OU=user-group",
+		},
+		{
+			name: "dynamic mode fetches from profile",
+			user: &RadiusUser{
+				RadiusClass:     "",
+				ProfileId:       1,
+				ProfileLinkMode: ProfileLinkModeDynamic,
+			},
+			cache:    cache,
+			expected: "OU=profile-group",
+		},
+		{
+			name: "NA treated as empty",
+			user: &RadiusUser{
+				RadiusClass:     "NA",
+				ProfileId:       1,
+				ProfileLinkMode: ProfileLinkModeDynamic,
+			},
+			cache:    cache,
+			expected: "OU=profile-group",
+		},
+		{
+			name: "static mode returns user value",
+			user: &RadiusUser{
+				RadiusClass:     "OU=static-group",
+				ProfileId:       1,
+				ProfileLinkMode: ProfileLinkModeStatic,
+			},
+			cache:    cache,
+			expected: "OU=static-group",
+		},
+		{
+			name: "static mode with empty returns empty",
+			user: &RadiusUser{
+				RadiusClass:     "",
+				ProfileId:       1,
+				ProfileLinkMode: ProfileLinkModeStatic,
+			},
+			cache:    cache,
+			expected: "",
+		},
+		{
+			name: "nil cache returns user value",
+			user: &RadiusUser{
+				RadiusClass:     "OU=cached-off",
+				ProfileId:       1,
+				ProfileLinkMode: ProfileLinkModeDynamic,
+			},
+			cache:    nil,
+			expected: "OU=cached-off",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.user.GetClass(tt.cache)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestGetIPv6PrefixPool(t *testing.T) {
 	cache := newMockCache()
 	cache.SetProfile(1, &RadiusProfile{

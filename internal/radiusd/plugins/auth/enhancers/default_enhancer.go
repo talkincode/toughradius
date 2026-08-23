@@ -61,6 +61,16 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 		_ = rfc2869.FramedPool_SetString(response, addrPool) //nolint:errcheck
 	}
 
+	// Set Class (RFC 2865 §5.25) when the user or inherited profile names one.
+	// The value is opaque to a conforming NAS; implementations such as ocserv
+	// interpret it as a group list in the form "OU=group1;group2". Empty/"NA"
+	// omits the attribute so existing NAS deployments are unchanged. The
+	// server does not rewrite or prefix the stored string.
+	radiusClass := user.GetClass(profileCache)
+	if common.IsNotEmptyAndNA(radiusClass) {
+		_ = rfc2865.Class_SetString(response, radiusClass) //nolint:errcheck
+	}
+
 	// User-specific IP address (always use direct access)
 	if common.IsNotEmptyAndNA(user.IpAddr) {
 		_ = rfc2865.FramedIPAddress_Set(response, net.ParseIP(user.IpAddr)) //nolint:errcheck

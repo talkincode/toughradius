@@ -398,6 +398,8 @@ func TestCreateUser(t *testing.T) {
 
 	// CreateTest Profile
 	profile := createTestProfile(db, "test-profile")
+	profile.RadiusClass = "OU=profile-group"
+	require.NoError(t, db.Save(profile).Error)
 
 	tests := []struct {
 		name           string
@@ -463,6 +465,31 @@ func TestCreateUser(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, user *domain.RadiusUser) {
 				assert.Equal(t, "enabled", user.Status)
+			},
+		},
+		{
+			name: "Create user inherits profile RADIUS Class",
+			requestBody: `{
+				"username": "classinherit",
+				"password": "password123",
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, user *domain.RadiusUser) {
+				assert.Equal(t, profile.RadiusClass, user.RadiusClass)
+			},
+		},
+		{
+			name: "Create user overrides profile RADIUS Class",
+			requestBody: `{
+				"username": "classoverride",
+				"password": "password123",
+				"profile_id": "` + fmt.Sprintf("%d", profile.ID) + `",
+				"radius_class": "OU=user-group"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, user *domain.RadiusUser) {
+				assert.Equal(t, "OU=user-group", user.RadiusClass)
 			},
 		},
 		{
@@ -620,6 +647,17 @@ func TestUpdateUser(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, u *domain.RadiusUser) {
 				assert.Equal(t, "disabled", u.Status)
+			},
+		},
+		{
+			name:   "Update RADIUS Class",
+			userID: fmt.Sprintf("%d", user.ID),
+			requestBody: `{
+				"radius_class": "OU=user-group"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, u *domain.RadiusUser) {
+				assert.Equal(t, "OU=user-group", u.RadiusClass)
 			},
 		},
 		{

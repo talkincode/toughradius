@@ -66,6 +66,40 @@ func TestImportRadiusUsers_JSON(t *testing.T) {
 	assert.Equal(t, int64(2), count)
 }
 
+func TestImportRadiusUsers_RadiusClass(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	profile := createTestProfile(db, "import-class-profile")
+	profile.RadiusClass = "OU=profile-group"
+	require.NoError(t, db.Save(profile).Error)
+
+	lines := []map[string]interface{}{
+		{"username": "imp_class_inherit", "password": "secret123", "profile_id": profile.ID},
+		{"username": "imp_class_override", "password": "secret123", "profile_id": profile.ID, "radius_class": "OU=user-group"},
+	}
+	var content bytes.Buffer
+	for _, l := range lines {
+		bs, _ := json.Marshal(l)
+		content.Write(bs)
+		content.WriteByte('\n')
+	}
+
+	req, rec := newUploadRequest("users.json", content.Bytes())
+	e := setupTestEcho()
+	c := CreateTestContext(e, db, req, rec, appCtx)
+
+	require.NoError(t, importRadiusUsers(c))
+	assert.Equal(t, http.StatusOK, rec.Code)
+
+	var inherited domain.RadiusUser
+	require.NoError(t, db.Where("username = ?", "imp_class_inherit").First(&inherited).Error)
+	assert.Equal(t, "OU=profile-group", inherited.RadiusClass)
+
+	var overridden domain.RadiusUser
+	require.NoError(t, db.Where("username = ?", "imp_class_override").First(&overridden).Error)
+	assert.Equal(t, "OU=user-group", overridden.RadiusClass)
+}
+
 func TestImportRadiusUsers_CSV(t *testing.T) {
 	db := setupTestDB(t)
 	appCtx := setupTestApp(t, db)

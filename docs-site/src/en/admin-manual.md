@@ -63,9 +63,10 @@ Subscriber accounts. List supports filtering by username, real name, email,
 mobile, and IP, plus CSV export and column sorting.
 
 Key form fields: username/password, status (enabled/disabled), **billing
-profile** (required — rates, concurrency, pools inherit from it), **expire
-time** (drives `Session-Timeout`), static `ip_addr` / `ipv6_addr`, IPv6 prefix
-pools and delegated prefixes (edit view), contact info, remark.
+profile** (required — rates, concurrency, pools, and Class inherit from it),
+**expire time** (drives `Session-Timeout`), static `ip_addr` / `ipv6_addr`,
+IPv6 prefix pools and delegated prefixes (edit view), `radius_class` (RFC 2865
+Class, emitted as-is), contact info, remark.
 
 **Batch import**: the list toolbar's import button accepts `.xlsx`, `.csv`, or
 `.json` files and reports created/failed counts. Export the current list as a
@@ -83,6 +84,7 @@ Reusable authorization templates:
 | `active_num` | Max concurrent sessions per user (0 = unlimited) |
 | `up_rate` / `down_rate` | Bandwidth in **Kbps**; converted per vendor (list shows Mbps for values ≥ 1024) |
 | `addr_pool` | `Framed-Pool` name the NAS allocates from |
+| `radius_class` | RFC 2865 Class (Type 25), written into Access-Accept as-is; for ocserv groups use `OU=group1;group2` |
 | `ipv6_prefix` / domain | IPv6 and Huawei domain authorization |
 | `bind_mac` / `bind_vlan` | Lock users to first-seen MAC / VLANs |
 
@@ -121,6 +123,8 @@ table — changes apply without restart. The 13 RADIUS settings:
 | `EapTlsServerCert` | empty | Name of the managed server certificate (import and select it on the Certificates page) presented for EAP-TLS/PEAP/TTLS; **empty disables certificate-based EAP** |
 | `EapTlsClientCa` | empty | Name of the managed CA certificate used to validate client certificate chains (EAP-TLS only) |
 | `EapTlsMinVersion` | `1.2` | Minimum TLS version (`1.2`/`1.3`) |
+| `EapTlsCipherProfile` | `modern` | TLS 1.2 cipher policy: `modern` (ECDHE+AEAD), `legacy-rsa-cbc` (opt-in RSA+AES-CBC for hostapd internal TLS; needs an RSA server cert), or `custom` |
+| `EapTlsCipherSuites` | empty | Custom TLS 1.2 suite list when the profile is `custom` |
 | `IgnorePassword` | `false` | Skip password verification (testing only) |
 | `AccountingHistoryDays` | `90` | Accounting retention days (`@daily` cleanup; `0` disables) |
 | `AcctInterimInterval` | `300` | Seconds between NAS interim updates |

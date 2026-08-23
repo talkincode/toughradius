@@ -144,6 +144,32 @@ func (u *RadiusUser) GetDomain(cache interface{}) string {
 	return u.Domain
 }
 
+// GetClass returns the RFC 2865 Class (Type 25) string, respecting profile
+// link mode. A non-empty user-specific value (other than "NA") takes
+// precedence; otherwise, in dynamic link mode, the value is read from the
+// linked profile via cache. An empty string means Class is not emitted.
+func (u *RadiusUser) GetClass(cache interface{}) string {
+	if u.RadiusClass != "" && u.RadiusClass != "NA" {
+		return u.RadiusClass
+	}
+
+	if u.ProfileLinkMode == ProfileLinkModeDynamic && cache != nil {
+		if cacheGetter, ok := cache.(ProfileCacheGetter); ok {
+			profile, err := cacheGetter.Get(u.ProfileId)
+			if err != nil {
+				zap.L().Error("failed to get profile from cache",
+					zap.Int64("user_id", u.ID),
+					zap.Int64("profile_id", u.ProfileId),
+					zap.Error(err))
+				return u.RadiusClass
+			}
+			return profile.RadiusClass
+		}
+	}
+
+	return u.RadiusClass
+}
+
 // GetIPv6PrefixPool returns the IPv6 prefix pool name, respecting profile link mode
 func (u *RadiusUser) GetIPv6PrefixPool(cache interface{}) string {
 	// User-specific override has highest priority

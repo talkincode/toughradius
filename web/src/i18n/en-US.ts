@@ -109,6 +109,7 @@ const customEnglishMessages: TranslationMessages = {
         ipv6_prefix_pool: 'IPv6 Prefix Pool',
         delegated_ipv6_prefix: 'Delegated IPv6 Prefix',
         delegated_ipv6_prefix_pool: 'Delegated IPv6 Prefix Pool',
+        radius_class: 'RADIUS Class',
         domain: 'Domain',
         remark: 'Remark',
         balance: 'Balance',
@@ -148,6 +149,7 @@ const customEnglishMessages: TranslationMessages = {
         expire_time: 'User service expiration time, leave blank for never expires',
         ip_addr: 'Static IPv4 address, e.g. 192.168.1.100',
         ipv6_addr: 'Static IPv6 address, e.g. 2001:db8::1',
+        radius_class: 'RFC 2865 Class, emitted as-is. For ocserv groups use OU=group1;group2',
         domain: 'Domain name for vendor-specific features (e.g. Huawei domain), e.g. enterprise.example.com',
         remark: 'Optional notes, max 1000 characters',
       },
@@ -285,6 +287,7 @@ const customEnglishMessages: TranslationMessages = {
         up_rate: 'Upload Rate (Kbps)',
         down_rate: 'Download Rate (Kbps)',
         addr_pool: 'Address Pool',
+        radius_class: 'RADIUS Class',
         domain: 'Domain',
         ipv6_prefix: 'IPv6 Prefix',
         bind_mac: 'Bind MAC',
@@ -332,6 +335,7 @@ const customEnglishMessages: TranslationMessages = {
         up_rate: 'Upload bandwidth limit',
         down_rate: 'Download bandwidth limit',
         addr_pool: 'Name of the IP address pool',
+        radius_class: 'RFC 2865 Class, emitted as-is. For ocserv groups use OU=group1;group2',
         ipv6_prefix: 'Example: 2001:db8::/64',
         domain: 'NAS domain attribute, e.g., Huawei domain_code',
         bind_mac: 'Whether to enable MAC binding',
@@ -713,6 +717,14 @@ const customEnglishMessages: TranslationMessages = {
       eap_tls_min_version: {
         title: 'EAP-TLS Minimum TLS Version',
         description: 'Minimum TLS protocol version accepted for EAP-TLS handshakes (1.2 or 1.3).',
+      },
+      eap_tls_cipher_profile: {
+        title: 'EAP TLS Cipher Profile',
+        description: 'Outer TLS 1.2 cipher policy. modern (default) keeps ECDHE+AEAD and does not weaken the tunnel. legacy-rsa-cbc enables RSA+AES-CBC for hostapd internal TLS / eapol_test and similar CBC-only clients; requires an RSA server certificate, has no forward secrecy, and never enables RC4, 3DES, or DHE. custom uses EapTlsCipherSuites. TLS 1.3 ignores this list.',
+      },
+      eap_tls_cipher_suites: {
+        title: 'EAP TLS Cipher Suites',
+        description: 'Comma-separated TLS 1.2 suite names or 0xNNNN ids used only when EapTlsCipherProfile=custom. RC4 and 3DES are always rejected.',
       },
       ignore_password: {
         title: 'Ignore Password Check',

@@ -140,6 +140,10 @@ func importRadiusUsers(c echo.Context) error {
 		if userDomain == "" {
 			userDomain = profile.Domain
 		}
+		radiusClass := importMapString(item, "radius_class", "RadiusClass", "Class")
+		if radiusClass == "" {
+			radiusClass = profile.RadiusClass
+		}
 
 		user := &domain.RadiusUser{
 			ID:              common.UUIDint64(),
@@ -152,6 +156,7 @@ func importRadiusUsers(c echo.Context) error {
 			Username:        username,
 			Password:        password,
 			AddrPool:        addrPool,
+			RadiusClass:     radiusClass,
 			ActiveNum:       profile.ActiveNum,
 			UpRate:          profile.UpRate,
 			DownRate:        profile.DownRate,

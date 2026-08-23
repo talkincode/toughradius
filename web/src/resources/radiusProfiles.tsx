@@ -91,6 +91,7 @@ interface RadiusProfile extends RaRecord {
   addr_pool?: string;
   ipv6_prefix?: string;
   domain?: string;
+  radius_class?: string;
   bind_mac?: boolean;
   bind_vlan?: boolean;
   remark?: string;
@@ -805,6 +806,16 @@ export const RadiusProfileEdit = () => {
                 size="small"
               />
             </FieldGridItem>
+            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+              <TextInput
+                source="radius_class"
+                label={translate('resources.radius/profiles.fields.radius_class', { _: 'RADIUS Class' })}
+                helperText={translate('resources.radius/profiles.helpers.radius_class', { _: 'RFC 2865 Class，原样下发。ocserv 群组请填 OU=group1;group2' })}
+                validate={[maxLength(253)]}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
           </FieldGrid>
         </FormSection>
 
@@ -962,6 +973,16 @@ export const RadiusProfileCreate = () => {
                 source="domain"
                 label={translate('resources.radius/profiles.fields.domain', { _: '域名' })}
                 helperText={translate('resources.radius/profiles.helpers.domain', { _: '用户认证域名' })}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+              <TextInput
+                source="radius_class"
+                label={translate('resources.radius/profiles.fields.radius_class', { _: 'RADIUS Class' })}
+                helperText={translate('resources.radius/profiles.helpers.radius_class', { _: 'RFC 2865 Class，原样下发。ocserv 群组请填 OU=group1;group2' })}
+                validate={[maxLength(253)]}
                 fullWidth
                 size="small"
               />
@@ -1314,6 +1335,10 @@ const ProfileDetails = () => {
               <DetailItem
                 label={translate('resources.radius/profiles.fields.domain', { _: '域名' })}
                 value={record.domain || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/profiles.fields.radius_class', { _: 'RADIUS Class' })}
+                value={record.radius_class || <EmptyValue />}
               />
             </Box>
           </DetailSectionCard>

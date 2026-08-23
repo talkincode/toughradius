@@ -97,6 +97,7 @@ interface RadiusUser extends RaRecord {
   ipv6_prefix_pool?: string;
   delegated_ipv6_prefix?: string;
   delegated_ipv6_prefix_pool?: string;
+  radius_class?: string;
   remark?: string;
   created_at?: string;
   updated_at?: string;
@@ -1321,6 +1322,16 @@ export const RadiusUserEdit = () => {
                 size="small"
               />
             </FieldGridItem>
+            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+              <TextInput
+                source="radius_class"
+                label="RADIUS Class"
+                helperText="RFC 2865 Class，原样写入 Access-Accept。ocserv 群组请填 OU=group1;group2"
+                validate={[maxLength(253)]}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
           </FieldGrid>
         </FormSection>
 
@@ -1495,6 +1506,16 @@ export const RadiusUserCreate = () => (
               source="ipv6_addr"
               label="IPv6地址"
               helperText="静态IPv6地址，如 2001:db8::1"
+              fullWidth
+              size="small"
+            />
+          </FieldGridItem>
+          <FieldGridItem span={{ xs: 1, sm: 2 }}>
+            <TextInput
+              source="radius_class"
+              label="RADIUS Class"
+              helperText="RFC 2865 Class，原样写入 Access-Accept。ocserv 群组请填 OU=group1;group2；留空则继承计费策略"
+              validate={[maxLength(253)]}
               fullWidth
               size="small"
             />
@@ -2041,6 +2062,22 @@ const UserDetails = () => {
                     />
                   ) : (
                     <EmptyValue message="未分配" />
+                  )
+                }
+              />
+              <DetailItem
+                label={translate('resources.radius/users.fields.radius_class', { _: 'RADIUS Class' })}
+                value={
+                  record.radius_class ? (
+                    <Chip
+                      label={record.radius_class}
+                      size="small"
+                      color="info"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}
+                    />
+                  ) : (
+                    <EmptyValue message="未设置" />
                   )
                 }
               />

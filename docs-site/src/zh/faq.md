@@ -62,6 +62,19 @@ Web TLS 监听需要 `{workdir}/private/toughradius.tls.crt` 与 `.key`。文件
 见[厂商对接指南](./vendor-guide.md#限速单位)。同时确认用户的策略确实设置了
 `up_rate`/`down_rate`（Kbps）。
 
+### ocserv 对接后用户进不了群组 / Class 没下发
+
+ocserv 把 RFC 2865 Class（Type 25）当成群组通道。在用户或计费策略上填写
+`radius_class`，认证成功后会**原样**写入 Access-Accept。空值不下发。
+
+ocserv 要求：
+
+- `auth = "radius[config=...,groupconfig=true]"`
+- Class 格式为 `OU=group1;group2`（多个组用分号；服务端**不会**自动加 `OU=`）
+- 这些组还必须出现在 ocserv 的 `select-group` 里
+
+`Domain` 是华为域属性，不是 Class。
+
 ### 拨号能认证成功，却拿不到 IP / 地址池没生效
 
 只有在用户或其计费策略上**设置了地址池**时，`Access-Accept` 才会下发
@@ -100,6 +113,15 @@ NAS 可用不同密钥，无需统一。
 基于 TLS 的 EAP 需要在系统配置中选择 `EapTlsServerCert`——
 留空时这些方法按设计处于禁用状态。先用 `cmd/certgen` 生成服务器证书，在
 「证书管理」中导入后，于系统配置选择该证书名称即可。`EapTlsClientCa` 仅在需要校验客户端证书（EAP-TLS）时选择。
+
+### PEAP / eapol_test 报 `no cipher suite supported`
+
+默认外层 TLS 只提供 ECDHE+AEAD（`EapTlsCipherProfile=modern`）。hostapd
+**internal TLS** 编译的 `eapol_test` 只报 RSA/DHE+CBC，两边没有交集。可选：
+
+1. 把 `eapol_test` 编成 `CONFIG_TLS=openssl`（推荐，保留默认 modern）。
+2. 将 `EapTlsCipherProfile` 设为 `legacy-rsa-cbc`，并使用 **RSA** 服务器证书。
+   该档无前向保密，且 Go 不实现 DHE；不要把它当成默认生产策略。
 
 ### 服务器与设备时钟不同步会有什么影响？
 

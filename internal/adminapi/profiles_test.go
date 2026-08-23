@@ -283,6 +283,19 @@ func TestCreateProfile(t *testing.T) {
 			},
 		},
 		{
+			name: "Create profile with RADIUS Class",
+			requestBody: `{
+				"name": "class-profile",
+				"status": "enabled",
+				"radius_class": "OU=vpn-users"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, profile *domain.RadiusProfile) {
+				assert.Equal(t, "class-profile", profile.Name)
+				assert.Equal(t, "OU=vpn-users", profile.RadiusClass)
+			},
+		},
+		{
 			name: "Missing status on create - use default",
 			requestBody: `{
 				"name": "default-status-profile",
@@ -422,6 +435,17 @@ func TestUpdateProfile(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			checkResult: func(t *testing.T, p *domain.RadiusProfile) {
 				assert.Equal(t, "disabled", p.Status)
+			},
+		},
+		{
+			name:      "Update RADIUS Class",
+			profileID: "1",
+			requestBody: `{
+				"radius_class": "OU=staff;contractors"
+			}`,
+			expectedStatus: http.StatusOK,
+			checkResult: func(t *testing.T, p *domain.RadiusProfile) {
+				assert.Equal(t, "OU=staff;contractors", p.RadiusClass)
 			},
 		},
 		{

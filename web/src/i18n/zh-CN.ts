@@ -109,6 +109,7 @@ const customChineseMessages: TranslationMessages = {
         ipv6_prefix_pool: 'IPv6前缀池',
         delegated_ipv6_prefix: '委派IPv6前缀',
         delegated_ipv6_prefix_pool: '委派IPv6前缀池',
+        radius_class: 'RADIUS Class',
         domain: '域名',
         remark: '备注',
         balance: '余额',
@@ -148,6 +149,7 @@ const customChineseMessages: TranslationMessages = {
         expire_time: '用户服务到期时间，留空表示永不过期',
         ip_addr: '静态IPv4地址，如 192.168.1.100',
         ipv6_addr: '静态IPv6地址，如 2001:db8::1',
+        radius_class: 'RFC 2865 Class，原样写入 Access-Accept。ocserv 群组请填 OU=group1;group2',
         domain: '域名，用于厂商特定功能（如华为域），如 enterprise.example.com',
         remark: '可选的备注信息，最多1000个字符',
       },
@@ -285,6 +287,7 @@ const customChineseMessages: TranslationMessages = {
         up_rate: '上行速率(Kbps)',
         down_rate: '下行速率(Kbps)',
         addr_pool: '地址池',
+        radius_class: 'RADIUS Class',
         domain: '域',
         ipv6_prefix: 'IPv6前缀',
         bind_mac: '绑定MAC',
@@ -332,6 +335,7 @@ const customChineseMessages: TranslationMessages = {
         up_rate: '上传带宽限制',
         down_rate: '下载带宽限制',
         addr_pool: 'IP地址池名称',
+        radius_class: 'RFC 2865 Class，原样下发。ocserv 群组请填 OU=group1;group2',
         ipv6_prefix: '如 2001:db8::/64',
         domain: '对应NAS设备域属性，如华为domain_code',
         bind_mac: '是否启用MAC地址绑定',
@@ -713,6 +717,14 @@ const customChineseMessages: TranslationMessages = {
       eap_tls_min_version: {
         title: 'EAP-TLS 最低 TLS 版本',
         description: 'EAP-TLS 握手允许的最低 TLS 协议版本（1.2 或 1.3）',
+      },
+      eap_tls_cipher_profile: {
+        title: 'EAP TLS 套件策略',
+        description: '外层 TLS 1.2 套件策略。modern（默认）保持 ECDHE+AEAD，不削弱隧道。legacy-rsa-cbc 为 hostapd internal TLS / eapol_test 等只讲 CBC 的客户端打开 RSA+AES-CBC；需要 RSA 服务器证书、无前向保密，且永不启用 RC4、3DES 或 DHE。custom 使用 EapTlsCipherSuites。TLS 1.3 忽略此列表。',
+      },
+      eap_tls_cipher_suites: {
+        title: 'EAP TLS 套件列表',
+        description: '仅当 EapTlsCipherProfile=custom 时生效：逗号分隔的 TLS 1.2 套件名或 0xNNNN。RC4 与 3DES 一律拒绝。',
       },
       ignore_password: {
         title: '忽略密码校验',

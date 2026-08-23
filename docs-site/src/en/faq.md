@@ -69,6 +69,21 @@ or `Cisco` receives no proprietary rate attribute — see the
 [Vendor Integration Guide](./vendor-guide.md#rate-limit-units). Also check that
 the user's profile actually sets `up_rate`/`down_rate` (Kbps).
 
+### ocserv users cannot join groups / Class is missing
+
+ocserv uses RFC 2865 Class (Type 25) as its group channel. Set `radius_class`
+on the user or billing profile; a successful authentication writes that string
+**as-is** into Access-Accept. An empty value omits the attribute.
+
+ocserv requires:
+
+- `auth = "radius[config=...,groupconfig=true]"`
+- Class format `OU=group1;group2` (semicolon-separated; the server does
+  **not** add an `OU=` prefix)
+- Those groups must also appear in ocserv `select-group`
+
+`Domain` is the Huawei domain attribute, not Class.
+
 ### Dial-up authenticates but gets no IP / the address pool has no effect
 
 `Framed-Pool` is sent only when a pool is **set on the user or its rate
@@ -115,6 +130,17 @@ TLS-based EAP requires selecting `EapTlsServerCert` in System Config —
 when it is empty the methods are disabled by design. Generate a server
 certificate with `cmd/certgen`, import it on the Certificates page, and select
 it by name. `EapTlsClientCa` is needed only to validate client certificates (EAP-TLS).
+
+### PEAP / eapol_test fails with `no cipher suite supported`
+
+The default outer TLS list is ECDHE+AEAD (`EapTlsCipherProfile=modern`).
+`eapol_test` built with hostapd **internal TLS** only offers RSA/DHE+CBC, so
+there is no overlap. Either:
+
+1. Rebuild `eapol_test` with `CONFIG_TLS=openssl` (preferred; keep modern).
+2. Set `EapTlsCipherProfile=legacy-rsa-cbc` and present an **RSA** server
+   certificate. That profile has no forward secrecy, and Go does not implement
+   DHE; do not use it as the default production policy.
 
 ### What breaks if the server and device clocks drift apart?
 

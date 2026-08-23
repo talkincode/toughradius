@@ -143,6 +143,7 @@ type ProfileRequest struct {
 	Name                    string      `json:"name" validate:"required,min=1,max=100"`
 	Status                  interface{} `json:"status"` // Can be string or boolean
 	AddrPool                string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	RadiusClass             string      `json:"radius_class" validate:"omitempty,max=253"`
 	ActiveNum               int         `json:"active_num" validate:"gte=0,lte=100"`
 	UpRate                  int         `json:"up_rate" validate:"gte=0,lte=10000000"`
 	DownRate                int         `json:"down_rate" validate:"gte=0,lte=10000000"`
@@ -161,6 +162,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
 		Name:                    pr.Name,
 		AddrPool:                pr.AddrPool,
+		RadiusClass:             pr.RadiusClass,
 		ActiveNum:               pr.ActiveNum,
 		UpRate:                  pr.UpRate,
 		DownRate:                pr.DownRate,
@@ -228,6 +230,7 @@ type ProfileUpdateRequest struct {
 	Name                    string      `json:"name" validate:"omitempty,min=1,max=100"`
 	Status                  interface{} `json:"status"` // Can be string or boolean
 	AddrPool                string      `json:"addr_pool" validate:"omitempty,addrpool"`
+	RadiusClass             string      `json:"radius_class" validate:"omitempty,max=253"`
 	ActiveNum               int         `json:"active_num" validate:"gte=0,lte=100"`
 	UpRate                  int         `json:"up_rate" validate:"gte=0,lte=10000000"`
 	DownRate                int         `json:"down_rate" validate:"gte=0,lte=10000000"`
@@ -247,6 +250,7 @@ func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
 	profile := &domain.RadiusProfile{
 		Name:                    pr.Name,
 		AddrPool:                pr.AddrPool,
+		RadiusClass:             pr.RadiusClass,
 		ActiveNum:               pr.ActiveNum,
 		UpRate:                  pr.UpRate,
 		DownRate:                pr.DownRate,
@@ -409,6 +413,9 @@ func UpdateProfile(c echo.Context) error {
 	}
 	if updateData.AddrPool != "" {
 		updates["addr_pool"] = updateData.AddrPool
+	}
+	if updateData.RadiusClass != "" {
+		updates["radius_class"] = updateData.RadiusClass
 	}
 	if updateData.ActiveNum >= 0 {
 		updates["active_num"] = updateData.ActiveNum

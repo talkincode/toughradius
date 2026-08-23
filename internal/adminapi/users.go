@@ -56,6 +56,7 @@ type UserRequest struct {
 	Username        string      `json:"username" validate:"required,min=3,max=50"`   // Username
 	Password        string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
 	AddrPool        string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
+	RadiusClass     string      `json:"radius_class" validate:"omitempty,max=253"`   // RFC 2865 Class (Type 25)
 	Vlanid1         int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
 	Vlanid2         int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
 	IpAddr          string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
@@ -71,16 +72,17 @@ type UserRequest struct {
 // toRadiusUser Convert UserRequest Convert to RadiusUser
 func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 	user := &domain.RadiusUser{
-		Realname: ur.Realname,
-		Mobile:   ur.Mobile,
-		Username: strings.TrimSpace(ur.Username),
-		Password: ur.Password,
-		AddrPool: ur.AddrPool,
-		Vlanid1:  ur.Vlanid1,
-		Vlanid2:  ur.Vlanid2,
-		IpAddr:   ur.IpAddr,
-		MacAddr:  ur.MacAddr,
-		Remark:   ur.Remark,
+		Realname:    ur.Realname,
+		Mobile:      ur.Mobile,
+		Username:    strings.TrimSpace(ur.Username),
+		Password:    ur.Password,
+		AddrPool:    ur.AddrPool,
+		RadiusClass: ur.RadiusClass,
+		Vlanid1:     ur.Vlanid1,
+		Vlanid2:     ur.Vlanid2,
+		IpAddr:      ur.IpAddr,
+		MacAddr:     ur.MacAddr,
+		Remark:      ur.Remark,
 	}
 
 	// Handle profile_id
@@ -161,6 +163,7 @@ type UserUpdateRequest struct {
 	Username                string      `json:"username" validate:"omitempty,min=3,max=50"`              // Username
 	Password                string      `json:"password" validate:"omitempty,min=6,max=128"`             // Password
 	AddrPool                string      `json:"addr_pool" validate:"omitempty,max=50"`                   // Address pool
+	RadiusClass             string      `json:"radius_class" validate:"omitempty,max=253"`               // RFC 2865 Class (Type 25)
 	Vlanid1                 int         `json:"vlanid1" validate:"gte=0,lte=4096"`                       // VLAN ID 1
 	Vlanid2                 int         `json:"vlanid2" validate:"gte=0,lte=4096"`                       // VLAN ID 2
 	IpAddr                  string      `json:"ip_addr" validate:"omitempty,ipv4"`                       // IPv4addresses
@@ -186,6 +189,7 @@ func (ur *UserUpdateRequest) toRadiusUser() *domain.RadiusUser {
 		Username:                strings.TrimSpace(ur.Username),
 		Password:                ur.Password,
 		AddrPool:                ur.AddrPool,
+		RadiusClass:             ur.RadiusClass,
 		Vlanid1:                 ur.Vlanid1,
 		Vlanid2:                 ur.Vlanid2,
 		IpAddr:                  ur.IpAddr,
@@ -385,6 +389,7 @@ func createRadiusUser(c echo.Context) error {
 	user.ID = common.UUIDint64()
 	// Inherit all profile attributes (can be overridden by user-specific values)
 	user.AddrPool = common.If(user.AddrPool != "", user.AddrPool, profile.AddrPool).(string)
+	user.RadiusClass = common.If(user.RadiusClass != "", user.RadiusClass, profile.RadiusClass).(string)
 	user.ActiveNum = profile.ActiveNum
 	user.UpRate = profile.UpRate
 	user.DownRate = profile.DownRate
@@ -467,6 +472,7 @@ func updateRadiusUser(c echo.Context) error {
 		updates["up_rate"] = profile.UpRate
 		updates["down_rate"] = profile.DownRate
 		updates["addr_pool"] = profile.AddrPool
+		updates["radius_class"] = profile.RadiusClass
 		updates["domain"] = profile.Domain
 		updates["ipv6_prefix_pool"] = profile.IPv6PrefixPool
 		updates["delegated_ipv6_prefix_pool"] = profile.DelegatedIpv6PrefixPool
@@ -495,6 +501,9 @@ func updateRadiusUser(c echo.Context) error {
 	}
 	if updateData.AddrPool != "" {
 		updates["addr_pool"] = updateData.AddrPool
+	}
+	if updateData.RadiusClass != "" {
+		updates["radius_class"] = updateData.RadiusClass
 	}
 	if updateData.Vlanid1 > 0 {
 		updates["vlanid1"] = updateData.Vlanid1
@@ -563,6 +572,9 @@ func updateRadiusUser(c echo.Context) error {
 				}
 				if user.AddrPool == "" || user.AddrPool == "NA" {
 					updates["addr_pool"] = profile.AddrPool
+				}
+				if user.RadiusClass == "" || user.RadiusClass == "NA" {
+					updates["radius_class"] = profile.RadiusClass
 				}
 				if user.Domain == "" || user.Domain == "NA" {
 					updates["domain"] = profile.Domain

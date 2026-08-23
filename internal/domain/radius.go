@@ -22,12 +22,16 @@ type RadiusProfile struct {
 	// to allocate a Delegated-IPv6-Prefix (RFC 6911 Delegated-IPv6-Prefix-Pool,
 	// attribute 171). Per RFC 6911 §2.4 it is distinct from IPv6PrefixPool
 	// (Framed-IPv6-Pool, used for SLAAC) and must not reuse the same value.
-	DelegatedIpv6PrefixPool string    `json:"delegated_ipv6_prefix_pool" form:"delegated_ipv6_prefix_pool"`
-	BindMac                 int       `json:"bind_mac" form:"bind_mac"`   // Bind MAC
-	BindVlan                int       `json:"bind_vlan" form:"bind_vlan"` // Bind VLAN
-	Remark                  string    `json:"remark" form:"remark"`       // Remark
-	CreatedAt               time.Time `json:"created_at" form:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at" form:"updated_at"`
+	DelegatedIpv6PrefixPool string `json:"delegated_ipv6_prefix_pool" form:"delegated_ipv6_prefix_pool"`
+	// RadiusClass is the RFC 2865 Class (Type 25) value copied into Access-Accept.
+	// The string is emitted as-is (max 253 octets). ocserv groupconfig expects
+	// "OU=group1;group2". Empty or "NA" means the attribute is omitted.
+	RadiusClass string    `json:"radius_class" form:"radius_class"`
+	BindMac     int       `json:"bind_mac" form:"bind_mac"`   // Bind MAC
+	BindVlan    int       `json:"bind_vlan" form:"bind_vlan"` // Bind VLAN
+	Remark      string    `json:"remark" form:"remark"`       // Remark
+	CreatedAt   time.Time `json:"created_at" form:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at" form:"updated_at"`
 }
 
 // TableName Specify table name
@@ -66,17 +70,21 @@ type RadiusUser struct {
 	// to allocate a Delegated-IPv6-Prefix (RFC 6911 Delegated-IPv6-Prefix-Pool,
 	// attribute 171). An empty value inherits from the linked RadiusProfile in
 	// dynamic link mode; per RFC 6911 §2.4 it is distinct from IPv6PrefixPool.
-	DelegatedIpv6PrefixPool string    `json:"delegated_ipv6_prefix_pool" form:"delegated_ipv6_prefix_pool"`
-	BindVlan                int       `json:"bind_vlan" form:"bind_vlan"`                 // Bind VLAN
-	BindMac                 int       `json:"bind_mac" form:"bind_mac"`                   // Bind MAC
-	ProfileLinkMode         int       `json:"profile_link_mode" form:"profile_link_mode"` // 0=static (snapshot), 1=dynamic (real-time from profile)
-	ExpireTime              time.Time `gorm:"index" json:"expire_time"`                   // Expiration time
-	Status                  string    `gorm:"index" json:"status" form:"status"`          // Status: enabled | disabled
-	Remark                  string    `json:"remark" form:"remark"`                       // Remark
-	OnlineCount             int       `json:"online_count" gorm:"-:migration;<-:false"`
-	LastOnline              time.Time `json:"last_online"`
-	CreatedAt               time.Time `gorm:"index" json:"created_at"`
-	UpdatedAt               time.Time `json:"updated_at"`
+	DelegatedIpv6PrefixPool string `json:"delegated_ipv6_prefix_pool" form:"delegated_ipv6_prefix_pool"`
+	// RadiusClass is the RFC 2865 Class (Type 25) value written into Access-Accept.
+	// A non-empty user value overrides the linked profile; empty/"NA" inherits in
+	// dynamic link mode. The string is emitted as-is (max 253 octets).
+	RadiusClass     string    `json:"radius_class" form:"radius_class"`
+	BindVlan        int       `json:"bind_vlan" form:"bind_vlan"`                 // Bind VLAN
+	BindMac         int       `json:"bind_mac" form:"bind_mac"`                   // Bind MAC
+	ProfileLinkMode int       `json:"profile_link_mode" form:"profile_link_mode"` // 0=static (snapshot), 1=dynamic (real-time from profile)
+	ExpireTime      time.Time `gorm:"index" json:"expire_time"`                   // Expiration time
+	Status          string    `gorm:"index" json:"status" form:"status"`          // Status: enabled | disabled
+	Remark          string    `json:"remark" form:"remark"`                       // Remark
+	OnlineCount     int       `json:"online_count" gorm:"-:migration;<-:false"`
+	LastOnline      time.Time `json:"last_online"`
+	CreatedAt       time.Time `gorm:"index" json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 // TableName Specify table name
