@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"crypto/tls"
+	"errors"
 	"fmt"
+	"io"
 
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/tlsengine"
@@ -92,15 +94,33 @@ func (t *tlsTunnel) HandleResponse(ctx *eap.EAPContext) (bool, error) {
 			setBool(state, stateKeyInnerActive, true)
 			return t.handleInnerRound(ctx, state, frag)
 		}
-		if !frag.IsACK() {
-			closeEngine(state)
-			return false, eap.ErrTLSUnexpectedFragment
-		}
+
 		engine, err := t.engineFor(state)
 		if err != nil {
 			return false, err
 		}
-		return t.onHandshakeComplete(ctx, state, engine)
+
+		// The RFC's ideal terminal response is a bare ACK (an empty EAP-TLS
+		// message, RFC 9190 Figure 1): the peer acknowledges the success
+		// indication and the exchange ends. Grant on it.
+		if frag.IsACK() && !reassemblyInProgress(state) {
+			return t.onHandshakeComplete(ctx, state, engine)
+		}
+
+		// A non-ACK message after the success point is the peer tearing down its
+		// TLS connection, which emits a close_notify alert. Real supplicants
+		// (wpa_supplicant, hostapd, Windows) close their TLS stack once the
+		// handshake completes rather than send the empty ACK the ideal flow
+		// shows. For plain EAP-TLS (no inner phase) treat a clean close_notify
+		// as benign closure and complete the authentication; a TLS *error* alert
+		// is a failure result indication and rejects (RFC 9190 §2.1.4 / §2.5,
+		// RFC 8446 §6.1). Tunneled methods (PEAP/TTLS) keep the strict handling.
+		if t.onApplicationData == nil {
+			return t.finishAfterPeerClosure(ctx, state, engine, frag)
+		}
+
+		closeEngine(state)
+		return false, eap.ErrTLSUnexpectedFragment
 	}
 
 	if t.hasQueuedFragments(state) {
@@ -174,6 +194,57 @@ func (t *tlsTunnel) advanceHandshake(ctx *eap.EAPContext, state *eap.EAPState, t
 	}
 
 	return t.startFlight(ctx, state, out, done)
+}
+
+// finishAfterPeerClosure completes a plain EAP-TLS exchange when, instead of the
+// empty ACK the RFC's ideal flow shows, the peer sends a TLS record after the
+// server's success point. Real supplicants tear down their TLS stack once the
+// handshake completes, which emits a close_notify alert carried as an ordinary
+// (non-ACK) EAP-TLS message.
+//
+// RFC 9190 §2.1.4 classifies close_notify as a warning-level closure ("the
+// connection is not going to continue normally") and §2.5 makes only TLS *error*
+// alerts a failure result indication; RFC 8446 §6.1 confirms close_notify "does
+// not indicate an error". So a clean close_notify (surfaced by the TLS engine as
+// io.EOF) completes the authentication, a TLS error alert (any other read error)
+// is a failure and rejects, and stray post-success application data is an
+// unexpected fragment. Only plain EAP-TLS reaches this path; PEAP/TTLS keep their
+// tunneled success semantics.
+func (t *tlsTunnel) finishAfterPeerClosure(ctx *eap.EAPContext, state *eap.EAPState, engine *tlsengine.Engine, frag *tlsfragment.Packet) (bool, error) {
+	reassembler := loadReassembler(state)
+	complete, err := reassembler.Accept(frag)
+	if err != nil {
+		closeEngine(state)
+		return false, err
+	}
+	if !complete {
+		saveReassembler(state, reassembler)
+		if serr := ctx.StateManager.SetState(state.StateID, state); serr != nil {
+			closeEngine(state)
+			return false, serr
+		}
+		return false, t.writeChallenge(ctx, state.StateID, t.buildFragmentACK(ctx.EAPMessage.Identifier+1))
+	}
+
+	records := reassembler.Buffer()
+	resetReassembler(state)
+
+	_, rerr := engine.ReadApplication(records)
+	switch {
+	case errors.Is(rerr, io.EOF):
+		// Clean close_notify: benign closure, the success was already committed.
+		return t.onHandshakeComplete(ctx, state, engine)
+	case rerr != nil:
+		// A TLS error alert (or otherwise unreadable record) is a failure result
+		// indication (RFC 9190 §2.5): reject rather than grant.
+		closeEngine(state)
+		return false, fmt.Errorf("%w: %v", eap.ErrTLSHandshakeFailed, rerr)
+	default:
+		// The peer sent application data after the success point. Plain EAP-TLS
+		// has no inner phase, so this violates the expected terminal flow.
+		closeEngine(state)
+		return false, eap.ErrTLSUnexpectedFragment
+	}
 }
 
 func (t *tlsTunnel) startFlight(ctx *eap.EAPContext, state *eap.EAPState, tlsData []byte, done bool) (bool, error) {
