@@ -207,11 +207,13 @@ type supplicant struct {
 // data before returning.
 type clientRunFunc func(client *tls.Conn) error
 
-// defaultClientRun performs the TLS handshake and exits. It deliberately does
-// not Close the conn: a close_notify alert would surface as an extra non-ACK
-// EAP-TLS round after the server's pending-success point and break the
-// exchange (most visibly with a TLS 1.2 pinned client, where the client is the
-// last to finish).
+// defaultClientRun performs the TLS handshake and exits without closing the
+// conn, so the exchange ends on the RFC 9190 Figure 1 bare ACK. A client that
+// Close()s instead emits a close_notify alert that arrives as a non-ACK EAP-TLS
+// round after the server's pending-success point; the handler now completes the
+// authentication on a clean close_notify (see the
+// TestTLSHandler_PendingSuccess_* tests), but the default run keeps the
+// ACK-terminated flow the other handshake tests assert.
 func defaultClientRun(client *tls.Conn) error {
 	return client.Handshake()
 }
@@ -331,6 +333,58 @@ func (s *supplicant) run() (success bool, err error) {
 	}
 	s.t.Fatal("EAP-TLS exchange did not complete within the round budget")
 	return false, nil
+}
+
+// driveToPendingSuccess runs the handshake until the server reaches its success
+// point (stateKeyPendingSuccess) and returns, leaving the live engine parked
+// awaiting the peer's terminal message. It is used by the pending-success
+// rejection tests to inject a crafted post-success TLS record (e.g. a corrupt
+// alert) that a real crypto/tls client cannot be made to emit. The client run
+// must be handshake-only (no Close), so the exchange settles at pending-success
+// instead of driving itself to a grant.
+func (s *supplicant) driveToPendingSuccess() {
+	s.t.Helper()
+	respData := s.nextClientFlight()
+	require.NotEmpty(s.t, respData, "client should produce a ClientHello")
+
+	var serverBuf []byte
+	for round := 0; round < 64; round++ {
+		state, err := s.sm.GetState(s.stateID)
+		require.NoError(s.t, err)
+		if getBool(state, stateKeyPendingSuccess) {
+			return
+		}
+
+		writer := &mockResponseWriter{}
+		ctx := s.responseCtx(writer, respData)
+		ok, herr := s.h.HandleResponse(ctx)
+		require.NoError(s.t, herr)
+		require.False(s.t, ok, "handshake must not grant before the injection point")
+
+		frag := s.parseChallenge(writer.response)
+		serverBuf = append(serverBuf, frag.Data...)
+		if frag.More() {
+			respData = nil
+			continue
+		}
+		flight := serverBuf
+		serverBuf = nil
+		if !s.finished && len(flight) > 0 {
+			_, werr := s.toClient.Write(flight)
+			require.NoError(s.t, werr)
+		}
+		respData = s.nextClientFlight()
+	}
+	s.t.Fatal("server did not reach the pending-success point within the round budget")
+}
+
+// sendTLSRecord feeds raw bytes to the handler as a single EAP-TLS message
+// (Length bit set, no More) and returns the handler's verdict. It lets a test
+// deliver an arbitrary post-success TLS record without a real TLS client.
+func (s *supplicant) sendTLSRecord(record []byte) (bool, error) {
+	writer := &mockResponseWriter{}
+	ctx := s.responseCtx(writer, record)
+	return s.h.HandleResponse(ctx)
 }
 
 func (s *supplicant) responseCtx(writer *mockResponseWriter, tlsData []byte) *eap.EAPContext {
@@ -623,6 +677,190 @@ func TestTLSHandler_FullHandshake_TLS12FallbackNoIndication(t *testing.T) {
 	assert.True(t, state.Success)
 
 	assertMPPEKeysMatchMSK(t, sup.acceptResponse, clientMSK)
+}
+
+// TestTLSHandler_PendingSuccess_TLS12ClientCloseGrants pins the client to TLS
+// 1.2 and, instead of the RFC 9190 Figure 1 bare ACK, has the peer Close() its
+// TLS stack once the handshake completes. A TLS 1.2 client is the last to
+// finish, so its close_notify alert reliably arrives as a distinct non-ACK
+// EAP-TLS round after the server's pending-success point. RFC 9190 §2.1.4 and
+// RFC 8446 §6.1 make close_notify a benign closure, so the server must complete
+// the authentication rather than reject the round.
+func TestTLSHandler_PendingSuccess_TLS12ClientCloseGrants(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice@example.com", "secret")
+
+	tlsCfg := clientCfg(ca, clientCert)
+	tlsCfg.MaxVersion = tls.VersionTLS12
+
+	closeAfterHandshake := func(client *tls.Conn) error {
+		if err := client.Handshake(); err != nil {
+			return err
+		}
+		if v := client.ConnectionState().Version; v != tls.VersionTLS12 {
+			return fmt.Errorf("negotiated version %#x, want TLS 1.2", v)
+		}
+		// Tear down the TLS stack: crypto/tls emits a close_notify alert.
+		return client.Close()
+	}
+
+	sup := newSupplicantWithClient(t, h, eap.TypeTLS, sm, stateID, "secret", tlsCfg, closeAfterHandshake)
+	success, err := sup.run()
+	require.NoError(t, err, "a clean close_notify after success must not reject")
+	assert.True(t, success, "TLS 1.2 EAP-TLS peer that Close()s must still authenticate")
+	require.NoError(t, sup.clientErr)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.True(t, state.Success)
+}
+
+// TestTLSHandler_PendingSuccess_TLS13ClientCloseGrants pins the client to TLS
+// 1.3, has it read the RFC 9190 §2.1.1 protected success indication (0x00) and
+// then Close() its TLS stack. Reading the indication keeps the client alive
+// until after the server's pending-success point, so the resulting close_notify
+// arrives as its own non-ACK round and must complete the authentication.
+func TestTLSHandler_PendingSuccess_TLS13ClientCloseGrants(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice@example.com", "secret")
+
+	tlsCfg := clientCfg(ca, clientCert)
+	tlsCfg.MinVersion = tls.VersionTLS13
+	tlsCfg.MaxVersion = tls.VersionTLS13
+
+	readThenClose := func(client *tls.Conn) error {
+		if err := client.Handshake(); err != nil {
+			return err
+		}
+		if v := client.ConnectionState().Version; v != tls.VersionTLS13 {
+			return fmt.Errorf("negotiated version %#x, want TLS 1.3", v)
+		}
+		buf := make([]byte, 1)
+		if _, err := io.ReadFull(client, buf); err != nil {
+			return fmt.Errorf("read protected success indication: %w", err)
+		}
+		if buf[0] != 0x00 {
+			return fmt.Errorf("protected success indication byte %#x, want 0x00", buf[0])
+		}
+		return client.Close()
+	}
+
+	sup := newSupplicantWithClient(t, h, eap.TypeTLS, sm, stateID, "secret", tlsCfg, readThenClose)
+	success, err := sup.run()
+	require.NoError(t, err, "a clean close_notify after the 0x00 indication must not reject")
+	assert.True(t, success, "TLS 1.3 EAP-TLS peer that Close()s must still authenticate")
+	require.NoError(t, sup.clientErr)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.True(t, state.Success)
+}
+
+// TestTLSHandler_PendingSuccess_StrayApplicationDataRejected verifies the
+// handler does not blindly grant on any post-success message: a peer that sends
+// ordinary application data (not a closure alert) after the success point is
+// out of the plain EAP-TLS flow, which has no inner phase, so the handler
+// rejects the fragment rather than authenticating.
+func TestTLSHandler_PendingSuccess_StrayApplicationDataRejected(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice@example.com", "secret")
+
+	tlsCfg := clientCfg(ca, clientCert)
+	tlsCfg.MaxVersion = tls.VersionTLS12
+
+	writeStrayData := func(client *tls.Conn) error {
+		if err := client.Handshake(); err != nil {
+			return err
+		}
+		// Encrypted application data, not a close_notify: this is not a valid
+		// terminal message for plain EAP-TLS.
+		_, err := client.Write([]byte("stray"))
+		return err
+	}
+
+	sup := newSupplicantWithClient(t, h, eap.TypeTLS, sm, stateID, "secret", tlsCfg, writeStrayData)
+	success, err := sup.run()
+	assert.False(t, success)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTLSUnexpectedFragment)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.False(t, state.Success, "stray application data must not authenticate")
+}
+
+// TestTLSHandler_PendingSuccess_TLSErrorAlertRejected drives the handshake to
+// the server's success point and then injects a corrupt (undecryptable) TLS
+// record in place of the peer's terminal message. RFC 9190 §2.5 makes a TLS
+// error alert a failure result indication, so the handler must reject rather
+// than grant. crypto/tls offers no way to make a client emit a raw error alert,
+// so the record is injected directly.
+func TestTLSHandler_PendingSuccess_TLSErrorAlertRejected(t *testing.T) {
+	ca := newHSTestCA(t, "Test Root CA")
+	clientCert := ca.issue(t, "alice", func(c *x509.Certificate) {
+		c.EmailAddresses = []string{"alice@example.com"}
+	})
+
+	cfg := serverEngineConfig(t, ca, ca)
+	h := NewTLSHandlerWithConfig(func() (*tlsengine.Config, error) { return cfg, nil })
+
+	sm := statemanager.NewMemoryStateManager()
+	defer sm.Close()
+
+	stateID := startHandshake(t, h, sm, "alice@example.com", "secret")
+
+	sup := newSupplicant(t, h, sm, stateID, "secret", clientCfg(ca, clientCert))
+	sup.driveToPendingSuccess()
+
+	// A complete but undecryptable TLS application-data record: a valid 5-octet
+	// header (content type 23, version 0x0303, length 32) followed by 32 octets
+	// that fail the record's AEAD. crypto/tls surfaces this as a non-EOF read
+	// error, which the handler maps to a failure result indication.
+	corrupt := make([]byte, 5+32)
+	corrupt[0] = 23   // application_data
+	corrupt[1] = 0x03 // legacy record version major
+	corrupt[2] = 0x03 // legacy record version minor
+	corrupt[3] = 0x00
+	corrupt[4] = 0x20 // length = 32
+
+	success, err := sup.sendTLSRecord(corrupt)
+	assert.False(t, success)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTLSHandshakeFailed)
+
+	state, err := sm.GetState(stateID)
+	require.NoError(t, err)
+	assert.False(t, state.Success, "a TLS error alert must not authenticate")
 }
 
 // assertMPPEKeysMatchMSK decrypts the MS-MPPE-Recv-Key / MS-MPPE-Send-Key from

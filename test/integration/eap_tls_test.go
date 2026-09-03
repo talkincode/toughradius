@@ -247,6 +247,54 @@ func TestEAPTLSEndToEnd(t *testing.T) {
 		// RFC 5216 §2.3: the TLS 1.2 fallback also derives MS-MPPE keys.
 		assertEAPTLSMPPEKeys(t, resp, sup, secret)
 	})
+
+	t.Run("tls 1.2 client close_notify still authenticates", func(t *testing.T) {
+		// Real supplicants (wpa_supplicant, hostapd, Windows) tear down their
+		// TLS stack once the handshake completes instead of sending the RFC 9190
+		// Figure 1 bare ACK. The resulting close_notify alert arrives as a
+		// non-ACK EAP-TLS round after the server's success point; RFC 9190
+		// §2.1.4 and RFC 8446 §6.1 make it a benign closure (not a failure
+		// result indication, §2.5), so the exchange must still Access-Accept. A
+		// TLS 1.2 client finishes last, so its close_notify reliably lands as
+		// its own post-success round.
+		ca := newEAPTLSTestCA(t, "IT EAP-TLS close CA "+suffix)
+		serverCert := ca.issueServer(t, "radius.example.com")
+		username := "it-eaptls-close-" + suffix + "@example.com"
+		clientCert := ca.issueClient(t, "close", username)
+		seedEAPTLSUser(t, profileID, username)
+
+		configureEAPTLS(t, serverCert, ca.certPEM())
+
+		cfg := clientTLSConfig(ca, clientCert)
+		cfg.MaxVersion = tls.VersionTLS12
+
+		sup := &eapTLSSupplicant{
+			serverAddr: serverAddr,
+			secret:     secret,
+			username:   username,
+			nasID:      nasID,
+			nasIP:      nasIP,
+			clientCfg:  cfg,
+			clientRun: func(client *tls.Conn) error {
+				if err := client.Handshake(); err != nil {
+					return err
+				}
+				if v := client.ConnectionState().Version; v != tls.VersionTLS12 {
+					return fmt.Errorf("negotiated version %#x, want TLS 1.2", v)
+				}
+				// Tear down the TLS stack: crypto/tls emits a close_notify alert.
+				return client.Close()
+			},
+		}
+		resp := sup.authenticate(t)
+		assert.Equalf(t, radius.CodeAccessAccept, resp.Code,
+			"EAP-TLS peer that Close()s after the handshake must authenticate, got %v (%q)", resp.Code, rfc2865.ReplyMessage_GetString(resp))
+		assertEAPCode(t, resp, eap.CodeSuccess)
+		require.NoError(t, sup.clientErr)
+		// The benign close_notify must not disturb key derivation: the Accept
+		// still carries the MS-MPPE session keys (RFC 5216 §2.3).
+		assertEAPTLSMPPEKeys(t, resp, sup, secret)
+	})
 }
 
 // assertEAPTLSMPPEKeys verifies the Access-Accept carries the MS-MPPE session
@@ -651,11 +699,12 @@ func (s *eapTLSSupplicant) exchange(packet *radius.Packet) (*radius.Packet, erro
 
 // startClient launches the crypto/tls client bound to in-memory duplex streams
 // that the supplicant bridges to the RADIUS transport. The default behavior
-// runs the handshake only and deliberately does not Close the conn: a
-// close_notify alert would surface as an extra non-ACK EAP-TLS round after the
-// server's pending-success point (most visibly with a TLS 1.2 pinned client,
-// where the client finishes last). Tests may override clientRun to also read
-// application data, e.g. the TLS 1.3 protected success indication.
+// runs the handshake only and ends the exchange on the RFC 9190 Figure 1 bare
+// ACK. Tests may override clientRun to also read application data (e.g. the TLS
+// 1.3 protected success indication) or to Close the conn: a client that Close()s
+// emits a close_notify alert that arrives as a non-ACK EAP-TLS round after the
+// server's pending-success point, which the handler now completes as a benign
+// closure (RFC 9190 §2.1.4).
 func (s *eapTLSSupplicant) startClient() {
 	s.toClient = newEAPStream()
 	s.fromClient = newEAPStream()

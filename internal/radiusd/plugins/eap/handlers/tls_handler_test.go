@@ -173,7 +173,16 @@ func TestTLSHandler_HandleResponse_MalformedFragment(t *testing.T) {
 	assert.NotErrorIs(t, err, eap.ErrTLSNotConfigured)
 }
 
-func TestTLSHandler_HandleResponse_PendingSuccessRequiresACK(t *testing.T) {
+// TestTLSHandler_HandleResponse_PendingSuccessNonACKIsPeerClosure verifies the
+// RFC 9190 §2.1.4 close_notify handling introduced for plain EAP-TLS: a peer
+// that sends a non-ACK message after the server's success point is treated as
+// tearing down its TLS connection, so the handler consults the live TLS session
+// to classify the closure (close_notify grants, a TLS error alert rejects)
+// rather than rejecting every non-ACK outright as it did before. This synthetic
+// state carries no live session, so the closure path fails closed instead of
+// granting. The full close_notify -> grant and error-alert -> reject behavior is
+// covered against a real engine by the TestTLSHandler_PendingSuccess_* tests.
+func TestTLSHandler_HandleResponse_PendingSuccessNonACKIsPeerClosure(t *testing.T) {
 	h := NewTLSHandler()
 	sm := statemanager.NewMemoryStateManager()
 	const stateID = "state-tls-pending"
@@ -188,8 +197,9 @@ func TestTLSHandler_HandleResponse_PendingSuccessRequiresACK(t *testing.T) {
 	writer := &mockResponseWriter{}
 	ctx := newTLSResponseCtx(t, stateID, writer, sm, 10, []byte{TLSFlagStart})
 	success, err := h.HandleResponse(ctx)
-	assert.False(t, success)
-	assert.ErrorIs(t, err, eap.ErrTLSUnexpectedFragment)
+	assert.False(t, success, "a non-ACK after the success point must never silently grant")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, eap.ErrTLSNotConfigured, "closure handling without a live session must fail closed")
 	assert.Nil(t, writer.response)
 }
 
