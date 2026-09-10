@@ -21,11 +21,11 @@
     "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
     "node-polyglot": "^2.6.0",
-    "ra-data-simple-rest": "^5.15.0",
+    "ra-data-simple-rest": "^5.15.3",
     "ra-language-chinese": "^2.0.10",
-    "ra-language-english": "^5.15.0",
+    "ra-language-english": "^5.15.3",
     "react": "^19.2.8",
-    "react-admin": "^5.15.1",
+    "react-admin": "^5.15.3",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
