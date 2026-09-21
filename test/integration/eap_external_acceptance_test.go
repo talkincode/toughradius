@@ -453,7 +453,11 @@ func writeEAPAcceptanceResult(t *testing.T, path string, run *eapAcceptanceRun) 
 		t.Logf("mkdir EAP acceptance result dir: %v", err)
 		return
 	}
-	if err := os.WriteFile(path, append(data, '\n'), 0o600); err != nil {
+	// The acceptance run executes as root inside the CI test container while the
+	// report step reads this file back as the unprivileged host runner, so the
+	// result must stay world-readable. A 0600 mode made the host-side report
+	// generation fail with "permission denied" even though every scenario passed.
+	if err := os.WriteFile(path, append(data, '\n'), 0o644); err != nil {
 		t.Logf("write EAP acceptance result: %v", err)
 	}
 }
