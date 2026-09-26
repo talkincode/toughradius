@@ -209,7 +209,7 @@ test-eap-acceptance-docker:
 		-e EAP_ACCEPTANCE_RESULT_JSON=/workspace/build/eap-acceptance/eap-acceptance.json \
 		-e CGO_ENABLED=0 \
 		-e GOCACHE=/tmp/go-build \
-		golang:1.25-bookworm \
+		golang:1.26-bookworm \
 		bash -c 'set -o pipefail; apt-get update && apt-get install -y --no-install-recommends eapoltest ca-certificates && mkdir -p build/eap-acceptance && go test -tags="integration eap_accept" -count=1 -run TestEAPExternalAcceptance -v ./test/integration/... 2>&1 | tee build/eap-acceptance/go-test.log' || test_status=$$?; \
 	if [ -f build/eap-acceptance/eap-acceptance.json ]; then \
 		go run ./scripts/eap_acceptance_report.go \
