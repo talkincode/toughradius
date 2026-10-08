@@ -13,9 +13,9 @@ The Chinese roadmap keeps the detailed agent delivery log. This English roadmap 
 3. Status flows as `Planned -> In progress -> Delivered`; delivery means merged to `main` with passing CI.
 4. Do not schedule non-goals from `TR-N001` through `TR-N006`: billing/orders, CRM/tickets, generic monitoring, multi-tenant SaaS, protocol-stack/framework rewrites, or hosted captive portal products.
 5. Agent output must go through pull request, CI, and human review. Direct pushes to `main` are forbidden.
-6. After each delivered subtask, use `.agents/skills/groom-roadmap/SKILL.md` to update status, split or reorder work, and keep the roadmap consistent with the checklist.
+6. After each delivered subtask, update status, split or reorder work, and keep the roadmap consistent with the checklist.
 7. Delivered subtasks should keep only outcome, evidence, residual risk, and traceable entry points. Long implementation narratives belong in PRs, commits, or changelogs.
-8. Automatic delegation picks the highest-priority unchecked subtask that is not marked `Blocked` or `waiting for evidence`.
+8. Development tasks pick the highest-priority unchecked subtask that is not marked `Blocked` or `waiting for evidence`.
 
 ## Status Definitions
 
