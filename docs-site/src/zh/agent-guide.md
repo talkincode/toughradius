@@ -35,20 +35,12 @@ agent 驱动开发围绕三份产物组织：
 - [`.agents/README.md`](https://github.com/talkincode/toughradius/blob/main/.agents/README.md)
   —— 委托参考与共享护栏。
 
-一个**总调度层**驱动循环，执行 SOP 负责领域内的具体工作：
-
-| 角色 | 技能 | 职责 |
-| --- | --- | --- |
-| 总调度 | `orchestrate-roadmap` | “自动委托开发”入口：选取下一个未勾选子任务、匹配 SOP、执行门禁、开 PR |
-| 门禁 | `review-pr` | 以 CI 为锚的独立审查；通过标签/评论打回，仅在审过**且** CI 绿时自动合并 |
-| 自我迭代 | `groom-roadmap` | 每次合并后勾选已交付子任务并重新梳理路线图 |
-
-执行 SOP 包括：新增厂商 VSA（`add-radius-vendor`）、新增 EAP 方法
+可用执行 SOP 包括：新增厂商 VSA（`add-radius-vendor`）、新增 EAP 方法
 （`add-eap-method`）、新增 Admin API（`add-adminapi-endpoint`）、新增 React Admin
 资源（`add-react-admin-resource`）、新增配置项（`add-config-schema`）、新增验收
 测试（`add-acceptance-test`）、同步上游 radius（`sync-upstream-radius`）、引用 RFC
 （`reference-rfc`）、对齐清单（`align-feature-checklist`）、编写 Go 测试
-（`write-go-tests`）、编写 Go API 文档（`document-go-apis`）。开始某类任务前先选用
+（`write-go-tests`）、编写 Go API 文档（`document-go-apis`）以及发版审查（`release-version`）。开始某类任务前先选用
 匹配的技能。
 
 agent **在你自己的主机**上用你自己的 agent/CLI 运行，而非通过 CI 工作流执行，
@@ -183,8 +175,7 @@ MVP 增量（例如：厂商属性解析 → 认证集成 → 计费 → 管理�
   下附 CI 可执行的验收测试，并引用
   [`docs/rfcs/`](https://github.com/talkincode/toughradius/tree/main/docs/rfcs)
   下对应的规范。
-- 产出一律走打了 `agent-roadmap` 标签的 PR，由 `review-pr` 门禁把关，仅在
-  `agent-approved` 且 CI 全绿时合并。
+- 产出一律走 PR，经代码审查与 CI 门禁验证通过后合并。
 
 ## 技术约束
 

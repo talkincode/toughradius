@@ -40,22 +40,13 @@ Agent-driven development is organized around three artifacts:
 - [`.agents/README.md`](https://github.com/talkincode/toughradius/blob/main/.agents/README.md)
   — the delegation reference and shared guardrails.
 
-A **coordinator layer** drives the loop, while the execution SOPs do the
-domain-specific work:
-
-| Role | Skill | Purpose |
-| --- | --- | --- |
-| Coordinator | `orchestrate-roadmap` | Entry role for "auto-delegate development": selects the next unchecked subtask, picks the matching SOP, enforces gates, opens a PR |
-| Gate | `review-pr` | Independent, CI-anchored review; requests changes via labels/comments and auto-merges only when approved **and** CI is green |
-| Self-iteration | `groom-roadmap` | After each merge, checks off the delivered subtask and re-grooms the roadmap |
-
-Execution SOPs include: add vendor VSA (`add-radius-vendor`), add EAP method
+Available execution SOPs include: add vendor VSA (`add-radius-vendor`), add EAP method
 (`add-eap-method`), add Admin API (`add-adminapi-endpoint`), add React Admin
 resource (`add-react-admin-resource`), add config schema (`add-config-schema`),
 add acceptance test (`add-acceptance-test`), sync upstream radius
 (`sync-upstream-radius`), reference RFC (`reference-rfc`), align checklist
-(`align-feature-checklist`), write Go tests (`write-go-tests`), and document Go
-APIs (`document-go-apis`). Pick the matching skill before starting a task type.
+(`align-feature-checklist`), write Go tests (`write-go-tests`), document Go
+APIs (`document-go-apis`), and release version review (`release-version`). Pick the matching skill before starting a task type.
 
 Agents run **on your own host** with your own agent/CLI, not via a CI workflow,
 so credentials never enter CI and the execution environment stays under your
@@ -209,8 +200,7 @@ Every agent change must pass these gates before merging:
   [`test/integration/`](https://github.com/talkincode/toughradius/tree/main/test/integration)
   and cite the relevant spec under
   [`docs/rfcs/`](https://github.com/talkincode/toughradius/tree/main/docs/rfcs).
-- Output goes through a PR labeled `agent-roadmap`, gated by `review-pr`, and is
-  merged only when `agent-approved` with green CI.
+- Output goes through a PR and is merged only after passing code review and green CI.
 
 ## Technical constraints
 
