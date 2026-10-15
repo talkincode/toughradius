@@ -7,7 +7,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-ldap/ldap/v3 v3.4.14
+	github.com/go-ldap/ldap/v3 v3.4.15
 	github.com/gocarina/gocsv v0.0.0-20230616125104-99d496ca653d
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo-jwt/v4 v4.4.0
@@ -20,8 +20,8 @@ require (
 	github.com/spf13/cast v1.10.0
 	github.com/stretchr/testify v1.12.1
 	go.uber.org/zap v1.28.0
-	golang.org/x/crypto v0.57.0
-	golang.org/x/sync v0.23.0
+	golang.org/x/crypto v0.58.0
+	golang.org/x/sync v0.24.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.3
@@ -42,7 +42,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
-	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	modernc.org/libc v1.67.1 // indirect
 	modernc.org/mathutil v1.7.1 // indirect
 	modernc.org/memory v1.11.0 // indirect
@@ -72,8 +72,8 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/net v0.60.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
 	golang.org/x/time v0.16.0
 )
 
