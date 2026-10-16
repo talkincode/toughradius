@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/app"
+	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"layeh.com/radius/rfc2865"
@@ -42,17 +43,21 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 		profileCache = authCtx.Metadata["profile_cache"]
 	}
 
-	timeout := int64(time.Until(user.ExpireTime).Seconds())
-	if timeout > math.MaxInt32 {
-		timeout = math.MaxInt32
-	}
-	if timeout < 0 {
-		timeout = 0
-	}
-
 	interim := getIntConfig(authCtx, app.ConfigRadiusAcctInterimInterval, 120)
 
-	_ = rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))           //nolint:errcheck,gosec // G115: timeout is validated
+	// RFC 2865 §5.27 Session-Timeout is the maximum seconds of service.
+	// An account with no expiration has no such maximum, so the attribute is
+	// omitted. Sending 0 would authorize zero seconds of service.
+	if !domain.ExpireTimeUnlimited(user.ExpireTime) {
+		timeout := int64(time.Until(user.ExpireTime).Seconds())
+		if timeout > math.MaxInt32 {
+			timeout = math.MaxInt32
+		}
+		if timeout < 0 {
+			timeout = 0
+		}
+		_ = rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout)) //nolint:errcheck,gosec // G115: timeout is validated
+	}
 	_ = rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim)) //nolint:errcheck,gosec // G115: interim is validated
 
 	// Use getter method for AddrPool

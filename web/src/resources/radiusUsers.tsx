@@ -3,6 +3,7 @@ import {
   Datagrid,
   TextField,
   DateField,
+  DateTimeInput,
   Edit,
   TextInput,
   SelectInput,
@@ -50,10 +51,12 @@ import {
   Skeleton,
   useTheme,
   useMediaQuery,
-  TextField as MuiTextField
+  TextField as MuiTextField,
+  Button as MuiButton,
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
 import { ReactNode, useMemo, useCallback, useState, useEffect, useRef } from 'react';
+import { useFormContext } from 'react-hook-form';
 import {
   Person as PersonIcon,
   ContactPhone as ContactIcon,
@@ -121,6 +124,10 @@ const formatExpireTime = (expireTime?: string): { text: string; color: 'success'
     return { text: '永不过期', color: 'success' };
   }
   const expireDate = new Date(expireTime);
+  // Year 1 is the stored "never expires" sentinel, not a real calendar date.
+  if (Number.isNaN(expireDate.getTime()) || expireDate.getFullYear() < 2) {
+    return { text: '永不过期', color: 'success' };
+  }
   const now = new Date();
   const diffDays = Math.ceil((expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   
@@ -132,6 +139,66 @@ const formatExpireTime = (expireTime?: string): { text: string; color: 'success'
     return { text: `${diffDays} 天后过期`, color: 'default' };
   }
   return { text: expireDate.toLocaleDateString(), color: 'success' };
+};
+
+const pad2 = (value: number) => String(value).padStart(2, '0');
+
+// A single user inside the JSON envelope is not addressable, so encoding/json
+// emits expire_time as RFC3339 with an offset ("2099-10-16T12:30:00+08:00").
+// datetime-local rejects that offset, so the editor never shows the stored
+// year (issue #645). List and detail already parse the same instant with Date;
+// reproduce that local calendar time here. A year before 2 means never expires.
+const formatExpireForInput = (value: unknown): string => {
+  if (value == null || value === '') {
+    return '';
+  }
+  const text = String(value).trim();
+  if (!text) {
+    return '';
+  }
+  const date = new Date(text.includes('T') ? text : text.replace(' ', 'T'));
+  if (Number.isNaN(date.getTime()) || date.getFullYear() < 2) {
+    return '';
+  }
+  return `${date.getFullYear()}-${pad2(date.getMonth() + 1)}-${pad2(date.getDate())}T${pad2(date.getHours())}:${pad2(date.getMinutes())}`;
+};
+
+// Keep an empty input as "" rather than null. The update API treats a present
+// empty string as "never expires" and treats an omitted/null field as unchanged.
+const parseExpireFromInput = (value: unknown): string => {
+  if (value == null) {
+    return '';
+  }
+  return String(value);
+};
+
+const ExpireTimeInput = () => {
+  const { setValue } = useFormContext();
+  return (
+    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-start' }}>
+      <Box sx={{ flex: 1, minWidth: 0 }}>
+        <DateTimeInput
+          source="expire_time"
+          label="过期时间"
+          helperText="用户服务到期时间，留空表示永不过期"
+          format={formatExpireForInput}
+          parse={parseExpireFromInput}
+          fullWidth
+          size="small"
+          slotProps={{ htmlInput: { max: '9999-12-31T23:59', step: 60 } }}
+        />
+      </Box>
+      <MuiButton
+        type="button"
+        size="small"
+        variant="outlined"
+        sx={{ mt: 1, flexShrink: 0 }}
+        onClick={() => setValue('expire_time', '', { shouldDirty: true, shouldTouch: true })}
+      >
+        清除
+      </MuiButton>
+    </Box>
+  );
 };
 
 // ============ 美化的详情组件 ============
@@ -1259,15 +1326,7 @@ export const RadiusUserEdit = () => {
               </ReferenceInput>
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
-              <TextInput
-                source="expire_time"
-                label="过期时间"
-                type="datetime-local"
-                helperText="用户服务到期时间，留空表示永不过期"
-                fullWidth
-                size="small"
-                InputLabelProps={{ shrink: true }}
-              />
+              <ExpireTimeInput />
             </FieldGridItem>
           </FieldGrid>
         </FormSection>
@@ -1474,15 +1533,7 @@ export const RadiusUserCreate = () => (
             </ReferenceInput>
           </FieldGridItem>
           <FieldGridItem span={{ xs: 1, sm: 2 }}>
-            <TextInput
-              source="expire_time"
-              label="过期时间"
-              type="datetime-local"
-              helperText="用户服务到期时间，留空表示永不过期"
-              fullWidth
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
+            <ExpireTimeInput />
           </FieldGridItem>
         </FieldGrid>
       </FormSection>

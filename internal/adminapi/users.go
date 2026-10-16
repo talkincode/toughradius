@@ -64,9 +64,10 @@ type UserRequest struct {
 	MacAddr         string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
 	BindVlan        interface{} `json:"bind_vlan"`                                   // Can be int or boolean
 	BindMac         interface{} `json:"bind_mac"`                                    // Can be int or boolean
-	ExpireTime      string      `json:"expire_time" validate:"omitempty"`            // Expiration time
-	Status          interface{} `json:"status"`                                      // Can be string or boolean
-	Remark          string      `json:"remark" validate:"omitempty,max=500"`         // Remark
+	// ExpireTime is optional. Empty or omitted means the account never expires.
+	ExpireTime string      `json:"expire_time" validate:"omitempty"`
+	Status     interface{} `json:"status"`                              // Can be string or boolean
+	Remark     string      `json:"remark" validate:"omitempty,max=500"` // Remark
 }
 
 // toRadiusUser Convert UserRequest Convert to RadiusUser
@@ -153,25 +154,29 @@ func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 // UserRequest, legacy and mixed-type frontend payloads are accepted and
 // normalized so older admin clients remain compatible.
 type UserUpdateRequest struct {
-	NodeID                  interface{} `json:"node_id"`                                                 // Can be int64 or string
-	ProfileID               interface{} `json:"profile_id"`                                              // Can be int64 or string
-	LegacyProfileID         interface{} `json:"profileid"`                                               // Legacy fallback field from older clients, used when profile_id is missing
-	Realname                string      `json:"realname" validate:"omitempty,max=100"`                   // Real name
-	Email                   string      `json:"email" validate:"omitempty,email,max=100"`                // Email
-	Mobile                  string      `json:"mobile" validate:"omitempty,max=20"`                      // Mobile number (optional, max 20 characters)
-	Address                 string      `json:"address" validate:"omitempty,max=255"`                    // addresses
-	Username                string      `json:"username" validate:"omitempty,min=3,max=50"`              // Username
-	Password                string      `json:"password" validate:"omitempty,min=6,max=128"`             // Password
-	AddrPool                string      `json:"addr_pool" validate:"omitempty,max=50"`                   // Address pool
-	RadiusClass             string      `json:"radius_class" validate:"omitempty,max=253"`               // RFC 2865 Class (Type 25)
-	Vlanid1                 int         `json:"vlanid1" validate:"gte=0,lte=4096"`                       // VLAN ID 1
-	Vlanid2                 int         `json:"vlanid2" validate:"gte=0,lte=4096"`                       // VLAN ID 2
-	IpAddr                  string      `json:"ip_addr" validate:"omitempty,ipv4"`                       // IPv4addresses
-	Ipv6Addr                string      `json:"ipv6_addr" validate:"omitempty"`                          // IPv6addresses
-	MacAddr                 string      `json:"mac_addr" validate:"omitempty,mac"`                       // MACaddresses
-	BindVlan                interface{} `json:"bind_vlan"`                                               // Can be int or boolean
-	BindMac                 interface{} `json:"bind_mac"`                                                // Can be int or boolean
-	ExpireTime              string      `json:"expire_time" validate:"omitempty"`                        // Expiration time
+	NodeID          interface{} `json:"node_id"`                                     // Can be int64 or string
+	ProfileID       interface{} `json:"profile_id"`                                  // Can be int64 or string
+	LegacyProfileID interface{} `json:"profileid"`                                   // Legacy fallback field from older clients, used when profile_id is missing
+	Realname        string      `json:"realname" validate:"omitempty,max=100"`       // Real name
+	Email           string      `json:"email" validate:"omitempty,email,max=100"`    // Email
+	Mobile          string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
+	Address         string      `json:"address" validate:"omitempty,max=255"`        // addresses
+	Username        string      `json:"username" validate:"omitempty,min=3,max=50"`  // Username
+	Password        string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
+	AddrPool        string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
+	RadiusClass     string      `json:"radius_class" validate:"omitempty,max=253"`   // RFC 2865 Class (Type 25)
+	Vlanid1         int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
+	Vlanid2         int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
+	IpAddr          string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
+	Ipv6Addr        string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6addresses
+	MacAddr         string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
+	BindVlan        interface{} `json:"bind_vlan"`                                   // Can be int or boolean
+	BindMac         interface{} `json:"bind_mac"`                                    // Can be int or boolean
+	// ExpireTime distinguishes "leave unchanged" from "clear". Nil means the
+	// client omitted the field. A pointer to an empty string clears the
+	// expiration so the account never expires. Any other value is parsed as
+	// local time.
+	ExpireTime              *string     `json:"expire_time" validate:"omitempty"`
 	Status                  interface{} `json:"status"`                                                  // Can be string or boolean
 	Remark                  string      `json:"remark" validate:"omitempty,max=500"`                     // Remark
 	IPv6PrefixPool          string      `json:"ipv6_prefix_pool" validate:"omitempty,max=100"`           // IPv6 prefix pool name
@@ -379,8 +384,8 @@ func createRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query billing profile", err.Error())
 	}
 
-	// ParseExpiration time
-	expire, err := parseTimeInput(req.ExpireTime, time.Now().AddDate(1, 0, 0))
+	// Empty expiration means never expires, matching the admin form hint.
+	expire, err := parseTimeInput(req.ExpireTime, time.Time{})
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "Invalid expire time format", nil)
 	}
@@ -544,12 +549,17 @@ func updateRadiusUser(c echo.Context) error {
 	if updateData.Status != "" {
 		updates["status"] = updateData.Status
 	}
-	if req.ExpireTime != "" {
-		expire, err := parseTimeInput(req.ExpireTime, user.ExpireTime)
-		if err != nil {
-			return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "Invalid expire time format", nil)
+	if req.ExpireTime != nil {
+		raw := strings.TrimSpace(*req.ExpireTime)
+		if raw == "" {
+			updates["expire_time"] = time.Time{}
+		} else {
+			expire, err := parseTimeInput(raw, time.Time{})
+			if err != nil {
+				return fail(c, http.StatusBadRequest, "INVALID_EXPIRE_TIME", "Invalid expire time format", nil)
+			}
+			updates["expire_time"] = expire
 		}
-		updates["expire_time"] = expire
 	}
 
 	// Handle ProfileLinkMode changes: switch from dynamic to static requires snapshot

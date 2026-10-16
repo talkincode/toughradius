@@ -118,8 +118,11 @@ func GetDashboardStats(c echo.Context) error {
 	// 4. Disabled users
 	db.Model(&domain.RadiusUser{}).Where("status = ?", "disabled").Count(&stats.DisabledUsers)
 
-	// 5. Expired users
-	db.Model(&domain.RadiusUser{}).Where("expire_time < ?", now).Count(&stats.ExpiredUsers)
+	// 5. Expired users. Year-1 timestamps are the "never expires" sentinel
+	// (see domain.ExpireTimeUnlimited) and must not be counted.
+	db.Model(&domain.RadiusUser{}).
+		Where("expire_time < ? AND expire_time >= ?", now, time.Date(2, time.January, 1, 0, 0, 0, 0, time.UTC)).
+		Count(&stats.ExpiredUsers)
 
 	// 6. Today's authentication count (estimated from today's new online sessions)
 	db.Model(&domain.RadiusOnline{}).Where("acct_start_time >= ?", todayStart).Count(&stats.TodayAuthCount)

@@ -951,13 +951,116 @@ func TestUserEdgeCases(t *testing.T) {
 		require.NoError(t, err)
 
 		var response Response
-		_ = json.Unmarshal(rec.Body.Bytes(), &response)
-		dataBytes, _ := json.Marshal(response.Data)
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
+		dataBytes, err := json.Marshal(response.Data)
+		require.NoError(t, err)
 		var user domain.RadiusUser
-		_ = json.Unmarshal(dataBytes, &user)
+		require.NoError(t, json.Unmarshal(dataBytes, &user))
 
-		// Default expiration time should be one year later
-		expectedExpire := time.Now().AddDate(1, 0, 0)
-		assert.WithinDuration(t, expectedExpire, user.ExpireTime, time.Hour*24)
+		// Empty expiration means never expires, matching the admin form hint.
+		assert.True(t, domain.ExpireTimeUnlimited(user.ExpireTime))
+		var payload map[string]any
+		require.NoError(t, json.Unmarshal(dataBytes, &payload))
+		assert.Equal(t, "", payload["expire_time"])
+	})
+}
+
+func TestUpdateUserExpireTime(t *testing.T) {
+	db := setupTestDB(t)
+	appCtx := setupTestApp(t, db)
+	profile := createTestProfile(db, "test-profile")
+
+	putUser := func(t *testing.T, id int64, body string) *httptest.ResponseRecorder {
+		t.Helper()
+		e := setupTestEcho()
+		req := httptest.NewRequest(http.MethodPut, fmt.Sprintf("/api/v1/users/%d", id), strings.NewReader(body))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := CreateTestContext(e, db, req, rec, appCtx)
+		c.SetParamNames("id")
+		c.SetParamValues(fmt.Sprintf("%d", id))
+		err := updateRadiusUser(c)
+		if rec.Code >= 400 && err != nil {
+			e.HTTPErrorHandler(err, c)
+		} else {
+			require.NoError(t, err)
+		}
+		return rec
+	}
+
+	t.Run("datetime-local value is stored as the same civil time", func(t *testing.T) {
+		user := createTestUser(db, "expire-set", profile.ID)
+		rec := putUser(t, user.ID, `{"expire_time":"2099-10-16T12:30"}`)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var stored domain.RadiusUser
+		require.NoError(t, db.First(&stored, user.ID).Error)
+		assert.Equal(t, 2099, stored.ExpireTime.Year())
+		assert.Equal(t, time.October, stored.ExpireTime.Month())
+		assert.Equal(t, 16, stored.ExpireTime.Day())
+		assert.Equal(t, 12, stored.ExpireTime.Hour())
+		assert.Equal(t, 30, stored.ExpireTime.Minute())
+
+		var response Response
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
+		payload, ok := response.Data.(map[string]any)
+		require.True(t, ok)
+		// The edit record is this payload. It must be the same instant the
+		// form displays; a single user value is not addressable inside the
+		// response envelope, so encoding/json emits RFC3339.
+		raw, ok := payload["expire_time"].(string)
+		require.True(t, ok)
+		parsed, err := time.Parse(time.RFC3339, raw)
+		require.NoError(t, err)
+		assert.True(t, stored.ExpireTime.Equal(parsed), "json=%s stored=%s", raw, stored.ExpireTime)
+	})
+
+	t.Run("empty expire time clears to never expires", func(t *testing.T) {
+		user := createTestUser(db, "expire-clear", profile.ID)
+		require.False(t, domain.ExpireTimeUnlimited(user.ExpireTime))
+
+		rec := putUser(t, user.ID, `{"expire_time":""}`)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var stored domain.RadiusUser
+		require.NoError(t, db.First(&stored, user.ID).Error)
+		assert.True(t, domain.ExpireTimeUnlimited(stored.ExpireTime))
+
+		var response Response
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &response))
+		payload, ok := response.Data.(map[string]any)
+		require.True(t, ok)
+		raw, _ := payload["expire_time"].(string)
+		if raw != "" {
+			parsed, err := time.Parse(time.RFC3339, raw)
+			require.NoError(t, err)
+			assert.True(t, domain.ExpireTimeUnlimited(parsed), "json=%s", raw)
+		}
+	})
+
+	t.Run("omitted expire time keeps the stored value", func(t *testing.T) {
+		user := createTestUser(db, "expire-keep", profile.ID)
+		before := user.ExpireTime
+
+		rec := putUser(t, user.ID, `{"realname":"Still Expires"}`)
+		assert.Equal(t, http.StatusOK, rec.Code)
+
+		var stored domain.RadiusUser
+		require.NoError(t, db.First(&stored, user.ID).Error)
+		assert.Equal(t, "Still Expires", stored.Realname)
+		assert.True(t, before.Equal(stored.ExpireTime), "stored=%v want=%v", stored.ExpireTime, before)
+	})
+
+	t.Run("invalid expire time is rejected", func(t *testing.T) {
+		user := createTestUser(db, "expire-bad", profile.ID)
+		rec := putUser(t, user.ID, `{"expire_time":"not-a-date"}`)
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		var errResponse ErrorResponse
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &errResponse))
+		assert.Equal(t, "INVALID_EXPIRE_TIME", errResponse.Error)
+
+		var stored domain.RadiusUser
+		require.NoError(t, db.First(&stored, user.ID).Error)
+		assert.True(t, user.ExpireTime.Equal(stored.ExpireTime))
 	})
 }

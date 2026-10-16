@@ -143,8 +143,9 @@ func TestRadiusUser_MarshalJSON(t *testing.T) {
 				err := json.Unmarshal(data, &result)
 				require.NoError(t, err)
 
-				// Check that zero times still produce formatted output
-				assert.NotEmpty(t, result["expire_time"])
+				// A zero expiration is "never expires" and must be an empty string so
+				// the admin form can leave the field blank. Last online is unrelated.
+				assert.Equal(t, "", result["expire_time"])
 				assert.NotEmpty(t, result["last_online"])
 			},
 		},

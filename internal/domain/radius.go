@@ -74,22 +74,36 @@ type RadiusUser struct {
 	// RadiusClass is the RFC 2865 Class (Type 25) value written into Access-Accept.
 	// A non-empty user value overrides the linked profile; empty/"NA" inherits in
 	// dynamic link mode. The string is emitted as-is (max 253 octets).
-	RadiusClass     string    `json:"radius_class" form:"radius_class"`
-	BindVlan        int       `json:"bind_vlan" form:"bind_vlan"`                 // Bind VLAN
-	BindMac         int       `json:"bind_mac" form:"bind_mac"`                   // Bind MAC
-	ProfileLinkMode int       `json:"profile_link_mode" form:"profile_link_mode"` // 0=static (snapshot), 1=dynamic (real-time from profile)
-	ExpireTime      time.Time `gorm:"index" json:"expire_time"`                   // Expiration time
-	Status          string    `gorm:"index" json:"status" form:"status"`          // Status: enabled | disabled
-	Remark          string    `json:"remark" form:"remark"`                       // Remark
-	OnlineCount     int       `json:"online_count" gorm:"-:migration;<-:false"`
-	LastOnline      time.Time `json:"last_online"`
-	CreatedAt       time.Time `gorm:"index" json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	RadiusClass     string `json:"radius_class" form:"radius_class"`
+	BindVlan        int    `json:"bind_vlan" form:"bind_vlan"`                 // Bind VLAN
+	BindMac         int    `json:"bind_mac" form:"bind_mac"`                   // Bind MAC
+	ProfileLinkMode int    `json:"profile_link_mode" form:"profile_link_mode"` // 0=static (snapshot), 1=dynamic (real-time from profile)
+	// ExpireTime is when the account stops being allowed to authenticate.
+	// The zero time, and any year-1 value read back from the database, means
+	// the account never expires. See ExpireTimeUnlimited.
+	ExpireTime  time.Time `gorm:"index" json:"expire_time"`
+	Status      string    `gorm:"index" json:"status" form:"status"` // Status: enabled | disabled
+	Remark      string    `json:"remark" form:"remark"`              // Remark
+	OnlineCount int       `json:"online_count" gorm:"-:migration;<-:false"`
+	LastOnline  time.Time `json:"last_online"`
+	CreatedAt   time.Time `gorm:"index" json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // TableName Specify table name
 func (RadiusUser) TableName() string {
 	return "radius_user"
+}
+
+// ExpireTimeUnlimited reports whether expireTime means the account never expires.
+//
+// A zero [time.Time] is the in-memory sentinel written when an admin clears the
+// expiration field. Databases often read that sentinel back as a year-1 local
+// timestamp, which is not [time.Time.IsZero], so any year before 2 is also
+// unlimited. A normal expiration, including a far-future date such as 2099, is
+// not unlimited.
+func ExpireTimeUnlimited(expireTime time.Time) bool {
+	return expireTime.IsZero() || expireTime.Year() < 2
 }
 
 // RadiusOnline stores active online session state tracked from accounting packets.
