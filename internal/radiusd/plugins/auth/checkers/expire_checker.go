@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 )
@@ -22,6 +23,9 @@ func (c *ExpireChecker) Order() int {
 func (c *ExpireChecker) Check(ctx context.Context, authCtx *auth.AuthContext) error {
 	user := authCtx.User
 
+	if domain.ExpireTimeUnlimited(user.ExpireTime) {
+		return nil
+	}
 	if user.ExpireTime.Before(time.Now()) {
 		return errors.NewUserExpiredError()
 	}

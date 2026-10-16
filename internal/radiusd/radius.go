@@ -171,7 +171,7 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 		return nil, radiuserrors.NewUserDisabledError()
 	}
 
-	if user.ExpireTime.Before(time.Now()) {
+	if !domain.ExpireTimeUnlimited(user.ExpireTime) && user.ExpireTime.Before(time.Now()) {
 		return nil, radiuserrors.NewUserExpiredError()
 	}
 	s.userCache.Set(cacheKey, user)

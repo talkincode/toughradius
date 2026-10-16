@@ -46,6 +46,16 @@ func TestExpireChecker_Check(t *testing.T) {
 			expireTime:  time.Now().Add(-1 * time.Second),
 			expectError: true,
 		},
+		{
+			name:        "zero expiration means never expires",
+			expireTime:  time.Time{},
+			expectError: false,
+		},
+		{
+			name:        "year-1 expiration read back from the database means never expires",
+			expireTime:  time.Date(1, time.January, 1, 0, 0, 0, 0, time.Local),
+			expectError: false,
+		},
 	}
 
 	for _, tt := range tests {

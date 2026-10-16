@@ -21,6 +21,12 @@ func (d SysOprLog) MarshalJSON() ([]byte, error) {
 
 func (d *RadiusUser) MarshalJSON() ([]byte, error) {
 	type Alias RadiusUser
+	expire := ""
+	// An empty string is the admin UI's "never expires" value. A formatted
+	// year-1 timestamp is not, and datetime-local cannot display it.
+	if !ExpireTimeUnlimited(d.ExpireTime) {
+		expire = d.ExpireTime.Format(timeutil.YYYYMMDDHHMMSS_LAYOUT)
+	}
 	return json.Marshal(&struct {
 		*Alias
 		ExpireTime string `json:"expire_time"`
@@ -28,7 +34,7 @@ func (d *RadiusUser) MarshalJSON() ([]byte, error) {
 	}{
 		Alias:      (*Alias)(d),
 		LastOnline: d.LastOnline.Format(timeutil.YYYYMMDDHHMM_LAYOUT),
-		ExpireTime: d.ExpireTime.Format(timeutil.YYYYMMDDHHMMSS_LAYOUT),
+		ExpireTime: expire,
 	})
 }
 
